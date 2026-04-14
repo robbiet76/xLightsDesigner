@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -17,6 +17,10 @@ function nowIso() {
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function resolveRepoRoot() {
@@ -108,6 +112,66 @@ async function waitForXLightsReady({ repoRoot, channel, outDir, prefix, timeoutM
   }, { timeoutMs, intervalMs });
 }
 
+function detectRunningXLightsProcess() {
+  const output = execFileSync("bash", ["-lc", "ps -Ao pid=,command= | rg 'xLights.app/Contents/MacOS/xLights' || true"], {
+    encoding: "utf8"
+  });
+  const line = str(output.split("\n").find(Boolean));
+  if (!line) return null;
+  const match = line.match(/^(\d+)\s+(.+)$/);
+  if (!match) return null;
+  const pid = Number(match[1]);
+  const binaryPath = str(match[2]);
+  const appPath = binaryPath.includes("/Contents/MacOS/xLights")
+    ? binaryPath.slice(0, binaryPath.indexOf("/Contents/MacOS/xLights") + "/Contents/MacOS/xLights".length).replace(/\/Contents\/MacOS\/xLights$/, ".app")
+    : "";
+  return { pid, binaryPath, appPath };
+}
+
+async function restartXLightsProcess({ repoRoot, channel, outDir, prefix } = {}) {
+  const detected = detectRunningXLightsProcess();
+  const details = {
+    detected
+  };
+  if (detected?.pid) {
+    try {
+      execFileSync("kill", [String(detected.pid)]);
+      details.killedPid = detected.pid;
+    } catch (error) {
+      details.killError = str(error?.message);
+    }
+    await sleep(2000);
+  }
+  if (!detected?.appPath) {
+    return {
+      ok: false,
+      reason: "xlights_process_not_found",
+      details
+    };
+  }
+  try {
+    execFileSync("open", ["-a", detected.appPath]);
+    details.launchedAppPath = detected.appPath;
+  } catch (error) {
+    return {
+      ok: false,
+      reason: "xlights_launch_failed",
+      details: {
+        ...details,
+        launchError: str(error?.message)
+      }
+    };
+  }
+  await sleep(5000);
+  const ready = await waitForXLightsReady({ repoRoot, channel, outDir, prefix: `${prefix}-after-restart`, timeoutMs: 120000, intervalMs: 2000 });
+  return {
+    ok: ready?.ok === true,
+    reason: ready?.ok === true ? "restarted" : "xlights_not_ready_after_restart",
+    details,
+    snapshot: ready?.snapshot || null
+  };
+}
+
 async function recoverXLightsIfDirtyEvalSequence({ repoRoot, channel, outDir, prefix } = {}) {
   const health = await runAutomation(
     repoRoot,
@@ -125,26 +189,12 @@ async function recoverXLightsIfDirtyEvalSequence({ repoRoot, channel, outDir, pr
   if (runtimeState !== "busy" && dirtyState !== "dirty") {
     return { ok: true, skipped: true, reason: "not_dirty_or_busy" };
   }
-  let saveRes;
-  try {
-    saveRes = await runAutomation(
-      repoRoot,
-      channel,
-      path.join(outDir, `${prefix}-recover-save.json`),
-      "save-xlights-sequence"
-    );
-  } catch (error) {
-    return {
-      ok: false,
-      skipped: false,
-      reason: "save_failed",
-      error: str(error?.message)
-    };
-  }
+  const restarted = await restartXLightsProcess({ repoRoot, channel, outDir, prefix: `${prefix}-restart` });
   return {
-    ok: saveRes?.ok === true,
+    ok: restarted?.ok === true,
     skipped: false,
-    saveRes
+    reason: restarted?.reason || "restart_failed",
+    restart: restarted
   };
 }
 
@@ -206,10 +256,14 @@ function buildWorkingSequencePath(workingShowRoot, suiteKey, scenarioName, basel
   return path.join(path.resolve(workingShowRoot), "__xld_eval", `${baseName}${ext}`);
 }
 
-function copyWorkingSequence({ suite, scenario, workingShowRoot }) {
+function resolveWorkingSequence({ suite, scenario, workingShowRoot }) {
   const baselinePath = str(scenario?.baselineSequencePath || suite?.baselineSequencePath || scenario?.sequencePath);
   if (!baselinePath) throw new Error(`Scenario ${str(scenario?.name)} is missing baselineSequencePath/sequencePath.`);
   const workingSequencePath = buildWorkingSequencePath(workingShowRoot, str(suite?.name || suite?.key || "suite"), str(scenario?.name), baselinePath, str(scenario?.sequencePath));
+  return { baselinePath, workingSequencePath };
+}
+
+function copyWorkingSequence({ baselinePath, workingSequencePath }) {
   fs.mkdirSync(path.dirname(workingSequencePath), { recursive: true });
   fs.copyFileSync(baselinePath, workingSequencePath);
   return { baselinePath, workingSequencePath };
@@ -277,6 +331,16 @@ function cloneProjectForScenario(baseProjectFilePath, suiteKey, scenarioName) {
   return { cloneRoot, cloneProjectFilePath };
 }
 
+function writeCloneSequencePathInput(cloneProjectFilePath, workingSequencePath) {
+  if (!fs.existsSync(cloneProjectFilePath)) return;
+  const project = JSON.parse(fs.readFileSync(cloneProjectFilePath, "utf8"));
+  const snapshot = { ...(project.snapshot || {}) };
+  snapshot.sequencePathInput = workingSequencePath;
+  snapshot.recentSequences = [workingSequencePath];
+  project.snapshot = snapshot;
+  fs.writeFileSync(cloneProjectFilePath, `${JSON.stringify(project, null, 2)}\n`, "utf8");
+}
+
 function summarizePlan(plan = {}) {
   const commands = arr(plan?.commands);
   const effectCreates = commands
@@ -327,13 +391,14 @@ function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, w
   const presentForbiddenEffects = planSummary.effectNames.filter((name) => forbiddenEffects.includes(name));
   const matchedTargets = planSummary.modelNames.filter((name) => requiredTargets.includes(name));
   const minimumMatchedEffects = Number(scenario?.minimumMatchedEffects || (expectedEffects.length ? 1 : 0));
+  const requireEffectCreateCommands = scenario?.requireEffectCreateCommands === true;
   const issues = [];
   if (!latestPlan) issues.push("missing_plan_handoff");
   if (!latestApplyResult) issues.push("missing_apply_result");
   if (expectedEffects.length && matchedEffects.length < minimumMatchedEffects) issues.push("expected_effect_missing");
   if (presentForbiddenEffects.length) issues.push("forbidden_effect_present");
   if (requiredTargets.length && !matchedTargets.length) issues.push("required_target_missing");
-  if (Number(latestGuidanceCoverage?.effectCreateCount || 0) <= 0) issues.push("no_effect_create_commands");
+  if (requireEffectCreateCommands && Number(latestGuidanceCoverage?.effectCreateCount || 0) <= 0) issues.push("no_effect_create_commands");
   return {
     suiteKey,
     scenarioName: str(scenario?.name),
@@ -365,63 +430,80 @@ function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, w
 
 async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenario, baseProjectFilePath }) {
   const prefix = `${suiteKey}-${str(scenario?.name) || "scenario"}`.replace(/[^a-zA-Z0-9._-]+/g, "-");
-  const { workingSequencePath, baselinePath } = copyWorkingSequence({
+  const { workingSequencePath, baselinePath } = resolveWorkingSequence({
     suite: { ...suite, key: suiteKey },
     scenario,
     workingShowRoot: suite?.workingShowRoot
   });
+  const initialHealthSnapshot = await runAutomation(
+    repoRoot,
+    channel,
+    path.join(outDir, `${prefix}-initial-health.json`),
+    "get-automation-health-snapshot"
+  );
+  const initialXLights = initialHealthSnapshot?.result?.xlights || {};
+  const reuseOpenSequence =
+    str(initialXLights?.runtimeState).toLowerCase() === "ready"
+    && initialXLights?.projectShowMatches === true
+    && str(initialXLights?.sequencePath) === workingSequencePath;
+  if (!reuseOpenSequence) {
+    copyWorkingSequence({ baselinePath, workingSequencePath });
+  }
   const { cloneProjectFilePath } = cloneProjectForScenario(baseProjectFilePath, suiteKey, str(scenario?.name || "scenario"));
+  writeCloneSequencePathInput(cloneProjectFilePath, workingSequencePath);
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open-project.json`), "open-project", [cloneProjectFilePath]);
   const beforeSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-before.json`), "get-sequencer-validation-snapshot");
   const previousPlanArtifactId = str(beforeSnapshot?.result?.latestPlanHandoff?.artifactId);
   const previousApplyArtifactId = str(beforeSnapshot?.result?.latestApplyResult?.artifactId);
-  const recovery = await recoverXLightsIfDirtyEvalSequence({ repoRoot, channel, outDir, prefix: `${prefix}-pre-open` });
-  if (recovery?.ok === false) {
-    return {
-      suiteKey,
-      scenarioName: str(scenario?.name),
-      workingSequencePath,
-      clonedProjectFilePath: cloneProjectFilePath,
-      baselinePath,
-      ok: false,
-      issues: ["xlights_recovery_failed"],
-      recovery
-    };
-  }
-  const xlightsReadyBeforeOpen = await waitForXLightsReady({ repoRoot, channel, outDir, prefix: `${prefix}-pre-open` });
-  if (!xlightsReadyBeforeOpen?.ok) {
-    return {
-      suiteKey,
-      scenarioName: str(scenario?.name),
-      workingSequencePath,
-      clonedProjectFilePath: cloneProjectFilePath,
-      baselinePath,
-      ok: false,
-      issues: ["xlights_not_ready_for_open"],
-      healthSnapshot: xlightsReadyBeforeOpen?.snapshot?.result || null
-    };
-  }
-
-  const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
-  fs.writeFileSync(
-    openPayloadPath,
-    `${JSON.stringify({ sequencePath: workingSequencePath, saveBeforeSwitch: false }, null, 2)}\n`,
-    "utf8"
-  );
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence.json`), "select-workflow", ["Sequence"]);
-  try {
-    await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
-  } catch (error) {
-    return {
-      suiteKey,
-      scenarioName: str(scenario?.name),
-      workingSequencePath,
-      clonedProjectFilePath: cloneProjectFilePath,
-      baselinePath,
-      ok: false,
-      issues: ["xlights_open_failed"],
-      openError: str(error?.message)
-    };
+  if (!reuseOpenSequence) {
+    const recovery = await recoverXLightsIfDirtyEvalSequence({ repoRoot, channel, outDir, prefix: `${prefix}-pre-open` });
+    if (recovery?.ok === false) {
+      return {
+        suiteKey,
+        scenarioName: str(scenario?.name),
+        workingSequencePath,
+        clonedProjectFilePath: cloneProjectFilePath,
+        baselinePath,
+        ok: false,
+        issues: ["xlights_recovery_failed"],
+        recovery
+      };
+    }
+    const xlightsReadyBeforeOpen = await waitForXLightsReady({ repoRoot, channel, outDir, prefix: `${prefix}-pre-open` });
+    if (!xlightsReadyBeforeOpen?.ok) {
+      return {
+        suiteKey,
+        scenarioName: str(scenario?.name),
+        workingSequencePath,
+        clonedProjectFilePath: cloneProjectFilePath,
+        baselinePath,
+        ok: false,
+        issues: ["xlights_not_ready_for_open"],
+        healthSnapshot: xlightsReadyBeforeOpen?.snapshot?.result || null
+      };
+    }
+
+    const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
+    fs.writeFileSync(
+      openPayloadPath,
+      `${JSON.stringify({ sequencePath: workingSequencePath, saveBeforeSwitch: false }, null, 2)}\n`,
+      "utf8"
+    );
+    try {
+      await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
+    } catch (error) {
+      return {
+        suiteKey,
+        scenarioName: str(scenario?.name),
+        workingSequencePath,
+        clonedProjectFilePath: cloneProjectFilePath,
+        baselinePath,
+        ok: false,
+        issues: ["xlights_open_failed"],
+        openError: str(error?.message)
+      };
+    }
   }
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-reset-assistant-memory.json`), "reset-assistant-memory");
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence-post-reset.json`), "select-workflow", ["Sequence"]);

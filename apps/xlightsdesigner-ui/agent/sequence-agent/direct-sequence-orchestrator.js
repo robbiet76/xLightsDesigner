@@ -3,6 +3,7 @@ import { buildProposalBundle } from "../designer-dialog/designer-dialog-contract
 import { buildProposalLifecycle } from "../designer-dialog/designer-dialog-lifecycle.js";
 import { buildCanonicalSequenceIntentHandoff } from "./sequence-intent-handoff.js";
 import { buildSequencingStrategy } from "./sequencing-strategy.js";
+import { resolveDirectCueEffectCandidates } from "../shared/effect-semantics-registry.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -41,10 +42,14 @@ function buildUserExecutionStrategy({
   designId = "",
   designRevision = 0,
   sections = [],
-  targetIds = []
+  targetIds = [],
+  intentSummary = "",
+  effectHints = []
 } = {}) {
   const normalizedSections = arr(sections).map((row) => str(row)).filter(Boolean);
   const normalizedTargets = arr(targetIds).map((row) => str(row)).filter(Boolean);
+  const normalizedIntentSummary = str(intentSummary) || "User-directed sequence change.";
+  const normalizedEffectHints = mergeUniqueStrings(effectHints);
   const passScope = normalizedSections.length > 1 ? "multi_section" : "single_section";
   const sectionPlans = (normalizedSections.length ? normalizedSections : ["General"]).map((section) => ({
     designId,
@@ -53,9 +58,9 @@ function buildUserExecutionStrategy({
     section,
     energy: "",
     density: "",
-    intentSummary: "User-directed sequence change.",
+    intentSummary: normalizedIntentSummary,
     targetIds: normalizedTargets,
-    effectHints: []
+    effectHints: normalizedEffectHints
   }));
   return {
     passScope,
@@ -427,6 +432,14 @@ export function executeDirectSequenceRequestOrchestration({
 
   const resolvedRequestedEffectPhrase = str(normalizedEffectOverrides[0] || requestedEffectPhrase);
   const matchedEffectName = matchRequestedEffectName(resolvedRequestedEffectPhrase, effectCatalog);
+  const directCueHints = resolveDirectCueEffectCandidates({
+    goalText: promptText,
+    smoothBias: /flow|smooth|glow|cinematic/.test(str(promptText).toLowerCase())
+  });
+  const executionEffectHints = mergeUniqueStrings([
+    matchedEffectName,
+    ...directCueHints
+  ]);
   if (matchedEffectName) {
     plan.normalizedIntent.effectOverrides = [matchedEffectName];
     plan.proposalLines = buildSequencingStrategy(plan.normalizedIntent, plan.targets);
@@ -499,7 +512,9 @@ export function executeDirectSequenceRequestOrchestration({
       designId,
       designRevision,
       sections: effectiveSections,
-      targetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
+      targetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean),
+      intentSummary: str(promptText),
+      effectHints: executionEffectHints
     })
   });
 

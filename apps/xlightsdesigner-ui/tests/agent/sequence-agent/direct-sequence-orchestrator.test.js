@@ -9,7 +9,8 @@ function sampleCatalog() {
   return buildEffectDefinitionCatalog([
     { effectName: "On", params: [] },
     { effectName: "Color Wash", params: [] },
-    { effectName: "Shimmer", params: [] }
+    { effectName: "Shimmer", params: [] },
+    { effectName: "Spirals", params: [] }
   ]);
 }
 
@@ -143,6 +144,28 @@ test("direct sequence orchestrator infers analyzed section scope from the prompt
   assert.deepEqual(result.intentHandoff.scope.sections, ["Chorus 1"]);
   assert.ok(result.proposalBundle.scope.sections.includes("Chorus 1"));
   assert.match(result.proposalLines[0], /for the requested duration/i);
+});
+
+test("direct sequence orchestrator preserves spiral cue intent in execution strategy", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-spiral-cue",
+    sequenceRevision: "rev-1",
+    promptText: "Design a single Chorus 1 concept for SpiralTrees. Keep SpiralTrees as the lead read and use flowing spiral motion rather than a generic segmented fill.",
+    selectedSections: ["Chorus 1"],
+    selectedTargetIds: ["SpiralTrees"],
+    selectedTagNames: [],
+    models: [{ id: "SpiralTrees", name: "SpiralTrees", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "SpiralTrees", name: "SpiralTrees", type: "model" }],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: sampleAnalysis()
+  });
+
+  assert.equal(result.ok, true);
+  assert.match(result.proposalBundle.executionPlan.sectionPlans[0].intentSummary, /flowing spiral motion/i);
+  assert.ok(result.proposalBundle.executionPlan.sectionPlans[0].effectHints.includes("Spirals"));
+  assert.ok(result.intentHandoff.executionStrategy.sectionPlans[0].effectHints.includes("Spirals"));
 });
 
 test("direct sequence orchestrator fails closed when prompt names a section without analysis", () => {
