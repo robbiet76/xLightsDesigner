@@ -88,7 +88,17 @@ export function buildHistoryDashboardState({
             applyImpactCount: Number(selectedSnapshot?.applyResult?.impactCount || selected.snapshotSummary?.applySummary?.impactCount || selected.impactCount || 0),
             audioTitle: str(selectedSnapshot?.analysisArtifact?.trackIdentity?.title || "Unknown audio"),
             layoutMode: str(selectedSnapshot?.designSceneContext?.layoutMode || "unknown"),
-            musicSummary: str(selectedSnapshot?.musicDesignContext?.summary || "No applied music context summary.")
+            musicSummary: str(selectedSnapshot?.musicDesignContext?.summary || "No applied music context summary."),
+            brief: selectedSnapshot?.creativeBrief || null,
+            applyResult: selectedSnapshot?.applyResult || null,
+            analysisArtifact: selectedSnapshot?.analysisArtifact || null,
+            sceneContext: selectedSnapshot?.designSceneContext || null,
+            musicContext: selectedSnapshot?.musicDesignContext || null,
+            renderObservation: selectedSnapshot?.renderObservation || null,
+            renderCritiqueContext: selectedSnapshot?.renderCritiqueContext || null,
+            sequenceArtisticGoal: selectedSnapshot?.sequenceArtisticGoal || null,
+            sequenceRevisionObjective: selectedSnapshot?.sequenceRevisionObjective || null,
+            artifactRefs: selected?.artifactRefs || null
           }
         : null
     }

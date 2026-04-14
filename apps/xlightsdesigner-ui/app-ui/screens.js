@@ -1704,6 +1704,26 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
               : `<p class="banner">No history snapshot selected.</p>`
           }
         </section>
+        ${
+          selected
+            ? renderSnapshotDashboard({
+                kicker: "Applied Snapshot Chain",
+                title: "Stored reasoning chain for the selected applied revision.",
+                brief: selected.brief || null,
+                proposalLines: selected.proposalLines || [],
+                applyResult: selected.applyResult || null,
+                analysisArtifact: selected.analysisArtifact || null,
+                sceneContext: selected.sceneContext || null,
+                musicContext: selected.musicContext || null,
+                renderObservation: selected.renderObservation || null,
+                renderCritiqueContext: selected.renderCritiqueContext || null,
+                sequenceArtisticGoal: selected.sequenceArtisticGoal || null,
+                sequenceRevisionObjective: selected.sequenceRevisionObjective || null,
+                artifactRefs: selected.artifactRefs || null,
+                emptyText: "No applied snapshot chain is available for this revision."
+              })
+            : ""
+        }
       </div>
     `, "history-screen");
     } catch (err) {

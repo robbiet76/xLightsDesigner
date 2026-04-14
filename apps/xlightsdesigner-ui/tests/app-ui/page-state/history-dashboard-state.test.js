@@ -42,7 +42,11 @@ test("history dashboard summarizes selected applied revision", () => {
           applyResult: { status: "completed", commandCount: 4, impactCount: 2 },
           analysisArtifact: { trackIdentity: { title: "Song" } },
           designSceneContext: { layoutMode: "2d" },
-          musicDesignContext: { summary: "Intro hold, chorus reveal." }
+          musicDesignContext: { summary: "Intro hold, chorus reveal." },
+          renderObservation: { artifactType: "render_observation_v1", macro: { leadModel: "Snowman" } },
+          renderCritiqueContext: { artifactType: "sequence_render_critique_context_v1", comparison: { leadMatchesPrimaryFocus: true } },
+          sequenceArtisticGoal: { artifactType: "sequence_artistic_goal_v1", scope: { goalLevel: "section" } },
+          sequenceRevisionObjective: { artifactType: "sequence_revision_objective_v1", ladderLevel: "section" }
         }
       }
     }
@@ -53,4 +57,8 @@ test("history dashboard summarizes selected applied revision", () => {
   assert.equal(dashboard.data.selected.summary, "Applied chorus focal lift");
   assert.equal(dashboard.data.selected.designSummary, "Warm focal chorus");
   assert.equal(dashboard.data.selected.audioTitle, "Song");
+  assert.equal(dashboard.data.selected.renderObservation.macro.leadModel, "Snowman");
+  assert.equal(dashboard.data.selected.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, true);
+  assert.equal(dashboard.data.selected.sequenceArtisticGoal.scope.goalLevel, "section");
+  assert.equal(dashboard.data.selected.sequenceRevisionObjective.ladderLevel, "section");
 });
