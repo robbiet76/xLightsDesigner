@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { execFileSync, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -110,92 +110,6 @@ async function waitForXLightsReady({ repoRoot, channel, outDir, prefix, timeoutM
       snapshot
     };
   }, { timeoutMs, intervalMs });
-}
-
-function detectRunningXLightsProcess() {
-  const output = execFileSync("bash", ["-lc", "ps -Ao pid=,command= | rg 'xLights.app/Contents/MacOS/xLights' || true"], {
-    encoding: "utf8"
-  });
-  const line = str(output.split("\n").find(Boolean));
-  if (!line) return null;
-  const match = line.match(/^(\d+)\s+(.+)$/);
-  if (!match) return null;
-  const pid = Number(match[1]);
-  const binaryPath = str(match[2]);
-  const appPath = binaryPath.includes("/Contents/MacOS/xLights")
-    ? binaryPath.slice(0, binaryPath.indexOf("/Contents/MacOS/xLights") + "/Contents/MacOS/xLights".length).replace(/\/Contents\/MacOS\/xLights$/, ".app")
-    : "";
-  return { pid, binaryPath, appPath };
-}
-
-async function restartXLightsProcess({ repoRoot, channel, outDir, prefix } = {}) {
-  const detected = detectRunningXLightsProcess();
-  const details = {
-    detected
-  };
-  if (detected?.pid) {
-    try {
-      execFileSync("kill", [String(detected.pid)]);
-      details.killedPid = detected.pid;
-    } catch (error) {
-      details.killError = str(error?.message);
-    }
-    await sleep(2000);
-  }
-  if (!detected?.appPath) {
-    return {
-      ok: false,
-      reason: "xlights_process_not_found",
-      details
-    };
-  }
-  try {
-    execFileSync("open", ["-a", detected.appPath]);
-    details.launchedAppPath = detected.appPath;
-  } catch (error) {
-    return {
-      ok: false,
-      reason: "xlights_launch_failed",
-      details: {
-        ...details,
-        launchError: str(error?.message)
-      }
-    };
-  }
-  await sleep(5000);
-  const ready = await waitForXLightsReady({ repoRoot, channel, outDir, prefix: `${prefix}-after-restart`, timeoutMs: 120000, intervalMs: 2000 });
-  return {
-    ok: ready?.ok === true,
-    reason: ready?.ok === true ? "restarted" : "xlights_not_ready_after_restart",
-    details,
-    snapshot: ready?.snapshot || null
-  };
-}
-
-async function recoverXLightsIfDirtyEvalSequence({ repoRoot, channel, outDir, prefix } = {}) {
-  const health = await runAutomation(
-    repoRoot,
-    channel,
-    path.join(outDir, `${prefix}-recover-health.json`),
-    "get-automation-health-snapshot"
-  );
-  const xlights = health?.result?.xlights || {};
-  const sequencePath = str(xlights?.sequencePath);
-  const runtimeState = str(xlights?.runtimeState).toLowerCase();
-  const dirtyState = str(xlights?.dirtyState).toLowerCase();
-  if (!sequencePath.includes("/__xld_eval/")) {
-    return { ok: true, skipped: true, reason: "non_eval_sequence" };
-  }
-  if (runtimeState !== "busy" && dirtyState !== "dirty") {
-    return { ok: true, skipped: true, reason: "not_dirty_or_busy" };
-  }
-  const restarted = await restartXLightsProcess({ repoRoot, channel, outDir, prefix: `${prefix}-restart` });
-  return {
-    ok: restarted?.ok === true,
-    skipped: false,
-    reason: restarted?.reason || "restart_failed",
-    restart: restarted
-  };
 }
 
 async function runDirectProposalGenerator(repoRoot, {
@@ -366,6 +280,7 @@ function buildBenchmarkPrompt(scenario = {}) {
 
 function buildSelectedSections(scenario = {}) {
   return [
+    ...arr(scenario?.sections),
     ...arr(scenario?.selectedSections),
     str(scenario?.sectionName)
   ].map((row) => str(row)).filter(Boolean);
@@ -457,19 +372,6 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   const previousApplyArtifactId = str(beforeSnapshot?.result?.latestApplyResult?.artifactId);
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence.json`), "select-workflow", ["Sequence"]);
   if (!reuseOpenSequence) {
-    const recovery = await recoverXLightsIfDirtyEvalSequence({ repoRoot, channel, outDir, prefix: `${prefix}-pre-open` });
-    if (recovery?.ok === false) {
-      return {
-        suiteKey,
-        scenarioName: str(scenario?.name),
-        workingSequencePath,
-        clonedProjectFilePath: cloneProjectFilePath,
-        baselinePath,
-        ok: false,
-        issues: ["xlights_recovery_failed"],
-        recovery
-      };
-    }
     const xlightsReadyBeforeOpen = await waitForXLightsReady({ repoRoot, channel, outDir, prefix: `${prefix}-pre-open` });
     if (!xlightsReadyBeforeOpen?.ok) {
       return {

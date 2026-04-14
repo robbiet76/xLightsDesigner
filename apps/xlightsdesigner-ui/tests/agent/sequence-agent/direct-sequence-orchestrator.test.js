@@ -246,6 +246,35 @@ test("direct sequence orchestrator maps generic chorus scope onto refrain-labele
   assert.deepEqual(result.intentHandoff.scope.sections, ["Refrain 1", "Refrain 2"]);
 });
 
+test("direct sequence orchestrator maps final chorus onto the last detected chorus section", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-final-chorus-alias",
+    sequenceRevision: "rev-1",
+    promptText: "In the Final Chorus, make Star read as a clear radial spin with pinwheel-style motion.",
+    selectedSections: ["Final Chorus"],
+    selectedTargetIds: ["Star"],
+    selectedTagNames: [],
+    models: [{ id: "Star", name: "Star", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "Star", name: "Star", type: "model" }],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", sectionType: "intro", startMs: 0, endMs: 10000 },
+          { label: "Chorus 1", sectionType: "chorus", startMs: 44000, endMs: 62000 },
+          { label: "Bridge", sectionType: "bridge", startMs: 62000, endMs: 76000 },
+          { label: "Chorus 4", sectionType: "chorus", startMs: 90000, endMs: 108000 }
+        ]
+      }
+    }
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.intentHandoff.scope.sections, ["Chorus 4"]);
+});
+
 test("direct sequence orchestrator allows full-song arc prompts that mention multiple musical regions", () => {
   const result = executeDirectSequenceRequestOrchestration({
     requestId: "req-direct-full-song-arc",

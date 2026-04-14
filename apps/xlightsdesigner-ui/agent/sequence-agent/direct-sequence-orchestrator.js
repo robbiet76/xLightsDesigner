@@ -112,10 +112,16 @@ function extractSectionLabels(analysisHandoff = null) {
 function buildSectionAliasEntries(analysisHandoff = null) {
   const sections = Array.isArray(analysisHandoff?.structure?.sections) ? analysisHandoff.structure.sections : [];
   const entries = [];
+  const typedLabels = new Map();
   for (const row of sections) {
     const label = typeof row === "string" ? str(row) : str(row?.label || row?.name || "");
     if (!label) continue;
     const sectionType = typeof row === "string" ? "" : str(row?.sectionType || row?.type || "").toLowerCase();
+    if (sectionType) {
+      const list = typedLabels.get(sectionType) || [];
+      list.push(label);
+      typedLabels.set(sectionType, list);
+    }
     entries.push({ alias: label.toLowerCase(), label, scopedOnly: false });
     const normalizedLabel = label.toLowerCase().replace(/\s+\d+$/g, "");
     if (normalizedLabel && normalizedLabel !== label.toLowerCase()) {
@@ -129,6 +135,13 @@ function buildSectionAliasEntries(analysisHandoff = null) {
     } else if (sectionType === "chorus") {
       entries.push({ alias: "refrain", label, scopedOnly: true });
     }
+  }
+  for (const [sectionType, labels] of typedLabels.entries()) {
+    if (!labels.length) continue;
+    entries.push({ alias: `first ${sectionType}`, label: labels[0], scopedOnly: true });
+    entries.push({ alias: `opening ${sectionType}`, label: labels[0], scopedOnly: true });
+    entries.push({ alias: `last ${sectionType}`, label: labels[labels.length - 1], scopedOnly: true });
+    entries.push({ alias: `final ${sectionType}`, label: labels[labels.length - 1], scopedOnly: true });
   }
   return entries;
 }
@@ -188,7 +201,19 @@ function matchSectionLabel(text = "", analysisHandoff = null) {
     .slice()
     .sort((a, b) => b.length - a.length);
   const exact = labels.find((label) => label.toLowerCase() === value.toLowerCase());
-  return exact || "";
+  if (exact) return exact;
+  const aliasEntries = buildSectionAliasEntries(analysisHandoff);
+  const aliasMatch = aliasEntries.find((entry) => str(entry?.alias).toLowerCase() === value.toLowerCase());
+  return str(aliasMatch?.label);
+}
+
+function resolveSelectedSections(selectedSections = [], analysisHandoff = null) {
+  return arr(selectedSections)
+    .map((row) => {
+      const value = str(row);
+      return matchSectionLabel(value, analysisHandoff) || value;
+    })
+    .filter(Boolean);
 }
 
 function tryDecomposeExplicitSequencingClauses(promptText = "", analysisHandoff = null) {
@@ -371,7 +396,7 @@ export function executeDirectSequenceRequestOrchestration({
     };
   }
 
-  const explicitSections = arr(selectedSections).map((row) => str(row)).filter(Boolean);
+  const explicitSections = resolveSelectedSections(selectedSections, analysisHandoff);
   const inferredSections = explicitSections.length ? [] : inferPromptSections(promptText, analysisHandoff);
   const effectiveSections = explicitSections.length ? explicitSections : inferredSections;
   const promptHasSectionScope = explicitSections.length > 0 || hasPromptSectionLanguage(promptText);
