@@ -12,8 +12,10 @@ import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js"
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
 import { translatePlacementIntentToXlights } from "./effect-intent-translation.js";
 import {
+  buildCrossEffectSharedSettingsKnowledgeMetadata,
   buildDerivedParameterKnowledgeMetadata,
   buildStage1TrainingKnowledgeMetadata,
+  recommendCrossEffectSharedSettings,
   recommendDerivedParameterPriors
 } from "./trained-effect-knowledge.js";
 import { buildSequencerRevisionBrief } from "./revision-planner.js";
@@ -552,6 +554,45 @@ function buildParameterPriorGuidance({
   };
 }
 
+function inferPreferredSharedSettingNames({ sequencerRevisionBrief = null, intentSummary = "" } = {}) {
+  const roles = new Set(normArray(sequencerRevisionBrief?.revisionRoles).map((row) => normText(row)));
+  const summary = normText(intentSummary).toLowerCase();
+  const names = new Set(["inTransitionType", "outTransitionType"]);
+  if (roles.has("reduce_competing_support") || roles.has("strengthen_lead") || /layer|blend|overlay/.test(summary)) {
+    names.add("layerMethod");
+    names.add("effectLayerMix");
+  }
+  if (roles.has("widen_support") || /overlay|support|buffer/.test(summary)) {
+    names.add("bufferStyle");
+  }
+  if (/morph|blend/.test(summary)) {
+    names.add("layerMorph");
+  }
+  return [...names];
+}
+
+function buildSharedSettingPriorGuidance({
+  sequencerRevisionBrief = null,
+  intentSummary = ""
+} = {}) {
+  const requestScopeMode = normText(sequencerRevisionBrief?.requestScopeMode);
+  const preferredSettingNames = inferPreferredSharedSettingNames({
+    sequencerRevisionBrief,
+    intentSummary
+  });
+  const recommendation = recommendCrossEffectSharedSettings({
+    requestScopeMode,
+    preferredSettingNames,
+    limitPerSetting: 2
+  });
+  return {
+    recommendationMode: normText(recommendation?.recommendationMode),
+    requestScopeMode,
+    preferredSettingNames,
+    settings: normArray(recommendation?.settings)
+  };
+}
+
 function inferEffectNameFromSectionPlan({
   section = "",
   energy = "",
@@ -761,6 +802,10 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
             displayElements,
             intentSummary,
             sequencerRevisionBrief
+          }),
+          sharedSettingPriorGuidance: buildSharedSettingPriorGuidance({
+            sequencerRevisionBrief,
+            intentSummary
           })
         };
       })
@@ -783,6 +828,10 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
             displayElements,
             intentSummary: `${normText(scope.goal)}${toneText}`,
             sequencerRevisionBrief
+          }),
+          sharedSettingPriorGuidance: buildSharedSettingPriorGuidance({
+            sequencerRevisionBrief,
+            intentSummary: `${normText(scope.goal)}${toneText}`
           })
         };
       })()];
@@ -794,7 +843,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
     executionSeedLines,
     preferSynthesized: strategySectionPlans.length > 0 || Boolean(revisionBriefExecutionLine),
     strategy: timing.strategy,
-    detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy} parameterPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.parameterPriorGuidance?.priors).length).length}`
+    detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy} parameterPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.parameterPriorGuidance?.priors).length).length} sharedSettingPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.sharedSettingPriorGuidance?.settings).length).length}`
   };
 }
 
@@ -1019,9 +1068,19 @@ function buildCommandsFromEffectPlacements({
           ].filter(Boolean).join(" "),
           sequencerRevisionBrief: null
         });
+    const placementSharedSettingPriorGuidance = placement?.sharedSettingPriorGuidance && typeof placement.sharedSettingPriorGuidance === "object"
+      ? placement.sharedSettingPriorGuidance
+      : buildSharedSettingPriorGuidance({
+          sequencerRevisionBrief: null,
+          intentSummary: [
+            normText(placement?.timingContext?.anchorLabel),
+            normText(placement?.effectName)
+          ].filter(Boolean).join(" ")
+        });
     const translated = translatePlacementIntentToXlights({
       placement: {
         ...placement,
+        sharedSettingPriorGuidance: placementSharedSettingPriorGuidance,
         parameterPriorGuidance: placementParameterPriorGuidance
       },
       effectCatalog
@@ -1064,6 +1123,7 @@ function buildCommandsFromEffectPlacements({
         designRevision: Number.isInteger(Number(placement?.designRevision)) ? Number(placement.designRevision) : 0,
         designAuthor: normText(placement?.designAuthor),
         settingsIntent: placement.settingsIntent,
+        sharedSettingPriorGuidance: placementSharedSettingPriorGuidance,
         parameterPriorGuidance: placementParameterPriorGuidance,
         paletteIntent: placement.paletteIntent,
         layerIntent: placement.layerIntent,
@@ -1420,6 +1480,7 @@ export function buildSequenceAgentPlan({
         : 0,
       trainingKnowledge: buildStage1TrainingKnowledgeMetadata(),
       parameterTrainingKnowledge: buildDerivedParameterKnowledgeMetadata(),
+      sharedSettingTrainingKnowledge: buildCrossEffectSharedSettingsKnowledgeMetadata(),
       effectStrategy: {
         toneHint: normText(effect?.toneHint),
         preferSynthesized: Boolean(effect?.preferSynthesized),

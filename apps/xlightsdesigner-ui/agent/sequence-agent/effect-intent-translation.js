@@ -247,6 +247,15 @@ const SAFE_DERIVED_PRIOR_PARAMETERS = Object.freeze(new Set([
   "3d"
 ]));
 
+const SHARED_SETTING_KEY_MAP = Object.freeze({
+  layerMethod: "T_CHOICE_LayerMethod",
+  effectLayerMix: "T_SLIDER_EffectLayerMix",
+  bufferStyle: "B_CHOICE_BufferStyle",
+  inTransitionType: "T_CHOICE_In_Transition_Type",
+  outTransitionType: "T_CHOICE_Out_Transition_Type",
+  layerMorph: "T_CHECKBOX_LayerMorph"
+});
+
 function buildSettingsFromDerivedPriorGuidance(parameterPriorGuidance = {}, effectDefinition = null) {
   const out = {};
   const priors = Array.isArray(parameterPriorGuidance?.priors) ? parameterPriorGuidance.priors : [];
@@ -258,6 +267,32 @@ function buildSettingsFromDerivedPriorGuidance(parameterPriorGuidance = {}, effe
       : null;
     if (!anchor) continue;
     writeDirectPriorSetting(out, effectDefinition, prior?.parameterName, anchor?.parameterValue);
+  }
+  return out;
+}
+
+function buildSettingsFromSharedSettingPriorGuidance(sharedSettingPriorGuidance = {}, existingSettings = {}) {
+  const out = {};
+  const settings = Array.isArray(sharedSettingPriorGuidance?.settings) ? sharedSettingPriorGuidance.settings : [];
+  for (const setting of settings) {
+    const settingName = normText(setting?.settingName);
+    const xlightsKey = SHARED_SETTING_KEY_MAP[settingName];
+    if (!xlightsKey || Object.prototype.hasOwnProperty.call(existingSettings, xlightsKey)) continue;
+    const recommendedValue = Array.isArray(setting?.recommendedValues) && setting.recommendedValues.length
+      ? setting.recommendedValues[0]?.appliedValue
+      : null;
+    if (recommendedValue == null || recommendedValue === "") continue;
+    if (xlightsKey === "T_CHECKBOX_LayerMorph") {
+      const value = resolveBooleanSetting(recommendedValue);
+      if (value != null) out[xlightsKey] = value;
+      continue;
+    }
+    if (xlightsKey === "T_SLIDER_EffectLayerMix") {
+      const value = clampInt(recommendedValue, 0, 100, null);
+      if (value != null) out[xlightsKey] = value;
+      continue;
+    }
+    out[xlightsKey] = normText(recommendedValue);
   }
   return out;
 }
@@ -322,8 +357,13 @@ export function translatePlacementIntentToXlights({
   const effectName = normText(placement?.effectName);
   const effectDefinition = normalizeCatalog(effectCatalog)[effectName] || null;
   const capability = getEffectIntentCapability(effectName);
+  const sharedIntentSettings = buildSharedSettingsFromIntent(asObject(placement?.settingsIntent), effectDefinition, capability);
   const translatedSettings = {
-    ...buildSharedSettingsFromIntent(asObject(placement?.settingsIntent), effectDefinition, capability),
+    ...sharedIntentSettings,
+    ...buildSettingsFromSharedSettingPriorGuidance(
+      asObject(placement?.sharedSettingPriorGuidance),
+      sharedIntentSettings
+    ),
     ...buildSettingsFromDerivedPriorGuidance(asObject(placement?.parameterPriorGuidance), effectDefinition),
     ...buildLayerSettingsFromIntent(asObject(placement?.layerIntent)),
     ...buildRenderSettingsFromIntent(asObject(placement?.renderIntent))

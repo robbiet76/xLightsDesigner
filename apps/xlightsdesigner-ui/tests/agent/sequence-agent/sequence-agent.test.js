@@ -282,6 +282,7 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.reviewStartLevel, "section");
   assert.equal(out.metadata.sectionScopeKind, "timing_track_windows");
   assert.equal(out.metadata.parameterTrainingKnowledge.artifactType, "sequencer_derived_parameter_priors_bundle");
+  assert.equal(out.metadata.sharedSettingTrainingKnowledge.artifactType, "sequencer_cross_effect_shared_settings_bundle");
 });
 
 test("sequence_agent exposes bounded parameter prior guidance for matched target geometry", () => {
@@ -330,6 +331,8 @@ test("sequence_agent exposes bounded parameter prior guidance for matched target
   assert.deepEqual(recommendation.parameterPriorGuidance.matchedGeometryProfiles, ["spinner_standard"]);
   assert.ok(recommendation.parameterPriorGuidance.priors.length > 0);
   assert.equal(recommendation.parameterPriorGuidance.priors[0].geometryProfile, "spinner_standard");
+  assert.equal(recommendation.sharedSettingPriorGuidance.recommendationMode === "none" || recommendation.sharedSettingPriorGuidance.recommendationMode === "cross_effect_generic", true);
+  assert.equal(Array.isArray(recommendation.sharedSettingPriorGuidance.settings), true);
 });
 
 test("sequence_agent uses sequencer revision brief to seed execution lines when explicit lines are absent", () => {

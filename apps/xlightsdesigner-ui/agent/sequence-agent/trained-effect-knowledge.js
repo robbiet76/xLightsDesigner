@@ -1,5 +1,6 @@
 import { STAGE1_TRAINED_EFFECT_BUNDLE } from './generated/stage1-trained-effect-bundle.js';
 import { DERIVED_PARAMETER_PRIORS_BUNDLE } from './generated/derived-parameter-priors-bundle.js';
+import { CROSS_EFFECT_SHARED_SETTINGS_BUNDLE } from './generated/cross-effect-shared-settings-bundle.js';
 import { classifyModelDisplayType } from './model-type-catalog.js';
 
 function normText(value = '') {
@@ -370,5 +371,64 @@ export function buildDerivedParameterKnowledgeMetadata() {
     generatedAt: normText(DERIVED_PARAMETER_PRIORS_BUNDLE.generatedAt),
     effectCount: Number(DERIVED_PARAMETER_PRIORS_BUNDLE.effectCount || 0),
     selectorReadyEffects: unique(DERIVED_PARAMETER_PRIORS_BUNDLE.selectorReadyEffects || [])
+  };
+}
+
+export function getCrossEffectSharedSettingsBundle() {
+  return CROSS_EFFECT_SHARED_SETTINGS_BUNDLE;
+}
+
+export function recommendCrossEffectSharedSettings({
+  requestScopeMode = '',
+  preferredSettingNames = [],
+  limitPerSetting = 2
+} = {}) {
+  const settingsByName = CROSS_EFFECT_SHARED_SETTINGS_BUNDLE?.settingsByName && typeof CROSS_EFFECT_SHARED_SETTINGS_BUNDLE.settingsByName === 'object'
+    ? CROSS_EFFECT_SHARED_SETTINGS_BUNDLE.settingsByName
+    : {};
+  const preferred = new Set(unique(preferredSettingNames));
+  const scopeMode = normText(requestScopeMode);
+  const settingNames = Object.keys(settingsByName)
+    .filter((name) => !preferred.size || preferred.has(name))
+    .sort((a, b) => a.localeCompare(b));
+  const settings = settingNames.map((settingName) => {
+    return {
+      settingName,
+      recommendedValues: (Array.isArray(settingsByName[settingName]) ? settingsByName[settingName] : [])
+        .map((row) => {
+          const successfulUses = Number(row?.successfulUses || 0);
+          const failedUses = Number(row?.failedUses || 0);
+          const sampleCount = Number(row?.sampleCount || 0);
+          let score = successfulUses * 10 + sampleCount - failedUses * 6;
+          if (scopeMode && unique(row?.favoredScopes).includes(scopeMode)) score += 8;
+          return {
+            appliedValue: row?.appliedValue,
+            sampleCount,
+            successfulUses,
+            failedUses,
+            effectNames: unique(row?.effectNames),
+            favoredScopes: unique(row?.favoredScopes),
+            favoredSignals: unique(row?.favoredSignals),
+            cautionSignals: unique(row?.cautionSignals),
+            score
+          };
+        })
+        .sort((a, b) => b.score - a.score || String(a.appliedValue).localeCompare(String(b.appliedValue)))
+        .slice(0, Math.max(1, Number(limitPerSetting) || 2))
+    };
+  }).filter((row) => row.recommendedValues.length);
+  return {
+    recommendationMode: settings.length ? 'cross_effect_generic' : 'none',
+    requestScopeMode: scopeMode,
+    settings
+  };
+}
+
+export function buildCrossEffectSharedSettingsKnowledgeMetadata() {
+  return {
+    artifactType: normText(CROSS_EFFECT_SHARED_SETTINGS_BUNDLE.artifactType),
+    artifactVersion: normText(CROSS_EFFECT_SHARED_SETTINGS_BUNDLE.artifactVersion),
+    generatedAt: normText(CROSS_EFFECT_SHARED_SETTINGS_BUNDLE.generatedAt),
+    settingCount: Number(CROSS_EFFECT_SHARED_SETTINGS_BUNDLE.settingCount || 0)
   };
 }

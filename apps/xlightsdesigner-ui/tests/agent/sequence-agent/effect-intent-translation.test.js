@@ -286,3 +286,42 @@ test("effect intent translation applies bounded derived prior booleans and enums
   });
   assert.equal(strand.settings.E_CHOICE_Mode, "Skips");
 });
+
+test("effect intent translation applies generic shared setting guidance before effect-specific priors", () => {
+  const catalog = buildEffectDefinitionCatalog([
+    {
+      effectName: "Bars",
+      params: [
+        { name: "E_SPEED", type: "int", min: 0, max: 10 }
+      ]
+    }
+  ]);
+
+  const out = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "Bars",
+      sharedSettingPriorGuidance: {
+        settings: [
+          { settingName: "inTransitionType", recommendedValues: [{ appliedValue: "Fade" }] },
+          { settingName: "outTransitionType", recommendedValues: [{ appliedValue: "Slide Bars" }] },
+          { settingName: "layerMethod", recommendedValues: [{ appliedValue: "Highlight" }] },
+          { settingName: "effectLayerMix", recommendedValues: [{ appliedValue: 60 }] },
+          { settingName: "layerMorph", recommendedValues: [{ appliedValue: true }] }
+        ]
+      },
+      parameterPriorGuidance: {
+        priors: [
+          { parameterName: "speed", recommendedAnchors: [{ parameterValue: 7 }] }
+        ]
+      }
+    },
+    effectCatalog: catalog
+  });
+
+  assert.equal(out.settings.T_CHOICE_In_Transition_Type, "Fade");
+  assert.equal(out.settings.T_CHOICE_Out_Transition_Type, "Slide Bars");
+  assert.equal(out.settings.T_CHOICE_LayerMethod, "Highlight");
+  assert.equal(out.settings.T_SLIDER_EffectLayerMix, 60);
+  assert.equal(out.settings.T_CHECKBOX_LayerMorph, "1");
+  assert.equal(out.settings.E_SPEED, 7);
+});
