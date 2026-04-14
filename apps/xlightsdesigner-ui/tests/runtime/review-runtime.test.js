@@ -435,6 +435,12 @@ test("executeApplyCore prefers collected post-apply render observation when avai
         focalCandidates: ["MegaTree"],
         coverageDomains: { broad: [], detail: [] }
       }),
+      buildCurrentMusicDesignContext: () => ({
+        artifactId: "music-1",
+        sectionArc: [
+          { label: "Chorus 1", energy: "medium", density: "moderate" }
+        ]
+      }),
       buildCurrentRenderObservation: () => null,
       buildSequenceAgentApplyResult: ({ practicalValidation }) => ({ practicalValidation, verification: { revisionAdvanced: true, expectedMutationsPresent: true, lockedTracksUnchanged: true } }),
       classifyOrchestrationFailureReason: () => "",
@@ -462,7 +468,7 @@ test("executeApplyCore prefers collected post-apply render observation when avai
 
   assert.equal(state.sequenceAgentRuntime.renderObservation?.artifactId, "render-1");
   assert.equal(state.sequenceAgentRuntime.renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus, true);
-  assert.match(String(state.creative.sequenceArtisticGoal?.traceability?.renderCritiqueArtifactId || ""), /render-1/);
+  assert.equal(state.sequenceAgentRuntime.renderCritiqueContext?.source?.renderObservationArtifactId, "render-1");
 });
 
 test("executeApplyCore prefers render critique refresh when render observation is available", async () => {

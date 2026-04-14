@@ -143,6 +143,17 @@ function toExpectedMusicSections(rows = []) {
   })).filter((row) => row.label);
 }
 
+function inferLocalizedFocusExpected({ handoff = null, broadCoverageExpected = false, restrainedCoverageExpected = false } = {}) {
+  if (broadCoverageExpected) return false;
+  const primaryTargets = uniqueStrings(handoff?.focusPlan?.primaryTargets || handoff?.focusPlan?.primaryTargetIds);
+  const supportTargets = uniqueStrings(handoff?.focusPlan?.secondaryTargets || handoff?.focusPlan?.secondaryTargetIds);
+  const targetIds = uniqueStrings(handoff?.scope?.targetIds);
+  const explicitTargets = uniqueStrings([...primaryTargets, ...supportTargets, ...targetIds]);
+  if (restrainedCoverageExpected && explicitTargets.length <= 3) return true;
+  if (primaryTargets.length <= 2 && supportTargets.length <= 1 && explicitTargets.length <= 3) return true;
+  return false;
+}
+
 export function buildRenderCritiqueContext({
   renderObservation = null,
   designSceneContext = null,
@@ -193,6 +204,11 @@ export function buildRenderCritiqueContext({
     densityTargets.some((row) => ["low", "sparse", "restrained"].includes(row)) ||
     musicExpectation.highestEnergy === "low" ||
     musicExpectation.densityBias === "sparse";
+  const localizedFocusExpected = inferLocalizedFocusExpected({
+    handoff,
+    broadCoverageExpected,
+    restrainedCoverageExpected
+  });
 
   return {
     artifactType: "sequence_render_critique_context_v1",
@@ -247,6 +263,7 @@ export function buildRenderCritiqueContext({
       leadIsKnownFocalCandidate,
       broadCoverageExpected,
       restrainedCoverageExpected,
+      localizedFocusExpected,
       musicalLiftExpected: musicExpectation.highestEnergy === "high" || musicExpectation.densityBias === "dense",
       restrainedMomentExpected: musicExpectation.highestEnergy === "low" || musicExpectation.densityBias === "sparse",
       renderUsesBroadScene: spreadRatio >= 0.03,

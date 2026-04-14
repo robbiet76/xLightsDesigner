@@ -181,13 +181,13 @@ function collectRenderCritiqueFindings(renderCritiqueContext = null) {
   if (comparison.renderHasDisplayGaps) {
     findings.push(`Visible display gaps remain across the rendered scene: ${arr(observed.coverageGapRegions).join(", ")}.`);
   }
-  if (comparison.renderIsLeftRightImbalanced) {
+  if (comparison.renderIsLeftRightImbalanced && !comparison.localizedFocusExpected) {
     findings.push("Rendered scene balance is too weighted to one side of the display.");
   }
-  if (comparison.renderIsTopBottomImbalanced) {
+  if (comparison.renderIsTopBottomImbalanced && !comparison.localizedFocusExpected) {
     findings.push("Rendered scene balance is too weighted vertically and leaves part of the display underused.");
   }
-  if (str(observed.breadthRead) === "tight" && arr(expected.supportTargetIds).length) {
+  if (str(observed.breadthRead) === "tight" && arr(expected.supportTargetIds).length && !comparison.localizedFocusExpected) {
     findings.push("Support targets are not contributing enough to the rendered scene.");
   }
   if (str(observed.temporalRead) === "flat") {

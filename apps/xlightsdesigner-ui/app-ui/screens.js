@@ -443,6 +443,9 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const renderFocusTargets = Array.isArray(renderCritiqueContext?.expected?.primaryFocusTargetIds)
       ? renderCritiqueContext.expected.primaryFocusTargetIds.filter(Boolean).slice(0, 3)
       : [];
+    const matchedMusicSections = Array.isArray(renderCritiqueContext?.expected?.musicSections)
+      ? renderCritiqueContext.expected.musicSections.filter((row) => row && typeof row === "object").slice(0, 3)
+      : [];
     const missingFocusTargets = Array.isArray(renderCritiqueContext?.comparison?.missingPrimaryFocusTargets)
       ? renderCritiqueContext.comparison.missingPrimaryFocusTargets.filter(Boolean).slice(0, 3)
       : [];
@@ -514,6 +517,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <p>${activeFamilies.length ? `Families: ${escapeHtml(activeFamilies.join(", "))}` : "No active family summary captured."}</p>
             <p>${renderObservation ? `Sampling: ${escapeHtml(String(renderObservation?.source?.samplingMode || "unknown"))} / ${escapeHtml(String(renderObservation?.source?.sampledModelCount || 0))} models / ${escapeHtml(String(renderObservation?.source?.windowCount || 0))} windows` : "No render observation snapshot loaded."}</p>
             <p>${renderCritiqueContext ? `Breadth: ${escapeHtml(String(renderCritiqueContext?.observed?.breadthRead || "unknown"))} / coverage: ${escapeHtml(String(renderCritiqueContext?.observed?.coverageRead || "unknown"))} / temporal: ${escapeHtml(String(renderCritiqueContext?.observed?.temporalRead || "unknown"))} / lead focus match: ${renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus ? "yes" : "no"}` : "No render critique context loaded."}</p>
+            ${renderCritiqueContext ? `<p>Music read: ${escapeHtml(String(renderCritiqueContext?.expected?.musicEnergyRead || "unknown"))} energy / ${escapeHtml(String(renderCritiqueContext?.expected?.musicDensityRead || "unknown"))} density${renderCritiqueContext?.comparison?.localizedFocusExpected ? " / localized focus expected" : ""}</p>` : ""}
+            ${matchedMusicSections.length ? `<p>Matched sections: ${escapeHtml(matchedMusicSections.map((row) => `${String(row?.label || "Section")} (${String(row?.energy || "unknown")}/${String(row?.density || "unknown")})`).join(", "))}</p>` : ""}
             ${renderCritiqueContext ? `<p>Balance: left-right ${escapeHtml(String(renderCritiqueContext?.observed?.leftRightBalanceRead || "unknown"))} / top-bottom ${escapeHtml(String(renderCritiqueContext?.observed?.topBottomBalanceRead || "unknown"))}</p>` : ""}
             ${Array.isArray(renderCritiqueContext?.observed?.coverageGapRegions) && renderCritiqueContext.observed.coverageGapRegions.length ? `<p>Gaps: ${escapeHtml(renderCritiqueContext.observed.coverageGapRegions.join(", "))}</p>` : ""}
             <p>${renderFocusTargets.length ? `Expected focus: ${escapeHtml(renderFocusTargets.join(", "))}` : "No expected render focus targets."}</p>

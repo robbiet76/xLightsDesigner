@@ -359,3 +359,37 @@ test("refreshSequenceRevisionObjectiveFromRenderCritique carries render-driven m
   assert.deepEqual(out.scope.revisionTargets, ["MegaTree", "Roofline", "Matrix"]);
   assert.deepEqual(out.sequencerDirection.focusTargets, ["MegaTree", "Roofline", "Matrix"]);
 });
+
+test("refreshSequenceArtisticGoalFromRenderCritique does not force broader support when localized focus is intended", () => {
+  const prior = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Localized right-side phrase." }
+  });
+  const out = refreshSequenceArtisticGoalFromRenderCritique({
+    priorArtisticGoal: prior,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "WindowRight",
+        breadthRead: "tight",
+        temporalRead: "modulated",
+        coverageGapRegions: ["left"]
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: true,
+        missingPrimaryFocusTargets: [],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: false,
+        renderIsLeftRightImbalanced: true,
+        localizedFocusExpected: true,
+        adjacentWindowComparisons: []
+      },
+      expected: {
+        supportTargetIds: ["Roofline"]
+      }
+    }
+  });
+
+  assert.equal(out.evaluationLens.mustImprove.some((row) => /Support targets are not contributing enough/i.test(String(row))), false);
+  assert.equal(out.evaluationLens.mustImprove.some((row) => /weighted to one side of the display/i.test(String(row))), false);
+});
