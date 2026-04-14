@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T17:53:55.840Z",
+  "generatedAt": "2026-04-14T19:00:56.771Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -90,6 +90,11 @@
       "model",
       "effect"
     ]
+  },
+  "crossEffectSharedSettingLearning": {
+    "status": "empty",
+    "storageClass": "general_training",
+    "sharedSettingOutcomeMemory": {}
   },
   "effects": [
     {
@@ -948,7 +953,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "populated",
@@ -1966,7 +1973,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "populated",
@@ -3758,7 +3767,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "populated",
@@ -4093,7 +4104,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "empty",
@@ -5280,7 +5293,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "populated",
@@ -5613,7 +5628,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "empty",
@@ -7944,7 +7961,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "populated",
@@ -12605,7 +12624,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "populated",
@@ -14170,7 +14191,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "populated",
@@ -15329,7 +15352,9 @@
             "favoredSignals": [],
             "cautionSignals": []
           }
-        }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
       },
       "screeningLearning": {
         "status": "populated",

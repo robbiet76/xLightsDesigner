@@ -2,7 +2,7 @@
 export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
   "artifactType": "sequencer_derived_parameter_priors_bundle",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T18:01:35.052Z",
+  "generatedAt": "2026-04-14T19:00:56.853Z",
   "sourceArtifactType": "sequencer_unified_training_set_v1",
   "sourceArtifactVersion": "1.0",
   "effectCount": 8,
