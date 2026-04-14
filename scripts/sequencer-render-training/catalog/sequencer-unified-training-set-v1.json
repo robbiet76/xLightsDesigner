@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T13:46:13.166Z",
+  "generatedAt": "2026-04-14T13:51:47.291Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -44,7 +44,7 @@
         "heuristic_observations",
         "fixture_model_context"
       ],
-      "currentPopulation": "57 durable general-training screening records loaded",
+      "currentPopulation": "68 durable general-training screening records loaded",
       "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
@@ -254,7 +254,9 @@
         "exhaustiveSettingCoverage": false,
         "screenedParameterNames": [
           "3D",
-          "cycles"
+          "cycles",
+          "gradient",
+          "highlight"
         ]
       },
       "liveOutcomeLearning": {
@@ -341,10 +343,12 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 7,
+        "screeningRecordCount": 11,
         "screenedParameterNames": [
           "3D",
-          "cycles"
+          "cycles",
+          "gradient",
+          "highlight"
         ],
         "sampledModelTypes": [
           "arch"
@@ -370,7 +374,13 @@
           "cycles_15",
           "cycles_2",
           "cycles_20",
-          "cycles_5"
+          "cycles_5",
+          "gradient",
+          "gradient_false",
+          "gradient_true",
+          "highlight",
+          "highlight_false",
+          "highlight_true"
         ]
       }
     },
@@ -527,7 +537,10 @@
         },
         "coverageStatus": "screened_parameter_subset",
         "exhaustiveSettingCoverage": false,
-        "screenedParameterNames": []
+        "screenedParameterNames": [
+          "circularPalette",
+          "cycles"
+        ]
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -587,13 +600,41 @@
         }
       },
       "screeningLearning": {
-        "status": "empty",
+        "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 0,
-        "screenedParameterNames": [],
-        "sampledModelTypes": [],
-        "sampledGeometryProfiles": [],
-        "observedLabelHints": []
+        "screeningRecordCount": 7,
+        "screenedParameterNames": [
+          "circularPalette",
+          "cycles"
+        ],
+        "sampledModelTypes": [
+          "matrix"
+        ],
+        "sampledGeometryProfiles": [
+          "matrix_high_density"
+        ],
+        "observedLabelHints": [
+          "circularPalette",
+          "circularPalette_false",
+          "effect:color_wash",
+          "flat_fill",
+          "full_coverage",
+          "linear_palette",
+          "matrix_fill",
+          "model:matrix",
+          "range_sample",
+          "render_style:default",
+          "steady_wash",
+          "wash_fill",
+          "circularPalette_true",
+          "circular_palette",
+          "cycles",
+          "cycles_0_5",
+          "cycles_1_0",
+          "cycles_2_0",
+          "cycles_3_0",
+          "cycles_4_0"
+        ]
       }
     },
     {

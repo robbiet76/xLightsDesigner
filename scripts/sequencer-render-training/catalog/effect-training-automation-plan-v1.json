@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_training_automation_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T13:46:13.330Z",
+  "generatedAt": "2026-04-14T13:51:47.487Z",
   "summary": {
     "effectCount": 20,
     "runnableNowCount": 0,
@@ -18,12 +18,12 @@
       "effectName": "Bars",
       "family": "rhythmic",
       "coverageStatus": "screened_parameter_subset",
-      "readiness": "ready_for_expansion",
+      "readiness": "screened_current_registry",
       "priority": "later",
-      "nextAction": "deepen_screened_subset",
+      "nextAction": "harvest_outcomes_or_add_interactions",
       "registryParameterCount": 6,
       "retainedParameterCount": 2,
-      "screenedParameterCount": 2,
+      "screenedParameterCount": 4,
       "outcomeRecordCount": 0
     },
     {
@@ -35,7 +35,7 @@
       "nextAction": "deepen_screened_subset",
       "registryParameterCount": 6,
       "retainedParameterCount": 2,
-      "screenedParameterCount": 0,
+      "screenedParameterCount": 2,
       "outcomeRecordCount": 0
     },
     {

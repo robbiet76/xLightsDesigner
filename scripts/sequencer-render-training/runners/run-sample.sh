@@ -124,6 +124,10 @@ if [[ "${XLIGHTS_CLOSE_BETWEEN_SAMPLES:-0}" == "1" ]]; then
 fi
 
 if [[ "${current_show_dir}" != "${show_dir}" ]]; then
+  log_step "close-before-show-change sampleId=${SAMPLE_ID}"
+  post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
+  sleep 1
+  ensure_xlights_ready >/dev/null
   log_step "change-show-folder sampleId=${SAMPLE_ID} folder=${show_dir}"
   run_and_require_ok "$(jq -cn --arg folder "${show_dir}" '{cmd:"changeShowFolder",folder:$folder}')" >/dev/null
 else

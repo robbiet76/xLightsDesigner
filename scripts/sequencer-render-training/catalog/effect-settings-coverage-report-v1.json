@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_settings_coverage_report_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T13:46:13.259Z",
+  "generatedAt": "2026-04-14T13:51:47.420Z",
   "summary": {
     "effectCount": 20,
     "screenedParameterSubsetCount": 10,
@@ -39,7 +39,9 @@
       ],
       "screenedParameterNames": [
         "3D",
-        "cycles"
+        "cycles",
+        "gradient",
+        "highlight"
       ],
       "exhaustiveSettingCoverage": false
     },
@@ -102,7 +104,10 @@
         "hFade",
         "vFade"
       ],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "circularPalette",
+        "cycles"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {

@@ -1,0 +1,94 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "bars-archgroup-expanded-sweep-v1-gradient-generated",
+  "description": "Registry-generated sweep for Bars gradient from bars-archgroup-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "ArchGroup",
+    "modelType": "arch",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Bars sweep on the grouped arch variant using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "bars-gradient-false-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 6,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "gradient",
+        "gradient_false",
+        "grouped_arch_read",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "gradient",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
+    },
+    {
+      "sampleId": "bars-gradient-true-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 6,
+        "center": 0,
+        "highlight": false,
+        "gradient": true,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "gradient",
+        "gradient_true",
+        "grouped_arch_read",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "gradient",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Bars",
+    "parameter": "gradient",
+    "importance": "medium",
+    "phase": "screen",
+    "anchors": [
+      false,
+      true
+    ],
+    "target": "effectSettings"
+  }
+}

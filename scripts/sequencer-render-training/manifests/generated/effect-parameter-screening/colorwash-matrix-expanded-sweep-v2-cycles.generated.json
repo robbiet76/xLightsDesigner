@@ -1,0 +1,216 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "colorwash-matrix-expanded-sweep-v2-cycles-generated",
+  "description": "Registry-generated sweep for Color Wash cycles from colorwash-matrix-expanded-sweep-v2.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "NorthPoleMatrix",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Color Wash sweep on a concrete matrix model using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "color wash-cycles-0_5-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 0.5,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_fill",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A",
+          "C_BUTTON_Palette2": "#FFF0D0"
+        }
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_0_5",
+        "matrix_fill",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
+    },
+    {
+      "sampleId": "color wash-cycles-1_0-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_fill",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A",
+          "C_BUTTON_Palette2": "#FFF0D0"
+        }
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_1_0",
+        "matrix_fill",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
+    },
+    {
+      "sampleId": "color wash-cycles-2_0-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 2.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_fill",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A",
+          "C_BUTTON_Palette2": "#FFF0D0"
+        }
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_2_0",
+        "matrix_fill",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
+    },
+    {
+      "sampleId": "color wash-cycles-3_0-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 3.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_fill",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A",
+          "C_BUTTON_Palette2": "#FFF0D0"
+        }
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_3_0",
+        "matrix_fill",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
+    },
+    {
+      "sampleId": "color wash-cycles-4_0-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 4.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_fill",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A",
+          "C_BUTTON_Palette2": "#FFF0D0"
+        }
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_4_0",
+        "matrix_fill",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Color Wash",
+    "parameter": "cycles",
+    "importance": "medium",
+    "phase": "screen",
+    "anchors": [
+      0.5,
+      1.0,
+      2.0,
+      3.0,
+      4.0
+    ],
+    "target": "effectSettings"
+  }
+}

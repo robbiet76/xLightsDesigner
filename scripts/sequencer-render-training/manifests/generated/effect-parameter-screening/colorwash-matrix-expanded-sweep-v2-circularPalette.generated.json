@@ -1,0 +1,102 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "colorwash-matrix-expanded-sweep-v2-circularPalette-generated",
+  "description": "Registry-generated sweep for Color Wash circularPalette from colorwash-matrix-expanded-sweep-v2.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "NorthPoleMatrix",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Color Wash sweep on a concrete matrix model using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "color wash-circularpalette-false-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_fill",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A",
+          "C_BUTTON_Palette2": "#FFF0D0"
+        }
+      },
+      "labelHints": [
+        "circularPalette",
+        "circularPalette_false",
+        "matrix_fill",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "circularPalette",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
+    },
+    {
+      "sampleId": "color wash-circularpalette-true-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_fill",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A",
+          "C_BUTTON_Palette2": "#FFF0D0"
+        }
+      },
+      "labelHints": [
+        "circularPalette",
+        "circularPalette_true",
+        "matrix_fill",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "circularPalette",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Color Wash",
+    "parameter": "circularPalette",
+    "importance": "medium",
+    "phase": "screen",
+    "anchors": [
+      false,
+      true
+    ],
+    "target": "effectSettings"
+  }
+}
