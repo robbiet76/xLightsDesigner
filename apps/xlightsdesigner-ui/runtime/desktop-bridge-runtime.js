@@ -13,7 +13,7 @@ function requireFunctions(bridge, names = []) {
 export function getDesktopBridge() {
   const w = currentWindow();
   if (!w) return null;
-  return w.xlightsDesignerDesktop || w.__xlightsDesignerDesktop || w.electronAPI || null;
+  return w.xlightsDesignerDesktop || w.__xlightsDesignerDesktop || null;
 }
 
 export function getDesktopStateBridge() {
@@ -130,47 +130,6 @@ export function getDesktopFileDialogBridge() {
     if (typeof xld.selectFile === "function") {
       return async (opts) => xld.selectFile(opts);
     }
-  }
-
-  const electron = w.electronAPI;
-  if (electron) {
-    if (typeof electron.openFileDialog === "function") {
-      return async (opts) => electron.openFileDialog(opts);
-    }
-    if (typeof electron.pickFile === "function") {
-      return async (opts) => electron.pickFile(opts);
-    }
-    if (typeof electron.selectFile === "function") {
-      return async (opts) => electron.selectFile(opts);
-    }
-  }
-
-  if (w.__TAURI__ && w.__TAURI__.dialog && typeof w.__TAURI__.dialog.open === "function") {
-    return async (opts) => {
-      const accept = Array.isArray(opts?.filters)
-        ? opts.filters.flatMap((f) =>
-            Array.isArray(f?.extensions)
-              ? f.extensions.map((ext) => `.${String(ext).toLowerCase()}`)
-              : []
-          )
-        : [];
-      return w.__TAURI__.dialog.open({
-        title: opts?.title || "Select File",
-        multiple: false,
-        directory: Boolean(opts?.directory),
-        filters: Array.isArray(opts?.filters)
-          ? opts.filters.map((f) => ({
-              name: f?.name || "Files",
-              extensions: Array.isArray(f?.extensions) ? f.extensions.filter((e) => e !== "*") : []
-            }))
-          : undefined,
-        accept: accept.length ? accept : undefined
-      });
-    };
-  }
-
-  if (w.__TAURI__ && w.__TAURI__.core && typeof w.__TAURI__.core.invoke === "function") {
-    return async (opts) => w.__TAURI__.core.invoke("open_file_dialog", { options: opts });
   }
 
   return null;

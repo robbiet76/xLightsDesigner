@@ -41,7 +41,7 @@ test("desktop bridge runtime normalizes dialog selections", () => {
 test("desktop bridge runtime exposes file dialog bridge when available", async () => {
   const prevWindow = globalThis.window;
   globalThis.window = {
-    electronAPI: {
+    xlightsDesignerDesktop: {
       openFileDialog: async (opts) => ({ path: `/picked/${opts.title}` })
     }
   };

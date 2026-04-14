@@ -1,11 +1,11 @@
 # xLightsDesigner Shared JS
 
-Status: Mixed
+Status: Mixed, Native-First
 
 This directory is not one thing.
 It contains both:
 - active shared JS domain/runtime/agent code
-- legacy renderer shell code from the Electron app
+- retired renderer shell residue from the Electron app
 
 ## Active Areas
 
@@ -23,8 +23,8 @@ Retirement targets:
 - `index.html`
 - `dev_server.py`
 
-These are legacy renderer shell surfaces from the Electron app.
-Do not deepen product-shell investment there.
+These are retired renderer shell surfaces from the Electron app.
+Do not deepen product-shell investment there or add new Electron compatibility fallback.
 
 ## Rules
 

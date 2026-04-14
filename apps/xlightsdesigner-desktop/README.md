@@ -1,13 +1,14 @@
 # xLightsDesigner Electron Desktop
 
-Status: Legacy Reference
+Status: Retired
 
 This directory is the retired Electron shell for xLightsDesigner.
+Its executable entrypoints now fail fast on purpose.
 
 ## Current Role
 
-- reference-only shell during native cutover
-- maintenance-only
+- cleanup-only shell residue during native cutover
+- not runnable for product work
 - not the active product target
 
 The active product shell is:
@@ -16,6 +17,7 @@ The active product shell is:
 ## Rules
 
 - do not add new product-shell behavior here
+- do not route automation or validation through this directory
 - do not use this directory as the place to resolve current UX questions
 - only make changes here when:
   - preserving a shared backend behavior during extraction

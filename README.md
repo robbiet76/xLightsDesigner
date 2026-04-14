@@ -7,7 +7,7 @@ Repository for the **xLights Agent Sequencer** initiative.
 ### `apps/`
 Runtime application code.
 - `apps/xlightsdesigner-ui/`: web UI used by desktop wrapper.
-- `apps/xlightsdesigner-desktop/`: Electron shell/build packaging.
+- `apps/xlightsdesigner-desktop/`: retired Electron shell kept only for bounded legacy cleanup.
 - `apps/xlightsdesigner-macos/`: native macOS SwiftUI shell scaffold.
 - `apps/xlightsdesigner-analysis-service/`: audio analysis backend.
 
@@ -89,36 +89,12 @@ Live endpoint:
 - `Use As Filter` and proposal views now respect the same section picker selection model.
 - Jobs panel is available from header and tracks async job ids/status/progress with polling via `jobs.get` and cancel hook via `jobs.cancel`.
 
-## Desktop Wrapper (Electron)
-`apps/xlightsdesigner-desktop/` contains an Electron wrapper that injects the desktop bridge used by `Browse...` controls in Sequence Setup.
+## Desktop Shell
+`apps/xlightsdesigner-desktop/` is retired.
 
-Lifecycle note:
-- Electron is now workflow reference and maintenance-only infrastructure.
-- New product-shell work belongs in `apps/xlightsdesigner-macos/`.
+Rules:
+- do not launch Electron for current development
+- do not add new shell behavior there
+- use `apps/xlightsdesigner-macos/` for the active product shell
 
-Run desktop mode:
-1. `cd apps/xlightsdesigner-desktop`
-2. `npm install`
-3. `npm run dev`
-
-What it does:
-- Starts/uses the UI dev server at `http://127.0.0.1:8080`.
-- Launches Electron pointing at that URL.
-- Exposes `window.xlightsDesignerDesktop.openFileDialog(...)` from preload.
-
-The UI still supports manual path entry when desktop bridge is unavailable.
-
-Build local desktop artifacts:
-1. `cd apps/xlightsdesigner-desktop`
-2. `npm install`
-3. `npm run dist:mac` (macOS zip) or `npm run dist:dir` (unpacked directory)
-4. `npm run verify:bundle` (checks built `.app` structure)
-
-Non-dev install validation:
-1. Copy built app to `/Applications` (for example from `dist/mac-arm64/xLightsDesigner.app`).
-2. Run:
-   - `scripts/desktop/validate-nondev-install.sh /Applications/xLightsDesigner.app`
-3. Record evidence:
-   - `scripts/desktop/record-validation-evidence.sh ...`
-4. Check rollout readiness:
-   - `scripts/desktop/check-desktop-readiness.sh`
+The remaining Electron directory exists only so legacy cleanup can proceed in bounded slices without touching shared runtime code blindly.
