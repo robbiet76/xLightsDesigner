@@ -228,7 +228,23 @@ const SAFE_DERIVED_PRIOR_PARAMETERS = Object.freeze(new Set([
   "bandsize",
   "intensity",
   "skipsize",
-  "advances"
+  "advances",
+  "circularpalette",
+  "reversefades",
+  "shimmer",
+  "strobe",
+  "rerandomize",
+  "highlight",
+  "gradient",
+  "blendedges",
+  "scale",
+  "blend",
+  "grow",
+  "shrink",
+  "rotation",
+  "mode",
+  "style",
+  "3d"
 ]));
 
 function buildSettingsFromDerivedPriorGuidance(parameterPriorGuidance = {}, effectDefinition = null) {

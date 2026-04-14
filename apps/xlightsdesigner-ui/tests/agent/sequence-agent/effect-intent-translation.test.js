@@ -214,3 +214,75 @@ test("effect intent translation applies bounded derived prior settings for safe 
   assert.equal(out.settings.E_ARMSIZE, 75);
   assert.equal(Object.prototype.hasOwnProperty.call(out.settings, "E_STYLE"), false);
 });
+
+test("effect intent translation applies bounded derived prior booleans and enums when schema matching is clean", () => {
+  const catalog = buildEffectDefinitionCatalog([
+    {
+      effectName: "Color Wash",
+      params: [
+        { name: "E_CHECKBOX_CircularPalette", type: "bool" },
+        { name: "E_CHECKBOX_Shimmer", type: "bool" },
+        { name: "E_CHECKBOX_ReverseFades", type: "bool" }
+      ]
+    },
+    {
+      effectName: "Twinkle",
+      params: [
+        { name: "E_CHECKBOX_Strobe", type: "bool" },
+        { name: "E_CHECKBOX_ReRandomize", type: "bool" },
+        { name: "E_CHOICE_Style", type: "enum", enumValues: ["New Render Method", "Old Render Method"] }
+      ]
+    },
+    {
+      effectName: "SingleStrand",
+      params: [
+        { name: "E_CHOICE_Mode", type: "enum", enumValues: ["Chase", "Skips", "FX"] }
+      ]
+    }
+  ]);
+
+  const wash = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "Color Wash",
+      parameterPriorGuidance: {
+        priors: [
+          { parameterName: "circularPalette", recommendedAnchors: [{ parameterValue: true }] },
+          { parameterName: "shimmer", recommendedAnchors: [{ parameterValue: false }] }
+        ]
+      }
+    },
+    effectCatalog: catalog
+  });
+  assert.equal(wash.settings.E_CHECKBOX_CircularPalette, "1");
+  assert.equal(wash.settings.E_CHECKBOX_Shimmer, "0");
+
+  const twinkle = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "Twinkle",
+      parameterPriorGuidance: {
+        priors: [
+          { parameterName: "strobe", recommendedAnchors: [{ parameterValue: true }] },
+          { parameterName: "reRandomize", recommendedAnchors: [{ parameterValue: false }] },
+          { parameterName: "style", recommendedAnchors: [{ parameterValue: "Old Render Method" }] }
+        ]
+      }
+    },
+    effectCatalog: catalog
+  });
+  assert.equal(twinkle.settings.E_CHECKBOX_Strobe, "1");
+  assert.equal(twinkle.settings.E_CHECKBOX_ReRandomize, "0");
+  assert.equal(twinkle.settings.E_CHOICE_Style, "Old Render Method");
+
+  const strand = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "SingleStrand",
+      parameterPriorGuidance: {
+        priors: [
+          { parameterName: "mode", recommendedAnchors: [{ parameterValue: "Skips" }] }
+        ]
+      }
+    },
+    effectCatalog: catalog
+  });
+  assert.equal(strand.settings.E_CHOICE_Mode, "Skips");
+});
