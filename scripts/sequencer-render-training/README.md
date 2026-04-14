@@ -29,6 +29,7 @@ Primary system roadmap:
 - `runners/run-overnight-approved-matrix.sh`
 - `runners/run-registry-plan.sh`
 - `runners/run-stage1-coverage-round.sh`
+- `runners/run-effect-training-automation-cycle.sh`
 
 ## Core Catalogs
 - `catalog/effect-parameter-registry.json`
