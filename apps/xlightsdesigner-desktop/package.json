@@ -14,33 +14,5 @@
     "install:mac-app": "node scripts/retired-command.mjs install:mac-app",
     "install:launch-agent": "node scripts/retired-command.mjs install:launch-agent",
     "verify:bundle": "node scripts/retired-command.mjs verify:bundle"
-  },
-  "devDependencies": {
-    "electron": "^31.0.0",
-    "electron-builder": "^24.13.3"
-  },
-  "build": {
-    "appId": "org.xlightsdesigner.desktop",
-    "productName": "xLightsDesigner",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "main.mjs",
-      "live-validation-suites.mjs",
-      "automation-request-processor.mjs",
-      "preload.mjs",
-      "xlights-validation.mjs",
-      "designer-chat-sanitizer.mjs",
-      "renderer/**/*",
-      "package.json"
-    ],
-    "mac": {
-      "target": [
-        "zip"
-      ],
-      "category": "public.app-category.utilities",
-      "hardenedRuntime": false
-    }
   }
 }

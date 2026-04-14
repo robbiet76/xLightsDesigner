@@ -16,6 +16,9 @@ Its Electron packaging/build scripts also fail fast on purpose.
 The active product shell is:
 - `../xlightsdesigner-macos/`
 
+Package/build metadata for Electron has also been removed.
+This directory should no longer be treated as an installable app package.
+
 ## Rules
 
 - do not add new product-shell behavior here
