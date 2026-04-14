@@ -55,7 +55,12 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
       selectedSections: ["Chorus 1", "Chorus 2"],
       warnings: ["Review density on roofline"],
       impactCount: 2,
-      graph: { nodeCount: 5 }
+      graph: { nodeCount: 5 },
+      metadata: {
+        requestScopeMode: "section_target_refinement",
+        reviewStartLevel: "section",
+        sectionScopeKind: "timing_track_windows"
+      }
     },
     applyResult: {
       status: "success",
@@ -69,6 +74,9 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
 
   assert.equal(summary.designSummary.title, "Snowfall chorus focus");
   assert.deepEqual(summary.sequenceSummary.targets, ["Snowman", "Roofline"]);
+  assert.equal(summary.sequenceSummary.requestScope.mode, "section_target_refinement");
+  assert.equal(summary.sequenceSummary.requestScope.reviewStartLevel, "section");
+  assert.equal(summary.sequenceSummary.requestScope.sectionScopeKind, "timing_track_windows");
   assert.equal(summary.applySummary.commandCount, 5);
   assert.equal(summary.verificationSummary.ok, true);
 });

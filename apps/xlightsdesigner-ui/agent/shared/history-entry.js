@@ -54,6 +54,11 @@ export function buildHistorySnapshotSummary({
   const warnings = compactList(planHandoff?.warnings, 6);
   const targets = compactList(planHandoff?.targetIds, 8);
   const selectedSections = compactList(planHandoff?.selectedSections, 8);
+  const requestScopeSummary = {
+    mode: ensureString(planHandoff?.metadata?.requestScopeMode, null),
+    reviewStartLevel: ensureString(planHandoff?.metadata?.reviewStartLevel, null),
+    sectionScopeKind: ensureString(planHandoff?.metadata?.sectionScopeKind, null)
+  };
   return {
     designSummary: {
       title: ensureString(creativeBrief?.title, "Design snapshot"),
@@ -64,7 +69,8 @@ export function buildHistorySnapshotSummary({
       proposalLines,
       targets,
       sections: selectedSections,
-      warnings
+      warnings,
+      requestScope: requestScopeSummary
     },
     applySummary: {
       status: ensureString(applyResult?.status, "pending"),

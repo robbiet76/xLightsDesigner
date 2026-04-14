@@ -99,3 +99,32 @@ test("project history runtime loads and selects history snapshots", async () => 
   assert.equal(state.ui.reviewHistorySnapshot.renderObservation.artifactId, "render-1");
   assert.equal(state.ui.reviewHistorySnapshot.renderCritiqueContext.artifactId, "critique-1");
 });
+
+test("project history runtime carries request scope into compact snapshot summaries", () => {
+  const state = buildState();
+  const runtime = createProjectHistoryRuntime({
+    state,
+    currentApplyContext: () => ({ projectKey: "proj-1", sequencePath: "/show/Test.xsq", endpoint: "http://127.0.0.1:49915/xlightsdesigner/api" }),
+    buildHistoryEntry: (value) => value,
+    currentArtifactRefs: () => ({}),
+    buildHistorySnapshotSummary: (payload) => payload && typeof payload === "object" ? payload : {}
+  });
+
+  const entry = runtime.buildApplyHistoryEntry({
+    status: "success",
+    summary: "Applied section refinement",
+    stage: "validate_apply",
+    planHandoff: {
+      metadata: {
+        requestScopeMode: "section_target_refinement",
+        reviewStartLevel: "section",
+        sectionScopeKind: "timing_track_windows"
+      }
+    },
+    applyResult: null
+  });
+
+  assert.equal(entry.snapshotSummary.planHandoff.metadata.requestScopeMode, "section_target_refinement");
+  assert.equal(entry.snapshotSummary.planHandoff.metadata.reviewStartLevel, "section");
+  assert.equal(entry.snapshotSummary.planHandoff.metadata.sectionScopeKind, "timing_track_windows");
+});
