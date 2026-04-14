@@ -75,6 +75,10 @@ test("build-unified-training-set aggregates harvested outcome records", () => {
   assert.equal(bars.liveOutcomeLearning.sharedSettingOutcomeMemory.effectLayerMix[0].appliedValue, 60);
   assert.equal(bars.liveOutcomeLearning.sharedSettingOutcomeMemory.inTransitionType[0].appliedValue, "Fade");
   assert.equal(bars.liveOutcomeLearning.sharedSettingOutcomeMemory.layerMorph[0].appliedValue, true);
+  assert.equal(Array.isArray(artifact.crossEffectSharedSettingLearning.sharedSettingOutcomeMemory.layerMethod), true);
+  assert.equal(artifact.crossEffectSharedSettingLearning.sharedSettingOutcomeMemory.layerMethod[0].appliedValue, "Additive");
+  assert.deepEqual(artifact.crossEffectSharedSettingLearning.sharedSettingOutcomeMemory.layerMethod[0].effectNames, ["Bars"]);
+  assert.equal(artifact.crossEffectSharedSettingLearning.sharedSettingOutcomeMemory.bufferStyle[0].successfulUses, 1);
   assert.ok(["none", "single_reference_per_geometry", "multi_configuration_sampled"].includes(
     bars.screeningLearning.configurationRepresentativeness.coverageStatus
   ));

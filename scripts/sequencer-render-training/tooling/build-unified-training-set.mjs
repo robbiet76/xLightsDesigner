@@ -558,6 +558,56 @@ function mergeSharedSettingOutcomeMemory(outcomeRecords = [], effectName = "") {
   );
 }
 
+function mergeCrossEffectSharedSettingOutcomeMemory(outcomeRecords = []) {
+  const out = {};
+  for (const record of outcomeRecords) {
+    const effectName = String(record?.effectName || "").trim();
+    const scopeMode = String(record?.requestScope?.mode || "").trim();
+    const positiveSignals = uniqueStrings(record?.resolvedSignals);
+    const cautionSignals = uniqueStrings([...(record?.persistedSignals || []), ...(record?.newSignals || [])]);
+    const status = String(record?.outcome?.status || "").trim();
+    const improved = record?.outcome?.improved === true || positiveSignals.length > 0 || status === "mixed";
+    const regressed = cautionSignals.length > 0 || status === "regressed" || status === "unchanged";
+    for (const row of Array.isArray(record?.appliedSharedSettingGuidance) ? record.appliedSharedSettingGuidance : []) {
+      const settingName = String(row?.settingName || "").trim();
+      if (!settingName) continue;
+      if (!out[settingName]) out[settingName] = {};
+      const key = JSON.stringify({ value: normalizeAnchorValue(row?.appliedValue) });
+      if (!out[settingName][key]) {
+        out[settingName][key] = {
+          appliedValue: normalizeAnchorValue(row?.appliedValue),
+          sampleCount: 0,
+          successfulUses: 0,
+          failedUses: 0,
+          effectNames: [],
+          favoredScopes: [],
+          favoredSignals: [],
+          cautionSignals: []
+        };
+      }
+      const target = out[settingName][key];
+      target.sampleCount += 1;
+      if (improved) target.successfulUses += 1;
+      if (regressed) target.failedUses += 1;
+      target.effectNames = uniqueStrings([...target.effectNames, ...(effectName ? [effectName] : [])]);
+      target.favoredScopes = uniqueStrings([...target.favoredScopes, ...(improved && scopeMode ? [scopeMode] : [])]);
+      target.favoredSignals = uniqueStrings([...target.favoredSignals, ...(improved ? positiveSignals : [])]);
+      target.cautionSignals = uniqueStrings([...target.cautionSignals, ...(regressed ? cautionSignals : [])]);
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(out)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([settingName, entries]) => [
+        settingName,
+        Object.values(entries).sort((a, b) =>
+          b.sampleCount - a.sampleCount ||
+          String(a.appliedValue).localeCompare(String(b.appliedValue))
+        )
+      ])
+  );
+}
+
 function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], screeningRecords = []) {
   const trained = bundle?.effectsByName?.[effectName] || {};
   const capability = getEffectIntentCapability(effectName) || {};
@@ -638,6 +688,7 @@ function buildTrainingSet() {
   const outcomeRecords = loadOutcomeRecords(recordsDirPath);
   const screeningRecords = loadScreeningRecords(screeningRecordsDirPath);
   const effectNames = Object.keys(bundle?.effectsByName || {}).sort((a, b) => a.localeCompare(b));
+  const crossEffectSharedSettingOutcomeMemory = mergeCrossEffectSharedSettingOutcomeMemory(outcomeRecords);
   return {
     artifactType: "sequencer_unified_training_set_v1",
     artifactVersion: "1.0",
@@ -706,6 +757,11 @@ function buildTrainingSet() {
       revisionRoles: REVISION_ROLES,
       requestScopeModes: REQUEST_SCOPE_MODES,
       reviewLevels: REVIEW_LEVELS
+    },
+    crossEffectSharedSettingLearning: {
+      status: Object.keys(crossEffectSharedSettingOutcomeMemory).length ? "populated" : "empty",
+      storageClass: "general_training",
+      sharedSettingOutcomeMemory: crossEffectSharedSettingOutcomeMemory
     },
     effects: effectNames.map((effectName) => buildEffectEntry(effectName, bundle, outcomeRecords, screeningRecords))
   };

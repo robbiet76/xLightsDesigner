@@ -397,6 +397,14 @@ This allows the sequencer to learn:
 
 without turning those settings into hardcoded universal defaults.
 
+Because these settings are generic and broadly reusable, the unified training set should expose them in two places:
+- per-effect supporting memory inside each effect entry
+- a root-level `crossEffectSharedSettingLearning` block that aggregates them across all effect families
+
+Design rule:
+- the root-level cross-effect memory is the primary generic training surface for transitions, blending, layer method, and buffer style
+- per-effect memory is supporting evidence only
+
 ## Acceptance Standard
 
 This framework is correct when:
