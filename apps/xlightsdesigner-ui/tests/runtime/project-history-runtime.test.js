@@ -65,6 +65,38 @@ test("project history runtime persists available artifacts for history", async (
   );
 });
 
+test("project history runtime emits diagnostics when project artifact persistence returns not ok", async () => {
+  const diagnostics = [];
+  const state = buildState();
+  state.sequenceAgentRuntime = {
+    renderObservation: { artifactId: "render-1" },
+    renderCritiqueContext: { artifactId: "critique-1" }
+  };
+  const runtime = createProjectHistoryRuntime({
+    state,
+    pushDiagnostic: (level, summary, detail) => diagnostics.push({ level, summary, detail }),
+    getDesktopProjectArtifactBridge: () => ({
+      writeProjectArtifacts: async () => ({ ok: false, reason: "bridge_rejected" })
+    }),
+    currentApplyContext: () => ({ projectKey: "proj-1", sequencePath: "/show/Test.xsq", endpoint: "" }),
+    buildEffectFamilyOutcomeRecords: () => [{ artifactId: "outcome-1", artifactType: "effect_family_outcome_record_v1" }],
+    buildCurrentDesignSceneContext: () => ({ artifactId: "scene-1" }),
+    buildCurrentMusicDesignContext: () => ({ artifactId: "music-1" }),
+    getValidHandoff: (contract) => (contract === "plan_handoff_v1" ? { artifactId: "plan-1" } : null)
+  });
+
+  const res = await runtime.persistCurrentArtifactsForHistory({
+    applyResult: { artifactId: "apply-1" },
+    historyEntry: { artifactId: "history-1" }
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(diagnostics.length, 1);
+  assert.equal(diagnostics[0].summary, "Project artifact persistence failed.");
+  assert.match(diagnostics[0].detail, /bridge_rejected/);
+  assert.match(diagnostics[0].detail, /outcomes=1/);
+});
+
 test("project history runtime loads and selects history snapshots", async () => {
   const state = buildState();
   state.applyHistory = [

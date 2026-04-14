@@ -25,7 +25,10 @@ export function createProjectHistoryRuntime(deps = {}) {
   async function persistCurrentArtifactsForHistory({ planHandoff = null, applyResult = null, historyEntry = null } = {}) {
     const bridge = getDesktopProjectArtifactBridge();
     const projectFilePath = str(state.projectFilePath);
-    if (!bridge || !projectFilePath) return { ok: false, reason: "unavailable" };
+    if (!bridge || !projectFilePath) {
+      pushDiagnostic("warning", "Project artifact persistence unavailable.", !bridge ? "desktop bridge missing" : "project file path missing");
+      return { ok: false, reason: "unavailable" };
+    }
     const artifacts = [
       state.audioAnalysis?.artifact || null,
       buildCurrentDesignSceneContext(),
@@ -54,12 +57,23 @@ export function createProjectHistoryRuntime(deps = {}) {
       sequencePath: context.sequencePath
     })).filter((artifact) => artifact && typeof artifact === "object" && typeof artifact.artifactId === "string");
     artifacts.push(...outcomeRecords);
-    if (!artifacts.length) return { ok: false, reason: "no_artifacts" };
+    if (!artifacts.length) {
+      pushDiagnostic("warning", "Project artifact persistence skipped.", "no artifacts were available to write");
+      return { ok: false, reason: "no_artifacts" };
+    }
     try {
-      return await bridge.writeProjectArtifacts({
+      const res = await bridge.writeProjectArtifacts({
         projectFilePath,
         artifacts
       });
+      if (!res?.ok) {
+        pushDiagnostic(
+          "warning",
+          "Project artifact persistence failed.",
+          `reason=${str(res?.reason || res?.error || "unknown")} artifacts=${artifacts.length} outcomes=${outcomeRecords.length}`
+        );
+      }
+      return res;
     } catch (err) {
       pushDiagnostic("warning", "Project artifact persistence failed.", String(err?.message || err));
       return { ok: false, reason: "write_failed" };
