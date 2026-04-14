@@ -1,0 +1,45 @@
+{
+  "artifactType": "sequence_artistic_goal_v1",
+  "artifactVersion": 1,
+  "goalId": "sag_archsingle_sparse_macro_001",
+  "createdAt": null,
+  "source": {
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_sparse_macro.json",
+    "designHandoffRef": "design_handoff_v2:proof_archsingle"
+  },
+  "scope": {
+    "goalLevel": "macro",
+    "requestedScope": {
+      "mode": "section_target_refinement",
+      "reviewStartLevel": "section",
+      "sectionScopeKind": "timing_track_windows"
+    }
+  },
+  "artisticIntent": {
+    "emotionalTone": "proof_inferred",
+    "visualTone": "proof_inferred",
+    "leadTarget": null,
+    "supportTargets": [],
+    "focusHierarchy": "single-idea section read",
+    "sectionArc": "Decide whether this section should remain Arches-only or intentionally add a support family.",
+    "motionCharacter": "derived_from_critique",
+    "densityCharacter": "sparse"
+  },
+  "evaluationLens": {
+    "mustPreserve": [
+      "The section reads as a single focused idea.",
+      "Density is consistent across the sampled window (sparse)."
+    ],
+    "mustImprove": [
+      "The visual footprint is very narrow relative to the full scene.",
+      "Only one family is carrying the section (Arches)."
+    ],
+    "comparisonQuestions": [
+      "Decide whether this section should remain Arches-only or intentionally add a support family."
+    ]
+  },
+  "antiGoals": [],
+  "traceability": {
+    "designSummary": "single-idea section read"
+  }
+}

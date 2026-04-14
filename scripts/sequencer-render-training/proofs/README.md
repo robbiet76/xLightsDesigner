@@ -119,6 +119,9 @@ Harness runner:
       - `decision`
       - `nextOwner`
       - `nextRevisionLevel`
+    - retained revision-objective directions:
+      - `designerDirection`
+      - `sequencerDirection`
 - [extract-sequence-revision-gate.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py)
   - converts a critique artifact into an explicit revision gating decision
   - suite runners now emit a retained gate artifact for every kept scenario

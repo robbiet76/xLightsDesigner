@@ -172,6 +172,18 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
                 f"{row['scenarioId']} nextRevisionLevel mismatch: expected {expected_next_revision_level}, got {row.get('nextRevisionLevel')}"
             )
 
+        expected_designer_direction = scenario.get("expectedDesignerDirection")
+        if expected_designer_direction and row.get("designerDirection") != expected_designer_direction:
+            errors.append(
+                f"{row['scenarioId']} designerDirection mismatch: expected {expected_designer_direction}, got {row.get('designerDirection')}"
+            )
+
+        expected_sequencer_direction = scenario.get("expectedSequencerDirection")
+        if expected_sequencer_direction and row.get("sequencerDirection") != expected_sequencer_direction:
+            errors.append(
+                f"{row['scenarioId']} sequencerDirection mismatch: expected {expected_sequencer_direction}, got {row.get('sequencerDirection')}"
+            )
+
         critique = load_json(row["critiqueArtifactPath"])
         if critique.get("ladderLevel") != expected_ladder_level:
             errors.append(
@@ -194,6 +206,16 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
         if expected_next_revision_level and gate.get("nextRevisionLevel") != expected_next_revision_level:
             errors.append(
                 f"{row['scenarioId']} gate artifact nextRevisionLevel mismatch: expected {expected_next_revision_level}, got {gate.get('nextRevisionLevel')}"
+            )
+
+        revision_objective = load_json(row["revisionObjectiveArtifactPath"])
+        if expected_designer_direction and revision_objective.get("designerDirection", {}).get("artisticCorrection") != expected_designer_direction:
+            errors.append(
+                f"{row['scenarioId']} revision objective designerDirection mismatch: expected {expected_designer_direction}, got {revision_objective.get('designerDirection', {}).get('artisticCorrection')}"
+            )
+        if expected_sequencer_direction and revision_objective.get("sequencerDirection", {}).get("executionObjective") != expected_sequencer_direction:
+            errors.append(
+                f"{row['scenarioId']} revision objective sequencerDirection mismatch: expected {expected_sequencer_direction}, got {revision_objective.get('sequencerDirection', {}).get('executionObjective')}"
             )
 
         observation = load_json(row["observationArtifactPath"])

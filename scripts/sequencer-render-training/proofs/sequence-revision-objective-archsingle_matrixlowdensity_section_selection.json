@@ -1,17 +1,17 @@
 {
   "artifactType": "sequence_revision_objective_v1",
   "artifactVersion": 1,
-  "objectiveId": "sro_archsingle_matrixlowdensity_section_balanced_001",
+  "objectiveId": "sro_archsingle_matrixlowdensity_section_selection_001",
   "createdAt": null,
   "source": {
-    "sequenceArtisticGoalRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-artistic-goal-archsingle_matrixlowdensity_section_balanced.json",
-    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_section_balanced.json",
-    "sequenceRevisionGateRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-archsingle_matrixlowdensity_section_balanced.json"
+    "sequenceArtisticGoalRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-artistic-goal-archsingle_matrixlowdensity_section_selection.json",
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_section_selection.json",
+    "sequenceRevisionGateRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-archsingle_matrixlowdensity_section_selection.json"
   },
   "scope": {
     "nextOwner": "shared",
     "requestedScope": {
-      "mode": "section_target_refinement",
+      "mode": "section_selection",
       "reviewStartLevel": "section",
       "sectionScopeKind": "timing_track_windows"
     },

@@ -1,14 +1,14 @@
 {
   "artifactType": "sequence_artistic_goal_v1",
   "artifactVersion": 1,
-  "goalId": "sag_archsingle_matrixlowdensity_section_balanced_001",
+  "goalId": "sag_archsingle_matrixlowdensity_balanced_macro_001",
   "createdAt": null,
   "source": {
-    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_section_balanced.json",
-    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_section"
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_balanced_macro.json",
+    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_support"
   },
   "scope": {
-    "goalLevel": "section",
+    "goalLevel": "macro",
     "requestedScope": {
       "mode": "section_target_refinement",
       "reviewStartLevel": "section",
@@ -21,7 +21,7 @@
     "leadTarget": null,
     "supportTargets": [],
     "focusHierarchy": "single-idea section read",
-    "sectionArc": "Clarify how the section should evolve from opening to closing instead of holding one static treatment.",
+    "sectionArc": "Preserve the current artistic direction while descending to the next critique level.",
     "motionCharacter": "derived_from_critique",
     "densityCharacter": "moderate"
   },
@@ -30,14 +30,11 @@
       "The section still reads as one idea with ArchSingle carrying the lead and restrained support around it.",
       "The active footprint is broad enough to register at scene scale.",
       "Density is consistent across the sampled window (moderate).",
-      "Multiple families are present, but the support family does not overpower the lead.",
-      "The section keeps a readable lead target even while support is present."
+      "Multiple families are present, but the support family does not overpower the lead."
     ],
-    "mustImprove": [
-      "Section development is too flat across opening, middle, and closing slices."
-    ],
+    "mustImprove": [],
     "comparisonQuestions": [
-      "Clarify how the section should evolve from opening to closing instead of holding one static treatment."
+      "Preserve the current artistic direction while descending to the next critique level."
     ]
   },
   "antiGoals": [],

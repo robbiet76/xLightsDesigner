@@ -32,6 +32,8 @@
     "expectedGateDecision": "revise_here",
     "expectedNextOwner": "shared",
     "expectedNextRevisionLevel": "section",
+    "expectedDesignerDirection": "The scene is split across too many active models to read as one idea.",
+    "expectedSequencerDirection": "Preserve current strengths while following the designer correction.",
     "sectionScope": "proof_section_tree_arch_split",
     "targetScope": "TreeFlat,ArchSingle",
     "effectFamilies": "SingleStrand,ColorWash"
@@ -69,6 +71,8 @@
     "expectedGateDecision": "revise_here",
     "expectedNextOwner": "shared",
     "expectedNextRevisionLevel": "section",
+    "expectedDesignerDirection": "Clarify how the section should evolve from opening to closing instead of holding one static treatment.",
+    "expectedSequencerDirection": "Introduce a bounded section-level evolution in spread, density, or support role across the sampled window.",
     "sectionScope": "proof_section_arch_matrix_balanced",
     "targetScope": "ArchSingle,MatrixLowDensity",
     "effectFamilies": "ColorWash,SingleStrand"
@@ -106,6 +110,8 @@
     "expectedGateDecision": "revise_here",
     "expectedNextOwner": "shared",
     "expectedNextRevisionLevel": "section",
+    "expectedDesignerDirection": "Clarify how the section should evolve from opening to closing instead of holding one static treatment.",
+    "expectedSequencerDirection": "Introduce a bounded section-level evolution in spread, density, or support role across the sampled window.",
     "sectionScope": "proof_section_arch_matrix_selection",
     "targetScope": "",
     "effectFamilies": "ColorWash,SingleStrand"

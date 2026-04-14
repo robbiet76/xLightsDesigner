@@ -72,6 +72,8 @@ def main():
         observation_path = os.path.join(PROOFS_DIR, f"render-observation-{scenario_id}.json")
         critique_path = os.path.join(PROOFS_DIR, f"sequence-critique-{scenario_id}.json")
         gate_path = os.path.join(PROOFS_DIR, f"sequence-revision-gate-{scenario_id}.json")
+        artistic_goal_path = os.path.join(PROOFS_DIR, f"sequence-artistic-goal-{scenario_id}.json")
+        revision_objective_path = os.path.join(PROOFS_DIR, f"sequence-revision-objective-{scenario_id}.json")
         record_path = os.path.join(PROOFS_DIR, f"sequence-learning-record-{scenario_id}.json")
 
         run([
@@ -92,6 +94,29 @@ def main():
             "scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py",
             "--critique", critique_path,
             "--out", gate_path,
+        ])
+        run([
+            "python3",
+            "scripts/sequencer-render-training/tooling/build-sequence-artistic-goal.py",
+            "--critique", critique_path,
+            "--goal-id", f"sag_{scenario_id}_001",
+            "--design-handoff-ref", scenario["designHandoffRef"],
+            "--requested-scope-mode", scenario["requestedScopeMode"],
+            "--review-start-level", scenario["reviewStartLevel"],
+            "--section-scope-kind", scenario["sectionScopeKind"],
+            "--out", artistic_goal_path,
+        ])
+        run([
+            "python3",
+            "scripts/sequencer-render-training/tooling/build-sequence-revision-objective.py",
+            "--critique", critique_path,
+            "--gate", gate_path,
+            "--artistic-goal", artistic_goal_path,
+            "--objective-id", f"sro_{scenario_id}_001",
+            "--requested-scope-mode", scenario["requestedScopeMode"],
+            "--review-start-level", scenario["reviewStartLevel"],
+            "--section-scope-kind", scenario["sectionScopeKind"],
+            "--out", revision_objective_path,
         ])
         run([
             "python3",
@@ -116,6 +141,7 @@ def main():
         observation = load_json(observation_path)
         critique = load_json(critique_path)
         gate = load_json(gate_path)
+        revision_objective = load_json(revision_objective_path)
         record = load_json(record_path)
         suite["scenarios"].append({
             "scenarioId": scenario_id,
@@ -123,6 +149,8 @@ def main():
             "observationArtifactPath": os.path.abspath(observation_path),
             "critiqueArtifactPath": os.path.abspath(critique_path),
             "revisionGateArtifactPath": os.path.abspath(gate_path),
+            "artisticGoalArtifactPath": os.path.abspath(artistic_goal_path),
+            "revisionObjectiveArtifactPath": os.path.abspath(revision_objective_path),
             "learningRecordArtifactPath": os.path.abspath(record_path),
             "ladderLevel": critique["ladderLevel"],
             "intentRead": critique["designerSummary"]["intentRead"],
@@ -132,6 +160,8 @@ def main():
             "gateDecision": gate["decision"],
             "nextOwner": gate["nextOwner"],
             "nextRevisionLevel": gate["nextRevisionLevel"],
+            "designerDirection": revision_objective["designerDirection"]["artisticCorrection"],
+            "sequencerDirection": revision_objective["sequencerDirection"]["executionObjective"],
             "requestScope": record["context"].get("requestedScope"),
             "cycleOutcome": record["outcome"]["cycleOutcome"],
         })

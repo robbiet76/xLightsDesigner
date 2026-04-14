@@ -23,6 +23,8 @@
     "expectedGateDecision": "revise_here",
     "expectedNextOwner": "shared",
     "expectedNextRevisionLevel": "macro",
+    "expectedDesignerDirection": "Decide whether this section should remain Tree-only or intentionally add a support family.",
+    "expectedSequencerDirection": "Broaden the active footprint with one secondary support family while preserving the lead target.",
     "sectionScope": "proof_window_treeflat_sparse",
     "targetScope": "TreeFlat",
     "effectFamilies": "SingleStrand"
@@ -51,6 +53,8 @@
     "expectedGateDecision": "revise_here",
     "expectedNextOwner": "shared",
     "expectedNextRevisionLevel": "macro",
+    "expectedDesignerDirection": "Decide whether this section should remain Matrix-only or intentionally add a support family.",
+    "expectedSequencerDirection": "Broaden the active footprint with one secondary support family while preserving the lead target.",
     "sectionScope": "proof_window_matrix_sparse",
     "targetScope": "MatrixLowDensity",
     "effectFamilies": "SingleStrand"
@@ -79,6 +83,8 @@
     "expectedGateDecision": "revise_here",
     "expectedNextOwner": "shared",
     "expectedNextRevisionLevel": "macro",
+    "expectedDesignerDirection": "Decide whether this section should remain Arches-only or intentionally add a support family.",
+    "expectedSequencerDirection": "Broaden the active footprint with one secondary support family while preserving the lead target.",
     "sectionScope": "proof_window_archsingle_sparse",
     "targetScope": "ArchSingle",
     "effectFamilies": "ColorWash"
@@ -108,6 +114,8 @@
     "expectedGateDecision": "revise_here",
     "expectedNextOwner": "designer",
     "expectedNextRevisionLevel": "macro",
+    "expectedDesignerDirection": "The scene is split across too many active models to read as one idea.",
+    "expectedSequencerDirection": "Preserve current strengths while following the designer correction.",
     "sectionScope": "proof_window_tree_arch_composite",
     "targetScope": "TreeFlat,ArchSingle",
     "effectFamilies": "SingleStrand,ColorWash"
@@ -137,6 +145,8 @@
     "expectedGateDecision": "descend",
     "expectedNextOwner": "none",
     "expectedNextRevisionLevel": "section",
+    "expectedDesignerDirection": "Preserve the current artistic direction while descending to the next critique level.",
+    "expectedSequencerDirection": "Preserve current strengths while following the designer correction.",
     "sectionScope": "proof_window_arch_matrix_balanced",
     "targetScope": "ArchSingle,MatrixLowDensity",
     "effectFamilies": "ColorWash,SingleStrand"
@@ -166,6 +176,8 @@
     "expectedGateDecision": "descend",
     "expectedNextOwner": "none",
     "expectedNextRevisionLevel": "section",
+    "expectedDesignerDirection": "Preserve the current artistic direction while descending to the next critique level.",
+    "expectedSequencerDirection": "Preserve current strengths while following the designer correction.",
     "sectionScope": "",
     "targetScope": "",
     "effectFamilies": "ColorWash,SingleStrand"
@@ -194,6 +206,8 @@
     "expectedGateDecision": "revise_here",
     "expectedNextOwner": "shared",
     "expectedNextRevisionLevel": "macro",
+    "expectedDesignerDirection": "Decide whether this section should remain Arches-only or intentionally add a support family.",
+    "expectedSequencerDirection": "Broaden the active footprint with one secondary support family while preserving the lead target.",
     "sectionScope": "",
     "targetScope": "ArchSingle",
     "effectFamilies": "ColorWash"

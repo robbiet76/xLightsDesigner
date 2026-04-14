@@ -1,0 +1,49 @@
+{
+  "artifactType": "sequence_revision_objective_v1",
+  "artifactVersion": 1,
+  "objectiveId": "sro_treeflat_sparse_macro_001",
+  "createdAt": null,
+  "source": {
+    "sequenceArtisticGoalRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-artistic-goal-treeflat_sparse_macro.json",
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-treeflat_sparse_macro.json",
+    "sequenceRevisionGateRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-treeflat_sparse_macro.json"
+  },
+  "scope": {
+    "nextOwner": "shared",
+    "requestedScope": {
+      "mode": "section_target_refinement",
+      "reviewStartLevel": "section",
+      "sectionScopeKind": "timing_track_windows"
+    },
+    "reviewStartLevel": "section"
+  },
+  "ladderLevel": "macro",
+  "designerDirection": {
+    "artisticCorrection": "Decide whether this section should remain Tree-only or intentionally add a support family.",
+    "mustPreserve": [
+      "The section reads as a single focused idea.",
+      "Density is consistent across the sampled window (sparse)."
+    ],
+    "mustAvoid": [
+      "The visual footprint is very narrow relative to the full scene.",
+      "Only one family is carrying the section (Tree)."
+    ],
+    "evaluationPrompt": "Decide whether this section should remain Tree-only or intentionally add a support family."
+  },
+  "sequencerDirection": {
+    "executionObjective": "Broaden the active footprint with one secondary support family while preserving the lead target.",
+    "allowedMoves": [
+      "Active content is concentrated enough to make the lead target legible.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Centroid motion indicates the active content is evolving, not frozen."
+    ],
+    "blockedMoves": [
+      "Macro instability blocks section, group, model, and effect refinement."
+    ],
+    "revisionBatchShape": "macro_pass"
+  },
+  "successChecks": [
+    "Highest active revision level remains macro.",
+    "Decide whether this section should remain Tree-only or intentionally add a support family."
+  ]
+}

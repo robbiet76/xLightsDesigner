@@ -1,0 +1,48 @@
+{
+  "artifactType": "sequence_revision_objective_v1",
+  "artifactVersion": 1,
+  "objectiveId": "sro_archsingle_matrixlowdensity_whole_sequence_macro_001",
+  "createdAt": null,
+  "source": {
+    "sequenceArtisticGoalRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-artistic-goal-archsingle_matrixlowdensity_whole_sequence_macro.json",
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_whole_sequence_macro.json",
+    "sequenceRevisionGateRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-archsingle_matrixlowdensity_whole_sequence_macro.json"
+  },
+  "scope": {
+    "nextOwner": "none",
+    "requestedScope": {
+      "mode": "whole_sequence",
+      "reviewStartLevel": "macro",
+      "sectionScopeKind": "full_sequence"
+    },
+    "reviewStartLevel": "macro"
+  },
+  "ladderLevel": "section",
+  "designerDirection": {
+    "artisticCorrection": "Preserve the current artistic direction while descending to the next critique level.",
+    "mustPreserve": [
+      "The section still reads as one idea with ArchSingle carrying the lead and restrained support around it.",
+      "The active footprint is broad enough to register at scene scale.",
+      "Density is consistent across the sampled window (moderate).",
+      "Multiple families are present, but the support family does not overpower the lead."
+    ],
+    "mustAvoid": [],
+    "evaluationPrompt": "Preserve the current artistic direction while descending to the next critique level."
+  },
+  "sequencerDirection": {
+    "executionObjective": "Preserve current strengths while following the designer correction.",
+    "allowedMoves": [
+      "Model balance is weighted enough to preserve a clear lead-plus-support hierarchy.",
+      "Scene spread is large enough to support broader composition.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Family spread is broad enough without losing the lead-target hierarchy.",
+      "Centroid motion indicates the active content is evolving, not frozen."
+    ],
+    "blockedMoves": [],
+    "revisionBatchShape": "section_pass"
+  },
+  "successChecks": [
+    "Highest active revision level remains section.",
+    "Preserve the current artistic direction while descending to the next critique level."
+  ]
+}

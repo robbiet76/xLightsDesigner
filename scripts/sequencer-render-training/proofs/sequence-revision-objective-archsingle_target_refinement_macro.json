@@ -1,0 +1,48 @@
+{
+  "artifactType": "sequence_revision_objective_v1",
+  "artifactVersion": 1,
+  "objectiveId": "sro_archsingle_target_refinement_macro_001",
+  "createdAt": null,
+  "source": {
+    "sequenceArtisticGoalRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-artistic-goal-archsingle_target_refinement_macro.json",
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_target_refinement_macro.json",
+    "sequenceRevisionGateRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-archsingle_target_refinement_macro.json"
+  },
+  "scope": {
+    "nextOwner": "shared",
+    "requestedScope": {
+      "mode": "target_refinement",
+      "reviewStartLevel": "model",
+      "sectionScopeKind": "full_sequence"
+    },
+    "reviewStartLevel": "model"
+  },
+  "ladderLevel": "macro",
+  "designerDirection": {
+    "artisticCorrection": "Decide whether this section should remain Arches-only or intentionally add a support family.",
+    "mustPreserve": [
+      "The section reads as a single focused idea.",
+      "Density is consistent across the sampled window (sparse)."
+    ],
+    "mustAvoid": [
+      "The visual footprint is very narrow relative to the full scene.",
+      "Only one family is carrying the section (Arches)."
+    ],
+    "evaluationPrompt": "Decide whether this section should remain Arches-only or intentionally add a support family."
+  },
+  "sequencerDirection": {
+    "executionObjective": "Broaden the active footprint with one secondary support family while preserving the lead target.",
+    "allowedMoves": [
+      "Active content is concentrated enough to make the lead target legible.",
+      "Frame-to-frame density remains stable through the sampled checkpoint."
+    ],
+    "blockedMoves": [
+      "Macro instability blocks section, group, model, and effect refinement."
+    ],
+    "revisionBatchShape": "macro_pass"
+  },
+  "successChecks": [
+    "Highest active revision level remains macro.",
+    "Decide whether this section should remain Arches-only or intentionally add a support family."
+  ]
+}

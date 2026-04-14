@@ -1,0 +1,50 @@
+{
+  "artifactType": "sequence_revision_objective_v1",
+  "artifactVersion": 1,
+  "objectiveId": "sro_treeflat_archsingle_section_split_001",
+  "createdAt": null,
+  "source": {
+    "sequenceArtisticGoalRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-artistic-goal-treeflat_archsingle_section_split.json",
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-treeflat_archsingle_section_split.json",
+    "sequenceRevisionGateRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-treeflat_archsingle_section_split.json"
+  },
+  "scope": {
+    "nextOwner": "shared",
+    "requestedScope": {
+      "mode": "section_target_refinement",
+      "reviewStartLevel": "section",
+      "sectionScopeKind": "timing_track_windows"
+    },
+    "reviewStartLevel": "section"
+  },
+  "ladderLevel": "section",
+  "designerDirection": {
+    "artisticCorrection": "The scene is split across too many active models to read as one idea.",
+    "mustPreserve": [
+      "The active footprint is broad enough to register at scene scale.",
+      "Density is consistent across the sampled window (moderate).",
+      "The section shows measurable development across the sampled window."
+    ],
+    "mustAvoid": [
+      "The scene is split across too many active models to read as one idea."
+    ],
+    "evaluationPrompt": "The scene is split across too many active models to read as one idea."
+  },
+  "sequencerDirection": {
+    "executionObjective": "Preserve current strengths while following the designer correction.",
+    "allowedMoves": [
+      "Scene spread is large enough to support broader composition.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Centroid motion indicates the active content is evolving, not frozen.",
+      "Section-level change is visible across the sampled slices."
+    ],
+    "blockedMoves": [
+      "Section instability blocks group, model, and effect refinement."
+    ],
+    "revisionBatchShape": "section_pass"
+  },
+  "successChecks": [
+    "Highest active revision level remains section.",
+    "The scene is split across too many active models to read as one idea."
+  ]
+}

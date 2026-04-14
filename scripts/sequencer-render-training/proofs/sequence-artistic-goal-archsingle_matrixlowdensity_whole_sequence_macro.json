@@ -1,0 +1,44 @@
+{
+  "artifactType": "sequence_artistic_goal_v1",
+  "artifactVersion": 1,
+  "goalId": "sag_archsingle_matrixlowdensity_whole_sequence_macro_001",
+  "createdAt": null,
+  "source": {
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_whole_sequence_macro.json",
+    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_whole_sequence"
+  },
+  "scope": {
+    "goalLevel": "macro",
+    "requestedScope": {
+      "mode": "whole_sequence",
+      "reviewStartLevel": "macro",
+      "sectionScopeKind": "full_sequence"
+    }
+  },
+  "artisticIntent": {
+    "emotionalTone": "proof_inferred",
+    "visualTone": "proof_inferred",
+    "leadTarget": null,
+    "supportTargets": [],
+    "focusHierarchy": "single-idea section read",
+    "sectionArc": "Preserve the current artistic direction while descending to the next critique level.",
+    "motionCharacter": "derived_from_critique",
+    "densityCharacter": "moderate"
+  },
+  "evaluationLens": {
+    "mustPreserve": [
+      "The section still reads as one idea with ArchSingle carrying the lead and restrained support around it.",
+      "The active footprint is broad enough to register at scene scale.",
+      "Density is consistent across the sampled window (moderate).",
+      "Multiple families are present, but the support family does not overpower the lead."
+    ],
+    "mustImprove": [],
+    "comparisonQuestions": [
+      "Preserve the current artistic direction while descending to the next critique level."
+    ]
+  },
+  "antiGoals": [],
+  "traceability": {
+    "designSummary": "single-idea section read"
+  }
+}

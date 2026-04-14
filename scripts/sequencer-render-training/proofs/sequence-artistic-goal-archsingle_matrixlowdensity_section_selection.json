@@ -1,16 +1,16 @@
 {
   "artifactType": "sequence_artistic_goal_v1",
   "artifactVersion": 1,
-  "goalId": "sag_archsingle_matrixlowdensity_section_balanced_001",
+  "goalId": "sag_archsingle_matrixlowdensity_section_selection_001",
   "createdAt": null,
   "source": {
-    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_section_balanced.json",
-    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_section"
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_section_selection.json",
+    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_section_selection"
   },
   "scope": {
     "goalLevel": "section",
     "requestedScope": {
-      "mode": "section_target_refinement",
+      "mode": "section_selection",
       "reviewStartLevel": "section",
       "sectionScopeKind": "timing_track_windows"
     }
