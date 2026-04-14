@@ -43,6 +43,10 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
         targetIds: ["ArchSingle", "MatrixLowDensity"],
         sections: ["Chorus 1"]
       }
+    },
+    priorPassMemory: {
+      artifactType: "sequencer_prior_pass_memory_v1",
+      unresolvedSignals: ["lead_mismatch", "flat_development"]
     }
   });
 
@@ -61,6 +65,8 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
   assert.deepEqual(out.sectionScope, ["Chorus 1"]);
   assert.deepEqual(out.blockedMoves, ["do_not_add_second_lead"]);
   assert.deepEqual(out.successChecks, ["section arc reads clearly", "lead target remains dominant"]);
+  assert.deepEqual(out.priorPassMemory.unresolvedSignals, ["lead_mismatch", "flat_development"]);
   assert.match(out.summary, /Clarify the section arc/i);
   assert.match(out.summary, /Introduce restrained support evolution/i);
+  assert.match(out.summary, /lead_mismatch/i);
 });

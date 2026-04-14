@@ -261,6 +261,10 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
       },
       successChecks: ["tree remains dominant"]
     },
+    priorPassMemory: {
+      artifactType: "sequencer_prior_pass_memory_v1",
+      unresolvedSignals: ["lead_mismatch"]
+    },
     sourceLines: ["Chorus 1 / MegaTree / increase pulse contrast and faster motion"],
     baseRevision: "rev-56",
     effectCatalog: sampleCatalog()
@@ -272,6 +276,8 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.sequencerRevisionBrief.leadTarget, "MegaTree");
   assert.deepEqual(out.metadata.sequencerRevisionBrief.supportTargets, ["Roofline"]);
   assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionTargets, []);
+  assert.deepEqual(out.metadata.priorPassMemory.unresolvedSignals, ["lead_mismatch"]);
+  assert.deepEqual(out.metadata.sequencerRevisionBrief.priorPassMemory.unresolvedSignals, ["lead_mismatch"]);
   assert.equal(out.metadata.requestScopeMode, "section_target_refinement");
   assert.equal(out.metadata.reviewStartLevel, "section");
   assert.equal(out.metadata.sectionScopeKind, "timing_track_windows");

@@ -33,6 +33,7 @@ export async function executeApplyCore({
     getSelectedSections,
     normalizeMetadataSelectionIds,
     normalizeMetadataSelectedTags,
+    buildPriorPassMemory = () => null,
     getSequenceTimingOwnershipRows,
     getManualLockedXdTracks,
     validateSequenceAgentContractGate,
@@ -100,6 +101,9 @@ export async function executeApplyCore({
     const sequenceArtisticGoal = state.creative?.sequenceArtisticGoal || planHandoff?.metadata?.sequenceArtisticGoal || null;
     const sequenceRevisionObjective = state.creative?.sequenceRevisionObjective || planHandoff?.metadata?.sequenceRevisionObjective || null;
     const sequencingDesignHandoff = state.creative?.sequencingDesignHandoff || planHandoff?.metadata?.sequencingDesignHandoff || intentHandoff?.sequencingDesignHandoff || null;
+    const priorPassMemory = buildPriorPassMemory({
+      historySnapshot: state.ui?.reviewHistorySnapshot || state.ui?.selectedHistorySnapshot || null
+    });
     const sequenceAgentInput = buildSequenceAgentInput({
       requestId: `${orchestrationRun.id}-apply`,
       endpoint: state.endpoint,
@@ -160,6 +164,7 @@ export async function executeApplyCore({
       sequencingDesignHandoff: sequenceAgentInput.sequencingDesignHandoff,
       sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
       sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
+      priorPassMemory,
       sourceLines,
       baseRevision: state.draftBaseRevision,
       capabilityCommands: state.health.capabilityCommands || [],

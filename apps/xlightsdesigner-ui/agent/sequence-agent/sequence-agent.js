@@ -15,6 +15,7 @@ import {
   buildStage1TrainingKnowledgeMetadata
 } from "./trained-effect-knowledge.js";
 import { buildSequencerRevisionBrief } from "./revision-planner.js";
+import { buildPriorPassMemory } from "./revision-memory.js";
 import {
   filterAvoidedEffects,
   selectPreferredEffect,
@@ -1161,6 +1162,7 @@ export function buildSequenceAgentPlan({
   sequencingDesignHandoff = null,
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null,
+  priorPassMemory = null,
   sourceLines = [],
   baseRevision = "unknown",
   capabilityCommands = [],
@@ -1207,7 +1209,8 @@ export function buildSequenceAgentPlan({
   const sequencerRevisionBrief = buildSequencerRevisionBrief({
     sequenceArtisticGoal,
     sequenceRevisionObjective,
-    sequencingDesignHandoff: scope.sequencingDesignHandoff
+    sequencingDesignHandoff: scope.sequencingDesignHandoff,
+    priorPassMemory: priorPassMemory && typeof priorPassMemory === "object" ? priorPassMemory : null
   });
 
   const timing = runStage({
@@ -1289,6 +1292,7 @@ export function buildSequenceAgentPlan({
       sequencingDesignHandoff: scope.sequencingDesignHandoff,
       sequenceArtisticGoal: sequenceArtisticGoal && typeof sequenceArtisticGoal === "object" ? sequenceArtisticGoal : null,
       sequenceRevisionObjective: sequenceRevisionObjective && typeof sequenceRevisionObjective === "object" ? sequenceRevisionObjective : null,
+      priorPassMemory: priorPassMemory && typeof priorPassMemory === "object" ? priorPassMemory : null,
       sequencerRevisionBrief,
       requestScopeMode: normText(sequencerRevisionBrief?.requestScopeMode),
       reviewStartLevel: normText(sequencerRevisionBrief?.reviewStartLevel),
@@ -1314,3 +1318,5 @@ export function buildSequenceAgentPlan({
   plan.artifactId = buildArtifactId(SEQUENCE_AGENT_PLAN_OUTPUT_CONTRACT, plan);
   return plan;
 }
+
+export { buildPriorPassMemory };

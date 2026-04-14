@@ -49,7 +49,8 @@ function inferRequestedScope(designHandoff = null) {
 export function buildSequencerRevisionBrief({
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null,
-  sequencingDesignHandoff = null
+  sequencingDesignHandoff = null,
+  priorPassMemory = null
 } = {}) {
   const objective = isPlainObject(sequenceRevisionObjective) ? sequenceRevisionObjective : null;
   const artisticGoal = isPlainObject(sequenceArtisticGoal) ? sequenceArtisticGoal : null;
@@ -72,7 +73,10 @@ export function buildSequencerRevisionBrief({
 
   const summaryParts = [
     str(designerDirection.artisticCorrection),
-    str(sequencerDirection.executionObjective)
+    str(sequencerDirection.executionObjective),
+    arr(priorPassMemory?.unresolvedSignals).length
+      ? `Carry forward unresolved prior-pass signals: ${arr(priorPassMemory.unresolvedSignals).join(", ")}.`
+      : ""
   ].filter(Boolean);
 
   return {
@@ -97,6 +101,7 @@ export function buildSequencerRevisionBrief({
     sectionScope,
     blockedMoves: arr(sequencerDirection.blockedMoves),
     successChecks: arr(objective?.successChecks),
+    priorPassMemory: isPlainObject(priorPassMemory) ? priorPassMemory : null,
     summary: summaryParts.join(" "),
   };
 }

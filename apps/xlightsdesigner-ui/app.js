@@ -115,6 +115,7 @@ import {
   estimateImpactCount
 } from "./agent/sequence-agent/command-builders.js";
 import { buildSequenceAgentPlan } from "./agent/sequence-agent/sequence-agent.js";
+import { buildPriorPassMemory } from "./agent/sequence-agent/revision-memory.js";
 import { evaluateSequencePlanCapabilities } from "./agent/sequence-agent/sequence-capability-gate.js";
 import { classifyModelDisplayType } from "./agent/sequence-agent/model-type-catalog.js";
 import { buildEffectDefinitionCatalog, emptyEffectDefinitionCatalog } from "./agent/sequence-agent/effect-definition-catalog.js";
@@ -8014,6 +8015,7 @@ applyReviewRuntime = createApplyReviewRuntime({
   arraysEqualOrdered,
   validateCommandGraph,
   buildSequenceAgentPlan,
+  buildPriorPassMemory,
   emitSequenceAgentStageTelemetry,
   evaluateSequencePlanCapabilities,
   isXdTimingTrack,
@@ -8111,6 +8113,7 @@ proposalGenerationRuntime = createProposalGenerationRuntime({
   buildDesignerExecutionSeedLines,
   shouldUseExecutionStrategySeedLines,
   buildSequenceAgentInput,
+  buildPriorPassMemory,
   currentLayoutMode,
   getSequenceTimingOwnershipRows,
   getManualLockedXdTracks,

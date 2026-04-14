@@ -63,6 +63,7 @@ export function createProposalGenerationRuntime(deps = {}) {
     buildDesignerExecutionSeedLines = () => [],
     shouldUseExecutionStrategySeedLines = () => false,
     buildSequenceAgentInput = () => ({}),
+    buildPriorPassMemory = () => null,
     currentLayoutMode = () => "2d",
     getSequenceTimingOwnershipRows = () => [],
     getManualLockedXdTracks = () => [],
@@ -389,6 +390,9 @@ export function createProposalGenerationRuntime(deps = {}) {
         : (shouldUseExecutionStrategySeedLines({ directSequenceMode, proposalOrchestration: normalizedProposalOrchestration })
             ? []
             : normalizedProposalOrchestration.proposalLines);
+      const priorPassMemory = buildPriorPassMemory({
+        historySnapshot: state.ui?.reviewHistorySnapshot || state.ui?.selectedHistorySnapshot || null
+      });
       const sequenceAgentInput = buildSequenceAgentInput({
         requestId: `${orchestrationRun.id}-generate`,
         endpoint: state.endpoint,
@@ -433,6 +437,7 @@ export function createProposalGenerationRuntime(deps = {}) {
           sequencingDesignHandoff: sequenceAgentInput.sequencingDesignHandoff,
           sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
           sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
+          priorPassMemory,
           sourceLines: proposalSeedLines,
           baseRevision: str(state.draftBaseRevision || state.revision || "unknown"),
           capabilityCommands: state.health.capabilityCommands || [],
