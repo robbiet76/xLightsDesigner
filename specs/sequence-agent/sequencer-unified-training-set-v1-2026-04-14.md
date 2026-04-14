@@ -36,6 +36,12 @@ not:
 - user-defined model names
 - local channel assignments
 - local file paths
+- section labels like `Chorus 1`
+- live planner target ids like `MegaTree` or `SpinnerHero`
+- any runtime-specific use-case naming
+
+The live planner may match shared priors to a concrete request context.
+That runtime context must not be written back into shared training artifacts.
 
 ## Core Rule
 

@@ -21,3 +21,20 @@ test("derived parameter prior bundle includes model-type aware priors", () => {
   assert.ok(marquee.priors.some((row) => row.modelType === "arch"));
   assert.ok(marquee.priors.some((row) => row.anchorProfiles.length > 0));
 });
+
+test("derived parameter prior bundle stays generic and excludes runtime-specific identifiers", () => {
+  const bundle = buildBundle(trainingSet);
+  const text = JSON.stringify(bundle);
+  for (const forbidden of [
+    "modelName",
+    "sequencePath",
+    "workingSequencePath",
+    "Chorus 1",
+    "Verse 1",
+    "MegaTree",
+    "Roofline",
+    "SpinnerHero"
+  ]) {
+    assert.equal(text.includes(forbidden), false, `unexpected token in shared prior bundle: ${forbidden}`);
+  }
+});
