@@ -5,6 +5,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+ACTIVE_PIXEL_EPSILON = 0.0003
+ACTIVE_BRIGHTNESS_EPSILON = 0.0003
+
 
 def run(cmd):
     return subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -172,7 +175,11 @@ def summarize(metrics):
 
     active_frames = [
         row for row in metrics
-        if row['frameActivePixelRatio'] > 0.02 or row['frameAverageBrightness'] > 0.02
+        if (
+            row['frameActivePixelRatio'] > ACTIVE_PIXEL_EPSILON
+            or row['frameAverageBrightness'] > ACTIVE_BRIGHTNESS_EPSILON
+            or row['frameUniqueColorCount'] > 1
+        )
     ]
     active_start = active_frames[0]['frameIndex'] if active_frames else None
     active_end = active_frames[-1]['frameIndex'] if active_frames else None
