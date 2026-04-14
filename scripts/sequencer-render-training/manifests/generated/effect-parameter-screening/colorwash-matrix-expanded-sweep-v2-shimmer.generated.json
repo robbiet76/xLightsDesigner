@@ -13,7 +13,7 @@
   },
   "samples": [
     {
-      "sampleId": "color wash-shimmer-false-generated-v1",
+      "sampleId": "color wash-shimmer-false-mono_white-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 1.0,
@@ -36,11 +36,12 @@
         },
         "paletteActivationMode": "xlights_default",
         "paletteActiveSlots": [
-          5
+          1
         ]
       },
       "labelHints": [
         "matrix_fill",
+        "palette_mono_white",
         "range_sample",
         "shimmer",
         "shimmer_false",
@@ -59,7 +60,56 @@
       }
     },
     {
-      "sampleId": "color wash-shimmer-true-generated-v1",
+      "sampleId": "color wash-shimmer-false-rgb_primary-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "matrix_fill",
+        "palette_rgb_primary",
+        "range_sample",
+        "shimmer",
+        "shimmer_false",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "shimmer",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "color wash-shimmer-true-mono_white-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 1.0,
@@ -82,11 +132,12 @@
         },
         "paletteActivationMode": "xlights_default",
         "paletteActiveSlots": [
-          5
+          1
         ]
       },
       "labelHints": [
         "matrix_fill",
+        "palette_mono_white",
         "range_sample",
         "shimmer",
         "shimmer_true",
@@ -102,6 +153,55 @@
         "screeningPhase": "screen",
         "screeningPriority": "medium",
         "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "color wash-shimmer-true-rgb_primary-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": true,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "matrix_fill",
+        "palette_rgb_primary",
+        "range_sample",
+        "shimmer",
+        "shimmer_true",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "shimmer",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
       }
     }
   ],

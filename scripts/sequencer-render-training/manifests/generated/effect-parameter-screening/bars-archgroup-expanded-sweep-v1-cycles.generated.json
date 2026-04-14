@@ -13,7 +13,7 @@
   },
   "samples": [
     {
-      "sampleId": "bars-cycles-2-generated-v1",
+      "sampleId": "bars-cycles-2-mono_white-generated-v1",
       "effectName": "Bars",
       "effectSettings": {
         "direction": "up",
@@ -25,13 +25,27 @@
         "3D": false
       },
       "sharedSettings": {
-        "renderStyle": "Single Line"
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
         "bar_motion",
         "cycles",
         "cycles_2",
         "grouped_arch_read",
+        "palette_mono_white",
         "range_sample"
       ],
       "export": {
@@ -42,11 +56,62 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
       }
     },
     {
-      "sampleId": "bars-cycles-5-generated-v1",
+      "sampleId": "bars-cycles-2-rgb_primary-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 2,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_2",
+        "grouped_arch_read",
+        "palette_rgb_primary",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "bars-cycles-5-mono_white-generated-v1",
       "effectName": "Bars",
       "effectSettings": {
         "direction": "up",
@@ -58,13 +123,27 @@
         "3D": false
       },
       "sharedSettings": {
-        "renderStyle": "Single Line"
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
         "bar_motion",
         "cycles",
         "cycles_5",
         "grouped_arch_read",
+        "palette_mono_white",
         "range_sample"
       ],
       "export": {
@@ -75,11 +154,62 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
       }
     },
     {
-      "sampleId": "bars-cycles-10-generated-v1",
+      "sampleId": "bars-cycles-5-rgb_primary-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 5,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_5",
+        "grouped_arch_read",
+        "palette_rgb_primary",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "bars-cycles-10-mono_white-generated-v1",
       "effectName": "Bars",
       "effectSettings": {
         "direction": "up",
@@ -91,13 +221,27 @@
         "3D": false
       },
       "sharedSettings": {
-        "renderStyle": "Single Line"
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
         "bar_motion",
         "cycles",
         "cycles_10",
         "grouped_arch_read",
+        "palette_mono_white",
         "range_sample"
       ],
       "export": {
@@ -108,11 +252,62 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
       }
     },
     {
-      "sampleId": "bars-cycles-15-generated-v1",
+      "sampleId": "bars-cycles-10-rgb_primary-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 10,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_10",
+        "grouped_arch_read",
+        "palette_rgb_primary",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "bars-cycles-15-mono_white-generated-v1",
       "effectName": "Bars",
       "effectSettings": {
         "direction": "up",
@@ -124,13 +319,27 @@
         "3D": false
       },
       "sharedSettings": {
-        "renderStyle": "Single Line"
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
         "bar_motion",
         "cycles",
         "cycles_15",
         "grouped_arch_read",
+        "palette_mono_white",
         "range_sample"
       ],
       "export": {
@@ -141,11 +350,62 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
       }
     },
     {
-      "sampleId": "bars-cycles-20-generated-v1",
+      "sampleId": "bars-cycles-15-rgb_primary-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 15,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_15",
+        "grouped_arch_read",
+        "palette_rgb_primary",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "bars-cycles-20-mono_white-generated-v1",
       "effectName": "Bars",
       "effectSettings": {
         "direction": "up",
@@ -157,13 +417,27 @@
         "3D": false
       },
       "sharedSettings": {
-        "renderStyle": "Single Line"
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
         "bar_motion",
         "cycles",
         "cycles_20",
         "grouped_arch_read",
+        "palette_mono_white",
         "range_sample"
       ],
       "export": {
@@ -174,7 +448,58 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "bars-cycles-20-rgb_primary-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 20,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_20",
+        "grouped_arch_read",
+        "palette_rgb_primary",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
       }
     }
   ],
@@ -191,6 +516,7 @@
       15,
       20
     ],
-    "target": "effectSettings"
+    "target": "effectSettings",
+    "screeningPaletteMode": null
   }
 }

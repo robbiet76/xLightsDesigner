@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T14:49:13.112Z",
+  "generatedAt": "2026-04-14T15:07:37.455Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -44,7 +44,7 @@
         "heuristic_observations",
         "fixture_model_context"
       ],
-      "currentPopulation": "68 durable general-training screening records loaded",
+      "currentPopulation": "144 durable general-training screening records loaded",
       "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
@@ -343,7 +343,7 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 11,
+        "screeningRecordCount": 22,
         "screenedParameterNames": [
           "3D",
           "cycles",
@@ -365,9 +365,11 @@
           "effect:bars",
           "grouped_arch_read",
           "model:arch",
+          "palette_mono_white",
           "range_sample",
           "render_style:single_line",
           "single_bar",
+          "palette_rgb_primary",
           "3D_true",
           "cycles",
           "cycles_10",
@@ -539,7 +541,9 @@
         "exhaustiveSettingCoverage": false,
         "screenedParameterNames": [
           "circularPalette",
-          "cycles"
+          "cycles",
+          "reverseFades",
+          "shimmer"
         ]
       },
       "liveOutcomeLearning": {
@@ -602,10 +606,12 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 7,
+        "screeningRecordCount": 22,
         "screenedParameterNames": [
           "circularPalette",
-          "cycles"
+          "cycles",
+          "reverseFades",
+          "shimmer"
         ],
         "sampledModelTypes": [
           "matrix"
@@ -619,21 +625,37 @@
           "effect:color_wash",
           "flat_fill",
           "full_coverage",
+          "intermittent_window_coverage",
           "linear_palette",
           "matrix_fill",
           "model:matrix",
+          "moderate_motion_window",
+          "palette_mono_white",
           "range_sample",
           "render_style:default",
           "steady_wash",
+          "subtle_brightness_change",
+          "subtle_color_travel",
           "wash_fill",
+          "palette_rgb_primary",
+          "stable_brightness",
+          "subtle_motion_window",
           "circularPalette_true",
           "circular_palette",
+          "color_travel",
           "cycles",
           "cycles_0_5",
           "cycles_1_0",
           "cycles_2_0",
           "cycles_3_0",
-          "cycles_4_0"
+          "cycles_4_0",
+          "reverseFades",
+          "reverseFades_false",
+          "reverseFades_true",
+          "shimmer",
+          "shimmer_false",
+          "shimmer_true",
+          "shimmer_wash"
         ]
       }
     },
@@ -1681,7 +1703,7 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 34,
+        "screeningRecordCount": 68,
         "screenedParameterNames": [
           "accel",
           "blendEdges",
@@ -1710,6 +1732,7 @@
           "model:spinner",
           "neutral_shockwave",
           "offset_shockwave",
+          "palette_mono_white",
           "radial_pattern_fit",
           "radial_shockwave",
           "range_sample",
@@ -1718,6 +1741,7 @@
           "shockwave_pattern",
           "single_shockwave",
           "spinner_fill",
+          "palette_rgb_primary",
           "accel_0",
           "accel_5",
           "blendEdges",
@@ -2401,7 +2425,7 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 16,
+        "screeningRecordCount": 32,
         "screenedParameterNames": [
           "count",
           "reRandomize",
@@ -2424,10 +2448,12 @@
           "medium_cadence_twinkle",
           "medium_twinkle",
           "model:single_line",
+          "palette_mono_white",
           "range_sample",
           "render_style:default",
           "soft_twinkle",
           "twinkle_pattern",
+          "palette_rgb_primary",
           "count_3",
           "count_5",
           "count_7",

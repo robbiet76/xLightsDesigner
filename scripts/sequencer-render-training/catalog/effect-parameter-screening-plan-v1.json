@@ -1,12 +1,11 @@
 {
   "artifactType": "effect_parameter_screening_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T14:49:12.785Z",
+  "generatedAt": "2026-04-14T15:07:37.087Z",
   "summary": {
-    "effectCount": 5,
-    "manifestCount": 92,
+    "effectCount": 4,
+    "manifestCount": 90,
     "runnableEffects": [
-      "Color Wash",
       "Marquee",
       "On",
       "Pinwheel",
@@ -15,26 +14,6 @@
     ]
   },
   "rows": [
-    {
-      "effectName": "Color Wash",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/colorwash-matrix-expanded-sweep-v2.json",
-      "baseManifestName": "colorwash-matrix-expanded-sweep-v2",
-      "parameterName": "reverseFades",
-      "practicalPriority": "medium",
-      "phase": "interaction",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/colorwash-matrix-expanded-sweep-v2-reverseFades.generated.json"
-    },
-    {
-      "effectName": "Color Wash",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/colorwash-matrix-expanded-sweep-v2.json",
-      "baseManifestName": "colorwash-matrix-expanded-sweep-v2",
-      "parameterName": "shimmer",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/colorwash-matrix-expanded-sweep-v2-shimmer.generated.json"
-    },
     {
       "effectName": "Marquee",
       "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/marquee-archgroup-expanded-sweep-v1.json",

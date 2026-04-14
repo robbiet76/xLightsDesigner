@@ -13,7 +13,54 @@
   },
   "samples": [
     {
-      "sampleId": "color wash-cycles-0_5-generated-v1",
+      "sampleId": "color wash-cycles-0_5-mono_white-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 0.5,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_0_5",
+        "matrix_fill",
+        "palette_mono_white",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "color wash-cycles-0_5-rgb_primary-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 0.5,
@@ -45,6 +92,7 @@
         "cycles",
         "cycles_0_5",
         "matrix_fill",
+        "palette_rgb_primary",
         "range_sample",
         "steady_wash"
       ],
@@ -61,7 +109,54 @@
       }
     },
     {
-      "sampleId": "color wash-cycles-1_0-generated-v1",
+      "sampleId": "color wash-cycles-1_0-mono_white-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_1_0",
+        "matrix_fill",
+        "palette_mono_white",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "color wash-cycles-1_0-rgb_primary-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 1.0,
@@ -93,6 +188,7 @@
         "cycles",
         "cycles_1_0",
         "matrix_fill",
+        "palette_rgb_primary",
         "range_sample",
         "steady_wash"
       ],
@@ -109,7 +205,54 @@
       }
     },
     {
-      "sampleId": "color wash-cycles-2_0-generated-v1",
+      "sampleId": "color wash-cycles-2_0-mono_white-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 2.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_2_0",
+        "matrix_fill",
+        "palette_mono_white",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "color wash-cycles-2_0-rgb_primary-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 2.0,
@@ -141,6 +284,7 @@
         "cycles",
         "cycles_2_0",
         "matrix_fill",
+        "palette_rgb_primary",
         "range_sample",
         "steady_wash"
       ],
@@ -157,7 +301,54 @@
       }
     },
     {
-      "sampleId": "color wash-cycles-3_0-generated-v1",
+      "sampleId": "color wash-cycles-3_0-mono_white-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 3.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_3_0",
+        "matrix_fill",
+        "palette_mono_white",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "color wash-cycles-3_0-rgb_primary-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 3.0,
@@ -189,6 +380,7 @@
         "cycles",
         "cycles_3_0",
         "matrix_fill",
+        "palette_rgb_primary",
         "range_sample",
         "steady_wash"
       ],
@@ -205,7 +397,54 @@
       }
     },
     {
-      "sampleId": "color wash-cycles-4_0-generated-v1",
+      "sampleId": "color wash-cycles-4_0-mono_white-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 4.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_4_0",
+        "matrix_fill",
+        "palette_mono_white",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "color wash-cycles-4_0-rgb_primary-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 4.0,
@@ -237,6 +476,7 @@
         "cycles",
         "cycles_4_0",
         "matrix_fill",
+        "palette_rgb_primary",
         "range_sample",
         "steady_wash"
       ],

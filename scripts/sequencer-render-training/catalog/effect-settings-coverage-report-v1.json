@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_settings_coverage_report_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T14:49:13.220Z",
+  "generatedAt": "2026-04-14T15:07:37.631Z",
   "summary": {
     "effectCount": 20,
     "screenedParameterSubsetCount": 10,
@@ -106,7 +106,9 @@
       ],
       "screenedParameterNames": [
         "circularPalette",
-        "cycles"
+        "cycles",
+        "reverseFades",
+        "shimmer"
       ],
       "exhaustiveSettingCoverage": false
     },

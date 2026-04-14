@@ -20,7 +20,7 @@ PALETTE_PRESETS = {
         "paletteProfile": "mono_white",
         "paletteActivationMode": "xlights_default",
         "palette": XLIGHTS_DEFAULT_PALETTE,
-        "activeSlots": [5]
+        "activeSlots": [1]
     },
     "rgb_primary": {
         "paletteProfile": "rgb_primary",
@@ -35,6 +35,8 @@ PALETTE_PRESETS = {
         "activeSlots": [2, 3, 4]
     }
 }
+
+DEFAULT_SCREENING_PALETTE_VARIANTS = ["mono_white", "rgb_primary"]
 
 
 def parse_args() -> argparse.Namespace:
@@ -59,6 +61,11 @@ def build_value_token(value) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     token = str(value)
+    return token.replace(".", "_").replace(" ", "_").replace("/", "_")
+
+
+def build_palette_token(value: str) -> str:
+    token = str(value or "").strip().lower()
     return token.replace(".", "_").replace(" ", "_").replace("/", "_")
 
 
@@ -110,37 +117,39 @@ def main() -> int:
         "screeningPaletteMode": param_registry.get("screeningPaletteMode"),
     }
 
+    palette_variants = param_registry.get("screeningPaletteVariants") or DEFAULT_SCREENING_PALETTE_VARIANTS
+
     for value in anchors:
-        sample = deepcopy(template)
-        sample["effectSettings"] = deepcopy(base_settings)
-        sample["sharedSettings"] = deepcopy(base_shared)
-        sample["export"] = deepcopy(base_export)
-        palette_mode = param_registry.get("screeningPaletteMode")
-        if palette_mode:
+        token = build_value_token(value)
+        for palette_mode in palette_variants:
+            sample = deepcopy(template)
+            sample["effectSettings"] = deepcopy(base_settings)
+            sample["sharedSettings"] = deepcopy(base_shared)
+            sample["export"] = deepcopy(base_export)
             preset = PALETTE_PRESETS.get(palette_mode)
             if preset is None:
-                raise ValueError(f"unknown screeningPaletteMode for {effect} {args.parameter}: {palette_mode}")
+                raise ValueError(f"unknown screening palette mode for {effect} {args.parameter}: {palette_mode}")
             sample["sharedSettings"]["paletteProfile"] = preset["paletteProfile"]
             sample["sharedSettings"]["palette"] = deepcopy(preset["palette"])
             sample["sharedSettings"]["paletteActivationMode"] = preset.get("paletteActivationMode", "explicit")
             sample["sharedSettings"]["paletteActiveSlots"] = deepcopy(preset.get("activeSlots", []))
-        sample["trainingContext"] = {
-            "screenedParameterName": args.parameter,
-            "screeningTarget": target,
-            "screeningPhase": param_registry.get("phase", "screen"),
-            "screeningPriority": param_registry.get("practicalPriority", param_registry.get("importance", "medium")),
-            "screeningPaletteMode": palette_mode or "",
-        }
-        if target == "sharedSettings":
-            sample["sharedSettings"][args.parameter] = value
-        else:
-            sample["effectSettings"][args.parameter] = value
-        token = build_value_token(value)
-        sample["sampleId"] = f"{effect.lower()}-{args.parameter.lower()}-{token}-generated-v1"
-        hints = list(sample.get("labelHints", []))
-        hints.extend(["range_sample", args.parameter, f"{args.parameter}_{token}"])
-        sample["labelHints"] = sorted(set(hints))
-        out["samples"].append(sample)
+            sample["trainingContext"] = {
+                "screenedParameterName": args.parameter,
+                "screeningTarget": target,
+                "screeningPhase": param_registry.get("phase", "screen"),
+                "screeningPriority": param_registry.get("practicalPriority", param_registry.get("importance", "medium")),
+                "screeningPaletteMode": palette_mode,
+            }
+            if target == "sharedSettings":
+                sample["sharedSettings"][args.parameter] = value
+            else:
+                sample["effectSettings"][args.parameter] = value
+            palette_token = build_palette_token(palette_mode)
+            sample["sampleId"] = f"{effect.lower()}-{args.parameter.lower()}-{token}-{palette_token}-generated-v1"
+            hints = list(sample.get("labelHints", []))
+            hints.extend(["range_sample", args.parameter, f"{args.parameter}_{token}", f"palette_{palette_token}"])
+            sample["labelHints"] = sorted(set(hints))
+            out["samples"].append(sample)
 
     Path(args.out_file).write_text(json.dumps(out, indent=2) + "\n")
     return 0

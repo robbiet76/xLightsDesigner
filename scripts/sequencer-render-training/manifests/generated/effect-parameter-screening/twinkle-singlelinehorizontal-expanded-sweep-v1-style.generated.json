@@ -13,7 +13,7 @@
   },
   "samples": [
     {
-      "sampleId": "twinkle-style-Old_Render_Method-generated-v1",
+      "sampleId": "twinkle-style-Old_Render_Method-mono_white-generated-v1",
       "effectName": "Twinkle",
       "effectSettings": {
         "style": "Old Render Method",
@@ -23,10 +23,24 @@
         "reRandomize": false
       },
       "sharedSettings": {
-        "renderStyle": "Default"
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
         "line_read",
+        "palette_mono_white",
         "range_sample",
         "soft_twinkle",
         "style",
@@ -40,11 +54,60 @@
         "screenedParameterName": "style",
         "screeningTarget": "effectSettings",
         "screeningPhase": "baseline",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
       }
     },
     {
-      "sampleId": "twinkle-style-New_Render_Method-generated-v1",
+      "sampleId": "twinkle-style-Old_Render_Method-rgb_primary-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "Old Render Method",
+        "count": 3,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "line_read",
+        "palette_rgb_primary",
+        "range_sample",
+        "soft_twinkle",
+        "style",
+        "style_Old_Render_Method"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "style",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "twinkle-style-New_Render_Method-mono_white-generated-v1",
       "effectName": "Twinkle",
       "effectSettings": {
         "style": "New Render Method",
@@ -54,10 +117,24 @@
         "reRandomize": false
       },
       "sharedSettings": {
-        "renderStyle": "Default"
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
         "line_read",
+        "palette_mono_white",
         "range_sample",
         "soft_twinkle",
         "style",
@@ -71,7 +148,56 @@
         "screenedParameterName": "style",
         "screeningTarget": "effectSettings",
         "screeningPhase": "baseline",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "twinkle-style-New_Render_Method-rgb_primary-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "line_read",
+        "palette_rgb_primary",
+        "range_sample",
+        "soft_twinkle",
+        "style",
+        "style_New_Render_Method"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "style",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
       }
     }
   ],
@@ -85,6 +211,7 @@
       "Old Render Method",
       "New Render Method"
     ],
-    "target": "effectSettings"
+    "target": "effectSettings",
+    "screeningPaletteMode": null
   }
 }

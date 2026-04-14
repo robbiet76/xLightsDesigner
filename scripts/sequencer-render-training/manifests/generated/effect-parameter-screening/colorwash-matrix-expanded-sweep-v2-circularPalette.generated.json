@@ -13,7 +13,7 @@
   },
   "samples": [
     {
-      "sampleId": "color wash-circularpalette-false-generated-v1",
+      "sampleId": "color wash-circularpalette-false-mono_white-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 1.0,
@@ -25,7 +25,54 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "circular_multi",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "circularPalette",
+        "circularPalette_false",
+        "matrix_fill",
+        "palette_mono_white",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "circularPalette",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "color wash-circularpalette-false-rgb_primary-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
         "palette": {
           "C_BUTTON_Palette1": "#FFFFFF",
           "C_BUTTON_Palette2": "#FF0000",
@@ -45,6 +92,7 @@
         "circularPalette",
         "circularPalette_false",
         "matrix_fill",
+        "palette_rgb_primary",
         "range_sample",
         "steady_wash"
       ],
@@ -57,11 +105,11 @@
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
         "screeningPriority": "medium",
-        "screeningPaletteMode": "circular_multi"
+        "screeningPaletteMode": "rgb_primary"
       }
     },
     {
-      "sampleId": "color wash-circularpalette-true-generated-v1",
+      "sampleId": "color wash-circularpalette-true-mono_white-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 1.0,
@@ -73,7 +121,54 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "circular_multi",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "circularPalette",
+        "circularPalette_true",
+        "matrix_fill",
+        "palette_mono_white",
+        "range_sample",
+        "steady_wash"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "circularPalette",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "color wash-circularpalette-true-rgb_primary-generated-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
         "palette": {
           "C_BUTTON_Palette1": "#FFFFFF",
           "C_BUTTON_Palette2": "#FF0000",
@@ -93,6 +188,7 @@
         "circularPalette",
         "circularPalette_true",
         "matrix_fill",
+        "palette_rgb_primary",
         "range_sample",
         "steady_wash"
       ],
@@ -105,7 +201,7 @@
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
         "screeningPriority": "medium",
-        "screeningPaletteMode": "circular_multi"
+        "screeningPaletteMode": "rgb_primary"
       }
     }
   ],

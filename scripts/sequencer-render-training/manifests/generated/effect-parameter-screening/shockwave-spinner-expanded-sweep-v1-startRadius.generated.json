@@ -13,7 +13,7 @@
   },
   "samples": [
     {
-      "sampleId": "shockwave-startradius-0-generated-v1",
+      "sampleId": "shockwave-startradius-0-mono_white-generated-v1",
       "effectName": "Shockwave",
       "effectSettings": {
         "cycles": 1,
@@ -28,9 +28,23 @@
         "scale": true
       },
       "sharedSettings": {
-        "renderStyle": "Default"
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
+        "palette_mono_white",
         "radial_shockwave",
         "range_sample",
         "spinner_fill",
@@ -45,11 +59,65 @@
         "screenedParameterName": "startRadius",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
       }
     },
     {
-      "sampleId": "shockwave-startradius-10-generated-v1",
+      "sampleId": "shockwave-startradius-0-rgb_primary-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 0,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "radial_shockwave",
+        "range_sample",
+        "spinner_fill",
+        "startRadius",
+        "startRadius_0"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "shockwave-startradius-10-mono_white-generated-v1",
       "effectName": "Shockwave",
       "effectSettings": {
         "cycles": 1,
@@ -64,9 +132,23 @@
         "scale": true
       },
       "sharedSettings": {
-        "renderStyle": "Default"
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
+        "palette_mono_white",
         "radial_shockwave",
         "range_sample",
         "spinner_fill",
@@ -81,11 +163,65 @@
         "screenedParameterName": "startRadius",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
       }
     },
     {
-      "sampleId": "shockwave-startradius-25-generated-v1",
+      "sampleId": "shockwave-startradius-10-rgb_primary-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 10,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "radial_shockwave",
+        "range_sample",
+        "spinner_fill",
+        "startRadius",
+        "startRadius_10"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "shockwave-startradius-25-mono_white-generated-v1",
       "effectName": "Shockwave",
       "effectSettings": {
         "cycles": 1,
@@ -100,9 +236,23 @@
         "scale": true
       },
       "sharedSettings": {
-        "renderStyle": "Default"
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
+        "palette_mono_white",
         "radial_shockwave",
         "range_sample",
         "spinner_fill",
@@ -117,11 +267,65 @@
         "screenedParameterName": "startRadius",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
       }
     },
     {
-      "sampleId": "shockwave-startradius-50-generated-v1",
+      "sampleId": "shockwave-startradius-25-rgb_primary-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 25,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "radial_shockwave",
+        "range_sample",
+        "spinner_fill",
+        "startRadius",
+        "startRadius_25"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "shockwave-startradius-50-mono_white-generated-v1",
       "effectName": "Shockwave",
       "effectSettings": {
         "cycles": 1,
@@ -136,9 +340,23 @@
         "scale": true
       },
       "sharedSettings": {
-        "renderStyle": "Default"
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
       },
       "labelHints": [
+        "palette_mono_white",
         "radial_shockwave",
         "range_sample",
         "spinner_fill",
@@ -153,7 +371,61 @@
         "screenedParameterName": "startRadius",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "high"
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "shockwave-startradius-50-rgb_primary-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 50,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "radial_shockwave",
+        "range_sample",
+        "spinner_fill",
+        "startRadius",
+        "startRadius_50"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
       }
     }
   ],
@@ -169,6 +441,7 @@
       25,
       50
     ],
-    "target": "effectSettings"
+    "target": "effectSettings",
+    "screeningPaletteMode": null
   }
 }

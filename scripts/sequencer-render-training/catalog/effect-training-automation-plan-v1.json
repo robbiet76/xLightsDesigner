@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_training_automation_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T14:49:13.307Z",
+  "generatedAt": "2026-04-14T15:07:37.727Z",
   "summary": {
     "effectCount": 20,
     "runnableNowCount": 0,
@@ -30,12 +30,12 @@
       "effectName": "Color Wash",
       "family": "wash",
       "coverageStatus": "screened_parameter_subset",
-      "readiness": "ready_for_expansion",
+      "readiness": "screened_current_registry",
       "priority": "later",
-      "nextAction": "deepen_screened_subset",
+      "nextAction": "harvest_outcomes_or_add_interactions",
       "registryParameterCount": 6,
       "retainedParameterCount": 2,
-      "screenedParameterCount": 2,
+      "screenedParameterCount": 4,
       "outcomeRecordCount": 0
     },
     {
