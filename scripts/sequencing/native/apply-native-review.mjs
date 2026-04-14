@@ -300,6 +300,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       analysisHandoff,
       intentHandoff: inputs.intentHandoff
     });
+    const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
     await persistNativeReviewArtifacts({
       projectFile,
       projectDoc: inputs.projectDoc,
@@ -321,7 +322,14 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       nextRevision: fallback.nextRevision,
       applyPath: fallback.applyPath,
       summary: fallback.summary,
-      applyResultId: str(applyResult?.artifactId)
+      applyResultId: str(applyResult?.artifactId),
+      renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),
+      renderFeedbackStatus: renderFeedbackCapabilities.fullFeedbackReady
+        ? (renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext ? 'captured' : 'apply_completed_without_artifacts')
+        : 'owned_routes_unavailable',
+      renderFeedbackMissingRequirements: Array.isArray(renderFeedbackCapabilities.missingRequirements)
+        ? renderFeedbackCapabilities.missingRequirements
+        : []
     };
   }
 
@@ -340,6 +348,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     analysisHandoff,
     intentHandoff: inputs.intentHandoff
   });
+  const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
   await persistNativeReviewArtifacts({
     projectFile,
     projectDoc: inputs.projectDoc,
@@ -361,7 +370,14 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     nextRevision: str(applyRes?.nextRevision || ''),
     applyPath: str(applyRes?.applyPath || ''),
     summary: str(commandsPlan?.summary || inputs.proposalBundle?.summary || 'Applied pending work.'),
-    applyResultId: str(applyResult?.artifactId)
+    applyResultId: str(applyResult?.artifactId),
+    renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),
+    renderFeedbackStatus: renderFeedbackCapabilities.fullFeedbackReady
+      ? (renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext ? 'captured' : 'apply_completed_without_artifacts')
+      : 'owned_routes_unavailable',
+    renderFeedbackMissingRequirements: Array.isArray(renderFeedbackCapabilities.missingRequirements)
+      ? renderFeedbackCapabilities.missingRequirements
+      : []
   };
 }
 
@@ -487,6 +503,66 @@ async function buildNativeRenderFeedbackArtifacts({
     return { renderObservation, renderCritiqueContext };
   } catch {
     return { renderObservation: null, renderCritiqueContext: null };
+  }
+}
+
+async function probeOwnedRenderFeedbackCapabilities(endpoint = '') {
+  const [layoutModels, layoutScene, renderSamples] = await Promise.all([
+    probeOwnedRoute(endpoint, '/layout/models'),
+    probeOwnedRoute(endpoint, '/layout/scene'),
+    probeOwnedRoute(endpoint, '/sequence/render-samples', {
+      method: 'POST',
+      body: {
+        startMs: 0,
+        endMs: 1,
+        maxFrames: 1,
+        channelRanges: []
+      }
+    })
+  ]);
+  return {
+    fullFeedbackReady: Boolean(layoutModels.available && layoutScene.available && renderSamples.available),
+    missingRequirements: [
+      layoutModels.available ? '' : 'layout.models',
+      layoutScene.available ? '' : 'layout.scene',
+      renderSamples.available ? '' : 'sequence.render-samples'
+    ].filter(Boolean),
+    layoutModels,
+    layoutScene,
+    renderSamples
+  };
+}
+
+async function probeOwnedRoute(endpoint = '', routePath = '', { method = 'GET', body = null } = {}) {
+  try {
+    const target = `${String(endpoint || '').replace(/\/+$/, '')}${routePath}`;
+    const response = await fetch(target, {
+      method,
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const text = await response.text();
+    let parsed = {};
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = {};
+    }
+    return {
+      available: response.status !== 404,
+      statusCode: response.status,
+      ok: parsed?.ok === true,
+      errorCode: str(parsed?.error?.code),
+      message: str(parsed?.error?.message)
+    };
+  } catch (err) {
+    return {
+      available: false,
+      statusCode: 0,
+      ok: false,
+      errorCode: 'REQUEST_FAILED',
+      message: str(err?.message || err)
+    };
   }
 }
 

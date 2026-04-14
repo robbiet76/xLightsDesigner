@@ -82,7 +82,10 @@ private struct StubXLightsSessionService: XLightsSessionService, Sendable {
                 commandCount: 12,
                 nextRevision: "rev-2",
                 applyPath: "owned_batch_plan",
-                sequencePath: "/tmp/HolidayRoad.xsq"
+                sequencePath: "/tmp/HolidayRoad.xsq",
+                renderFeedbackCaptured: false,
+                renderFeedbackStatus: "owned_routes_unavailable",
+                renderFeedbackMissingRequirements: ["layout.scene", "sequence.render-samples"]
             )
         },
         xlightsSessionService: StubXLightsSessionService()
@@ -94,6 +97,7 @@ private struct StubXLightsSessionService: XLightsSessionService, Sendable {
     #expect(model.isApplying == false)
     #expect(model.transientBanner?.state == .ready)
     #expect(model.transientBanner?.text.contains("Applied 12 commands") == true)
+    #expect(model.transientBanner?.text.contains("Render feedback unavailable") == true)
     #expect(model.transientBanner?.text.contains("Rendered xLights sequence") == true)
     #expect(model.transientBanner?.text.contains("Saved xLights sequence") == true)
 }
@@ -106,7 +110,16 @@ private struct StubXLightsSessionService: XLightsSessionService, Sendable {
         pendingWorkService: LocalPendingWorkService(),
         reviewExecutionService: StubReviewExecutionService { _, _, _ in
             Issue.record("applyPendingWork should not be called")
-            return ReviewApplyExecutionResult(summary: "", commandCount: 0, nextRevision: "", applyPath: "", sequencePath: "")
+            return ReviewApplyExecutionResult(
+                summary: "",
+                commandCount: 0,
+                nextRevision: "",
+                applyPath: "",
+                sequencePath: "",
+                renderFeedbackCaptured: false,
+                renderFeedbackStatus: "",
+                renderFeedbackMissingRequirements: []
+            )
         }
     )
 

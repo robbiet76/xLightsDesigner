@@ -59,9 +59,22 @@ final class ReviewScreenViewModel {
                 let renderSummary = try? await xlightsSessionService.renderCurrentSequence()
                 let saveSummary = try? await xlightsSessionService.saveCurrentSequence()
                 isApplying = false
+                let feedbackSummary: String
+                if result.renderFeedbackCaptured {
+                    feedbackSummary = " Render feedback artifacts captured."
+                } else if result.renderFeedbackStatus == "owned_routes_unavailable" {
+                    let missing = result.renderFeedbackMissingRequirements.joined(separator: ", ")
+                    feedbackSummary = missing.isEmpty
+                        ? " Render feedback unavailable: owned API parity is incomplete."
+                        : " Render feedback unavailable: missing owned routes \(missing)."
+                } else if !result.renderFeedbackStatus.isEmpty {
+                    feedbackSummary = " Render feedback status: \(result.renderFeedbackStatus)."
+                } else {
+                    feedbackSummary = ""
+                }
                 transientBanner = WorkflowBannerModel(
                     id: "review-apply-success",
-                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
+                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + feedbackSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
                     state: .ready
                 )
                 refresh()

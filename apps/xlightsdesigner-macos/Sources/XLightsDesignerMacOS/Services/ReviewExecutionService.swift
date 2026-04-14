@@ -20,6 +20,9 @@ struct ReviewApplyExecutionResult: Sendable {
     let nextRevision: String
     let applyPath: String
     let sequencePath: String
+    let renderFeedbackCaptured: Bool
+    let renderFeedbackStatus: String
+    let renderFeedbackMissingRequirements: [String]
 }
 
 protocol ReviewExecutionService: Sendable {
@@ -48,7 +51,10 @@ struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
             commandCount: int(json["commandCount"]),
             nextRevision: string(json["nextRevision"]),
             applyPath: string(json["applyPath"]),
-            sequencePath: string(json["sequencePath"])
+            sequencePath: string(json["sequencePath"]),
+            renderFeedbackCaptured: bool(json["renderFeedbackCaptured"]),
+            renderFeedbackStatus: string(json["renderFeedbackStatus"]),
+            renderFeedbackMissingRequirements: stringArray(json["renderFeedbackMissingRequirements"])
         )
     }
 
@@ -84,5 +90,16 @@ struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
     private func int(_ value: Any?) -> Int {
         if let num = value as? NSNumber { return num.intValue }
         return Int(String(describing: value ?? "")) ?? 0
+    }
+
+    private func bool(_ value: Any?) -> Bool {
+        if let bool = value as? Bool { return bool }
+        if let number = value as? NSNumber { return number.boolValue }
+        return false
+    }
+
+    private func stringArray(_ value: Any?) -> [String] {
+        guard let rows = value as? [Any] else { return [] }
+        return rows.map { String(describing: $0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
     }
 }
