@@ -12,7 +12,9 @@ import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js"
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
 import { translatePlacementIntentToXlights } from "./effect-intent-translation.js";
 import {
-  buildStage1TrainingKnowledgeMetadata
+  buildDerivedParameterKnowledgeMetadata,
+  buildStage1TrainingKnowledgeMetadata,
+  recommendDerivedParameterPriors
 } from "./trained-effect-knowledge.js";
 import { buildSequencerRevisionBrief } from "./revision-planner.js";
 import { buildPriorPassMemory } from "./revision-memory.js";
@@ -488,6 +490,68 @@ function inferRevisionBriefPreferredEffects(brief = {}) {
   return [];
 }
 
+function inferDesiredParameterBehaviorHints({ effectName = "", summary = "", sequencerRevisionBrief = null } = {}) {
+  const hints = new Set();
+  const normalizedEffectName = normText(effectName);
+  const normalizedSummary = normText(summary).toLowerCase();
+  const revisionRoles = new Set(normArray(sequencerRevisionBrief?.revisionRoles).map((row) => normText(row)));
+  const motionCharacter = normText(sequencerRevisionBrief?.motionCharacter).toLowerCase();
+
+  if (normalizedSummary.includes("forward")) hints.add("forward_motion");
+  if (normalizedSummary.includes("linear")) hints.add("linear_pattern_fit");
+  if (normalizedSummary.includes("radial") || normalizedEffectName === "Pinwheel" || normalizedEffectName === "Shockwave") hints.add("radial_pattern_fit");
+  if (normalizedSummary.includes("spiral") || normalizedEffectName === "Spirals") hints.add("spiral_pattern_fit");
+  if (normalizedSummary.includes("grouped arch") || normalizedSummary.includes("arch")) hints.add("grouped_arch_read");
+
+  if (revisionRoles.has("strengthen_lead")) hints.add("readable_lead");
+  if (revisionRoles.has("increase_section_contrast")) hints.add("high_contrast");
+  if (revisionRoles.has("add_section_development")) hints.add("moderate_motion");
+  if (revisionRoles.has("reduce_competing_support")) hints.add("static_or_near_static");
+  if (motionCharacter.includes("restrained") || motionCharacter.includes("still")) hints.add("static_or_near_static");
+  if (motionCharacter.includes("expand")) hints.add("moderate_motion");
+
+  return [...hints];
+}
+
+function inferPreferredPaletteMode({ effectName = "" } = {}) {
+  const normalizedEffectName = normText(effectName);
+  if (["Color Wash", "Twinkle", "Pinwheel", "Shockwave"].includes(normalizedEffectName)) return "rgb_primary";
+  return "mono_white";
+}
+
+function buildParameterPriorGuidance({
+  effectName = "",
+  targetIds = [],
+  displayElements = [],
+  intentSummary = "",
+  sequencerRevisionBrief = null
+} = {}) {
+  const preferredPaletteMode = inferPreferredPaletteMode({ effectName });
+  const desiredBehaviorHints = inferDesiredParameterBehaviorHints({
+    effectName,
+    summary: intentSummary,
+    sequencerRevisionBrief
+  });
+  const recommendation = recommendDerivedParameterPriors({
+    effectName,
+    targetIds,
+    displayElements,
+    paletteMode: preferredPaletteMode,
+    desiredBehaviorHints,
+    limit: 3,
+    anchorsPerPrior: 2
+  });
+  return {
+    effectName: normText(effectName),
+    preferredPaletteMode,
+    desiredBehaviorHints,
+    recommendationMode: normText(recommendation?.recommendationMode),
+    matchedGeometryProfiles: normArray(recommendation?.matchedGeometryProfiles),
+    matchedModelTypes: normArray(recommendation?.matchedModelTypes),
+    priors: normArray(recommendation?.priors)
+  };
+}
+
 function inferEffectNameFromSectionPlan({
   section = "",
   energy = "",
@@ -655,7 +719,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
     secondary: normArray(sequencerRevisionBrief?.revisionTargets),
     fallback: normArray(sequencerRevisionBrief?.targetScope)
   });
-  const executionSeedLines = strategySectionPlans.length
+  const seedRecommendations = strategySectionPlans.length
     ? strategySectionPlans.map((row) => {
         const prioritizedTargetIds = mergePriorityTargets({
           primary: briefPriorityTargets,
@@ -679,13 +743,26 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           visualHintBehaviorText,
           sequencerRevisionBrief
         });
-        return buildStructuredExecutionLine({
+        const intentSummary = `${normText(row?.intentSummary || scope.goal)}${toneText}`;
+        return {
+          section: normText(row?.section),
+          targetIds: prioritizedTargetIds,
+          effectName,
+          executionLine: buildStructuredExecutionLine({
           section: row?.section,
           targetIds: prioritizedTargetIds,
           fallbackTargetIds: scope.targetIds,
-          intentSummary: `${normText(row?.intentSummary || scope.goal)}${toneText}`,
+          intentSummary,
           effectName
-        });
+          }),
+          parameterPriorGuidance: buildParameterPriorGuidance({
+            effectName,
+            targetIds: prioritizedTargetIds,
+            displayElements,
+            intentSummary,
+            sequencerRevisionBrief
+          })
+        };
       })
     : [(() => {
         const sectionText = Array.isArray(scope.sectionNames) && scope.sectionNames.length
@@ -694,15 +771,30 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
         const targetText = Array.isArray(scope.targetIds) && scope.targetIds.length
           ? scope.targetIds.slice(0, 8).join(", ")
           : "Whole Show";
-        return revisionBriefExecutionLine || `${sectionText} / ${targetText} / ${scope.mode || "create"} from intent: ${scope.goal || "unspecified"}${toneText}`;
+        const fallbackEffectName = inferRevisionBriefEffectName(sequencerRevisionBrief || {});
+        return {
+          section: sectionText,
+          targetIds: normArray(scope.targetIds),
+          effectName: fallbackEffectName,
+          executionLine: revisionBriefExecutionLine || `${sectionText} / ${targetText} / ${scope.mode || "create"} from intent: ${scope.goal || "unspecified"}${toneText}`,
+          parameterPriorGuidance: buildParameterPriorGuidance({
+            effectName: fallbackEffectName,
+            targetIds: normArray(scope.targetIds),
+            displayElements,
+            intentSummary: `${normText(scope.goal)}${toneText}`,
+            sequencerRevisionBrief
+          })
+        };
       })()];
+  const executionSeedLines = seedRecommendations.map((row) => row.executionLine);
   return {
     toneHint,
     effectPlacements,
+    seedRecommendations,
     executionSeedLines,
     preferSynthesized: strategySectionPlans.length > 0 || Boolean(revisionBriefExecutionLine),
     strategy: timing.strategy,
-    detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy}`
+    detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy} parameterPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.parameterPriorGuidance?.priors).length).length}`
   };
 }
 
@@ -1311,6 +1403,13 @@ export function buildSequenceAgentPlan({
         ? scope.sequencingDesignHandoff.sectionDirectives.length
         : 0,
       trainingKnowledge: buildStage1TrainingKnowledgeMetadata(),
+      parameterTrainingKnowledge: buildDerivedParameterKnowledgeMetadata(),
+      effectStrategy: {
+        toneHint: normText(effect?.toneHint),
+        preferSynthesized: Boolean(effect?.preferSynthesized),
+        strategy: normText(effect?.strategy),
+        seedRecommendations: normArray(effect?.seedRecommendations)
+      },
       metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments)
     }
   };

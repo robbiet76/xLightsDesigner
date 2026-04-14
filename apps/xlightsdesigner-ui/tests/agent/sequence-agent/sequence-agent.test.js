@@ -281,6 +281,55 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.requestScopeMode, "section_target_refinement");
   assert.equal(out.metadata.reviewStartLevel, "section");
   assert.equal(out.metadata.sectionScopeKind, "timing_track_windows");
+  assert.equal(out.metadata.parameterTrainingKnowledge.artifactType, "sequencer_derived_parameter_priors_bundle");
+});
+
+test("sequence_agent exposes bounded parameter prior guidance for matched target geometry", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track P", artist: "Artist P" },
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 0, endMs: 1000, energy: "high", density: "medium" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Drive a strong radial spin on the focal spinner.",
+      mode: "revise",
+      scope: {
+        targetIds: ["SpinnerHero"],
+        tagNames: ["focal"],
+        sections: ["Chorus 1"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            section: "Chorus 1",
+            energy: "high",
+            density: "medium",
+            intentSummary: "radial spin with stronger motion",
+            targetIds: ["SpinnerHero"],
+            effectHints: ["Pinwheel"]
+          }
+        ]
+      }
+    },
+    displayElements: [
+      { id: "SpinnerHero", name: "SpinnerHero", type: "model", displayAs: "Spinner", geometryProfile: "spinner_standard" }
+    ],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Pinwheel", params: [] },
+      { effectName: "Color Wash", params: [] }
+    ])
+  });
+
+  const recommendation = out.metadata.effectStrategy.seedRecommendations[0];
+  assert.equal(recommendation.effectName, "Pinwheel");
+  assert.equal(recommendation.parameterPriorGuidance.recommendationMode, "exact_geometry");
+  assert.deepEqual(recommendation.parameterPriorGuidance.matchedGeometryProfiles, ["spinner_standard"]);
+  assert.ok(recommendation.parameterPriorGuidance.priors.length > 0);
+  assert.equal(recommendation.parameterPriorGuidance.priors[0].geometryProfile, "spinner_standard");
 });
 
 test("sequence_agent uses sequencer revision brief to seed execution lines when explicit lines are absent", () => {

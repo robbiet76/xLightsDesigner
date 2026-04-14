@@ -1,4 +1,5 @@
 import { STAGE1_TRAINED_EFFECT_BUNDLE } from './generated/stage1-trained-effect-bundle.js';
+import { DERIVED_PARAMETER_PRIORS_BUNDLE } from './generated/derived-parameter-priors-bundle.js';
 import { classifyModelDisplayType } from './model-type-catalog.js';
 
 function normText(value = '') {
@@ -101,6 +102,22 @@ function inferModelBucketsForTargets({ targetIds = [], displayElements = [] } = 
     }
   }
   return [...buckets];
+}
+
+function inferExactGeometryProfilesForTargets({ targetIds = [], displayElements = [] } = {}) {
+  const displayIndex = buildDisplayElementIndex(displayElements);
+  const profiles = new Set();
+  for (const targetId of unique(targetIds)) {
+    const row = displayIndex.get(targetId);
+    const geometryProfile = normText(
+      row?.geometryProfile
+      || row?.trainingGeometryProfile
+      || row?.modelGeometryProfile
+      || row?.metadata?.geometryProfile
+    );
+    if (geometryProfile) profiles.add(geometryProfile);
+  }
+  return [...profiles];
 }
 
 function tokenizeTrainingPhrase(value = '') {
@@ -233,5 +250,125 @@ export function buildStage1TrainingKnowledgeMetadata() {
     equalizedEffectCount: Number(STAGE1_TRAINED_EFFECT_BUNDLE.stage1?.equalizedCount || 0),
     effectCount: Number(STAGE1_TRAINED_EFFECT_BUNDLE.stage1?.effectCount || 0),
     targetState: normText(STAGE1_TRAINED_EFFECT_BUNDLE.stage1?.targetState)
+  };
+}
+
+export function getDerivedParameterPriorsBundle() {
+  return DERIVED_PARAMETER_PRIORS_BUNDLE;
+}
+
+export function getDerivedParameterPriorsForEffect(effectName = '') {
+  return DERIVED_PARAMETER_PRIORS_BUNDLE.effectsByName?.[normText(effectName)] || null;
+}
+
+function scoreConfidence(value = '') {
+  const key = low(value);
+  if (key === 'high') return 30;
+  if (key === 'medium') return 18;
+  if (key === 'low') return 8;
+  return 0;
+}
+
+function chooseRecommendedAnchors(prior = null, desiredBehaviorHints = [], anchorsPerPrior = 2) {
+  const desired = new Set(unique(desiredBehaviorHints).map((row) => low(row)));
+  const anchors = Array.isArray(prior?.anchorProfiles) ? prior.anchorProfiles : [];
+  return anchors
+    .map((anchor) => {
+      const behaviorHints = unique(anchor?.behaviorHints);
+      const temporalSignatureHints = unique(anchor?.temporalSignatureHints);
+      let score = Number(anchor?.sampleCount || 0) * 10;
+      score += Number(anchor?.meanTemporalMotion || 0) * 100;
+      score += Number(anchor?.meanNonBlankRatio || 0) * 5;
+      for (const token of [...behaviorHints, ...temporalSignatureHints].map((row) => low(row))) {
+        if (desired.has(token)) score += 20;
+      }
+      return {
+        parameterValue: anchor?.parameterValue,
+        sampleCount: Number(anchor?.sampleCount || 0),
+        meanTemporalMotion: Number(anchor?.meanTemporalMotion || 0),
+        meanTemporalColorDelta: Number(anchor?.meanTemporalColorDelta || 0),
+        meanTemporalBrightnessDelta: Number(anchor?.meanTemporalBrightnessDelta || 0),
+        meanNonBlankRatio: Number(anchor?.meanNonBlankRatio || 0),
+        temporalSignatureHints,
+        behaviorHints,
+        score
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, Math.max(1, Number(anchorsPerPrior) || 2));
+}
+
+export function recommendDerivedParameterPriors({
+  effectName = '',
+  targetIds = [],
+  displayElements = [],
+  paletteMode = '',
+  desiredBehaviorHints = [],
+  limit = 3,
+  anchorsPerPrior = 2
+} = {}) {
+  const profile = getDerivedParameterPriorsForEffect(effectName);
+  if (!profile || !Array.isArray(profile?.priors) || !profile.priors.length) {
+    return {
+      effectName: normText(effectName),
+      recommendationMode: 'none',
+      matchedGeometryProfiles: [],
+      matchedModelTypes: [],
+      priors: []
+    };
+  }
+  const matchedGeometryProfiles = inferExactGeometryProfilesForTargets({ targetIds, displayElements });
+  const matchedModelTypes = inferModelBucketsForTargets({ targetIds, displayElements });
+  const normalizedPaletteMode = normText(paletteMode);
+  const desired = unique(desiredBehaviorHints);
+  const scored = profile.priors
+    .map((prior) => {
+      const exactGeometryMatch = matchedGeometryProfiles.includes(normText(prior?.geometryProfile));
+      const modelTypeMatch = matchedModelTypes.includes(normText(prior?.modelType));
+      if (matchedGeometryProfiles.length && !exactGeometryMatch) return null;
+      if (!matchedGeometryProfiles.length && matchedModelTypes.length && !modelTypeMatch) return null;
+      let score = Number(prior?.distinctAnchorCount || 0) * 10 + Number(prior?.sampleCount || 0);
+      score += scoreConfidence(prior?.confidence);
+      if (exactGeometryMatch) score += 100;
+      if (modelTypeMatch) score += 35;
+      if (normalizedPaletteMode && normText(prior?.paletteMode) === normalizedPaletteMode) score += 15;
+      const recommendedAnchors = chooseRecommendedAnchors(prior, desired, anchorsPerPrior);
+      score += recommendedAnchors.reduce((sum, anchor) => sum + Number(anchor?.score || 0), 0) / 100;
+      return {
+        parameterName: normText(prior?.parameterName),
+        geometryProfile: normText(prior?.geometryProfile),
+        modelType: normText(prior?.modelType),
+        analyzerFamily: normText(prior?.analyzerFamily),
+        paletteMode: normText(prior?.paletteMode),
+        confidence: normText(prior?.confidence),
+        configurationCoverageStatus: normText(prior?.configurationCoverageStatus),
+        configurationProfileCount: Number(prior?.configurationProfileCount || 0),
+        distinctAnchorCount: Number(prior?.distinctAnchorCount || 0),
+        sampleCount: Number(prior?.sampleCount || 0),
+        recommendedAnchors,
+        score
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score || a.parameterName.localeCompare(b.parameterName));
+  const recommendationMode = matchedGeometryProfiles.length
+    ? 'exact_geometry'
+    : (matchedModelTypes.length ? 'model_type_bucket' : 'effect_only');
+  return {
+    effectName: normText(effectName),
+    recommendationMode,
+    matchedGeometryProfiles,
+    matchedModelTypes,
+    priors: scored.slice(0, Math.max(1, Number(limit) || 3))
+  };
+}
+
+export function buildDerivedParameterKnowledgeMetadata() {
+  return {
+    artifactType: normText(DERIVED_PARAMETER_PRIORS_BUNDLE.artifactType),
+    artifactVersion: normText(DERIVED_PARAMETER_PRIORS_BUNDLE.artifactVersion),
+    generatedAt: normText(DERIVED_PARAMETER_PRIORS_BUNDLE.generatedAt),
+    effectCount: Number(DERIVED_PARAMETER_PRIORS_BUNDLE.effectCount || 0),
+    selectorReadyEffects: unique(DERIVED_PARAMETER_PRIORS_BUNDLE.selectorReadyEffects || [])
   };
 }
