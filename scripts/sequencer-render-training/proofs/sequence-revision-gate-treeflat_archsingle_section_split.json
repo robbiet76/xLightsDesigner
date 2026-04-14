@@ -1,0 +1,15 @@
+{
+  "artifactType": "sequence_revision_gate_v1",
+  "artifactVersion": 1,
+  "source": {
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-treeflat_archsingle_section_split.json"
+  },
+  "highestFailingLevel": "section",
+  "decision": "revise_here",
+  "nextOwner": "shared",
+  "nextRevisionLevel": "section",
+  "blockingReasons": [
+    "Section instability blocks group, model, and effect refinement."
+  ],
+  "recommendedMoves": []
+}

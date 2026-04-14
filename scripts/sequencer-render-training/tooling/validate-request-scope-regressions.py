@@ -148,10 +148,52 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
                 f"{row['scenarioId']} cycleOutcome mismatch: expected {expected_cycle_outcome}, got {row.get('cycleOutcome')}"
             )
 
+        expected_highest_failing_level = scenario.get("expectedHighestFailingLevel")
+        if expected_highest_failing_level and row.get("highestFailingLevel") != expected_highest_failing_level:
+            errors.append(
+                f"{row['scenarioId']} highestFailingLevel mismatch: expected {expected_highest_failing_level}, got {row.get('highestFailingLevel')}"
+            )
+
+        expected_gate_decision = scenario.get("expectedGateDecision")
+        if expected_gate_decision and row.get("gateDecision") != expected_gate_decision:
+            errors.append(
+                f"{row['scenarioId']} gateDecision mismatch: expected {expected_gate_decision}, got {row.get('gateDecision')}"
+            )
+
+        expected_next_owner = scenario.get("expectedNextOwner")
+        if expected_next_owner and row.get("nextOwner") != expected_next_owner:
+            errors.append(
+                f"{row['scenarioId']} nextOwner mismatch: expected {expected_next_owner}, got {row.get('nextOwner')}"
+            )
+
+        expected_next_revision_level = scenario.get("expectedNextRevisionLevel")
+        if expected_next_revision_level and row.get("nextRevisionLevel") != expected_next_revision_level:
+            errors.append(
+                f"{row['scenarioId']} nextRevisionLevel mismatch: expected {expected_next_revision_level}, got {row.get('nextRevisionLevel')}"
+            )
+
         critique = load_json(row["critiqueArtifactPath"])
         if critique.get("ladderLevel") != expected_ladder_level:
             errors.append(
                 f"{row['scenarioId']} critique ladder mismatch: expected {expected_ladder_level}, got {critique.get('ladderLevel')}"
+            )
+
+        gate = load_json(row["revisionGateArtifactPath"])
+        if expected_highest_failing_level and gate.get("highestFailingLevel") != expected_highest_failing_level:
+            errors.append(
+                f"{row['scenarioId']} gate artifact highestFailingLevel mismatch: expected {expected_highest_failing_level}, got {gate.get('highestFailingLevel')}"
+            )
+        if expected_gate_decision and gate.get("decision") != expected_gate_decision:
+            errors.append(
+                f"{row['scenarioId']} gate artifact decision mismatch: expected {expected_gate_decision}, got {gate.get('decision')}"
+            )
+        if expected_next_owner and gate.get("nextOwner") != expected_next_owner:
+            errors.append(
+                f"{row['scenarioId']} gate artifact nextOwner mismatch: expected {expected_next_owner}, got {gate.get('nextOwner')}"
+            )
+        if expected_next_revision_level and gate.get("nextRevisionLevel") != expected_next_revision_level:
+            errors.append(
+                f"{row['scenarioId']} gate artifact nextRevisionLevel mismatch: expected {expected_next_revision_level}, got {gate.get('nextRevisionLevel')}"
             )
 
         observation = load_json(row["observationArtifactPath"])

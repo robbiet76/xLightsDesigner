@@ -71,6 +71,7 @@ def main():
 
         observation_path = os.path.join(PROOFS_DIR, f"render-observation-{scenario_id}.json")
         critique_path = os.path.join(PROOFS_DIR, f"sequence-critique-{scenario_id}.json")
+        gate_path = os.path.join(PROOFS_DIR, f"sequence-revision-gate-{scenario_id}.json")
         record_path = os.path.join(PROOFS_DIR, f"sequence-learning-record-{scenario_id}.json")
 
         run([
@@ -85,6 +86,12 @@ def main():
             "--observation", observation_path,
             "--ladder-level", "section",
             "--out", critique_path,
+        ])
+        run([
+            "python3",
+            "scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py",
+            "--critique", critique_path,
+            "--out", gate_path,
         ])
         run([
             "python3",
@@ -108,17 +115,23 @@ def main():
 
         observation = load_json(observation_path)
         critique = load_json(critique_path)
+        gate = load_json(gate_path)
         record = load_json(record_path)
         suite["scenarios"].append({
             "scenarioId": scenario_id,
             "windowArtifactPath": os.path.abspath(window_path),
             "observationArtifactPath": os.path.abspath(observation_path),
             "critiqueArtifactPath": os.path.abspath(critique_path),
+            "revisionGateArtifactPath": os.path.abspath(gate_path),
             "learningRecordArtifactPath": os.path.abspath(record_path),
             "ladderLevel": critique["ladderLevel"],
             "intentRead": critique["designerSummary"]["intentRead"],
             "compositionRead": critique["designerSummary"]["compositionRead"],
             "familyBalanceRead": critique["sequencerSummary"]["familyBalanceRead"],
+            "highestFailingLevel": gate["highestFailingLevel"],
+            "gateDecision": gate["decision"],
+            "nextOwner": gate["nextOwner"],
+            "nextRevisionLevel": gate["nextRevisionLevel"],
             "requestScope": record["context"].get("requestedScope"),
             "cycleOutcome": record["outcome"]["cycleOutcome"],
         })

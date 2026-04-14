@@ -48,6 +48,7 @@ def main():
         window_path = os.path.join(PROOFS_DIR, f"preview-scene-window-{scenario_id}.json")
         observation_path = os.path.join(PROOFS_DIR, f"render-observation-{scenario_id}.json")
         critique_path = os.path.join(PROOFS_DIR, f"sequence-critique-{scenario_id}.json")
+        gate_path = os.path.join(PROOFS_DIR, f"sequence-revision-gate-{scenario_id}.json")
         record_path = os.path.join(PROOFS_DIR, f"sequence-learning-record-{scenario_id}.json")
         if scenario.get("mode") == "composite":
             compose_cmd = [
@@ -83,6 +84,12 @@ def main():
         ])
         run([
             "python3",
+            "scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py",
+            "--critique", critique_path,
+            "--out", gate_path,
+        ])
+        run([
+            "python3",
             "scripts/sequencer-render-training/tooling/build-sequence-learning-record.py",
             "--window", window_path,
             "--observation", observation_path,
@@ -103,6 +110,7 @@ def main():
 
         observation = load_json(observation_path)
         critique = load_json(critique_path)
+        gate = load_json(gate_path)
         record = load_json(record_path)
 
         suite_summary["scenarios"].append({
@@ -111,11 +119,16 @@ def main():
             "windowArtifactPath": os.path.abspath(window_path),
             "observationArtifactPath": os.path.abspath(observation_path),
             "critiqueArtifactPath": os.path.abspath(critique_path),
+            "revisionGateArtifactPath": os.path.abspath(gate_path),
             "learningRecordArtifactPath": os.path.abspath(record_path),
             "maxActiveModelCount": observation["macro"]["maxActiveModelCount"],
             "maxSceneSpreadRatio": observation["macro"]["maxSceneSpreadRatio"],
             "focusRead": critique["designerSummary"]["focusRead"],
             "familyBalanceRead": critique["sequencerSummary"]["familyBalanceRead"],
+            "highestFailingLevel": gate["highestFailingLevel"],
+            "gateDecision": gate["decision"],
+            "nextOwner": gate["nextOwner"],
+            "nextRevisionLevel": gate["nextRevisionLevel"],
             "requestScope": record["context"].get("requestedScope"),
             "cycleOutcome": record["outcome"]["cycleOutcome"],
         })
@@ -123,6 +136,7 @@ def main():
             "windowArtifactPath": os.path.abspath(window_path),
             "observationArtifactPath": os.path.abspath(observation_path),
             "critiqueArtifactPath": os.path.abspath(critique_path),
+            "revisionGateArtifactPath": os.path.abspath(gate_path),
             "learningRecordArtifactPath": os.path.abspath(record_path),
         }
 

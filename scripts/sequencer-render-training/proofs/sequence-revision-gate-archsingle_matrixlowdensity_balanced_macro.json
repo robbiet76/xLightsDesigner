@@ -1,0 +1,13 @@
+{
+  "artifactType": "sequence_revision_gate_v1",
+  "artifactVersion": 1,
+  "source": {
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_balanced_macro.json"
+  },
+  "highestFailingLevel": "none",
+  "decision": "descend",
+  "nextOwner": "none",
+  "nextRevisionLevel": "section",
+  "blockingReasons": [],
+  "recommendedMoves": []
+}

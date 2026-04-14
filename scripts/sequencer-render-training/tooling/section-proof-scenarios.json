@@ -28,6 +28,10 @@
     "expectedCompositionRead": "split",
     "expectedFamilyBalanceRead": "multi_family",
     "expectedCycleOutcome": "usable_with_revision",
+    "expectedHighestFailingLevel": "section",
+    "expectedGateDecision": "revise_here",
+    "expectedNextOwner": "shared",
+    "expectedNextRevisionLevel": "section",
     "sectionScope": "proof_section_tree_arch_split",
     "targetScope": "TreeFlat,ArchSingle",
     "effectFamilies": "SingleStrand,ColorWash"
@@ -61,6 +65,10 @@
     "expectedCompositionRead": "concentrated",
     "expectedFamilyBalanceRead": "multi_family",
     "expectedCycleOutcome": "usable_with_revision",
+    "expectedHighestFailingLevel": "section",
+    "expectedGateDecision": "revise_here",
+    "expectedNextOwner": "shared",
+    "expectedNextRevisionLevel": "section",
     "sectionScope": "proof_section_arch_matrix_balanced",
     "targetScope": "ArchSingle,MatrixLowDensity",
     "effectFamilies": "ColorWash,SingleStrand"
@@ -94,6 +102,10 @@
     "expectedCompositionRead": "concentrated",
     "expectedFamilyBalanceRead": "multi_family",
     "expectedCycleOutcome": "usable_with_revision",
+    "expectedHighestFailingLevel": "section",
+    "expectedGateDecision": "revise_here",
+    "expectedNextOwner": "shared",
+    "expectedNextRevisionLevel": "section",
     "sectionScope": "proof_section_arch_matrix_selection",
     "targetScope": "",
     "effectFamilies": "ColorWash,SingleStrand"

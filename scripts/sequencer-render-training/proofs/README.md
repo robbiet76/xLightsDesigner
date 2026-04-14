@@ -114,12 +114,14 @@ Harness runner:
     - coarse numeric tolerance bands for stable macro signals:
       - `maxSceneSpreadRatio`
       - `centroidMotionMean`
+    - retained revision-gate routing:
+      - `highestFailingLevel`
+      - `decision`
+      - `nextOwner`
+      - `nextRevisionLevel`
 - [extract-sequence-revision-gate.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py)
   - converts a critique artifact into an explicit revision gating decision
-  - current kept gate proofs:
-    - [sequence-revision-gate-treeflat_sparse_macro.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-treeflat_sparse_macro.json)
-    - [sequence-revision-gate-treeflat_archsingle_composite_macro.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-treeflat_archsingle_composite_macro.json)
-    - [sequence-revision-gate-archsingle_matrixlowdensity_section_balanced.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-archsingle_matrixlowdensity_section_balanced.json)
+  - suite runners now emit a retained gate artifact for every kept scenario
 - [build-sequence-artistic-goal.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-sequence-artistic-goal.py)
   - derives a designer-owned `sequence_artistic_goal_v1` from current critique context
 - [build-sequence-revision-objective.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-sequence-revision-objective.py)

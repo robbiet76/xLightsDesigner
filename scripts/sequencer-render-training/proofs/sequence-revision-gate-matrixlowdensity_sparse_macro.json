@@ -2,7 +2,7 @@
   "artifactType": "sequence_revision_gate_v1",
   "artifactVersion": 1,
   "source": {
-    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-treeflat_sparse_macro.json"
+    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-matrixlowdensity_sparse_macro.json"
   },
   "highestFailingLevel": "macro",
   "decision": "revise_here",
@@ -13,6 +13,6 @@
   ],
   "recommendedMoves": [
     "Broaden the active footprint with one secondary support family while preserving the lead target.",
-    "Decide whether this section should remain Tree-only or intentionally add a support family."
+    "Decide whether this section should remain Matrix-only or intentionally add a support family."
   ]
 }
