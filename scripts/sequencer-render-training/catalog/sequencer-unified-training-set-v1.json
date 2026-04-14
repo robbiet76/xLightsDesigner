@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T16:00:46.126Z",
+  "generatedAt": "2026-04-14T16:07:06.870Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -44,7 +44,7 @@
         "heuristic_observations",
         "fixture_model_context"
       ],
-      "currentPopulation": "238 durable general-training screening records loaded",
+      "currentPopulation": "332 durable general-training screening records loaded",
       "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
@@ -830,28 +830,31 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 30,
+        "screeningRecordCount": 60,
         "screenedParameterNames": [
           "speed",
           "stagger",
           "thickness"
         ],
         "sampledModelTypes": [
+          "arch",
           "single_line"
         ],
         "sampledGeometryProfiles": [
+          "arch_grouped",
           "single_line_horizontal"
         ],
         "observedLabelHints": [
+          "arch_pattern",
+          "arch_pattern_fit",
           "effect:marquee",
           "forward_motion",
-          "linear_pattern_fit",
           "marquee_motion",
           "marquee_pattern",
-          "model:single_line",
+          "model:arch",
           "palette_mono_white",
           "range_sample",
-          "render_style:single_line",
+          "render_style:default",
           "speed",
           "speed_1",
           "tight_marquee",
@@ -871,7 +874,10 @@
           "thickness_2",
           "thickness_4",
           "thickness_6",
-          "thickness_8"
+          "thickness_8",
+          "linear_pattern_fit",
+          "model:single_line",
+          "render_style:single_line"
         ]
       }
     },
@@ -1342,15 +1348,17 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 18,
+        "screeningRecordCount": 36,
         "screenedParameterNames": [
           "armSize",
           "speed"
         ],
         "sampledModelTypes": [
+          "spinner",
           "star"
         ],
         "sampledGeometryProfiles": [
+          "spinner_standard",
           "star_single_layer"
         ],
         "observedLabelHints": [
@@ -1358,13 +1366,14 @@
           "armSize_100",
           "effect:pinwheel",
           "few_arm_pinwheel",
-          "model:star",
+          "model:spinner",
           "palette_mono_white",
           "pinwheel_motion",
           "pinwheel_pattern",
+          "radial_pattern_fit",
           "range_sample",
           "render_style:default",
-          "star_pattern_fit",
+          "spinner_pinwheel",
           "static_pinwheel",
           "palette_rgb_primary",
           "armSize_25",
@@ -1375,7 +1384,9 @@
           "speed_14",
           "speed_18",
           "speed_3",
-          "speed_7"
+          "speed_7",
+          "model:star",
+          "star_pattern_fit"
         ]
       }
     },
@@ -2098,32 +2109,34 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 30,
+        "screeningRecordCount": 60,
         "screenedParameterNames": [
           "advances",
           "intensity",
           "skipSize"
         ],
         "sampledModelTypes": [
+          "single_line",
           "tree_360"
         ],
         "sampledGeometryProfiles": [
+          "single_line_horizontal",
           "tree_360_round"
         ],
         "observedLabelHints": [
           "advances",
           "advances_16",
           "chase_pattern",
+          "clean_linear_pattern",
           "effect:singlestrand",
           "fragmented_pattern",
-          "model:tree_360",
+          "linear_pattern_fit",
+          "model:single_line",
           "palette_mono_white",
           "range_sample",
           "render_style:single_line",
-          "round_tree_pattern",
           "single_direction_chase",
           "sparse_sampled_motion",
-          "tree_pattern_fit",
           "palette_rgb_primary",
           "advances_24",
           "advances_32",
@@ -2140,7 +2153,10 @@
           "skipSize_3",
           "skipSize_5",
           "skipSize_7",
-          "skipSize_9"
+          "skipSize_9",
+          "model:tree_360",
+          "round_tree_pattern",
+          "tree_pattern_fit"
         ]
       }
     },
@@ -2381,7 +2397,7 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 16,
+        "screeningRecordCount": 32,
         "screenedParameterNames": [
           "3D",
           "blend",
@@ -2389,9 +2405,11 @@
           "shrink"
         ],
         "sampledModelTypes": [
+          "tree_flat",
           "tree_360"
         ],
         "sampledGeometryProfiles": [
+          "tree_flat_single_layer",
           "tree_360_round"
         ],
         "observedLabelHints": [
@@ -2401,7 +2419,7 @@
           "forward_motion",
           "forward_rotation",
           "medium_spiral",
-          "model:tree_360",
+          "model:tree_flat",
           "palette_mono_white",
           "range_sample",
           "render_style:default",
@@ -2421,7 +2439,8 @@
           "grow_true",
           "shrink",
           "shrink_false",
-          "shrink_true"
+          "shrink_true",
+          "model:tree_360"
         ]
       }
     },

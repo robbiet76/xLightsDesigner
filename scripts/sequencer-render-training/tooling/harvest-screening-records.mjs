@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 
@@ -29,6 +29,23 @@ function listRecordFiles(sourcePath = "") {
     .sort((a, b) => a.localeCompare(b));
 }
 
+function slug(value = "") {
+  return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function buildTargetFilename(filePath = "") {
+  try {
+    const record = JSON.parse(readFileSync(filePath, "utf8"));
+    const effectName = slug(record?.effectName || "effect");
+    const modelName = slug(record?.fixture?.modelName || "model");
+    const geometryProfile = slug(record?.fixture?.geometryProfile || "geometry");
+    const sampleId = slug(record?.sampleId || basename(filePath, ".record.json"));
+    return `${effectName}-${modelName}-${geometryProfile}-${sampleId}.record.json`;
+  } catch {
+    return basename(filePath);
+  }
+}
+
 const args = parseArgs(process.argv.slice(2));
 if (!args.source) {
   console.error("usage: node harvest-screening-records.mjs --source <screening-run-dir> [--out-dir <dir>]");
@@ -38,7 +55,7 @@ if (!args.source) {
 const files = listRecordFiles(args.source);
 mkdirSync(args.outDir, { recursive: true });
 for (const filePath of files) {
-  copyFileSync(filePath, join(args.outDir, basename(filePath)));
+  copyFileSync(filePath, join(args.outDir, buildTargetFilename(filePath)));
 }
 
 console.log(JSON.stringify({
