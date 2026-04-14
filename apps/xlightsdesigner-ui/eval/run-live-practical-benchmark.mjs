@@ -108,6 +108,46 @@ async function waitForXLightsReady({ repoRoot, channel, outDir, prefix, timeoutM
   }, { timeoutMs, intervalMs });
 }
 
+async function recoverXLightsIfDirtyEvalSequence({ repoRoot, channel, outDir, prefix } = {}) {
+  const health = await runAutomation(
+    repoRoot,
+    channel,
+    path.join(outDir, `${prefix}-recover-health.json`),
+    "get-automation-health-snapshot"
+  );
+  const xlights = health?.result?.xlights || {};
+  const sequencePath = str(xlights?.sequencePath);
+  const runtimeState = str(xlights?.runtimeState).toLowerCase();
+  const dirtyState = str(xlights?.dirtyState).toLowerCase();
+  if (!sequencePath.includes("/__xld_eval/")) {
+    return { ok: true, skipped: true, reason: "non_eval_sequence" };
+  }
+  if (runtimeState !== "busy" && dirtyState !== "dirty") {
+    return { ok: true, skipped: true, reason: "not_dirty_or_busy" };
+  }
+  let saveRes;
+  try {
+    saveRes = await runAutomation(
+      repoRoot,
+      channel,
+      path.join(outDir, `${prefix}-recover-save.json`),
+      "save-xlights-sequence"
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      skipped: false,
+      reason: "save_failed",
+      error: str(error?.message)
+    };
+  }
+  return {
+    ok: saveRes?.ok === true,
+    skipped: false,
+    saveRes
+  };
+}
+
 async function runDirectProposalGenerator(repoRoot, {
   projectFilePath = "",
   prompt = "",
@@ -335,6 +375,19 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   const beforeSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-before.json`), "get-sequencer-validation-snapshot");
   const previousPlanArtifactId = str(beforeSnapshot?.result?.latestPlanHandoff?.artifactId);
   const previousApplyArtifactId = str(beforeSnapshot?.result?.latestApplyResult?.artifactId);
+  const recovery = await recoverXLightsIfDirtyEvalSequence({ repoRoot, channel, outDir, prefix: `${prefix}-pre-open` });
+  if (recovery?.ok === false) {
+    return {
+      suiteKey,
+      scenarioName: str(scenario?.name),
+      workingSequencePath,
+      clonedProjectFilePath: cloneProjectFilePath,
+      baselinePath,
+      ok: false,
+      issues: ["xlights_recovery_failed"],
+      recovery
+    };
+  }
   const xlightsReadyBeforeOpen = await waitForXLightsReady({ repoRoot, channel, outDir, prefix: `${prefix}-pre-open` });
   if (!xlightsReadyBeforeOpen?.ok) {
     return {
@@ -350,9 +403,26 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   }
 
   const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
-  fs.writeFileSync(openPayloadPath, `${JSON.stringify({ sequencePath: workingSequencePath }, null, 2)}\n`, "utf8");
+  fs.writeFileSync(
+    openPayloadPath,
+    `${JSON.stringify({ sequencePath: workingSequencePath, saveBeforeSwitch: false }, null, 2)}\n`,
+    "utf8"
+  );
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence.json`), "select-workflow", ["Sequence"]);
-  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
+  try {
+    await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
+  } catch (error) {
+    return {
+      suiteKey,
+      scenarioName: str(scenario?.name),
+      workingSequencePath,
+      clonedProjectFilePath: cloneProjectFilePath,
+      baselinePath,
+      ok: false,
+      issues: ["xlights_open_failed"],
+      openError: str(error?.message)
+    };
+  }
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-reset-assistant-memory.json`), "reset-assistant-memory");
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence-post-reset.json`), "select-workflow", ["Sequence"]);
   const promptText = buildBenchmarkPrompt(scenario);

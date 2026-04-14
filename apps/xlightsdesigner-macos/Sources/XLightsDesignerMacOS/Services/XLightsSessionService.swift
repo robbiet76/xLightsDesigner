@@ -242,11 +242,23 @@ struct LocalXLightsSessionService: XLightsSessionService {
     }
 
     private func waitForOwnedJobResult(jobID: String, command: String, attempts: Int = 180, delayMs: UInt64 = 500) async throws -> [String: Any] {
+        var queuedWithoutStartCount = 0
         for _ in 0..<attempts {
             let settled = try await readJSON(from: "/jobs/get?jobId=\(jobID.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? jobID)")
             let data = dictionary(settled["data"])
             let state = string(data["state"]).lowercased()
+            let startedAt = string(data["startedAt"])
             if state == "queued" || state == "running" {
+                if state == "queued" && startedAt.isEmpty {
+                    queuedWithoutStartCount += 1
+                    if queuedWithoutStartCount >= 10 {
+                        throw XLightsSessionServiceError.invalidResponse(
+                            "Owned xLights job \(jobID) for \(command) is stuck queued without starting."
+                        )
+                    }
+                } else {
+                    queuedWithoutStartCount = 0
+                }
                 try await Task.sleep(nanoseconds: delayMs * 1_000_000)
                 continue
             }

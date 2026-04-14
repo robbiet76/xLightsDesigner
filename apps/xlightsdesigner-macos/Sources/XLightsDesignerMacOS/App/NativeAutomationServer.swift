@@ -162,7 +162,8 @@ final class NativeAutomationServer: @unchecked Sendable {
             }
             do {
                 let policy = model.settingsScreenModel.screenModel.safetyConfig.sequenceSwitchUnsavedPolicy
-                let saveBeforeSwitch = model.xlightsSessionModel.shouldSaveBeforeSwitch(policy: policy)
+                let saveBeforeSwitch = payload["saveBeforeSwitch"] as? Bool
+                    ?? model.xlightsSessionModel.shouldSaveBeforeSwitch(policy: policy)
                 let summary = try await model.xlightsSessionModel.openSequence(filePath: filePath, saveBeforeSwitch: saveBeforeSwitch)
                 persistActiveSequencePath(filePath)
                 refreshAll()

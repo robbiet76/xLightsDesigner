@@ -32,7 +32,7 @@ function str(value = "") {
 }
 
 function usage() {
-  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | open-project <path> | select-workflow <Project|Display|Audio|Design|Sequence|Review|History> | open-sequence <path> | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | get-render-feedback-snapshot | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights | reset-assistant-memory");
+  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | open-project <path> | select-workflow <Project|Display|Audio|Design|Sequence|Review|History> | open-sequence <path> | save-xlights-sequence | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | get-render-feedback-snapshot | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights | reset-assistant-memory");
   process.exit(2);
 }
 
@@ -193,7 +193,8 @@ if (command === "ping" || command === "get-automation-health-snapshot") {
     path: "/action",
     body: {
       action: "openXLightsSequence",
-      filePath: str(payload?.sequencePath || payload?.filePath)
+      filePath: str(payload?.sequencePath || payload?.filePath),
+      saveBeforeSwitch: typeof payload?.saveBeforeSwitch === "boolean" ? payload.saveBeforeSwitch : undefined
     }
   };
 } else if (command === "open-project") {
@@ -204,6 +205,12 @@ if (command === "ping" || command === "get-automation-health-snapshot") {
       action: "openProject",
       filePath: rest.join(" ").trim()
     }
+  };
+} else if (command === "save-xlights-sequence") {
+  nativeCall = {
+    method: "POST",
+    path: "/action",
+    body: { action: "saveXLightsSequence" }
   };
 } else if (command === "dispatch-prompt") {
   nativeCall = {
