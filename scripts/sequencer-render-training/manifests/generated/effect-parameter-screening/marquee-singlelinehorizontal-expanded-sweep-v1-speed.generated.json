@@ -1,0 +1,522 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "marquee-singlelinehorizontal-expanded-sweep-v1-speed-generated",
+  "description": "Registry-generated sweep for Marquee speed from marquee-singlelinehorizontal-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "SingleLineHorizontal",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Marquee sweep on the canonical horizontal single-line model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "marquee-speed-1-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 1,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "speed",
+        "speed_1",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-speed-1-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 1,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "speed",
+        "speed_1",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-speed-3-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 3,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "speed",
+        "speed_3",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-speed-3-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 3,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "speed",
+        "speed_3",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-speed-5-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "speed",
+        "speed_5",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-speed-5-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "speed",
+        "speed_5",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-speed-7-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 7,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "speed",
+        "speed_7",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-speed-7-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 7,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "speed",
+        "speed_7",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-speed-9-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 9,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "speed",
+        "speed_9",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-speed-9-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 9,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "speed",
+        "speed_9",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Marquee",
+    "parameter": "speed",
+    "importance": "high",
+    "phase": "screen",
+    "anchors": [
+      1,
+      3,
+      5,
+      7,
+      9
+    ],
+    "target": "effectSettings",
+    "screeningPaletteMode": null
+  }
+}

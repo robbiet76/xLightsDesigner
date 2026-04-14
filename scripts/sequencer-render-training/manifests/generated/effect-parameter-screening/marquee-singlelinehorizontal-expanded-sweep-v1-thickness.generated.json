@@ -1,0 +1,522 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "marquee-singlelinehorizontal-expanded-sweep-v1-thickness-generated",
+  "description": "Registry-generated sweep for Marquee thickness from marquee-singlelinehorizontal-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "SingleLineHorizontal",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Marquee sweep on the canonical horizontal single-line model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "marquee-thickness-1-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 1,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "thickness",
+        "thickness_1",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-thickness-1-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 1,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "thickness",
+        "thickness_1",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-thickness-2-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "thickness",
+        "thickness_2",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-thickness-2-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "thickness",
+        "thickness_2",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-thickness-4-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 4,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "thickness",
+        "thickness_4",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-thickness-4-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 4,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "thickness",
+        "thickness_4",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-thickness-6-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 6,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "thickness",
+        "thickness_6",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-thickness-6-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 6,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "thickness",
+        "thickness_6",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-thickness-8-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 8,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "thickness",
+        "thickness_8",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-thickness-8-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 8,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "thickness",
+        "thickness_8",
+        "tight_marquee"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "thickness",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Marquee",
+    "parameter": "thickness",
+    "importance": "high",
+    "phase": "screen",
+    "anchors": [
+      1,
+      2,
+      4,
+      6,
+      8
+    ],
+    "target": "effectSettings",
+    "screeningPaletteMode": null
+  }
+}

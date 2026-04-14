@@ -1,0 +1,229 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "spirals-treeround-expanded-sweep-v1-shrink-generated",
+  "description": "Registry-generated sweep for Spirals shrink from spirals-treeround-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeRound",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Spirals sweep on the canonical round tree model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "spirals-shrink-false-mono_white-generated-v1",
+      "effectName": "Spirals",
+      "effectSettings": {
+        "count": 1,
+        "movement": 10,
+        "rotation": 20,
+        "thickness": 50,
+        "blend": false,
+        "3D": false,
+        "grow": false,
+        "shrink": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "palette_mono_white",
+        "range_sample",
+        "round_tree_pattern",
+        "shrink",
+        "shrink_false",
+        "spiral_motion"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "shrink",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "low",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "spirals-shrink-false-rgb_primary-generated-v1",
+      "effectName": "Spirals",
+      "effectSettings": {
+        "count": 1,
+        "movement": 10,
+        "rotation": 20,
+        "thickness": 50,
+        "blend": false,
+        "3D": false,
+        "grow": false,
+        "shrink": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "range_sample",
+        "round_tree_pattern",
+        "shrink",
+        "shrink_false",
+        "spiral_motion"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "shrink",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "low",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "spirals-shrink-true-mono_white-generated-v1",
+      "effectName": "Spirals",
+      "effectSettings": {
+        "count": 1,
+        "movement": 10,
+        "rotation": 20,
+        "thickness": 50,
+        "blend": false,
+        "3D": false,
+        "grow": false,
+        "shrink": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "palette_mono_white",
+        "range_sample",
+        "round_tree_pattern",
+        "shrink",
+        "shrink_true",
+        "spiral_motion"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "shrink",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "low",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "spirals-shrink-true-rgb_primary-generated-v1",
+      "effectName": "Spirals",
+      "effectSettings": {
+        "count": 1,
+        "movement": 10,
+        "rotation": 20,
+        "thickness": 50,
+        "blend": false,
+        "3D": false,
+        "grow": false,
+        "shrink": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "range_sample",
+        "round_tree_pattern",
+        "shrink",
+        "shrink_true",
+        "spiral_motion"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "shrink",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "low",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Spirals",
+    "parameter": "shrink",
+    "importance": "medium",
+    "phase": "screen",
+    "anchors": [
+      false,
+      true
+    ],
+    "target": "effectSettings",
+    "screeningPaletteMode": null
+  }
+}

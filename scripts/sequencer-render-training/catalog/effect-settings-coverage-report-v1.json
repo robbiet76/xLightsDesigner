@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_settings_coverage_report_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T15:07:37.631Z",
+  "generatedAt": "2026-04-14T15:44:00.435Z",
   "summary": {
     "effectCount": 20,
     "screenedParameterSubsetCount": 10,
@@ -419,7 +419,12 @@
         "rotation",
         "thickness"
       ],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "3D",
+        "blend",
+        "grow",
+        "shrink"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {

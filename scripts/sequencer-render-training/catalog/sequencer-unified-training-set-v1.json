@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T15:07:37.455Z",
+  "generatedAt": "2026-04-14T15:44:00.309Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -44,7 +44,7 @@
         "heuristic_observations",
         "fixture_model_context"
       ],
-      "currentPopulation": "144 durable general-training screening records loaded",
+      "currentPopulation": "160 durable general-training screening records loaded",
       "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
@@ -2205,7 +2205,12 @@
         },
         "coverageStatus": "screened_parameter_subset",
         "exhaustiveSettingCoverage": false,
-        "screenedParameterNames": []
+        "screenedParameterNames": [
+          "3D",
+          "blend",
+          "grow",
+          "shrink"
+        ]
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -2256,13 +2261,50 @@
         }
       },
       "screeningLearning": {
-        "status": "empty",
+        "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 0,
-        "screenedParameterNames": [],
-        "sampledModelTypes": [],
-        "sampledGeometryProfiles": [],
-        "observedLabelHints": []
+        "screeningRecordCount": 16,
+        "screenedParameterNames": [
+          "3D",
+          "blend",
+          "grow",
+          "shrink"
+        ],
+        "sampledModelTypes": [
+          "tree_360"
+        ],
+        "sampledGeometryProfiles": [
+          "tree_360_round"
+        ],
+        "observedLabelHints": [
+          "3D",
+          "3D_false",
+          "effect:spirals",
+          "forward_motion",
+          "forward_rotation",
+          "medium_spiral",
+          "model:tree_360",
+          "palette_mono_white",
+          "range_sample",
+          "render_style:default",
+          "round_tree_pattern",
+          "single_spiral",
+          "spiral_flow",
+          "spiral_motion",
+          "spiral_pattern",
+          "tree_pattern_fit",
+          "palette_rgb_primary",
+          "3D_true",
+          "blend",
+          "blend_false",
+          "blend_true",
+          "grow",
+          "grow_false",
+          "grow_true",
+          "shrink",
+          "shrink_false",
+          "shrink_true"
+        ]
       }
     },
     {

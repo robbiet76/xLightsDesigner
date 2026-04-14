@@ -1,0 +1,522 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "marquee-archgroup-expanded-sweep-v1-stagger-generated",
+  "description": "Registry-generated sweep for Marquee stagger from marquee-archgroup-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "ArchGroup",
+    "modelType": "arch",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Marquee sweep on the canonical grouped arch model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "marquee-stagger-0-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "stagger",
+        "stagger_0"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-stagger-0-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "stagger",
+        "stagger_0"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-stagger-2-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 2,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "stagger",
+        "stagger_2"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-stagger-2-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 2,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "stagger",
+        "stagger_2"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-stagger-4-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 4,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "stagger",
+        "stagger_4"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-stagger-4-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 4,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "stagger",
+        "stagger_4"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-stagger-6-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 6,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "stagger",
+        "stagger_6"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-stagger-6-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 6,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "stagger",
+        "stagger_6"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "marquee-stagger-8-mono_white-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 8,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_mono_white",
+        "range_sample",
+        "stagger",
+        "stagger_8"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "marquee-stagger-8-rgb_primary-generated-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 8,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "arch_pattern",
+        "marquee_motion",
+        "palette_rgb_primary",
+        "range_sample",
+        "stagger",
+        "stagger_8"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "stagger",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Marquee",
+    "parameter": "stagger",
+    "importance": "medium",
+    "phase": "screen",
+    "anchors": [
+      0,
+      2,
+      4,
+      6,
+      8
+    ],
+    "target": "effectSettings",
+    "screeningPaletteMode": null
+  }
+}

@@ -73,7 +73,8 @@ for row in rows:
     ], check=True)
 
     if execute == "1":
-        sample_out = os.path.join(out_dir, f"{row['effectName']}-{row['parameterName']}")
+        base_name = row.get("baseManifestName") or os.path.splitext(os.path.basename(row["baseManifestPath"]))[0]
+        sample_out = os.path.join(out_dir, f"{base_name}-{row['parameterName']}")
         os.makedirs(sample_out, exist_ok=True)
         subprocess.run([
             "bash",

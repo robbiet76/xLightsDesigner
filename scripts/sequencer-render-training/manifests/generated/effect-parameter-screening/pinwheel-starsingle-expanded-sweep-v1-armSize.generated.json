@@ -1,0 +1,431 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "pinwheel-starsingle-expanded-sweep-v1-armSize-generated",
+  "description": "Registry-generated sweep for Pinwheel armSize from pinwheel-starsingle-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "StarSingle",
+    "modelType": "star",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Pinwheel sweep on the canonical single-layer star using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "pinwheel-armsize-25-mono_white-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 25,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "armSize",
+        "armSize_25",
+        "few_arm_pinwheel",
+        "palette_mono_white",
+        "pinwheel_motion",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "armSize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "pinwheel-armsize-25-rgb_primary-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 25,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "armSize",
+        "armSize_25",
+        "few_arm_pinwheel",
+        "palette_rgb_primary",
+        "pinwheel_motion",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "armSize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "pinwheel-armsize-50-mono_white-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "armSize",
+        "armSize_50",
+        "few_arm_pinwheel",
+        "palette_mono_white",
+        "pinwheel_motion",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "armSize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "pinwheel-armsize-50-rgb_primary-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "armSize",
+        "armSize_50",
+        "few_arm_pinwheel",
+        "palette_rgb_primary",
+        "pinwheel_motion",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "armSize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "pinwheel-armsize-75-mono_white-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 75,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "armSize",
+        "armSize_75",
+        "few_arm_pinwheel",
+        "palette_mono_white",
+        "pinwheel_motion",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "armSize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "pinwheel-armsize-75-rgb_primary-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 75,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "armSize",
+        "armSize_75",
+        "few_arm_pinwheel",
+        "palette_rgb_primary",
+        "pinwheel_motion",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "armSize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "pinwheel-armsize-100-mono_white-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 100,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "armSize",
+        "armSize_100",
+        "few_arm_pinwheel",
+        "palette_mono_white",
+        "pinwheel_motion",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "armSize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "pinwheel-armsize-100-rgb_primary-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 100,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "armSize",
+        "armSize_100",
+        "few_arm_pinwheel",
+        "palette_rgb_primary",
+        "pinwheel_motion",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "armSize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Pinwheel",
+    "parameter": "armSize",
+    "importance": "medium",
+    "phase": "screen",
+    "anchors": [
+      25,
+      50,
+      75,
+      100
+    ],
+    "target": "effectSettings",
+    "screeningPaletteMode": null
+  }
+}

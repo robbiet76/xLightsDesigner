@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_training_automation_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T15:07:37.727Z",
+  "generatedAt": "2026-04-14T15:44:00.515Z",
   "summary": {
     "effectCount": 20,
     "runnableNowCount": 0,
@@ -114,12 +114,12 @@
       "effectName": "Spirals",
       "family": "motion_texture",
       "coverageStatus": "screened_parameter_subset",
-      "readiness": "ready_for_expansion",
+      "readiness": "screened_current_registry",
       "priority": "later",
-      "nextAction": "deepen_screened_subset",
+      "nextAction": "harvest_outcomes_or_add_interactions",
       "registryParameterCount": 8,
       "retainedParameterCount": 4,
-      "screenedParameterCount": 0,
+      "screenedParameterCount": 4,
       "outcomeRecordCount": 0
     },
     {

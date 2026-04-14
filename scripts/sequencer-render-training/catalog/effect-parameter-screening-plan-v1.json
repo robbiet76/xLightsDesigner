@@ -1,16 +1,15 @@
 {
   "artifactType": "effect_parameter_screening_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T15:07:37.087Z",
+  "generatedAt": "2026-04-14T15:43:40.890Z",
   "summary": {
-    "effectCount": 4,
-    "manifestCount": 90,
+    "effectCount": 3,
+    "manifestCount": 78,
     "runnableEffects": [
       "Marquee",
       "On",
       "Pinwheel",
-      "SingleStrand",
-      "Spirals"
+      "SingleStrand"
     ]
   },
   "rows": [
@@ -793,126 +792,6 @@
       "phase": "control",
       "target": "effectSettings",
       "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/singlestrand-treespiral-expanded-sweep-v1-intensity.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treeflat-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treeflat-expanded-sweep-v1-3D.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treeflat-expanded-sweep-v1",
-      "parameterName": "blend",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treeflat-expanded-sweep-v1-blend.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treeflat-expanded-sweep-v1",
-      "parameterName": "grow",
-      "practicalPriority": "low",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treeflat-expanded-sweep-v1-grow.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treeflat-expanded-sweep-v1",
-      "parameterName": "shrink",
-      "practicalPriority": "low",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treeflat-expanded-sweep-v1-shrink.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treeround-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treeround-expanded-sweep-v1-3D.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treeround-expanded-sweep-v1",
-      "parameterName": "blend",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treeround-expanded-sweep-v1-blend.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treeround-expanded-sweep-v1",
-      "parameterName": "grow",
-      "practicalPriority": "low",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treeround-expanded-sweep-v1-grow.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treeround-expanded-sweep-v1",
-      "parameterName": "shrink",
-      "practicalPriority": "low",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treeround-expanded-sweep-v1-shrink.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treespiral-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treespiral-expanded-sweep-v1-3D.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treespiral-expanded-sweep-v1",
-      "parameterName": "blend",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treespiral-expanded-sweep-v1-blend.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treespiral-expanded-sweep-v1",
-      "parameterName": "grow",
-      "practicalPriority": "low",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treespiral-expanded-sweep-v1-grow.generated.json"
-    },
-    {
-      "effectName": "Spirals",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/spirals-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "spirals-treespiral-expanded-sweep-v1",
-      "parameterName": "shrink",
-      "practicalPriority": "low",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/spirals-treespiral-expanded-sweep-v1-shrink.generated.json"
     }
   ]
 }

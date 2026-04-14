@@ -1,0 +1,532 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "pinwheel-spinner-expanded-sweep-v1-speed-generated",
+  "description": "Registry-generated sweep for Pinwheel speed from pinwheel-spinner-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "Spinner",
+    "modelType": "spinner",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Pinwheel sweep on the radial spinner model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "pinwheel-speed-3-mono_white-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 3,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "palette_mono_white",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_3",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "pinwheel-speed-3-rgb_primary-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 3,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_3",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "pinwheel-speed-7-mono_white-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 7,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "palette_mono_white",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_7",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "pinwheel-speed-7-rgb_primary-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 7,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_7",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "pinwheel-speed-10-mono_white-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "palette_mono_white",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_10",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "pinwheel-speed-10-rgb_primary-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_10",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "pinwheel-speed-14-mono_white-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 14,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "palette_mono_white",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_14",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "pinwheel-speed-14-rgb_primary-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 14,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_14",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "pinwheel-speed-18-mono_white-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 18,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "palette_mono_white",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_18",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "pinwheel-speed-18-rgb_primary-generated-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 18,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "palette_rgb_primary",
+        "pinwheel_motion",
+        "range_sample",
+        "speed",
+        "speed_18",
+        "spinner_pinwheel"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Pinwheel",
+    "parameter": "speed",
+    "importance": "high",
+    "phase": "screen",
+    "anchors": [
+      3,
+      7,
+      10,
+      14,
+      18
+    ],
+    "target": "effectSettings",
+    "screeningPaletteMode": null
+  }
+}
