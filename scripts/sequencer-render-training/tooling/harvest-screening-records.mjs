@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 
@@ -37,13 +37,29 @@ function buildTargetFilename(filePath = "") {
   try {
     const record = JSON.parse(readFileSync(filePath, "utf8"));
     const effectName = slug(record?.effectName || "effect");
-    const modelName = slug(record?.fixture?.modelName || "model");
     const geometryProfile = slug(record?.fixture?.geometryProfile || "geometry");
     const sampleId = slug(record?.sampleId || basename(filePath, ".record.json"));
-    return `${effectName}-${modelName}-${geometryProfile}-${sampleId}.record.json`;
+    return `${effectName}-${geometryProfile}-${sampleId}.record.json`;
   } catch {
     return basename(filePath);
   }
+}
+
+function sanitizeRecord(record = {}) {
+  const next = JSON.parse(JSON.stringify(record || {}));
+  if (next.fixture && typeof next.fixture === "object") {
+    delete next.fixture.modelName;
+    delete next.fixture.sequencePath;
+    delete next.fixture.workingSequencePath;
+  }
+  if (next.artifact && typeof next.artifact === "object") {
+    delete next.artifact.path;
+  }
+  if (next.features && typeof next.features === "object") {
+    delete next.features.artifactPath;
+    delete next.features.analyzedArtifactPath;
+  }
+  return next;
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -55,7 +71,9 @@ if (!args.source) {
 const files = listRecordFiles(args.source);
 mkdirSync(args.outDir, { recursive: true });
 for (const filePath of files) {
-  copyFileSync(filePath, join(args.outDir, buildTargetFilename(filePath)));
+  const record = JSON.parse(readFileSync(filePath, "utf8"));
+  const targetPath = join(args.outDir, buildTargetFilename(filePath));
+  writeFileSync(targetPath, `${JSON.stringify(sanitizeRecord(record))}\n`, "utf8");
 }
 
 console.log(JSON.stringify({

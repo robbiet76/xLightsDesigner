@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T16:07:06.870Z",
+  "generatedAt": "2026-04-14T16:12:41.095Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -44,7 +44,7 @@
         "heuristic_observations",
         "fixture_model_context"
       ],
-      "currentPopulation": "332 durable general-training screening records loaded",
+      "currentPopulation": "330 durable general-training screening records loaded",
       "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
@@ -1789,7 +1789,7 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 68,
+        "screeningRecordCount": 66,
         "screenedParameterNames": [
           "accel",
           "blendEdges",
@@ -1810,7 +1810,7 @@
         ],
         "observedLabelHints": [
           "accel",
-          "accel_-5",
+          "accel_0",
           "compact_shockwave",
           "effect:shockwave",
           "hard_edge_shockwave",
@@ -1828,7 +1828,6 @@
           "single_shockwave",
           "spinner_fill",
           "palette_rgb_primary",
-          "accel_0",
           "accel_5",
           "blendEdges",
           "blendEdges_false",
@@ -2405,12 +2404,12 @@
           "shrink"
         ],
         "sampledModelTypes": [
-          "tree_flat",
-          "tree_360"
+          "tree_360",
+          "tree_flat"
         ],
         "sampledGeometryProfiles": [
-          "tree_flat_single_layer",
-          "tree_360_round"
+          "tree_360_round",
+          "tree_flat_single_layer"
         ],
         "observedLabelHints": [
           "3D",
@@ -2419,7 +2418,7 @@
           "forward_motion",
           "forward_rotation",
           "medium_spiral",
-          "model:tree_flat",
+          "model:tree_360",
           "palette_mono_white",
           "range_sample",
           "render_style:default",
@@ -2440,7 +2439,7 @@
           "shrink",
           "shrink_false",
           "shrink_true",
-          "model:tree_360"
+          "model:tree_flat"
         ]
       }
     },

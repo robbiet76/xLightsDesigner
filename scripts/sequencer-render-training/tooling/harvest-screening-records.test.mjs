@@ -55,6 +55,8 @@ test("harvest-screening-records keeps distinct geometry variants", () => {
 
   const files = readdirSync(outDir).sort();
   assert.equal(files.length, 2);
-  assert.ok(files.some((name) => name.includes("archgroup-arch-grouped")));
-  assert.ok(files.some((name) => name.includes("singlelinehorizontal-single-line-horizontal")));
+  assert.ok(files.some((name) => name.includes("marquee-arch-grouped")));
+  assert.ok(files.some((name) => name.includes("marquee-single-line-horizontal")));
+  assert.ok(!files.some((name) => name.includes("archgroup")));
+  assert.ok(!files.some((name) => name.includes("singlelinehorizontal")));
 });
