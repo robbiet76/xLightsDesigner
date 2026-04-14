@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T16:12:41.095Z",
+  "generatedAt": "2026-04-14T16:30:36.930Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -44,7 +44,7 @@
         "heuristic_observations",
         "fixture_model_context"
       ],
-      "currentPopulation": "330 durable general-training screening records loaded",
+      "currentPopulation": "434 durable general-training screening records loaded",
       "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
@@ -2052,6 +2052,9 @@
         "coverageStatus": "screened_parameter_subset",
         "exhaustiveSettingCoverage": false,
         "screenedParameterNames": [
+          "bandSize",
+          "fadeType",
+          "mode",
           "advances",
           "intensity",
           "skipSize"
@@ -2108,35 +2111,67 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 60,
+        "screeningRecordCount": 164,
         "screenedParameterNames": [
+          "bandSize",
+          "fadeType",
+          "mode",
           "advances",
           "intensity",
           "skipSize"
         ],
         "sampledModelTypes": [
+          "arch",
+          "custom",
           "single_line",
           "tree_360"
         ],
         "sampledGeometryProfiles": [
+          "arch_single",
+          "custom",
           "single_line_horizontal",
-          "tree_360_round"
+          "tree_360_round",
+          "tree_360_spiral"
         ],
         "observedLabelHints": [
-          "advances",
-          "advances_16",
+          "arch_pattern",
+          "arch_pattern_fit",
+          "bandSize",
+          "bandSize_1",
           "chase_pattern",
-          "clean_linear_pattern",
           "effect:singlestrand",
           "fragmented_pattern",
-          "linear_pattern_fit",
-          "model:single_line",
+          "model:arch",
           "palette_mono_white",
           "range_sample",
           "render_style:single_line",
           "single_direction_chase",
           "sparse_sampled_motion",
           "palette_rgb_primary",
+          "bandSize_3",
+          "bandSize_5",
+          "bandSize_7",
+          "bandSize_9",
+          "fadeType",
+          "fadeType_From_Head",
+          "fadeType_From_Tail",
+          "fadeType_Head_and_Tail",
+          "fadeType_Middle",
+          "fadeType_None",
+          "mode",
+          "mode_Chase",
+          "fx_texture",
+          "mode_FX",
+          "dense_sampled_motion",
+          "mode_Skips",
+          "skip_pattern",
+          "clean_cane_pattern",
+          "model:custom",
+          "advances",
+          "advances_16",
+          "clean_linear_pattern",
+          "linear_pattern_fit",
+          "model:single_line",
           "advances_24",
           "advances_32",
           "advances_40",
@@ -2155,7 +2190,8 @@
           "skipSize_9",
           "model:tree_360",
           "round_tree_pattern",
-          "tree_pattern_fit"
+          "tree_pattern_fit",
+          "spiral_tree_pattern"
         ]
       }
     },

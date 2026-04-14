@@ -1,0 +1,336 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-expanded-sweep-v2-mode-generated",
+  "description": "Registry-generated sweep for SingleStrand mode from singlestrand-linear-expanded-sweep-v2.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded SingleStrand sweep on a concrete roofline-style single-line model using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "singlestrand-mode-Chase-mono_white-generated-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "clean_linear_pattern",
+        "mode",
+        "mode_Chase",
+        "palette_mono_white",
+        "range_sample",
+        "single_direction_chase"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "mode",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "singlestrand-mode-Chase-rgb_primary-generated-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "clean_linear_pattern",
+        "mode",
+        "mode_Chase",
+        "palette_rgb_primary",
+        "range_sample",
+        "single_direction_chase"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "mode",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "singlestrand-mode-Skips-mono_white-generated-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "clean_linear_pattern",
+        "mode",
+        "mode_Skips",
+        "palette_mono_white",
+        "range_sample",
+        "single_direction_chase"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "mode",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "singlestrand-mode-Skips-rgb_primary-generated-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "clean_linear_pattern",
+        "mode",
+        "mode_Skips",
+        "palette_rgb_primary",
+        "range_sample",
+        "single_direction_chase"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "mode",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    },
+    {
+      "sampleId": "singlestrand-mode-FX-mono_white-generated-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "mono_white",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          1
+        ]
+      },
+      "labelHints": [
+        "clean_linear_pattern",
+        "mode",
+        "mode_FX",
+        "palette_mono_white",
+        "range_sample",
+        "single_direction_chase"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "mode",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "mono_white"
+      }
+    },
+    {
+      "sampleId": "singlestrand-mode-FX-rgb_primary-generated-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "rgb_primary",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
+      },
+      "labelHints": [
+        "clean_linear_pattern",
+        "mode",
+        "mode_FX",
+        "palette_rgb_primary",
+        "range_sample",
+        "single_direction_chase"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "mode",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high",
+        "screeningPaletteMode": "rgb_primary"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "SingleStrand",
+    "parameter": "mode",
+    "importance": "high",
+    "phase": "baseline",
+    "anchors": [
+      "Chase",
+      "Skips",
+      "FX"
+    ],
+    "target": "effectSettings",
+    "screeningPaletteMode": null
+  }
+}

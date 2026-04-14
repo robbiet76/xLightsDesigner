@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_training_automation_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T16:12:41.291Z",
+  "generatedAt": "2026-04-14T16:30:37.128Z",
   "summary": {
     "effectCount": 20,
     "runnableNowCount": 0,
@@ -102,12 +102,12 @@
       "effectName": "SingleStrand",
       "family": "strand_pattern",
       "coverageStatus": "screened_parameter_subset",
-      "readiness": "ready_for_expansion",
+      "readiness": "screened_current_registry",
       "priority": "later",
-      "nextAction": "deepen_screened_subset",
+      "nextAction": "harvest_outcomes_or_add_interactions",
       "registryParameterCount": 10,
       "retainedParameterCount": 4,
-      "screenedParameterCount": 3,
+      "screenedParameterCount": 6,
       "outcomeRecordCount": 0
     },
     {

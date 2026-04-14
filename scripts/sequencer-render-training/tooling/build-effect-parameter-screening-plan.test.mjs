@@ -18,7 +18,6 @@ test("build-effect-parameter-screening-plan skips already screened parameters an
   });
   const plan = JSON.parse(readFileSync(outFile, "utf8"));
   assert.equal(plan.artifactType, "effect_parameter_screening_plan_v1");
-  assert.ok(plan.summary.manifestCount > 0);
   assert.ok(!plan.rows.some((row) => row.effectName === "Shockwave" && row.parameterName === "centerX"));
   assert.ok(!plan.rows.some((row) => row.effectName === "Shockwave" && row.parameterName === "centerY"));
   assert.ok(!plan.rows.some((row) => row.effectName === "Shockwave" && row.parameterName === "centerX"));
@@ -27,5 +26,7 @@ test("build-effect-parameter-screening-plan skips already screened parameters an
   assert.ok(!plan.rows.some((row) => row.effectName === "Bars"));
   assert.ok(!plan.rows.some((row) => row.effectName === "Color Wash"));
   assert.ok(!plan.rows.some((row) => row.effectName === "Marquee"));
-  assert.ok(plan.rows.some((row) => row.effectName === "SingleStrand"));
+  assert.ok(!plan.rows.some((row) => row.effectName === "SingleStrand"));
+  assert.ok(plan.summary.manifestCount >= 0);
+  assert.equal(plan.summary.manifestCount, plan.rows.length);
 });
