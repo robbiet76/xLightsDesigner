@@ -236,5 +236,9 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
 - Parameter sampling should come from the effect parameter registry where possible.
 - Intent mapping should only be built on structurally mature effects and geometry profiles.
 - Registry planning should be geometry-profile-aware.
-- The unified training set is the canonical general-training surface joining Stage 1 baseline knowledge with Phase 3 live outcome slots.
-- Preference learning must remain outside the unified training set in a separate store.
+- The old unified training set is now transitional and should not be treated as the long-term selector foundation.
+- The reset rebuild should follow:
+  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md`
+  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md`
+  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md`
+- Preference learning must remain outside the rebuilt shared training records in a separate store.
