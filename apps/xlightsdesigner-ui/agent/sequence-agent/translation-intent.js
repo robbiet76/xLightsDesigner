@@ -40,24 +40,24 @@ function inferPrimaryMotion(text = "") {
 }
 
 function inferPrimaryTexture(text = "") {
-  const lower = str(text).toLowerCase();
+  const lower = stripNegativeClauses(text);
+  if (/\bsolid\b|\bhold\b/.test(lower)) return "solid";
+  if (/\bpinwheel\b|\bspiral\b|\bshockwave\b/.test(lower)) return "banded";
   if (/\bsegmented\b|\bbands\b|\bbar(s)?\b/.test(lower)) return "segmented";
   if (/\bshimmer\b|\btwinkle\b|\bsparkle\b|\btexture\b/.test(lower)) return "sparkling";
-  if (/\bsolid\b|\bhold\b/.test(lower)) return "solid";
   if (/\bwash\b|\bsmooth\b|\bsoft\b/.test(lower)) return "smooth";
-  if (/\bpinwheel\b|\bspiral\b|\bshockwave\b/.test(lower)) return "banded";
   return "smooth";
 }
 
 function inferEnergyLevel(text = "") {
-  const lower = str(text).toLowerCase();
-  if (/\brestrained\b|\bsoft\b|\bgentle\b|\bcalm\b/.test(lower)) return "restrained";
+  const lower = stripNegativeClauses(text);
+  if (/\brestrained\b|\bsoft\b|\bgentle\b|\bcalm\b|\bminimal movement\b|\bsteady\b|\bsolid\b|\bhold\b/.test(lower)) return "restrained";
   if (/\bbold\b|\bfinal chorus\b|\baggressive\b|\bstrong\b/.test(lower)) return "aggressive";
   return "moderate";
 }
 
 function inferCoverageLevel(text = "") {
-  const lower = str(text).toLowerCase();
+  const lower = stripNegativeClauses(text);
   if (/\bbroad\b|\bfull\b|\bcoverage\b|\bfill\b|\bwash\b/.test(lower)) return "broad";
   if (/\bsingle\b|\bfocused\b|\blead\b/.test(lower)) return "focused";
   return "focused";

@@ -127,6 +127,21 @@ Examples:
   - matched `Shockwave`
   - missed `primaryTexture`
 
+Follow-up batch after translation-intent cleanup:
+
+- [live-practical-benchmark-report.json](/tmp/live-practical-benchmark-native-suite-render-baseline-v2/live-practical-benchmark-report.json)
+
+Result:
+
+- `scenarioCount: 10`
+- `failedScenarioCount: 0`
+
+Meaning:
+
+- the first post-cleanup batch failures were resolved by removing negative-clause leakage from translation-intent behavior inference
+- this was a translation-layer correction, not an automation workaround
+- the current remaining discrepancy is the stale render-sample capability probe on the running native app process, which still needs a process restart to reflect the updated probe body
+
 ## Current Checklist
 
 - [x] rebuild/revalidate the running xLights binary with owned `layout.scene`
