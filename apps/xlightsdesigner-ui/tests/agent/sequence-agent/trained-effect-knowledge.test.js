@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  recommendTrainedEffects,
   recommendTrainedEffectsForVisualFamilies
 } from "../../../agent/sequence-agent/trained-effect-knowledge.js";
 
@@ -28,6 +29,16 @@ test("trained effect knowledge does not invent static family recommendations whe
       { id: "Star", name: "Star", displayAs: "Star" }
     ],
     limit: 2
+  });
+
+  assert.deepEqual(out, []);
+});
+
+test("trained effect knowledge ignores generic intent tags as ranking evidence", () => {
+  const out = recommendTrainedEffects({
+    summary: "animated bold fill steady",
+    targetModelTypes: ["spinner"],
+    limit: 5
   });
 
   assert.deepEqual(out, []);

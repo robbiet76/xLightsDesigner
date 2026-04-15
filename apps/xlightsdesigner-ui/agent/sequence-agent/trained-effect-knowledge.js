@@ -35,6 +35,23 @@ function unique(values = []) {
   return [...new Set((Array.isArray(values) ? values : []).map((row) => normText(row)).filter(Boolean))];
 }
 
+const GENERIC_INTENT_TAGS = new Set([
+  'animated',
+  'bold',
+  'busy',
+  'clean',
+  'directional',
+  'fill',
+  'full',
+  'partial',
+  'patterned',
+  'restrained',
+  'segmented',
+  'sparse',
+  'steady',
+  'varied'
+]);
+
 function buildBehaviorTokenSet(values = []) {
   const tokens = new Set();
   for (const value of unique(values)) {
@@ -146,16 +163,20 @@ export function recommendTrainedEffects({
     const profile = getStage1TrainedEffectProfile(effectName);
     if (!profile) continue;
     let score = 0;
+    let semanticEvidenceScore = 0;
     const reasons = [];
 
     if (containsPhrase(lowerHaystack, effectName)) {
       score += 100;
+      semanticEvidenceScore += 100;
       reasons.push(`explicit:${effectName}`);
     }
 
     for (const intentTag of Array.isArray(profile.intentTags) ? profile.intentTags : []) {
+      if (GENERIC_INTENT_TAGS.has(low(intentTag))) continue;
       if (haystackWords.has(low(intentTag))) {
         score += 3;
+        semanticEvidenceScore += 3;
         reasons.push(`intent:${intentTag}`);
       }
     }
@@ -165,6 +186,7 @@ export function recommendTrainedEffects({
       const matched = familyTokens.filter((token) => haystackWords.has(low(token)));
       if (matched.length >= Math.max(1, Math.min(2, familyTokens.length))) {
         score += 6;
+        semanticEvidenceScore += 6;
         reasons.push(`family:${family}`);
       }
     }
@@ -178,7 +200,7 @@ export function recommendTrainedEffects({
       }
     }
 
-    if (score > 0) {
+    if (semanticEvidenceScore > 0 && score > 0) {
       scored.push({ effectName, score, reasons, profile });
     }
   }
@@ -229,6 +251,7 @@ export function recommendTrainedEffectsForVisualFamilies({
     }
 
     for (const tag of intentTags) {
+      if (GENERIC_INTENT_TAGS.has(low(tag))) continue;
       const tagTokens = tokenizeTrainingPhrase(String(tag).replace(/_/g, ' '));
       const matched = tagTokens.filter((token) => desiredTokens.has(low(token)));
       if (matched.length) {
