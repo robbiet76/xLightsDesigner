@@ -18,6 +18,14 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+function resolveScenarioId(scenario = {}, fallback = "scenario") {
+  return str(scenario?.scenarioId || scenario?.name || fallback);
+}
+
+function resolveScenarioLabel(scenario = {}, fallback = "") {
+  return str(scenario?.scenarioLabel || scenario?.name || scenario?.scenarioId || fallback);
+}
+
 function sampleEffectCatalog() {
   return buildEffectDefinitionCatalog([
     { effectName: "Bars", params: [] },
@@ -183,7 +191,8 @@ async function runScenario(scenario = {}) {
   const expectedEffects = arr(scenario?.expectedEffects).map((row) => str(row)).filter(Boolean);
   const matchedExpectedEffects = expectedEffects.filter((row) => observedEffects.includes(row));
   return {
-    name: str(scenario?.name),
+    scenarioId: resolveScenarioId(scenario),
+    scenarioLabel: resolveScenarioLabel(scenario),
     ok: practicalValidation.overallOk === true && matchedExpectedEffects.length > 0,
     expectedEffects,
     observedEffects,
@@ -215,7 +224,8 @@ async function main() {
     scenarioCount: results.length,
     passedScenarioCount: results.length - failed.length,
     failedScenarioCount: failed.length,
-    failedScenarioNames: failed.map((row) => row.name),
+    failedScenarioIds: failed.map((row) => row.scenarioId),
+    failedScenarioLabels: failed.map((row) => row.scenarioLabel),
     ok: failed.length === 0,
     results
   };

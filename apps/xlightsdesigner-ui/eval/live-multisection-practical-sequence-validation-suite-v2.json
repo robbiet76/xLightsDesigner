@@ -5,136 +5,285 @@
   "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2-Baseline.xsq",
   "scenarios": [
     {
-      "name": "intro-to-chorus-tree-contrast",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Intro", "Chorus 1"],
-      "targets": ["PorchTree", "SpiralTrees"],
+      "sections": [
+        "Intro",
+        "Chorus 1"
+      ],
+      "targets": [
+        "PorchTree",
+        "SpiralTrees"
+      ],
       "prompt": "Keep PorchTree calm and warm in the Intro with broad steady wash coverage, then let SpiralTrees clearly take over in Chorus 1 with flowing spiral motion. Preserve readable contrast between the two sections rather than using one generic look across both.",
-      "expectedEffects": ["Color Wash", "Spirals"],
+      "expectedEffects": [
+        "Color Wash",
+        "Spirals"
+      ],
       "sectionExpectedEffects": {
-        "Intro": ["Color Wash"],
-        "Chorus 1": ["Spirals"]
+        "Intro": [
+          "Color Wash"
+        ],
+        "Chorus 1": [
+          "Spirals"
+        ]
       },
       "sectionForbiddenEffects": {
-        "Intro": ["Spirals", "Pinwheel", "Shockwave"],
-        "Chorus 1": ["On"]
+        "Intro": [
+          "Spirals",
+          "Pinwheel",
+          "Shockwave"
+        ],
+        "Chorus 1": [
+          "On"
+        ]
       },
-      "requiredObservedTargets": ["PorchTree", "SpiralTrees"],
-      "forbiddenEffects": ["Pinwheel", "Shockwave"],
+      "requiredObservedTargets": [
+        "PorchTree",
+        "SpiralTrees"
+      ],
+      "forbiddenEffects": [
+        "Pinwheel",
+        "Shockwave"
+      ],
       "requirePreferredEffectAlignment": true,
       "requireDistinctPrimarySectionEffects": true,
-      "minimumMatchedEffects": 2
+      "minimumMatchedEffects": 2,
+      "scenarioId": "live_multisection_practical_sequence_validation_suite_v2_case_001",
+      "scenarioLabel": "intro-to-chorus-tree-contrast"
     },
     {
-      "name": "verse-to-chorus-border-escalation",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Verse 1", "Chorus 2"],
-      "targets": ["Border_Segments"],
+      "sections": [
+        "Verse 1",
+        "Chorus 2"
+      ],
+      "targets": [
+        "Border_Segments"
+      ],
       "prompt": "Use Border_Segments as a clean segmented bars read in Verse 1, then escalate them into an obvious marquee-band chase in Chorus 2. Keep the chorus visibly more assertive than the verse.",
-      "expectedEffects": ["Bars", "Marquee"],
+      "expectedEffects": [
+        "Bars",
+        "Marquee"
+      ],
       "sectionExpectedEffects": {
-        "Verse 1": ["Bars"],
-        "Chorus 2": ["Marquee"]
+        "Verse 1": [
+          "Bars"
+        ],
+        "Chorus 2": [
+          "Marquee"
+        ]
       },
       "sectionForbiddenEffects": {
-        "Verse 1": ["Color Wash", "Twinkle"],
-        "Chorus 2": ["Color Wash", "Twinkle"]
+        "Verse 1": [
+          "Color Wash",
+          "Twinkle"
+        ],
+        "Chorus 2": [
+          "Color Wash",
+          "Twinkle"
+        ]
       },
-      "requiredObservedTargets": ["Border_Segments"],
-      "forbiddenEffects": ["Color Wash", "Twinkle"],
+      "requiredObservedTargets": [
+        "Border_Segments"
+      ],
+      "forbiddenEffects": [
+        "Color Wash",
+        "Twinkle"
+      ],
       "requirePreferredEffectAlignment": true,
       "requireDistinctPrimarySectionEffects": true,
-      "minimumMatchedEffects": 2
+      "minimumMatchedEffects": 2,
+      "scenarioId": "live_multisection_practical_sequence_validation_suite_v2_case_002",
+      "scenarioLabel": "verse-to-chorus-border-escalation"
     },
     {
-      "name": "bridge-to-finalchorus-radial-shift",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Bridge", "Final Chorus"],
-      "targets": ["Spinners", "Star"],
+      "sections": [
+        "Bridge",
+        "Final Chorus"
+      ],
+      "targets": [
+        "Spinners",
+        "Star"
+      ],
       "prompt": "Keep Spinners restrained and texture-led in the Bridge with a softer twinkle feel, then shift to a clear radial spin on Star in the Final Chorus. The Final Chorus should read as the stronger visual payoff.",
-      "expectedEffects": ["Twinkle", "Pinwheel"],
+      "expectedEffects": [
+        "Twinkle",
+        "Pinwheel"
+      ],
       "sectionExpectedEffects": {
-        "Bridge": ["Twinkle", "Shimmer"],
-        "Final Chorus": ["Pinwheel"]
+        "Bridge": [
+          "Twinkle",
+          "Shimmer"
+        ],
+        "Final Chorus": [
+          "Pinwheel"
+        ]
       },
       "sectionForbiddenEffects": {
-        "Bridge": ["Pinwheel", "Shockwave"],
-        "Final Chorus": ["Twinkle", "Shockwave"]
+        "Bridge": [
+          "Pinwheel",
+          "Shockwave"
+        ],
+        "Final Chorus": [
+          "Twinkle",
+          "Shockwave"
+        ]
       },
-      "requiredObservedTargets": ["Spinners", "Star"],
-      "forbiddenEffects": ["Shockwave"],
+      "requiredObservedTargets": [
+        "Spinners",
+        "Star"
+      ],
+      "forbiddenEffects": [
+        "Shockwave"
+      ],
       "requirePreferredEffectAlignment": true,
       "requireDistinctPrimarySectionEffects": true,
-      "minimumMatchedEffects": 2
+      "minimumMatchedEffects": 2,
+      "scenarioId": "live_multisection_practical_sequence_validation_suite_v2_case_003",
+      "scenarioLabel": "bridge-to-finalchorus-radial-shift"
     },
     {
-      "name": "verse-to-outro-snowman-release",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Verse 1", "Outro"],
-      "targets": ["Snowman"],
+      "sections": [
+        "Verse 1",
+        "Outro"
+      ],
+      "targets": [
+        "Snowman"
+      ],
       "prompt": "Keep Snowman gently animated with restrained shimmer texture in Verse 1, then settle it into a solid steady hold in the Outro. The Outro should feel calmer and more resolved than the verse.",
-      "expectedEffects": ["Shimmer", "Color Wash"],
+      "expectedEffects": [
+        "Shimmer",
+        "Color Wash"
+      ],
       "sectionExpectedEffects": {
-        "Verse 1": ["Shimmer"],
-        "Outro": ["Color Wash", "On"]
+        "Verse 1": [
+          "Shimmer"
+        ],
+        "Outro": [
+          "Color Wash",
+          "On"
+        ]
       },
       "sectionForbiddenEffects": {
-        "Verse 1": ["Bars", "Shockwave"],
-        "Outro": ["Bars", "Twinkle", "Shockwave"]
+        "Verse 1": [
+          "Bars",
+          "Shockwave"
+        ],
+        "Outro": [
+          "Bars",
+          "Twinkle",
+          "Shockwave"
+        ]
       },
-      "requiredObservedTargets": ["Snowman"],
-      "forbiddenEffects": ["Bars", "Shockwave"],
+      "requiredObservedTargets": [
+        "Snowman"
+      ],
+      "forbiddenEffects": [
+        "Bars",
+        "Shockwave"
+      ],
       "requirePreferredEffectAlignment": true,
       "requireDistinctPrimarySectionEffects": true,
-      "minimumMatchedEffects": 2
+      "minimumMatchedEffects": 2,
+      "scenarioId": "live_multisection_practical_sequence_validation_suite_v2_case_004",
+      "scenarioLabel": "verse-to-outro-snowman-release"
     },
     {
-      "name": "verse-to-chorus-canes-to-border-shift",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Verse 2", "Chorus 2"],
-      "targets": ["CandyCanes", "Border_Segments"],
+      "sections": [
+        "Verse 2",
+        "Chorus 2"
+      ],
+      "targets": [
+        "CandyCanes",
+        "Border_Segments"
+      ],
       "prompt": "In Verse 2, make CandyCanes read as a directional traveling strand with chase motion. Then let Border_Segments take over Chorus 2 with an obvious marquee-band chase. Keep the chorus bolder and more public-facing than the verse.",
-      "expectedEffects": ["SingleStrand", "Marquee"],
+      "expectedEffects": [
+        "SingleStrand",
+        "Marquee"
+      ],
       "sectionExpectedEffects": {
-        "Verse 2": ["SingleStrand"],
-        "Chorus 2": ["Marquee"]
+        "Verse 2": [
+          "SingleStrand"
+        ],
+        "Chorus 2": [
+          "Marquee"
+        ]
       },
       "sectionForbiddenEffects": {
-        "Verse 2": ["Color Wash", "Pinwheel"],
-        "Chorus 2": ["Color Wash", "Twinkle"]
+        "Verse 2": [
+          "Color Wash",
+          "Pinwheel"
+        ],
+        "Chorus 2": [
+          "Color Wash",
+          "Twinkle"
+        ]
       },
-      "requiredObservedTargets": ["CandyCanes", "Border_Segments"],
-      "forbiddenEffects": ["Color Wash"],
+      "requiredObservedTargets": [
+        "CandyCanes",
+        "Border_Segments"
+      ],
+      "forbiddenEffects": [
+        "Color Wash"
+      ],
       "requirePreferredEffectAlignment": true,
       "requireDistinctPrimarySectionEffects": true,
-      "minimumMatchedEffects": 2
+      "minimumMatchedEffects": 2,
+      "scenarioId": "live_multisection_practical_sequence_validation_suite_v2_case_005",
+      "scenarioLabel": "verse-to-chorus-canes-to-border-shift"
     },
     {
-      "name": "bridge-to-chorus-star-ring-to-spin",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Bridge", "Final Chorus"],
-      "targets": ["Star"],
+      "sections": [
+        "Bridge",
+        "Final Chorus"
+      ],
+      "targets": [
+        "Star"
+      ],
       "prompt": "Use Star as a centered shockwave ring in the Bridge, then switch it to a clear pinwheel-style radial spin in the Final Chorus. Make the Final Chorus read as the stronger resolved payoff rather than repeating the same radial family.",
-      "expectedEffects": ["Shockwave", "Pinwheel"],
+      "expectedEffects": [
+        "Shockwave",
+        "Pinwheel"
+      ],
       "sectionExpectedEffects": {
-        "Bridge": ["Shockwave"],
-        "Final Chorus": ["Pinwheel"]
+        "Bridge": [
+          "Shockwave"
+        ],
+        "Final Chorus": [
+          "Pinwheel"
+        ]
       },
       "sectionForbiddenEffects": {
-        "Bridge": ["Pinwheel"],
-        "Final Chorus": ["Shockwave", "Twinkle"]
+        "Bridge": [
+          "Pinwheel"
+        ],
+        "Final Chorus": [
+          "Shockwave",
+          "Twinkle"
+        ]
       },
-      "requiredObservedTargets": ["Star"],
-      "forbiddenEffects": ["Twinkle"],
+      "requiredObservedTargets": [
+        "Star"
+      ],
+      "forbiddenEffects": [
+        "Twinkle"
+      ],
       "requirePreferredEffectAlignment": true,
       "requireDistinctPrimarySectionEffects": true,
-      "minimumMatchedEffects": 2
+      "minimumMatchedEffects": 2,
+      "scenarioId": "live_multisection_practical_sequence_validation_suite_v2_case_006",
+      "scenarioLabel": "bridge-to-chorus-star-ring-to-spin"
     }
   ]
 }
