@@ -8,131 +8,413 @@
       "name": "tree-chorus-spiral-lead",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Chorus 1"],
-      "targets": ["SpiralTrees"],
+      "sections": [
+        "Chorus 1"
+      ],
+      "targets": [
+        "SpiralTrees"
+      ],
       "prompt": "Design a single Chorus 1 concept for SpiralTrees. Keep SpiralTrees as the lead read and use flowing spiral motion rather than a generic segmented fill. Do not rewrite the whole show.",
-      "expectedEffects": ["Spirals"],
-      "requiredObservedTargets": ["SpiralTrees"],
-      "forbiddenEffects": ["Bars", "Marquee"],
+      "expectedEffects": [
+        "Spirals"
+      ],
+      "requiredObservedTargets": [
+        "SpiralTrees"
+      ],
+      "forbiddenEffects": [
+        "Bars",
+        "Marquee"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "drift"
+        ],
+        "primaryTexture": [
+          "banded"
+        ],
+        "coverageLevel": [
+          "focused"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryMotion": [
+          "burst",
+          "shimmer"
+        ]
+      }
     },
     {
       "name": "spinner-bridge-soft-twinkle",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Bridge"],
-      "targets": ["Spinners"],
+      "sections": [
+        "Bridge"
+      ],
+      "targets": [
+        "Spinners"
+      ],
       "prompt": "In the Bridge, keep Spinners restrained and texture-led with a softer twinkle read rather than a bold ring or spin. Prefer twinkle or shimmer family behavior and avoid a large directional pass.",
-      "expectedEffects": ["Twinkle", "Shimmer"],
-      "requiredObservedTargets": ["Spinners"],
-      "forbiddenEffects": ["Shockwave", "Pinwheel"],
+      "expectedEffects": [
+        "Twinkle",
+        "Shimmer"
+      ],
+      "requiredObservedTargets": [
+        "Spinners"
+      ],
+      "forbiddenEffects": [
+        "Shockwave",
+        "Pinwheel"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "shimmer"
+        ],
+        "primaryTexture": [
+          "sparkling"
+        ],
+        "energyLevel": [
+          "restrained"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryMotion": [
+          "burst",
+          "spin"
+        ]
+      }
     },
     {
       "name": "snowman-verse-shimmer-texture",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Verse 1"],
-      "targets": ["Snowman"],
+      "sections": [
+        "Verse 1"
+      ],
+      "targets": [
+        "Snowman"
+      ],
       "prompt": "For Verse 1, keep Snowman gently animated with a restrained shimmer texture instead of a strong fill or segmented chase. Do not broaden beyond Snowman.",
-      "expectedEffects": ["Shimmer"],
-      "requiredObservedTargets": ["Snowman"],
-      "forbiddenEffects": ["Bars", "Shockwave"],
+      "expectedEffects": [
+        "Shimmer"
+      ],
+      "requiredObservedTargets": [
+        "Snowman"
+      ],
+      "forbiddenEffects": [
+        "Bars",
+        "Shockwave"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "shimmer"
+        ],
+        "primaryTexture": [
+          "sparkling"
+        ],
+        "energyLevel": [
+          "restrained"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryMotion": [
+          "burst",
+          "chase"
+        ],
+        "primaryTexture": [
+          "segmented"
+        ]
+      }
     },
     {
       "name": "border-verse-bars-segmented",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Verse 1"],
-      "targets": ["Border_Segments"],
+      "sections": [
+        "Verse 1"
+      ],
+      "targets": [
+        "Border_Segments"
+      ],
       "prompt": "In Verse 1, drive Border_Segments with a clean segmented bars treatment and readable directional motion. Avoid soft sparkle texture.",
-      "expectedEffects": ["Bars"],
-      "requiredObservedTargets": ["Border_Segments"],
-      "forbiddenEffects": ["Twinkle", "Shimmer"],
+      "expectedEffects": [
+        "Bars"
+      ],
+      "requiredObservedTargets": [
+        "Border_Segments"
+      ],
+      "forbiddenEffects": [
+        "Twinkle",
+        "Shimmer"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "chase"
+        ],
+        "primaryTexture": [
+          "segmented"
+        ],
+        "transitionCharacter": [
+          "directional"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryTexture": [
+          "sparkling"
+        ]
+      }
     },
     {
       "name": "border-chorus-marquee-bands",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Chorus 2"],
-      "targets": ["Border_Segments"],
+      "sections": [
+        "Chorus 2"
+      ],
+      "targets": [
+        "Border_Segments"
+      ],
       "prompt": "For Chorus 2, use Border_Segments as a marching marquee-band read with obvious segmented chase structure rather than broad wash or sparkle.",
-      "expectedEffects": ["Marquee"],
-      "requiredObservedTargets": ["Border_Segments"],
-      "forbiddenEffects": ["Color Wash", "Twinkle"],
+      "expectedEffects": [
+        "Marquee"
+      ],
+      "requiredObservedTargets": [
+        "Border_Segments"
+      ],
+      "forbiddenEffects": [
+        "Color Wash",
+        "Twinkle"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "chase"
+        ],
+        "primaryTexture": [
+          "segmented"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryTexture": [
+          "sparkling"
+        ],
+        "primaryMotion": [
+          "hold"
+        ]
+      }
     },
     {
       "name": "porchtree-intro-warm-wash",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Intro"],
-      "targets": ["PorchTree"],
+      "sections": [
+        "Intro"
+      ],
+      "targets": [
+        "PorchTree"
+      ],
       "prompt": "In the Intro, keep PorchTree calm with a warm color wash and broad steady coverage. Do not turn it into a chase or radial motion.",
-      "expectedEffects": ["Color Wash"],
-      "requiredObservedTargets": ["PorchTree"],
-      "forbiddenEffects": ["Bars", "Pinwheel", "SingleStrand"],
+      "expectedEffects": [
+        "Color Wash"
+      ],
+      "requiredObservedTargets": [
+        "PorchTree"
+      ],
+      "forbiddenEffects": [
+        "Bars",
+        "Pinwheel",
+        "SingleStrand"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "hold"
+        ],
+        "primaryTexture": [
+          "smooth"
+        ],
+        "coverageLevel": [
+          "broad"
+        ],
+        "energyLevel": [
+          "restrained"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryMotion": [
+          "chase",
+          "spin",
+          "burst"
+        ]
+      }
     },
     {
       "name": "snowman-outro-solid-hold",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Outro"],
-      "targets": ["Snowman"],
+      "sections": [
+        "Outro"
+      ],
+      "targets": [
+        "Snowman"
+      ],
       "prompt": "For the Outro, keep Snowman on a solid steady hold with minimal movement. Use an On effect rather than sparkle, bars, or ring motion.",
-      "expectedEffects": ["On", "Color Wash"],
-      "requiredObservedTargets": ["Snowman"],
-      "forbiddenEffects": ["Bars", "Twinkle", "Shockwave"],
+      "expectedEffects": [
+        "On",
+        "Color Wash"
+      ],
+      "requiredObservedTargets": [
+        "Snowman"
+      ],
+      "forbiddenEffects": [
+        "Bars",
+        "Twinkle",
+        "Shockwave"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "hold"
+        ],
+        "primaryTexture": [
+          "solid"
+        ],
+        "energyLevel": [
+          "restrained"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryMotion": [
+          "shimmer",
+          "burst",
+          "chase"
+        ]
+      }
     },
     {
       "name": "star-finalchorus-pinwheel-spin",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Final Chorus"],
-      "targets": ["Star"],
+      "sections": [
+        "Final Chorus"
+      ],
+      "targets": [
+        "Star"
+      ],
       "prompt": "In the Final Chorus, make Star read as a clear radial spin with pinwheel-style motion. Avoid soft texture and avoid a diffuse ring burst.",
-      "expectedEffects": ["Pinwheel"],
-      "requiredObservedTargets": ["Star"],
-      "forbiddenEffects": ["Twinkle", "Shockwave"],
+      "expectedEffects": [
+        "Pinwheel"
+      ],
+      "requiredObservedTargets": [
+        "Star"
+      ],
+      "forbiddenEffects": [
+        "Twinkle",
+        "Shockwave"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "spin"
+        ],
+        "primaryTexture": [
+          "banded"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryMotion": [
+          "shimmer",
+          "burst"
+        ]
+      }
     },
     {
       "name": "star-chorus-shockwave-ring",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Chorus 2"],
-      "targets": ["Star"],
+      "sections": [
+        "Chorus 2"
+      ],
+      "targets": [
+        "Star"
+      ],
       "prompt": "For Chorus 2, use Star as a centered shockwave ring burst with radial expansion. Do not turn it into a soft twinkle texture or pinwheel spin.",
-      "expectedEffects": ["Shockwave"],
-      "requiredObservedTargets": ["Star"],
-      "forbiddenEffects": ["Twinkle", "Pinwheel"],
+      "expectedEffects": [
+        "Shockwave"
+      ],
+      "requiredObservedTargets": [
+        "Star"
+      ],
+      "forbiddenEffects": [
+        "Twinkle",
+        "Pinwheel"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "burst"
+        ],
+        "primaryTexture": [
+          "banded"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryMotion": [
+          "shimmer",
+          "spin"
+        ]
+      }
     },
     {
       "name": "canes-verse-singlestrand-travel",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "sections": ["Verse 2"],
-      "targets": ["CandyCanes"],
+      "sections": [
+        "Verse 2"
+      ],
+      "targets": [
+        "CandyCanes"
+      ],
       "prompt": "In Verse 2, make CandyCanes read as a directional traveling strand with chase motion, not a broad wash or radial treatment.",
-      "expectedEffects": ["SingleStrand"],
-      "requiredObservedTargets": ["CandyCanes"],
-      "forbiddenEffects": ["Color Wash", "Pinwheel"],
+      "expectedEffects": [
+        "SingleStrand"
+      ],
+      "requiredObservedTargets": [
+        "CandyCanes"
+      ],
+      "forbiddenEffects": [
+        "Color Wash",
+        "Pinwheel"
+      ],
       "requirePreferredEffectAlignment": true,
-      "minimumMatchedEffects": 1
+      "minimumMatchedEffects": 1,
+      "expectedBehaviors": {
+        "primaryMotion": [
+          "chase"
+        ],
+        "transitionCharacter": [
+          "directional"
+        ]
+      },
+      "contradictoryBehaviors": {
+        "primaryMotion": [
+          "hold",
+          "spin",
+          "burst"
+        ]
+      }
     }
   ]
 }

@@ -272,6 +272,62 @@ function summarizePlan(plan = {}) {
   };
 }
 
+function collectTranslationBehaviorSignals(translationIntent = {}) {
+  const behaviorTargets = arr(translationIntent?.behaviorTargets);
+  const targetRoles = arr(translationIntent?.targetRoles);
+  const sectionRoles = arr(translationIntent?.sectionRoles);
+  return {
+    primaryMotion: [...new Set(behaviorTargets.map((row) => str(row?.motion?.primaryMotion)).filter(Boolean))],
+    primaryTexture: [...new Set(behaviorTargets.map((row) => str(row?.texture?.primaryTexture)).filter(Boolean))],
+    energyLevel: [...new Set(behaviorTargets.map((row) => str(row?.energy?.energyLevel)).filter(Boolean))],
+    coverageLevel: [...new Set(behaviorTargets.map((row) => str(row?.coverage?.coverageLevel)).filter(Boolean))],
+    transitionCharacter: [...new Set(behaviorTargets.flatMap((row) => [str(row?.transitions?.entryCharacter), str(row?.transitions?.exitCharacter)]).filter(Boolean))],
+    targetRole: [...new Set(targetRoles.map((row) => str(row?.role)).filter(Boolean))],
+    sectionRole: [...new Set(sectionRoles.map((row) => str(row?.role)).filter(Boolean))]
+  };
+}
+
+function evaluateBehaviorAssertions({ scenario = {}, translationIntent = {} } = {}) {
+  const actualSignals = collectTranslationBehaviorSignals(translationIntent);
+  const expectedBehaviors = scenario?.expectedBehaviors && typeof scenario.expectedBehaviors === "object" ? scenario.expectedBehaviors : {};
+  const contradictoryBehaviors = scenario?.contradictoryBehaviors && typeof scenario.contradictoryBehaviors === "object" ? scenario.contradictoryBehaviors : {};
+  const matched = {};
+  const missing = {};
+  const contradictory = {};
+  const issues = [];
+
+  for (const [dimension, expectedValues] of Object.entries(expectedBehaviors)) {
+    const expected = arr(expectedValues).map((row) => str(row)).filter(Boolean);
+    const actual = arr(actualSignals?.[dimension]).map((row) => str(row)).filter(Boolean);
+    const overlap = actual.filter((row) => expected.includes(row));
+    matched[dimension] = overlap;
+    if (expected.length && !overlap.length) {
+      missing[dimension] = { expected, actual };
+      issues.push(`expected_behavior_missing:${dimension}`);
+    }
+  }
+
+  for (const [dimension, forbiddenValues] of Object.entries(contradictoryBehaviors)) {
+    const forbidden = arr(forbiddenValues).map((row) => str(row)).filter(Boolean);
+    const actual = arr(actualSignals?.[dimension]).map((row) => str(row)).filter(Boolean);
+    const overlap = actual.filter((row) => forbidden.includes(row));
+    contradictory[dimension] = overlap;
+    if (overlap.length) {
+      issues.push(`contradictory_behavior_present:${dimension}`);
+    }
+  }
+
+  return {
+    actualSignals,
+    expectedBehaviors,
+    contradictoryBehaviors,
+    matched,
+    missing,
+    contradictory,
+    issues
+  };
+}
+
 function buildBenchmarkPrompt(scenario = {}) {
   const basePrompt = str(scenario?.prompt || scenario?.strongPrompt || scenario?.revisionPrompt);
   const benchmarkDirective = "Use defaults where needed. Do not ask follow-up questions. Do not answer with a concept summary. Materialize an apply-ready sequencing plan and command handoff now.";
@@ -298,6 +354,9 @@ function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, w
   const latestPlan = promptSnapshot?.result?.latestPlanHandoff || applySnapshot?.result?.latestPlanHandoff || null;
   const latestApplyResult = applySnapshot?.result?.latestApplyResult || null;
   const latestGuidanceCoverage = promptSnapshot?.result?.latestGuidanceCoverage || null;
+  const latestIntentHandoff = promptSnapshot?.result?.latestIntentHandoff || applySnapshot?.result?.latestIntentHandoff || null;
+  const translationIntent = latestIntentHandoff?.executionStrategy?.translationIntent || null;
+  const behaviorEvaluation = evaluateBehaviorAssertions({ scenario, translationIntent });
   const planSummary = summarizePlan(latestPlan);
   const expectedEffects = arr(scenario?.expectedEffects).map((row) => str(row)).filter(Boolean);
   const forbiddenEffects = arr(scenario?.forbiddenEffects).map((row) => str(row)).filter(Boolean);
@@ -314,6 +373,7 @@ function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, w
   if (presentForbiddenEffects.length) issues.push("forbidden_effect_present");
   if (requiredTargets.length && !matchedTargets.length) issues.push("required_target_missing");
   if (requireEffectCreateCommands && Number(latestGuidanceCoverage?.effectCreateCount || 0) <= 0) issues.push("no_effect_create_commands");
+  issues.push(...behaviorEvaluation.issues);
   return {
     suiteKey,
     scenarioName: str(scenario?.name),
@@ -325,6 +385,16 @@ function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, w
     presentForbiddenEffects,
     matchedTargets,
     guidanceCoverage: latestGuidanceCoverage,
+    translationIntentSummary: translationIntent
+      ? {
+          artifactType: str(translationIntent?.artifactType),
+          artifactId: str(translationIntent?.artifactId),
+          behaviorTargets: arr(translationIntent?.behaviorTargets),
+          targetRoles: arr(translationIntent?.targetRoles),
+          sectionRoles: arr(translationIntent?.sectionRoles)
+        }
+      : null,
+    behaviorEvaluation,
     renderFeedbackCapabilities: promptSnapshot?.result?.ownedRenderFeedbackCapabilities || null,
     latestPlanSummary: latestPlan
       ? {
@@ -515,6 +585,8 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   });
 }
 
+export { collectTranslationBehaviorSignals, evaluateBehaviorAssertions, evaluateScenario };
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const repoRoot = resolveRepoRoot();
@@ -579,4 +651,6 @@ async function main() {
   if (!report.ok) process.exitCode = 1;
 }
 
-await main();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await main();
+}
