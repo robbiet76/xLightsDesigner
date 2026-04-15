@@ -801,6 +801,69 @@ test("sequence_agent keeps alternate realization candidates alive before final s
   assert.match(out.executionLines[0], /apply Twinkle effect/i);
 });
 
+test("sequence_agent does not demote On just because the prompt is warm", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track F", artist: "Artist F" },
+      structure: {
+        sections: [
+          { label: "Outro", startMs: 0, endMs: 1000, energy: "low", density: "sparse" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Hold Snowman in a warm amber glow with minimal movement.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman"],
+        tagNames: [],
+        sections: ["Outro"]
+      },
+      executionStrategy: {
+        translationIntent: {
+          behaviorTargets: [
+            {
+              appliesTo: "section",
+              section: "Outro",
+              behaviorSummary: "warm amber glow steady hold minimal movement"
+            }
+          ]
+        },
+        sectionPlans: [
+          {
+            section: "Outro",
+            energy: "low",
+            density: "sparse",
+            intentSummary: "hold snowman in a warm amber glow with minimal movement",
+            targetIds: ["Snowman"],
+            effectHints: []
+          }
+        ]
+      },
+      sequencingDesignHandoff: {
+        sectionDirectives: [
+          {
+            sectionName: "Outro",
+            sectionPurpose: "resolve",
+            motionTarget: "restrained_motion",
+            densityTarget: "sparse",
+            transitionIntent: "hold",
+            preferredVisualFamilies: ["static_fill"]
+          }
+        ]
+      }
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "On", params: [] },
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Shimmer", params: [] }
+    ])
+  });
+
+  assert.equal(out.metadata.effectStrategy.seedRecommendations[0].effectName, "On");
+  assert.match(out.executionLines[0], /apply On effect in warm amber and gold tones/i);
+});
+
 test("sequence_agent clamps effect placement windows to sequence duration", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

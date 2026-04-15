@@ -74,8 +74,7 @@ export const SAFE_EFFECT_FALLBACKS = Object.freeze({
   sparklyTexture: ["Shimmer", "Twinkle"],
   rhythmicMotion: ["Bars", "Marquee", "SingleStrand"],
   staticFill: ["On", "Color Wash"],
-  default: ["Color Wash", "On", "Shimmer"],
-  trainedOnAlternate: ["Color Wash", "Shimmer"]
+  default: ["Color Wash", "On", "Shimmer"]
 });
 
 export const TEMPLATE_EFFECT_PREFERENCES = Object.freeze([

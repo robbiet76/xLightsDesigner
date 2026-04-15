@@ -641,8 +641,6 @@ function inferEffectNameFromSectionPlan({
   });
   const normalizedEnergy = normText(energy).toLowerCase();
   const normalizedDensity = normText(density).toLowerCase();
-  const explicitStaticCue = /\bon effect\b|\bsolid\b|\bhold\b|\bsteady\b/.test(summary);
-  const cinematicWarmCue = /warm|amber|gold|cinematic|glow|smooth/.test(summary);
   const trained = recommendEffectsForTargets({
     summary,
     energy: normalizedEnergy,
@@ -651,14 +649,7 @@ function inferEffectNameFromSectionPlan({
     displayElements,
     limit: 3
   });
-  let trainedEffectNames = filterAvoidedEffects(trained.map((row) => row?.effectName), effectAvoidances);
-  if (cinematicWarmCue && !explicitStaticCue && trainedEffectNames[0] === "On") {
-    trainedEffectNames = [
-      ...trainedEffectNames.filter((row) => normText(row) !== "On"),
-      ...filterAvoidedEffects(chooseSafeFallbackChain("trainedOnAlternate"), effectAvoidances),
-      "On"
-    ].filter((row, index, values) => values.indexOf(row) === index);
-  }
+  const trainedEffectNames = filterAvoidedEffects(trained.map((row) => row?.effectName), effectAvoidances);
   const combinedCandidates = [
     ...familyDriven.map((row) => row?.effectName),
     ...trainedEffectNames,
