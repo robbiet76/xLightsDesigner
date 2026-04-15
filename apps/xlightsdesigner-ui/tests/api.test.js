@@ -8,6 +8,7 @@ import {
   renderCurrentSequence,
   getRenderedSequenceSamples,
   openSequence,
+  getLayoutScene,
   getTimingMarks,
   listEffects
 } from "../api.js";
@@ -218,6 +219,45 @@ test("getRenderedSequenceSamples uses owned route and preserves sparse sample pa
     assert.equal(body.data.sampleEncoding, "base64_packed_channel_ranges_v1");
     assert.equal(body.data.samples.length, 2);
     assert.equal(body.data.channelRanges[1].startChannel, 100);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("getLayoutScene uses owned route and preserves scene payload", async () => {
+  const calls = [];
+  const originalFetch = global.fetch;
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    return jsonResponse({
+      ok: true,
+      statusCode: 200,
+      data: {
+        models: [
+          {
+            name: "Snowman",
+            type: "Single Line",
+            layoutGroup: "Yard",
+            transform: {
+              position: { x: 1, y: 2, z: 3 },
+              rotationDeg: { x: 0, y: 0, z: 0 },
+              scale: { x: 1, y: 1, z: 1 }
+            },
+            dimensions: { width: 4, height: 5, depth: 1 }
+          }
+        ],
+        cameras: [],
+        views: [],
+        displayElements: []
+      }
+    });
+  };
+  try {
+    const body = await getLayoutScene("http://127.0.0.1:49915/xlightsdesigner/api", { includeCameras: true });
+    assert.match(calls[0], /\/layout\/scene\?includeCameras=true$/);
+    assert.equal(body.data.models.length, 1);
+    assert.equal(body.data.models[0].name, "Snowman");
+    assert.equal(body.data.models[0].transform.position.z, 3);
   } finally {
     global.fetch = originalFetch;
   }

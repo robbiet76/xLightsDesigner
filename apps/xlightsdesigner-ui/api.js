@@ -511,6 +511,12 @@ export async function getCameras(endpoint) {
 }
 
 export async function getLayoutScene(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    return normalizeOwnedCompleted(
+      "layout.getScene",
+      await readOwnedGet(endpoint, "/layout/scene", params)
+    );
+  }
   return postCommand(endpoint, "layout.getScene", params);
 }
 
