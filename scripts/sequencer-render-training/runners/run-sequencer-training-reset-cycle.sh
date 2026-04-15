@@ -37,6 +37,7 @@ SETTINGS_COVERAGE="$RUN_ROOT/artifacts/effect-settings-coverage-report-v1.json"
 AUTOMATION_PLAN="$RUN_ROOT/artifacts/effect-training-automation-plan-v1.json"
 SCREENING_PLAN="$RUN_ROOT/artifacts/effect-parameter-screening-plan-v1.json"
 INTERACTION_COVERAGE="$RUN_ROOT/artifacts/effect-setting-interaction-coverage-report-v1.json"
+DOSSIER_DIR="$RUN_ROOT/artifacts/effect-training-dossiers"
 RESET_REPORT="$RUN_ROOT/sequencer-training-reset-report.json"
 HARVEST_SUMMARY="$RUN_ROOT/artifacts/harvest-summary.json"
 
@@ -55,6 +56,12 @@ node "$ROOT_DIR/tooling/build-effect-settings-coverage-report.mjs" "$SETTINGS_CO
 node "$ROOT_DIR/tooling/build-effect-training-automation-plan.mjs" "$AUTOMATION_PLAN"
 node "$ROOT_DIR/tooling/build-effect-parameter-screening-plan.mjs" "$SCREENING_PLAN"
 node "$ROOT_DIR/tooling/build-effect-setting-interaction-coverage-report.mjs" "$AUTOMATION_PLAN" "$INTERACTION_COVERAGE"
+node "$ROOT_DIR/tooling/build-effect-training-dossiers.mjs" \
+  "$DOSSIER_DIR" \
+  "$ROOT_DIR/catalog/sequencer-unified-training-set-v1.json" \
+  "$SETTINGS_COVERAGE" \
+  "$INTERACTION_COVERAGE" \
+  "$ROOT_DIR/catalog/effect-parameter-registry.json"
 
 printf '[training-reset] building consolidated reset report\n'
 REPORT_ARGS=(

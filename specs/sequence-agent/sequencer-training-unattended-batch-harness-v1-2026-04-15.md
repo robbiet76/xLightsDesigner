@@ -58,6 +58,7 @@ Each unattended run must emit:
 - automation plan snapshot
 - screening plan snapshot
 - interaction coverage report
+- one per-effect training dossier directory
 - one consolidated regeneration-gate report
 - one run log
 

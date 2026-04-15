@@ -71,6 +71,7 @@ Primary system roadmap:
 - `tooling/build-effect-parameter-screening-plan.mjs`
 - `tooling/build-effect-setting-interaction-coverage-report.mjs`
 - `tooling/build-sequencer-training-reset-report.mjs`
+- `tooling/build-effect-training-dossiers.mjs`
 - `tooling/resolve-controlled-designer-term.py`
 - `analysis/analyze_decoded_window.py`
 
@@ -261,4 +262,8 @@ bash scripts/sequencer-render-training/runners/run-sequencer-training-reset-cycl
   --harvest-source /tmp/prior-screening-run \
   --out-dir /tmp/sequencer-training-reset-batch \
   --require-clean-ready
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/build-effect-training-dossiers.mjs
 ```
