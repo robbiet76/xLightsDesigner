@@ -828,22 +828,6 @@ function buildSectionEffectHints({
     if (/final chorus|finale/.test(lowerSection) && floodedFinale) {
       return resolveContextualEffectCandidates({ contextKey: "highEnergy", variant: "finaleFlooded" });
     }
-    if (smoothBias) {
-      return resolveContextualEffectCandidates({
-        contextKey: "highEnergy",
-        variant: nearEnd ? "smoothNearEnd" : "smoothDefault"
-      });
-    }
-    if (crispBias) {
-      return resolveContextualEffectCandidates({
-        contextKey: "highEnergy",
-        variant: nearEnd ? "crispNearEnd" : "crispDefault"
-      });
-    }
-    return resolveContextualEffectCandidates({
-      contextKey: "highEnergy",
-      variant: nearEnd ? "nearEnd" : "default"
-    });
   }
   if (/tag/.test(lowerSection)) {
     return resolveSectionContextEffectCandidates({
