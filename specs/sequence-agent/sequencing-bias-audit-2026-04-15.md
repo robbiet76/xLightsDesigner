@@ -115,6 +115,8 @@ Do not preserve long term:
 
 Status:
 - quarantine
+- pattern-family evidence now outranks the static family map
+- continue reducing the remaining fallback map and keyword reliance
 
 #### 3. Coarse family-level benchmark assertions
 Files:
@@ -208,6 +210,7 @@ Reset direction:
 Status:
 - partially reset
 - direct role tables were removed, but residual hardcoded family returns still remain
+- narrowed further to explicit hold-state fallback plus trained ranking
 
 ## Already Removed In This Audit Pass
 
@@ -225,6 +228,8 @@ Status:
    - `DESIGNER_FAMILY_POOLS`
    - `SECTION_CONTEXT_RULES`
    - `REPEATED_ROLE_RULES`
+10. trained effect knowledge now prefers stage1 pattern-family evidence over the static visual-family map
+11. revision brief effect inference no longer returns `Bars` / `Shimmer` from broad summary heuristics
 
 These changes reduced leakage from:
 - benchmark shorthand
@@ -266,8 +271,8 @@ Directly replace residual hardcoded returns in:
 - `inferRevisionBriefEffectName()`
 
 Current objective:
-- remove the remaining `Bars` / `On` / `Shimmer` summary shortcuts
-- leave only behavior-first ranking and narrow explicit hold-state handling if still justified
+- remove the remaining `On` hold fallback if trained behavior ranking becomes reliable enough to cover it
+- otherwise keep it as a narrow explicit hold-state exception only
 
 ## Training And Recalibration Rule
 

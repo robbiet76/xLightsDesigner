@@ -731,14 +731,6 @@ function inferRevisionBriefEffectName(brief = {}) {
     })
   );
   if (directCueChosen) return directCueChosen;
-  if (/contrast|hierarchy|differentiat|lift|shift/.test(summary)) return "Bars";
-  if (/flat|evolv|develop/.test(summary)) {
-    return motionCharacter.includes("restrained") ? "Shimmer" : "Bars";
-  }
-  if (motionCharacter.includes("still")) return "On";
-  if (motionCharacter.includes("restrained")) return "Shimmer";
-  if (motionCharacter.includes("expand")) return "Bars";
-  if (densityCharacter === "sparse") return "On";
   const trainedChosen = firstAvailableEffect(
     filterAvoidedEffects(
       recommendEffectsForTargets({
@@ -753,6 +745,9 @@ function inferRevisionBriefEffectName(brief = {}) {
     )
   );
   if (trainedChosen) return trainedChosen;
+  if (motionCharacter.includes("still") || /\bsolid hold|steady hold|minimal movement\b/.test(summary)) {
+    return "On";
+  }
   return "Color Wash";
 }
 

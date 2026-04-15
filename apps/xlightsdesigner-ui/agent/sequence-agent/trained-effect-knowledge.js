@@ -62,6 +62,18 @@ export const VISUAL_FAMILY_EFFECT_MAP = Object.freeze({
   fill: ['Color Wash', 'On', 'Bars', 'Marquee', 'Shockwave']
 });
 
+function buildBehaviorTokenSet(values = []) {
+  const tokens = new Set();
+  for (const value of unique(values)) {
+    const normalized = normText(value);
+    if (!normalized) continue;
+    for (const token of tokenizeTrainingPhrase(normalized.replace(/_/g, ' '))) {
+      tokens.add(low(token));
+    }
+  }
+  return tokens;
+}
+
 function buildDisplayElementIndex(displayElements = []) {
   const index = new Map();
   for (const row of Array.isArray(displayElements) ? displayElements : []) {
@@ -168,13 +180,6 @@ export function recommendTrainedEffects({
       reasons.push(`explicit:${effectName}`);
     }
 
-    for (const keyword of EFFECT_KEYWORDS[effectName] || []) {
-      if (containsPhrase(lowerHaystack, keyword)) {
-        score += 12;
-        reasons.push(`keyword:${keyword}`);
-      }
-    }
-
     for (const intentTag of Array.isArray(profile.intentTags) ? profile.intentTags : []) {
       if (haystackWords.has(low(intentTag))) {
         score += 3;
@@ -228,16 +233,57 @@ export function recommendTrainedEffectsForVisualFamilies({
   limit = 5
 } = {}) {
   const targetModelTypes = inferModelBucketsForTargets({ targetIds, displayElements });
-  const preferred = unique(preferredVisualFamilies).flatMap((row) => VISUAL_FAMILY_EFFECT_MAP[row] || []);
-  const supported = unique(preferred).filter((effectName) => {
+  const desiredTokens = buildBehaviorTokenSet(preferredVisualFamilies);
+  const scored = [];
+
+  for (const effectName of unique(STAGE1_TRAINED_EFFECT_BUNDLE.selectorReadyEffects || [])) {
+    const profile = getStage1TrainedEffectProfile(effectName);
+    if (!profile) continue;
+    if (targetModelTypes.length && !effectSupportsAnyBucket(profile, targetModelTypes)) continue;
+
+    let score = 0;
+    const reasons = [];
+    const patternFamilies = unique(profile?.patternFamilies);
+    const intentTags = unique(profile?.intentTags);
+
+    for (const family of patternFamilies) {
+      const familyTokens = tokenizeTrainingPhrase(String(family).replace(/_/g, ' '));
+      const matched = familyTokens.filter((token) => desiredTokens.has(low(token)));
+      if (matched.length) {
+        score += 18 + (matched.length * 6);
+        reasons.push(`pattern:${family}`);
+      }
+    }
+
+    for (const tag of intentTags) {
+      const tagTokens = tokenizeTrainingPhrase(String(tag).replace(/_/g, ' '));
+      const matched = tagTokens.filter((token) => desiredTokens.has(low(token)));
+      if (matched.length) {
+        score += 10 + (matched.length * 4);
+        reasons.push(`intent:${tag}`);
+      }
+    }
+
+    if (score > 0) {
+      scored.push({ effectName, score, reasons, profile });
+    }
+  }
+
+  scored.sort((a, b) => b.score - a.score || a.effectName.localeCompare(b.effectName));
+  if (scored.length) {
+    return scored.slice(0, Math.max(1, Number(limit) || 5));
+  }
+
+  const fallbackPreferred = unique(preferredVisualFamilies).flatMap((row) => VISUAL_FAMILY_EFFECT_MAP[row] || []);
+  const supportedFallback = unique(fallbackPreferred).filter((effectName) => {
     const profile = getStage1TrainedEffectProfile(effectName);
     if (!profile) return false;
     return !targetModelTypes.length || effectSupportsAnyBucket(profile, targetModelTypes);
   });
-  return supported.slice(0, Math.max(1, Number(limit) || 5)).map((effectName, index) => ({
+  return supportedFallback.slice(0, Math.max(1, Number(limit) || 5)).map((effectName, index) => ({
     effectName,
-    score: 100 - index,
-    reasons: ['preferred_visual_family'],
+    score: 20 - index,
+    reasons: ['preferred_visual_family_fallback'],
     profile: getStage1TrainedEffectProfile(effectName)
   }));
 }

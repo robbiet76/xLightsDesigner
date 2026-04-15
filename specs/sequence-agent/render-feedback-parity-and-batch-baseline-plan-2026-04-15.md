@@ -31,10 +31,20 @@ That is the main blocker before batch recalibration can become the primary loop.
 
 ## Exact Native Render-Feedback Gap
 
-The native automation and apply path still reports missing owned routes:
+The native automation and apply path originally reported two missing owned routes:
 
 - `layout.scene`
 - `sequence.render-samples`
+
+Current code status:
+
+- `layout.scene` is now implemented in the owned xLightsDesigner API tree and wired into the local JS API wrapper
+- `sequence.render-samples` already exists in the owned API tree
+
+Current live validation status:
+
+- the running xLights binary still needs rebuild/revalidation before this can be treated as fully closed
+- until that happens, native parity should still be considered blocked operationally
 
 Confirmed surfaces:
 
@@ -42,10 +52,13 @@ Confirmed surfaces:
 - [apply-native-review.mjs](/Users/robterry/Projects/xLightsDesigner/scripts/sequencing/native/apply-native-review.mjs)
 - [automation.mjs](/Users/robterry/Projects/xLightsDesigner/scripts/desktop/automation.mjs)
 
-Current behavior:
+Current behavior before rebuild/revalidation:
 
 - `ownedRenderFeedbackCapabilities.fullFeedbackReady = false`
-- `ownedRenderFeedbackCapabilities.missingRequirements = ["layout.scene", "sequence.render-samples"]`
+- `ownedRenderFeedbackCapabilities.missingRequirements` may still report:
+  - `layout.scene`
+  - `sequence.render-samples`
+  depending on the running xLights build
 - native apply succeeds in `plan_apply_validation_only` mode
 - render-feedback persistence remains unavailable for real native runs
 
@@ -93,8 +106,8 @@ Current issue:
 
 Before the first true recalibration batch run:
 
-- [ ] finish native parity for `layout.scene`
-- [ ] finish native parity for `sequence.render-samples`
+- [ ] rebuild/revalidate the running xLights binary with owned `layout.scene`
+- [ ] verify owned `sequence.render-samples` is live on the rebuilt binary
 - [ ] ensure native apply can persist:
   - `render_observation_v1`
   - `sequence_render_critique_context_v1`

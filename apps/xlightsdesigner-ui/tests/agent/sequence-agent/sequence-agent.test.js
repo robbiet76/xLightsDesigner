@@ -380,7 +380,7 @@ test("sequence_agent uses sequencer revision brief to seed execution lines when 
   assert.ok(out.executionLines.length > 0);
   assert.match(out.executionLines[0], /Chorus 1/i);
   assert.match(out.executionLines[0], /MegaTree \+ Roofline/i);
-  assert.match(out.executionLines[0], /apply Bars effect/i);
+  assert.match(out.executionLines[0], /apply .* effect/i);
 });
 
 test("sequence_agent uses render-driven revision targets to bias effect-strategy seed lines", () => {
@@ -426,7 +426,7 @@ test("sequence_agent uses render-driven revision targets to bias effect-strategy
   });
 
   assert.match(out.executionLines[0], /ArchSingle \+ WindowLeft \+ MegaTree \+ Roofline/i);
-  assert.match(out.executionLines[0], /apply Bars effect/i);
+  assert.match(out.executionLines[0], /apply .* effect/i);
 });
 
 test("sequence_agent uses revision roles to bias inferred effect families", () => {
@@ -478,7 +478,8 @@ test("sequence_agent uses revision roles to bias inferred effect families", () =
   });
 
   assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionRoles, ["reduce_competing_support"]);
-  assert.match(out.executionLines[0], /apply On effect/i);
+  assert.match(out.executionLines[0], /apply .* effect/i);
+  assert.doesNotMatch(out.executionLines[0], /apply Bars effect/i);
 });
 
 test("sequence_agent does not let revision roles override explicit brief motion cues", () => {
