@@ -88,6 +88,7 @@ The sequencer must learn:
 - which settings mostly fine-tune
 - which settings interact strongly with geometry
 - which settings interact strongly with other settings
+- which setting combinations reinforce, mask, or invert each other
 
 This is as important as effect selection itself.
 
@@ -161,6 +162,28 @@ The sequencer must also understand shared settings as part of the medium:
 These cannot remain generic metadata only.
 They must participate in rendered-behavior understanding.
 
+
+### 3A. Additive Interaction Semantics
+
+The sequencer must learn compound control behavior, not just isolated control behavior.
+
+That includes:
+
+- parameter + parameter interactions
+- parameter + shared-setting interactions
+- parameter + palette-context interactions
+- geometry-amplified interactions
+
+The system must distinguish:
+
+- reinforcing combinations
+- masking combinations
+- threshold combinations
+- saturating combinations
+- effectively independent combinations
+
+A single-setting "ideal value" concept is not a valid training target.
+
 ### 4. Geometry-Conditioned Rendering
 
 The same effect + setting region can render differently on:
@@ -185,6 +208,7 @@ The rebuilt training pipeline must emit artifacts that describe:
 - behavior capability
 - parameter semantics
 - shared-setting semantics
+- additive interaction semantics
 - geometry-conditioned rendering differences
 
 It must not emit selector bundles that only say:
@@ -280,3 +304,11 @@ It should be used as the semantic foundation when defining:
 - `behavior_capability_record_v1`
 - parameter-semantics training records
 - regenerated selector input artifacts
+
+## Harness Requirement
+
+Clean regeneration is blocked until the additive interaction harness defined in:
+
+- [effect-setting-interaction-training-harness-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-setting-interaction-training-harness-v1-2026-04-15.md)
+
+can produce interaction-aware evidence for regenerated training artifacts.

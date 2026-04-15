@@ -68,7 +68,7 @@ not directly against effect-family doctrine.
 
 ## Record Set
 
-The rebuild defines three primary training records.
+The rebuild defines four primary training records.
 
 ### 1. `behavior_capability_record_v1`
 
@@ -253,6 +253,58 @@ Expected settings include:
 - `layerMorph`
 - palette-related shared controls
 
+
+### 4. `parameter_interaction_semantics_record_v1`
+
+Purpose:
+- describe how combinations of settings alter rendered behavior
+
+Shape:
+
+```json
+{
+  "artifactType": "parameter_interaction_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "string",
+  "createdAt": "ISO-8601",
+  "effectName": "string",
+  "geometryProfile": "string",
+  "primaryParameter": "string",
+  "secondaryParameter": "string",
+  "secondarySettingKind": "effect_parameter|shared_setting|palette_context",
+  "interactionRegion": {},
+  "interactionType": "reinforcing|masking|threshold|inverting|saturating|independent",
+  "affectedSignals": [],
+  "behaviorImpactSummary": "string",
+  "geometrySensitivity": "string",
+  "confidence": {},
+  "evidenceCount": 0,
+  "traceability": {}
+}
+```
+
+Required fields:
+
+- `effectName`
+- `geometryProfile`
+- `primaryParameter`
+- `secondaryParameter`
+- `secondarySettingKind`
+- `interactionRegion`
+- `interactionType`
+- `affectedSignals`
+- `behaviorImpactSummary`
+- `confidence`
+- `evidenceCount`
+
+Suggested `interactionRegion` fields:
+
+- `primaryValueRegion`
+- `secondaryValueRegion`
+- `sharedSettingsContext`
+- `paletteContext`
+- `stabilityNotes`
+
 ## Confidence Model
 
 All records must carry a confidence representation that is grounded in evidence quality, not opinion.
@@ -304,4 +356,4 @@ These records are correct when they support:
 - geometry-conditioned render reasoning
 - batch-harness validation
 
-They are not complete until they are used to regenerate the next selector input artifacts and those artifacts hold through the full batch harness.
+They are not complete until they are used to regenerate the next selector input artifacts, the interaction-aware regeneration report is emitted, and those artifacts hold through the full batch harness.

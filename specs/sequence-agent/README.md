@@ -3,7 +3,7 @@
 Status: Active
 Date: 2026-03-12
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-04-13
+Last Reviewed: 2026-04-15
 
 Active specifications for `sequence_agent`, xLights control, render-training, and sequencing quality architecture.
 
@@ -28,6 +28,8 @@ These are the current operating specs for sequencing work.
 - [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
 - [sequencer-training-records-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md)
 - [sequencer-training-regeneration-inventory-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-regeneration-inventory-2026-04-15.md)
+- [effect-setting-interaction-training-harness-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-setting-interaction-training-harness-v1-2026-04-15.md)
+- [sequencer-training-unattended-batch-harness-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-unattended-batch-harness-v1-2026-04-15.md)
 - [xlights-upstream-tracking-policy-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-upstream-tracking-policy-2026-04-13.md)
 - [sequencer-phase3-roadmap-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-phase3-roadmap-2026-04-13.md)
 - [sequencer-unified-training-set-v1-2026-04-14.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-unified-training-set-v1-2026-04-14.md)

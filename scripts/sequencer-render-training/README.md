@@ -34,6 +34,7 @@ Primary system roadmap:
 - `runners/run-overnight-approved-matrix.sh`
 - `runners/run-registry-plan.sh`
 - `runners/run-stage1-coverage-round.sh`
+- `runners/run-sequencer-training-reset-cycle.sh`
 - `runners/run-effect-training-automation-cycle.sh`
 - `runners/run-effect-parameter-screening-plan.sh`
 - `runners/run-live-outcome-harvest-cycle.sh`
@@ -68,6 +69,8 @@ Primary system roadmap:
 - `tooling/build-effect-settings-coverage-report.mjs`
 - `tooling/build-effect-training-automation-plan.mjs`
 - `tooling/build-effect-parameter-screening-plan.mjs`
+- `tooling/build-effect-setting-interaction-coverage-report.mjs`
+- `tooling/build-sequencer-training-reset-report.mjs`
 - `tooling/resolve-controlled-designer-term.py`
 - `analysis/analyze_decoded_window.py`
 
@@ -234,6 +237,7 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
   - `manifests/` for copied manifests
   - `derived/` reserved for future decode outputs
 - Parameter sampling should come from the effect parameter registry where possible.
+- Additive and pairwise interaction manifests are required inputs for the training reset; single-parameter sweeps alone are not sufficient for clean regeneration.
 - Intent mapping should only be built on structurally mature effects and geometry profiles.
 - Registry planning should be geometry-profile-aware.
 - The old unified training set is now transitional and should not be treated as the long-term selector foundation.
@@ -241,4 +245,20 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
   - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md`
   - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md`
   - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md`
+  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-setting-interaction-training-harness-v1-2026-04-15.md`
 - Preference learning must remain outside the rebuilt shared training records in a separate store.
+
+
+## Unattended Reset Cycle
+
+```bash
+bash scripts/sequencer-render-training/runners/run-sequencer-training-reset-cycle.sh \
+  --out-dir /tmp/sequencer-training-reset-batch
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-sequencer-training-reset-cycle.sh \
+  --harvest-source /tmp/prior-screening-run \
+  --out-dir /tmp/sequencer-training-reset-batch \
+  --require-clean-ready
+```

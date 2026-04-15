@@ -58,6 +58,7 @@ Keep these as inputs to the rebuild:
 - render-feedback pipeline
 - owned automation path
 - full batch harness
+- interaction manifests and interaction-derived evidence
 - translation-layer specs:
   - [translation-layer-training-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/translation-layer-training-plan-2026-04-15.md)
   - [visual-behavior-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/visual-behavior-v1-2026-04-15.md)
@@ -100,6 +101,7 @@ not as:
 It must also explicitly model:
 
 - what each parameter changes visually
+- how additive parameter combinations change the rendered result
 - how shared settings change the rendered result
 - how geometry changes the read without becoming model-use doctrine
 - how design language maps to behavior and settings instead of collapsing to effect names
@@ -160,7 +162,8 @@ Accepted evidence must come from:
 
 1. generated artifact validation
 2. focused unit coverage
-3. full batch harness results
+3. interaction-aware regeneration coverage
+4. full batch harness results
 
 The full batch harness is the release gate for selector/training changes.
 
@@ -185,6 +188,7 @@ Checklist:
 - [ ] define `behavior_capability_record_v1`
 - [ ] define parameter-semantics training record shape
 - [ ] define shared-setting-semantics training record shape
+- [ ] define interaction-semantics training record shape
 - [ ] define required `behaviorSignals`
 - [ ] define required `renderOutcomeSignals`
 - [ ] define confidence/evidence aggregation fields
@@ -207,6 +211,7 @@ Checklist:
 - [ ] regenerate capability records from raw render evidence
 - [ ] regenerate parameter-region summaries from those records
 - [ ] regenerate shared-setting compatibility summaries from those records
+- [ ] regenerate additive interaction summaries from those records
 - [ ] avoid generic “intentTags” as primary recommendation evidence
 
 Deliverable:
@@ -279,3 +284,11 @@ The reset is successful when:
 - geometry fit refines recommendations instead of replacing semantics
 - multiple valid realizations remain available until late selection
 - the full batch harness remains green without growing new doctrine tables
+
+## Clean Regeneration Gate
+
+No clean regeneration run may proceed until the additive interaction harness defined in:
+
+- [effect-setting-interaction-training-harness-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-setting-interaction-training-harness-v1-2026-04-15.md)
+
+is implemented enough to emit interaction-aware records and consolidated regeneration coverage.

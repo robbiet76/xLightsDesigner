@@ -75,6 +75,7 @@ Directory:
 Use:
 
 - bounded sweep definitions
+- interaction manifest definitions
 - regeneration harness execution inputs
 
 ### 4. Outcome / Proof Artifacts
@@ -213,6 +214,7 @@ The regeneration pipeline should eventually emit:
 - `behavior_capability_record_v1`
 - `parameter_semantics_record_v1`
 - `shared_setting_semantics_record_v1`
+- `parameter_interaction_semantics_record_v1`
 
 ### Regenerated runtime bundles
 
@@ -232,10 +234,11 @@ The regeneration harness must:
 
 1. read preserved raw evidence
 2. build canonical record artifacts
-3. regenerate runtime bundles from those records
-4. run focused validations
-5. run the full batch harness
-6. emit one consolidated regeneration report
+3. build interaction-aware record artifacts
+4. regenerate runtime bundles from those records
+5. run focused validations
+6. run the full batch harness
+7. emit one consolidated regeneration report
 
 ## Retirement Checklist
 
@@ -251,3 +254,7 @@ The regeneration harness must:
 3. build record-generation tooling from screening records
 4. regenerate parameter/shared-setting bundles from the new records
 5. validate through the full batch harness
+
+## Clean Run Blocker
+
+A clean regeneration run is blocked until the harness consumes preserved interaction manifests, emits `parameter_interaction_semantics_record_v1`, and reports interaction-evidence coverage.
