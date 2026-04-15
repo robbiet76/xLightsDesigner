@@ -768,18 +768,6 @@ function buildSectionEffectHints({
     return directCueCandidates;
   }
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch|visual weight|impact budget/.test(lowerGoal)) {
-    if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
-      return resolveContextualEffectCandidates({
-        contextKey: "lightingCue",
-        variant: smoothBias ? "highSmooth" : (crispBias ? "highCrisp" : "highDefault")
-      });
-    }
-    if (/bridge/.test(lowerSection)) {
-      return resolveContextualEffectCandidates({ contextKey: "lightingCue", variant: "bridge" });
-    }
-    if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
-      return resolveContextualEffectCandidates({ contextKey: "lightingCue", variant: "low" });
-    }
     return resolveContextualEffectCandidates({ contextKey: "lightingCue", variant: "default" });
   }
   if (/\b(phrase|transition|release|breath)\b/.test(lowerGoal) && /bridge/.test(lowerSection)) {
@@ -804,15 +792,6 @@ function buildSectionEffectHints({
     return resolveContextualEffectCandidates({ contextKey: "rhythm", variant: "default" });
   }
   if (!uniformHierarchy && /perimeter|frame|framing|negative space|centerpiece/.test(lowerGoal)) {
-    if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
-      return resolveContextualEffectCandidates({ contextKey: "framing", variant: "high" });
-    }
-    if (/bridge/.test(lowerSection)) {
-      return resolveContextualEffectCandidates({ contextKey: "framing", variant: "bridge" });
-    }
-    if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
-      return resolveContextualEffectCandidates({ contextKey: "framing", variant: "low" });
-    }
     return resolveContextualEffectCandidates({ contextKey: "framing", variant: "default" });
   }
   if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lowerSection)) {
