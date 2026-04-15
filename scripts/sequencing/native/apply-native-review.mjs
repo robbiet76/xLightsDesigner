@@ -2,7 +2,6 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 
 import {
   getOpenSequence,
@@ -546,7 +545,7 @@ async function probeOwnedRoute(endpoint = '', routePath = '', { method = 'GET', 
   }
 }
 
-async function buildNativeSceneGraph({ endpoint = '', showDir = '' } = {}) {
+async function buildNativeSceneGraph({ endpoint = '' } = {}) {
   const modelRes = await getModels(endpoint);
   const sceneModels = Array.isArray(modelRes?.data?.models) ? modelRes.data.models : [];
   const modelsById = {};
@@ -562,10 +561,9 @@ async function buildNativeSceneGraph({ endpoint = '', showDir = '' } = {}) {
       y: toFiniteNumber(row?.positionY),
       z: toFiniteNumber(row?.positionZ)
     };
-    const metadata = !isGroup ? readShowModelMetadata({ showDir, modelName: id }) : null;
-    const startChannel = toFiniteNumber(metadata?.startChannel);
-    const endChannel = toFiniteNumber(metadata?.endChannel);
-    const syntheticNodeCount = Math.max(1, Math.min(50, Number(metadata?.nodeCount || row?.nodeCount || 1)));
+    const startChannel = toFiniteNumber(row?.startChannel);
+    const endChannel = toFiniteNumber(row?.endChannel);
+    const syntheticNodeCount = Math.max(1, Math.min(50, Number(row?.nodeCount || 1)));
     const nodes = Array.from({ length: syntheticNodeCount }, (_, index) => ({
       id: `${id}:${index}`,
       coords: {
@@ -577,7 +575,7 @@ async function buildNativeSceneGraph({ endpoint = '', showDir = '' } = {}) {
       id,
       name: str(row?.name || id),
       type: isGroup ? 'group' : 'model',
-      typeCategory: str(metadata?.resolvedModelType || lowerType || 'unknown'),
+      typeCategory: str(typeText || 'unknown'),
       startChannel,
       endChannel,
       transform: {
@@ -592,7 +590,7 @@ async function buildNativeSceneGraph({ endpoint = '', showDir = '' } = {}) {
 
   return {
     loaded: true,
-    source: 'layout.getModels+xml_metadata',
+    source: 'layout.getModels',
     loadedAt: new Date().toISOString(),
     modelsById,
     groupsById: {},
@@ -643,29 +641,6 @@ function buildSamplingWindows({ analysisHandoff = null, intentHandoff = null } =
 function toFiniteNumber(value) {
   const num = Number(value);
   return Number.isFinite(num) ? num : null;
-}
-
-function readShowModelMetadata({ showDir = '', modelName = '' } = {}) {
-  const normalizedShowDir = str(showDir);
-  const normalizedModelName = str(modelName);
-  if (!normalizedShowDir || !normalizedModelName) return null;
-  try {
-    const stdout = execFileSync('python3', [
-      'scripts/sequencer-render-training/tooling/get-model-fseq-metadata.py',
-      '--show-dir',
-      normalizedShowDir,
-      '--model-name',
-      normalizedModelName
-    ], {
-      cwd: process.cwd(),
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
-    const parsed = JSON.parse(stdout);
-    return parsed && typeof parsed === 'object' ? parsed : null;
-  } catch {
-    return null;
-  }
 }
 
 function normalizeCommandsForNativeApply(commands = []) {

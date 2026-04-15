@@ -1,3 +1,5 @@
+import { finalizeArtifact } from "../shared/artifact-ids.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -265,9 +267,9 @@ export function buildRenderCritiqueContext({
     !narrowRequestScope &&
     (broadCoverageExpected || !restrainedCoverageExpected);
 
-  return {
+  return finalizeArtifact({
     artifactType: "sequence_render_critique_context_v1",
-    artifactVersion: 1,
+    artifactVersion: "1.0",
     source: {
       renderObservationArtifactId: str(observation?.artifactId),
       designSceneContextArtifactId: str(scene?.artifactId),
@@ -334,5 +336,5 @@ export function buildRenderCritiqueContext({
       adjacentWindowComparisons: windowComparisons,
       drilldownTargetIds
     }
-  };
+  });
 }
