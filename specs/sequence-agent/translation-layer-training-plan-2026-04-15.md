@@ -296,6 +296,97 @@ Not:
 
 - where should this effect family be used?
 
+### What To Quarantine
+
+These are still active in parts of the system, but they should be treated as suspect until audited and either removed or replaced:
+
+- prompt-to-family shortcut tables
+- heuristic family-ranking bias
+- benchmark shorthand that encodes effect, prop, or section semantics in identifiers
+- realization hints that flow back into semantic or behavior inference
+- hand-authored use-case mappings that imply fixed relationships between section type, prop type, and effect family
+
+Quarantined logic must not be treated as the future architecture.
+It may remain temporarily only when:
+
+- it is clearly isolated
+- it has an identified replacement path
+- it is scheduled for removal
+
+### What To Reset
+
+If a logic path is proven to encode old sequencing bias, it should be reset directly instead of wrapped in new compatibility logic.
+
+Reset candidates include:
+
+- selector/ranking paths that override translation intent with family stereotypes
+- semantic inference paths contaminated by realization hints
+- benchmark assumptions that equate family choice with artistic correctness
+- scenario naming or metadata schemes that encode use-case doctrine instead of opaque identity plus structured intent
+
+The default cleanup move is:
+
+1. identify the contaminated path
+2. replace or delete it directly
+3. retire the old path in the same slice
+
+Do not add a second semantic system just to compensate for the first one.
+
+## Bias Reset Policy
+
+The project must distinguish three categories of sequencing knowledge:
+
+### Preserve
+
+Keep empirical medium evidence unless it is directly shown to be contaminated:
+
+- screened effect behavior evidence
+- geometry-sensitive capability evidence
+- parameter differentiation evidence
+- shared setting behavior evidence
+- portable representativeness/confidence metadata
+
+### Quarantine
+
+Keep running only long enough to avoid breaking the product while it is being replaced:
+
+- legacy heuristic family selectors
+- prompt phrase to family shortcuts
+- benchmark-only coarse family assertions
+- semantic inference that still relies on legacy design shorthand
+
+### Reset
+
+Delete or replace once a cleaner path exists:
+
+- effect-family stereotypes presented as general sequencing truth
+- broad forbidden-family assumptions
+- descriptive benchmark ids treated as semantic meaning
+- logic that reuses realization output as semantic input
+
+This policy exists to prevent a full wipe of useful medium knowledge while still allowing aggressive resets of the biased layers.
+
+## Training Execution Policy
+
+Future retraining and recalibration work must run through a batch harness, not separate ad hoc manual steps.
+
+Why:
+
+- batch execution exposes hidden coupling between scenarios
+- batch execution reduces one-off tuning against isolated cases
+- batch execution makes regression and cleanup measurable
+- batch execution keeps training and validation repeatable
+
+Training and evaluation harnesses should therefore:
+
+- run the full defined scenario batch
+- emit one consolidated report for the batch
+- record scenario-level failures and aggregate drift
+- support repeatable rebuilds from a known baseline
+- make it easy to compare one run against the previous run
+
+If a new training or selector change only succeeds in an isolated manual path but fails in batch, it should be treated as incomplete.
+
 ### What To Derive Next
 
 From the existing training corpus, derive:
@@ -392,6 +483,8 @@ Do not keep expanding training or selector heuristics indefinitely before the re
 - [ ] mark which behaviors are geometry-sensitive
 - [ ] mark which behaviors are stable across configurations
 - [ ] keep shared setting learning generic and cross-effect
+- [ ] run future retraining and recalibration through a batch harness, not isolated manual passes
+- [ ] require one consolidated batch report for each training or selector-change run
 
 ### Planner
 
@@ -400,6 +493,7 @@ Do not keep expanding training or selector heuristics indefinitely before the re
 - [ ] allow multiple realizations for one intended behavior
 - [ ] rank realizations by geometry fit, evidence strength, and live outcome evidence
 - [ ] reduce direct family shortcut logic over time
+- [ ] remove contaminated heuristic paths in the same slice that replaces them
 
 ### Validation
 
@@ -407,6 +501,7 @@ Do not keep expanding training or selector heuristics indefinitely before the re
 - [ ] add behavior-level assertions to the live suite
 - [ ] replace broad family bans with contradiction checks where possible
 - [ ] add section-composition and cross-prop coordination scenarios
+- [ ] treat benchmark ids as opaque only and keep all meaning in structured fields
 
 ### Render Feedback
 
@@ -426,12 +521,17 @@ Do not keep expanding training or selector heuristics indefinitely before the re
 ### Rule Hygiene
 
 - [ ] inventory current hardcoded selector and benchmark rules
+- [ ] classify current sequencing logic into:
+  - preserve
+  - quarantine
+  - reset
 - [ ] tag each rule as:
   - safety
   - temporary scaffold
   - benchmark-only
   - permanent boundary
 - [ ] remove temporary selector rules once replaced by translation-intent and behavior logic
+- [ ] do not add compensating abstraction layers just to preserve old biased paths
 
 ## Immediate Focus
 
@@ -451,3 +551,5 @@ Those three items are the anchor that keeps the project from drifting back into 
 - established translation-layer north star
 - defined the distinction between medium knowledge and effect-family stereotypes
 - defined the implementation checklist that should guide subsequent sequencing work
+- added preserve/quarantine/reset policy for bias cleanup
+- added batch-harness requirement for future retraining and recalibration
