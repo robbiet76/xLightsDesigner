@@ -95,14 +95,12 @@ test("practical sequence validation summarizes readback and design alignment", (
         coveredPrimaryFocusTargetIds: ["TreeRound"],
         uncoveredPrimaryFocusTargetIds: [],
         preferredVisualFamilies: ["spiral_flow"],
-        preferredEffectHints: ["Spirals"],
         observedTargets: ["TreeRound"],
         observedEffectNames: ["Spirals"],
         roleCoverage: [{ role: "lead", ok: true, coveredTargetIds: ["TreeRound"] }]
       },
       designChecks: [
-        { kind: "design-focus", target: "primary-focus", ok: true, detail: "covered TreeRound" },
-        { kind: "design-visual-family", target: "spiral_flow", ok: true, detail: "matched Spirals" }
+        { kind: "design-focus", target: "primary-focus", ok: true, detail: "covered TreeRound" }
       ]
     }
   });
@@ -111,7 +109,7 @@ test("practical sequence validation summarizes readback and design alignment", (
   assert.equal(artifact.overallOk, true);
   assert.equal(artifact.trainingKnowledge.artifactType, "sequencer_stage1_training_bundle");
   assert.equal(artifact.summary.readbackChecks.passed, 1);
-  assert.equal(artifact.summary.designChecks.passed, 2);
+  assert.equal(artifact.summary.designChecks.passed, 1);
   assert.equal(artifact.summary.metadataCoverage.missingMetadata, 0);
   assert.equal(artifact.summary.metadataCoverage.definedVisualHints, 1);
   assert.equal(artifact.summary.timingFidelity.structureTrackPresent, true);

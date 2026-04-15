@@ -1,4 +1,3 @@
-import { VISUAL_FAMILY_EFFECT_MAP } from "./trained-effect-knowledge.js";
 import {
   normalizeSubmodelGraph,
   parseSubmodelParentId
@@ -76,9 +75,6 @@ function buildDesignAlignment(designContext = {}, appliedEffectTargets = []) {
       .map((row) => str(row))
       .filter(Boolean)
   ));
-  const preferredEffectHints = Array.from(new Set(
-    preferredVisualFamilies.flatMap((row) => VISUAL_FAMILY_EFFECT_MAP[row] || [])
-  ));
   const roleCoverage = arr(designContext?.propRoleAssignments)
     .map((row) => {
       const role = str(row?.role);
@@ -102,7 +98,6 @@ function buildDesignAlignment(designContext = {}, appliedEffectTargets = []) {
     coveredPrimaryFocusTargetIds,
     uncoveredPrimaryFocusTargetIds: primaryFocusTargetIds.filter((targetId) => !coveredPrimaryFocusTargetIds.includes(targetId)),
     preferredVisualFamilies,
-    preferredEffectHints,
     observedTargets,
     observedEffectNames,
     roleCoverage,
@@ -133,19 +128,6 @@ function buildDesignChecks(designAlignment = {}) {
       detail: role.ok
         ? `covered ${role.coveredTargetIds.join(", ")}`
         : `no applied targets matched ${role.role}`
-    });
-  }
-  if (Array.isArray(designAlignment.preferredEffectHints) && designAlignment.preferredEffectHints.length) {
-    const matched = designAlignment.preferredEffectHints.filter((effectName) =>
-      arr(designAlignment.observedEffectNames).includes(effectName)
-    );
-    checks.push({
-      kind: "design-visual-family",
-      target: designAlignment.preferredVisualFamilies.join(", "),
-      ok: matched.length > 0,
-      detail: matched.length
-        ? `matched ${matched.join(", ")}`
-        : `no observed effects matched preferred families (${designAlignment.preferredEffectHints.join(", ")})`
     });
   }
   return checks;

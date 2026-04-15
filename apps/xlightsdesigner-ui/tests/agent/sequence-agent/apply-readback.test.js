@@ -161,8 +161,7 @@ test("apply readback carries design and training context with alignment checks",
     verification.designChecks.map((row) => [row.kind, row.ok]),
     [
       ["design-focus", true],
-      ["design-role", true],
-      ["design-visual-family", true]
+      ["design-role", true]
     ]
   );
 });

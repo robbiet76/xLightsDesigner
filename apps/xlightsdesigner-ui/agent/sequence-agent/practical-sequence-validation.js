@@ -513,7 +513,6 @@ export function buildPracticalSequenceValidation({
       coveredPrimaryFocusTargetIds: arr(designAlignment?.coveredPrimaryFocusTargetIds),
       uncoveredPrimaryFocusTargetIds: arr(designAlignment?.uncoveredPrimaryFocusTargetIds),
       preferredVisualFamilies: arr(designAlignment?.preferredVisualFamilies),
-      preferredEffectHints: arr(designAlignment?.preferredEffectHints),
       observedTargets: arr(designAlignment?.observedTargets),
       observedEffectNames: arr(designAlignment?.observedEffectNames),
       roleCoverage: arr(designAlignment?.roleCoverage)
