@@ -97,6 +97,13 @@ not as:
 
 - effect family with a few semantic labels
 
+It must also explicitly model:
+
+- what each parameter changes visually
+- how shared settings change the rendered result
+- how geometry changes the read without becoming model-use doctrine
+- how design language maps to behavior and settings instead of collapsing to effect names
+
 ### Core Training Unit
 
 The new training unit is a `behavior-capability observation`.
@@ -131,6 +138,20 @@ These should align with:
 
 - [visual-behavior-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/visual-behavior-v1-2026-04-15.md)
 
+### Required Semantic Understanding
+
+The rebuilt training corpus must also encode:
+
+- effect capability breadth
+- parameter semantics
+- shared-setting semantics
+- geometry-conditioned rendering differences
+- language-to-behavior mapping
+
+Reference:
+
+- [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
+
 ## Acceptance Standard
 
 No training or recalibration pass is accepted from isolated spot checks.
@@ -162,10 +183,13 @@ Goal:
 
 Checklist:
 - [ ] define `behavior_capability_record_v1`
+- [ ] define parameter-semantics training record shape
+- [ ] define shared-setting-semantics training record shape
 - [ ] define required `behaviorSignals`
 - [ ] define required `renderOutcomeSignals`
 - [ ] define confidence/evidence aggregation fields
 - [ ] define how geometry/profile is encoded
+- [ ] define how language maps to behavior and setting axes without effect-family doctrine
 
 Deliverable:
 - new schema/spec for behavior-capability training records
