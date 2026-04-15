@@ -72,3 +72,4 @@ These are still useful, but they are no longer the primary way into the current 
 - Designer-owned handoff and preference artifacts live in:
   - [sequencing-design-handoff-v2-spec-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/sequencing-design-handoff-v2-spec-2026-03-19.md)
   - [director-profile-v1.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/director-profile-v1.md)
+- [render-feedback-parity-and-batch-baseline-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-feedback-parity-and-batch-baseline-plan-2026-04-15.md)

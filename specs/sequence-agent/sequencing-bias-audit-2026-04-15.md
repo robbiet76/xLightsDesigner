@@ -105,6 +105,7 @@ File:
 Why quarantined:
 - `VISUAL_FAMILY_EFFECT_MAP` and related ranking are useful as a bounded realization helper
 - but they still encode effect-family-first assumptions that may collapse multiple valid realizations into one narrow family route
+- `EFFECT_KEYWORDS` and `recommendTrainedEffects()` still score explicit family/keyword matches ahead of richer behavior realization
 
 Keep temporarily:
 - as a bounded realization candidate source
@@ -190,6 +191,10 @@ File:
 
 Current issue:
 - legacy revision-role-to-family shortcuts were present in `inferRevisionBriefEffectName()`
+- the function still contains hardcoded summary-to-family returns such as:
+  - contrast or hierarchy -> `Bars`
+  - still or sparse -> `On`
+  - restrained -> `Shimmer`
 
 Why this is a reset target:
 - this is a pure shortcut layer
@@ -201,7 +206,8 @@ Reset direction:
 - preserve only explicit safety or hold-state cases if needed
 
 Status:
-- reset completed in current audit pass
+- partially reset
+- direct role tables were removed, but residual hardcoded family returns still remain
 
 ## Already Removed In This Audit Pass
 
@@ -243,6 +249,25 @@ Shrink or remove:
 Current objective:
 - leave only narrow contextual helpers that are still actively used and defensible
 - continue deleting unused or doctrine-heavy variants as behavior-first planning replaces them
+
+### 3. Reset target 3
+Directly reduce:
+- `VISUAL_FAMILY_EFFECT_MAP`
+- `EFFECT_KEYWORDS`
+- `recommendTrainedEffects()`
+- `recommendTrainedEffectsForVisualFamilies()`
+
+Current objective:
+- stop treating family and keyword matches as the primary realization evidence
+- move this layer toward behavior-capability ranking rather than family-name routing
+
+### 4. Reset target 4
+Directly replace residual hardcoded returns in:
+- `inferRevisionBriefEffectName()`
+
+Current objective:
+- remove the remaining `Bars` / `On` / `Shimmer` summary shortcuts
+- leave only behavior-first ranking and narrow explicit hold-state handling if still justified
 
 ## Training And Recalibration Rule
 
