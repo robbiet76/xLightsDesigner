@@ -194,6 +194,10 @@ Checklist:
 Deliverable:
 - new schema/spec for behavior-capability training records
 
+Primary spec:
+
+- [sequencer-training-records-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md)
+
 ### Phase 3: Regenerate Capability Artifacts From Raw Evidence
 
 Goal:

@@ -26,6 +26,7 @@ These are the current operating specs for sequencing work.
 - [sequencing-bias-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-bias-audit-2026-04-15.md)
 - [sequencer-training-reset-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md)
 - [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
+- [sequencer-training-records-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md)
 - [xlights-upstream-tracking-policy-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-upstream-tracking-policy-2026-04-13.md)
 - [sequencer-phase3-roadmap-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-phase3-roadmap-2026-04-13.md)
 - [sequencer-unified-training-set-v1-2026-04-14.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-unified-training-set-v1-2026-04-14.md)
@@ -42,6 +43,7 @@ These remain active, but they are supporting material rather than the first entr
 - [render-training-stage1-full-coverage-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-stage1-full-coverage-roadmap-2026-03-19.md)
 - [effect-knowledge-architecture-audit-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-knowledge-architecture-audit-2026-03-22.md)
 - [effect-training-audit-2026-04-14.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-training-audit-2026-04-14.md)
+- [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
 - [model-metadata-ownership-and-tagging-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-ownership-and-tagging-2026-03-22.md)
 - [model-metadata-record-contract-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-record-contract-2026-03-22.md)
 - [sequencer-phase3-implementation-checklist-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-phase3-implementation-checklist-2026-04-13.md)
@@ -66,6 +68,8 @@ These are still useful, but they are no longer the primary way into the current 
 - `render-training-retention-policy-2026-03-19.md`
 - `sequence-agent-semantics-architecture-2026-03-22.md`
 - `sequencer-training-phase2-roadmap-2026-03-22.md`
+- `sequencer-unified-training-set-v1-2026-04-14.md`
+- `effect-training-automation-loop-v1-2026-04-14.md`
 
 ## Related Domains
 

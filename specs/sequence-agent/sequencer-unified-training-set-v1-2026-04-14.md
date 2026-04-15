@@ -1,9 +1,21 @@
 # Sequencer Unified Training Set v1
 
-Status: Active  
+Status: Transitional  
 Date: 2026-04-14  
 Owner: xLightsDesigner Team  
-Last Reviewed: 2026-04-14
+Last Reviewed: 2026-04-15
+
+## Status Note
+
+This spec describes the previous unified selector/training container.
+
+It remains useful as a record of the earlier design, but it is no longer the canonical direction for the sequencer rebuild.
+
+Superseded for new selector training work by:
+
+- [sequencer-training-reset-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md)
+- [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
+- [sequencer-training-records-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md)
 
 ## Purpose
 

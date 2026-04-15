@@ -1,9 +1,20 @@
 # Effect Training Audit
 
-Status: Active  
+Status: Transitional  
 Date: 2026-04-14  
 Owner: xLightsDesigner Team  
-Last Reviewed: 2026-04-14
+Last Reviewed: 2026-04-15
+
+## Status Note
+
+This audit captured the old selector baseline accurately at the time, but its recommendation frame is now transitional.
+
+It should not be read as approval of the current selector abstraction.
+
+Use it as historical context only, alongside the reset documents:
+
+- [sequencer-training-reset-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md)
+- [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
 
 ## Purpose
 

@@ -1,9 +1,22 @@
 # Effect Training Automation Loop v1
 
-Status: Active  
+Status: Transitional  
 Date: 2026-04-14  
 Owner: xLightsDesigner Team  
-Last Reviewed: 2026-04-14
+Last Reviewed: 2026-04-15
+
+## Status Note
+
+This automation-loop spec assumed the earlier selector abstraction and readiness model.
+
+It is not the canonical automation definition for the reset rebuild.
+
+It remains useful as historical planning context only.
+
+The rebuild should instead follow:
+
+- [sequencer-training-reset-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md)
+- [sequencer-training-records-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md)
 
 ## Purpose
 
