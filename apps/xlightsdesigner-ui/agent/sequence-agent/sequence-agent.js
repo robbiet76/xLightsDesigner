@@ -637,10 +637,8 @@ function inferEffectNameFromSectionPlan({
     preferredVisualFamilies: normArray(sectionDirective?.preferredVisualFamilies),
     targetIds,
     displayElements,
-    limit: 1
+    limit: 3
   });
-  const familyChosen = selectPreferredEffect(familyDriven.map((row) => row?.effectName), { availableEffects, effectAvoidances });
-  if (familyChosen) return familyChosen;
   const normalizedEnergy = normText(energy).toLowerCase();
   const normalizedDensity = normText(density).toLowerCase();
   const explicitStaticCue = /\bon effect\b|\bsolid\b|\bhold\b|\bsteady\b/.test(summary);
@@ -651,22 +649,23 @@ function inferEffectNameFromSectionPlan({
     density: normalizedDensity,
     targetIds,
     displayElements,
-    limit: 1
+    limit: 3
   });
-  const trainedEffectNames = filterAvoidedEffects(trained.map((row) => row?.effectName), effectAvoidances);
-  const trainedChosen = firstAvailableEffect(trainedEffectNames, availableEffects);
-  if (trainedChosen) {
-    if (trainedChosen === "On" && cinematicWarmCue && !explicitStaticCue) {
-      const alternate = selectPreferredEffect(
-        trainedEffectNames.filter((row) => normText(row) !== "On"),
-        { availableEffects, effectAvoidances }
-      ) || selectPreferredEffect(chooseSafeFallbackChain("trainedOnAlternate"), { availableEffects, effectAvoidances });
-      if (alternate) return alternate;
-    }
-    return trainedChosen;
+  let trainedEffectNames = filterAvoidedEffects(trained.map((row) => row?.effectName), effectAvoidances);
+  if (cinematicWarmCue && !explicitStaticCue && trainedEffectNames[0] === "On") {
+    trainedEffectNames = [
+      ...trainedEffectNames.filter((row) => normText(row) !== "On"),
+      ...filterAvoidedEffects(chooseSafeFallbackChain("trainedOnAlternate"), effectAvoidances),
+      "On"
+    ].filter((row, index, values) => values.indexOf(row) === index);
   }
-  const hinted = selectPreferredEffect(effectHints, { availableEffects, effectAvoidances });
-  if (hinted) return hinted;
+  const combinedCandidates = [
+    ...familyDriven.map((row) => row?.effectName),
+    ...trainedEffectNames,
+    ...normArray(effectHints)
+  ];
+  const combinedChosen = selectPreferredEffect(combinedCandidates, { availableEffects, effectAvoidances });
+  if (combinedChosen) return combinedChosen;
 
   return selectPreferredEffect(
     [resolveSummaryFallbackEffect(summary, availableEffects)].filter(Boolean),

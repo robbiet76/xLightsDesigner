@@ -739,6 +739,68 @@ test("sequence_agent lets translation behavior outrank conflicting effect hints"
   assert.match(out.executionLines[0], /apply Shimmer effect/i);
 });
 
+test("sequence_agent keeps alternate realization candidates alive before final selection", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track E", artist: "Artist E" },
+      structure: {
+        sections: [
+          { label: "Bridge", startMs: 0, endMs: 1000, energy: "medium", density: "medium" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Keep the bridge soft, restrained, and texture-led.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Spinners"],
+        tagNames: [],
+        sections: ["Bridge"]
+      },
+      executionStrategy: {
+        translationIntent: {
+          behaviorTargets: [
+            {
+              appliesTo: "section",
+              section: "Bridge",
+              behaviorSummary: "soft texture restrained gentle sparkle"
+            }
+          ]
+        },
+        sectionPlans: [
+          {
+            section: "Bridge",
+            energy: "medium",
+            density: "medium",
+            intentSummary: "keep the bridge soft, restrained, and texture-led",
+            targetIds: ["Spinners"],
+            effectHints: []
+          }
+        ]
+      },
+      sequencingDesignHandoff: {
+        sectionDirectives: [
+          {
+            sectionName: "Bridge",
+            sectionPurpose: "bridge_reset",
+            motionTarget: "restrained_motion",
+            densityTarget: "moderate",
+            transitionIntent: "hold",
+            preferredVisualFamilies: ["soft_texture"]
+          }
+        ]
+      }
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Twinkle", params: [] },
+      { effectName: "Color Wash", params: [] }
+    ])
+  });
+
+  assert.equal(out.metadata.effectStrategy.seedRecommendations[0].effectName, "Twinkle");
+  assert.match(out.executionLines[0], /apply Twinkle effect/i);
+});
+
 test("sequence_agent clamps effect placement windows to sequence duration", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {
