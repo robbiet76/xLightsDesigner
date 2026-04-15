@@ -12,16 +12,30 @@ function unique(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
-function inferPrimaryMotion(text = "") {
+function stripNegativeClauses(text = "") {
   const lower = str(text).toLowerCase();
+  return lower
+    .replace(/rather than[^.!,;:]*/g, " ")
+    .replace(/instead of[^.!,;:]*/g, " ")
+    .replace(/avoid[^.!,;:]*/g, " ")
+    .replace(/do not turn it into[^.!,;:]*/g, " ")
+    .replace(/not a[^.!,;:]*/g, " ")
+    .replace(/not an[^.!,;:]*/g, " ")
+    .replace(/not\s+[^.!,;:]*/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function inferPrimaryMotion(text = "") {
+  const lower = stripNegativeClauses(text);
   if (/\bhold\b|\bsteady\b|\bsolid\b|\bminimal movement\b|\bstill\b/.test(lower)) return "hold";
+  if (/\bshimmer\b|\btwinkle\b|\bsparkle\b/.test(lower)) return "shimmer";
   if (/\bspin\b|\bpinwheel\b|\bradial spin\b/.test(lower)) return "spin";
   if (/\bshockwave\b|\bburst\b|\bring burst\b|\bradial expansion\b/.test(lower)) return "burst";
-  if (/\bshimmer\b/.test(lower)) return "shimmer";
-  if (/\btwinkle\b|\bsparkle\b/.test(lower)) return "shimmer";
   if (/\bchase\b|\btravel\b|\bdirectional\b/.test(lower)) return "chase";
   if (/\bspiral\b|\bflow\b|\bflowing\b|\bdrift\b/.test(lower)) return "drift";
   if (/\bwash\b/.test(lower)) return "hold";
+  if (/\brestrained\b|\bsoft\b|\bgentle\b/.test(lower)) return "shimmer";
   return "hold";
 }
 
@@ -50,7 +64,7 @@ function inferCoverageLevel(text = "") {
 }
 
 function inferTransitionCharacter(text = "") {
-  const lower = str(text).toLowerCase();
+  const lower = stripNegativeClauses(text);
   if (/\bgentle\b|\bsoft\b|\bdissolve\b/.test(lower)) return "gentle";
   if (/\bdirectional\b|\btravel\b|\bchase\b/.test(lower)) return "directional";
   if (/\bhard\b|\bsnap\b|\bstrobe\b/.test(lower)) return "hard";
@@ -151,7 +165,7 @@ export function buildTranslationIntentV1({
   const normalizedTargetIds = unique(targetIds);
   const normalizedPrompt = str(promptText);
   const normalizedHints = unique(effectHints);
-  const behaviorSeed = [normalizedPrompt, ...normalizedHints].join(" ").trim();
+  const behaviorSeed = normalizedPrompt;
   return finalizeArtifact({
     artifactType: "translation_intent_v1",
     artifactVersion: "1.0",

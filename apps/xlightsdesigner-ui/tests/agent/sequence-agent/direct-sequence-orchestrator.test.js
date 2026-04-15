@@ -171,6 +171,38 @@ test("direct sequence orchestrator preserves spiral cue intent in execution stra
   assert.equal(result.intentHandoff.executionStrategy.translationIntent?.targetRoles?.[0]?.targetId, "SpiralTrees");
 });
 
+test("direct sequence orchestrator keeps negative spin cues out of translation intent", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-soft-twinkle",
+    sequenceRevision: "rev-1",
+    promptText: "In the Bridge, keep Spinners restrained and texture-led with a softer twinkle read rather than a bold ring or spin. Prefer twinkle or shimmer family behavior and avoid a large directional pass.",
+    selectedSections: ["Bridge"],
+    selectedTargetIds: ["Spinners"],
+    selectedTagNames: [],
+    models: [{ id: "Spinners", name: "Spinners", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "Spinners", name: "Spinners", type: "model" }],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Twinkle", params: [] },
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Shockwave", params: [] },
+      { effectName: "Pinwheel", params: [] }
+    ]),
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [{ label: "Bridge", startMs: 62000, endMs: 76000 }]
+      }
+    }
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.intentHandoff.executionStrategy.translationIntent?.behaviorTargets?.[0]?.motion?.primaryMotion, "shimmer");
+  assert.equal(result.intentHandoff.executionStrategy.translationIntent?.behaviorTargets?.[0]?.texture?.primaryTexture, "sparkling");
+  assert.ok(result.intentHandoff.executionStrategy.translationIntent?.realizationGuidance?.preferredFamilies?.includes("Twinkle"));
+  assert.ok(result.intentHandoff.executionStrategy.translationIntent?.realizationGuidance?.preferredFamilies?.includes("Shockwave"));
+});
+
 test("direct sequence orchestrator fails closed when prompt names a section without analysis", () => {
   const result = executeDirectSequenceRequestOrchestration({
     requestId: "req-direct-5",
