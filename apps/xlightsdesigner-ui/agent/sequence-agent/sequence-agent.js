@@ -745,10 +745,10 @@ function inferRevisionBriefEffectName(brief = {}) {
     )
   );
   if (trainedChosen) return trainedChosen;
-  if (motionCharacter.includes("still") || /\bsolid hold|steady hold|minimal movement\b/.test(summary)) {
-    return "On";
+  if (motionCharacter.includes("still")) {
+    return resolveSummaryFallbackEffect(`${summary} steady hold`) || "On";
   }
-  return "Color Wash";
+  return resolveSummaryFallbackEffect(summary) || "Color Wash";
 }
 
 function buildRevisionBriefExecutionLine({ brief = {}, scope = {}, toneText = "" } = {}) {

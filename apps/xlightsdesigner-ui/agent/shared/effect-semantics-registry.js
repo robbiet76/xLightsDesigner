@@ -1,5 +1,4 @@
 import {
-  VISUAL_FAMILY_EFFECT_MAP,
   recommendTrainedEffectsForTargets,
   recommendTrainedEffectsForVisualFamilies
 } from "../sequence-agent/trained-effect-knowledge.js";
@@ -363,5 +362,3 @@ export function inferLegacyEffectCandidates(description = "", { limit = 3 } = {}
 
   return uniqueStrings(matches).slice(0, Math.max(1, Number(limit) || 3));
 }
-
-export { VISUAL_FAMILY_EFFECT_MAP };

@@ -35,33 +35,6 @@ function unique(values = []) {
   return [...new Set((Array.isArray(values) ? values : []).map((row) => normText(row)).filter(Boolean))];
 }
 
-export const EFFECT_KEYWORDS = Object.freeze({
-  'Bars': ['bars', 'bar', 'striped', 'pulse', 'compress', 'expand', 'segmented'],
-  'Color Wash': ['wash', 'sweep', 'fill', 'fade', 'gradient'],
-  'Marquee': ['marquee', 'band', 'segmented', 'chaser', 'skip'],
-  'On': ['hold', 'solid', 'steady', 'glow', 'ramp', 'static'],
-  'Pinwheel': ['pinwheel', 'radial', 'spin', 'rotating', 'arms'],
-  'Shimmer': ['shimmer', 'sparkle', 'glitter'],
-  'Shockwave': ['shockwave', 'ring', 'burst', 'centered', 'offcenter', 'crisp', 'diffuse'],
-  'SingleStrand': ['strand', 'chase', 'bounce', 'directional', 'travel'],
-  'Spirals': ['spiral', 'spirals', 'helical', 'helix', 'rotation'],
-  'Twinkle': ['twinkle', 'strobe', 'random', 'texture']
-});
-
-export const VISUAL_FAMILY_EFFECT_MAP = Object.freeze({
-  spiral_flow: ['Spirals'],
-  helical_spiral_flow: ['Spirals'],
-  segmented_motion: ['Bars', 'Marquee'],
-  directional_motion: ['Bars', 'Marquee', 'SingleStrand', 'Spirals'],
-  bounce_motion: ['SingleStrand'],
-  radial_rotation: ['Pinwheel', 'Shockwave'],
-  diffuse_expand: ['Shockwave'],
-  soft_texture: ['Twinkle', 'Shimmer'],
-  crisp_texture: ['Twinkle', 'Shockwave'],
-  static_fill: ['Color Wash', 'On'],
-  fill: ['Color Wash', 'On', 'Bars', 'Marquee', 'Shockwave']
-});
-
 function buildBehaviorTokenSet(values = []) {
   const tokens = new Set();
   for (const value of unique(values)) {
