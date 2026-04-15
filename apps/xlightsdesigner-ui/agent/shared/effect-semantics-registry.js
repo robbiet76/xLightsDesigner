@@ -1,5 +1,4 @@
 import {
-  EFFECT_KEYWORDS,
   VISUAL_FAMILY_EFFECT_MAP,
   recommendTrainedEffectsForTargets,
   recommendTrainedEffectsForVisualFamilies
@@ -23,6 +22,14 @@ function uniqueStrings(values = []) {
     out.push(value);
   }
   return out;
+}
+
+function containsWholePhrase(haystack = "", needle = "") {
+  const text = str(haystack).toLowerCase();
+  const phrase = str(needle).toLowerCase();
+  if (!text || !phrase) return false;
+  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, "i").test(text);
 }
 
 export const EFFECT_NAME_ALIASES = Object.freeze({
@@ -351,13 +358,7 @@ export function inferLegacyEffectCandidates(description = "", { limit = 3 } = {}
 
   for (const [alias, effectName] of Object.entries(EFFECT_NAME_ALIASES)) {
     if (!alias || !effectName) continue;
-    if (text.includes(alias)) matches.push(effectName);
-  }
-
-  for (const [effectName, keywords] of Object.entries(EFFECT_KEYWORDS)) {
-    if (arr(keywords).some((keyword) => text.includes(str(keyword).toLowerCase()))) {
-      matches.push(effectName);
-    }
+    if (containsWholePhrase(text, alias)) matches.push(effectName);
   }
 
   return uniqueStrings(matches).slice(0, Math.max(1, Number(limit) || 3));

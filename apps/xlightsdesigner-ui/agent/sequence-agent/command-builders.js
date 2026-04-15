@@ -1,7 +1,8 @@
 import {
   choosePreferredTemplateEffect,
   inferLegacyEffectCandidates,
-  recommendEffectsForTargets
+  recommendEffectsForTargets,
+  resolveSummaryFallbackEffect
 } from "../shared/effect-semantics-registry.js";
 import {
   inferBufferStyleFamily,
@@ -511,6 +512,10 @@ function inferEffectNameFromDescription(description = "", effectCatalog = null, 
   for (const effectName of legacyCandidates) {
     if (hasCatalog && !Object.prototype.hasOwnProperty.call(byName, effectName)) continue;
     return effectName;
+  }
+  const narrowFallback = normText(resolveSummaryFallbackEffect(description));
+  if (narrowFallback && (!hasCatalog || Object.prototype.hasOwnProperty.call(byName, narrowFallback))) {
+    return narrowFallback;
   }
   const trained = recommendEffectsForTargets({
     summary: description,

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  inferLegacyEffectCandidates,
   resolveSummaryFallbackEffect,
   chooseSafeFallbackChain
 } from "../../../agent/shared/effect-semantics-registry.js";
@@ -21,4 +22,10 @@ test("chooseSafeFallbackChain no longer exposes retired doctrine-specific chains
   assert.deepEqual(chooseSafeFallbackChain("sparklyTexture"), ["Shimmer", "Twinkle"]);
   assert.deepEqual(chooseSafeFallbackChain("cinematicWarmHigh"), []);
   assert.deepEqual(chooseSafeFallbackChain("denseBridge"), []);
+});
+
+test("inferLegacyEffectCandidates only honors explicit effect aliases", () => {
+  assert.deepEqual(inferLegacyEffectCandidates("apply shimmer to the tree"), ["Shimmer"]);
+  assert.deepEqual(inferLegacyEffectCandidates("soft sparkle texture with restrained motion"), []);
+  assert.deepEqual(inferLegacyEffectCandidates("directional chase across the line"), []);
 });
