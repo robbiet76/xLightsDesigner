@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 function parseArgs(argv = []) {
@@ -8,6 +8,10 @@ function parseArgs(argv = []) {
     screeningPlan: "",
     interactionCoverage: "",
     harvestSummary: "",
+    behaviorRecordDir: "",
+    parameterRecordDir: "",
+    sharedRecordDir: "",
+    interactionRecordDir: "",
     output: resolve("scripts/sequencer-render-training/catalog/sequencer-training-reset-report-v1.json")
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -17,6 +21,10 @@ function parseArgs(argv = []) {
     if (arg === "--screening-plan") args.screeningPlan = resolve(String(argv[i + 1] || "").trim());
     if (arg === "--interaction-coverage") args.interactionCoverage = resolve(String(argv[i + 1] || "").trim());
     if (arg === "--harvest-summary") args.harvestSummary = resolve(String(argv[i + 1] || "").trim());
+    if (arg === "--behavior-record-dir") args.behaviorRecordDir = resolve(String(argv[i + 1] || "").trim());
+    if (arg === "--parameter-record-dir") args.parameterRecordDir = resolve(String(argv[i + 1] || "").trim());
+    if (arg === "--shared-record-dir") args.sharedRecordDir = resolve(String(argv[i + 1] || "").trim());
+    if (arg === "--interaction-record-dir") args.interactionRecordDir = resolve(String(argv[i + 1] || "").trim());
     if (arg === "--output") args.output = resolve(String(argv[i + 1] || "").trim());
   }
   return args;
@@ -24,6 +32,15 @@ function parseArgs(argv = []) {
 
 function loadJson(path = "") {
   return path ? JSON.parse(readFileSync(path, "utf8")) : null;
+}
+function countRecordFiles(dir = "") {
+  if (!dir || !existsSync(dir)) return 0;
+  try {
+    const names = readdirSync(dir).filter((name) => name.endsWith(".json") && name !== "index.json");
+    return names.length;
+  } catch {
+    return 0;
+  }
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -39,6 +56,10 @@ const interactionRecordGeneratorPresent = existsSync(resolve("scripts/sequencer-
 const behaviorRecordGeneratorPresent = existsSync(resolve("scripts/sequencer-render-training/tooling/build-behavior-capability-records.mjs"));
 const parameterRecordGeneratorPresent = existsSync(resolve("scripts/sequencer-render-training/tooling/build-parameter-semantics-records.mjs"));
 const sharedSettingRecordGeneratorPresent = existsSync(resolve("scripts/sequencer-render-training/tooling/build-shared-setting-semantics-records.mjs"));
+const behaviorRecordCount = countRecordFiles(args.behaviorRecordDir);
+const parameterRecordCount = countRecordFiles(args.parameterRecordDir);
+const sharedRecordCount = countRecordFiles(args.sharedRecordDir);
+const interactionRecordCount = countRecordFiles(args.interactionRecordDir);
 
 const blockers = [];
 if (!interactionCoverage?.summary?.interactionCoverageReady) blockers.push("interaction_coverage_incomplete");
@@ -46,6 +67,10 @@ if (!interactionRecordGeneratorPresent) blockers.push("missing_parameter_interac
 if (!behaviorRecordGeneratorPresent) blockers.push("missing_behavior_record_generator");
 if (!parameterRecordGeneratorPresent) blockers.push("missing_parameter_record_generator");
 if (!sharedSettingRecordGeneratorPresent) blockers.push("missing_shared_setting_record_generator");
+if (behaviorRecordCount === 0) blockers.push("empty_behavior_records");
+if (parameterRecordCount === 0) blockers.push("empty_parameter_records");
+if (sharedRecordCount === 0) blockers.push("empty_shared_setting_records");
+if (interactionRecordCount === 0) blockers.push("empty_interaction_records");
 
 const report = {
   artifactType: "sequencer_training_reset_report_v1",
@@ -56,7 +81,11 @@ const report = {
     automationPlan: args.automationPlan,
     screeningPlan: args.screeningPlan,
     interactionCoverage: args.interactionCoverage,
-    harvestSummary: harvestSummary ? args.harvestSummary : ""
+    harvestSummary: harvestSummary ? args.harvestSummary : "",
+    behaviorRecordDir: args.behaviorRecordDir,
+    parameterRecordDir: args.parameterRecordDir,
+    sharedRecordDir: args.sharedRecordDir,
+    interactionRecordDir: args.interactionRecordDir
   },
   summary: {
     effectCount: settingsCoverage?.summary?.effectCount || 0,
@@ -66,6 +95,10 @@ const report = {
     harvestedRecordCount: harvestSummary?.copiedCount || 0,
     interactionCoverageReady: Boolean(interactionCoverage?.summary?.interactionCoverageReady),
     recordGeneratorsReady: behaviorRecordGeneratorPresent && parameterRecordGeneratorPresent && sharedSettingRecordGeneratorPresent && interactionRecordGeneratorPresent,
+    behaviorRecordCount,
+    parameterRecordCount,
+    sharedRecordCount,
+    interactionRecordCount,
     cleanRegenerationAllowed: blockers.length === 0
   },
   generatorStatus: {
@@ -74,10 +107,16 @@ const report = {
     sharedSettingRecordGeneratorPresent,
     interactionRecordGeneratorPresent
   },
+  recordOutputs: {
+    behaviorRecordCount,
+    parameterRecordCount,
+    sharedRecordCount,
+    interactionRecordCount
+  },
   blockers,
   notes: [
     "This report is the unattended regeneration gate summary.",
-    "A clean regeneration run remains blocked until interaction-aware record generators exist and interaction coverage is complete."
+    "A clean regeneration run remains blocked until interaction coverage and generated record outputs satisfy the reset gate."
   ]
 };
 

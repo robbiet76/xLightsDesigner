@@ -72,6 +72,10 @@ Primary system roadmap:
 - `tooling/build-effect-setting-interaction-coverage-report.mjs`
 - `tooling/build-sequencer-training-reset-report.mjs`
 - `tooling/build-effect-training-dossiers.mjs`
+- `tooling/build-parameter-interaction-semantics-records.mjs`
+- `tooling/build-shared-setting-semantics-records.mjs`
+- `tooling/build-parameter-semantics-records.mjs`
+- `tooling/build-behavior-capability-records.mjs`
 - `tooling/resolve-controlled-designer-term.py`
 - `analysis/analyze_decoded_window.py`
 

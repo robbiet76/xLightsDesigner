@@ -38,6 +38,10 @@ AUTOMATION_PLAN="$RUN_ROOT/artifacts/effect-training-automation-plan-v1.json"
 SCREENING_PLAN="$RUN_ROOT/artifacts/effect-parameter-screening-plan-v1.json"
 INTERACTION_COVERAGE="$RUN_ROOT/artifacts/effect-setting-interaction-coverage-report-v1.json"
 DOSSIER_DIR="$RUN_ROOT/artifacts/effect-training-dossiers"
+BEHAVIOR_RECORD_DIR="$RUN_ROOT/artifacts/behavior-capability-records"
+PARAMETER_RECORD_DIR="$RUN_ROOT/artifacts/parameter-semantics-records"
+SHARED_RECORD_DIR="$RUN_ROOT/artifacts/shared-setting-semantics-records"
+INTERACTION_RECORD_DIR="$RUN_ROOT/artifacts/parameter-interaction-semantics-records"
 RESET_REPORT="$RUN_ROOT/sequencer-training-reset-report.json"
 HARVEST_SUMMARY="$RUN_ROOT/artifacts/harvest-summary.json"
 
@@ -56,6 +60,10 @@ node "$ROOT_DIR/tooling/build-effect-settings-coverage-report.mjs" "$SETTINGS_CO
 node "$ROOT_DIR/tooling/build-effect-training-automation-plan.mjs" "$AUTOMATION_PLAN"
 node "$ROOT_DIR/tooling/build-effect-parameter-screening-plan.mjs" "$SCREENING_PLAN"
 node "$ROOT_DIR/tooling/build-effect-setting-interaction-coverage-report.mjs" "$AUTOMATION_PLAN" "$INTERACTION_COVERAGE"
+node "$ROOT_DIR/tooling/build-behavior-capability-records.mjs" "$BEHAVIOR_RECORD_DIR"
+node "$ROOT_DIR/tooling/build-parameter-semantics-records.mjs" "$PARAMETER_RECORD_DIR"
+node "$ROOT_DIR/tooling/build-shared-setting-semantics-records.mjs" "$SHARED_RECORD_DIR"
+node "$ROOT_DIR/tooling/build-parameter-interaction-semantics-records.mjs" "$INTERACTION_RECORD_DIR"
 node "$ROOT_DIR/tooling/build-effect-training-dossiers.mjs" \
   "$DOSSIER_DIR" \
   "$ROOT_DIR/catalog/sequencer-unified-training-set-v1.json" \
@@ -69,6 +77,10 @@ REPORT_ARGS=(
   --automation-plan "$AUTOMATION_PLAN"
   --screening-plan "$SCREENING_PLAN"
   --interaction-coverage "$INTERACTION_COVERAGE"
+  --behavior-record-dir "$BEHAVIOR_RECORD_DIR"
+  --parameter-record-dir "$PARAMETER_RECORD_DIR"
+  --shared-record-dir "$SHARED_RECORD_DIR"
+  --interaction-record-dir "$INTERACTION_RECORD_DIR"
   --output "$RESET_REPORT"
 )
 if [[ -f "$HARVEST_SUMMARY" ]]; then

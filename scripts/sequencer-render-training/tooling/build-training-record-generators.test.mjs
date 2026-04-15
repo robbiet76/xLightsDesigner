@@ -1,0 +1,30 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+
+test("training record generators emit canonical record indexes", () => {
+  const root = mkdtempSync(join(tmpdir(), "training-records-"));
+  const behaviorDir = join(root, "behavior");
+  const parameterDir = join(root, "parameter");
+  const sharedDir = join(root, "shared");
+  const interactionDir = join(root, "interaction");
+  execFileSync("node", [resolve("scripts/sequencer-render-training/tooling/build-behavior-capability-records.mjs"), behaviorDir], { cwd: resolve("."), stdio: "pipe" });
+  execFileSync("node", [resolve("scripts/sequencer-render-training/tooling/build-parameter-semantics-records.mjs"), parameterDir], { cwd: resolve("."), stdio: "pipe" });
+  execFileSync("node", [resolve("scripts/sequencer-render-training/tooling/build-shared-setting-semantics-records.mjs"), sharedDir], { cwd: resolve("."), stdio: "pipe" });
+  execFileSync("node", [resolve("scripts/sequencer-render-training/tooling/build-parameter-interaction-semantics-records.mjs"), interactionDir], { cwd: resolve("."), stdio: "pipe" });
+  const behaviorIndex = JSON.parse(readFileSync(join(behaviorDir, "index.json"), "utf8"));
+  const parameterIndex = JSON.parse(readFileSync(join(parameterDir, "index.json"), "utf8"));
+  const sharedIndex = JSON.parse(readFileSync(join(sharedDir, "index.json"), "utf8"));
+  const interactionIndex = JSON.parse(readFileSync(join(interactionDir, "index.json"), "utf8"));
+  assert.equal(behaviorIndex.artifactType, "behavior_capability_record_index_v1");
+  assert.equal(parameterIndex.artifactType, "parameter_semantics_record_index_v1");
+  assert.equal(sharedIndex.artifactType, "shared_setting_semantics_record_index_v1");
+  assert.equal(interactionIndex.artifactType, "parameter_interaction_semantics_record_index_v1");
+  assert.ok(behaviorIndex.recordCount > 0);
+  assert.ok(parameterIndex.recordCount > 0);
+  assert.ok(sharedIndex.recordCount > 0);
+  assert.ok(interactionIndex.recordCount > 0);
+});
