@@ -216,6 +216,7 @@ Checklist:
 
 Deliverable:
 - regenerated capability-first training bundle
+- one canonical per-effect training reference file per effect
 
 ### Phase 4: Rebuild Realization Ranking
 
@@ -265,7 +266,8 @@ When the new capability-first selector lands:
 3. build the regeneration harness
 4. regenerate the selector input artifacts from preserved raw evidence
 5. rebuild selector ranking against those regenerated artifacts
-6. validate only through the batch harness
+6. emit one canonical per-effect training reference file per effect
+7. validate only through the batch harness
 
 ## Current Working Rule
 
@@ -292,3 +294,11 @@ No clean regeneration run may proceed until the additive interaction harness def
 - [effect-setting-interaction-training-harness-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-setting-interaction-training-harness-v1-2026-04-15.md)
 
 is implemented enough to emit interaction-aware records and consolidated regeneration coverage.
+
+## Canonical Training Reference Surface
+
+After the full rerun, the canonical training reference must be one file per effect as defined in:
+
+- [effect-training-reference-file-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-training-reference-file-v1-2026-04-15.md)
+
+Aggregate summaries may remain as support artifacts, but they are not the primary training reference surface.

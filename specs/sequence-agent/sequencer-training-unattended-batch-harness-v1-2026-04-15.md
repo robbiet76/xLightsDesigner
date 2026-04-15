@@ -58,7 +58,7 @@ Each unattended run must emit:
 - automation plan snapshot
 - screening plan snapshot
 - interaction coverage report
-- one per-effect training dossier directory
+- one canonical per-effect training reference directory
 - one consolidated regeneration-gate report
 - one run log
 
@@ -95,3 +95,11 @@ This unattended controller is the correct next control surface before the first 
 
 It is allowed to use transitional planning artifacts as inputs while the record generators are being built.
 It is not allowed to claim that the clean regeneration path is ready until the interaction-aware generators exist.
+
+## Full Rerun Requirement
+
+The full rerun is not complete until the unattended controller emits a canonical per-effect reference directory that satisfies:
+
+- [effect-training-reference-file-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-training-reference-file-v1-2026-04-15.md)
+
+The current dossier export remains transitional until it is rebuilt from the new record generators.

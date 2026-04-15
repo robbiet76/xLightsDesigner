@@ -227,6 +227,7 @@ The regeneration pipeline should eventually emit:
 - coverage reports
 - regeneration reports
 - batch acceptance reports
+- per-effect canonical training references
 
 ## Harness Responsibilities
 

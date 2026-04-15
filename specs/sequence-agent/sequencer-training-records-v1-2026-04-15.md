@@ -357,3 +357,11 @@ These records are correct when they support:
 - batch-harness validation
 
 They are not complete until they are used to regenerate the next selector input artifacts, the interaction-aware regeneration report is emitted, and those artifacts hold through the full batch harness.
+
+## Canonical Packaging Requirement
+
+After record generation, the canonical packaging surface for inspection and sequencer reference must be one per-effect file that aggregates the relevant records for that effect.
+
+Reference:
+
+- [effect-training-reference-file-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-training-reference-file-v1-2026-04-15.md)
