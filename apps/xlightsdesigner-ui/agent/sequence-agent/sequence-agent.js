@@ -144,7 +144,10 @@ function deriveExecutionStrategy(intentHandoff = {}) {
         targetIds: normArray(row?.targetIds).map((s) => normText(s)).filter(Boolean),
         effectHints: normArray(row?.effectHints).map((s) => normText(s)).filter(Boolean)
       }))
-      .filter((row) => row.section)
+      .filter((row) => row.section),
+    translationIntent: strategy?.translationIntent && typeof strategy.translationIntent === "object" && !Array.isArray(strategy.translationIntent)
+      ? strategy.translationIntent
+      : null
   };
 }
 
@@ -779,6 +782,15 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
         const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
         const effectAvoidances = collectEffectAvoidancesForTargets(prioritizedTargetIds, metadataAssignmentIndex);
         const visualHintBehaviorText = collectDefinedVisualHintBehaviorTextForTargets(prioritizedTargetIds, metadataAssignmentIndex);
+        const translationBehaviorText = normArray(scope?.executionStrategy?.translationIntent?.behaviorTargets)
+          .filter((target) => {
+            const appliesTo = normText(target?.appliesTo);
+            const targetId = normText(target?.targetId);
+            if (appliesTo === "section") return normText(target?.section) === normText(row?.section) || !normText(target?.section);
+            return prioritizedTargetIds.includes(targetId);
+          })
+          .map((target) => normText(target?.behaviorSummary))
+          .filter(Boolean);
         const effectName = inferEffectNameFromSectionPlan({
           section: row?.section,
           energy: sectionDirective?.energyTarget || row?.energy,
@@ -790,7 +802,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           sectionDirective,
           availableEffects,
           effectAvoidances,
-          visualHintBehaviorText,
+          visualHintBehaviorText: [...visualHintBehaviorText, ...translationBehaviorText],
           sequencerRevisionBrief
         });
         const intentSummary = `${normText(row?.intentSummary || scope.goal)}${toneText}`;

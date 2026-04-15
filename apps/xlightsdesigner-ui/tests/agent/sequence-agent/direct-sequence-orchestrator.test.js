@@ -166,6 +166,9 @@ test("direct sequence orchestrator preserves spiral cue intent in execution stra
   assert.match(result.proposalBundle.executionPlan.sectionPlans[0].intentSummary, /flowing spiral motion/i);
   assert.ok(result.proposalBundle.executionPlan.sectionPlans[0].effectHints.includes("Spirals"));
   assert.ok(result.intentHandoff.executionStrategy.sectionPlans[0].effectHints.includes("Spirals"));
+  assert.equal(result.intentHandoff.executionStrategy.translationIntent?.artifactType, "translation_intent_v1");
+  assert.equal(result.intentHandoff.executionStrategy.translationIntent?.behaviorTargets?.[0]?.motion?.primaryMotion, "drift");
+  assert.equal(result.intentHandoff.executionStrategy.translationIntent?.targetRoles?.[0]?.targetId, "SpiralTrees");
 });
 
 test("direct sequence orchestrator fails closed when prompt names a section without analysis", () => {

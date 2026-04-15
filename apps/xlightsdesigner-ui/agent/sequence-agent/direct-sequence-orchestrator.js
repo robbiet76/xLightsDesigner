@@ -3,6 +3,7 @@ import { buildProposalBundle } from "../designer-dialog/designer-dialog-contract
 import { buildProposalLifecycle } from "../designer-dialog/designer-dialog-lifecycle.js";
 import { buildCanonicalSequenceIntentHandoff } from "./sequence-intent-handoff.js";
 import { buildSequencingStrategy } from "./sequencing-strategy.js";
+import { buildTranslationIntentV1 } from "./translation-intent.js";
 import { resolveDirectCueEffectCandidates } from "../shared/effect-semantics-registry.js";
 
 function str(value = "") {
@@ -44,7 +45,8 @@ function buildUserExecutionStrategy({
   sections = [],
   targetIds = [],
   intentSummary = "",
-  effectHints = []
+  effectHints = [],
+  translationIntent = null
 } = {}) {
   const normalizedSections = arr(sections).map((row) => str(row)).filter(Boolean);
   const normalizedTargets = arr(targetIds).map((row) => str(row)).filter(Boolean);
@@ -71,7 +73,8 @@ function buildUserExecutionStrategy({
     targetCount: normalizedTargets.length,
     primarySections: normalizedSections,
     sectionPlans,
-    effectPlacements: []
+    effectPlacements: [],
+    translationIntent: translationIntent && typeof translationIntent === "object" ? translationIntent : null
   };
 }
 
@@ -465,6 +468,16 @@ export function executeDirectSequenceRequestOrchestration({
     matchedEffectName,
     ...directCueHints
   ]);
+  const translationIntent = buildTranslationIntentV1({
+    promptText,
+    sections: effectiveSections,
+    targetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean),
+    effectHints: executionEffectHints,
+    source: {
+      promptText,
+      mode: "direct_sequence_request"
+    }
+  });
   if (matchedEffectName) {
     plan.normalizedIntent.effectOverrides = [matchedEffectName];
     plan.proposalLines = buildSequencingStrategy(plan.normalizedIntent, plan.targets);
@@ -539,7 +552,8 @@ export function executeDirectSequenceRequestOrchestration({
       sections: effectiveSections,
       targetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean),
       intentSummary: str(promptText),
-      effectHints: executionEffectHints
+      effectHints: executionEffectHints,
+      translationIntent
     })
   });
 
