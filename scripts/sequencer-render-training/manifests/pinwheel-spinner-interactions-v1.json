@@ -1,0 +1,20 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "pinwheel-spinner-interactions-v1",
+  "description": "Representative Pinwheel interaction sweep on the canonical spinner model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "Spinner",
+    "modelType": "spinner",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Combines arms, speed, twist, rotation, and depth mode on the spinner."
+  },
+  "samples": [
+    {"sampleId":"pinwheel-spinner-crisp-rotation-v1","effectName":"Pinwheel","effectSettings":{"style":"New Render Method","arms":4,"armSize":50,"thickness":30,"twist":60,"speed":12,"rotation":true,"3DMode":"None"},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","rotating_pinwheel","crisp_spin"]},
+    {"sampleId":"pinwheel-spinner-dense-depth-v1","effectName":"Pinwheel","effectSettings":{"style":"New Render Method","arms":6,"armSize":50,"thickness":60,"twist":0,"speed":10,"rotation":true,"3DMode":"3D"},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","dense_pinwheel","depth_mode"]},
+    {"sampleId":"pinwheel-spinner-wide-oldrender-v1","effectName":"Pinwheel","effectSettings":{"style":"Old Render Method","arms":3,"armSize":75,"thickness":40,"twist":0,"speed":7,"rotation":false,"3DMode":"None"},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","old_render_pinwheel","wide_arms"]},
+    {"sampleId":"pinwheel-spinner-twisted-fast-v1","effectName":"Pinwheel","effectSettings":{"style":"New Render Method","arms":4,"armSize":50,"thickness":40,"twist":180,"speed":18,"rotation":true,"3DMode":"Sweep"},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","twisted_spin","sweep_depth"]}
+  ]
+}

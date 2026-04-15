@@ -1,0 +1,20 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-interactions-v1",
+  "description": "Representative SingleStrand interaction sweep on a canonical single-line model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Combines chase, skip, and FX control interactions on a single-line model."
+  },
+  "samples": [
+    {"sampleId":"singlestrand-linear-chase-clean-v1","effectName":"SingleStrand","effectSettings":{"mode":"Chase","colors":"Palette","numberChases":1,"chaseSize":18,"cycles":1.5,"offset":0,"chaseType":"Left-Right","fadeType":"None","groupAllStrands":false},"sharedSettings":{"renderStyle":"Single Line"},"labelHints":["interaction_sweep","single_direction_chase","clean_linear_pattern"]},
+    {"sampleId":"singlestrand-linear-chase-dense-comet-v1","effectName":"SingleStrand","effectSettings":{"mode":"Chase","colors":"Palette","numberChases":3,"chaseSize":10,"cycles":2.5,"offset":0,"chaseType":"Left-Right","fadeType":"From Head","groupAllStrands":false},"sharedSettings":{"renderStyle":"Single Line"},"labelHints":["interaction_sweep","dense_chase","comet_like"]},
+    {"sampleId":"singlestrand-linear-skips-banded-v1","effectName":"SingleStrand","effectSettings":{"mode":"Skips","colors":"Palette","skipSize":5,"bandSize":3,"advances":24,"cycles":2.0,"offset":0,"groupAllStrands":false},"sharedSettings":{"renderStyle":"Single Line"},"labelHints":["interaction_sweep","segmented_chase","banded_motion"]},
+    {"sampleId":"singlestrand-linear-fx-texture-v1","effectName":"SingleStrand","effectSettings":{"mode":"FX","colors":"Palette","intensity":160,"cycles":3.0,"offset":0,"groupAllStrands":false},"sharedSettings":{"renderStyle":"Single Line"},"labelHints":["interaction_sweep","fx_texture","high_activity"]}
+  ]
+}

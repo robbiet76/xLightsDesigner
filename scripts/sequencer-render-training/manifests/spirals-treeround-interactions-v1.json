@@ -1,0 +1,20 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "spirals-treeround-interactions-v1",
+  "description": "Representative Spirals interaction sweep on the canonical round tree model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeRound",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Combines count, movement, rotation, thickness, blend, and 3D/grow behavior on a round tree."
+  },
+  "samples": [
+    {"sampleId":"spirals-treeround-basic-flow-v1","effectName":"Spirals","effectSettings":{"count":1,"movement":10,"rotation":20,"thickness":50,"blend":false,"3D":false,"grow":false,"shrink":false},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","spiral_motion","round_tree_pattern"]},
+    {"sampleId":"spirals-treeround-dense-blended-v1","effectName":"Spirals","effectSettings":{"count":3,"movement":14,"rotation":30,"thickness":35,"blend":true,"3D":false,"grow":false,"shrink":false},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","dense_spirals","blended_texture"]},
+    {"sampleId":"spirals-treeround-reverse-tight-v1","effectName":"Spirals","effectSettings":{"count":2,"movement":-10,"rotation":-20,"thickness":50,"blend":false,"3D":false,"grow":false,"shrink":true},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","reverse_rotation","tight_spirals"]},
+    {"sampleId":"spirals-treeround-depth-grow-v1","effectName":"Spirals","effectSettings":{"count":2,"movement":10,"rotation":20,"thickness":70,"blend":false,"3D":true,"grow":true,"shrink":false},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","depth_shading","growing_spirals"]}
+  ]
+}

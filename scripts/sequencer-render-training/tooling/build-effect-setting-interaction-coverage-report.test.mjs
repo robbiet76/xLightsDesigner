@@ -5,7 +5,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-test("build-effect-setting-interaction-coverage-report reports interaction manifests and missing coverage", () => {
+test("build-effect-setting-interaction-coverage-report reports complete interaction coverage for runnable effects", () => {
   const root = mkdtempSync(join(tmpdir(), "interaction-coverage-"));
   const automationPlanPath = join(root, "automation-plan.json");
   const outFile = join(root, "interaction-coverage.json");
@@ -30,5 +30,6 @@ test("build-effect-setting-interaction-coverage-report reports interaction manif
   assert.ok(report.summary.totalInteractionManifestCount >= 5);
   assert.ok(report.effects.some((row) => row.effectName === "Shockwave" && row.hasInteractionCoverage));
   assert.ok(report.effects.some((row) => row.effectName === "Twinkle" && row.hasInteractionCoverage));
-  assert.ok(report.summary.missingInteractionCoverageCount >= 1);
+  assert.equal(report.summary.missingInteractionCoverageCount, 0);
+  assert.equal(report.summary.interactionCoverageReady, true);
 });

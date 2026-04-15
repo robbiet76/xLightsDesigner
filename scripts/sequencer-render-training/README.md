@@ -72,6 +72,7 @@ Primary system roadmap:
 - `tooling/build-effect-setting-interaction-coverage-report.mjs`
 - `tooling/build-sequencer-training-reset-report.mjs`
 - `tooling/build-effect-training-dossiers.mjs`
+- `tooling/build-effect-training-learnings-summary.mjs`
 - `tooling/build-parameter-interaction-semantics-records.mjs`
 - `tooling/build-shared-setting-semantics-records.mjs`
 - `tooling/build-parameter-semantics-records.mjs`

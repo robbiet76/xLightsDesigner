@@ -42,6 +42,7 @@ BEHAVIOR_RECORD_DIR="$RUN_ROOT/artifacts/behavior-capability-records"
 PARAMETER_RECORD_DIR="$RUN_ROOT/artifacts/parameter-semantics-records"
 SHARED_RECORD_DIR="$RUN_ROOT/artifacts/shared-setting-semantics-records"
 INTERACTION_RECORD_DIR="$RUN_ROOT/artifacts/parameter-interaction-semantics-records"
+LEARNINGS_SUMMARY="$RUN_ROOT/effect-training-learnings-summary.md"
 RESET_REPORT="$RUN_ROOT/sequencer-training-reset-report.json"
 HARVEST_SUMMARY="$RUN_ROOT/artifacts/harvest-summary.json"
 
@@ -70,6 +71,7 @@ node "$ROOT_DIR/tooling/build-effect-training-dossiers.mjs" \
   "$SETTINGS_COVERAGE" \
   "$INTERACTION_COVERAGE" \
   "$ROOT_DIR/catalog/effect-parameter-registry.json"
+node "$ROOT_DIR/tooling/build-effect-training-learnings-summary.mjs" "$DOSSIER_DIR" "$LEARNINGS_SUMMARY"
 
 printf '[training-reset] building consolidated reset report\n'
 REPORT_ARGS=(

@@ -1,0 +1,20 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "bars-archgroup-interactions-v1",
+  "description": "Representative Bars interaction sweep on the canonical grouped arch model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "ArchGroup",
+    "modelType": "arch",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Combines directional, density, cadence, and structural toggles on grouped arches."
+  },
+  "samples": [
+    {"sampleId":"bars-archgroup-compress-dense-v1","effectName":"Bars","effectSettings":{"direction":"compress","barCount":4,"cycles":12,"center":0,"highlight":false,"gradient":false,"3D":false},"sharedSettings":{"renderStyle":"Single Line"},"labelHints":["interaction_sweep","compressing_bars","dense_bars"]},
+    {"sampleId":"bars-archgroup-expand-gradient-v1","effectName":"Bars","effectSettings":{"direction":"expand","barCount":2,"cycles":5,"center":0,"highlight":false,"gradient":true,"3D":false},"sharedSettings":{"renderStyle":"Single Line"},"labelHints":["interaction_sweep","expanding_bars","soft_gradient"]},
+    {"sampleId":"bars-archgroup-up-highlight-3d-v1","effectName":"Bars","effectSettings":{"direction":"up","barCount":3,"cycles":8,"center":0,"highlight":true,"gradient":false,"3D":true},"sharedSettings":{"renderStyle":"Single Line"},"labelHints":["interaction_sweep","highlight_bars","depth_shading"]},
+    {"sampleId":"bars-archgroup-left-gradient-highlight-v1","effectName":"Bars","effectSettings":{"direction":"Left","barCount":3,"cycles":8,"center":0,"highlight":true,"gradient":true,"3D":false},"sharedSettings":{"renderStyle":"Single Line"},"labelHints":["interaction_sweep","striped_motion","gradient_highlight"]}
+  ]
+}

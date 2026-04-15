@@ -1,0 +1,20 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "colorwash-matrix-interactions-v1",
+  "description": "Representative Color Wash interaction sweep on the canonical matrix model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Combines cycles, fade axes, shimmer, reverse fades, and circular palette behavior."
+  },
+  "samples": [
+    {"sampleId":"colorwash-matrix-two-axis-soft-v1","effectName":"Color Wash","effectSettings":{"cycles":1.5,"vFade":true,"hFade":true,"reverseFades":false,"shimmer":false,"circularPalette":false},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","two_axis_fade","soft_fill"]},
+    {"sampleId":"colorwash-matrix-two-axis-shimmer-v1","effectName":"Color Wash","effectSettings":{"cycles":2.0,"vFade":true,"hFade":true,"reverseFades":false,"shimmer":true,"circularPalette":false},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","two_axis_fade","sparkle_fill"]},
+    {"sampleId":"colorwash-matrix-reverse-circular-v1","effectName":"Color Wash","effectSettings":{"cycles":2.0,"vFade":true,"hFade":false,"reverseFades":true,"shimmer":false,"circularPalette":true},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","reverse_gradient","circular_palette"]},
+    {"sampleId":"colorwash-matrix-calm-horizontal-v1","effectName":"Color Wash","effectSettings":{"cycles":0.5,"vFade":false,"hFade":true,"reverseFades":false,"shimmer":false,"circularPalette":false},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","horizontal_fade","calm_fill"]}
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "marquee-archgroup-interactions-v1",
+  "description": "Representative Marquee interaction sweep on the canonical grouped arch model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "ArchGroup",
+    "modelType": "arch",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Combines band, skip, thickness, speed, reverse, and stagger on grouped arches."
+  },
+  "samples": [
+    {"sampleId":"marquee-archgroup-tight-fast-v1","effectName":"Marquee","effectSettings":{"bandSize":3,"skipSize":0,"thickness":2,"stagger":0,"speed":7,"start":0,"reverse":false},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","tight_marquee","fast_forward"]},
+    {"sampleId":"marquee-archgroup-wide-reverse-v1","effectName":"Marquee","effectSettings":{"bandSize":7,"skipSize":1,"thickness":4,"stagger":0,"speed":5,"start":0,"reverse":true},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","wide_marquee","reverse_motion"]},
+    {"sampleId":"marquee-archgroup-segmented-staggered-v1","effectName":"Marquee","effectSettings":{"bandSize":3,"skipSize":4,"thickness":2,"stagger":4,"speed":5,"start":0,"reverse":false},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","segmented_marquee","staggered_motion"]},
+    {"sampleId":"marquee-archgroup-thick-fast-staggered-v1","effectName":"Marquee","effectSettings":{"bandSize":5,"skipSize":2,"thickness":6,"stagger":6,"speed":9,"start":0,"reverse":false},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","thick_marquee","layered_motion"]}
+  ]
+}

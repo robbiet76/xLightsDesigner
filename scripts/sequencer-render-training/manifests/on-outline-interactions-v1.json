@@ -1,0 +1,20 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "on-outline-interactions-v1",
+  "description": "Representative On interaction sweep on a canonical outline model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "Border-01",
+    "modelType": "outline",
+    "startMs": 1000,
+    "endMs": 3000,
+    "durationClass": "short",
+    "notes": "Combines start/end levels, shimmer, and cycles for static and ramped hold behavior."
+  },
+  "samples": [
+    {"sampleId":"on-outline-hold-clean-v1","effectName":"On","effectSettings":{"startLevel":100,"endLevel":100,"shimmer":false,"cycles":1},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","static_hold","clean_fill"]},
+    {"sampleId":"on-outline-ramp-down-v1","effectName":"On","effectSettings":{"startLevel":100,"endLevel":40,"shimmer":false,"cycles":1},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","ramp_down","soft_falloff"]},
+    {"sampleId":"on-outline-ramp-up-shimmer-v1","effectName":"On","effectSettings":{"startLevel":30,"endLevel":100,"shimmer":true,"cycles":1},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","ramp_up","shimmer_hold"]},
+    {"sampleId":"on-outline-low-cycle-shimmer-v1","effectName":"On","effectSettings":{"startLevel":100,"endLevel":100,"shimmer":true,"cycles":2},"sharedSettings":{"renderStyle":"Default"},"labelHints":["interaction_sweep","shimmer_hold","pulsed_hold"]}
+  ]
+}
