@@ -865,19 +865,10 @@ function buildSectionEffectHints({
   if (chorusLikeSolo) {
     return resolveSectionContextEffectCandidates({ sectionKey: "solo", variant: "chorusLike" });
   }
-  if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
-    return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "wide" });
-  }
   if (escalationGoal && /verse 1/.test(lowerSection)) {
     return resolveContextualEffectCandidates({
       contextKey: "genericFlow",
       variant: flattenedEscalation ? "escalationVerseFlat" : "escalationVerseOpen"
-    });
-  }
-  if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
-    return resolveContextualEffectCandidates({
-      contextKey: "genericFlow",
-      variant: /outro|coda/.test(lowerSection) ? "lowOutro" : "low"
     });
   }
   if (/pulse|rhythm|drive|movement/.test(lowerGoal)) {
