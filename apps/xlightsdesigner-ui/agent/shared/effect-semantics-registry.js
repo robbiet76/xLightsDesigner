@@ -82,10 +82,6 @@ export const SAFE_EFFECT_FALLBACKS = Object.freeze({
   sparklyTexture: ["Shimmer", "Twinkle"],
   rhythmicMotion: ["Bars", "Marquee", "SingleStrand"],
   staticFill: ["On", "Color Wash"],
-  cinematicWarmHigh: ["Shimmer", "Color Wash", "On"],
-  cinematicWarmLow: ["Color Wash", "Shimmer", "On"],
-  highEnergy: ["Shimmer", "Bars", "Pinwheel"],
-  denseBridge: ["Bars", "Shimmer", "Color Wash"],
   default: ["Color Wash", "On", "Shimmer"],
   trainedOnAlternate: ["Color Wash", "Shimmer"]
 });
@@ -113,28 +109,6 @@ export const SUMMARY_FALLBACK_RULES = Object.freeze([
     key: "staticFill",
     patterns: [/\b(on effect|solid|hold|steady)\b/],
     defaultEffect: "On"
-  },
-  {
-    key: "cinematicWarmHigh",
-    patterns: [/\b(warm|amber|gold|cinematic|glow|smooth)\b/, /\b(chorus|payoff|finale)\b/],
-    mode: "all",
-    defaultEffect: "Shimmer"
-  },
-  {
-    key: "cinematicWarmLow",
-    patterns: [/\b(warm|amber|gold|cinematic|glow|smooth)\b/],
-    defaultEffect: "Color Wash"
-  },
-  {
-    key: "highEnergy",
-    patterns: [/\b(chorus|payoff|finale)\b/],
-    defaultEffect: "Shimmer"
-  },
-  {
-    key: "denseBridge",
-    patterns: [/\bbridge\b/, /\bdense\b/],
-    mode: "any",
-    defaultEffect: "Bars"
   },
   {
     key: "default",
