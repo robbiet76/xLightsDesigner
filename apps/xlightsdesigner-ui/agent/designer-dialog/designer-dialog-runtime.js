@@ -17,7 +17,6 @@ import {
   canonicalizeEffectNameAlias,
   resolveContextualEffectCandidates,
   resolveDirectCueEffectCandidates,
-  resolveRepeatedRoleEffectCandidates,
   resolveSectionIntentSummary,
   resolveSectionContextEffectCandidates
 } from "../shared/effect-semantics-registry.js";
@@ -767,42 +766,6 @@ function buildSectionEffectHints({
   });
   if (directCueCandidates.length) {
     return directCueCandidates;
-  }
-  if (/chorus/.test(lowerSection)) {
-    if (/\b(unrelated idea|separate unrelated|do not need to share|no need to share|no family resemblance|no build pattern)\b/.test(lowerGoal)) {
-      return resolveRepeatedRoleEffectCandidates({
-        roleKey: "chorus",
-        variant: "unrelated",
-        repeatedRoleIndex: Math.max(Number(repeatedRoleIndex || 0), Number(sectionIndex || 0)),
-        repeatedRoleCount
-      });
-    }
-    if (/\b(common visual language|family resemblance|feel related|recognizable common|build in size|build pattern|final chorus clearly landing biggest)\b/.test(lowerGoal)) {
-      return resolveRepeatedRoleEffectCandidates({
-        roleKey: "chorus",
-        variant: "coherentBuild",
-        repeatedRoleIndex: Math.max(Number(repeatedRoleIndex || 0), Number(sectionIndex || 0)),
-        repeatedRoleCount
-      });
-    }
-  }
-  if (/verse/.test(lowerSection)) {
-    if (/\b(each verse feel unrelated|no need for verse 1 and verse 2 to share|no need to share a supporting identity|unrelated to the other sections)\b/.test(lowerGoal)) {
-      return resolveRepeatedRoleEffectCandidates({
-        roleKey: "verse",
-        variant: "unrelated",
-        repeatedRoleIndex: Math.max(Number(repeatedRoleIndex || 0), Number(sectionIndex || 0)),
-        repeatedRoleCount
-      });
-    }
-    if (/\b(shared supporting visual language|same narrative world|connected by a shared|share a supporting identity)\b/.test(lowerGoal)) {
-      return resolveRepeatedRoleEffectCandidates({
-        roleKey: "verse",
-        variant: "coherentSupport",
-        repeatedRoleIndex: Math.max(Number(repeatedRoleIndex || 0), Number(sectionIndex || 0)),
-        repeatedRoleCount
-      });
-    }
   }
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch|visual weight|impact budget/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
