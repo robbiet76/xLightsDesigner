@@ -29,22 +29,9 @@ The system still does not have full rendered-output validation.
 
 That is the main blocker before batch recalibration can become the primary loop.
 
-## Exact Native Render-Feedback Gap
+## Native Render-Feedback Status
 
-The native automation and apply path originally reported two missing owned routes:
-
-- `layout.scene`
-- `sequence.render-samples`
-
-Current code status:
-
-- `layout.scene` is now implemented in the owned xLightsDesigner API tree and wired into the local JS API wrapper
-- `sequence.render-samples` already exists in the owned API tree
-
-Current live validation status:
-
-- the running xLights binary still needs rebuild/revalidation before this can be treated as fully closed
-- until that happens, native parity should still be considered blocked operationally
+The owned render-feedback surface is now live end to end.
 
 Confirmed surfaces:
 
@@ -52,19 +39,21 @@ Confirmed surfaces:
 - [apply-native-review.mjs](/Users/robterry/Projects/xLightsDesigner/scripts/sequencing/native/apply-native-review.mjs)
 - [automation.mjs](/Users/robterry/Projects/xLightsDesigner/scripts/desktop/automation.mjs)
 
-Current behavior before rebuild/revalidation:
+Current live validation status:
 
-- `ownedRenderFeedbackCapabilities.fullFeedbackReady = false`
-- `ownedRenderFeedbackCapabilities.missingRequirements` may still report:
-  - `layout.scene`
-  - `sequence.render-samples`
-  depending on the running xLights build
-- native apply succeeds in `plan_apply_validation_only` mode
-- render-feedback persistence remains unavailable for real native runs
+- `layout.scene` is live
+- `sequence.render-samples` is live
+- native apply persists:
+  - `render_observation_v1`
+  - `sequence_render_critique_context_v1`
+- batch render-feedback capability probing had one false negative:
+  - the probe sent empty `channelRanges`
+  - the owned API correctly returned `400 channelRanges is required`
+  - this is a probe bug, not a missing capability
 
 ## Why This Matters
 
-Without these routes, the system cannot complete the full translation loop:
+With these routes in place, the system can complete the full translation loop:
 
 1. infer intended behavior
 2. plan realization
@@ -73,13 +62,13 @@ Without these routes, the system cannot complete the full translation loop:
 5. critique rendered result
 6. feed outcome back into ranking and training
 
-That means current benchmark scoring is still strongest at:
+Current benchmark scoring is still strongest at:
 
 - semantic alignment
 - behavior intent alignment
 - plan/apply artifact validation
 
-It is still weak at:
+It is still weaker at:
 
 - actual visual translation quality
 
@@ -102,18 +91,54 @@ Current issue:
 - behavior-capability evidence is not yet the dominant ranking language
 - multiple valid realizations are still collapsed too early
 
-## Pre-Batch Checklist
+## Post-Baseline Status
 
-Before the first true recalibration batch run:
+The first full post-cleanup batch baseline now exists:
 
-- [ ] rebuild/revalidate the running xLights binary with owned `layout.scene`
-- [ ] verify owned `sequence.render-samples` is live on the rebuilt binary
-- [ ] ensure native apply can persist:
+- [live-practical-benchmark-report.json](/tmp/live-practical-benchmark-native-suite-render-baseline/live-practical-benchmark-report.json)
+
+Batch result:
+
+- `scenarioCount: 10`
+- `failedScenarioCount: 5`
+
+The current failures are translation-quality failures, not automation failures.
+
+Observed failure shape:
+
+- family selection is often correct
+- behavior realization still misses on:
+  - texture
+  - coverage
+  - energy
+
+Examples:
+
+- `section_case_001`
+  - matched `Spirals`
+  - missed `primaryTexture` and `coverageLevel`
+- `section_case_007`
+  - matched `On`
+  - missed `primaryTexture` and `energyLevel`
+- `section_case_008`
+  - matched `Pinwheel`
+  - missed `primaryTexture`
+- `section_case_009`
+  - matched `Shockwave`
+  - missed `primaryTexture`
+
+## Current Checklist
+
+- [x] rebuild/revalidate the running xLights binary with owned `layout.scene`
+- [x] verify owned `sequence.render-samples` is live on the rebuilt binary
+- [x] ensure native apply can persist:
   - `render_observation_v1`
   - `sequence_render_critique_context_v1`
-- [ ] confirm validation snapshots surface those artifacts end to end
+- [x] confirm validation snapshots surface those artifacts end to end
+- [ ] fix the capability probe false negative for `sequence.render-samples`
 - [ ] reduce remaining family-first realization bias in `trained-effect-knowledge.js`
-- [ ] reduce residual hardcoded family returns in `inferRevisionBriefEffectName()`
+- [ ] remove remaining residual hardcoded family fallback in revision realization
+- [ ] run the next full batch after the realization changes and compare drift against the baseline
 
 ## Batch Harness Requirements
 
@@ -138,10 +163,10 @@ Required characteristics:
 
 ## Baseline Run Order
 
-1. finish native render-feedback parity
+1. fix the capability probe false negative
 2. reduce remaining family-first realization bias
-3. run the full batch harness once
-4. store the report as the post-cleanup baseline
+3. run the full batch harness again
+4. compare against the stored post-cleanup baseline
 5. only then start recalibration or retraining work
 
 ## Non-Goals
@@ -156,6 +181,6 @@ Do not do these before the batch baseline exists:
 
 This plan is complete when:
 
-- native batch runs can observe and critique rendered output
-- the batch harness produces a consolidated translation baseline report
+- native batch runs can observe and critique rendered output without false capability negatives
+- the batch harness produces repeatable consolidated baseline reports
 - recalibration decisions are based on batch evidence instead of isolated scenario wins

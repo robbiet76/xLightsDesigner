@@ -673,9 +673,14 @@ final class NativeAutomationServer: @unchecked Sendable {
             method: "POST",
             body: [
                 "startMs": 0,
-                "endMs": 1,
+                "endMs": 25,
                 "maxFrames": 1,
-                "channelRanges": []
+                "channelRanges": [
+                    [
+                        "startChannel": 1,
+                        "channelCount": 1
+                    ]
+                ]
             ]
         )
 
