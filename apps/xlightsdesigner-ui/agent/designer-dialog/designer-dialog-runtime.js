@@ -896,15 +896,6 @@ function buildSectionEffectHints({
       variant: /outro|coda/.test(lowerSection) ? "lowOutro" : "low"
     });
   }
-  if (nearPeak) {
-    return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "nearPeak" });
-  }
-  if (nearEnd) {
-    return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "nearEnd" });
-  }
-  if (nearStart) {
-    return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "nearStart" });
-  }
   if (/pulse|rhythm|drive|movement/.test(lowerGoal)) {
     return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "pulse" });
   }
