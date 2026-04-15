@@ -616,8 +616,6 @@ function inferEffectNameFromSectionPlan({
     { availableEffects, effectAvoidances }
   );
   if (briefPreferred) return briefPreferred;
-  const hinted = selectPreferredEffect(effectHints, { availableEffects, effectAvoidances });
-  if (hinted) return hinted;
   const directiveText = [
     normText(sectionDirective?.sectionPurpose),
     normText(sectionDirective?.motionTarget),
@@ -667,6 +665,8 @@ function inferEffectNameFromSectionPlan({
     }
     return trainedChosen;
   }
+  const hinted = selectPreferredEffect(effectHints, { availableEffects, effectAvoidances });
+  if (hinted) return hinted;
 
   return selectPreferredEffect(
     [resolveSummaryFallbackEffect(summary, availableEffects)].filter(Boolean),

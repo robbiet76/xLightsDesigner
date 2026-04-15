@@ -622,6 +622,70 @@ test("sequence_agent uses defined visual hint behavior text to steer fallback ef
   assert.match(combined, /\bBars\b/);
 });
 
+test("sequence_agent lets translation behavior outrank conflicting effect hints", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track D", artist: "Artist D" },
+      structure: {
+        sections: [
+          { label: "Bridge", startMs: 0, endMs: 1000, energy: "medium", density: "medium" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Keep the bridge soft, restrained, and texture-led with a gentle handoff.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Spinners"],
+        tagNames: [],
+        sections: ["Bridge"]
+      },
+      executionStrategy: {
+        translationIntent: {
+          behaviorTargets: [
+            {
+              appliesTo: "section",
+              section: "Bridge",
+              behaviorSummary: "shimmer sparkling restrained gentle"
+            }
+          ]
+        },
+        sectionPlans: [
+          {
+            section: "Bridge",
+            energy: "medium",
+            density: "medium",
+            intentSummary: "keep the bridge soft, restrained, and texture-led with a gentle handoff",
+            targetIds: ["Spinners"],
+            effectHints: ["Shockwave"]
+          }
+        ]
+      },
+      sequencingDesignHandoff: {
+        sectionDirectives: [
+          {
+            sectionName: "Bridge",
+            sectionPurpose: "bridge_reset",
+            motionTarget: "restrained_motion",
+            densityTarget: "moderate",
+            transitionIntent: "hold",
+            preferredVisualFamilies: ["soft_texture"]
+          }
+        ]
+      }
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Twinkle", params: [] },
+      { effectName: "Shockwave", params: [] },
+      { effectName: "Color Wash", params: [] }
+    ])
+  });
+
+  assert.equal(out.metadata.effectStrategy.seedRecommendations[0].effectName, "Shimmer");
+  assert.match(out.executionLines[0], /apply Shimmer effect/i);
+});
+
 test("sequence_agent clamps effect placement windows to sequence duration", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {
