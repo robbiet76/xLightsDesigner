@@ -56,8 +56,8 @@ function mapDensityTarget(value = '') {
   return 'moderate';
 }
 
-function inferMotionTarget({ section = '', goal = '', effectHints = [] } = {}) {
-  const text = `${str(section)} ${str(goal)} ${arr(effectHints).map((row) => str(row)).join(' ')}`.toLowerCase();
+function inferMotionTarget({ section = '', goal = '' } = {}) {
+  const text = `${str(section)} ${str(goal)}`.toLowerCase();
   if (/still|hold|steady|solid/.test(text)) return 'still';
   if (/expand|release|lift|grow/.test(text)) return 'expanding_motion';
   if (/aggressive|punchy|attack|snap/.test(text)) return 'aggressive_motion';
@@ -74,8 +74,8 @@ function inferTransitionIntent({ section = '', goal = '', energy = '' } = {}) {
   return 'hold';
 }
 
-function inferSectionPreferredVisualFamilies({ section = '', goal = '', effectHints = [] } = {}) {
-  const text = `${str(section)} ${stripNegativeCueClauses(goal)} ${arr(effectHints).map((row) => str(row)).join(' ')}`.toLowerCase();
+function inferSectionPreferredVisualFamilies({ section = '', goal = '' } = {}) {
+  const text = `${str(section)} ${stripNegativeCueClauses(goal)}`.toLowerCase();
   const preferred = [];
   if (/\b(on effect|solid steady hold|solid hold|steady hold|static hold|minimal movement)\b/.test(text)) preferred.push('static_fill');
   if (/spiral|helical|helix/.test(text)) preferred.push('spiral_flow');
@@ -190,12 +190,11 @@ export function buildSequencingDesignHandoffV2({
     sectionName: str(row?.section),
     sectionPurpose: inferSectionPurpose(row?.section, row?.energy, row?.density, row?.intentSummary || goal),
     energyTarget: mapEnergyTarget(row?.energy),
-    motionTarget: inferMotionTarget({ section: row?.section, goal: row?.intentSummary || goal, effectHints: row?.effectHints }),
+    motionTarget: inferMotionTarget({ section: row?.section, goal: row?.intentSummary || goal }),
     densityTarget: mapDensityTarget(row?.density),
     transitionIntent: inferTransitionIntent({ section: row?.section, goal: row?.intentSummary || goal, energy: row?.energy }),
     preferredVisualFamilies: uniqueStrings([
-      ...arr(row?.effectHints).map((hint) => str(hint).toLowerCase().replace(/\s+/g, '_')),
-      ...inferSectionPreferredVisualFamilies({ section: row?.section, goal: row?.intentSummary || goal, effectHints: row?.effectHints })
+      ...inferSectionPreferredVisualFamilies({ section: row?.section, goal: row?.intentSummary || goal })
     ]),
     avoidVisualFamilies: uniqueStrings(visualFamilyPreferences.avoid),
     notes: str(row?.intentSummary)
