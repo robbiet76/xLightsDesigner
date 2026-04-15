@@ -694,24 +694,43 @@ function buildStructuredExecutionLine({
   return `${sectionText} / ${targetText} / apply ${effectText} effect${paletteClause} for the requested duration using the current target timing`;
 }
 
-function inferRevisionBriefEffectName(brief = {}) {
-  const summary = `${normText(brief?.artisticGoalSummary)} ${normText(brief?.executionObjective)}`.toLowerCase();
-  const motionCharacter = normText(brief?.motionCharacter).toLowerCase();
-  const densityCharacter = normText(brief?.densityCharacter).toLowerCase();
+function buildRevisionBriefBehaviorSummary(brief = {}) {
   const revisionRoles = new Set(normArray(brief?.revisionRoles).map((row) => normText(row)));
-  if (revisionRoles.has("increase_section_contrast")) return "Bars";
+  const summaryBits = [
+    normText(brief?.artisticGoalSummary),
+    normText(brief?.executionObjective),
+    normText(brief?.motionCharacter).replaceAll("_", " "),
+    normText(brief?.densityCharacter).replaceAll("_", " ")
+  ];
+  if (revisionRoles.has("increase_section_contrast")) {
+    summaryBits.push("clear differentiated contrast segmented visual separation");
+  }
   if (revisionRoles.has("add_section_development")) {
-    return motionCharacter.includes("restrained") ? "Shimmer" : "Bars";
+    summaryBits.push("evolving development with visible motion change over time");
   }
   if (revisionRoles.has("reduce_competing_support")) {
-    return motionCharacter.includes("restrained") ? "Shimmer" : "On";
+    summaryBits.push("restrained support hold with minimal competing motion");
   }
   if (revisionRoles.has("widen_support")) {
-    return motionCharacter.includes("restrained") ? "Color Wash" : "Bars";
+    summaryBits.push("broader support coverage with restrained background behavior");
   }
   if (revisionRoles.has("strengthen_lead")) {
-    return motionCharacter.includes("still") ? "On" : "Bars";
+    summaryBits.push("clear lead emphasis with reduced competing support");
   }
+  return summaryBits.filter(Boolean).join(" ").toLowerCase();
+}
+
+function inferRevisionBriefEffectName(brief = {}) {
+  const summary = buildRevisionBriefBehaviorSummary(brief);
+  const motionCharacter = normText(brief?.motionCharacter).toLowerCase();
+  const densityCharacter = normText(brief?.densityCharacter).toLowerCase();
+  const directCueChosen = firstAvailableEffect(
+    resolveDirectCueEffectCandidates({
+      goalText: summary,
+      smoothBias: /flow|smooth|glow|cinematic/.test(summary)
+    })
+  );
+  if (directCueChosen) return directCueChosen;
   if (/contrast|hierarchy|differentiat|lift|shift/.test(summary)) return "Bars";
   if (/flat|evolv|develop/.test(summary)) {
     return motionCharacter.includes("restrained") ? "Shimmer" : "Bars";
@@ -720,6 +739,20 @@ function inferRevisionBriefEffectName(brief = {}) {
   if (motionCharacter.includes("restrained")) return "Shimmer";
   if (motionCharacter.includes("expand")) return "Bars";
   if (densityCharacter === "sparse") return "On";
+  const trainedChosen = firstAvailableEffect(
+    filterAvoidedEffects(
+      recommendEffectsForTargets({
+        summary,
+        energy: "",
+        density: densityCharacter,
+        targetIds: [],
+        displayElements: [],
+        limit: 1
+      }).map((row) => row?.effectName),
+      []
+    )
+  );
+  if (trainedChosen) return trainedChosen;
   return "Color Wash";
 }
 

@@ -481,6 +481,58 @@ test("sequence_agent uses revision roles to bias inferred effect families", () =
   assert.match(out.executionLines[0], /apply On effect/i);
 });
 
+test("sequence_agent does not let revision roles override explicit brief motion cues", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      goal: "Refine the chorus focal read.",
+      scope: {
+        targetIds: ["SpiralTrees"],
+        sections: ["Chorus 1"],
+        tagNames: ["focal"]
+      },
+      designSummary: "SpiralTrees carry the chorus lead."
+    },
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      scope: { goalLevel: "section" },
+      artisticIntent: {
+        leadTarget: "SpiralTrees",
+        sectionArc: "lift",
+        motionCharacter: "steady_motion",
+        densityCharacter: "moderate"
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: {
+        nextOwner: "shared",
+        revisionRoles: ["increase_section_contrast"]
+      },
+      designerDirection: {
+        artisticCorrection: "Keep the chorus readable."
+      },
+      sequencerDirection: {
+        executionObjective: "Use flowing spiral motion rather than a generic segmented fill."
+      },
+      successChecks: ["chorus reads clearly"]
+    },
+    sourceLines: [],
+    baseRevision: "rev-58",
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Spirals", params: [] },
+      { effectName: "Bars", params: [] },
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Color Wash", params: [] }
+    ])
+  });
+
+  assert.match(out.executionLines[0], /apply Spirals effect/i);
+});
+
 test("sequence_agent prefers direct spiral cue over generic shimmer fallback", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {
