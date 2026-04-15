@@ -5,7 +5,6 @@
   "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2-Baseline.xsq",
   "scenarios": [
     {
-      "name": "tree-chorus-spiral-lead",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -43,10 +42,11 @@
           "burst",
           "shimmer"
         ]
-      }
+      },
+      "scenarioId": "section_case_001",
+      "scenarioLabel": "tree-chorus-spiral-lead"
     },
     {
-      "name": "spinner-bridge-soft-twinkle",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -85,10 +85,11 @@
           "burst",
           "spin"
         ]
-      }
+      },
+      "scenarioId": "section_case_002",
+      "scenarioLabel": "spinner-bridge-soft-twinkle"
     },
     {
-      "name": "snowman-verse-shimmer-texture",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -129,10 +130,11 @@
         "primaryTexture": [
           "segmented"
         ]
-      }
+      },
+      "scenarioId": "section_case_003",
+      "scenarioLabel": "snowman-verse-shimmer-texture"
     },
     {
-      "name": "border-verse-bars-segmented",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -169,10 +171,11 @@
         "primaryTexture": [
           "sparkling"
         ]
-      }
+      },
+      "scenarioId": "section_case_004",
+      "scenarioLabel": "border-verse-bars-segmented"
     },
     {
-      "name": "border-chorus-marquee-bands",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -209,10 +212,11 @@
         "primaryMotion": [
           "hold"
         ]
-      }
+      },
+      "scenarioId": "section_case_005",
+      "scenarioLabel": "border-chorus-marquee-bands"
     },
     {
-      "name": "porchtree-intro-warm-wash",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -255,10 +259,11 @@
           "spin",
           "burst"
         ]
-      }
+      },
+      "scenarioId": "section_case_006",
+      "scenarioLabel": "porchtree-intro-warm-wash"
     },
     {
-      "name": "snowman-outro-solid-hold",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -299,10 +304,11 @@
           "burst",
           "chase"
         ]
-      }
+      },
+      "scenarioId": "section_case_007",
+      "scenarioLabel": "snowman-outro-solid-hold"
     },
     {
-      "name": "star-finalchorus-pinwheel-spin",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -337,10 +343,11 @@
           "shimmer",
           "burst"
         ]
-      }
+      },
+      "scenarioId": "section_case_008",
+      "scenarioLabel": "star-finalchorus-pinwheel-spin"
     },
     {
-      "name": "star-chorus-shockwave-ring",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -375,10 +382,11 @@
           "shimmer",
           "spin"
         ]
-      }
+      },
+      "scenarioId": "section_case_009",
+      "scenarioLabel": "star-chorus-shockwave-ring"
     },
     {
-      "name": "canes-verse-singlestrand-travel",
       "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
@@ -414,7 +422,9 @@
           "spin",
           "burst"
         ]
-      }
+      },
+      "scenarioId": "section_case_010",
+      "scenarioLabel": "canes-verse-singlestrand-travel"
     }
   ]
 }

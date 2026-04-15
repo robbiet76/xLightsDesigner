@@ -161,6 +161,15 @@ function buildSuiteCatalog(repoRoot, explicitSuitePath = "") {
   ];
 }
 
+
+function resolveScenarioId(scenario = {}, fallback = "scenario") {
+  return str(scenario?.scenarioId || scenario?.name || fallback);
+}
+
+function resolveScenarioLabel(scenario = {}, fallback = "") {
+  return str(scenario?.scenarioLabel || scenario?.name || scenario?.scenarioId || fallback);
+}
+
 function buildWorkingSequencePath(workingShowRoot, suiteKey, scenarioName, baselinePath, sourcePath) {
   const ext = path.extname(str(sourcePath) || str(baselinePath) || ".xsq") || ".xsq";
   const baseName = `${suiteKey}-${scenarioName}`
@@ -172,8 +181,8 @@ function buildWorkingSequencePath(workingShowRoot, suiteKey, scenarioName, basel
 
 function resolveWorkingSequence({ suite, scenario, workingShowRoot }) {
   const baselinePath = str(scenario?.baselineSequencePath || suite?.baselineSequencePath || scenario?.sequencePath);
-  if (!baselinePath) throw new Error(`Scenario ${str(scenario?.name)} is missing baselineSequencePath/sequencePath.`);
-  const workingSequencePath = buildWorkingSequencePath(workingShowRoot, str(suite?.name || suite?.key || "suite"), str(scenario?.name), baselinePath, str(scenario?.sequencePath));
+  if (!baselinePath) throw new Error(`Scenario ${resolveScenarioId(scenario)} is missing baselineSequencePath/sequencePath.`);
+  const workingSequencePath = buildWorkingSequencePath(workingShowRoot, str(suite?.name || suite?.key || "suite"), resolveScenarioId(scenario), baselinePath, str(scenario?.sequencePath));
   return { baselinePath, workingSequencePath };
 }
 
@@ -376,7 +385,8 @@ function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, w
   issues.push(...behaviorEvaluation.issues);
   return {
     suiteKey,
-    scenarioName: str(scenario?.name),
+    scenarioId: resolveScenarioId(scenario),
+    scenarioLabel: resolveScenarioLabel(scenario),
     workingSequencePath,
     expectedEffects,
     forbiddenEffects,
@@ -414,7 +424,7 @@ function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, w
 }
 
 async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenario, baseProjectFilePath }) {
-  const prefix = `${suiteKey}-${str(scenario?.name) || "scenario"}`.replace(/[^a-zA-Z0-9._-]+/g, "-");
+  const prefix = `${suiteKey}-${resolveScenarioId(scenario) || "scenario"}`.replace(/[^a-zA-Z0-9._-]+/g, "-");
   const { workingSequencePath, baselinePath } = resolveWorkingSequence({
     suite: { ...suite, key: suiteKey },
     scenario,
@@ -434,7 +444,7 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   if (!reuseOpenSequence) {
     copyWorkingSequence({ baselinePath, workingSequencePath });
   }
-  const { cloneProjectFilePath } = cloneProjectForScenario(baseProjectFilePath, suiteKey, str(scenario?.name || "scenario"));
+  const { cloneProjectFilePath } = cloneProjectForScenario(baseProjectFilePath, suiteKey, resolveScenarioId(scenario, "scenario"));
   writeCloneSequencePathInput(cloneProjectFilePath, workingSequencePath);
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open-project.json`), "open-project", [cloneProjectFilePath]);
   const beforeSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-before.json`), "get-sequencer-validation-snapshot");
@@ -446,7 +456,8 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
     if (!xlightsReadyBeforeOpen?.ok) {
       return {
         suiteKey,
-        scenarioName: str(scenario?.name),
+        scenarioId: resolveScenarioId(scenario),
+        scenarioLabel: resolveScenarioLabel(scenario),
         workingSequencePath,
         clonedProjectFilePath: cloneProjectFilePath,
         baselinePath,
@@ -467,7 +478,8 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
     } catch (error) {
       return {
         suiteKey,
-        scenarioName: str(scenario?.name),
+        scenarioId: resolveScenarioId(scenario),
+        scenarioLabel: resolveScenarioLabel(scenario),
         workingSequencePath,
         clonedProjectFilePath: cloneProjectFilePath,
         baselinePath,
@@ -513,7 +525,8 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   if (!promptReady?.ok) {
     return {
       suiteKey,
-      scenarioName: str(scenario?.name),
+      scenarioId: resolveScenarioId(scenario),
+      scenarioLabel: resolveScenarioLabel(scenario),
       workingSequencePath,
       clonedProjectFilePath: cloneProjectFilePath,
       baselinePath,
@@ -528,7 +541,8 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   if (!xlightsReadyBeforeApply?.ok) {
     return {
       suiteKey,
-      scenarioName: str(scenario?.name),
+      scenarioId: resolveScenarioId(scenario),
+      scenarioLabel: resolveScenarioLabel(scenario),
       workingSequencePath,
       clonedProjectFilePath: cloneProjectFilePath,
       baselinePath,
@@ -565,7 +579,8 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   if (!applyReady?.ok) {
     return {
       suiteKey,
-      scenarioName: str(scenario?.name),
+      scenarioId: resolveScenarioId(scenario),
+      scenarioLabel: resolveScenarioLabel(scenario),
       workingSequencePath,
       clonedProjectFilePath: cloneProjectFilePath,
       baselinePath,
@@ -635,7 +650,8 @@ async function main() {
     totalDurationMs: Date.now() - startedAt,
     ok: failed.length === 0,
     failedScenarioCount: failed.length,
-    failedScenarioNames: failed.map((row) => row.scenarioName),
+    failedScenarioIds: failed.map((row) => row.scenarioId),
+    failedScenarioLabels: failed.map((row) => row.scenarioLabel),
     supportedSurface: {
       transport: "native_http",
       benchmarkMode: "plan_apply_validation_only",

@@ -84,8 +84,8 @@ function buildLedger(report = {}, reportPath = "") {
     const suiteResult = suiteArtifact?.result && typeof suiteArtifact.result === "object"
       ? suiteArtifact.result
       : suiteArtifact;
-    const scenarioName = str(issue?.scenarioName);
-    const scenario = arr(suiteResult?.results).find((row) => str(row?.name) === scenarioName) || null;
+    const scenarioId = str(issue?.scenarioId || issue?.scenarioName);
+    const scenario = arr(suiteResult?.results).find((row) => str(row?.scenarioId || row?.scenarioName || row?.name) === scenarioId) || null;
     const validation = scenario?.validation && typeof scenario.validation === "object" ? scenario.validation : null;
     const practicalValidation = scenario?.practicalValidation && typeof scenario.practicalValidation === "object"
       ? scenario.practicalValidation
@@ -104,7 +104,8 @@ function buildLedger(report = {}, reportPath = "") {
       suiteSummary: str(suite?.summary),
       summary: str(issue?.summary || issue?.detail || issue?.message || issue?.target || "Unclassified issue"),
       target: str(issue?.target),
-      scenarioName,
+      scenarioId,
+      scenarioLabel: str(issue?.scenarioLabel || scenario?.scenarioLabel || scenario?.scenarioName || scenario?.name || ''),
       detail: str(issue?.detail),
       sourceReport: reportPath,
       suiteArtifactPath: str(suite?.artifactPath),

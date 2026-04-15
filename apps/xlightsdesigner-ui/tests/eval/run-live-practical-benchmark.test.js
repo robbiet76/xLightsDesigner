@@ -79,7 +79,8 @@ test('evaluateScenario reports behavior issues alongside coarse plan checks', ()
   const result = evaluateScenario({
     suiteKey: 'section',
     scenario: {
-      name: 'spinner-bridge-soft-twinkle',
+      scenarioId: 'section_case_002',
+      scenarioLabel: 'spinner-bridge-soft-twinkle',
       expectedEffects: ['Twinkle', 'Shimmer'],
       forbiddenEffects: ['Shockwave'],
       requiredObservedTargets: ['Spinners'],
@@ -92,6 +93,8 @@ test('evaluateScenario reports behavior issues alongside coarse plan checks', ()
     workingSequencePath: '/tmp/test.xsq'
   });
 
+  assert.equal(result.scenarioId, 'section_case_002');
+  assert.equal(result.scenarioLabel, 'spinner-bridge-soft-twinkle');
   assert.equal(result.ok, false);
   assert.match(result.issues.join(','), /expected_effect_missing/);
   assert.match(result.issues.join(','), /forbidden_effect_present/);
