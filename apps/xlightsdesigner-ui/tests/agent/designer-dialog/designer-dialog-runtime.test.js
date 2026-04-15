@@ -276,7 +276,7 @@ test("designer runtime builds actionable whole-sequence section plans instead of
   const sectionPlans = result.proposalBundle.executionPlan.sectionPlans;
   assert.equal(sectionPlans.length, 5);
   assert.match(sectionPlans[0].intentSummary, /restrained|slower fades|readable atmosphere/i);
-  assert.match(sectionPlans[2].intentSummary, /stronger visual payoff|layered shimmer|focal emphasis/i);
+  assert.match(sectionPlans[2].intentSummary, /develop the section|richer layering|controlled/i);
   assert.notEqual(sectionPlans[0].intentSummary, result.handoff.goal);
   assert.ok(sectionPlans[0].targetIds.slice(0, 2).every((targetId) => !/(^|\/)(allmodels|allmodels_)/i.test(targetId)));
   assert.ok(sectionPlans[0].targetIds.includes("Snowman"));

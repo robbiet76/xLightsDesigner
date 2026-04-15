@@ -18,7 +18,6 @@ import {
   resolveContextualEffectCandidates,
   resolveDirectCueEffectCandidates,
   resolveSectionIntentSummary,
-  resolveSectionContextEffectCandidates
 } from "../shared/effect-semantics-registry.js";
 
 function str(value = "") {
@@ -736,30 +735,8 @@ function buildSectionEffectHints({
   const crispBias = motionPreference === "controlled" || focusPreference === "crisp-focal" || /clarity|clean read|focused/.test(lowerGoal);
   const smoothBias = !crispBias && (motionPreference === "smooth" || /cinematic|emotionally open|glow/.test(lowerGoal));
   const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
-  const suspendedBridge = isSuspendedBridgeGoal(lowerGoal);
-  const chorusLikeBridge = isChorusLikeBridgeGoal(lowerGoal);
-  const controlledFinale = isControlledFinaleGoal(lowerGoal);
-  const floodedFinale = isFloodedFinaleGoal(lowerGoal);
-  const focusedDrop = isFocusedDropGoal(lowerGoal);
-  const diffusedDrop = isDiffusedDropGoal(lowerGoal);
-  const resolvingTag = isResolvingTagGoal(lowerGoal);
-  const overblownTag = isOverblownTagGoal(lowerGoal);
-  const resolvingCoda = isResolvingCodaGoal(lowerGoal);
-  const overblownCoda = isOverblownCodaGoal(lowerGoal);
-  const contrastingMiddle8 = isContrastingMiddle8Goal(lowerGoal);
-  const chorusLikeMiddle8 = isChorusLikeMiddle8Goal(lowerGoal);
-  const hookEchoPostChorus = isHookEchoPostChorusGoal(lowerGoal);
-  const verseLikePostChorus = isVerseLikePostChorusGoal(lowerGoal);
   const escalationGoal = isEscalationPacingGoal(lowerGoal);
   const flattenedEscalation = isFlattenedEscalationGoal(lowerGoal);
-  const focusedRap = /(^|\b)(rap|rap section)\b/.test(lowerSection)
-    && /\b(clipped|rhythmic delivery|narrower focus|tighten the motion)\b/.test(lowerGoal);
-  const chorusLikeRap = /(^|\b)(rap|rap section)\b/.test(lowerSection)
-    && /\b(singing-chorus language|broad.*chorus|same broad)\b/.test(lowerGoal);
-  const focusedSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
-    && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
-  const chorusLikeSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
-    && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
   const directCueCandidates = resolveDirectCueEffectCandidates({
     goalText: lowerGoal,
     smoothBias
@@ -769,15 +746,6 @@ function buildSectionEffectHints({
   }
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch|visual weight|impact budget/.test(lowerGoal)) {
     return resolveContextualEffectCandidates({ contextKey: "lightingCue", variant: "default" });
-  }
-  if (/\b(phrase|transition|release|breath)\b/.test(lowerGoal) && /bridge/.test(lowerSection)) {
-    if (suspendedBridge) {
-      return resolveContextualEffectCandidates({ contextKey: "phraseBridge", variant: "suspended" });
-    }
-    if (chorusLikeBridge) {
-      return resolveContextualEffectCandidates({ contextKey: "phraseBridge", variant: "chorusLike" });
-    }
-    return resolveContextualEffectCandidates({ contextKey: "phraseBridge", variant: "default" });
   }
   if (/rhythm|pulse|groove|drive/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
@@ -793,56 +761,6 @@ function buildSectionEffectHints({
   }
   if (!uniformHierarchy && /perimeter|frame|framing|negative space|centerpiece/.test(lowerGoal)) {
     return resolveContextualEffectCandidates({ contextKey: "framing", variant: "default" });
-  }
-  if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lowerSection)) {
-    if (/drop/.test(lowerSection) && focusedDrop) {
-      return resolveContextualEffectCandidates({ contextKey: "highEnergy", variant: "dropFocused" });
-    }
-    if (/drop/.test(lowerSection) && diffusedDrop) {
-      return resolveContextualEffectCandidates({ contextKey: "highEnergy", variant: "dropDiffused" });
-    }
-    if (/final chorus|finale/.test(lowerSection) && controlledFinale) {
-      return resolveContextualEffectCandidates({ contextKey: "highEnergy", variant: "finaleControlled" });
-    }
-    if (/final chorus|finale/.test(lowerSection) && floodedFinale) {
-      return resolveContextualEffectCandidates({ contextKey: "highEnergy", variant: "finaleFlooded" });
-    }
-  }
-  if (/tag/.test(lowerSection)) {
-    return resolveSectionContextEffectCandidates({
-      sectionKey: "tag",
-      variant: resolvingTag ? "resolving" : (overblownTag ? "overblown" : "default")
-    });
-  }
-  if (/coda/.test(lowerSection)) {
-    return resolveSectionContextEffectCandidates({
-      sectionKey: "coda",
-      variant: resolvingCoda ? "resolving" : (overblownCoda ? "overblown" : "default")
-    });
-  }
-  if (/middle 8/.test(lowerSection)) {
-    return resolveSectionContextEffectCandidates({
-      sectionKey: "middle8",
-      variant: contrastingMiddle8 ? "contrasting" : (chorusLikeMiddle8 ? "chorusLike" : "default")
-    });
-  }
-  if (/post-?chorus/.test(lowerSection)) {
-    return resolveSectionContextEffectCandidates({
-      sectionKey: "postChorus",
-      variant: hookEchoPostChorus ? "hookEcho" : (verseLikePostChorus ? "verseLike" : "default")
-    });
-  }
-  if (focusedRap) {
-    return resolveSectionContextEffectCandidates({ sectionKey: "rap", variant: "focused" });
-  }
-  if (chorusLikeRap) {
-    return resolveSectionContextEffectCandidates({ sectionKey: "rap", variant: "chorusLike" });
-  }
-  if (focusedSolo) {
-    return resolveSectionContextEffectCandidates({ sectionKey: "solo", variant: "focused" });
-  }
-  if (chorusLikeSolo) {
-    return resolveSectionContextEffectCandidates({ sectionKey: "solo", variant: "chorusLike" });
   }
   if (escalationGoal && /verse 1/.test(lowerSection)) {
     return resolveContextualEffectCandidates({
@@ -863,28 +781,6 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   const lowerGoal = str(goal).toLowerCase();
   const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
   const warm = /warm|amber|gold|red|cinematic|glow|theatrical/.test(lowerGoal);
-  const suspendedBridge = isSuspendedBridgeGoal(lowerGoal);
-  const chorusLikeBridge = isChorusLikeBridgeGoal(lowerGoal);
-  const controlledFinale = isControlledFinaleGoal(lowerGoal);
-  const floodedFinale = isFloodedFinaleGoal(lowerGoal);
-  const focusedDrop = isFocusedDropGoal(lowerGoal);
-  const diffusedDrop = isDiffusedDropGoal(lowerGoal);
-  const resolvingTag = isResolvingTagGoal(lowerGoal);
-  const overblownTag = isOverblownTagGoal(lowerGoal);
-  const resolvingCoda = isResolvingCodaGoal(lowerGoal);
-  const overblownCoda = isOverblownCodaGoal(lowerGoal);
-  const contrastingMiddle8 = isContrastingMiddle8Goal(lowerGoal);
-  const chorusLikeMiddle8 = isChorusLikeMiddle8Goal(lowerGoal);
-  const hookEchoPostChorus = isHookEchoPostChorusGoal(lowerGoal);
-  const verseLikePostChorus = isVerseLikePostChorusGoal(lowerGoal);
-  const focusedRap = /(^|\b)(rap|rap section)\b/.test(lowerSection)
-    && /\b(clipped|rhythmic delivery|narrower focus|tighten the motion)\b/.test(lowerGoal);
-  const chorusLikeRap = /(^|\b)(rap|rap section)\b/.test(lowerSection)
-    && /\b(singing-chorus language|broad.*chorus|same broad)\b/.test(lowerGoal);
-  const focusedSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
-    && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
-  const chorusLikeSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
-    && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return resolveSectionIntentSummary({ summaryKey: "lightingCue", variant: "high", warm });
@@ -902,87 +798,6 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
       return resolveSectionIntentSummary({ summaryKey: "framing", variant: "low", warm });
     }
     return resolveSectionIntentSummary({ summaryKey: "framing", variant: "default", warm });
-  }
-  if (normalizedEnergy === 'high' || /chorus|final chorus|payoff/.test(lowerSection)) {
-    if (/drop/.test(lowerSection)) {
-      if (focusedDrop) {
-        return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "dropFocused", warm });
-      }
-      if (diffusedDrop) {
-        return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "dropDiffused", warm });
-      }
-      return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "dropDefault", warm });
-    }
-    if (/final chorus|finale/.test(lowerSection)) {
-      if (controlledFinale) {
-        return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "finaleControlled", warm });
-      }
-      if (floodedFinale) {
-        return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "finaleFlooded", warm });
-      }
-      return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "finaleDefault", warm });
-    }
-    if (/chorus/.test(lowerSection)) {
-      return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "chorus", warm });
-    }
-    return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "default", warm });
-  }
-  if (/bridge/.test(lowerSection)) {
-    if (suspendedBridge) {
-      return resolveSectionIntentSummary({ summaryKey: "bridge", variant: "suspended", warm });
-    }
-    if (chorusLikeBridge) {
-      return resolveSectionIntentSummary({ summaryKey: "bridge", variant: "chorusLike", warm });
-    }
-    return resolveSectionIntentSummary({ summaryKey: "bridge", variant: "default", warm });
-  }
-  if (/tag/.test(lowerSection)) {
-    if (resolvingTag) {
-      return resolveSectionIntentSummary({ summaryKey: "tag", variant: "resolving", warm });
-    }
-    if (overblownTag) {
-      return resolveSectionIntentSummary({ summaryKey: "tag", variant: "overblown", warm });
-    }
-    return resolveSectionIntentSummary({ summaryKey: "tag", variant: "default", warm });
-  }
-  if (/coda/.test(lowerSection)) {
-    if (resolvingCoda) {
-      return resolveSectionIntentSummary({ summaryKey: "coda", variant: "resolving", warm });
-    }
-    if (overblownCoda) {
-      return resolveSectionIntentSummary({ summaryKey: "coda", variant: "overblown", warm });
-    }
-    return resolveSectionIntentSummary({ summaryKey: "coda", variant: "default", warm });
-  }
-  if (/middle 8/.test(lowerSection)) {
-    if (contrastingMiddle8) {
-      return resolveSectionIntentSummary({ summaryKey: "middle8", variant: "contrasting", warm });
-    }
-    if (chorusLikeMiddle8) {
-      return resolveSectionIntentSummary({ summaryKey: "middle8", variant: "chorusLike", warm });
-    }
-    return resolveSectionIntentSummary({ summaryKey: "middle8", variant: "default", warm });
-  }
-  if (/post-?chorus/.test(lowerSection)) {
-    if (hookEchoPostChorus) {
-      return resolveSectionIntentSummary({ summaryKey: "postChorus", variant: "hookEcho", warm });
-    }
-    if (verseLikePostChorus) {
-      return resolveSectionIntentSummary({ summaryKey: "postChorus", variant: "verseLike", warm });
-    }
-    return resolveSectionIntentSummary({ summaryKey: "postChorus", variant: "default", warm });
-  }
-  if (focusedRap) {
-    return resolveSectionIntentSummary({ summaryKey: "rap", variant: "focused", warm });
-  }
-  if (chorusLikeRap) {
-    return resolveSectionIntentSummary({ summaryKey: "rap", variant: "chorusLike", warm });
-  }
-  if (focusedSolo) {
-    return resolveSectionIntentSummary({ summaryKey: "solo", variant: "focused", warm });
-  }
-  if (chorusLikeSolo) {
-    return resolveSectionIntentSummary({ summaryKey: "solo", variant: "chorusLike", warm });
   }
   if (normalizedEnergy === 'low' || /intro|outro|coda/.test(lowerSection)) {
     return resolveSectionIntentSummary({ summaryKey: "generic", variant: "low", warm });
