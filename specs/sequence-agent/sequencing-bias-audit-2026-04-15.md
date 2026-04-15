@@ -142,13 +142,11 @@ File:
 - [sequence-agent.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent.js)
 
 Current issue:
-- `inferEffectNameFromSectionPlan()` still prioritizes:
-  - revision-brief preferred effects
-  - `effectHints`
+- `inferEffectNameFromSectionPlan()` still contains family-first fallback surfaces:
   - direct cue family candidates
   - visual-family family maps
   - trained family recommendations
-  before the system truly behaves like behavior-first realization
+- `effectHints` have already been demoted behind translation behavior
 
 Why this is a reset target:
 - this is the highest-leverage place where old family bias can still dominate final planning
@@ -160,22 +158,17 @@ Reset direction:
 - keep multiple candidate realizations alive longer
 
 Status:
-- reset target 1
+- partially reset
+- continue reducing family-first fallback ordering
 
 #### 2. Legacy family pools and contextual effect rules
 File:
 - [effect-semantics-registry.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/agent/shared/effect-semantics-registry.js)
 
 Current issue:
-- `DESIGNER_FAMILY_POOLS`
-- `SECTION_CONTEXT_RULES`
 - `CONTEXTUAL_EFFECT_RULES`
 - `SUMMARY_FALLBACK_RULES`
-
-These still encode section/use-case flavored assumptions such as:
-- intro -> gentle set
-- chorus -> dense family set
-- bridge -> bars/shockwave style set
+- the remaining contextual rules still encode some realization doctrine, but much less than before
 
 Why this is a reset target:
 - this is the old sequencing doctrine in compact table form
@@ -187,17 +180,16 @@ Reset direction:
 - replace their role with behavior-driven candidate generation and batch-evaluated ranking
 
 Status:
-- reset target 2
+- partially reset
+- `DESIGNER_FAMILY_POOLS`, `SECTION_CONTEXT_RULES`, and repeated-role doctrine are already removed
+- continue shrinking remaining contextual tables
 
 #### 3. Revision-brief effect heuristics
 File:
 - [sequence-agent.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent.js)
 
 Current issue:
-- `inferRevisionBriefEffectName()` directly maps critique/revision roles to fixed effects such as:
-  - contrast -> `Bars`
-  - still -> `On`
-  - restrained -> `Shimmer`
+- legacy revision-role-to-family shortcuts were present in `inferRevisionBriefEffectName()`
 
 Why this is a reset target:
 - this is a pure shortcut layer
@@ -209,7 +201,7 @@ Reset direction:
 - preserve only explicit safety or hold-state cases if needed
 
 Status:
-- reset target 3
+- reset completed in current audit pass
 
 ## Already Removed In This Audit Pass
 
@@ -219,6 +211,14 @@ Status:
 2. translation intent no longer inherits realization hints
 3. negative cue clauses no longer seed contradictory direct family hints
 4. sequencing design handoff no longer uses `effectHints` for semantic directives
+5. `effectHints` no longer outrank translation behavior in section planning
+6. revision briefs no longer map directly to fixed effect families
+7. summary fallback doctrine has been reduced to narrow behavior-only fallbacks
+8. repeated-section, section-position, high-energy, low-energy, bridge, lighting, framing, and section-context doctrine has been removed from active designer-dialog routing
+9. dead registry doctrine tables have been deleted:
+   - `DESIGNER_FAMILY_POOLS`
+   - `SECTION_CONTEXT_RULES`
+   - `REPEATED_ROLE_RULES`
 
 These changes reduced leakage from:
 - benchmark shorthand
@@ -232,26 +232,17 @@ These changes reduced leakage from:
 Directly audit and reduce bias in:
 - `inferEffectNameFromSectionPlan()`
 
-First pass objective:
-- stop letting `effectHints` and direct family shortcuts outrank translation-intent behavior when they conflict
+Current objective:
+- continue reducing direct cue and family-map dominance where behavior-first realization can replace them
 
-### 2. Reset target 3
-Directly replace:
-- `inferRevisionBriefEffectName()`
-
-First pass objective:
-- convert fixed family returns into behavior-first realization guidance
-
-### 3. Reset target 2
+### 2. Reset target 2
 Shrink or remove:
-- `DESIGNER_FAMILY_POOLS`
-- `SECTION_CONTEXT_RULES`
 - `CONTEXTUAL_EFFECT_RULES`
 - `SUMMARY_FALLBACK_RULES`
 
-First pass objective:
-- leave only narrow fallback behavior that is still defensible
-- eliminate section/use-case doctrine encoded as family lists
+Current objective:
+- leave only narrow contextual helpers that are still actively used and defensible
+- continue deleting unused or doctrine-heavy variants as behavior-first planning replaces them
 
 ## Training And Recalibration Rule
 

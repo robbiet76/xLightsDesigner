@@ -457,17 +457,9 @@ function chooseExecutionTargets({
   const isPeak = normalizedEnergy === 'high' || /chorus|finale|outro payoff/.test(key);
   const isGentle = normalizedEnergy === 'low' || /intro|outro/.test(key);
   const isWide = normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(key);
-  const isRap = /(^|\b)(rap|rap section)\b/.test(key);
-  const isSolo = /(^|\b)(solo|instrumental solo)\b/.test(key);
-  const focusedRap = isRap && /\b(clipped|rhythmic delivery|narrower focus|tighten the motion)\b/.test(lowerGoal);
-  const chorusLikeRap = isRap && /\b(singing-chorus language|broad.*chorus|same broad)\b/.test(lowerGoal);
-  const focusedSolo = isSolo && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
-  const chorusLikeSolo = isSolo && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
   const restrainedSupport = !uniformHierarchy && /negative space|lighter framing|restrained|support|visual weight|impact budget|carry the weight|support lighter|large footprint|large-footprint/.test(lowerGoal);
   const impactBudgetGoal = /visual weight|impact budget|carry the weight|support lighter|large footprint|large-footprint/.test(lowerGoal);
   const floodedImpactBudgetGoal = /same weight|equal emphasis|flooding the whole layout|spend the visual impact budget immediately|whole layout whenever possible/.test(lowerGoal);
-  const controlledFinale = isControlledFinaleGoal(lowerGoal);
-  const floodedFinale = isFloodedFinaleGoal(lowerGoal);
   const variedHierarchy = !uniformHierarchy && isVariedHierarchyGoal(lowerGoal);
   if (/foreground/.test(lowerGoal) || /background/.test(lowerGoal)) {
     return prioritizeConcreteTargets([
@@ -506,7 +498,7 @@ function chooseExecutionTargets({
       ...right.slice(0, 1),
       ...stableFallback.slice(0, 2)
     ]);
-    if (isPeak || controlledFinale) {
+    if (isPeak) {
       return stableSupport.slice(0, 5);
     }
     return stableSupport.slice(0, 4);
@@ -541,38 +533,6 @@ function chooseExecutionTargets({
     ]).slice(0, 8);
   }
   if (singleScope || tagDriven) {
-    if (focusedRap) {
-      return prioritizeConcreteTargets([
-        ...focal.slice(0, 2),
-        ...detail.slice(0, 1),
-        ...center.slice(0, 1),
-        ...fallback.slice(0, 1)
-      ]).slice(0, 4);
-    }
-    if (chorusLikeRap) {
-      return prioritizeConcreteTargets([
-        ...focal.slice(0, 2),
-        ...detail.slice(0, 2),
-        ...broad.slice(0, 2),
-        ...fallback.slice(0, 2)
-      ]).slice(0, 8);
-    }
-    if (focusedSolo) {
-      return prioritizeConcreteTargets([
-        ...focal.slice(0, 2),
-        ...center.slice(0, 1),
-        ...detail.slice(0, 1),
-        ...fallback.slice(0, 1)
-      ]).slice(0, 4);
-    }
-    if (chorusLikeSolo) {
-      return prioritizeConcreteTargets([
-        ...focal.slice(0, 2),
-        ...detail.slice(0, 2),
-        ...broad.slice(0, 2),
-        ...fallback.slice(0, 2)
-      ]).slice(0, 8);
-    }
     if (isGentle) {
       return prioritizeConcreteTargets([
         ...focal.slice(0, 2),
@@ -624,59 +584,12 @@ function chooseExecutionTargets({
     ]).slice(0, 5);
   }
   if (isPeak) {
-    if (/final chorus|finale/.test(key) && controlledFinale) {
-      return prioritizeConcreteTargets([
-        ...focal.slice(0, 2),
-        ...detail.slice(0, 2),
-        ...fallback.slice(0, 2)
-      ]).slice(0, 5);
-    }
-    if (/final chorus|finale/.test(key) && floodedFinale) {
-      return prioritizeConcreteTargets([
-        ...focal.slice(0, 2),
-        ...detail.slice(0, 2),
-        ...broad.slice(0, 2),
-        ...fallback.slice(0, 2)
-      ]).slice(0, 8);
-    }
     return prioritizeConcreteTargets([
       ...focal.slice(0, 2),
       ...detail.slice(0, 2),
       ...broad.slice(0, 2),
       ...fallback.slice(0, 2)
     ]).slice(0, 10);
-  }
-  if (focusedRap) {
-    return prioritizeConcreteTargets([
-      ...focal.slice(0, 2),
-      ...detail.slice(0, 1),
-      ...center.slice(0, 1),
-      ...fallback.slice(0, 1)
-    ]).slice(0, 4);
-  }
-  if (chorusLikeRap) {
-    return prioritizeConcreteTargets([
-      ...focal.slice(0, 2),
-      ...detail.slice(0, 2),
-      ...broad.slice(0, 2),
-      ...fallback.slice(0, 2)
-    ]).slice(0, 8);
-  }
-  if (focusedSolo) {
-    return prioritizeConcreteTargets([
-      ...focal.slice(0, 2),
-      ...center.slice(0, 1),
-      ...detail.slice(0, 1),
-      ...fallback.slice(0, 1)
-    ]).slice(0, 4);
-  }
-  if (chorusLikeSolo) {
-    return prioritizeConcreteTargets([
-      ...focal.slice(0, 2),
-      ...detail.slice(0, 2),
-      ...broad.slice(0, 2),
-      ...fallback.slice(0, 2)
-    ]).slice(0, 8);
   }
   if (isWide) {
     return prioritizeConcreteTargets([
