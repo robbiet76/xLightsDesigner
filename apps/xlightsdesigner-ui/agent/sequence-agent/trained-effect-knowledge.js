@@ -273,19 +273,7 @@ export function recommendTrainedEffectsForVisualFamilies({
   if (scored.length) {
     return scored.slice(0, Math.max(1, Number(limit) || 5));
   }
-
-  const fallbackPreferred = unique(preferredVisualFamilies).flatMap((row) => VISUAL_FAMILY_EFFECT_MAP[row] || []);
-  const supportedFallback = unique(fallbackPreferred).filter((effectName) => {
-    const profile = getStage1TrainedEffectProfile(effectName);
-    if (!profile) return false;
-    return !targetModelTypes.length || effectSupportsAnyBucket(profile, targetModelTypes);
-  });
-  return supportedFallback.slice(0, Math.max(1, Number(limit) || 5)).map((effectName, index) => ({
-    effectName,
-    score: 20 - index,
-    reasons: ['preferred_visual_family_fallback'],
-    profile: getStage1TrainedEffectProfile(effectName)
-  }));
+  return [];
 }
 
 export function buildStage1TrainingKnowledgeMetadata() {

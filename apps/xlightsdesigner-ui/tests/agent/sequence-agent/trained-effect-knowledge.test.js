@@ -20,9 +20,9 @@ test("trained effect knowledge prefers stage1 pattern evidence over static famil
   assert.equal(out[0].reasons.includes("preferred_visual_family_fallback"), false);
 });
 
-test("trained effect knowledge only falls back to static family mapping when stage1 evidence does not match", () => {
+test("trained effect knowledge does not invent static family recommendations when stage1 evidence does not match", () => {
   const out = recommendTrainedEffectsForVisualFamilies({
-    preferredVisualFamilies: ["radial_rotation"],
+    preferredVisualFamilies: ["unsupported_family_token"],
     targetIds: ["Star"],
     displayElements: [
       { id: "Star", name: "Star", displayAs: "Star" }
@@ -30,6 +30,5 @@ test("trained effect knowledge only falls back to static family mapping when sta
     limit: 2
   });
 
-  assert.ok(out.length >= 1);
-  assert.ok(out.every((row) => Array.isArray(row?.reasons) && row.reasons.length));
+  assert.deepEqual(out, []);
 });
