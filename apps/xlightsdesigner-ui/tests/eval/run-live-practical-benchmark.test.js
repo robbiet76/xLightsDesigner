@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluateBehaviorAssertions, evaluateScenario } from '../../eval/run-live-practical-benchmark.mjs';
+import { resolveDirectCueEffectCandidates } from '../../agent/shared/effect-semantics-registry.js';
 
 function makeSnapshot({ translationIntent, plan, applyResult } = {}) {
   return {
@@ -96,4 +97,14 @@ test('evaluateScenario reports behavior issues alongside coarse plan checks', ()
   assert.match(result.issues.join(','), /forbidden_effect_present/);
   assert.match(result.issues.join(','), /expected_behavior_missing:primaryMotion/);
   assert.match(result.issues.join(','), /contradictory_behavior_present:primaryMotion/);
+});
+
+
+test('resolveDirectCueEffectCandidates ignores negative ring and spin clauses for soft twinkle prompts', () => {
+  const result = resolveDirectCueEffectCandidates({
+    goalText: 'In the Bridge, keep Spinners restrained and texture-led with a softer twinkle read rather than a bold ring or spin. Prefer twinkle or shimmer family behavior and avoid a large directional pass.',
+    smoothBias: false
+  });
+
+  assert.deepEqual(result, ['Shimmer', 'Twinkle']);
 });

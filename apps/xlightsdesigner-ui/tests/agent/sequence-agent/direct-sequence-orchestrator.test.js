@@ -200,7 +200,7 @@ test("direct sequence orchestrator keeps negative spin cues out of translation i
   assert.equal(result.intentHandoff.executionStrategy.translationIntent?.behaviorTargets?.[0]?.motion?.primaryMotion, "shimmer");
   assert.equal(result.intentHandoff.executionStrategy.translationIntent?.behaviorTargets?.[0]?.texture?.primaryTexture, "sparkling");
   assert.ok(result.intentHandoff.executionStrategy.translationIntent?.realizationGuidance?.preferredFamilies?.includes("Twinkle"));
-  assert.ok(result.intentHandoff.executionStrategy.translationIntent?.realizationGuidance?.preferredFamilies?.includes("Shockwave"));
+  assert.ok(!result.intentHandoff.executionStrategy.translationIntent?.realizationGuidance?.preferredFamilies?.includes("Shockwave"));
 });
 
 test("direct sequence orchestrator fails closed when prompt names a section without analysis", () => {

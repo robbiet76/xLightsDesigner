@@ -430,11 +430,24 @@ export function choosePreferredTemplateEffect(effectCatalog = null) {
   return names.length ? names[0] : "";
 }
 
+function stripNegativeCueClauses(value = "") {
+  const text = str(value);
+  if (!text) return "";
+  return text
+    .replace(/do not turn it into[\s\S]*?(?=[.?!]|$)/gi, " ")
+    .replace(/rather than[\s\S]*?(?=[.?!]|$)/gi, " ")
+    .replace(/instead of[\s\S]*?(?=[.?!]|$)/gi, " ")
+    .replace(/avoid[\s\S]*?(?=[.?!]|$)/gi, " ")
+    .replace(/without[\s\S]*?(?=[.?!]|$)/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function resolveDirectCueEffectCandidates({
   goalText = "",
   smoothBias = false
 } = {}) {
-  const text = str(goalText).toLowerCase();
+  const text = stripNegativeCueClauses(goalText).toLowerCase();
   if (!text) return [];
 
   for (const rule of DIRECT_CUE_RULES) {
