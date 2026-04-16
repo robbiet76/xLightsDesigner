@@ -1,0 +1,156 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "shockwave-accel",
+  "createdAt": "2026-04-16T18:35:28.026Z",
+  "effectName": "Shockwave",
+  "parameterName": "accel",
+  "sourceDefinition": {
+    "id": "Shockwave_Accel",
+    "label": "Acceleration",
+    "description": "Adjusts the expansion speed curve. Positive values make the ring expand slowly then accelerate; negative values make it start fast then decelerate.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 0,
+    "min": -10,
+    "max": 10,
+    "options": [],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Adjusts the expansion speed curve. Positive values make the ring expand slowly then accelerate; negative values make it start fast then decelerate.",
+  "semanticAxis": "variation",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "accel_0",
+    "compact_shockwave",
+    "hard_edge_shockwave",
+    "medium_width_shockwave",
+    "neutral_shockwave",
+    "offset_shockwave",
+    "radial_pattern_fit",
+    "radial_shockwave",
+    "scaled_shockwave",
+    "shockwave_pattern",
+    "single_shockwave",
+    "spinner_fill",
+    "accel_5"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "shockwave-accel-spinner-standard-0",
+      "valueSummary": "0",
+      "behaviorImpactSummary": "accel_0,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
+      "affectedSignals": [
+        "accel_0",
+        "compact_shockwave",
+        "hard_edge_shockwave",
+        "medium_width_shockwave",
+        "neutral_shockwave",
+        "offset_shockwave",
+        "radial_pattern_fit",
+        "radial_shockwave",
+        "scaled_shockwave",
+        "shockwave_pattern",
+        "single_shockwave",
+        "spinner_fill"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "shockwave-accel-spinner-standard-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "accel_5,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
+      "affectedSignals": [
+        "accel_5",
+        "compact_shockwave",
+        "hard_edge_shockwave",
+        "medium_width_shockwave",
+        "neutral_shockwave",
+        "offset_shockwave",
+        "radial_pattern_fit",
+        "radial_shockwave",
+        "scaled_shockwave",
+        "shockwave_pattern",
+        "single_shockwave",
+        "spinner_fill"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "shockwave-accel-spinner-standard-0",
+      "valueSummary": "0",
+      "behaviorImpactSummary": "accel_0,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
+      "affectedSignals": [
+        "accel_0",
+        "compact_shockwave",
+        "hard_edge_shockwave",
+        "medium_width_shockwave",
+        "neutral_shockwave",
+        "offset_shockwave",
+        "radial_pattern_fit",
+        "radial_shockwave",
+        "scaled_shockwave",
+        "shockwave_pattern",
+        "single_shockwave",
+        "spinner_fill"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "shockwave-accel-spinner-standard-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "accel_5,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
+      "affectedSignals": [
+        "accel_5",
+        "compact_shockwave",
+        "hard_edge_shockwave",
+        "medium_width_shockwave",
+        "neutral_shockwave",
+        "offset_shockwave",
+        "radial_pattern_fit",
+        "radial_shockwave",
+        "scaled_shockwave",
+        "shockwave_pattern",
+        "single_shockwave",
+        "spinner_fill"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 4,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "spinner_standard"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "artifactType": "parameter_interaction_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "shockwave-centery-accel-shockwave-treeround-interactions-v1",
+  "createdAt": "2026-04-16T18:35:27.981Z",
+  "effectName": "Shockwave",
+  "geometryProfile": "tree_360_standard",
+  "primaryParameter": "centerY",
+  "secondaryParameter": "accel",
+  "secondarySettingKind": "effect_parameter",
+  "interactionRegion": {
+    "primaryValueRegion": [
+      "50",
+      "70"
+    ],
+    "secondaryValueRegion": [
+      "0",
+      "-5",
+      "5"
+    ],
+    "sharedSettingsContext": [
+      "Default"
+    ],
+    "paletteContext": [],
+    "stabilityNotes": []
+  },
+  "interactionType": "planned_interaction_sweep",
+  "affectedSignals": [
+    "interaction_sweep",
+    "wide_soft_shockwave",
+    "centered_shockwave",
+    "thin_hard_shockwave",
+    "compact_shockwave",
+    "decelerating_shockwave",
+    "offset_shockwave",
+    "accelerating_shockwave"
+  ],
+  "behaviorImpactSummary": "interaction_sweep,wide_soft_shockwave,centered_shockwave,thin_hard_shockwave,compact_shockwave,decelerating_shockwave,offset_shockwave,accelerating_shockwave",
+  "geometrySensitivity": "manifest_scoped",
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "planned_manifest_only",
+    "coverageStatus": "narrow"
+  },
+  "evidenceCount": 6,
+  "traceability": {
+    "sourceArtifactIds": [
+      "shockwave-treeround-interactions-v1.json"
+    ],
+    "sourceGeometryProfiles": [
+      "tree_360_standard"
+    ],
+    "generatedBy": "build-parameter-interaction-semantics-records.mjs"
+  }
+}

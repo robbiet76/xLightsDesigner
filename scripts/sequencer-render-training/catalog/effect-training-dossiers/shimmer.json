@@ -1,0 +1,525 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.273Z",
+  "status": "transitional_current_evidence",
+  "effectName": "Shimmer",
+  "family": "sparkle",
+  "intentSurface": {
+    "supportedSettingsIntent": [
+      "intensity",
+      "speed",
+      "density",
+      "coverage",
+      "motion",
+      "variation"
+    ],
+    "supportedPaletteIntent": [
+      "colors",
+      "temperature",
+      "contrast",
+      "brightness",
+      "saturation",
+      "accentUsage"
+    ],
+    "supportedLayerIntent": [
+      "priority",
+      "blendRole",
+      "mixAmount",
+      "overlayPolicy"
+    ],
+    "supportedRenderIntent": [
+      "groupPolicy",
+      "bufferStyle",
+      "expansionPolicy",
+      "riskTolerance"
+    ]
+  },
+  "currentCoverage": {
+    "coverageStatus": "screened_parameter_subset",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [
+      "cycles",
+      "dutyFactor",
+      "useAllColors"
+    ],
+    "retainedParameterNames": [
+      "cycles",
+      "dutyFactor",
+      "useAllColors"
+    ],
+    "screenedParameterNames": [],
+    "screeningRecordCount": 0
+  },
+  "upstreamMetadata": {
+    "sourceFile": "Shimmer.json",
+    "propertyCount": 4,
+    "visibilityRuleCount": 0,
+    "parameters": {
+      "cycles": {
+        "upstreamId": "Shimmer_Cycles",
+        "label": "Cycle Count",
+        "description": "Number of on/off shimmer cycles over the duration of the effect. Higher values produce faster flickering.",
+        "default": 1,
+        "min": 0,
+        "max": 6000,
+        "options": []
+      },
+      "dutyFactor": {
+        "upstreamId": "Shimmer_Duty_Factor",
+        "label": "Duty Factor",
+        "description": "Percentage of each cycle the color is visible before going black. Lower values produce shorter on-flashes with longer dark gaps.",
+        "default": 50,
+        "min": 1,
+        "max": 100,
+        "options": []
+      },
+      "useAllColors": {
+        "upstreamId": "Shimmer_Use_All_Colors",
+        "label": "Use All Colors",
+        "description": "When enabled, each pixel is assigned a random color from the palette every frame. When disabled, all pixels use the same color which cycles sequentially through the palette.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      }
+    }
+  },
+  "registryDefinition": {
+    "complexityClass": "simple",
+    "earlySamplingPolicy": "standard_screening",
+    "notes": "Texture-heavy effect where duty and cadence strongly shape density and restraint.",
+    "parameters": {
+      "cycles": {
+        "type": "numeric",
+        "range": {
+          "min": 0.5,
+          "max": 5
+        },
+        "anchors": [
+          0.5,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "interactionHypotheses": [
+          "dutyFactor",
+          "useAllColors",
+          "geometryProfile"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Shimmer_Cycles",
+          "label": "Cycle Count",
+          "description": "Number of on/off shimmer cycles over the duration of the effect. Higher values produce faster flickering.",
+          "type": "float",
+          "controlType": "slider",
+          "default": 1,
+          "min": 0,
+          "max": 6000,
+          "divisor": 10,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "dutyFactor": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          10,
+          25,
+          40,
+          55,
+          70,
+          85
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "interactionHypotheses": [
+          "cycles",
+          "useAllColors",
+          "geometryProfile"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Shimmer_Duty_Factor",
+          "label": "Duty Factor",
+          "description": "Percentage of each cycle the color is visible before going black. Lower values produce shorter on-flashes with longer dark gaps.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 50,
+          "min": 1,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "useAllColors": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "interactionHypotheses": [
+          "cycles",
+          "dutyFactor"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Shimmer_Use_All_Colors",
+          "label": "Use All Colors",
+          "description": "When enabled, each pixel is assigned a random color from the palette every frame. When disabled, all pixels use the same color which cycles sequentially through the palette.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Shimmer",
+    "upstreamSourceFile": "Shimmer.json",
+    "upstreamPropertyCount": 4,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": [
+      {
+        "id": "PRE_2017_7",
+        "label": "Pre v2017.7 Shimmer"
+      }
+    ]
+  },
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [
+      "shimmer-archsingle-expanded-sweep-v1.json",
+      "shimmer-hiddentree-expanded-sweep-v1.json",
+      "shimmer-hiddentreestar-expanded-sweep-v1.json",
+      "shimmer-outline-expanded-sweep-v2.json",
+      "shimmer-singlelinehorizontal-expanded-sweep-v1.json",
+      "shimmer-starsingle-expanded-sweep-v1.json",
+      "shimmer-treeflat-expanded-sweep-v1.json",
+      "shimmer-treeround-expanded-sweep-v1.json",
+      "shimmer-treespiral-expanded-sweep-v1.json"
+    ],
+    "range": [
+      "shimmer-hiddentree-cycles-range-v1.json",
+      "shimmer-hiddentree-dutyfactor-range-v1.json",
+      "shimmer-hiddentreestar-cycles-range-v1.json",
+      "shimmer-hiddentreestar-dutyfactor-range-v1.json",
+      "shimmer-outline-cycles-range-v1.json",
+      "shimmer-outline-dutyfactor-range-v1.json"
+    ],
+    "combos": [],
+    "interactions": [
+      "shimmer-outline-interactions-v1.json"
+    ],
+    "all": [
+      "shimmer-archsingle-expanded-sweep-v1.json",
+      "shimmer-hiddentree-cycles-range-v1.json",
+      "shimmer-hiddentree-dutyfactor-range-v1.json",
+      "shimmer-hiddentree-expanded-sweep-v1.json",
+      "shimmer-hiddentreestar-cycles-range-v1.json",
+      "shimmer-hiddentreestar-dutyfactor-range-v1.json",
+      "shimmer-hiddentreestar-expanded-sweep-v1.json",
+      "shimmer-outline-cycles-range-v1.json",
+      "shimmer-outline-dutyfactor-range-v1.json",
+      "shimmer-outline-expanded-sweep-v2.json",
+      "shimmer-outline-interactions-v1.json",
+      "shimmer-outline-reduced-sweep-v1.json",
+      "shimmer-singlelinehorizontal-expanded-sweep-v1.json",
+      "shimmer-starsingle-expanded-sweep-v1.json",
+      "shimmer-treeflat-expanded-sweep-v1.json",
+      "shimmer-treeround-expanded-sweep-v1.json",
+      "shimmer-treespiral-expanded-sweep-v1.json"
+    ]
+  },
+  "evidenceIndex": {
+    "screeningRecords": [],
+    "screeningRecordPaths": []
+  },
+  "currentTrainingReference": {
+    "effectName": "Shimmer",
+    "baseline": {
+      "currentStage": "selector_ready",
+      "selectorReady": true,
+      "selectorEvidence": {
+        "selectedCaseCount": 3,
+        "passedCaseCount": 3,
+        "caseIds": [
+          "select_shimmer_spinner_texture",
+          "select_shimmer_linear_texture",
+          "select_shimmer_matrix_texture"
+        ]
+      },
+      "supportedModelTypes": [
+        "arch",
+        "cane",
+        "icicles",
+        "matrix",
+        "single_line",
+        "spinner",
+        "star",
+        "tree_360",
+        "tree_flat"
+      ],
+      "supportedGeometryProfiles": [
+        "arch_grouped",
+        "arch_multi_layer",
+        "arch_single",
+        "cane_grouped",
+        "cane_single",
+        "cane_stick_grouped",
+        "icicles_drop_pattern",
+        "matrix_high_density",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "single_line_horizontal",
+        "single_line_single_node",
+        "single_line_vertical",
+        "spinner_standard",
+        "star_multi_layer",
+        "star_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "tree_flat_single_layer"
+      ],
+      "intentTags": [
+        "animated",
+        "bold",
+        "busy",
+        "clean",
+        "directional",
+        "fill",
+        "full",
+        "partial",
+        "patterned",
+        "restrained",
+        "sparse",
+        "steady",
+        "texture_heavy"
+      ],
+      "patternFamilies": [
+        "radial_sparkle",
+        "shimmer"
+      ],
+      "retainedParameters": [
+        {
+          "parameterName": "cycles",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "dutyFactor",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "useAllColors",
+          "status": "interaction_suspected",
+          "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+        }
+      ]
+    },
+    "capability": {
+      "family": "sparkle",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "supportedPaletteIntent": [
+        "colors",
+        "temperature",
+        "contrast",
+        "brightness",
+        "saturation",
+        "accentUsage"
+      ],
+      "supportedLayerIntent": [
+        "priority",
+        "blendRole",
+        "mixAmount",
+        "overlayPolicy"
+      ],
+      "supportedRenderIntent": [
+        "groupPolicy",
+        "bufferStyle",
+        "expansionPolicy",
+        "riskTolerance"
+      ]
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "cycles",
+        "dutyFactor",
+        "useAllColors"
+      ],
+      "retainedParameterNames": [
+        "cycles",
+        "dutyFactor",
+        "useAllColors"
+      ],
+      "supportedIntentAxes": {
+        "settings": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "palette": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "layer": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "render": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "coverageStatus": "screened_parameter_subset",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [],
+      "derivedPriors": {
+        "status": "empty",
+        "priorCount": 0,
+        "priors": []
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [
+        {
+          "role": "add_section_development",
+          "priority": "primary",
+          "source": "legacy_runtime_heuristic",
+          "conditions": [
+            "motion:restrained"
+          ]
+        },
+        {
+          "role": "reduce_competing_support",
+          "priority": "primary",
+          "source": "legacy_runtime_heuristic",
+          "conditions": [
+            "motion:restrained"
+          ]
+        }
+      ],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "empty",
+      "storageClass": "general_training",
+      "screeningRecordCount": 0,
+      "screenedParameterNames": [],
+      "sampledModelTypes": [],
+      "sampledGeometryProfiles": [],
+      "observedLabelHints": [],
+      "configurationRepresentativeness": {
+        "coverageStatus": "none",
+        "profileCount": 0,
+        "profiles": []
+      }
+    }
+  }
+}

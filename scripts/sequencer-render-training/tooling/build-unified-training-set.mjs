@@ -29,7 +29,7 @@ const REVIEW_LEVELS = [
 ];
 
 const EFFECT_PARAMETER_REGISTRY = JSON.parse(
-  readFileSync(resolve("scripts/sequencer-render-training/catalog/effect-parameter-registry.json"), "utf8")
+  readFileSync(resolve("scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json"), "utf8")
 );
 
 const ROLE_FAMILY_SEED_PRIORS = Object.freeze({

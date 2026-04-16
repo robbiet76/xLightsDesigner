@@ -1,0 +1,55 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.247Z",
+  "status": "transitional_current_evidence",
+  "effectName": "Circles",
+  "family": "particle_motion",
+  "intentSurface": {
+    "supportedSettingsIntent": [
+      "intensity",
+      "speed",
+      "density",
+      "coverage",
+      "motion",
+      "variation"
+    ],
+    "supportedPaletteIntent": [],
+    "supportedLayerIntent": [],
+    "supportedRenderIntent": []
+  },
+  "currentCoverage": {
+    "coverageStatus": "intent_translatable_only",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [],
+    "retainedParameterNames": [],
+    "screenedParameterNames": [],
+    "screeningRecordCount": 0
+  },
+  "upstreamMetadata": {
+    "sourceFile": "",
+    "propertyCount": 0,
+    "visibilityRuleCount": 0,
+    "parameters": {}
+  },
+  "registryDefinition": {},
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [],
+    "range": [],
+    "combos": [],
+    "interactions": [],
+    "all": []
+  },
+  "evidenceIndex": {
+    "screeningRecords": [],
+    "screeningRecordPaths": []
+  },
+  "currentTrainingReference": {}
+}

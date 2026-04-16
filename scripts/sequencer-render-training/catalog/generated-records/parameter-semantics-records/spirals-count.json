@@ -1,0 +1,43 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "spirals-count",
+  "createdAt": "2026-04-16T18:35:28.034Z",
+  "effectName": "Spirals",
+  "parameterName": "count",
+  "sourceDefinition": {
+    "id": "Spirals_Count",
+    "label": "Palette Rep",
+    "description": "Number of times the full color palette is repeated across the spirals. Higher values create more spiral arms by duplicating the palette pattern.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 1,
+    "min": 1,
+    "max": 5,
+    "options": [],
+    "valueCurve": true,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Number of times the full color palette is repeated across the spirals. Higher values create more spiral arms by duplicating the palette pattern.",
+  "semanticAxis": "density",
+  "observedDirectionality": "narrow_or_unknown",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "narrow_or_unknown",
+  "affectedSignals": [],
+  "valueRegions": [],
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "registry_only",
+    "coverageStatus": "narrow"
+  },
+  "evidenceCount": 0,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

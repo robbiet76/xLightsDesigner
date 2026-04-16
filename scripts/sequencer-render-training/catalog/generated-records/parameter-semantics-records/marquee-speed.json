@@ -1,0 +1,430 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "marquee-speed",
+  "createdAt": "2026-04-16T18:35:28.018Z",
+  "effectName": "Marquee",
+  "parameterName": "speed",
+  "sourceDefinition": {
+    "id": "Marquee_Speed",
+    "label": "Speed",
+    "description": "How fast the marquee pattern moves around the perimeter. Zero freezes the animation.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 3,
+    "min": 0,
+    "max": 50,
+    "options": [],
+    "valueCurve": true,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "How fast the marquee pattern moves around the perimeter. Zero freezes the animation.",
+  "semanticAxis": "speed",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "arch_pattern",
+    "arch_pattern_fit",
+    "forward_motion",
+    "marquee_motion",
+    "marquee_pattern",
+    "speed_1",
+    "tight_marquee",
+    "speed_3",
+    "speed_5",
+    "speed_7",
+    "speed_9",
+    "linear_pattern_fit"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "marquee-speed-arch-grouped-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_1,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_1",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-arch-grouped-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_3,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_3",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-arch-grouped-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_5,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_5",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-arch-grouped-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_7,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_7",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-arch-grouped-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_9,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_9",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-arch-grouped-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_7,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_7",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-arch-grouped-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_3,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_3",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-arch-grouped-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_1,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_1",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-arch-grouped-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_5,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_5",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-arch-grouped-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_9,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_9",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_1,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_1",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_3,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_3",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_5,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_5",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_7,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_7",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_9,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_9",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_7,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_7",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_1,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_1",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_3,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_3",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_5,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_5",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-speed-single-line-horizontal-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,speed_9,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "speed_9",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 20,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_grouped",
+      "single_line_horizontal"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

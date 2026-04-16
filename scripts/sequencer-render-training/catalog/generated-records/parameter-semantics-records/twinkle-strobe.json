@@ -1,0 +1,134 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "twinkle-strobe",
+  "createdAt": "2026-04-16T18:35:28.036Z",
+  "effectName": "Twinkle",
+  "parameterName": "strobe",
+  "sourceDefinition": {
+    "id": "Twinkle_Strobe",
+    "label": "Strobe",
+    "description": "When enabled, twinkling pixels snap on and off instantly instead of fading, creating a strobe-like flash effect.",
+    "type": "bool",
+    "controlType": "checkbox",
+    "default": false,
+    "min": null,
+    "max": null,
+    "options": [],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "When enabled, twinkling pixels snap on and off instantly instead of fading, creating a strobe-like flash effect.",
+  "semanticAxis": "variation",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "line_read",
+    "linear_pattern_fit",
+    "medium_cadence_twinkle",
+    "medium_twinkle",
+    "soft_twinkle",
+    "strobe_false",
+    "twinkle_pattern",
+    "strobe_true",
+    "strobe_twinkle"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "twinkle-strobe-single-line-horizontal-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,strobe_false,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "strobe_false",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-strobe-single-line-horizontal-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,strobe_true,strobe_twinkle,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "strobe_true",
+        "strobe_twinkle",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-strobe-single-line-horizontal-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,strobe_false,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "strobe_false",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-strobe-single-line-horizontal-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,strobe_true,strobe_twinkle,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "strobe_true",
+        "strobe_twinkle",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 4,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "single_line_horizontal"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

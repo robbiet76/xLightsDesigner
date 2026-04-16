@@ -26,7 +26,7 @@
       "notes": "decoded render analysis support"
     },
     {
-      "path": "catalog/effect-parameter-registry.json",
+      "path": "catalog/effective-effect-parameter-registry.json",
       "purpose": "core_catalog",
       "refCount": 8,
       "lifecycle": "active_core",

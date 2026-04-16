@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "twinkle-rerandomize-single-line-horizontal-rgb-primary-false",
+  "createdAt": "2026-04-16T18:35:27.483Z",
+  "effectName": "Twinkle",
+  "geometryProfile": "single_line_horizontal",
+  "modelType": "single_line",
+  "parameterRegion": {
+    "parameterName": "reRandomize",
+    "regionKind": "single_value",
+    "valueSummary": "false",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "paletteContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "static_or_near_static",
+    "primaryTexture": "line_read",
+    "motionPacing": "static_or_near_static",
+    "textureDensity": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,reRandomize_false,soft_twinkle,twinkle_pattern",
+    "energyLevel": "restrained",
+    "coverageLevel": "focused",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "low"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "static_or_near_static",
+    "densityRead": "moderate",
+    "nonBlankRatio": 0.5,
+    "temporalMotion": 0.008307,
+    "temporalColorDelta": 0.004161,
+    "temporalBrightnessDelta": 0.002559,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "single_line_horizontal"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "marquee-skipsize",
+  "createdAt": "2026-04-16T18:35:28.018Z",
+  "effectName": "Marquee",
+  "parameterName": "skipSize",
+  "sourceDefinition": {
+    "id": "Marquee_Skip_Size",
+    "label": "Skip Size",
+    "description": "Number of unlit (dark) pixels between each color band. Zero means bands are placed back-to-back with no gap.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 0,
+    "min": 0,
+    "max": 100,
+    "options": [],
+    "valueCurve": true,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Number of unlit (dark) pixels between each color band. Zero means bands are placed back-to-back with no gap.",
+  "semanticAxis": "variation",
+  "observedDirectionality": "narrow_or_unknown",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "narrow_or_unknown",
+  "affectedSignals": [],
+  "valueRegions": [],
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "registry_only",
+    "coverageStatus": "narrow"
+  },
+  "evidenceCount": 0,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

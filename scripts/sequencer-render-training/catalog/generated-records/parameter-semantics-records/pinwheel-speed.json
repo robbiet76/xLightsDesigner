@@ -1,0 +1,430 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "pinwheel-speed",
+  "createdAt": "2026-04-16T18:35:28.024Z",
+  "effectName": "Pinwheel",
+  "parameterName": "speed",
+  "sourceDefinition": {
+    "id": "Pinwheel_Speed",
+    "label": "Speed",
+    "description": "Rotation speed of the pinwheel. Higher values make the arms spin faster.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 10,
+    "min": 0,
+    "max": 50,
+    "options": [],
+    "valueCurve": true,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Rotation speed of the pinwheel. Higher values make the arms spin faster.",
+  "semanticAxis": "speed",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "few_arm_pinwheel",
+    "pinwheel_motion",
+    "pinwheel_pattern",
+    "radial_pattern_fit",
+    "speed_3",
+    "spinner_pinwheel",
+    "static_pinwheel",
+    "speed_10",
+    "speed_7",
+    "speed_14",
+    "speed_18",
+    "star_pattern_fit"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "pinwheel-speed-spinner-standard-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_3,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_3",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-spinner-standard-10",
+      "valueSummary": "10",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_10,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_10",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-spinner-standard-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_7,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_7",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-spinner-standard-14",
+      "valueSummary": "14",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_14,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_14",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-spinner-standard-18",
+      "valueSummary": "18",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_18,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_18",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-spinner-standard-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_3,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_3",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-spinner-standard-10",
+      "valueSummary": "10",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_10,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_10",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-spinner-standard-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_7,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_7",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-spinner-standard-14",
+      "valueSummary": "14",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_14,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_14",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-spinner-standard-18",
+      "valueSummary": "18",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_18,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "speed_18",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-18",
+      "valueSummary": "18",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_18,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_18",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-14",
+      "valueSummary": "14",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_14,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_14",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_3,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_3",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-10",
+      "valueSummary": "10",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_10,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_10",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_7,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_7",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-18",
+      "valueSummary": "18",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_18,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_18",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-10",
+      "valueSummary": "10",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_10,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_10",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_3,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_3",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-14",
+      "valueSummary": "14",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_14,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_14",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-speed-star-single-layer-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_7,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "speed_7",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 20,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "spinner_standard",
+      "star_single_layer"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

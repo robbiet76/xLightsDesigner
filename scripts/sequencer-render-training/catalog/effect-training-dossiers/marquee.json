@@ -1,0 +1,2364 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.257Z",
+  "status": "transitional_current_evidence",
+  "effectName": "Marquee",
+  "family": "marquee_motion",
+  "intentSurface": {
+    "supportedSettingsIntent": [],
+    "supportedPaletteIntent": [],
+    "supportedLayerIntent": [],
+    "supportedRenderIntent": []
+  },
+  "currentCoverage": {
+    "coverageStatus": "screened_parameter_subset",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [
+      "bandSize",
+      "reverse",
+      "skipSize",
+      "speed",
+      "stagger",
+      "thickness"
+    ],
+    "retainedParameterNames": [
+      "bandSize",
+      "reverse",
+      "skipSize"
+    ],
+    "screenedParameterNames": [
+      "speed",
+      "stagger",
+      "thickness"
+    ],
+    "screeningRecordCount": 60
+  },
+  "upstreamMetadata": {
+    "sourceFile": "Marquee.json",
+    "propertyCount": 14,
+    "visibilityRuleCount": 0,
+    "parameters": {
+      "bandSize": {
+        "upstreamId": "Marquee_Band_Size",
+        "label": "Band Size",
+        "description": "Number of consecutive lit pixels in each color band of the marquee pattern.",
+        "default": 3,
+        "min": 1,
+        "max": 100,
+        "options": []
+      },
+      "reverse": {
+        "upstreamId": "Marquee_Reverse",
+        "label": "Reverse",
+        "description": "When enabled, the marquee pattern moves in the opposite direction around the perimeter.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "skipSize": {
+        "upstreamId": "Marquee_Skip_Size",
+        "label": "Skip Size",
+        "description": "Number of unlit (dark) pixels between each color band. Zero means bands are placed back-to-back with no gap.",
+        "default": 0,
+        "min": 0,
+        "max": 100,
+        "options": []
+      },
+      "speed": {
+        "upstreamId": "Marquee_Speed",
+        "label": "Speed",
+        "description": "How fast the marquee pattern moves around the perimeter. Zero freezes the animation.",
+        "default": 3,
+        "min": 0,
+        "max": 50,
+        "options": []
+      },
+      "stagger": {
+        "upstreamId": "Marquee_Stagger",
+        "label": "Stagger",
+        "description": "Offsets the starting position of each concentric ring so inner rings appear shifted relative to outer rings, creating a spiral-like look.",
+        "default": 0,
+        "min": 0,
+        "max": 50,
+        "options": []
+      },
+      "thickness": {
+        "upstreamId": "Marquee_Thickness",
+        "label": "Thickness",
+        "description": "Number of concentric marquee rings drawn inward from the outer edge. Each ring is offset by one pixel toward the center.",
+        "default": 1,
+        "min": 1,
+        "max": 100,
+        "options": []
+      }
+    }
+  },
+  "registryDefinition": {
+    "complexityClass": "complex",
+    "earlySamplingPolicy": "broad_geometry_first",
+    "notes": "Readable border and perimeter motion effect. Band/skip/thickness/speed should be screened before less common positioning controls.",
+    "parameters": {
+      "bandSize": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 10
+        },
+        "anchors": [
+          1,
+          3,
+          5,
+          7,
+          9
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "skipSize",
+          "thickness",
+          "speed"
+        ],
+        "stopRule": "stop_when_regions_stabilize",
+        "upstream": {
+          "id": "Marquee_Band_Size",
+          "label": "Band Size",
+          "description": "Number of consecutive lit pixels in each color band of the marquee pattern.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 3,
+          "min": 1,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "reverse": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "speed",
+          "start"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Marquee_Reverse",
+          "label": "Reverse",
+          "description": "When enabled, the marquee pattern moves in the opposite direction around the perimeter.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "skipSize": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 10
+        },
+        "anchors": [
+          0,
+          2,
+          4,
+          6,
+          8
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "bandSize",
+          "speed",
+          "reverse"
+        ],
+        "stopRule": "stop_when_regions_stabilize",
+        "upstream": {
+          "id": "Marquee_Skip_Size",
+          "label": "Skip Size",
+          "description": "Number of unlit (dark) pixels between each color band. Zero means bands are placed back-to-back with no gap.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "speed": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 10
+        },
+        "anchors": [
+          1,
+          3,
+          5,
+          7,
+          9
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "bandSize",
+          "reverse",
+          "stagger"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Marquee_Speed",
+          "label": "Speed",
+          "description": "How fast the marquee pattern moves around the perimeter. Zero freezes the animation.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 3,
+          "min": 0,
+          "max": 50,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "stagger": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 10
+        },
+        "anchors": [
+          0,
+          2,
+          4,
+          6,
+          8
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "thickness",
+          "reverse"
+        ],
+        "stopRule": "stop_if_flat_across_profile",
+        "upstream": {
+          "id": "Marquee_Stagger",
+          "label": "Stagger",
+          "description": "Offsets the starting position of each concentric ring so inner rings appear shifted relative to outer rings, creating a spiral-like look.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 0,
+          "min": 0,
+          "max": 50,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "thickness": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 10
+        },
+        "anchors": [
+          1,
+          2,
+          4,
+          6,
+          8
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "bandSize",
+          "skipSize",
+          "geometryProfile"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Marquee_Thickness",
+          "label": "Thickness",
+          "description": "Number of concentric marquee rings drawn inward from the outer edge. Each ring is offset by one pixel toward the center.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Marquee",
+    "upstreamSourceFile": "Marquee.json",
+    "upstreamPropertyCount": 14,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": [
+      {
+        "id": "Marquee_Start",
+        "label": "Start Pos"
+      },
+      {
+        "id": "Marquee_ScaleX",
+        "label": "Scale X"
+      },
+      {
+        "id": "Marquee_ScaleY",
+        "label": "Scale Y"
+      },
+      {
+        "id": "Marquee_PixelOffsets",
+        "label": "Offsets In Pixels"
+      },
+      {
+        "id": "MarqueeXC",
+        "label": "X-axis Center"
+      },
+      {
+        "id": "Marquee_WrapX",
+        "label": "Wrap X"
+      },
+      {
+        "id": "MarqueeYC",
+        "label": "Y-axis Center"
+      },
+      {
+        "id": "Marquee_WrapY",
+        "label": "Wrap Y"
+      }
+    ]
+  },
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [
+      "marquee-archgroup-expanded-sweep-v1.json",
+      "marquee-archsingle-expanded-sweep-v1.json",
+      "marquee-archtriplelayer-expanded-sweep-v1.json",
+      "marquee-singlelinehorizontal-expanded-sweep-v1.json",
+      "marquee-singlelinevertical-expanded-sweep-v1.json",
+      "marquee-treeflat-expanded-sweep-v1.json",
+      "marquee-treeround-expanded-sweep-v1.json",
+      "marquee-treespiral-expanded-sweep-v1.json"
+    ],
+    "range": [],
+    "combos": [],
+    "interactions": [
+      "marquee-archgroup-interactions-v1.json"
+    ],
+    "all": [
+      "marquee-archgroup-expanded-sweep-v1.json",
+      "marquee-archgroup-interactions-v1.json",
+      "marquee-archsingle-expanded-sweep-v1.json",
+      "marquee-archtriplelayer-expanded-sweep-v1.json",
+      "marquee-singlelinehorizontal-expanded-sweep-v1.json",
+      "marquee-singlelinevertical-expanded-sweep-v1.json",
+      "marquee-treeflat-expanded-sweep-v1.json",
+      "marquee-treeround-expanded-sweep-v1.json",
+      "marquee-treespiral-expanded-sweep-v1.json"
+    ]
+  },
+  "evidenceIndex": {
+    "screeningRecords": [
+      "marquee-arch-grouped-marquee-speed-1-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-speed-1-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-speed-3-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-speed-3-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-speed-5-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-speed-5-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-speed-7-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-speed-7-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-speed-9-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-speed-9-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-0-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-0-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-2-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-2-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-4-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-4-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-6-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-6-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-8-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-stagger-8-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-1-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-1-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-2-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-2-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-4-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-4-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-6-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-6-rgb-primary-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-8-mono-white-generated-v1.record.json",
+      "marquee-arch-grouped-marquee-thickness-8-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-1-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-1-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-3-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-3-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-5-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-5-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-7-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-7-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-9-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-speed-9-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-0-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-0-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-2-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-2-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-4-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-4-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-6-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-6-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-8-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-stagger-8-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-1-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-1-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-2-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-2-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-4-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-4-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-6-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-6-rgb-primary-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-8-mono-white-generated-v1.record.json",
+      "marquee-single-line-horizontal-marquee-thickness-8-rgb-primary-generated-v1.record.json"
+    ],
+    "screeningRecordPaths": [
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-1-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-1-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-3-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-3-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-5-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-5-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-7-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-7-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-9-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-speed-9-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-0-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-0-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-2-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-2-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-4-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-4-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-6-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-6-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-8-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-stagger-8-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-1-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-1-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-2-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-2-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-4-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-4-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-6-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-6-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-8-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-arch-grouped-marquee-thickness-8-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-1-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-1-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-3-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-3-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-5-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-5-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-7-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-7-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-9-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-speed-9-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-0-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-0-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-2-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-2-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-4-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-4-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-6-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-6-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-8-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-stagger-8-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-1-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-1-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-2-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-2-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-4-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-4-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-6-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-6-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-8-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/marquee-single-line-horizontal-marquee-thickness-8-rgb-primary-generated-v1.record.json"
+    ]
+  },
+  "currentTrainingReference": {
+    "effectName": "Marquee",
+    "baseline": {
+      "currentStage": "selector_ready",
+      "selectorReady": true,
+      "selectorEvidence": {
+        "selectedCaseCount": 3,
+        "passedCaseCount": 3,
+        "caseIds": [
+          "select_clean_fill_steady_competition",
+          "select_wide_clean_motion",
+          "select_arch_segmented_marquee"
+        ]
+      },
+      "supportedModelTypes": [
+        "arch",
+        "cane",
+        "icicles",
+        "matrix",
+        "single_line",
+        "spinner",
+        "star",
+        "tree_360",
+        "tree_flat"
+      ],
+      "supportedGeometryProfiles": [
+        "arch_grouped",
+        "arch_multi_layer",
+        "arch_single",
+        "cane_grouped",
+        "cane_single",
+        "cane_stick_grouped",
+        "icicles_drop_pattern",
+        "matrix_high_density",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "single_line_horizontal",
+        "single_line_single_node",
+        "single_line_vertical",
+        "spinner_standard",
+        "star_multi_layer",
+        "star_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "tree_flat_single_layer"
+      ],
+      "intentTags": [
+        "animated",
+        "bold",
+        "bouncy",
+        "busy",
+        "clean",
+        "directional",
+        "fill",
+        "full",
+        "partial",
+        "patterned",
+        "restrained",
+        "segmented",
+        "steady"
+      ],
+      "patternFamilies": [
+        "marquee_motion",
+        "segmented_marquee",
+        "tree_fill",
+        "wide_marquee"
+      ],
+      "retainedParameters": [
+        {
+          "parameterName": "bandSize",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "reverse",
+          "status": "interaction_suspected",
+          "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+        },
+        {
+          "parameterName": "skipSize",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        }
+      ]
+    },
+    "capability": {
+      "family": "marquee_motion",
+      "supportedSettingsIntent": [],
+      "supportedPaletteIntent": [],
+      "supportedLayerIntent": [],
+      "supportedRenderIntent": []
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "bandSize",
+        "reverse",
+        "skipSize",
+        "speed",
+        "stagger",
+        "thickness"
+      ],
+      "retainedParameterNames": [
+        "bandSize",
+        "reverse",
+        "skipSize"
+      ],
+      "supportedIntentAxes": {
+        "settings": [],
+        "palette": [],
+        "layer": [],
+        "render": []
+      },
+      "coverageStatus": "screened_parameter_subset",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [
+        "speed",
+        "stagger",
+        "thickness"
+      ],
+      "derivedPriors": {
+        "status": "populated",
+        "priorCount": 12,
+        "priors": [
+          {
+            "parameterName": "speed",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_1",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_3",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_5",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_7",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 9,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_9",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "speed",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027338,
+                "meanTemporalColorDelta": 0.032945,
+                "meanTemporalBrightnessDelta": 0.01793,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_7",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026875,
+                "meanTemporalColorDelta": 0.030655,
+                "meanTemporalBrightnessDelta": 0.017915,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_3",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026182,
+                "meanTemporalColorDelta": 0.027224,
+                "meanTemporalBrightnessDelta": 0.017897,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_1",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025351,
+                "meanTemporalColorDelta": 0.023108,
+                "meanTemporalBrightnessDelta": 0.017875,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_5",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 9,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.024285,
+                "meanTemporalColorDelta": 0.017838,
+                "meanTemporalBrightnessDelta": 0.017838,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_9",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "speed",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_1",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_3",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_5",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_7",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 9,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_9",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "speed",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.030114,
+                "meanTemporalColorDelta": 0.046679,
+                "meanTemporalBrightnessDelta": 0.018015,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_7",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.028167,
+                "meanTemporalColorDelta": 0.037058,
+                "meanTemporalBrightnessDelta": 0.017948,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_1",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.028167,
+                "meanTemporalColorDelta": 0.037058,
+                "meanTemporalBrightnessDelta": 0.017948,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_3",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_5",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 9,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.024282,
+                "meanTemporalColorDelta": 0.017833,
+                "meanTemporalBrightnessDelta": 0.017833,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "speed_9",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "stagger",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 0,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_0",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_2",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_4",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 6,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_6",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 8,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_8",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "stagger",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 0,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025351,
+                "meanTemporalColorDelta": 0.023108,
+                "meanTemporalBrightnessDelta": 0.017875,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_0",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025351,
+                "meanTemporalColorDelta": 0.023108,
+                "meanTemporalBrightnessDelta": 0.017875,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_2",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025351,
+                "meanTemporalColorDelta": 0.023108,
+                "meanTemporalBrightnessDelta": 0.017875,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_4",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 6,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025351,
+                "meanTemporalColorDelta": 0.023108,
+                "meanTemporalBrightnessDelta": 0.017875,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_6",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 8,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025351,
+                "meanTemporalColorDelta": 0.023108,
+                "meanTemporalBrightnessDelta": 0.017875,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_8",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "stagger",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 0,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_0",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_2",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_4",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 6,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_6",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 8,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_8",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "stagger",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 0,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_0",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_2",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_4",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 6,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_6",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 8,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "stagger_8",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "thickness",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_2",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_4",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 6,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_6",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 8,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_8",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.032868,
+                "meanTemporalColorDelta": 0.035789,
+                "meanTemporalBrightnessDelta": 0.035789,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_1",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "thickness",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025583,
+                "meanTemporalColorDelta": 0.024252,
+                "meanTemporalBrightnessDelta": 0.017882,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_4",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 6,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025583,
+                "meanTemporalColorDelta": 0.024252,
+                "meanTemporalBrightnessDelta": 0.017882,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_6",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 8,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025583,
+                "meanTemporalColorDelta": 0.024252,
+                "meanTemporalBrightnessDelta": 0.017882,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_8",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.025351,
+                "meanTemporalColorDelta": 0.023108,
+                "meanTemporalBrightnessDelta": 0.017875,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_2",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.018424,
+                "meanTemporalColorDelta": 0.016248,
+                "meanTemporalBrightnessDelta": 0.012153,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern",
+                  "arch_pattern_fit",
+                  "forward_motion",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_1",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "thickness",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_1",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_2",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_4",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 6,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_6",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 8,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_8",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "thickness",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_1",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_2",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_4",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 6,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_6",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 8,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.026232,
+                "meanTemporalColorDelta": 0.027459,
+                "meanTemporalBrightnessDelta": 0.017905,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "linear_pattern_fit",
+                  "marquee_motion",
+                  "marquee_pattern",
+                  "thickness_8",
+                  "tight_marquee"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "populated",
+      "storageClass": "general_training",
+      "screeningRecordCount": 60,
+      "screenedParameterNames": [
+        "speed",
+        "stagger",
+        "thickness"
+      ],
+      "sampledModelTypes": [
+        "arch",
+        "single_line"
+      ],
+      "sampledGeometryProfiles": [
+        "arch_grouped",
+        "single_line_horizontal"
+      ],
+      "observedLabelHints": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "effect:marquee",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "model:arch",
+        "palette_mono_white",
+        "range_sample",
+        "render_style:default",
+        "speed",
+        "speed_1",
+        "tight_marquee",
+        "palette_rgb_primary",
+        "speed_3",
+        "speed_5",
+        "speed_7",
+        "speed_9",
+        "stagger",
+        "stagger_0",
+        "stagger_2",
+        "stagger_4",
+        "stagger_6",
+        "stagger_8",
+        "thickness",
+        "thickness_1",
+        "thickness_2",
+        "thickness_4",
+        "thickness_6",
+        "thickness_8",
+        "linear_pattern_fit",
+        "model:single_line",
+        "render_style:single_line"
+      ],
+      "configurationRepresentativeness": {
+        "coverageStatus": "single_reference_per_geometry",
+        "profileCount": 2,
+        "profiles": [
+          {
+            "modelType": "arch",
+            "geometryProfile": "arch_grouped",
+            "analyzerFamily": "linear",
+            "displayAsNormalized": "arches",
+            "stringType": "RGB Nodes",
+            "nodeCount": 50,
+            "nodeCountBucket": "small",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "grouped",
+              "type:arch"
+            ],
+            "structuralSettings": {
+              "Angle": "0",
+              "Dir": "L",
+              "DisplayAs": "Arches",
+              "Height": "1.000000",
+              "parm1": "3",
+              "parm2": "50",
+              "parm3": "1",
+              "StartSide": "B",
+              "StringType": "RGB Nodes"
+            },
+            "structuralSignature": "37983f3862ab",
+            "sampleCount": 30
+          },
+          {
+            "modelType": "single_line",
+            "geometryProfile": "single_line_horizontal",
+            "analyzerFamily": "linear",
+            "displayAsNormalized": "single_line",
+            "stringType": "RGB Nodes",
+            "nodeCount": 50,
+            "nodeCountBucket": "small",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "horizontal_orientation",
+              "type:single_line"
+            ],
+            "structuralSettings": {
+              "Dir": "L",
+              "DisplayAs": "Single Line",
+              "parm1": "1",
+              "parm2": "50",
+              "parm3": "1",
+              "StartSide": "B",
+              "StringType": "RGB Nodes"
+            },
+            "structuralSignature": "d64e2ecfe7dc",
+            "sampleCount": 30
+          }
+        ]
+      }
+    }
+  }
+}

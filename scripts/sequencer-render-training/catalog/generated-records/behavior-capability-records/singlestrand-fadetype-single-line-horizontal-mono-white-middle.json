@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "singlestrand-fadetype-single-line-horizontal-mono-white-middle",
+  "createdAt": "2026-04-16T18:35:27.482Z",
+  "effectName": "SingleStrand",
+  "geometryProfile": "single_line_horizontal",
+  "modelType": "single_line",
+  "parameterRegion": {
+    "parameterName": "fadeType",
+    "regionKind": "single_value",
+    "valueSummary": "Middle",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "mono_white"
+  },
+  "paletteContext": {
+    "paletteMode": "mono_white"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "subtle_motion",
+    "primaryTexture": "chase_pattern",
+    "motionPacing": "subtle_motion",
+    "textureDensity": "chase_pattern,clean_linear_pattern,fadeType_Middle,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+    "energyLevel": "restrained",
+    "coverageLevel": "focused",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "subtle_motion",
+    "densityRead": "moderate",
+    "nonBlankRatio": 0.7,
+    "temporalMotion": 0.017282,
+    "temporalColorDelta": 0.011565,
+    "temporalBrightnessDelta": 0.011565,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "multi_configuration_sampled"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "single_line_horizontal"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

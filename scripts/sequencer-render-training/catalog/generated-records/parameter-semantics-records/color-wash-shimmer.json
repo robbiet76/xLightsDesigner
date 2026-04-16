@@ -1,0 +1,156 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "color-wash-shimmer",
+  "createdAt": "2026-04-16T18:35:28.016Z",
+  "effectName": "Color Wash",
+  "parameterName": "shimmer",
+  "sourceDefinition": {
+    "id": "ColorWash_Shimmer",
+    "label": "Shimmer",
+    "description": "Alternates between the current wash color and black on every other frame, creating a rapid strobe-like flicker.",
+    "type": "bool",
+    "controlType": "checkbox",
+    "default": false,
+    "min": null,
+    "max": null,
+    "options": [],
+    "valueCurve": false,
+    "lockable": false,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Alternates between the current wash color and black on every other frame, creating a rapid strobe-like flicker.",
+  "semanticAxis": "edge_softness",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "unknown",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "flat_fill",
+    "full_coverage",
+    "intermittent_window_coverage",
+    "linear_palette",
+    "matrix_fill",
+    "moderate_motion_window",
+    "shimmer_false",
+    "steady_wash",
+    "subtle_brightness_change",
+    "subtle_color_travel",
+    "wash_fill",
+    "shimmer_true",
+    "shimmer_wash",
+    "stable_brightness",
+    "subtle_motion_window"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "color-wash-shimmer-matrix-high-density-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,shimmer_false,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
+      "affectedSignals": [
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "shimmer_false",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-shimmer-matrix-high-density-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,shimmer_true,shimmer_wash,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
+      "affectedSignals": [
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "shimmer_true",
+        "shimmer_wash",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-shimmer-matrix-high-density-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,shimmer_false,stable_brightness,steady_wash,subtle_color_travel,subtle_motion_window,wash_fill",
+      "affectedSignals": [
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "shimmer_false",
+        "stable_brightness",
+        "steady_wash",
+        "subtle_color_travel",
+        "subtle_motion_window",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-shimmer-matrix-high-density-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,shimmer_true,shimmer_wash,stable_brightness,steady_wash,subtle_color_travel,subtle_motion_window,wash_fill",
+      "affectedSignals": [
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "shimmer_true",
+        "shimmer_wash",
+        "stable_brightness",
+        "steady_wash",
+        "subtle_color_travel",
+        "subtle_motion_window",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 4,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "matrix_high_density"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

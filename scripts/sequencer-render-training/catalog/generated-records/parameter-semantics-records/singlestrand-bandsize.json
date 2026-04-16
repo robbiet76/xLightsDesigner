@@ -1,0 +1,816 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "singlestrand-bandsize",
+  "createdAt": "2026-04-16T18:35:28.029Z",
+  "effectName": "SingleStrand",
+  "parameterName": "bandSize",
+  "sourceDefinition": {
+    "id": "Skips_BandSize",
+    "label": "Band size",
+    "description": "Number of consecutive lit pixels in each colored band of the skip pattern.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 1,
+    "min": 1,
+    "max": 20,
+    "options": [],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Number of consecutive lit pixels in each colored band of the skip pattern.",
+  "semanticAxis": "density",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "arch_pattern",
+    "arch_pattern_fit",
+    "bandSize_1",
+    "chase_pattern",
+    "fragmented_pattern",
+    "single_direction_chase",
+    "sparse_sampled_motion",
+    "bandSize_3",
+    "bandSize_5",
+    "bandSize_7",
+    "bandSize_9",
+    "clean_cane_pattern",
+    "clean_linear_pattern",
+    "linear_pattern_fit",
+    "spiral_tree_pattern",
+    "tree_pattern_fit"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "singlestrand-bandsize-arch-single-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_1,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_1",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-arch-single-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_3,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_3",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-arch-single-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_5,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_5",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-arch-single-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_7,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_7",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-arch-single-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_9,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_9",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-arch-single-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_1,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_1",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-arch-single-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_3,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_3",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-arch-single-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_5,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_5",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-arch-single-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_7,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_7",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-arch-single-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,bandSize_9,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "bandSize_9",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "bandSize_1,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_1",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "bandSize_3,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_3",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "bandSize_5,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_5",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "bandSize_7,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_7",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "bandSize_9,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_9",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "bandSize_1,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_1",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "bandSize_3,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_3",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "bandSize_5,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_5",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "bandSize_7,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_7",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-custom-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "bandSize_9,chase_pattern,clean_cane_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_9",
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "bandSize_1,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_1",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "bandSize_3,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_3",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "bandSize_5,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_5",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "bandSize_7,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_7",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "bandSize_9,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_9",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "bandSize_1,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_1",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "bandSize_3,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_3",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "bandSize_5,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_5",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "bandSize_7,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_7",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-single-line-horizontal-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "bandSize_9,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "bandSize_9",
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "bandSize_1,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_1",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "bandSize_3,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_3",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "bandSize_5,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_5",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "bandSize_7,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_7",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "bandSize_9,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_9",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "bandSize_1,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_1",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "bandSize_3,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_3",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "bandSize_5,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_5",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-7",
+      "valueSummary": "7",
+      "behaviorImpactSummary": "bandSize_7,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_7",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-bandsize-tree-360-spiral-9",
+      "valueSummary": "9",
+      "behaviorImpactSummary": "bandSize_9,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "bandSize_9",
+        "chase_pattern",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 40,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_single",
+      "custom",
+      "single_line_horizontal",
+      "tree_360_spiral"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

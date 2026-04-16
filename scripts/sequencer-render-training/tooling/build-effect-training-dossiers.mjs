@@ -27,7 +27,7 @@ const interactionCoveragePath = process.argv[5]
   : resolve("scripts/sequencer-render-training/catalog/effect-setting-interaction-coverage-report-v1.json");
 const registryPath = process.argv[6]
   ? resolve(process.argv[6])
-  : resolve("scripts/sequencer-render-training/catalog/effect-parameter-registry.json");
+  : resolve("scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json");
 
 const unified = JSON.parse(readFileSync(unifiedPath, "utf8"));
 const coverage = JSON.parse(readFileSync(coveragePath, "utf8"));
@@ -102,6 +102,25 @@ for (const effectName of effectNames) {
       retainedParameterNames: Array.isArray(coverageEffect.retainedParameterNames) ? coverageEffect.retainedParameterNames : [],
       screenedParameterNames: Array.isArray(coverageEffect.screenedParameterNames) ? coverageEffect.screenedParameterNames : [],
       screeningRecordCount: screeningRecords.length
+    },
+    upstreamMetadata: {
+      sourceFile: str(registryEffect.upstreamSourceFile),
+      propertyCount: Number(registryEffect.upstreamPropertyCount || 0),
+      visibilityRuleCount: Number(registryEffect.upstreamVisibilityRuleCount || 0),
+      parameters: Object.fromEntries(
+        Object.entries(registryEffect.parameters || {}).map(([parameterName, meta]) => [
+          parameterName,
+          {
+            upstreamId: str(meta?.upstream?.id),
+            label: str(meta?.upstream?.label),
+            description: str(meta?.upstream?.description),
+            default: meta?.upstream?.default,
+            min: meta?.upstream?.min ?? null,
+            max: meta?.upstream?.max ?? null,
+            options: Array.isArray(meta?.upstream?.options) ? meta.upstream.options : []
+          }
+        ])
+      )
     },
     registryDefinition: registryEffect,
     interactionCoverage: {

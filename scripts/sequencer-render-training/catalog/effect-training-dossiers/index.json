@@ -1,0 +1,93 @@
+{
+  "artifactType": "effect_training_dossier_index_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.285Z",
+  "effectCount": 20,
+  "outputDir": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-training-dossiers",
+  "unifiedPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json",
+  "coveragePath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-settings-coverage-report-v1.json",
+  "interactionCoveragePath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-setting-interaction-coverage-report-v1.json",
+  "registryPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json",
+  "effects": [
+    {
+      "effectName": "Bars",
+      "fileName": "bars.json"
+    },
+    {
+      "effectName": "Butterfly",
+      "fileName": "butterfly.json"
+    },
+    {
+      "effectName": "Circles",
+      "fileName": "circles.json"
+    },
+    {
+      "effectName": "Color Wash",
+      "fileName": "color-wash.json"
+    },
+    {
+      "effectName": "Curtain",
+      "fileName": "curtain.json"
+    },
+    {
+      "effectName": "Fan",
+      "fileName": "fan.json"
+    },
+    {
+      "effectName": "Fire",
+      "fileName": "fire.json"
+    },
+    {
+      "effectName": "Marquee",
+      "fileName": "marquee.json"
+    },
+    {
+      "effectName": "Meteors",
+      "fileName": "meteors.json"
+    },
+    {
+      "effectName": "Morph",
+      "fileName": "morph.json"
+    },
+    {
+      "effectName": "On",
+      "fileName": "on.json"
+    },
+    {
+      "effectName": "Pinwheel",
+      "fileName": "pinwheel.json"
+    },
+    {
+      "effectName": "Shimmer",
+      "fileName": "shimmer.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "fileName": "shockwave.json"
+    },
+    {
+      "effectName": "SingleStrand",
+      "fileName": "singlestrand.json"
+    },
+    {
+      "effectName": "Snowflakes",
+      "fileName": "snowflakes.json"
+    },
+    {
+      "effectName": "Spirals",
+      "fileName": "spirals.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "fileName": "twinkle.json"
+    },
+    {
+      "effectName": "VU Meter",
+      "fileName": "vu-meter.json"
+    },
+    {
+      "effectName": "Wave",
+      "fileName": "wave.json"
+    }
+  ]
+}

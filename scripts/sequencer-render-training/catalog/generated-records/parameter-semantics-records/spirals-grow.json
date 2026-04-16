@@ -1,0 +1,235 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "spirals-grow",
+  "createdAt": "2026-04-16T18:35:28.035Z",
+  "effectName": "Spirals",
+  "parameterName": "grow",
+  "sourceDefinition": {
+    "id": "Spirals_Grow",
+    "label": "Grow",
+    "description": "When enabled, the spiral arms gradually increase in thickness over the effect duration.",
+    "type": "bool",
+    "controlType": "checkbox",
+    "default": false,
+    "min": null,
+    "max": null,
+    "options": [],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "When enabled, the spiral arms gradually increase in thickness over the effect duration.",
+  "semanticAxis": "variation",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "forward_motion",
+    "forward_rotation",
+    "grow_true",
+    "medium_spiral",
+    "round_tree_pattern",
+    "single_spiral",
+    "spiral_flow",
+    "spiral_motion",
+    "spiral_pattern",
+    "tree_pattern_fit",
+    "grow_false"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "spirals-grow-tree-360-round-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "forward_motion,forward_rotation,grow_true,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "forward_motion",
+        "forward_rotation",
+        "grow_true",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_round"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-grow-tree-360-round-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "forward_motion,forward_rotation,grow_false,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "forward_motion",
+        "forward_rotation",
+        "grow_false",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_round"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-grow-tree-360-round-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "forward_motion,forward_rotation,grow_true,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "forward_motion",
+        "forward_rotation",
+        "grow_true",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_round"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-grow-tree-360-round-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "forward_motion,forward_rotation,grow_false,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "forward_motion",
+        "forward_rotation",
+        "grow_false",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_round"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-grow-tree-flat-single-layer-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "forward_motion,forward_rotation,grow_true,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "forward_motion",
+        "forward_rotation",
+        "grow_true",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_flat_single_layer"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-grow-tree-flat-single-layer-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "forward_motion,forward_rotation,grow_false,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "forward_motion",
+        "forward_rotation",
+        "grow_false",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_flat_single_layer"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-grow-tree-flat-single-layer-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "forward_motion,forward_rotation,grow_true,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "forward_motion",
+        "forward_rotation",
+        "grow_true",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_flat_single_layer"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-grow-tree-flat-single-layer-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "forward_motion,forward_rotation,grow_false,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "forward_motion",
+        "forward_rotation",
+        "grow_false",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_flat_single_layer"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 8,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "tree_360_round",
+      "tree_flat_single_layer"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

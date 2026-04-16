@@ -1,0 +1,237 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "bars-cycles",
+  "createdAt": "2026-04-16T18:35:28.012Z",
+  "effectName": "Bars",
+  "parameterName": "cycles",
+  "sourceDefinition": {
+    "id": "Bars_Cycles",
+    "label": "Cycles",
+    "description": "Number of times the bars scroll completely across the model during the effect. Higher values make the bars move faster.",
+    "type": "float",
+    "controlType": "slider",
+    "default": 1,
+    "min": 0,
+    "max": 300,
+    "options": [],
+    "valueCurve": true,
+    "lockable": false,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Number of times the bars scroll completely across the model during the effect. Higher values make the bars move faster.",
+  "semanticAxis": "speed",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "arch_pattern_fit",
+    "bar_motion",
+    "bar_pattern",
+    "cycles_10",
+    "grouped_arch_read",
+    "single_bar",
+    "cycles_15",
+    "cycles_2",
+    "cycles_20",
+    "cycles_5"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "bars-cycles-arch-grouped-10",
+      "valueSummary": "10",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_10,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_10",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-cycles-arch-grouped-15",
+      "valueSummary": "15",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_15,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_15",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-cycles-arch-grouped-2",
+      "valueSummary": "2",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_2,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_2",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-cycles-arch-grouped-20",
+      "valueSummary": "20",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_20,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_20",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-cycles-arch-grouped-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_5,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_5",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-cycles-arch-grouped-10",
+      "valueSummary": "10",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_10,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_10",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-cycles-arch-grouped-5",
+      "valueSummary": "5",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_5,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_5",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-cycles-arch-grouped-20",
+      "valueSummary": "20",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_20,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_20",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-cycles-arch-grouped-2",
+      "valueSummary": "2",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_2,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_2",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-cycles-arch-grouped-15",
+      "valueSummary": "15",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,cycles_15,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "cycles_15",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 10,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_grouped"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

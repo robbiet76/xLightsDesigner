@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "spirals-3d-tree-flat-single-layer-mono-white-false",
+  "createdAt": "2026-04-16T18:35:27.483Z",
+  "effectName": "Spirals",
+  "geometryProfile": "tree_flat_single_layer",
+  "modelType": "tree_flat",
+  "parameterRegion": {
+    "parameterName": "3D",
+    "regionKind": "single_value",
+    "valueSummary": "false",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "mono_white"
+  },
+  "paletteContext": {
+    "paletteMode": "mono_white"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "subtle_motion",
+    "primaryTexture": "3D_false",
+    "motionPacing": "subtle_motion",
+    "textureDensity": "3D_false,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+    "energyLevel": "moderate",
+    "coverageLevel": "broad",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "low"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "subtle_motion",
+    "densityRead": "dense",
+    "nonBlankRatio": 0.75,
+    "temporalMotion": 0.027303,
+    "temporalColorDelta": 0.029605,
+    "temporalBrightnessDelta": 0.029605,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "tree_flat_single_layer"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

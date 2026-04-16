@@ -40,7 +40,7 @@ Primary system roadmap:
 - `runners/run-live-outcome-harvest-cycle.sh`
 
 ## Core Catalogs
-- `catalog/effect-parameter-registry.json`
+- `catalog/effective-effect-parameter-registry.json`
 - `catalog/generic-layout-model-catalog.json`
 - `catalog/generic-layout-geometry-audit.json`
 - `catalog/stage1-effect-model-scope.json`
@@ -165,7 +165,7 @@ bash scripts/sequencer-render-training/runners/run-effect-parameter-screening-pl
 
 ```bash
 python3 scripts/sequencer-render-training/generators/generate-parameter-sweep-manifest.py \
-  --registry scripts/sequencer-render-training/catalog/effect-parameter-registry.json \
+  --registry scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json \
   --base-manifest scripts/sequencer-render-training/manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json \
   --parameter numberChases \
   --out-file /tmp/singlestrand-numberchases.generated.json
@@ -173,7 +173,7 @@ python3 scripts/sequencer-render-training/generators/generate-parameter-sweep-ma
 
 ```bash
 python3 scripts/sequencer-render-training/generators/generate-registry-plan-manifests.py \
-  --registry scripts/sequencer-render-training/catalog/effect-parameter-registry.json \
+  --registry scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json \
   --plan scripts/sequencer-render-training/registry/registry-planning-phase1.json \
   --out-dir /tmp/registry-plan-manifests \
   --summary-out /tmp/registry-plan-manifests/summary.json

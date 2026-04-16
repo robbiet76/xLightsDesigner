@@ -1,0 +1,71 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "on-baseline",
+  "createdAt": "2026-04-16T18:35:27.478Z",
+  "effectName": "On",
+  "geometryProfile": "cross_geometry",
+  "modelType": "mixed",
+  "parameterRegion": {
+    "parameterName": "baseline",
+    "regionKind": "cluster",
+    "valueSummary": "current_baseline_capability",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {},
+  "paletteContext": {},
+  "behaviorSignals": {
+    "primaryMotion": "animated",
+    "primaryTexture": "static_fill",
+    "motionPacing": "animated,bold,busy,clean,directional,fill,full,partial,patterned,restrained,sparse,steady",
+    "textureDensity": "static_fill,static_hold",
+    "energyLevel": "unknown",
+    "coverageLevel": "unknown",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "mixed",
+    "stability": "low"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "unknown",
+    "nonBlankRatio": 0,
+    "temporalMotion": 0,
+    "temporalColorDelta": 0,
+    "temporalBrightnessDelta": 0,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "screened_parameter_subset"
+  },
+  "evidenceCount": 0,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_grouped",
+      "arch_multi_layer",
+      "arch_single",
+      "cane_grouped",
+      "cane_single",
+      "cane_stick_grouped",
+      "icicles_drop_pattern",
+      "matrix_high_density",
+      "matrix_low_density",
+      "matrix_medium_density",
+      "single_line_horizontal",
+      "single_line_single_node",
+      "single_line_vertical",
+      "spinner_standard",
+      "star_multi_layer",
+      "star_single_layer",
+      "tree_360_round",
+      "tree_360_spiral",
+      "tree_flat_single_layer"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

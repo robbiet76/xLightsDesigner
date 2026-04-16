@@ -1,0 +1,520 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "singlestrand-mode",
+  "createdAt": "2026-04-16T18:35:28.033Z",
+  "effectName": "SingleStrand",
+  "parameterName": "mode",
+  "sourceDefinition": {
+    "id": "SingleStrand_Colors",
+    "label": "Colors",
+    "description": "Selects the color source for the chase. Palette uses the user-defined palette colors; Rainbow cycles through all hues automatically.",
+    "type": "enum",
+    "controlType": "choice",
+    "default": "Palette",
+    "min": null,
+    "max": null,
+    "options": [
+      "Rainbow",
+      "Palette"
+    ],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Selects the color source for the chase. Palette uses the user-defined palette colors; Rainbow cycles through all hues automatically.",
+  "semanticAxis": "directionality",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "unknown",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "arch_pattern",
+    "arch_pattern_fit",
+    "dense_sampled_motion",
+    "fragmented_pattern",
+    "mode_Skips",
+    "single_direction_chase",
+    "skip_pattern",
+    "chase_pattern",
+    "mode_Chase",
+    "sparse_sampled_motion",
+    "fx_texture",
+    "mode_FX",
+    "clean_cane_pattern",
+    "clean_linear_pattern",
+    "linear_pattern_fit",
+    "spiral_tree_pattern",
+    "tree_pattern_fit"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "singlestrand-mode-arch-single-skips",
+      "valueSummary": "Skips",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,dense_sampled_motion,fragmented_pattern,mode_Skips,single_direction_chase,skip_pattern",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "dense_sampled_motion",
+        "fragmented_pattern",
+        "mode_Skips",
+        "single_direction_chase",
+        "skip_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-arch-single-chase",
+      "valueSummary": "Chase",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fragmented_pattern,mode_Chase,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fragmented_pattern",
+        "mode_Chase",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-arch-single-fx",
+      "valueSummary": "FX",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,fragmented_pattern,fx_texture,mode_FX,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "fragmented_pattern",
+        "fx_texture",
+        "mode_FX",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-arch-single-fx",
+      "valueSummary": "FX",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,fragmented_pattern,fx_texture,mode_FX,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "fragmented_pattern",
+        "fx_texture",
+        "mode_FX",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-arch-single-chase",
+      "valueSummary": "Chase",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fragmented_pattern,mode_Chase,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fragmented_pattern",
+        "mode_Chase",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-arch-single-skips",
+      "valueSummary": "Skips",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,dense_sampled_motion,fragmented_pattern,mode_Skips,single_direction_chase,skip_pattern",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "dense_sampled_motion",
+        "fragmented_pattern",
+        "mode_Skips",
+        "single_direction_chase",
+        "skip_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-custom-fx",
+      "valueSummary": "FX",
+      "behaviorImpactSummary": "clean_cane_pattern,fragmented_pattern,fx_texture,mode_FX,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "fx_texture",
+        "mode_FX",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-custom-skips",
+      "valueSummary": "Skips",
+      "behaviorImpactSummary": "clean_cane_pattern,fragmented_pattern,mode_Skips,single_direction_chase,skip_pattern,sparse_sampled_motion",
+      "affectedSignals": [
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "mode_Skips",
+        "single_direction_chase",
+        "skip_pattern",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-custom-chase",
+      "valueSummary": "Chase",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fragmented_pattern,mode_Chase,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "mode_Chase",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-custom-fx",
+      "valueSummary": "FX",
+      "behaviorImpactSummary": "clean_cane_pattern,fragmented_pattern,fx_texture,mode_FX,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "fx_texture",
+        "mode_FX",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-custom-chase",
+      "valueSummary": "Chase",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fragmented_pattern,mode_Chase,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "mode_Chase",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-custom-skips",
+      "valueSummary": "Skips",
+      "behaviorImpactSummary": "clean_cane_pattern,fragmented_pattern,mode_Skips,single_direction_chase,skip_pattern,sparse_sampled_motion",
+      "affectedSignals": [
+        "clean_cane_pattern",
+        "fragmented_pattern",
+        "mode_Skips",
+        "single_direction_chase",
+        "skip_pattern",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-single-line-horizontal-skips",
+      "valueSummary": "Skips",
+      "behaviorImpactSummary": "clean_linear_pattern,dense_sampled_motion,fragmented_pattern,linear_pattern_fit,mode_Skips,single_direction_chase,skip_pattern",
+      "affectedSignals": [
+        "clean_linear_pattern",
+        "dense_sampled_motion",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "mode_Skips",
+        "single_direction_chase",
+        "skip_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-single-line-horizontal-fx",
+      "valueSummary": "FX",
+      "behaviorImpactSummary": "clean_linear_pattern,fragmented_pattern,fx_texture,linear_pattern_fit,mode_FX,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "fx_texture",
+        "linear_pattern_fit",
+        "mode_FX",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-single-line-horizontal-chase",
+      "valueSummary": "Chase",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,mode_Chase,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "mode_Chase",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-single-line-horizontal-fx",
+      "valueSummary": "FX",
+      "behaviorImpactSummary": "clean_linear_pattern,fragmented_pattern,fx_texture,linear_pattern_fit,mode_FX,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "fx_texture",
+        "linear_pattern_fit",
+        "mode_FX",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-single-line-horizontal-chase",
+      "valueSummary": "Chase",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,mode_Chase,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "mode_Chase",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-single-line-horizontal-skips",
+      "valueSummary": "Skips",
+      "behaviorImpactSummary": "clean_linear_pattern,dense_sampled_motion,fragmented_pattern,linear_pattern_fit,mode_Skips,single_direction_chase,skip_pattern",
+      "affectedSignals": [
+        "clean_linear_pattern",
+        "dense_sampled_motion",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "mode_Skips",
+        "single_direction_chase",
+        "skip_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-tree-360-spiral-fx",
+      "valueSummary": "FX",
+      "behaviorImpactSummary": "fragmented_pattern,fx_texture,mode_FX,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "fragmented_pattern",
+        "fx_texture",
+        "mode_FX",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-tree-360-spiral-chase",
+      "valueSummary": "Chase",
+      "behaviorImpactSummary": "chase_pattern,fragmented_pattern,mode_Chase,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fragmented_pattern",
+        "mode_Chase",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-tree-360-spiral-skips",
+      "valueSummary": "Skips",
+      "behaviorImpactSummary": "dense_sampled_motion,fragmented_pattern,mode_Skips,single_direction_chase,skip_pattern,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "dense_sampled_motion",
+        "fragmented_pattern",
+        "mode_Skips",
+        "single_direction_chase",
+        "skip_pattern",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-tree-360-spiral-fx",
+      "valueSummary": "FX",
+      "behaviorImpactSummary": "fragmented_pattern,fx_texture,mode_FX,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "fragmented_pattern",
+        "fx_texture",
+        "mode_FX",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-tree-360-spiral-chase",
+      "valueSummary": "Chase",
+      "behaviorImpactSummary": "chase_pattern,fragmented_pattern,mode_Chase,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fragmented_pattern",
+        "mode_Chase",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-mode-tree-360-spiral-skips",
+      "valueSummary": "Skips",
+      "behaviorImpactSummary": "dense_sampled_motion,fragmented_pattern,mode_Skips,single_direction_chase,skip_pattern,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "dense_sampled_motion",
+        "fragmented_pattern",
+        "mode_Skips",
+        "single_direction_chase",
+        "skip_pattern",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 24,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_single",
+      "custom",
+      "single_line_horizontal",
+      "tree_360_spiral"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

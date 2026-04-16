@@ -1,0 +1,248 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "twinkle-steps",
+  "createdAt": "2026-04-16T18:35:28.036Z",
+  "effectName": "Twinkle",
+  "parameterName": "steps",
+  "sourceDefinition": {
+    "id": "Twinkle_Steps",
+    "label": "Twinkle Steps",
+    "description": "Number of frames for a complete twinkle cycle (fade up then fade down). Lower values create faster, snappier twinkles; higher values create slow, gentle fades.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 30,
+    "min": 2,
+    "max": 400,
+    "options": [],
+    "valueCurve": true,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Number of frames for a complete twinkle cycle (fade up then fade down). Lower values create faster, snappier twinkles; higher values create slow, gentle fades.",
+  "semanticAxis": "density",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "line_read",
+    "linear_pattern_fit",
+    "medium_cadence_twinkle",
+    "medium_twinkle",
+    "soft_twinkle",
+    "steps_10",
+    "twinkle_pattern",
+    "steps_70",
+    "steps_30",
+    "steps_50",
+    "steps_90"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-10",
+      "valueSummary": "10",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_10,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_10",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-70",
+      "valueSummary": "70",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_70,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_70",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-30",
+      "valueSummary": "30",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_30,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_30",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-50",
+      "valueSummary": "50",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_50,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_50",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-90",
+      "valueSummary": "90",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_90,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_90",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-30",
+      "valueSummary": "30",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_30,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_30",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-10",
+      "valueSummary": "10",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_10,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_10",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-50",
+      "valueSummary": "50",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_50,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_50",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-70",
+      "valueSummary": "70",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_70,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_70",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-steps-single-line-horizontal-90",
+      "valueSummary": "90",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,steps_90,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "steps_90",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 10,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "single_line_horizontal"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

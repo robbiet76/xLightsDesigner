@@ -1,0 +1,43 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "color-wash-vfade",
+  "createdAt": "2026-04-16T18:35:28.017Z",
+  "effectName": "Color Wash",
+  "parameterName": "vFade",
+  "sourceDefinition": {
+    "id": "ColorWash_VFade",
+    "label": "Vertical Fade",
+    "description": "Fades the wash color from full brightness at the vertical center to black at the top and bottom edges.",
+    "type": "bool",
+    "controlType": "checkbox",
+    "default": false,
+    "min": null,
+    "max": null,
+    "options": [],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Fades the wash color from full brightness at the vertical center to black at the top and bottom edges.",
+  "semanticAxis": "edge_softness",
+  "observedDirectionality": "narrow_or_unknown",
+  "interactionSensitivity": "unknown",
+  "geometrySensitivity": "narrow_or_unknown",
+  "affectedSignals": [],
+  "valueRegions": [],
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "registry_only",
+    "coverageStatus": "narrow"
+  },
+  "evidenceCount": 0,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

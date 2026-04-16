@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "pinwheel-armsize-spinner-standard-rgb-primary-100",
+  "createdAt": "2026-04-16T18:35:27.478Z",
+  "effectName": "Pinwheel",
+  "geometryProfile": "spinner_standard",
+  "modelType": "spinner",
+  "parameterRegion": {
+    "parameterName": "armSize",
+    "regionKind": "single_value",
+    "valueSummary": "100",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "paletteContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "subtle_motion",
+    "primaryTexture": "armSize_100",
+    "motionPacing": "subtle_motion",
+    "textureDensity": "armSize_100,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel",
+    "energyLevel": "moderate",
+    "coverageLevel": "broad",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "subtle_motion",
+    "densityRead": "dense",
+    "nonBlankRatio": 0.75,
+    "temporalMotion": 0.028728,
+    "temporalColorDelta": 0.04049,
+    "temporalBrightnessDelta": 0.017119,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "spinner_standard"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

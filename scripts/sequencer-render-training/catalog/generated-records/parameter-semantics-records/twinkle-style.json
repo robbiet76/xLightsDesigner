@@ -1,0 +1,134 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "twinkle-style",
+  "createdAt": "2026-04-16T18:35:28.037Z",
+  "effectName": "Twinkle",
+  "parameterName": "style",
+  "sourceDefinition": {
+    "id": "Twinkle_Style",
+    "label": "Style",
+    "description": "Selects the rendering algorithm. Old Render Method uses the original per-frame logic; New Render Method uses an updated approach with smoother transitions.",
+    "type": "enum",
+    "controlType": "choice",
+    "default": "New Render Method",
+    "min": null,
+    "max": null,
+    "options": [
+      "Old Render Method",
+      "New Render Method"
+    ],
+    "valueCurve": false,
+    "lockable": false,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Selects the rendering algorithm. Old Render Method uses the original per-frame logic; New Render Method uses an updated approach with smoother transitions.",
+  "semanticAxis": "variation",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "line_read",
+    "linear_pattern_fit",
+    "medium_cadence_twinkle",
+    "medium_twinkle",
+    "soft_twinkle",
+    "style_New_Render_Method",
+    "twinkle_pattern",
+    "style_Old_Render_Method"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "twinkle-style-single-line-horizontal-new-render-method",
+      "valueSummary": "New Render Method",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,style_New_Render_Method,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "style_New_Render_Method",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-style-single-line-horizontal-old-render-method",
+      "valueSummary": "Old Render Method",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,style_Old_Render_Method,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "style_Old_Render_Method",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-style-single-line-horizontal-new-render-method",
+      "valueSummary": "New Render Method",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,style_New_Render_Method,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "style_New_Render_Method",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "twinkle-style-single-line-horizontal-old-render-method",
+      "valueSummary": "Old Render Method",
+      "behaviorImpactSummary": "line_read,linear_pattern_fit,medium_cadence_twinkle,medium_twinkle,soft_twinkle,style_Old_Render_Method,twinkle_pattern",
+      "affectedSignals": [
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "soft_twinkle",
+        "style_Old_Render_Method",
+        "twinkle_pattern"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 4,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "single_line_horizontal"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

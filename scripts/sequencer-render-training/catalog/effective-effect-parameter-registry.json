@@ -1,0 +1,2801 @@
+{
+  "version": "1.0",
+  "sharedParameters": {
+    "renderStyle": {
+      "type": "enum",
+      "target": "sharedSettings",
+      "anchors": [
+        "Default",
+        "Single Line"
+      ],
+      "importance": "high",
+      "phase": "screen",
+      "interactionHypotheses": [
+        "effect",
+        "geometryProfile"
+      ],
+      "stopRule": "all_meaningful_options"
+    }
+  },
+  "effects": {
+    "Bars": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "High-value structural motion effect. Direction, bar count, cadence, and structural toggles are first-order levers across linear, arch, and tree geometries. Full Stage 1 geometry coverage and observed behavior now support treating Bars as complex rather than moderate.",
+      "parameters": {
+        "3D": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "highlight",
+            "gradient"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Bars_3D",
+            "label": "3D",
+            "description": "Applies a brightness or alpha gradient within each bar so it fades from full brightness at one edge to dark at the other, giving a three-dimensional appearance.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "barCount": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 5
+          },
+          "anchors": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "direction",
+            "cycles",
+            "geometryProfile"
+          ],
+          "stopRule": "stop_when_regions_stabilize",
+          "upstream": {
+            "id": "Bars_BarCount",
+            "label": "Palette Rep",
+            "description": "Number of times the full palette color sequence repeats across the model. Higher values produce more, thinner bars.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 5,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 20
+          },
+          "anchors": [
+            2,
+            5,
+            10,
+            15,
+            20
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "direction",
+            "barCount",
+            "geometryProfile"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Bars_Cycles",
+            "label": "Cycles",
+            "description": "Number of times the bars scroll completely across the model during the effect. Higher values make the bars move faster.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 1,
+            "min": 0,
+            "max": 300,
+            "divisor": 10,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "direction": {
+          "type": "enum",
+          "anchors": [
+            "up",
+            "down",
+            "expand",
+            "compress",
+            "Left",
+            "Right"
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "barCount",
+            "cycles",
+            "renderStyle",
+            "geometryProfile"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Bars_Direction",
+            "label": "Direction",
+            "description": "Direction the bars travel. Expand/compress radiate from or collapse toward a center point. Alternate modes snap bars one step at a time. Custom modes place static bars with an adjustable center offset.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "up",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "up",
+              "down",
+              "expand",
+              "compress",
+              "Left",
+              "Right",
+              "H-expand",
+              "H-compress",
+              "Alternate Up",
+              "Alternate Down",
+              "Alternate Left",
+              "Alternate Right",
+              "Custom Horz",
+              "Custom Vert"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "gradient": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "highlight",
+            "barCount"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Bars_Gradient",
+            "label": "Gradient",
+            "description": "Smoothly blends colors between adjacent bars instead of using hard edges, creating a continuous gradient across the palette.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "highlight": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "gradient",
+            "3D"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Bars_Highlight",
+            "label": "Highlight",
+            "description": "Adds a bright white highlight line at the leading edge of each bar to make the boundaries between colors more visible.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Bars",
+      "upstreamSourceFile": "Bars.json",
+      "upstreamPropertyCount": 8,
+      "upstreamVisibilityRuleCount": 1,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": [
+        {
+          "id": "Bars_Center",
+          "label": "Center Point"
+        },
+        {
+          "id": "Bars_UseFirstColorForHighlight",
+          "label": "Use First Color for Highlight"
+        }
+      ]
+    },
+    "Color Wash": {
+      "complexityClass": "moderate",
+      "earlySamplingPolicy": "standard_screening",
+      "notes": "Structure often changes more from boolean fade combinations than from numeric cycle changes. Broad canonical coverage is still required because fade-direction semantics shift by geometry.",
+      "parameters": {
+        "circularPalette": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "screeningPaletteMode": "circular_multi",
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "ColorWash_CircularPalette",
+            "label": "Circular Palette",
+            "description": "Makes the palette wrap around by blending the last color back into the first, creating a seamless continuous color loop instead of stopping at the last color.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 0.5,
+            "max": 4
+          },
+          "anchors": [
+            0.5,
+            1,
+            2,
+            3,
+            4
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "screeningPaletteMode": "rgb_primary",
+          "interactionHypotheses": [
+            "vFade",
+            "hFade",
+            "shimmer",
+            "circularPalette"
+          ],
+          "stopRule": "stop_if_flat_across_profile",
+          "upstream": {
+            "id": "ColorWash_Cycles",
+            "label": "Count",
+            "description": "Number of times the full palette color sequence cycles during the effect. Higher values make the color transitions happen faster.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 200,
+            "divisor": 10,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "hFade": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "ColorWash_HFade",
+            "label": "Horizontal Fade",
+            "description": "Fades the wash color from full brightness at the horizontal center to black at the left and right edges.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "reverseFades": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "interaction",
+          "screeningPaletteMode": "mono_white",
+          "stopRule": "interaction_only",
+          "upstream": {
+            "id": "ColorWash_ReverseFades",
+            "label": "Reverse Fades",
+            "description": "Reverses the direction of the vertical and horizontal fades so brightness is at the edges and fades to black at the center.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "shimmer": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "screeningPaletteMode": "mono_white",
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "ColorWash_Shimmer",
+            "label": "Shimmer",
+            "description": "Alternates between the current wash color and black on every other frame, creating a rapid strobe-like flicker.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "vFade": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "ColorWash_VFade",
+            "label": "Vertical Fade",
+            "description": "Fades the wash color from full brightness at the vertical center to black at the top and bottom edges.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Color Wash",
+      "upstreamSourceFile": "ColorWash.json",
+      "upstreamPropertyCount": 6,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
+    "Marquee": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Readable border and perimeter motion effect. Band/skip/thickness/speed should be screened before less common positioning controls.",
+      "parameters": {
+        "bandSize": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [
+            1,
+            3,
+            5,
+            7,
+            9
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "skipSize",
+            "thickness",
+            "speed"
+          ],
+          "stopRule": "stop_when_regions_stabilize",
+          "upstream": {
+            "id": "Marquee_Band_Size",
+            "label": "Band Size",
+            "description": "Number of consecutive lit pixels in each color band of the marquee pattern.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 3,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "reverse": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "speed",
+            "start"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Marquee_Reverse",
+            "label": "Reverse",
+            "description": "When enabled, the marquee pattern moves in the opposite direction around the perimeter.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "skipSize": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 10
+          },
+          "anchors": [
+            0,
+            2,
+            4,
+            6,
+            8
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "bandSize",
+            "speed",
+            "reverse"
+          ],
+          "stopRule": "stop_when_regions_stabilize",
+          "upstream": {
+            "id": "Marquee_Skip_Size",
+            "label": "Skip Size",
+            "description": "Number of unlit (dark) pixels between each color band. Zero means bands are placed back-to-back with no gap.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 0,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "speed": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [
+            1,
+            3,
+            5,
+            7,
+            9
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "bandSize",
+            "reverse",
+            "stagger"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Marquee_Speed",
+            "label": "Speed",
+            "description": "How fast the marquee pattern moves around the perimeter. Zero freezes the animation.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 3,
+            "min": 0,
+            "max": 50,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "stagger": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 10
+          },
+          "anchors": [
+            0,
+            2,
+            4,
+            6,
+            8
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "thickness",
+            "reverse"
+          ],
+          "stopRule": "stop_if_flat_across_profile",
+          "upstream": {
+            "id": "Marquee_Stagger",
+            "label": "Stagger",
+            "description": "Offsets the starting position of each concentric ring so inner rings appear shifted relative to outer rings, creating a spiral-like look.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 0,
+            "min": 0,
+            "max": 50,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "thickness": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [
+            1,
+            2,
+            4,
+            6,
+            8
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "bandSize",
+            "skipSize",
+            "geometryProfile"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Marquee_Thickness",
+            "label": "Thickness",
+            "description": "Number of concentric marquee rings drawn inward from the outer edge. Each ring is offset by one pixel toward the center.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Marquee",
+      "upstreamSourceFile": "Marquee.json",
+      "upstreamPropertyCount": 14,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": [
+        {
+          "id": "Marquee_Start",
+          "label": "Start Pos"
+        },
+        {
+          "id": "Marquee_ScaleX",
+          "label": "Scale X"
+        },
+        {
+          "id": "Marquee_ScaleY",
+          "label": "Scale Y"
+        },
+        {
+          "id": "Marquee_PixelOffsets",
+          "label": "Offsets In Pixels"
+        },
+        {
+          "id": "MarqueeXC",
+          "label": "X-axis Center"
+        },
+        {
+          "id": "Marquee_WrapX",
+          "label": "Wrap X"
+        },
+        {
+          "id": "MarqueeYC",
+          "label": "Y-axis Center"
+        },
+        {
+          "id": "Marquee_WrapY",
+          "label": "Wrap Y"
+        }
+      ]
+    },
+    "On": {
+      "complexityClass": "simple",
+      "earlySamplingPolicy": "baseline_only",
+      "notes": "Static baseline effect. Brightness transitions are semantic and are not normalized away.",
+      "parameters": {
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 0.5,
+            "max": 5
+          },
+          "anchors": [
+            1
+          ],
+          "importance": "low",
+          "phase": "defer",
+          "stopRule": "do_not_expand_without_signal",
+          "upstream": {
+            "id": "On_Cycles",
+            "label": "Cycle Count",
+            "description": "Number of times the start-to-end intensity ramp repeats over the effect duration. Values greater than 1 create a pulsing look.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 1,
+            "min": 0,
+            "max": 1000,
+            "divisor": 10,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": true
+          }
+        },
+        "endLevel": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            0,
+            100
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "stopRule": "semantic_levels_only",
+          "upstream": {
+            "id": "Eff_On_End",
+            "label": "End Intensity",
+            "description": "Sets the brightness level at the end of the effect as a percentage. The intensity ramps linearly from Start to End over the effect duration.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 100,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": true
+          }
+        },
+        "shimmer": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "On_Shimmer",
+            "label": "Shimmer",
+            "description": "When enabled, the effect alternates between the first and second palette colors on each frame, creating a rapid flickering shimmer.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": true
+          }
+        },
+        "startLevel": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            0,
+            100
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "stopRule": "semantic_levels_only",
+          "upstream": {
+            "id": "Eff_On_Start",
+            "label": "Start Intensity",
+            "description": "Sets the brightness level at the beginning of the effect as a percentage of the palette color's full value.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 100,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": true
+          }
+        }
+      },
+      "upstreamEffectName": "On",
+      "upstreamSourceFile": "On.json",
+      "upstreamPropertyCount": 5,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": [
+        {
+          "id": "On_Transparency",
+          "label": "Transparency"
+        }
+      ]
+    },
+    "Pinwheel": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "benchmarkGeometryFamilies": [
+        "star",
+        "tree_360"
+      ],
+      "notes": "High-value radial effect. Strong candidate for star, spinner, and tree profiles where style, arms, rotation, and speed should dominate early screening.",
+      "parameters": {
+        "3DMode": {
+          "type": "enum",
+          "anchors": [
+            "none",
+            "3D",
+            "3D Inverted",
+            "Sweep"
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "style",
+            "thickness",
+            "geometryProfile"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Pinwheel_3D",
+            "label": "3D",
+            "description": "Applies a brightness or alpha gradient across each arm to simulate depth. 3D fades edges, 3D Inverted fades the center, and Sweep applies a directional gradient from one edge to the other.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "None",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "None",
+              "3D",
+              "3D Inverted",
+              "Sweep"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "arms": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 8
+          },
+          "anchors": [
+            2,
+            3,
+            4,
+            6,
+            8
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "speed",
+            "armSize",
+            "geometryProfile"
+          ],
+          "stopRule": "stop_when_regions_stabilize",
+          "upstream": {
+            "id": "Pinwheel_Arms",
+            "label": "#Arms",
+            "description": "Number of colored arms radiating from the center of the pinwheel. Each arm uses the next color from the palette.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 3,
+            "min": 1,
+            "max": 20,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "armSize": {
+          "type": "numeric",
+          "range": {
+            "min": 10,
+            "max": 100
+          },
+          "anchors": [
+            25,
+            50,
+            75,
+            100
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "arms",
+            "thickness",
+            "geometryProfile"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Pinwheel_ArmSize",
+            "label": "Size",
+            "description": "Length of each arm as a percentage of the maximum radius. Values above 100 extend the arms beyond the model edges.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 100,
+            "min": 0,
+            "max": 400,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "rotation": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "twist",
+            "speed"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Pinwheel_Rotation",
+            "label": "Rotation",
+            "description": "Sets the rotation direction. When checked, the pinwheel spins counter-clockwise; when unchecked, it spins clockwise.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": true,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "speed": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 20
+          },
+          "anchors": [
+            3,
+            7,
+            10,
+            14,
+            18
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "arms",
+            "rotation",
+            "twist"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Pinwheel_Speed",
+            "label": "Speed",
+            "description": "Rotation speed of the pinwheel. Higher values make the arms spin faster.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 10,
+            "min": 0,
+            "max": 50,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "style": {
+          "type": "enum",
+          "anchors": [
+            "Old Render Method",
+            "New Render Method"
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "arms",
+            "3D",
+            "geometryProfile"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Pinwheel_Style",
+            "label": "Style",
+            "description": "Rendering algorithm to use. The new method uses ISPC-accelerated rendering for better performance and fills the entire buffer; the old method draws arms by stepping along radial lines. Existing sequences are migrated to preserve 'Old Render Method' so their look doesn't change.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "New Render Method",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [
+              "Old Render Method",
+              "New Render Method"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "thickness": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            0,
+            20,
+            40,
+            60,
+            80
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "arms",
+            "twist",
+            "3D"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Pinwheel_Thickness",
+            "label": "Thick",
+            "description": "Width of each arm as a percentage of the angular space between arms. At 100, adjacent arms touch with no gap between them.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 0,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "twist": {
+          "type": "numeric",
+          "range": {
+            "min": -360,
+            "max": 360
+          },
+          "anchors": [
+            -180,
+            -60,
+            0,
+            60,
+            180
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "rotation",
+            "speed",
+            "geometryProfile"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Pinwheel_Twist",
+            "label": "Twist",
+            "description": "Degrees of curvature applied along each arm from center to tip. Positive values twist clockwise, negative values twist counter-clockwise, creating spiral arms.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 0,
+            "min": -360,
+            "max": 360,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Pinwheel",
+      "upstreamSourceFile": "Pinwheel.json",
+      "upstreamPropertyCount": 11,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": [
+        {
+          "id": "Pinwheel_Offset",
+          "label": "Offset"
+        },
+        {
+          "id": "PinwheelXC",
+          "label": "X-axis Center"
+        },
+        {
+          "id": "PinwheelYC",
+          "label": "Y-axis center"
+        }
+      ]
+    },
+    "Shimmer": {
+      "complexityClass": "simple",
+      "earlySamplingPolicy": "standard_screening",
+      "notes": "Texture-heavy effect where duty and cadence strongly shape density and restraint.",
+      "parameters": {
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 0.5,
+            "max": 5
+          },
+          "anchors": [
+            0.5,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "interactionHypotheses": [
+            "dutyFactor",
+            "useAllColors",
+            "geometryProfile"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Shimmer_Cycles",
+            "label": "Cycle Count",
+            "description": "Number of on/off shimmer cycles over the duration of the effect. Higher values produce faster flickering.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 1,
+            "min": 0,
+            "max": 6000,
+            "divisor": 10,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "dutyFactor": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            10,
+            25,
+            40,
+            55,
+            70,
+            85
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "interactionHypotheses": [
+            "cycles",
+            "useAllColors",
+            "geometryProfile"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Shimmer_Duty_Factor",
+            "label": "Duty Factor",
+            "description": "Percentage of each cycle the color is visible before going black. Lower values produce shorter on-flashes with longer dark gaps.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 50,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "useAllColors": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "interactionHypotheses": [
+            "cycles",
+            "dutyFactor"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Shimmer_Use_All_Colors",
+            "label": "Use All Colors",
+            "description": "When enabled, each pixel is assigned a random color from the palette every frame. When disabled, all pixels use the same color which cycles sequentially through the palette.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Shimmer",
+      "upstreamSourceFile": "Shimmer.json",
+      "upstreamPropertyCount": 4,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": [
+        {
+          "id": "PRE_2017_7",
+          "label": "Pre v2017.7 Shimmer"
+        }
+      ]
+    },
+    "Shockwave": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Spatial expansion effect. Best on matrix/radial/tree classes, but worth early inclusion because center/radius/width semantics are highly interpretable.",
+      "parameters": {
+        "accel": {
+          "type": "numeric",
+          "range": {
+            "min": -10,
+            "max": 10
+          },
+          "anchors": [
+            -5,
+            0,
+            5
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "cycles",
+            "endRadius"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Shockwave_Accel",
+            "label": "Acceleration",
+            "description": "Adjusts the expansion speed curve. Positive values make the ring expand slowly then accelerate; negative values make it start fast then decelerate.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 0,
+            "min": -10,
+            "max": 10,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "blendEdges": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "startWidth",
+            "endWidth"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Shockwave_Blend_Edges",
+            "label": "Blend Edges",
+            "description": "When enabled, the ring edges fade out smoothly based on distance from the ring center, creating a soft glow instead of hard edges.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": true,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "centerX": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            25,
+            50,
+            75
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "centerY",
+            "geometryProfile"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Shockwave_CenterX",
+            "label": "Center X",
+            "description": "Horizontal center of the shockwave ring as a percentage of the buffer width.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 50,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "centerY": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            25,
+            50,
+            75
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "centerX",
+            "geometryProfile"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Shockwave_CenterY",
+            "label": "Center Y",
+            "description": "Vertical center of the shockwave ring as a percentage of the buffer height.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 50,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 5
+          },
+          "anchors": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "startRadius",
+            "endRadius",
+            "accel"
+          ],
+          "stopRule": "stop_when_regions_stabilize",
+          "upstream": {
+            "id": "Shockwave_Cycles",
+            "label": "Cycles",
+            "description": "Number of times the shockwave ring expands from Radius1 to Radius2 over the effect duration.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "endRadius": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            10,
+            25,
+            50,
+            75
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "startRadius",
+            "scale"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Shockwave_End_Radius",
+            "label": "Radius2",
+            "description": "Ending radius of the expanding ring at the end of each cycle.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 10,
+            "min": 0,
+            "max": 750,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "endWidth": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 50
+          },
+          "anchors": [
+            2,
+            5,
+            10,
+            20
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "startWidth",
+            "blendEdges"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Shockwave_End_Width",
+            "label": "Width2",
+            "description": "Thickness of the ring band at the end of each cycle.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 10,
+            "min": 0,
+            "max": 255,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "scale": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "startRadius",
+            "endRadius",
+            "geometryProfile"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Shockwave_Scale",
+            "label": "Scale to Buffer",
+            "description": "When enabled, radius and width values are treated as percentages of the buffer size. When disabled, values are in absolute pixels.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": true,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "startRadius": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            0,
+            10,
+            25,
+            50
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "endRadius",
+            "scale"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Shockwave_Start_Radius",
+            "label": "Radius1",
+            "description": "Starting radius of the expanding ring at the beginning of each cycle.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 0,
+            "max": 750,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "startWidth": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 50
+          },
+          "anchors": [
+            2,
+            5,
+            10,
+            20
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "endWidth",
+            "blendEdges"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Shockwave_Start_Width",
+            "label": "Width1",
+            "description": "Thickness of the ring band at the start of each cycle.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 5,
+            "min": 0,
+            "max": 255,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Shockwave",
+      "upstreamSourceFile": "Shockwave.json",
+      "upstreamPropertyCount": 10,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
+    "SingleStrand": {
+      "complexityClass": "moderate",
+      "earlySamplingPolicy": "standard_screening",
+      "notes": "Primary motion-pattern effect. Mode and geometry profile materially change which parameters matter.",
+      "parameters": {
+        "advances": {
+          "type": "numeric",
+          "range": {
+            "min": 8,
+            "max": 40
+          },
+          "anchors": [
+            8,
+            16,
+            24,
+            32,
+            40
+          ],
+          "importance": "low",
+          "phase": "control",
+          "appliesWhen": {
+            "mode": [
+              "Skips"
+            ]
+          },
+          "stopRule": "stop_if_flat_across_profile",
+          "upstream": {
+            "id": "Skips_Advance",
+            "label": "Number of Advances",
+            "description": "Number of times the skip pattern shifts position over the effect duration. Higher values make the pattern appear to march along the strand.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 0,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "bandSize": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 9
+          },
+          "anchors": [
+            1,
+            3,
+            5,
+            7,
+            9
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": [
+              "Skips"
+            ]
+          },
+          "interactionHypotheses": [
+            "skipSize",
+            "geometryProfile"
+          ],
+          "stopRule": "stop_if_flat_across_profile",
+          "upstream": {
+            "id": "Skips_BandSize",
+            "label": "Band size",
+            "description": "Number of consecutive lit pixels in each colored band of the skip pattern.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 20,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "chaseSize": {
+          "type": "numeric",
+          "range": {
+            "min": 4,
+            "max": 40
+          },
+          "anchors": [
+            8,
+            14,
+            20,
+            26,
+            32,
+            38
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": [
+              "Chase"
+            ]
+          },
+          "interactionHypotheses": [
+            "numberChases",
+            "fadeType",
+            "geometryProfile"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Color_Mix1",
+            "label": "Chase Size",
+            "description": "Length of each lit chase segment as a percentage of the total strand length.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 10,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "chaseType": {
+          "type": "enum",
+          "anchors": [
+            "Left-Right",
+            "Right-Left",
+            "Bounce from Middle",
+            "Dual Bounce"
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": [
+              "Chase"
+            ]
+          },
+          "interactionHypotheses": [
+            "numberChases",
+            "fadeType",
+            "geometryProfile"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Chase_Type1",
+            "label": "Chase Types",
+            "description": "Direction and movement pattern of the chase. Bounce types reverse at edges, Dual runs two chases simultaneously, Static types display without motion, and Middle types expand or contract from the center.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "Left-Right",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "Left-Right",
+              "Right-Left",
+              "Bounce from Left",
+              "Bounce from Right",
+              "Dual Chase",
+              "From Middle",
+              "To Middle",
+              "Bounce to Middle",
+              "Bounce from Middle",
+              "Static Left-Right",
+              "Static Right-Left",
+              "Static Dual",
+              "Static From Middle",
+              "Static To Middle",
+              "Static Double-Ended"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 0.5,
+            "max": 5
+          },
+          "anchors": [
+            0.5,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "interactionHypotheses": [
+            "mode",
+            "geometryProfile"
+          ],
+          "stopRule": "stop_if_flat_across_profile",
+          "upstream": {
+            "id": "Chase_Rotations",
+            "label": "Cycles",
+            "description": "Number of complete chase traversals over the effect duration. Higher values make the chase move faster.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 500,
+            "divisor": 10,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "fadeType": {
+          "type": "enum",
+          "anchors": [
+            "None",
+            "From Head",
+            "From Tail",
+            "Head and Tail",
+            "Middle"
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": [
+              "Chase"
+            ]
+          },
+          "interactionHypotheses": [
+            "chaseType",
+            "chaseSize",
+            "geometryProfile"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Fade_Type",
+            "label": "Fade",
+            "description": "Applies a brightness fade to the chase segment. 'From Head' fades from the leading edge, 'From Tail' from the trailing edge, 'Head and Tail' fades both ends, and 'Middle' fades from the center outward.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "None",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "None",
+              "From Head",
+              "From Tail",
+              "Head and Tail",
+              "Middle"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "intensity": {
+          "type": "numeric",
+          "range": {
+            "min": 40,
+            "max": 200
+          },
+          "anchors": [
+            40,
+            80,
+            120,
+            160,
+            200
+          ],
+          "importance": "low",
+          "phase": "control",
+          "appliesWhen": {
+            "mode": [
+              "FX"
+            ]
+          },
+          "stopRule": "stop_if_flat_across_profile",
+          "upstream": {
+            "id": "FX_Intensity",
+            "label": "Intensity",
+            "description": "Controls the intensity parameter of the selected FX animation. Its exact meaning varies by effect (e.g., brightness, size, or density).",
+            "type": "int",
+            "controlType": "slider",
+            "default": 128,
+            "min": 0,
+            "max": 255,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "mode": {
+          "type": "enum",
+          "anchors": [
+            "Chase",
+            "Skips",
+            "FX"
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "SingleStrand_Colors",
+            "label": "Colors",
+            "description": "Selects the color source for the chase. Palette uses the user-defined palette colors; Rainbow cycles through all hues automatically.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "Palette",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "Rainbow",
+              "Palette"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "numberChases": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 5
+          },
+          "anchors": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": [
+              "Chase"
+            ]
+          },
+          "interactionHypotheses": [
+            "chaseType",
+            "chaseSize",
+            "geometryProfile"
+          ],
+          "stopRule": "stop_when_regions_stabilize",
+          "upstream": {
+            "id": "Number_Chases",
+            "label": "Number Chases",
+            "description": "Number of simultaneous chase segments running across the strand.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 20,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "skipSize": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 9
+          },
+          "anchors": [
+            1,
+            3,
+            5,
+            7,
+            9
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": [
+              "Skips"
+            ]
+          },
+          "interactionHypotheses": [
+            "advances",
+            "bandSize",
+            "geometryProfile"
+          ],
+          "stopRule": "stop_when_regions_stabilize",
+          "upstream": {
+            "id": "Skips_SkipSize",
+            "label": "Skip size",
+            "description": "Number of unlit (dark) pixels between each colored band. Set to 0 for no gaps.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 0,
+            "max": 20,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "SingleStrand",
+      "upstreamSourceFile": "SingleStrand.json",
+      "upstreamPropertyCount": 17,
+      "upstreamVisibilityRuleCount": 1,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": [
+        {
+          "id": "Chase_Offset",
+          "label": "Offset"
+        },
+        {
+          "id": "Chase_Group_All",
+          "label": "Group All Strands"
+        },
+        {
+          "id": "Skips_StartPos",
+          "label": "Starting Position"
+        },
+        {
+          "id": "Skips_Direction",
+          "label": "Direction"
+        },
+        {
+          "id": "SingleStrand_FX_Palette",
+          "label": "Palette"
+        },
+        {
+          "id": "FX_Speed",
+          "label": "Speed"
+        }
+      ]
+    },
+    "Spirals": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "benchmarkGeometryFamilies": [
+        "tree_flat",
+        "tree_360"
+      ],
+      "benchmarkRole": "flagship_tree_effect",
+      "notes": "Geometry-sensitive motion effect. Especially high value on tree profiles where count, movement, rotation, and thickness interact with spiral-capable model forms.",
+      "parameters": {
+        "3D": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "blend",
+            "thickness"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Spirals_3D",
+            "label": "3D",
+            "description": "When enabled, applies a brightness gradient across each spiral arm to simulate a 3D shading effect, making the arms appear rounded.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "blend": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "3D",
+            "rotation"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Spirals_Blend",
+            "label": "Blend",
+            "description": "When enabled, blends all palette colors vertically across each spiral arm instead of using distinct per-arm colors.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "count": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 5
+          },
+          "anchors": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "movement",
+            "rotation",
+            "thickness",
+            "geometryProfile"
+          ],
+          "stopRule": "stop_when_regions_stabilize",
+          "upstream": {
+            "id": "Spirals_Count",
+            "label": "Palette Rep",
+            "description": "Number of times the full color palette is repeated across the spirals. Higher values create more spiral arms by duplicating the palette pattern.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 5,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "grow": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "low",
+          "interactionHypotheses": [
+            "shrink",
+            "movement"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Spirals_Grow",
+            "label": "Grow",
+            "description": "When enabled, the spiral arms gradually increase in thickness over the effect duration.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "movement": {
+          "type": "numeric",
+          "range": {
+            "min": -20,
+            "max": 20
+          },
+          "anchors": [
+            -15,
+            -5,
+            0,
+            5,
+            15
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "rotation",
+            "count",
+            "geometryProfile"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Spirals_Movement",
+            "label": "Movement",
+            "description": "Speed and direction of the spiral rotation. Positive values rotate in one direction, negative in the other. Zero keeps the spirals stationary.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 1,
+            "min": -200,
+            "max": 200,
+            "divisor": 10,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "rotation": {
+          "type": "numeric",
+          "range": {
+            "min": -50,
+            "max": 50
+          },
+          "anchors": [
+            -30,
+            -10,
+            0,
+            10,
+            30
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "movement",
+            "thickness",
+            "geometryProfile"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Spirals_Rotation",
+            "label": "Spiral Wraps",
+            "description": "Number of times each spiral arm wraps around the model from bottom to top. Negative values reverse the wrap direction. Larger absolute values produce tighter spirals.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 2,
+            "min": -300,
+            "max": 300,
+            "divisor": 10,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "shrink": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "low",
+          "interactionHypotheses": [
+            "grow",
+            "movement"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Spirals_Shrink",
+            "label": "Shrink",
+            "description": "When enabled, the spiral arms gradually decrease in thickness over the effect duration. When both Grow and Shrink are enabled, the arms grow then shrink.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "thickness": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            10,
+            30,
+            50,
+            70,
+            90
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "count",
+            "blend",
+            "3D"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Spirals_Thickness",
+            "label": "Thickness",
+            "description": "Width of each spiral arm as a percentage of the available space. At 100% the arms fill the entire model with no gaps between them.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 50,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Spirals",
+      "upstreamSourceFile": "Spirals.json",
+      "upstreamPropertyCount": 8,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
+    "Twinkle": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Higher-value texture effect than Shimmer for long-term training. Density, dwell, strobe behavior, rerandomization, and render method should be screened first.",
+      "parameters": {
+        "count": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [
+            1,
+            3,
+            5,
+            7,
+            9
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "steps",
+            "strobe",
+            "geometryProfile"
+          ],
+          "stopRule": "stop_when_regions_stabilize",
+          "upstream": {
+            "id": "Twinkle_Count",
+            "label": "Percent of Lights",
+            "description": "Percentage of pixels that are actively twinkling at any given time. Higher values create a denser twinkling field.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 3,
+            "min": 2,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "reRandomize": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": [
+            "style",
+            "count"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Twinkle_ReRandom",
+            "label": "Re-Randomize after twinkle",
+            "description": "When enabled, each pixel is assigned a new random position after its twinkle cycle completes. When disabled, pixels twinkle in the same locations repeatedly.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "steps": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 100
+          },
+          "anchors": [
+            10,
+            30,
+            50,
+            70,
+            90
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "count",
+            "strobe",
+            "style"
+          ],
+          "stopRule": "refine_only_near_breakpoints",
+          "upstream": {
+            "id": "Twinkle_Steps",
+            "label": "Twinkle Steps",
+            "description": "Number of frames for a complete twinkle cycle (fade up then fade down). Lower values create faster, snappier twinkles; higher values create slow, gentle fades.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 30,
+            "min": 2,
+            "max": 400,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": 400,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "strobe": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "steps",
+            "style"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Twinkle_Strobe",
+            "label": "Strobe",
+            "description": "When enabled, twinkling pixels snap on and off instantly instead of fading, creating a strobe-like flash effect.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "style": {
+          "type": "enum",
+          "anchors": [
+            "Old Render Method",
+            "New Render Method"
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": [
+            "count",
+            "steps",
+            "strobe"
+          ],
+          "stopRule": "all_meaningful_options",
+          "upstream": {
+            "id": "Twinkle_Style",
+            "label": "Style",
+            "description": "Selects the rendering algorithm. Old Render Method uses the original per-frame logic; New Render Method uses an updated approach with smoother transitions.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "New Render Method",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [
+              "Old Render Method",
+              "New Render Method"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Twinkle",
+      "upstreamSourceFile": "Twinkle.json",
+      "upstreamPropertyCount": 5,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    }
+  },
+  "metadataSource": {
+    "type": "xlights_effectmetadata_overlay",
+    "xlightsVersion": "2026.06",
+    "generatedAt": "2026-04-16T18:35:27.345Z",
+    "bundlePath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/upstream-effectmetadata/xlights-effectmetadata-bundle-2026.06.json"
+  }
+}

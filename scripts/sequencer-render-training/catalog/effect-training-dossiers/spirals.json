@@ -1,0 +1,1982 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.280Z",
+  "status": "transitional_current_evidence",
+  "effectName": "Spirals",
+  "family": "motion_texture",
+  "intentSurface": {
+    "supportedSettingsIntent": [
+      "intensity",
+      "speed",
+      "density",
+      "coverage",
+      "motion",
+      "direction",
+      "thickness",
+      "variation"
+    ],
+    "supportedPaletteIntent": [
+      "colors",
+      "temperature",
+      "contrast",
+      "brightness",
+      "saturation",
+      "accentUsage"
+    ],
+    "supportedLayerIntent": [
+      "priority",
+      "blendRole",
+      "mixAmount",
+      "overlayPolicy"
+    ],
+    "supportedRenderIntent": [
+      "groupPolicy",
+      "bufferStyle",
+      "expansionPolicy",
+      "riskTolerance"
+    ]
+  },
+  "currentCoverage": {
+    "coverageStatus": "screened_parameter_subset",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [
+      "3D",
+      "blend",
+      "count",
+      "grow",
+      "movement",
+      "rotation",
+      "shrink",
+      "thickness"
+    ],
+    "retainedParameterNames": [
+      "count",
+      "movement",
+      "rotation",
+      "thickness"
+    ],
+    "screenedParameterNames": [
+      "3D",
+      "blend",
+      "grow",
+      "shrink"
+    ],
+    "screeningRecordCount": 32
+  },
+  "upstreamMetadata": {
+    "sourceFile": "Spirals.json",
+    "propertyCount": 8,
+    "visibilityRuleCount": 0,
+    "parameters": {
+      "3D": {
+        "upstreamId": "Spirals_3D",
+        "label": "3D",
+        "description": "When enabled, applies a brightness gradient across each spiral arm to simulate a 3D shading effect, making the arms appear rounded.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "blend": {
+        "upstreamId": "Spirals_Blend",
+        "label": "Blend",
+        "description": "When enabled, blends all palette colors vertically across each spiral arm instead of using distinct per-arm colors.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "count": {
+        "upstreamId": "Spirals_Count",
+        "label": "Palette Rep",
+        "description": "Number of times the full color palette is repeated across the spirals. Higher values create more spiral arms by duplicating the palette pattern.",
+        "default": 1,
+        "min": 1,
+        "max": 5,
+        "options": []
+      },
+      "grow": {
+        "upstreamId": "Spirals_Grow",
+        "label": "Grow",
+        "description": "When enabled, the spiral arms gradually increase in thickness over the effect duration.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "movement": {
+        "upstreamId": "Spirals_Movement",
+        "label": "Movement",
+        "description": "Speed and direction of the spiral rotation. Positive values rotate in one direction, negative in the other. Zero keeps the spirals stationary.",
+        "default": 1,
+        "min": -200,
+        "max": 200,
+        "options": []
+      },
+      "rotation": {
+        "upstreamId": "Spirals_Rotation",
+        "label": "Spiral Wraps",
+        "description": "Number of times each spiral arm wraps around the model from bottom to top. Negative values reverse the wrap direction. Larger absolute values produce tighter spirals.",
+        "default": 2,
+        "min": -300,
+        "max": 300,
+        "options": []
+      },
+      "shrink": {
+        "upstreamId": "Spirals_Shrink",
+        "label": "Shrink",
+        "description": "When enabled, the spiral arms gradually decrease in thickness over the effect duration. When both Grow and Shrink are enabled, the arms grow then shrink.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "thickness": {
+        "upstreamId": "Spirals_Thickness",
+        "label": "Thickness",
+        "description": "Width of each spiral arm as a percentage of the available space. At 100% the arms fill the entire model with no gaps between them.",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "options": []
+      }
+    }
+  },
+  "registryDefinition": {
+    "complexityClass": "complex",
+    "earlySamplingPolicy": "broad_geometry_first",
+    "benchmarkGeometryFamilies": [
+      "tree_flat",
+      "tree_360"
+    ],
+    "benchmarkRole": "flagship_tree_effect",
+    "notes": "Geometry-sensitive motion effect. Especially high value on tree profiles where count, movement, rotation, and thickness interact with spiral-capable model forms.",
+    "parameters": {
+      "3D": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "blend",
+          "thickness"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Spirals_3D",
+          "label": "3D",
+          "description": "When enabled, applies a brightness gradient across each spiral arm to simulate a 3D shading effect, making the arms appear rounded.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "blend": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "3D",
+          "rotation"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Spirals_Blend",
+          "label": "Blend",
+          "description": "When enabled, blends all palette colors vertically across each spiral arm instead of using distinct per-arm colors.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "count": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 5
+        },
+        "anchors": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "movement",
+          "rotation",
+          "thickness",
+          "geometryProfile"
+        ],
+        "stopRule": "stop_when_regions_stabilize",
+        "upstream": {
+          "id": "Spirals_Count",
+          "label": "Palette Rep",
+          "description": "Number of times the full color palette is repeated across the spirals. Higher values create more spiral arms by duplicating the palette pattern.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 5,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "grow": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "low",
+        "interactionHypotheses": [
+          "shrink",
+          "movement"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Spirals_Grow",
+          "label": "Grow",
+          "description": "When enabled, the spiral arms gradually increase in thickness over the effect duration.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "movement": {
+        "type": "numeric",
+        "range": {
+          "min": -20,
+          "max": 20
+        },
+        "anchors": [
+          -15,
+          -5,
+          0,
+          5,
+          15
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "rotation",
+          "count",
+          "geometryProfile"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Spirals_Movement",
+          "label": "Movement",
+          "description": "Speed and direction of the spiral rotation. Positive values rotate in one direction, negative in the other. Zero keeps the spirals stationary.",
+          "type": "float",
+          "controlType": "slider",
+          "default": 1,
+          "min": -200,
+          "max": 200,
+          "divisor": 10,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "rotation": {
+        "type": "numeric",
+        "range": {
+          "min": -50,
+          "max": 50
+        },
+        "anchors": [
+          -30,
+          -10,
+          0,
+          10,
+          30
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "movement",
+          "thickness",
+          "geometryProfile"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Spirals_Rotation",
+          "label": "Spiral Wraps",
+          "description": "Number of times each spiral arm wraps around the model from bottom to top. Negative values reverse the wrap direction. Larger absolute values produce tighter spirals.",
+          "type": "float",
+          "controlType": "slider",
+          "default": 2,
+          "min": -300,
+          "max": 300,
+          "divisor": 10,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "shrink": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "low",
+        "interactionHypotheses": [
+          "grow",
+          "movement"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Spirals_Shrink",
+          "label": "Shrink",
+          "description": "When enabled, the spiral arms gradually decrease in thickness over the effect duration. When both Grow and Shrink are enabled, the arms grow then shrink.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "thickness": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          10,
+          30,
+          50,
+          70,
+          90
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "count",
+          "blend",
+          "3D"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Spirals_Thickness",
+          "label": "Thickness",
+          "description": "Width of each spiral arm as a percentage of the available space. At 100% the arms fill the entire model with no gaps between them.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 50,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Spirals",
+    "upstreamSourceFile": "Spirals.json",
+    "upstreamPropertyCount": 8,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": []
+  },
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [
+      "spirals-treeflat-expanded-sweep-v1.json",
+      "spirals-treeround-expanded-sweep-v1.json",
+      "spirals-treespiral-expanded-sweep-v1.json"
+    ],
+    "range": [],
+    "combos": [],
+    "interactions": [
+      "spirals-treeround-interactions-v1.json"
+    ],
+    "all": [
+      "spirals-treeflat-expanded-sweep-v1.json",
+      "spirals-treeround-expanded-sweep-v1.json",
+      "spirals-treeround-interactions-v1.json",
+      "spirals-treespiral-expanded-sweep-v1.json"
+    ]
+  },
+  "evidenceIndex": {
+    "screeningRecords": [
+      "spirals-tree-360-round-spirals-3d-false-mono-white-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-3d-false-rgb-primary-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-3d-true-mono-white-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-3d-true-rgb-primary-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-blend-false-mono-white-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-blend-false-rgb-primary-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-blend-true-mono-white-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-blend-true-rgb-primary-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-grow-false-mono-white-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-grow-false-rgb-primary-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-grow-true-mono-white-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-grow-true-rgb-primary-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-shrink-false-mono-white-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-shrink-false-rgb-primary-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-shrink-true-mono-white-generated-v1.record.json",
+      "spirals-tree-360-round-spirals-shrink-true-rgb-primary-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-3d-false-mono-white-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-3d-false-rgb-primary-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-3d-true-mono-white-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-3d-true-rgb-primary-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-blend-false-mono-white-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-blend-false-rgb-primary-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-blend-true-mono-white-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-blend-true-rgb-primary-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-grow-false-mono-white-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-grow-false-rgb-primary-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-grow-true-mono-white-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-grow-true-rgb-primary-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-shrink-false-mono-white-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-shrink-false-rgb-primary-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-shrink-true-mono-white-generated-v1.record.json",
+      "spirals-tree-flat-single-layer-spirals-shrink-true-rgb-primary-generated-v1.record.json"
+    ],
+    "screeningRecordPaths": [
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-3d-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-3d-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-3d-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-3d-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-blend-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-blend-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-blend-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-blend-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-grow-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-grow-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-grow-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-grow-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-shrink-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-shrink-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-shrink-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-360-round-spirals-shrink-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-3d-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-3d-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-3d-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-3d-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-blend-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-blend-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-blend-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-blend-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-grow-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-grow-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-grow-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-grow-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-shrink-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-shrink-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-shrink-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/spirals-tree-flat-single-layer-spirals-shrink-true-rgb-primary-generated-v1.record.json"
+    ]
+  },
+  "currentTrainingReference": {
+    "effectName": "Spirals",
+    "baseline": {
+      "currentStage": "selector_ready",
+      "selectorReady": true,
+      "selectorEvidence": {
+        "selectedCaseCount": 3,
+        "passedCaseCount": 3,
+        "caseIds": [
+          "select_helical_clean_fill",
+          "select_round_spiral_rotation",
+          "select_spiral_helical_rotation"
+        ]
+      },
+      "supportedModelTypes": [
+        "arch",
+        "cane",
+        "icicles",
+        "matrix",
+        "single_line",
+        "spinner",
+        "star",
+        "tree_360",
+        "tree_flat"
+      ],
+      "supportedGeometryProfiles": [
+        "arch_grouped",
+        "arch_multi_layer",
+        "arch_single",
+        "cane_grouped",
+        "cane_single",
+        "cane_stick_grouped",
+        "icicles_drop_pattern",
+        "matrix_high_density",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "single_line_horizontal",
+        "single_line_single_node",
+        "single_line_vertical",
+        "spinner_standard",
+        "star_multi_layer",
+        "star_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "tree_flat_single_layer"
+      ],
+      "intentTags": [
+        "animated",
+        "bold",
+        "busy",
+        "clean",
+        "directional",
+        "fill",
+        "full",
+        "geometry_coupled",
+        "partial",
+        "patterned",
+        "restrained",
+        "segmented",
+        "sparse",
+        "steady"
+      ],
+      "patternFamilies": [
+        "helical_spiral_drift",
+        "helical_spiral_flow",
+        "helical_spiral_motion",
+        "helical_spiral_rotation",
+        "spiral_drift",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_rotation"
+      ],
+      "retainedParameters": [
+        {
+          "parameterName": "count",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "movement",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "rotation",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "thickness",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        }
+      ]
+    },
+    "capability": {
+      "family": "motion_texture",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "supportedPaletteIntent": [
+        "colors",
+        "temperature",
+        "contrast",
+        "brightness",
+        "saturation",
+        "accentUsage"
+      ],
+      "supportedLayerIntent": [
+        "priority",
+        "blendRole",
+        "mixAmount",
+        "overlayPolicy"
+      ],
+      "supportedRenderIntent": [
+        "groupPolicy",
+        "bufferStyle",
+        "expansionPolicy",
+        "riskTolerance"
+      ]
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "3D",
+        "blend",
+        "count",
+        "grow",
+        "movement",
+        "rotation",
+        "shrink",
+        "thickness"
+      ],
+      "retainedParameterNames": [
+        "count",
+        "movement",
+        "rotation",
+        "thickness"
+      ],
+      "supportedIntentAxes": {
+        "settings": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "thickness",
+          "variation"
+        ],
+        "palette": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "layer": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "render": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "coverageStatus": "screened_parameter_subset",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [
+        "3D",
+        "blend",
+        "grow",
+        "shrink"
+      ],
+      "derivedPriors": {
+        "status": "populated",
+        "priorCount": 16,
+        "priors": [
+          {
+            "parameterName": "3D",
+            "geometryProfile": "tree_360_round",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "6ed60f188c6c"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_false",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.022582,
+                "meanTemporalColorDelta": 0.016566,
+                "meanTemporalBrightnessDelta": 0.016566,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_true",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "3D",
+            "geometryProfile": "tree_360_round",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "6ed60f188c6c"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.016652,
+                "meanTemporalColorDelta": 0.00725,
+                "meanTemporalBrightnessDelta": 0.00725,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_true",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014895,
+                "meanTemporalColorDelta": 0.010036,
+                "meanTemporalBrightnessDelta": 0.010036,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_false",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "3D",
+            "geometryProfile": "tree_flat_single_layer",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "c19094507fbd"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_false",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.022582,
+                "meanTemporalColorDelta": 0.016566,
+                "meanTemporalBrightnessDelta": 0.016566,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_true",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "3D",
+            "geometryProfile": "tree_flat_single_layer",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "c19094507fbd"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.016652,
+                "meanTemporalColorDelta": 0.00725,
+                "meanTemporalBrightnessDelta": 0.00725,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_true",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014895,
+                "meanTemporalColorDelta": 0.010036,
+                "meanTemporalBrightnessDelta": 0.010036,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_false",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "blend",
+            "geometryProfile": "tree_360_round",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "6ed60f188c6c"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "blend_false",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "blend_true",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "blend",
+            "geometryProfile": "tree_360_round",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "6ed60f188c6c"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.022518,
+                "meanTemporalColorDelta": 0.013446,
+                "meanTemporalBrightnessDelta": 0.01342,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "blend_true",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014895,
+                "meanTemporalColorDelta": 0.010036,
+                "meanTemporalBrightnessDelta": 0.010036,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "blend_false",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "blend",
+            "geometryProfile": "tree_flat_single_layer",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "c19094507fbd"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "blend_false",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "blend_true",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "blend",
+            "geometryProfile": "tree_flat_single_layer",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "c19094507fbd"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.022518,
+                "meanTemporalColorDelta": 0.013446,
+                "meanTemporalBrightnessDelta": 0.01342,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "blend_true",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014895,
+                "meanTemporalColorDelta": 0.010036,
+                "meanTemporalBrightnessDelta": 0.010036,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "blend_false",
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "grow",
+            "geometryProfile": "tree_360_round",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "6ed60f188c6c"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "high_motion"
+                ],
+                "meanTemporalMotion": 0.18125,
+                "meanTemporalColorDelta": 0.200658,
+                "meanTemporalBrightnessDelta": 0.200658,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "grow_true",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "grow_false",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "grow",
+            "geometryProfile": "tree_360_round",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "6ed60f188c6c"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.062272,
+                "meanTemporalColorDelta": 0.046835,
+                "meanTemporalBrightnessDelta": 0.046835,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "grow_true",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014895,
+                "meanTemporalColorDelta": 0.010036,
+                "meanTemporalBrightnessDelta": 0.010036,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "grow_false",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "grow",
+            "geometryProfile": "tree_flat_single_layer",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "c19094507fbd"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "high_motion"
+                ],
+                "meanTemporalMotion": 0.18125,
+                "meanTemporalColorDelta": 0.200658,
+                "meanTemporalBrightnessDelta": 0.200658,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "grow_true",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "grow_false",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "grow",
+            "geometryProfile": "tree_flat_single_layer",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "c19094507fbd"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.062272,
+                "meanTemporalColorDelta": 0.046835,
+                "meanTemporalBrightnessDelta": 0.046835,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "grow_true",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014895,
+                "meanTemporalColorDelta": 0.010036,
+                "meanTemporalBrightnessDelta": 0.010036,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "grow_false",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "shrink",
+            "geometryProfile": "tree_360_round",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "6ed60f188c6c"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "high_motion"
+                ],
+                "meanTemporalMotion": 0.189803,
+                "meanTemporalColorDelta": 0.207237,
+                "meanTemporalBrightnessDelta": 0.207237,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "shrink_true",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "shrink_false",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "shrink",
+            "geometryProfile": "tree_360_round",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "6ed60f188c6c"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.057965,
+                "meanTemporalColorDelta": 0.04349,
+                "meanTemporalBrightnessDelta": 0.04349,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "shrink_true",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014895,
+                "meanTemporalColorDelta": 0.010036,
+                "meanTemporalBrightnessDelta": 0.010036,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "shrink_false",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "6ed60f188c6c"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "shrink",
+            "geometryProfile": "tree_flat_single_layer",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "c19094507fbd"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "high_motion"
+                ],
+                "meanTemporalMotion": 0.189803,
+                "meanTemporalColorDelta": 0.207237,
+                "meanTemporalBrightnessDelta": 0.207237,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "shrink_true",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.027303,
+                "meanTemporalColorDelta": 0.029605,
+                "meanTemporalBrightnessDelta": 0.029605,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "shrink_false",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "shrink",
+            "geometryProfile": "tree_flat_single_layer",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "c19094507fbd"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.057965,
+                "meanTemporalColorDelta": 0.04349,
+                "meanTemporalBrightnessDelta": 0.04349,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "shrink_true",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014895,
+                "meanTemporalColorDelta": 0.010036,
+                "meanTemporalBrightnessDelta": 0.010036,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "forward_motion",
+                  "forward_rotation",
+                  "medium_spiral",
+                  "round_tree_pattern",
+                  "shrink_false",
+                  "single_spiral",
+                  "spiral_flow",
+                  "spiral_motion",
+                  "spiral_pattern",
+                  "tree_pattern_fit"
+                ],
+                "structuralSignatures": [
+                  "c19094507fbd"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "populated",
+      "storageClass": "general_training",
+      "screeningRecordCount": 32,
+      "screenedParameterNames": [
+        "3D",
+        "blend",
+        "grow",
+        "shrink"
+      ],
+      "sampledModelTypes": [
+        "tree_360",
+        "tree_flat"
+      ],
+      "sampledGeometryProfiles": [
+        "tree_360_round",
+        "tree_flat_single_layer"
+      ],
+      "observedLabelHints": [
+        "3D",
+        "3D_false",
+        "effect:spirals",
+        "forward_motion",
+        "forward_rotation",
+        "medium_spiral",
+        "model:tree_360",
+        "palette_mono_white",
+        "range_sample",
+        "render_style:default",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit",
+        "palette_rgb_primary",
+        "3D_true",
+        "blend",
+        "blend_false",
+        "blend_true",
+        "grow",
+        "grow_false",
+        "grow_true",
+        "shrink",
+        "shrink_false",
+        "shrink_true",
+        "model:tree_flat"
+      ],
+      "configurationRepresentativeness": {
+        "coverageStatus": "single_reference_per_geometry",
+        "profileCount": 2,
+        "profiles": [
+          {
+            "modelType": "tree_360",
+            "geometryProfile": "tree_360_round",
+            "analyzerFamily": "tree",
+            "displayAsNormalized": "tree_360",
+            "stringType": "RGB Nodes",
+            "nodeCount": 50,
+            "nodeCountBucket": "small",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "nodes_per_string:50",
+              "strings:16",
+              "type:tree_360"
+            ],
+            "structuralSettings": {
+              "Dir": "L",
+              "DisplayAs": "Tree 360",
+              "parm1": "16",
+              "parm2": "50",
+              "parm3": "1",
+              "StartSide": "B",
+              "StringType": "RGB Nodes"
+            },
+            "structuralSignature": "6ed60f188c6c",
+            "sampleCount": 16
+          },
+          {
+            "modelType": "tree_flat",
+            "geometryProfile": "tree_flat_single_layer",
+            "analyzerFamily": "tree",
+            "displayAsNormalized": "tree_flat",
+            "stringType": "RGB Nodes",
+            "nodeCount": 50,
+            "nodeCountBucket": "small",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "nodes_per_string:50",
+              "strings:16",
+              "type:tree_flat"
+            ],
+            "structuralSettings": {
+              "Dir": "L",
+              "DisplayAs": "Tree Flat",
+              "parm1": "16",
+              "parm2": "50",
+              "parm3": "1",
+              "StartSide": "B",
+              "StringType": "RGB Nodes"
+            },
+            "structuralSignature": "c19094507fbd",
+            "sampleCount": 16
+          }
+        ]
+      }
+    }
+  }
+}

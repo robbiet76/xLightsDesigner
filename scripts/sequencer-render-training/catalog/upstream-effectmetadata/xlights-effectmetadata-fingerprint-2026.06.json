@@ -1,0 +1,308 @@
+{
+  "artifactType": "xlights_effect_metadata_fingerprint_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:27.349Z",
+  "xlightsVersion": "2026.06",
+  "sourceDir": "/Users/robterry/xLights-2026.06/resources/effectmetadata",
+  "schemaSha256": "fbb394e9ed58d2b7858ca487f7734abbc179330edd16ffacbe2ad4f190d3cecb",
+  "effectCount": 56,
+  "sharedCount": 3,
+  "fileFingerprints": [
+    {
+      "kind": "effect",
+      "fileName": "Adjust.json",
+      "sha256": "475f355954cd8c8985ba3a7efeb56fb48e669e63cb4f0b27f3021ce97a764967"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Bars.json",
+      "sha256": "b56e2e41203fca400b4a1ff65e18cc46a2e28646738b6cf0616f576bf30a4995"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Butterfly.json",
+      "sha256": "864bc6f000113f48f0d25c73af38b4c3560fdaca7d58ce5f051ebac25cdfc341"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Candle.json",
+      "sha256": "0daefde0a0584ed79b8a55c1f221eb3fc1c292e6d1ea0bde33ade08bcaa5f73c"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Circles.json",
+      "sha256": "2e0af9e0a2281130c38cfee059169d37c3eaf0bff91a200202da2661808b4236"
+    },
+    {
+      "kind": "effect",
+      "fileName": "ColorWash.json",
+      "sha256": "7054ea7d7d2831fd49768f6aa2e0e7cd365690c4c8e5be5cf2bdce74dc60bd66"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Curtain.json",
+      "sha256": "de00ac465f66b4736377180f809ea72578a1c7a1f793b3fc49ce8e75d2c43474"
+    },
+    {
+      "kind": "effect",
+      "fileName": "DMX.json",
+      "sha256": "0011216c49691871106fa02953159910d8df353d619253e209e53050a2739264"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Duplicate.json",
+      "sha256": "853d1ea19d8d7b6e0b92241c15258477d076675a89f6ea40568de17134f73481"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Faces.json",
+      "sha256": "e7e0a3fad498f4d685861861e78ec6443958d0e57c77d5e3c9c7bdec1c35bbb3"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Fan.json",
+      "sha256": "99dd035910c97de04b67a7cd6e54a59c0bb73f8cefd0a7b756d1848a6c307833"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Fill.json",
+      "sha256": "670578279c1326706f9d147d207ac7cbe72bdc7f555b4ef652d32b125a3e2452"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Fire.json",
+      "sha256": "6f0d5915565b99d0c3533405c850c4ad77ac910d860a543b76ce8b8d70946e1b"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Fireworks.json",
+      "sha256": "ef659156cabb4a0e06d8fb77983495ff89f88f1a6a3f018ae71212381ea8923a"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Galaxy.json",
+      "sha256": "65687088be52b2282945b2b06135e75ae9a0ff347c319f3250ea22d64d21b7e1"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Garlands.json",
+      "sha256": "490518369dd02e98878cf501246d0846bcdbbfe512726af2e521d18904e99b9b"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Glediator.json",
+      "sha256": "cd406e2062138faec13955e4232bdf209caa7cce02861e9105ee702bf1b1cf4f"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Guitar.json",
+      "sha256": "6ea5a83a6faae81d9a9c3bffa3d885c50f838c77d15bed9a29a04ec1d5b0e4a6"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Kaleidoscope.json",
+      "sha256": "b9f17552cafdf173314de0ea5e400751f466599198fe02896c037706f7cd73da"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Life.json",
+      "sha256": "cad7b897ca5ff55367a4fca36b781842eefb4373a540207c0afbae4cc354bd76"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Lightning.json",
+      "sha256": "8ad9a0781e9bae5b2353a12595f46d593cfb3ae738d53c29dbb0171118532224"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Lines.json",
+      "sha256": "eabb706e01ab92fad5deebfea37478ec6f2194bf4d1196f0953dcef47284395b"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Liquid.json",
+      "sha256": "f8fd3de3ec80fc3a12b29ccddf5c440943438010137b46ed3eae4e6eebed81ca"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Marquee.json",
+      "sha256": "0725c0fca910d2b0973f74203d0429364edb88797a4948543448344b60ab9db4"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Meteors.json",
+      "sha256": "0614e234027968085343bb0650e44b32c18ba3ac7f8cf9ff0e18556304f6c879"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Morph.json",
+      "sha256": "d29fb8e6f1fc1e160fb4d9eeea0976a71627ce980bab9b364e726050516bc3f4"
+    },
+    {
+      "kind": "effect",
+      "fileName": "MovingHead.json",
+      "sha256": "d68f2dd560354965e7e61056561d09626f37c029b743123bbb41f0186248ee0d"
+    },
+    {
+      "kind": "effect",
+      "fileName": "MusicEffect.json",
+      "sha256": "b096cb8cb0b7c5f541e9e0ca79ebd35be7dca1bc0e8fd47bdce69af5d17a0ca6"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Off.json",
+      "sha256": "7d94fa271572126be0233dd6e514d5bbf40c5fe845dfaa3c0cc12006fb9b6d2c"
+    },
+    {
+      "kind": "effect",
+      "fileName": "On.json",
+      "sha256": "653f9f626848ebd0b72a1c5cb80b38540e6a10b815f38eb4dfe31d0066d84f7e"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Piano.json",
+      "sha256": "a4f09ef10056f7ab159a5cbb99ea3e7d8c56f84991b42a9996fe93d3e465e420"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Pictures.json",
+      "sha256": "9813bfa3db505d6de9512005441b6859ba0cda6e0e2369a5df7490c18c1d4335"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Pinwheel.json",
+      "sha256": "6b631df2b96c0e6e0e666893200869be102b5ad5f6f8f81dd26c9d744aaca0b2"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Plasma.json",
+      "sha256": "53a930de01a61679fcb647bfb490e3f209196d997a728ef847fca5cb8e036a1f"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Ripple.json",
+      "sha256": "9d0ff497d7bbc16488795b1c022ff5ba4b807e58df0653d86afdd98b6681c36d"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Servo.json",
+      "sha256": "dd1a9f8de49ff6a73fb58c62f805bfca31242066d4d29560414d3d77296f158b"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Shader.json",
+      "sha256": "22ba261b9e960b50c4d60ed7973ae619b4d8c2b4cda972c9ae443dec975911b9"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Shape.json",
+      "sha256": "288f4fbd6ccb0e803d991c693063b46e08a74d21bc6d14540b4ce5d5f7b984d8"
+    },
+    {
+      "kind": "shared",
+      "fileName": "shared/Buffer.json",
+      "sha256": "a63868f2b75ee8ca00da08e211715e8686611f5fe2ad4713885ad90111c54947"
+    },
+    {
+      "kind": "shared",
+      "fileName": "shared/Color.json",
+      "sha256": "503d0e9245436582ed29bab7622e4fee461c22c5916edf277622fc8ecd025c19"
+    },
+    {
+      "kind": "shared",
+      "fileName": "shared/Timing.json",
+      "sha256": "b5f5784572aed8a2289d91b6dda697371d1f5c4bee3d35e0bb4c46f0644a6308"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Shimmer.json",
+      "sha256": "9ec307394ecb69a503f1b85b514821b13d912a94f0b0398a39b3a9a53c70c01a"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Shockwave.json",
+      "sha256": "8bfeeb59a589a1ebc9eb7caf53da7b1f77214459db6b6b73df3780ed2b17de0f"
+    },
+    {
+      "kind": "effect",
+      "fileName": "SingleStrand.json",
+      "sha256": "a23852bcfbcba7ca29f1ae88ef9802292e72668a8a8f28f0c12dca84b4f461fe"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Sketch.json",
+      "sha256": "c31fa73deb39752cbe2cc7fff13b32f297de5583b94fce19826d9875fc5d0a35"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Snowflakes.json",
+      "sha256": "0fb54f7e5012f9ad52a37b7f21d0ed721074257627c15b2ff72828f599cdb1bb"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Snowstorm.json",
+      "sha256": "8f805bf1dc21da92c53a3ed5713a79ebe9dc126b6401b99981e42e7448caaf19"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Spirals.json",
+      "sha256": "a91d87740c1b1ce466e61300476808847fb4a2b608cffdb17c5466f0c021656e"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Spirograph.json",
+      "sha256": "6dc884d4df85812060de9bdd952941603bb61f6ed96ff0c077e38b436af3a926"
+    },
+    {
+      "kind": "effect",
+      "fileName": "State.json",
+      "sha256": "06e6b377051ebb0024c7155406a884e486c4b9fe793547d33c0ba289d4194621"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Strobe.json",
+      "sha256": "d33420e0a85e5eee60de001f2af2fdb4dd8aa6b0d237b1a2bcbfbc7bd69b5c3e"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Tendril.json",
+      "sha256": "d2b2bf212497e30b019a7f02e0dc542c8ef1f834844d74ea7f411803bad45947"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Text.json",
+      "sha256": "9749ea0cc661ddd671b1ed8170e896f1f9c7dc025f64d44a5ef02fc1ae8250bc"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Tree.json",
+      "sha256": "77a84700d4637c456a04f92965da0f13652a4804afb24542e7ee1314be4c0173"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Twinkle.json",
+      "sha256": "b301b0b40165f728d51a23633c7b018d0c14c8535ce71a923c4346cbc0d1b51c"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Video.json",
+      "sha256": "55533339a7e2a2769bc5d0004490ae019dd1441a1a1ff422609547b91215953a"
+    },
+    {
+      "kind": "effect",
+      "fileName": "VUMeter.json",
+      "sha256": "1a543ac3c02e1b2f176443a18ebe6d36f345c5f446f06c4e50eb971705259c9d"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Warp.json",
+      "sha256": "8abb23cea52ab16870a77d29f546b5a5b8b0732993e28eda8ae5e10de4a2814e"
+    },
+    {
+      "kind": "effect",
+      "fileName": "Wave.json",
+      "sha256": "4127d4f79f389a7448454084b11cf1fe142ecbbbc8e3b36820f25608e7ab0543"
+    }
+  ],
+  "bundleSha256": "1a4ecccb147b043045e612463d3ca42a7bfab6b44413e3c53a772449deef645b"
+}

@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "singlestrand-bandsize-single-line-horizontal-rgb-primary-7",
+  "createdAt": "2026-04-16T18:35:27.481Z",
+  "effectName": "SingleStrand",
+  "geometryProfile": "single_line_horizontal",
+  "modelType": "single_line",
+  "parameterRegion": {
+    "parameterName": "bandSize",
+    "regionKind": "single_value",
+    "valueSummary": "7",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "paletteContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "subtle_motion",
+    "primaryTexture": "bandSize_7",
+    "motionPacing": "subtle_motion",
+    "textureDensity": "bandSize_7,chase_pattern,clean_linear_pattern,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+    "energyLevel": "restrained",
+    "coverageLevel": "broad",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "subtle_motion",
+    "densityRead": "dense",
+    "nonBlankRatio": 0.75,
+    "temporalMotion": 0.014788,
+    "temporalColorDelta": 0.008848,
+    "temporalBrightnessDelta": 0.007747,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "multi_configuration_sampled"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "single_line_horizontal"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

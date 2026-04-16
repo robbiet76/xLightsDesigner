@@ -1,0 +1,513 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.268Z",
+  "status": "transitional_current_evidence",
+  "effectName": "On",
+  "family": "hold",
+  "intentSurface": {
+    "supportedSettingsIntent": [
+      "intensity",
+      "coverage",
+      "motion"
+    ],
+    "supportedPaletteIntent": [
+      "colors",
+      "temperature",
+      "contrast",
+      "brightness",
+      "saturation",
+      "accentUsage"
+    ],
+    "supportedLayerIntent": [
+      "priority",
+      "blendRole",
+      "mixAmount",
+      "overlayPolicy"
+    ],
+    "supportedRenderIntent": [
+      "groupPolicy",
+      "bufferStyle",
+      "expansionPolicy",
+      "riskTolerance"
+    ]
+  },
+  "currentCoverage": {
+    "coverageStatus": "screened_parameter_subset",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [
+      "cycles",
+      "endLevel",
+      "shimmer",
+      "startLevel"
+    ],
+    "retainedParameterNames": [
+      "endLevel",
+      "shimmer",
+      "startLevel"
+    ],
+    "screenedParameterNames": [],
+    "screeningRecordCount": 0
+  },
+  "upstreamMetadata": {
+    "sourceFile": "On.json",
+    "propertyCount": 5,
+    "visibilityRuleCount": 0,
+    "parameters": {
+      "cycles": {
+        "upstreamId": "On_Cycles",
+        "label": "Cycle Count",
+        "description": "Number of times the start-to-end intensity ramp repeats over the effect duration. Values greater than 1 create a pulsing look.",
+        "default": 1,
+        "min": 0,
+        "max": 1000,
+        "options": []
+      },
+      "endLevel": {
+        "upstreamId": "Eff_On_End",
+        "label": "End Intensity",
+        "description": "Sets the brightness level at the end of the effect as a percentage. The intensity ramps linearly from Start to End over the effect duration.",
+        "default": 100,
+        "min": 0,
+        "max": 100,
+        "options": []
+      },
+      "shimmer": {
+        "upstreamId": "On_Shimmer",
+        "label": "Shimmer",
+        "description": "When enabled, the effect alternates between the first and second palette colors on each frame, creating a rapid flickering shimmer.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "startLevel": {
+        "upstreamId": "Eff_On_Start",
+        "label": "Start Intensity",
+        "description": "Sets the brightness level at the beginning of the effect as a percentage of the palette color's full value.",
+        "default": 100,
+        "min": 0,
+        "max": 100,
+        "options": []
+      }
+    }
+  },
+  "registryDefinition": {
+    "complexityClass": "simple",
+    "earlySamplingPolicy": "baseline_only",
+    "notes": "Static baseline effect. Brightness transitions are semantic and are not normalized away.",
+    "parameters": {
+      "cycles": {
+        "type": "numeric",
+        "range": {
+          "min": 0.5,
+          "max": 5
+        },
+        "anchors": [
+          1
+        ],
+        "importance": "low",
+        "phase": "defer",
+        "stopRule": "do_not_expand_without_signal",
+        "upstream": {
+          "id": "On_Cycles",
+          "label": "Cycle Count",
+          "description": "Number of times the start-to-end intensity ramp repeats over the effect duration. Values greater than 1 create a pulsing look.",
+          "type": "float",
+          "controlType": "slider",
+          "default": 1,
+          "min": 0,
+          "max": 1000,
+          "divisor": 10,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": true
+        }
+      },
+      "endLevel": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          0,
+          100
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "stopRule": "semantic_levels_only",
+        "upstream": {
+          "id": "Eff_On_End",
+          "label": "End Intensity",
+          "description": "Sets the brightness level at the end of the effect as a percentage. The intensity ramps linearly from Start to End over the effect duration.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 100,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": true
+        }
+      },
+      "shimmer": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "On_Shimmer",
+          "label": "Shimmer",
+          "description": "When enabled, the effect alternates between the first and second palette colors on each frame, creating a rapid flickering shimmer.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": true
+        }
+      },
+      "startLevel": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          0,
+          100
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "stopRule": "semantic_levels_only",
+        "upstream": {
+          "id": "Eff_On_Start",
+          "label": "Start Intensity",
+          "description": "Sets the brightness level at the beginning of the effect as a percentage of the palette color's full value.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 100,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": true
+        }
+      }
+    },
+    "upstreamEffectName": "On",
+    "upstreamSourceFile": "On.json",
+    "upstreamPropertyCount": 5,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": [
+      {
+        "id": "On_Transparency",
+        "label": "Transparency"
+      }
+    ]
+  },
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [],
+    "range": [],
+    "combos": [],
+    "interactions": [
+      "on-outline-interactions-v1.json"
+    ],
+    "all": [
+      "on-archsingle-reduced-sweep-v1.json",
+      "on-hiddentree-reduced-sweep-v1.json",
+      "on-hiddentreestar-reduced-sweep-v1.json",
+      "on-matrix-reduced-sweep-v1.json",
+      "on-outline-interactions-v1.json",
+      "on-reduced-sweep-v1.json",
+      "on-sample-v1.json",
+      "on-singlelinehorizontal-reduced-sweep-v1.json",
+      "on-spiraltree-reduced-sweep-v1.json",
+      "on-starsingle-reduced-sweep-v1.json",
+      "on-treeflat-reduced-sweep-v1.json",
+      "on-treeround-reduced-sweep-v1.json"
+    ]
+  },
+  "evidenceIndex": {
+    "screeningRecords": [],
+    "screeningRecordPaths": []
+  },
+  "currentTrainingReference": {
+    "effectName": "On",
+    "baseline": {
+      "currentStage": "selector_ready",
+      "selectorReady": true,
+      "selectorEvidence": {
+        "selectedCaseCount": 3,
+        "passedCaseCount": 3,
+        "caseIds": [
+          "select_on_ramp_up_line",
+          "select_on_ramp_down_spinner",
+          "select_on_shimmer_tree"
+        ]
+      },
+      "supportedModelTypes": [
+        "arch",
+        "cane",
+        "icicles",
+        "matrix",
+        "single_line",
+        "spinner",
+        "star",
+        "tree_360",
+        "tree_flat"
+      ],
+      "supportedGeometryProfiles": [
+        "arch_grouped",
+        "arch_multi_layer",
+        "arch_single",
+        "cane_grouped",
+        "cane_single",
+        "cane_stick_grouped",
+        "icicles_drop_pattern",
+        "matrix_high_density",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "single_line_horizontal",
+        "single_line_single_node",
+        "single_line_vertical",
+        "spinner_standard",
+        "star_multi_layer",
+        "star_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "tree_flat_single_layer"
+      ],
+      "intentTags": [
+        "animated",
+        "bold",
+        "busy",
+        "clean",
+        "directional",
+        "fill",
+        "full",
+        "partial",
+        "patterned",
+        "restrained",
+        "sparse",
+        "steady"
+      ],
+      "patternFamilies": [
+        "static_fill",
+        "static_hold"
+      ],
+      "retainedParameters": [
+        {
+          "parameterName": "endLevel",
+          "status": "interaction_suspected",
+          "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+        },
+        {
+          "parameterName": "shimmer",
+          "status": "interaction_suspected",
+          "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+        },
+        {
+          "parameterName": "startLevel",
+          "status": "interaction_suspected",
+          "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+        }
+      ]
+    },
+    "capability": {
+      "family": "hold",
+      "supportedSettingsIntent": [
+        "intensity",
+        "coverage",
+        "motion"
+      ],
+      "supportedPaletteIntent": [
+        "colors",
+        "temperature",
+        "contrast",
+        "brightness",
+        "saturation",
+        "accentUsage"
+      ],
+      "supportedLayerIntent": [
+        "priority",
+        "blendRole",
+        "mixAmount",
+        "overlayPolicy"
+      ],
+      "supportedRenderIntent": [
+        "groupPolicy",
+        "bufferStyle",
+        "expansionPolicy",
+        "riskTolerance"
+      ]
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "cycles",
+        "endLevel",
+        "shimmer",
+        "startLevel"
+      ],
+      "retainedParameterNames": [
+        "endLevel",
+        "shimmer",
+        "startLevel"
+      ],
+      "supportedIntentAxes": {
+        "settings": [
+          "intensity",
+          "coverage",
+          "motion"
+        ],
+        "palette": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "layer": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "render": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "coverageStatus": "screened_parameter_subset",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [],
+      "derivedPriors": {
+        "status": "empty",
+        "priorCount": 0,
+        "priors": []
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [
+        {
+          "role": "reduce_competing_support",
+          "priority": "primary",
+          "source": "legacy_runtime_heuristic",
+          "conditions": [
+            "motion:not_restrained"
+          ]
+        },
+        {
+          "role": "strengthen_lead",
+          "priority": "primary",
+          "source": "legacy_runtime_heuristic",
+          "conditions": [
+            "motion:still"
+          ]
+        }
+      ],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "empty",
+      "storageClass": "general_training",
+      "screeningRecordCount": 0,
+      "screenedParameterNames": [],
+      "sampledModelTypes": [],
+      "sampledGeometryProfiles": [],
+      "observedLabelHints": [],
+      "configurationRepresentativeness": {
+        "coverageStatus": "none",
+        "profileCount": 0,
+        "profiles": []
+      }
+    }
+  }
+}

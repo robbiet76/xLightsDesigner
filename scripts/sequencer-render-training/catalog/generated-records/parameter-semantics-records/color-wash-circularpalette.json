@@ -1,0 +1,155 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "color-wash-circularpalette",
+  "createdAt": "2026-04-16T18:35:28.014Z",
+  "effectName": "Color Wash",
+  "parameterName": "circularPalette",
+  "sourceDefinition": {
+    "id": "ColorWash_CircularPalette",
+    "label": "Circular Palette",
+    "description": "Makes the palette wrap around by blending the last color back into the first, creating a seamless continuous color loop instead of stopping at the last color.",
+    "type": "bool",
+    "controlType": "checkbox",
+    "default": false,
+    "min": null,
+    "max": null,
+    "options": [],
+    "valueCurve": false,
+    "lockable": false,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Makes the palette wrap around by blending the last color back into the first, creating a seamless continuous color loop instead of stopping at the last color.",
+  "semanticAxis": "variation",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "unknown",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "circularPalette_false",
+    "flat_fill",
+    "full_coverage",
+    "intermittent_window_coverage",
+    "linear_palette",
+    "matrix_fill",
+    "moderate_motion_window",
+    "steady_wash",
+    "subtle_brightness_change",
+    "subtle_color_travel",
+    "wash_fill",
+    "circularPalette_true",
+    "circular_palette",
+    "color_travel",
+    "stable_brightness",
+    "subtle_motion_window"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "color-wash-circularpalette-matrix-high-density-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "circularPalette_false,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
+      "affectedSignals": [
+        "circularPalette_false",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-circularpalette-matrix-high-density-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "circularPalette_true,circular_palette,flat_fill,full_coverage,intermittent_window_coverage,matrix_fill,moderate_motion_window,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
+      "affectedSignals": [
+        "circularPalette_true",
+        "circular_palette",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "matrix_fill",
+        "moderate_motion_window",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-circularpalette-matrix-high-density-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "circularPalette_true,circular_palette,color_travel,flat_fill,full_coverage,intermittent_window_coverage,matrix_fill,moderate_motion_window,stable_brightness,steady_wash,wash_fill",
+      "affectedSignals": [
+        "circularPalette_true",
+        "circular_palette",
+        "color_travel",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "matrix_fill",
+        "moderate_motion_window",
+        "stable_brightness",
+        "steady_wash",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-circularpalette-matrix-high-density-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "circularPalette_false,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,stable_brightness,steady_wash,subtle_color_travel,subtle_motion_window,wash_fill",
+      "affectedSignals": [
+        "circularPalette_false",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "stable_brightness",
+        "steady_wash",
+        "subtle_color_travel",
+        "subtle_motion_window",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 4,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "matrix_high_density"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

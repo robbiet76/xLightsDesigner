@@ -1,0 +1,1424 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.235Z",
+  "status": "transitional_current_evidence",
+  "effectName": "Bars",
+  "family": "rhythmic",
+  "intentSurface": {
+    "supportedSettingsIntent": [
+      "intensity",
+      "speed",
+      "density",
+      "coverage",
+      "motion",
+      "direction",
+      "thickness",
+      "variation"
+    ],
+    "supportedPaletteIntent": [
+      "colors",
+      "temperature",
+      "contrast",
+      "brightness",
+      "saturation",
+      "accentUsage"
+    ],
+    "supportedLayerIntent": [
+      "priority",
+      "blendRole",
+      "mixAmount",
+      "overlayPolicy"
+    ],
+    "supportedRenderIntent": [
+      "groupPolicy",
+      "bufferStyle",
+      "expansionPolicy",
+      "riskTolerance"
+    ]
+  },
+  "currentCoverage": {
+    "coverageStatus": "screened_parameter_subset",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [
+      "3D",
+      "barCount",
+      "cycles",
+      "direction",
+      "gradient",
+      "highlight"
+    ],
+    "retainedParameterNames": [
+      "barCount",
+      "direction"
+    ],
+    "screenedParameterNames": [
+      "3D",
+      "cycles",
+      "gradient",
+      "highlight"
+    ],
+    "screeningRecordCount": 22
+  },
+  "upstreamMetadata": {
+    "sourceFile": "Bars.json",
+    "propertyCount": 8,
+    "visibilityRuleCount": 1,
+    "parameters": {
+      "3D": {
+        "upstreamId": "Bars_3D",
+        "label": "3D",
+        "description": "Applies a brightness or alpha gradient within each bar so it fades from full brightness at one edge to dark at the other, giving a three-dimensional appearance.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "barCount": {
+        "upstreamId": "Bars_BarCount",
+        "label": "Palette Rep",
+        "description": "Number of times the full palette color sequence repeats across the model. Higher values produce more, thinner bars.",
+        "default": 1,
+        "min": 1,
+        "max": 5,
+        "options": []
+      },
+      "cycles": {
+        "upstreamId": "Bars_Cycles",
+        "label": "Cycles",
+        "description": "Number of times the bars scroll completely across the model during the effect. Higher values make the bars move faster.",
+        "default": 1,
+        "min": 0,
+        "max": 300,
+        "options": []
+      },
+      "direction": {
+        "upstreamId": "Bars_Direction",
+        "label": "Direction",
+        "description": "Direction the bars travel. Expand/compress radiate from or collapse toward a center point. Alternate modes snap bars one step at a time. Custom modes place static bars with an adjustable center offset.",
+        "default": "up",
+        "min": null,
+        "max": null,
+        "options": [
+          "up",
+          "down",
+          "expand",
+          "compress",
+          "Left",
+          "Right",
+          "H-expand",
+          "H-compress",
+          "Alternate Up",
+          "Alternate Down",
+          "Alternate Left",
+          "Alternate Right",
+          "Custom Horz",
+          "Custom Vert"
+        ]
+      },
+      "gradient": {
+        "upstreamId": "Bars_Gradient",
+        "label": "Gradient",
+        "description": "Smoothly blends colors between adjacent bars instead of using hard edges, creating a continuous gradient across the palette.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "highlight": {
+        "upstreamId": "Bars_Highlight",
+        "label": "Highlight",
+        "description": "Adds a bright white highlight line at the leading edge of each bar to make the boundaries between colors more visible.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      }
+    }
+  },
+  "registryDefinition": {
+    "complexityClass": "complex",
+    "earlySamplingPolicy": "broad_geometry_first",
+    "notes": "High-value structural motion effect. Direction, bar count, cadence, and structural toggles are first-order levers across linear, arch, and tree geometries. Full Stage 1 geometry coverage and observed behavior now support treating Bars as complex rather than moderate.",
+    "parameters": {
+      "3D": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "highlight",
+          "gradient"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Bars_3D",
+          "label": "3D",
+          "description": "Applies a brightness or alpha gradient within each bar so it fades from full brightness at one edge to dark at the other, giving a three-dimensional appearance.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "barCount": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 5
+        },
+        "anchors": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "direction",
+          "cycles",
+          "geometryProfile"
+        ],
+        "stopRule": "stop_when_regions_stabilize",
+        "upstream": {
+          "id": "Bars_BarCount",
+          "label": "Palette Rep",
+          "description": "Number of times the full palette color sequence repeats across the model. Higher values produce more, thinner bars.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 5,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "cycles": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 20
+        },
+        "anchors": [
+          2,
+          5,
+          10,
+          15,
+          20
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "direction",
+          "barCount",
+          "geometryProfile"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Bars_Cycles",
+          "label": "Cycles",
+          "description": "Number of times the bars scroll completely across the model during the effect. Higher values make the bars move faster.",
+          "type": "float",
+          "controlType": "slider",
+          "default": 1,
+          "min": 0,
+          "max": 300,
+          "divisor": 10,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "direction": {
+        "type": "enum",
+        "anchors": [
+          "up",
+          "down",
+          "expand",
+          "compress",
+          "Left",
+          "Right"
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "barCount",
+          "cycles",
+          "renderStyle",
+          "geometryProfile"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Bars_Direction",
+          "label": "Direction",
+          "description": "Direction the bars travel. Expand/compress radiate from or collapse toward a center point. Alternate modes snap bars one step at a time. Custom modes place static bars with an adjustable center offset.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "up",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [
+            "up",
+            "down",
+            "expand",
+            "compress",
+            "Left",
+            "Right",
+            "H-expand",
+            "H-compress",
+            "Alternate Up",
+            "Alternate Down",
+            "Alternate Left",
+            "Alternate Right",
+            "Custom Horz",
+            "Custom Vert"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "gradient": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "highlight",
+          "barCount"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Bars_Gradient",
+          "label": "Gradient",
+          "description": "Smoothly blends colors between adjacent bars instead of using hard edges, creating a continuous gradient across the palette.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "highlight": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "gradient",
+          "3D"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Bars_Highlight",
+          "label": "Highlight",
+          "description": "Adds a bright white highlight line at the leading edge of each bar to make the boundaries between colors more visible.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Bars",
+    "upstreamSourceFile": "Bars.json",
+    "upstreamPropertyCount": 8,
+    "upstreamVisibilityRuleCount": 1,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": [
+      {
+        "id": "Bars_Center",
+        "label": "Center Point"
+      },
+      {
+        "id": "Bars_UseFirstColorForHighlight",
+        "label": "Use First Color for Highlight"
+      }
+    ]
+  },
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [
+      "bars-archgroup-expanded-sweep-v1.json",
+      "bars-archsingle-expanded-sweep-v1.json",
+      "bars-archtriplelayer-expanded-sweep-v1.json",
+      "bars-singlelinehorizontal-expanded-sweep-v1.json",
+      "bars-singlelinevertical-expanded-sweep-v1.json",
+      "bars-treeflat-expanded-sweep-v1.json",
+      "bars-treeround-expanded-sweep-v1.json",
+      "bars-treespiral-expanded-sweep-v1.json"
+    ],
+    "range": [],
+    "combos": [],
+    "interactions": [
+      "bars-archgroup-interactions-v1.json"
+    ],
+    "all": [
+      "bars-archgroup-expanded-sweep-v1.json",
+      "bars-archgroup-interactions-v1.json",
+      "bars-archsingle-expanded-sweep-v1.json",
+      "bars-archtriplelayer-expanded-sweep-v1.json",
+      "bars-singlelinehorizontal-expanded-sweep-v1.json",
+      "bars-singlelinevertical-expanded-sweep-v1.json",
+      "bars-treeflat-expanded-sweep-v1.json",
+      "bars-treeround-expanded-sweep-v1.json",
+      "bars-treespiral-expanded-sweep-v1.json"
+    ]
+  },
+  "evidenceIndex": {
+    "screeningRecords": [
+      "bars-arch-grouped-bars-3d-false-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-3d-false-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-3d-true-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-3d-true-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-10-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-10-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-15-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-15-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-2-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-2-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-20-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-20-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-5-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-cycles-5-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-gradient-false-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-gradient-false-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-gradient-true-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-gradient-true-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-highlight-false-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-highlight-false-rgb-primary-generated-v1.record.json",
+      "bars-arch-grouped-bars-highlight-true-mono-white-generated-v1.record.json",
+      "bars-arch-grouped-bars-highlight-true-rgb-primary-generated-v1.record.json"
+    ],
+    "screeningRecordPaths": [
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-3d-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-3d-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-3d-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-3d-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-10-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-10-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-15-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-15-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-2-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-2-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-20-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-20-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-5-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-cycles-5-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-gradient-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-gradient-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-gradient-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-gradient-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-highlight-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-highlight-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-highlight-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/bars-arch-grouped-bars-highlight-true-rgb-primary-generated-v1.record.json"
+    ]
+  },
+  "currentTrainingReference": {
+    "effectName": "Bars",
+    "baseline": {
+      "currentStage": "selector_ready",
+      "selectorReady": true,
+      "selectorEvidence": {
+        "selectedCaseCount": 2,
+        "passedCaseCount": 2,
+        "caseIds": [
+          "select_directional_segmented_clean",
+          "select_arch_compress_motion"
+        ]
+      },
+      "supportedModelTypes": [
+        "arch",
+        "cane",
+        "icicles",
+        "matrix",
+        "single_line",
+        "spinner",
+        "star",
+        "tree_360",
+        "tree_flat"
+      ],
+      "supportedGeometryProfiles": [
+        "arch_grouped",
+        "arch_multi_layer",
+        "arch_single",
+        "cane_grouped",
+        "cane_single",
+        "cane_stick_grouped",
+        "icicles_drop_pattern",
+        "matrix_high_density",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "single_line_horizontal",
+        "single_line_single_node",
+        "single_line_vertical",
+        "spinner_standard",
+        "star_multi_layer",
+        "star_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "tree_flat_single_layer"
+      ],
+      "intentTags": [
+        "animated",
+        "bold",
+        "clean",
+        "directional",
+        "fill",
+        "full",
+        "patterned",
+        "segmented",
+        "steady"
+      ],
+      "patternFamilies": [
+        "compressing_bars",
+        "dense_bars",
+        "expanding_bars",
+        "multi_bars",
+        "single_bar_motion",
+        "tree_bar_bands",
+        "tree_compressing_bars",
+        "tree_dense_bars",
+        "tree_expanding_bars"
+      ],
+      "retainedParameters": [
+        {
+          "parameterName": "barCount",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "direction",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        }
+      ]
+    },
+    "capability": {
+      "family": "rhythmic",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "supportedPaletteIntent": [
+        "colors",
+        "temperature",
+        "contrast",
+        "brightness",
+        "saturation",
+        "accentUsage"
+      ],
+      "supportedLayerIntent": [
+        "priority",
+        "blendRole",
+        "mixAmount",
+        "overlayPolicy"
+      ],
+      "supportedRenderIntent": [
+        "groupPolicy",
+        "bufferStyle",
+        "expansionPolicy",
+        "riskTolerance"
+      ]
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "3D",
+        "barCount",
+        "cycles",
+        "direction",
+        "gradient",
+        "highlight"
+      ],
+      "retainedParameterNames": [
+        "barCount",
+        "direction"
+      ],
+      "supportedIntentAxes": {
+        "settings": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "thickness",
+          "variation"
+        ],
+        "palette": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "layer": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "render": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "coverageStatus": "screened_parameter_subset",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [
+        "3D",
+        "cycles",
+        "gradient",
+        "highlight"
+      ],
+      "derivedPriors": {
+        "status": "populated",
+        "priorCount": 8,
+        "priors": [
+          {
+            "parameterName": "3D",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_false",
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0,
+                "meanTemporalColorDelta": 0,
+                "meanTemporalBrightnessDelta": 0,
+                "meanNonBlankRatio": 0,
+                "behaviorHints": [
+                  "3D_true",
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "3D",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.119983,
+                "meanTemporalColorDelta": 0.498246,
+                "meanTemporalBrightnessDelta": 0.020502,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "3D_false",
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0,
+                "meanTemporalColorDelta": 0,
+                "meanTemporalBrightnessDelta": 0,
+                "meanNonBlankRatio": 0,
+                "behaviorHints": [
+                  "3D_true",
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "cycles",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_10",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 15,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_15",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_2",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 20,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_20",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_5",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "cycles",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.119983,
+                "meanTemporalColorDelta": 0.498246,
+                "meanTemporalBrightnessDelta": 0.020502,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_10",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.112855,
+                "meanTemporalColorDelta": 0.463571,
+                "meanTemporalBrightnessDelta": 0.019952,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_5",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 20,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.09238,
+                "meanTemporalColorDelta": 0.361197,
+                "meanTemporalBrightnessDelta": 0.019952,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_20",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.057499,
+                "meanTemporalColorDelta": 0.189199,
+                "meanTemporalBrightnessDelta": 0.018576,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_2",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": 15,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.043698,
+                "meanTemporalColorDelta": 0.120674,
+                "meanTemporalBrightnessDelta": 0.018301,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "cycles_15",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "gradient",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "gradient_false",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "gradient_true",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "gradient",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.119983,
+                "meanTemporalColorDelta": 0.498246,
+                "meanTemporalBrightnessDelta": 0.020502,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "gradient_false",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.119983,
+                "meanTemporalColorDelta": 0.498246,
+                "meanTemporalBrightnessDelta": 0.020502,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "gradient_true",
+                  "grouped_arch_read",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "highlight",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "grouped_arch_read",
+                  "highlight_false",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "grouped_arch_read",
+                  "highlight_true",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "highlight",
+            "geometryProfile": "arch_grouped",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "37983f3862ab"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.119983,
+                "meanTemporalColorDelta": 0.498246,
+                "meanTemporalBrightnessDelta": 0.020502,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "grouped_arch_read",
+                  "highlight_false",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "arch_pattern_fit",
+                  "bar_motion",
+                  "bar_pattern",
+                  "grouped_arch_read",
+                  "highlight_true",
+                  "single_bar"
+                ],
+                "structuralSignatures": [
+                  "37983f3862ab"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [
+        {
+          "role": "increase_section_contrast",
+          "priority": "primary",
+          "source": "legacy_runtime_heuristic",
+          "conditions": [
+            "default"
+          ]
+        },
+        {
+          "role": "add_section_development",
+          "priority": "primary",
+          "source": "legacy_runtime_heuristic",
+          "conditions": [
+            "motion:not_restrained"
+          ]
+        },
+        {
+          "role": "widen_support",
+          "priority": "primary",
+          "source": "legacy_runtime_heuristic",
+          "conditions": [
+            "motion:not_restrained"
+          ]
+        },
+        {
+          "role": "strengthen_lead",
+          "priority": "primary",
+          "source": "legacy_runtime_heuristic",
+          "conditions": [
+            "motion:not_still"
+          ]
+        }
+      ],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "populated",
+      "storageClass": "general_training",
+      "screeningRecordCount": 22,
+      "screenedParameterNames": [
+        "3D",
+        "cycles",
+        "gradient",
+        "highlight"
+      ],
+      "sampledModelTypes": [
+        "arch"
+      ],
+      "sampledGeometryProfiles": [
+        "arch_grouped"
+      ],
+      "observedLabelHints": [
+        "3D",
+        "3D_false",
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "effect:bars",
+        "grouped_arch_read",
+        "model:arch",
+        "palette_mono_white",
+        "range_sample",
+        "render_style:single_line",
+        "single_bar",
+        "palette_rgb_primary",
+        "3D_true",
+        "cycles",
+        "cycles_10",
+        "cycles_15",
+        "cycles_2",
+        "cycles_20",
+        "cycles_5",
+        "gradient",
+        "gradient_false",
+        "gradient_true",
+        "highlight",
+        "highlight_false",
+        "highlight_true"
+      ],
+      "configurationRepresentativeness": {
+        "coverageStatus": "single_reference_per_geometry",
+        "profileCount": 1,
+        "profiles": [
+          {
+            "modelType": "arch",
+            "geometryProfile": "arch_grouped",
+            "analyzerFamily": "linear",
+            "displayAsNormalized": "arches",
+            "stringType": "RGB Nodes",
+            "nodeCount": 50,
+            "nodeCountBucket": "small",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "grouped",
+              "type:arch"
+            ],
+            "structuralSettings": {
+              "Angle": "0",
+              "Dir": "L",
+              "DisplayAs": "Arches",
+              "Height": "1.000000",
+              "parm1": "3",
+              "parm2": "50",
+              "parm3": "1",
+              "StartSide": "B",
+              "StringType": "RGB Nodes"
+            },
+            "structuralSignature": "37983f3862ab",
+            "sampleCount": 22
+          }
+        ]
+      }
+    }
+  }
+}

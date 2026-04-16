@@ -1,0 +1,27 @@
+{
+  "artifactType": "shared_setting_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "outTransitionType",
+  "createdAt": "2026-04-16T18:35:27.818Z",
+  "settingName": "outTransitionType",
+  "settingValueRegion": {
+    "regionKind": "transitional_empty",
+    "values": []
+  },
+  "affectedBehaviorSignals": [],
+  "interactionTargets": [],
+  "geometrySensitivity": "cross_effect_or_unknown",
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "no_outcome_evidence",
+    "coverageStatus": "empty"
+  },
+  "evidenceCount": 0,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [],
+    "generatedBy": "build-shared-setting-semantics-records.mjs"
+  }
+}

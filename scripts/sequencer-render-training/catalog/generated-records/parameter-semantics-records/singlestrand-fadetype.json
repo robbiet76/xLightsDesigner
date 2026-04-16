@@ -1,0 +1,822 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "singlestrand-fadetype",
+  "createdAt": "2026-04-16T18:35:28.031Z",
+  "effectName": "SingleStrand",
+  "parameterName": "fadeType",
+  "sourceDefinition": {
+    "id": "Fade_Type",
+    "label": "Fade",
+    "description": "Applies a brightness fade to the chase segment. 'From Head' fades from the leading edge, 'From Tail' from the trailing edge, 'Head and Tail' fades both ends, and 'Middle' fades from the center outward.",
+    "type": "enum",
+    "controlType": "choice",
+    "default": "None",
+    "min": null,
+    "max": null,
+    "options": [
+      "None",
+      "From Head",
+      "From Tail",
+      "Head and Tail",
+      "Middle"
+    ],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Applies a brightness fade to the chase segment. 'From Head' fades from the leading edge, 'From Tail' from the trailing edge, 'Head and Tail' fades both ends, and 'Middle' fades from the center outward.",
+  "semanticAxis": "edge_softness",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "arch_pattern",
+    "arch_pattern_fit",
+    "chase_pattern",
+    "fadeType_From_Head",
+    "fragmented_pattern",
+    "single_direction_chase",
+    "sparse_sampled_motion",
+    "fadeType_From_Tail",
+    "fadeType_Head_and_Tail",
+    "fadeType_None",
+    "fadeType_Middle",
+    "clean_cane_pattern",
+    "clean_linear_pattern",
+    "linear_pattern_fit",
+    "spiral_tree_pattern",
+    "tree_pattern_fit"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "singlestrand-fadetype-arch-single-from-head",
+      "valueSummary": "From Head",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_From_Head,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_From_Head",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-arch-single-from-tail",
+      "valueSummary": "From Tail",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_From_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_From_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-arch-single-head-and-tail",
+      "valueSummary": "Head and Tail",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_Head_and_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_Head_and_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-arch-single-none",
+      "valueSummary": "None",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_None,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_None",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-arch-single-middle",
+      "valueSummary": "Middle",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_Middle,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_Middle",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-arch-single-from-head",
+      "valueSummary": "From Head",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_From_Head,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_From_Head",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-arch-single-from-tail",
+      "valueSummary": "From Tail",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_From_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_From_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-arch-single-head-and-tail",
+      "valueSummary": "Head and Tail",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_Head_and_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_Head_and_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-arch-single-none",
+      "valueSummary": "None",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_None,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_None",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-arch-single-middle",
+      "valueSummary": "Middle",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,chase_pattern,fadeType_Middle,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "chase_pattern",
+        "fadeType_Middle",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "arch_single"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-from-head",
+      "valueSummary": "From Head",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_From_Head,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_From_Head",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-from-tail",
+      "valueSummary": "From Tail",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_From_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_From_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-head-and-tail",
+      "valueSummary": "Head and Tail",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_Head_and_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_Head_and_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-middle",
+      "valueSummary": "Middle",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_Middle,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_Middle",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-none",
+      "valueSummary": "None",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_None,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_None",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-from-head",
+      "valueSummary": "From Head",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_From_Head,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_From_Head",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-from-tail",
+      "valueSummary": "From Tail",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_From_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_From_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-head-and-tail",
+      "valueSummary": "Head and Tail",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_Head_and_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_Head_and_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-middle",
+      "valueSummary": "Middle",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_Middle,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_Middle",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-custom-none",
+      "valueSummary": "None",
+      "behaviorImpactSummary": "chase_pattern,clean_cane_pattern,fadeType_None,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_cane_pattern",
+        "fadeType_None",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "custom"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-from-head",
+      "valueSummary": "From Head",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_From_Head,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_From_Head",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-from-tail",
+      "valueSummary": "From Tail",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_From_Tail,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_From_Tail",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-head-and-tail",
+      "valueSummary": "Head and Tail",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_Head_and_Tail,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_Head_and_Tail",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-none",
+      "valueSummary": "None",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_None,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_None",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-middle",
+      "valueSummary": "Middle",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_Middle,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_Middle",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-from-head",
+      "valueSummary": "From Head",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_From_Head,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_From_Head",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-from-tail",
+      "valueSummary": "From Tail",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_From_Tail,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_From_Tail",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-head-and-tail",
+      "valueSummary": "Head and Tail",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_Head_and_Tail,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_Head_and_Tail",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-none",
+      "valueSummary": "None",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_None,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_None",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-single-line-horizontal-middle",
+      "valueSummary": "Middle",
+      "behaviorImpactSummary": "chase_pattern,clean_linear_pattern,fadeType_Middle,fragmented_pattern,linear_pattern_fit,single_direction_chase,sparse_sampled_motion",
+      "affectedSignals": [
+        "chase_pattern",
+        "clean_linear_pattern",
+        "fadeType_Middle",
+        "fragmented_pattern",
+        "linear_pattern_fit",
+        "single_direction_chase",
+        "sparse_sampled_motion"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-from-head",
+      "valueSummary": "From Head",
+      "behaviorImpactSummary": "chase_pattern,fadeType_From_Head,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_From_Head",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-from-tail",
+      "valueSummary": "From Tail",
+      "behaviorImpactSummary": "chase_pattern,fadeType_From_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_From_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-head-and-tail",
+      "valueSummary": "Head and Tail",
+      "behaviorImpactSummary": "chase_pattern,fadeType_Head_and_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_Head_and_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-middle",
+      "valueSummary": "Middle",
+      "behaviorImpactSummary": "chase_pattern,fadeType_Middle,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_Middle",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-none",
+      "valueSummary": "None",
+      "behaviorImpactSummary": "chase_pattern,fadeType_None,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_None",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-head-and-tail",
+      "valueSummary": "Head and Tail",
+      "behaviorImpactSummary": "chase_pattern,fadeType_Head_and_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_Head_and_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-from-head",
+      "valueSummary": "From Head",
+      "behaviorImpactSummary": "chase_pattern,fadeType_From_Head,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_From_Head",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-from-tail",
+      "valueSummary": "From Tail",
+      "behaviorImpactSummary": "chase_pattern,fadeType_From_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_From_Tail",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-middle",
+      "valueSummary": "Middle",
+      "behaviorImpactSummary": "chase_pattern,fadeType_Middle,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_Middle",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "singlestrand-fadetype-tree-360-spiral-none",
+      "valueSummary": "None",
+      "behaviorImpactSummary": "chase_pattern,fadeType_None,fragmented_pattern,single_direction_chase,sparse_sampled_motion,spiral_tree_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "chase_pattern",
+        "fadeType_None",
+        "fragmented_pattern",
+        "single_direction_chase",
+        "sparse_sampled_motion",
+        "spiral_tree_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_spiral"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 40,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_single",
+      "custom",
+      "single_line_horizontal",
+      "tree_360_spiral"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

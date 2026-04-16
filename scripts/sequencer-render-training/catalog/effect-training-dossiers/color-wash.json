@@ -1,0 +1,1431 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.249Z",
+  "status": "transitional_current_evidence",
+  "effectName": "Color Wash",
+  "family": "wash",
+  "intentSurface": {
+    "supportedSettingsIntent": [
+      "intensity",
+      "speed",
+      "density",
+      "coverage",
+      "motion",
+      "variation"
+    ],
+    "supportedPaletteIntent": [
+      "colors",
+      "temperature",
+      "contrast",
+      "brightness",
+      "saturation",
+      "accentUsage"
+    ],
+    "supportedLayerIntent": [
+      "priority",
+      "blendRole",
+      "mixAmount",
+      "overlayPolicy"
+    ],
+    "supportedRenderIntent": [
+      "groupPolicy",
+      "bufferStyle",
+      "expansionPolicy",
+      "riskTolerance"
+    ]
+  },
+  "currentCoverage": {
+    "coverageStatus": "screened_parameter_subset",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [
+      "circularPalette",
+      "cycles",
+      "hFade",
+      "reverseFades",
+      "shimmer",
+      "vFade"
+    ],
+    "retainedParameterNames": [
+      "hFade",
+      "vFade"
+    ],
+    "screenedParameterNames": [
+      "circularPalette",
+      "cycles",
+      "reverseFades",
+      "shimmer"
+    ],
+    "screeningRecordCount": 22
+  },
+  "upstreamMetadata": {
+    "sourceFile": "ColorWash.json",
+    "propertyCount": 6,
+    "visibilityRuleCount": 0,
+    "parameters": {
+      "circularPalette": {
+        "upstreamId": "ColorWash_CircularPalette",
+        "label": "Circular Palette",
+        "description": "Makes the palette wrap around by blending the last color back into the first, creating a seamless continuous color loop instead of stopping at the last color.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "cycles": {
+        "upstreamId": "ColorWash_Cycles",
+        "label": "Count",
+        "description": "Number of times the full palette color sequence cycles during the effect. Higher values make the color transitions happen faster.",
+        "default": 1,
+        "min": 1,
+        "max": 200,
+        "options": []
+      },
+      "hFade": {
+        "upstreamId": "ColorWash_HFade",
+        "label": "Horizontal Fade",
+        "description": "Fades the wash color from full brightness at the horizontal center to black at the left and right edges.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "reverseFades": {
+        "upstreamId": "ColorWash_ReverseFades",
+        "label": "Reverse Fades",
+        "description": "Reverses the direction of the vertical and horizontal fades so brightness is at the edges and fades to black at the center.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "shimmer": {
+        "upstreamId": "ColorWash_Shimmer",
+        "label": "Shimmer",
+        "description": "Alternates between the current wash color and black on every other frame, creating a rapid strobe-like flicker.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "vFade": {
+        "upstreamId": "ColorWash_VFade",
+        "label": "Vertical Fade",
+        "description": "Fades the wash color from full brightness at the vertical center to black at the top and bottom edges.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      }
+    }
+  },
+  "registryDefinition": {
+    "complexityClass": "moderate",
+    "earlySamplingPolicy": "standard_screening",
+    "notes": "Structure often changes more from boolean fade combinations than from numeric cycle changes. Broad canonical coverage is still required because fade-direction semantics shift by geometry.",
+    "parameters": {
+      "circularPalette": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "screeningPaletteMode": "circular_multi",
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "ColorWash_CircularPalette",
+          "label": "Circular Palette",
+          "description": "Makes the palette wrap around by blending the last color back into the first, creating a seamless continuous color loop instead of stopping at the last color.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "cycles": {
+        "type": "numeric",
+        "range": {
+          "min": 0.5,
+          "max": 4
+        },
+        "anchors": [
+          0.5,
+          1,
+          2,
+          3,
+          4
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "screeningPaletteMode": "rgb_primary",
+        "interactionHypotheses": [
+          "vFade",
+          "hFade",
+          "shimmer",
+          "circularPalette"
+        ],
+        "stopRule": "stop_if_flat_across_profile",
+        "upstream": {
+          "id": "ColorWash_Cycles",
+          "label": "Count",
+          "description": "Number of times the full palette color sequence cycles during the effect. Higher values make the color transitions happen faster.",
+          "type": "float",
+          "controlType": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 200,
+          "divisor": 10,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "hFade": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "ColorWash_HFade",
+          "label": "Horizontal Fade",
+          "description": "Fades the wash color from full brightness at the horizontal center to black at the left and right edges.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "reverseFades": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "interaction",
+        "screeningPaletteMode": "mono_white",
+        "stopRule": "interaction_only",
+        "upstream": {
+          "id": "ColorWash_ReverseFades",
+          "label": "Reverse Fades",
+          "description": "Reverses the direction of the vertical and horizontal fades so brightness is at the edges and fades to black at the center.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "shimmer": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "screeningPaletteMode": "mono_white",
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "ColorWash_Shimmer",
+          "label": "Shimmer",
+          "description": "Alternates between the current wash color and black on every other frame, creating a rapid strobe-like flicker.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "vFade": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "ColorWash_VFade",
+          "label": "Vertical Fade",
+          "description": "Fades the wash color from full brightness at the vertical center to black at the top and bottom edges.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Color Wash",
+    "upstreamSourceFile": "ColorWash.json",
+    "upstreamPropertyCount": 6,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": []
+  },
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [
+      "colorwash-matrix-expanded-sweep-v2.json"
+    ],
+    "range": [
+      "colorwash-matrix-cycles-range-v1.json"
+    ],
+    "combos": [
+      "colorwash-matrix-fade-combos-v1.json"
+    ],
+    "interactions": [
+      "colorwash-matrix-interactions-v1.json"
+    ],
+    "all": [
+      "colorwash-matrix-cycles-range-v1.json",
+      "colorwash-matrix-expanded-sweep-v2.json",
+      "colorwash-matrix-fade-combos-v1.json",
+      "colorwash-matrix-interactions-v1.json",
+      "colorwash-matrix-reduced-sweep-v1.json"
+    ]
+  },
+  "evidenceIndex": {
+    "screeningRecords": [
+      "color-wash-matrix-high-density-color-wash-circularpalette-false-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-circularpalette-false-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-circularpalette-true-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-circularpalette-true-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-0-5-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-0-5-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-1-0-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-1-0-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-2-0-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-2-0-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-3-0-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-3-0-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-4-0-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-cycles-4-0-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-reversefades-false-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-reversefades-false-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-reversefades-true-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-reversefades-true-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-shimmer-false-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-shimmer-false-rgb-primary-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-shimmer-true-mono-white-generated-v1.record.json",
+      "color-wash-matrix-high-density-color-wash-shimmer-true-rgb-primary-generated-v1.record.json"
+    ],
+    "screeningRecordPaths": [
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-circularpalette-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-circularpalette-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-circularpalette-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-circularpalette-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-0-5-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-0-5-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-1-0-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-1-0-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-2-0-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-2-0-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-3-0-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-3-0-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-4-0-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-cycles-4-0-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-reversefades-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-reversefades-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-reversefades-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-reversefades-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-shimmer-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-shimmer-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-shimmer-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/color-wash-matrix-high-density-color-wash-shimmer-true-rgb-primary-generated-v1.record.json"
+    ]
+  },
+  "currentTrainingReference": {
+    "effectName": "Color Wash",
+    "baseline": {
+      "currentStage": "selector_ready",
+      "selectorReady": true,
+      "selectorEvidence": {
+        "selectedCaseCount": 2,
+        "passedCaseCount": 2,
+        "caseIds": [
+          "select_colorwash_spinner_fill",
+          "select_colorwash_tree_fill"
+        ]
+      },
+      "supportedModelTypes": [
+        "arch",
+        "cane",
+        "icicles",
+        "matrix",
+        "single_line",
+        "spinner",
+        "star",
+        "tree_360",
+        "tree_flat"
+      ],
+      "supportedGeometryProfiles": [
+        "arch_grouped",
+        "arch_multi_layer",
+        "arch_single",
+        "cane_grouped",
+        "cane_single",
+        "cane_stick_grouped",
+        "icicles_drop_pattern",
+        "matrix_high_density",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "single_line_horizontal",
+        "single_line_single_node",
+        "single_line_vertical",
+        "spinner_standard",
+        "star_multi_layer",
+        "star_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "tree_flat_single_layer"
+      ],
+      "intentTags": [
+        "bold",
+        "busy",
+        "clean",
+        "fill",
+        "full",
+        "partial",
+        "patterned",
+        "restrained",
+        "segmented",
+        "sparse",
+        "steady"
+      ],
+      "patternFamilies": [
+        "radial_fill",
+        "star_fill",
+        "tree_fill",
+        "unclassified"
+      ],
+      "retainedParameters": [
+        {
+          "parameterName": "hFade",
+          "status": "interaction_suspected",
+          "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+        },
+        {
+          "parameterName": "vFade",
+          "status": "interaction_suspected",
+          "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+        }
+      ]
+    },
+    "capability": {
+      "family": "wash",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "supportedPaletteIntent": [
+        "colors",
+        "temperature",
+        "contrast",
+        "brightness",
+        "saturation",
+        "accentUsage"
+      ],
+      "supportedLayerIntent": [
+        "priority",
+        "blendRole",
+        "mixAmount",
+        "overlayPolicy"
+      ],
+      "supportedRenderIntent": [
+        "groupPolicy",
+        "bufferStyle",
+        "expansionPolicy",
+        "riskTolerance"
+      ]
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "circularPalette",
+        "cycles",
+        "hFade",
+        "reverseFades",
+        "shimmer",
+        "vFade"
+      ],
+      "retainedParameterNames": [
+        "hFade",
+        "vFade"
+      ],
+      "supportedIntentAxes": {
+        "settings": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "palette": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "layer": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "render": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "coverageStatus": "screened_parameter_subset",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [
+        "circularPalette",
+        "cycles",
+        "reverseFades",
+        "shimmer"
+      ],
+      "derivedPriors": {
+        "status": "populated",
+        "priorCount": 8,
+        "priors": [
+          {
+            "parameterName": "circularPalette",
+            "geometryProfile": "matrix_high_density",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "15d958bbb38b"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "circularPalette_false",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "circularPalette_true",
+                  "circular_palette",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "circularPalette",
+            "geometryProfile": "matrix_high_density",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "15d958bbb38b"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.041022,
+                "meanTemporalColorDelta": 0.107052,
+                "meanTemporalBrightnessDelta": 0.018438,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "circularPalette_true",
+                  "circular_palette",
+                  "color_travel",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "stable_brightness",
+                  "steady_wash",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.03496,
+                "meanTemporalColorDelta": 0.077468,
+                "meanTemporalBrightnessDelta": 0.018025,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "circularPalette_false",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "stable_brightness",
+                  "steady_wash",
+                  "subtle_color_travel",
+                  "subtle_motion_window",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "cycles",
+            "geometryProfile": "matrix_high_density",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "15d958bbb38b"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 0.5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "cycles_0_5",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "cycles_1_0",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "cycles_2_0",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "cycles_3_0",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "cycles_4_0",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "cycles",
+            "geometryProfile": "matrix_high_density",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "15d958bbb38b"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.072745,
+                "meanTemporalColorDelta": 0.263502,
+                "meanTemporalBrightnessDelta": 0.019677,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "color_travel",
+                  "cycles_4_0",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "stable_brightness",
+                  "steady_wash",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.066206,
+                "meanTemporalColorDelta": 0.232611,
+                "meanTemporalBrightnessDelta": 0.018645,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "color_travel",
+                  "cycles_3_0",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "stable_brightness",
+                  "steady_wash",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.050413,
+                "meanTemporalColorDelta": 0.154248,
+                "meanTemporalBrightnessDelta": 0.018301,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "color_travel",
+                  "cycles_2_0",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "stable_brightness",
+                  "steady_wash",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.03496,
+                "meanTemporalColorDelta": 0.077468,
+                "meanTemporalBrightnessDelta": 0.018025,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "cycles_1_0",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "stable_brightness",
+                  "steady_wash",
+                  "subtle_color_travel",
+                  "subtle_motion_window",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": 0.5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.029161,
+                "meanTemporalColorDelta": 0.04871,
+                "meanTemporalBrightnessDelta": 0.017888,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "cycles_0_5",
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "stable_brightness",
+                  "steady_wash",
+                  "subtle_color_travel",
+                  "subtle_motion_window",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "reverseFades",
+            "geometryProfile": "matrix_high_density",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "15d958bbb38b"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "reverseFades_false",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "reverseFades_true",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "reverseFades",
+            "geometryProfile": "matrix_high_density",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "15d958bbb38b"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.03496,
+                "meanTemporalColorDelta": 0.077468,
+                "meanTemporalBrightnessDelta": 0.018025,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "reverseFades_false",
+                  "stable_brightness",
+                  "steady_wash",
+                  "subtle_color_travel",
+                  "subtle_motion_window",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.03496,
+                "meanTemporalColorDelta": 0.077468,
+                "meanTemporalBrightnessDelta": 0.018025,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "reverseFades_true",
+                  "stable_brightness",
+                  "steady_wash",
+                  "subtle_color_travel",
+                  "subtle_motion_window",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "shimmer",
+            "geometryProfile": "matrix_high_density",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "15d958bbb38b"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "shimmer_false",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.047368,
+                "meanTemporalColorDelta": 0.052632,
+                "meanTemporalBrightnessDelta": 0.052632,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "moderate_motion_window",
+                  "shimmer_true",
+                  "shimmer_wash",
+                  "steady_wash",
+                  "subtle_brightness_change",
+                  "subtle_color_travel",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "shimmer",
+            "geometryProfile": "matrix_high_density",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "15d958bbb38b"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.03496,
+                "meanTemporalColorDelta": 0.077468,
+                "meanTemporalBrightnessDelta": 0.018025,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "shimmer_false",
+                  "stable_brightness",
+                  "steady_wash",
+                  "subtle_color_travel",
+                  "subtle_motion_window",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.034905,
+                "meanTemporalColorDelta": 0.077193,
+                "meanTemporalBrightnessDelta": 0.018025,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "flat_fill",
+                  "full_coverage",
+                  "intermittent_window_coverage",
+                  "linear_palette",
+                  "matrix_fill",
+                  "shimmer_true",
+                  "shimmer_wash",
+                  "stable_brightness",
+                  "steady_wash",
+                  "subtle_color_travel",
+                  "subtle_motion_window",
+                  "wash_fill"
+                ],
+                "structuralSignatures": [
+                  "15d958bbb38b"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [
+        {
+          "role": "widen_support",
+          "priority": "primary",
+          "source": "legacy_runtime_heuristic",
+          "conditions": [
+            "motion:restrained"
+          ]
+        }
+      ],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "populated",
+      "storageClass": "general_training",
+      "screeningRecordCount": 22,
+      "screenedParameterNames": [
+        "circularPalette",
+        "cycles",
+        "reverseFades",
+        "shimmer"
+      ],
+      "sampledModelTypes": [
+        "matrix"
+      ],
+      "sampledGeometryProfiles": [
+        "matrix_high_density"
+      ],
+      "observedLabelHints": [
+        "circularPalette",
+        "circularPalette_false",
+        "effect:color_wash",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "model:matrix",
+        "moderate_motion_window",
+        "palette_mono_white",
+        "range_sample",
+        "render_style:default",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill",
+        "palette_rgb_primary",
+        "stable_brightness",
+        "subtle_motion_window",
+        "circularPalette_true",
+        "circular_palette",
+        "color_travel",
+        "cycles",
+        "cycles_0_5",
+        "cycles_1_0",
+        "cycles_2_0",
+        "cycles_3_0",
+        "cycles_4_0",
+        "reverseFades",
+        "reverseFades_false",
+        "reverseFades_true",
+        "shimmer",
+        "shimmer_false",
+        "shimmer_true",
+        "shimmer_wash"
+      ],
+      "configurationRepresentativeness": {
+        "coverageStatus": "single_reference_per_geometry",
+        "profileCount": 1,
+        "profiles": [
+          {
+            "modelType": "matrix",
+            "geometryProfile": "matrix_high_density",
+            "analyzerFamily": "matrix",
+            "displayAsNormalized": "horiz_matrix",
+            "stringType": "RGB Nodes",
+            "nodeCount": 8192,
+            "nodeCountBucket": "very_large",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "density_high",
+              "matrix:64x128",
+              "type:matrix"
+            ],
+            "structuralSettings": {
+              "Dir": "L",
+              "DisplayAs": "Horiz Matrix",
+              "parm1": "64",
+              "parm2": "128",
+              "parm3": "1",
+              "StartSide": "T",
+              "StringType": "RGB Nodes"
+            },
+            "structuralSignature": "15d958bbb38b",
+            "sampleCount": 22
+          }
+        ]
+      }
+    }
+  }
+}

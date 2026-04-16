@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "singlestrand-fadetype-custom-mono-white-head-and-tail",
+  "createdAt": "2026-04-16T18:35:27.481Z",
+  "effectName": "SingleStrand",
+  "geometryProfile": "custom",
+  "modelType": "custom",
+  "parameterRegion": {
+    "parameterName": "fadeType",
+    "regionKind": "single_value",
+    "valueSummary": "Head and Tail",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "mono_white"
+  },
+  "paletteContext": {
+    "paletteMode": "mono_white"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "subtle_motion",
+    "primaryTexture": "chase_pattern",
+    "motionPacing": "subtle_motion",
+    "textureDensity": "chase_pattern,clean_cane_pattern,fadeType_Head_and_Tail,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+    "energyLevel": "restrained",
+    "coverageLevel": "broad",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "subtle_motion",
+    "densityRead": "dense",
+    "nonBlankRatio": 0.75,
+    "temporalMotion": 0.013594,
+    "temporalColorDelta": 0.000396,
+    "temporalBrightnessDelta": 0.000396,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "custom"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

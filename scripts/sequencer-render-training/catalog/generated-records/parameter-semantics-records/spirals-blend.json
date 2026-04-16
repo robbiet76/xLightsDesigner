@@ -1,0 +1,235 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "spirals-blend",
+  "createdAt": "2026-04-16T18:35:28.034Z",
+  "effectName": "Spirals",
+  "parameterName": "blend",
+  "sourceDefinition": {
+    "id": "Spirals_Blend",
+    "label": "Blend",
+    "description": "When enabled, blends all palette colors vertically across each spiral arm instead of using distinct per-arm colors.",
+    "type": "bool",
+    "controlType": "checkbox",
+    "default": false,
+    "min": null,
+    "max": null,
+    "options": [],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "When enabled, blends all palette colors vertically across each spiral arm instead of using distinct per-arm colors.",
+  "semanticAxis": "edge_softness",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "blend_false",
+    "forward_motion",
+    "forward_rotation",
+    "medium_spiral",
+    "round_tree_pattern",
+    "single_spiral",
+    "spiral_flow",
+    "spiral_motion",
+    "spiral_pattern",
+    "tree_pattern_fit",
+    "blend_true"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "spirals-blend-tree-360-round-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "blend_false,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "blend_false",
+        "forward_motion",
+        "forward_rotation",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_round"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-blend-tree-360-round-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "blend_true,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "blend_true",
+        "forward_motion",
+        "forward_rotation",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_round"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-blend-tree-360-round-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "blend_true,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "blend_true",
+        "forward_motion",
+        "forward_rotation",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_round"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-blend-tree-360-round-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "blend_false,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "blend_false",
+        "forward_motion",
+        "forward_rotation",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_360_round"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-blend-tree-flat-single-layer-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "blend_false,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "blend_false",
+        "forward_motion",
+        "forward_rotation",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_flat_single_layer"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-blend-tree-flat-single-layer-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "blend_true,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "blend_true",
+        "forward_motion",
+        "forward_rotation",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_flat_single_layer"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-blend-tree-flat-single-layer-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "blend_true,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "blend_true",
+        "forward_motion",
+        "forward_rotation",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_flat_single_layer"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "spirals-blend-tree-flat-single-layer-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "blend_false,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit",
+      "affectedSignals": [
+        "blend_false",
+        "forward_motion",
+        "forward_rotation",
+        "medium_spiral",
+        "round_tree_pattern",
+        "single_spiral",
+        "spiral_flow",
+        "spiral_motion",
+        "spiral_pattern",
+        "tree_pattern_fit"
+      ],
+      "geometrySpecificNotes": [
+        "tree_flat_single_layer"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 8,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "tree_360_round",
+      "tree_flat_single_layer"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

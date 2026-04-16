@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "color-wash-circularpalette-matrix-high-density-rgb-primary-true",
+  "createdAt": "2026-04-16T18:35:27.477Z",
+  "effectName": "Color Wash",
+  "geometryProfile": "matrix_high_density",
+  "modelType": "matrix",
+  "parameterRegion": {
+    "parameterName": "circularPalette",
+    "regionKind": "single_value",
+    "valueSummary": "true",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "paletteContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "moderate_motion",
+    "primaryTexture": "circularPalette_true",
+    "motionPacing": "moderate_motion",
+    "textureDensity": "circularPalette_true,circular_palette,color_travel,flat_fill,full_coverage,intermittent_window_coverage,matrix_fill,moderate_motion_window,stable_brightness,steady_wash,wash_fill",
+    "energyLevel": "moderate",
+    "coverageLevel": "broad",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "low"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "moderate_motion",
+    "densityRead": "dense",
+    "nonBlankRatio": 0.75,
+    "temporalMotion": 0.041022,
+    "temporalColorDelta": 0.107052,
+    "temporalBrightnessDelta": 0.018438,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "matrix_high_density"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

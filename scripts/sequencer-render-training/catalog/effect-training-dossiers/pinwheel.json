@@ -1,0 +1,1890 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.270Z",
+  "status": "transitional_current_evidence",
+  "effectName": "Pinwheel",
+  "family": "radial_motion",
+  "intentSurface": {
+    "supportedSettingsIntent": [
+      "intensity",
+      "speed",
+      "density",
+      "coverage",
+      "motion",
+      "direction",
+      "thickness",
+      "variation"
+    ],
+    "supportedPaletteIntent": [
+      "colors",
+      "temperature",
+      "contrast",
+      "brightness",
+      "saturation",
+      "accentUsage"
+    ],
+    "supportedLayerIntent": [
+      "priority",
+      "blendRole",
+      "mixAmount",
+      "overlayPolicy"
+    ],
+    "supportedRenderIntent": [
+      "groupPolicy",
+      "bufferStyle",
+      "expansionPolicy",
+      "riskTolerance"
+    ]
+  },
+  "currentCoverage": {
+    "coverageStatus": "screened_parameter_subset",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [
+      "3DMode",
+      "arms",
+      "armSize",
+      "rotation",
+      "speed",
+      "style",
+      "thickness",
+      "twist"
+    ],
+    "retainedParameterNames": [
+      "3DMode",
+      "arms",
+      "rotation",
+      "style",
+      "thickness",
+      "twist"
+    ],
+    "screenedParameterNames": [
+      "armSize",
+      "speed"
+    ],
+    "screeningRecordCount": 36
+  },
+  "upstreamMetadata": {
+    "sourceFile": "Pinwheel.json",
+    "propertyCount": 11,
+    "visibilityRuleCount": 0,
+    "parameters": {
+      "3DMode": {
+        "upstreamId": "Pinwheel_3D",
+        "label": "3D",
+        "description": "Applies a brightness or alpha gradient across each arm to simulate depth. 3D fades edges, 3D Inverted fades the center, and Sweep applies a directional gradient from one edge to the other.",
+        "default": "None",
+        "min": null,
+        "max": null,
+        "options": [
+          "None",
+          "3D",
+          "3D Inverted",
+          "Sweep"
+        ]
+      },
+      "arms": {
+        "upstreamId": "Pinwheel_Arms",
+        "label": "#Arms",
+        "description": "Number of colored arms radiating from the center of the pinwheel. Each arm uses the next color from the palette.",
+        "default": 3,
+        "min": 1,
+        "max": 20,
+        "options": []
+      },
+      "armSize": {
+        "upstreamId": "Pinwheel_ArmSize",
+        "label": "Size",
+        "description": "Length of each arm as a percentage of the maximum radius. Values above 100 extend the arms beyond the model edges.",
+        "default": 100,
+        "min": 0,
+        "max": 400,
+        "options": []
+      },
+      "rotation": {
+        "upstreamId": "Pinwheel_Rotation",
+        "label": "Rotation",
+        "description": "Sets the rotation direction. When checked, the pinwheel spins counter-clockwise; when unchecked, it spins clockwise.",
+        "default": true,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "speed": {
+        "upstreamId": "Pinwheel_Speed",
+        "label": "Speed",
+        "description": "Rotation speed of the pinwheel. Higher values make the arms spin faster.",
+        "default": 10,
+        "min": 0,
+        "max": 50,
+        "options": []
+      },
+      "style": {
+        "upstreamId": "Pinwheel_Style",
+        "label": "Style",
+        "description": "Rendering algorithm to use. The new method uses ISPC-accelerated rendering for better performance and fills the entire buffer; the old method draws arms by stepping along radial lines. Existing sequences are migrated to preserve 'Old Render Method' so their look doesn't change.",
+        "default": "New Render Method",
+        "min": null,
+        "max": null,
+        "options": [
+          "Old Render Method",
+          "New Render Method"
+        ]
+      },
+      "thickness": {
+        "upstreamId": "Pinwheel_Thickness",
+        "label": "Thick",
+        "description": "Width of each arm as a percentage of the angular space between arms. At 100, adjacent arms touch with no gap between them.",
+        "default": 0,
+        "min": 0,
+        "max": 100,
+        "options": []
+      },
+      "twist": {
+        "upstreamId": "Pinwheel_Twist",
+        "label": "Twist",
+        "description": "Degrees of curvature applied along each arm from center to tip. Positive values twist clockwise, negative values twist counter-clockwise, creating spiral arms.",
+        "default": 0,
+        "min": -360,
+        "max": 360,
+        "options": []
+      }
+    }
+  },
+  "registryDefinition": {
+    "complexityClass": "complex",
+    "earlySamplingPolicy": "broad_geometry_first",
+    "benchmarkGeometryFamilies": [
+      "star",
+      "tree_360"
+    ],
+    "notes": "High-value radial effect. Strong candidate for star, spinner, and tree profiles where style, arms, rotation, and speed should dominate early screening.",
+    "parameters": {
+      "3DMode": {
+        "type": "enum",
+        "anchors": [
+          "none",
+          "3D",
+          "3D Inverted",
+          "Sweep"
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "style",
+          "thickness",
+          "geometryProfile"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Pinwheel_3D",
+          "label": "3D",
+          "description": "Applies a brightness or alpha gradient across each arm to simulate depth. 3D fades edges, 3D Inverted fades the center, and Sweep applies a directional gradient from one edge to the other.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "None",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [
+            "None",
+            "3D",
+            "3D Inverted",
+            "Sweep"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "arms": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 8
+        },
+        "anchors": [
+          2,
+          3,
+          4,
+          6,
+          8
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "speed",
+          "armSize",
+          "geometryProfile"
+        ],
+        "stopRule": "stop_when_regions_stabilize",
+        "upstream": {
+          "id": "Pinwheel_Arms",
+          "label": "#Arms",
+          "description": "Number of colored arms radiating from the center of the pinwheel. Each arm uses the next color from the palette.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 3,
+          "min": 1,
+          "max": 20,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "armSize": {
+        "type": "numeric",
+        "range": {
+          "min": 10,
+          "max": 100
+        },
+        "anchors": [
+          25,
+          50,
+          75,
+          100
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "arms",
+          "thickness",
+          "geometryProfile"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Pinwheel_ArmSize",
+          "label": "Size",
+          "description": "Length of each arm as a percentage of the maximum radius. Values above 100 extend the arms beyond the model edges.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 100,
+          "min": 0,
+          "max": 400,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "rotation": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "twist",
+          "speed"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Pinwheel_Rotation",
+          "label": "Rotation",
+          "description": "Sets the rotation direction. When checked, the pinwheel spins counter-clockwise; when unchecked, it spins clockwise.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": true,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "speed": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 20
+        },
+        "anchors": [
+          3,
+          7,
+          10,
+          14,
+          18
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "arms",
+          "rotation",
+          "twist"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Pinwheel_Speed",
+          "label": "Speed",
+          "description": "Rotation speed of the pinwheel. Higher values make the arms spin faster.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 10,
+          "min": 0,
+          "max": 50,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "style": {
+        "type": "enum",
+        "anchors": [
+          "Old Render Method",
+          "New Render Method"
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "arms",
+          "3D",
+          "geometryProfile"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Pinwheel_Style",
+          "label": "Style",
+          "description": "Rendering algorithm to use. The new method uses ISPC-accelerated rendering for better performance and fills the entire buffer; the old method draws arms by stepping along radial lines. Existing sequences are migrated to preserve 'Old Render Method' so their look doesn't change.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "New Render Method",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [
+            "Old Render Method",
+            "New Render Method"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "thickness": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          0,
+          20,
+          40,
+          60,
+          80
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "arms",
+          "twist",
+          "3D"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Pinwheel_Thickness",
+          "label": "Thick",
+          "description": "Width of each arm as a percentage of the angular space between arms. At 100, adjacent arms touch with no gap between them.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "twist": {
+        "type": "numeric",
+        "range": {
+          "min": -360,
+          "max": 360
+        },
+        "anchors": [
+          -180,
+          -60,
+          0,
+          60,
+          180
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "rotation",
+          "speed",
+          "geometryProfile"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Pinwheel_Twist",
+          "label": "Twist",
+          "description": "Degrees of curvature applied along each arm from center to tip. Positive values twist clockwise, negative values twist counter-clockwise, creating spiral arms.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 0,
+          "min": -360,
+          "max": 360,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Pinwheel",
+    "upstreamSourceFile": "Pinwheel.json",
+    "upstreamPropertyCount": 11,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": [
+      {
+        "id": "Pinwheel_Offset",
+        "label": "Offset"
+      },
+      {
+        "id": "PinwheelXC",
+        "label": "X-axis Center"
+      },
+      {
+        "id": "PinwheelYC",
+        "label": "Y-axis center"
+      }
+    ]
+  },
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [
+      "pinwheel-spinner-expanded-sweep-v1.json",
+      "pinwheel-starsingle-expanded-sweep-v1.json",
+      "pinwheel-startriplelayer-expanded-sweep-v1.json",
+      "pinwheel-treeflat-expanded-sweep-v1.json",
+      "pinwheel-treeround-expanded-sweep-v1.json",
+      "pinwheel-treespiral-expanded-sweep-v1.json"
+    ],
+    "range": [],
+    "combos": [],
+    "interactions": [
+      "pinwheel-spinner-interactions-v1.json"
+    ],
+    "all": [
+      "pinwheel-spinner-expanded-sweep-v1.json",
+      "pinwheel-spinner-interactions-v1.json",
+      "pinwheel-starsingle-expanded-sweep-v1.json",
+      "pinwheel-startriplelayer-expanded-sweep-v1.json",
+      "pinwheel-treeflat-expanded-sweep-v1.json",
+      "pinwheel-treeround-expanded-sweep-v1.json",
+      "pinwheel-treespiral-expanded-sweep-v1.json"
+    ]
+  },
+  "evidenceIndex": {
+    "screeningRecords": [
+      "pinwheel-spinner-standard-pinwheel-armsize-100-mono-white-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-armsize-100-rgb-primary-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-armsize-25-mono-white-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-armsize-25-rgb-primary-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-armsize-50-mono-white-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-armsize-50-rgb-primary-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-armsize-75-mono-white-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-armsize-75-rgb-primary-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-10-mono-white-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-10-rgb-primary-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-14-mono-white-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-14-rgb-primary-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-18-mono-white-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-18-rgb-primary-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-3-mono-white-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-3-rgb-primary-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-7-mono-white-generated-v1.record.json",
+      "pinwheel-spinner-standard-pinwheel-speed-7-rgb-primary-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-armsize-100-mono-white-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-armsize-100-rgb-primary-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-armsize-25-mono-white-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-armsize-25-rgb-primary-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-armsize-50-mono-white-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-armsize-50-rgb-primary-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-armsize-75-mono-white-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-armsize-75-rgb-primary-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-10-mono-white-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-10-rgb-primary-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-14-mono-white-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-14-rgb-primary-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-18-mono-white-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-18-rgb-primary-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-3-mono-white-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-3-rgb-primary-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-7-mono-white-generated-v1.record.json",
+      "pinwheel-star-single-layer-pinwheel-speed-7-rgb-primary-generated-v1.record.json"
+    ],
+    "screeningRecordPaths": [
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-armsize-100-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-armsize-100-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-armsize-25-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-armsize-25-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-armsize-50-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-armsize-50-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-armsize-75-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-armsize-75-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-10-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-10-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-14-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-14-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-18-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-18-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-3-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-3-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-7-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-spinner-standard-pinwheel-speed-7-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-armsize-100-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-armsize-100-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-armsize-25-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-armsize-25-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-armsize-50-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-armsize-50-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-armsize-75-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-armsize-75-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-10-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-10-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-14-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-14-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-18-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-18-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-3-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-3-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-7-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/pinwheel-star-single-layer-pinwheel-speed-7-rgb-primary-generated-v1.record.json"
+    ]
+  },
+  "currentTrainingReference": {
+    "effectName": "Pinwheel",
+    "baseline": {
+      "currentStage": "selector_ready",
+      "selectorReady": true,
+      "selectorEvidence": {
+        "selectedCaseCount": 2,
+        "passedCaseCount": 2,
+        "caseIds": [
+          "select_star_directional_restrained",
+          "select_star_dense_pinwheel"
+        ]
+      },
+      "supportedModelTypes": [
+        "arch",
+        "cane",
+        "icicles",
+        "matrix",
+        "single_line",
+        "spinner",
+        "star",
+        "tree_360",
+        "tree_flat"
+      ],
+      "supportedGeometryProfiles": [
+        "arch_grouped",
+        "arch_multi_layer",
+        "arch_single",
+        "cane_grouped",
+        "cane_single",
+        "cane_stick_grouped",
+        "icicles_drop_pattern",
+        "matrix_high_density",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "single_line_horizontal",
+        "single_line_single_node",
+        "single_line_vertical",
+        "spinner_standard",
+        "star_multi_layer",
+        "star_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "tree_flat_single_layer"
+      ],
+      "intentTags": [
+        "animated",
+        "bold",
+        "busy",
+        "directional",
+        "geometry_coupled",
+        "partial",
+        "patterned",
+        "restrained",
+        "sparse",
+        "steady"
+      ],
+      "patternFamilies": [
+        "dense_pinwheel",
+        "helical_pinwheel",
+        "radial_pinwheel",
+        "tree_pinwheel",
+        "tree_pinwheel_rotation"
+      ],
+      "retainedParameters": [
+        {
+          "parameterName": "3DMode",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "arms",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "rotation",
+          "status": "interaction_suspected",
+          "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+        },
+        {
+          "parameterName": "style",
+          "status": "interaction_suspected",
+          "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+        },
+        {
+          "parameterName": "thickness",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        },
+        {
+          "parameterName": "twist",
+          "status": "high_impact_observed",
+          "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+        }
+      ]
+    },
+    "capability": {
+      "family": "radial_motion",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "supportedPaletteIntent": [
+        "colors",
+        "temperature",
+        "contrast",
+        "brightness",
+        "saturation",
+        "accentUsage"
+      ],
+      "supportedLayerIntent": [
+        "priority",
+        "blendRole",
+        "mixAmount",
+        "overlayPolicy"
+      ],
+      "supportedRenderIntent": [
+        "groupPolicy",
+        "bufferStyle",
+        "expansionPolicy",
+        "riskTolerance"
+      ]
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "3DMode",
+        "arms",
+        "armSize",
+        "rotation",
+        "speed",
+        "style",
+        "thickness",
+        "twist"
+      ],
+      "retainedParameterNames": [
+        "3DMode",
+        "arms",
+        "rotation",
+        "style",
+        "thickness",
+        "twist"
+      ],
+      "supportedIntentAxes": {
+        "settings": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "thickness",
+          "variation"
+        ],
+        "palette": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "layer": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "render": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "coverageStatus": "screened_parameter_subset",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [
+        "armSize",
+        "speed"
+      ],
+      "derivedPriors": {
+        "status": "populated",
+        "priorCount": 8,
+        "priors": [
+          {
+            "parameterName": "armSize",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 100,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.04625,
+                "meanTemporalColorDelta": 0.050658,
+                "meanTemporalBrightnessDelta": 0.050658,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_100",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.039737,
+                "meanTemporalColorDelta": 0.043421,
+                "meanTemporalBrightnessDelta": 0.043421,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_75",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.023158,
+                "meanTemporalColorDelta": 0.025,
+                "meanTemporalBrightnessDelta": 0.025,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_50",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.008355,
+                "meanTemporalColorDelta": 0.008553,
+                "meanTemporalBrightnessDelta": 0.008553,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_25",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "armSize",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 100,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.028728,
+                "meanTemporalColorDelta": 0.04049,
+                "meanTemporalBrightnessDelta": 0.017119,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_100",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.024233,
+                "meanTemporalColorDelta": 0.031187,
+                "meanTemporalBrightnessDelta": 0.014761,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_75",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01323,
+                "meanTemporalColorDelta": 0.010179,
+                "meanTemporalBrightnessDelta": 0.008486,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_50",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.010186,
+                "meanTemporalColorDelta": 0.008846,
+                "meanTemporalBrightnessDelta": 0.002901,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_25",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "armSize",
+            "geometryProfile": "star_single_layer",
+            "paletteMode": "mono_white",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "26769477fbf2"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.00687,
+                "meanTemporalColorDelta": 0.000324,
+                "meanTemporalBrightnessDelta": 0.000324,
+                "meanNonBlankRatio": 0.45,
+                "behaviorHints": [
+                  "armSize_25",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 100,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001313,
+                "meanTemporalColorDelta": 0.000728,
+                "meanTemporalBrightnessDelta": 0.000728,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_100",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001259,
+                "meanTemporalColorDelta": 0.000668,
+                "meanTemporalBrightnessDelta": 0.000668,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_50",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001241,
+                "meanTemporalColorDelta": 0.000647,
+                "meanTemporalBrightnessDelta": 0.000647,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_75",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "armSize",
+            "geometryProfile": "star_single_layer",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "26769477fbf2"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.010676,
+                "meanTemporalColorDelta": 0.000149,
+                "meanTemporalBrightnessDelta": 0.00011,
+                "meanNonBlankRatio": 0.45,
+                "behaviorHints": [
+                  "armSize_25",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 100,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.002395,
+                "meanTemporalColorDelta": 0.000759,
+                "meanTemporalBrightnessDelta": 0.000249,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_100",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.002359,
+                "meanTemporalColorDelta": 0.000732,
+                "meanTemporalBrightnessDelta": 0.00022,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_75",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.002297,
+                "meanTemporalColorDelta": 0.000383,
+                "meanTemporalBrightnessDelta": 0.000227,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "armSize_50",
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "speed",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.024342,
+                "meanTemporalColorDelta": 0.026316,
+                "meanTemporalBrightnessDelta": 0.026316,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_3",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.023158,
+                "meanTemporalColorDelta": 0.025,
+                "meanTemporalBrightnessDelta": 0.025,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_10",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.021974,
+                "meanTemporalColorDelta": 0.023684,
+                "meanTemporalBrightnessDelta": 0.023684,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_7",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 14,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019013,
+                "meanTemporalColorDelta": 0.020395,
+                "meanTemporalBrightnessDelta": 0.020395,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_14",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 18,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.017829,
+                "meanTemporalColorDelta": 0.019079,
+                "meanTemporalBrightnessDelta": 0.019079,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_18",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "speed",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014065,
+                "meanTemporalColorDelta": 0.011909,
+                "meanTemporalBrightnessDelta": 0.008944,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_3",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01323,
+                "meanTemporalColorDelta": 0.010179,
+                "meanTemporalBrightnessDelta": 0.008486,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_10",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.012555,
+                "meanTemporalColorDelta": 0.009281,
+                "meanTemporalBrightnessDelta": 0.008012,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_7",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 14,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01087,
+                "meanTemporalColorDelta": 0.006906,
+                "meanTemporalBrightnessDelta": 0.006906,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_14",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 18,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01029,
+                "meanTemporalColorDelta": 0.006448,
+                "meanTemporalBrightnessDelta": 0.006448,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "radial_pattern_fit",
+                  "speed_18",
+                  "spinner_pinwheel",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "speed",
+            "geometryProfile": "star_single_layer",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "26769477fbf2"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 18,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001368,
+                "meanTemporalColorDelta": 0.000789,
+                "meanTemporalBrightnessDelta": 0.000789,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_18",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 14,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001277,
+                "meanTemporalColorDelta": 0.000688,
+                "meanTemporalBrightnessDelta": 0.000688,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_14",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001277,
+                "meanTemporalColorDelta": 0.000688,
+                "meanTemporalBrightnessDelta": 0.000688,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_3",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001259,
+                "meanTemporalColorDelta": 0.000668,
+                "meanTemporalBrightnessDelta": 0.000668,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_10",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001186,
+                "meanTemporalColorDelta": 0.000587,
+                "meanTemporalBrightnessDelta": 0.000587,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_7",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "speed",
+            "geometryProfile": "star_single_layer",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "26769477fbf2"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 18,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.002317,
+                "meanTemporalColorDelta": 0.000267,
+                "meanTemporalBrightnessDelta": 0.000267,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_18",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.002297,
+                "meanTemporalColorDelta": 0.000383,
+                "meanTemporalBrightnessDelta": 0.000227,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_10",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.002287,
+                "meanTemporalColorDelta": 0.000298,
+                "meanTemporalBrightnessDelta": 0.000233,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_3",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 14,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.002285,
+                "meanTemporalColorDelta": 0.000286,
+                "meanTemporalBrightnessDelta": 0.000234,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_14",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              },
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.002248,
+                "meanTemporalColorDelta": 0.000291,
+                "meanTemporalBrightnessDelta": 0.0002,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "few_arm_pinwheel",
+                  "pinwheel_motion",
+                  "pinwheel_pattern",
+                  "speed_7",
+                  "star_pattern_fit",
+                  "static_pinwheel"
+                ],
+                "structuralSignatures": [
+                  "26769477fbf2"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "populated",
+      "storageClass": "general_training",
+      "screeningRecordCount": 36,
+      "screenedParameterNames": [
+        "armSize",
+        "speed"
+      ],
+      "sampledModelTypes": [
+        "spinner",
+        "star"
+      ],
+      "sampledGeometryProfiles": [
+        "spinner_standard",
+        "star_single_layer"
+      ],
+      "observedLabelHints": [
+        "armSize",
+        "armSize_100",
+        "effect:pinwheel",
+        "few_arm_pinwheel",
+        "model:spinner",
+        "palette_mono_white",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "range_sample",
+        "render_style:default",
+        "spinner_pinwheel",
+        "static_pinwheel",
+        "palette_rgb_primary",
+        "armSize_25",
+        "armSize_50",
+        "armSize_75",
+        "speed",
+        "speed_10",
+        "speed_14",
+        "speed_18",
+        "speed_3",
+        "speed_7",
+        "model:star",
+        "star_pattern_fit"
+      ],
+      "configurationRepresentativeness": {
+        "coverageStatus": "single_reference_per_geometry",
+        "profileCount": 2,
+        "profiles": [
+          {
+            "modelType": "spinner",
+            "geometryProfile": "spinner_standard",
+            "analyzerFamily": "radial",
+            "displayAsNormalized": "spinner",
+            "stringType": "RGB Nodes",
+            "nodeCount": 10,
+            "nodeCountBucket": "very_small",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "arms:8",
+              "type:spinner"
+            ],
+            "structuralSettings": {
+              "Alternate": "false",
+              "Arc": "360",
+              "Dir": "L",
+              "DisplayAs": "Spinner",
+              "Hollow": "0",
+              "parm1": "1",
+              "parm2": "10",
+              "parm3": "8",
+              "StartSide": "T",
+              "StringType": "RGB Nodes",
+              "ZigZag": "false"
+            },
+            "structuralSignature": "055dbdc56c9d",
+            "sampleCount": 18
+          },
+          {
+            "modelType": "star",
+            "geometryProfile": "star_single_layer",
+            "analyzerFamily": "star",
+            "displayAsNormalized": "star",
+            "stringType": "RGB Nodes",
+            "nodeCount": 50,
+            "nodeCountBucket": "small",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "points:5",
+              "type:star"
+            ],
+            "structuralSettings": {
+              "DisplayAs": "Star",
+              "parm1": "1",
+              "parm2": "50",
+              "parm3": "5",
+              "StarStartLocation": "Bottom Ctr-CW",
+              "StringType": "RGB Nodes"
+            },
+            "structuralSignature": "26769477fbf2",
+            "sampleCount": 18
+          }
+        ]
+      }
+    }
+  }
+}

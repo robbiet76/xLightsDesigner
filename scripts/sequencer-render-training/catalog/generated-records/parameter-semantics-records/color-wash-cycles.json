@@ -1,0 +1,295 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "color-wash-cycles",
+  "createdAt": "2026-04-16T18:35:28.014Z",
+  "effectName": "Color Wash",
+  "parameterName": "cycles",
+  "sourceDefinition": {
+    "id": "ColorWash_Cycles",
+    "label": "Count",
+    "description": "Number of times the full palette color sequence cycles during the effect. Higher values make the color transitions happen faster.",
+    "type": "float",
+    "controlType": "slider",
+    "default": 1,
+    "min": 1,
+    "max": 200,
+    "options": [],
+    "valueCurve": true,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Number of times the full palette color sequence cycles during the effect. Higher values make the color transitions happen faster.",
+  "semanticAxis": "speed",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "cycles_0_5",
+    "flat_fill",
+    "full_coverage",
+    "intermittent_window_coverage",
+    "linear_palette",
+    "matrix_fill",
+    "moderate_motion_window",
+    "steady_wash",
+    "subtle_brightness_change",
+    "subtle_color_travel",
+    "wash_fill",
+    "cycles_1_0",
+    "cycles_2_0",
+    "cycles_3_0",
+    "cycles_4_0",
+    "color_travel",
+    "stable_brightness",
+    "subtle_motion_window"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-0-5",
+      "valueSummary": "0.5",
+      "behaviorImpactSummary": "cycles_0_5,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
+      "affectedSignals": [
+        "cycles_0_5",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "cycles_1_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
+      "affectedSignals": [
+        "cycles_1_0",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-2",
+      "valueSummary": "2",
+      "behaviorImpactSummary": "cycles_2_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
+      "affectedSignals": [
+        "cycles_2_0",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "cycles_3_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
+      "affectedSignals": [
+        "cycles_3_0",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-4",
+      "valueSummary": "4",
+      "behaviorImpactSummary": "cycles_4_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
+      "affectedSignals": [
+        "cycles_4_0",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "steady_wash",
+        "subtle_brightness_change",
+        "subtle_color_travel",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-4",
+      "valueSummary": "4",
+      "behaviorImpactSummary": "color_travel,cycles_4_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,stable_brightness,steady_wash,wash_fill",
+      "affectedSignals": [
+        "color_travel",
+        "cycles_4_0",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "stable_brightness",
+        "steady_wash",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-3",
+      "valueSummary": "3",
+      "behaviorImpactSummary": "color_travel,cycles_3_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,stable_brightness,steady_wash,wash_fill",
+      "affectedSignals": [
+        "color_travel",
+        "cycles_3_0",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "stable_brightness",
+        "steady_wash",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-2",
+      "valueSummary": "2",
+      "behaviorImpactSummary": "color_travel,cycles_2_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,stable_brightness,steady_wash,wash_fill",
+      "affectedSignals": [
+        "color_travel",
+        "cycles_2_0",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "moderate_motion_window",
+        "stable_brightness",
+        "steady_wash",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-1",
+      "valueSummary": "1",
+      "behaviorImpactSummary": "cycles_1_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,stable_brightness,steady_wash,subtle_color_travel,subtle_motion_window,wash_fill",
+      "affectedSignals": [
+        "cycles_1_0",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "stable_brightness",
+        "steady_wash",
+        "subtle_color_travel",
+        "subtle_motion_window",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "color-wash-cycles-matrix-high-density-0-5",
+      "valueSummary": "0.5",
+      "behaviorImpactSummary": "cycles_0_5,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,stable_brightness,steady_wash,subtle_color_travel,subtle_motion_window,wash_fill",
+      "affectedSignals": [
+        "cycles_0_5",
+        "flat_fill",
+        "full_coverage",
+        "intermittent_window_coverage",
+        "linear_palette",
+        "matrix_fill",
+        "stable_brightness",
+        "steady_wash",
+        "subtle_color_travel",
+        "subtle_motion_window",
+        "wash_fill"
+      ],
+      "geometrySpecificNotes": [
+        "matrix_high_density"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 10,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "matrix_high_density"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

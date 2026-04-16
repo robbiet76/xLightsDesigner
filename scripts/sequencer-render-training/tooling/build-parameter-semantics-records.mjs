@@ -12,9 +12,29 @@ function inferAxis(name = "") {
   if (n.includes("level") || n.includes("intensity") || n.includes("highlight")) return "brightness_profile";
   return "variation";
 }
+
+function upstreamSummary(meta = {}) {
+  const upstream = meta?.upstream;
+  if (!upstream || typeof upstream !== "object") return null;
+  return {
+    id: upstream.id || null,
+    label: upstream.label || null,
+    description: upstream.description || null,
+    type: upstream.type || null,
+    controlType: upstream.controlType || null,
+    default: upstream.default,
+    min: upstream.min ?? null,
+    max: upstream.max ?? null,
+    options: Array.isArray(upstream.options) ? upstream.options : [],
+    valueCurve: Boolean(upstream.valueCurve),
+    lockable: Boolean(upstream.lockable),
+    suppressIfDefault: Boolean(upstream.suppressIfDefault)
+  };
+}
+
 const outputDir = process.argv[2] ? resolve(process.argv[2]) : resolve("scripts/sequencer-render-training/catalog/generated-records/parameter-semantics-records");
 const unified = JSON.parse(readFileSync(resolve(process.argv[3] || "scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json"), "utf8"));
-const registry = JSON.parse(readFileSync(resolve(process.argv[4] || "scripts/sequencer-render-training/catalog/effect-parameter-registry.json"), "utf8"));
+const registry = JSON.parse(readFileSync(resolve(process.argv[4] || "scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json"), "utf8"));
 mkdirSync(outputDir, { recursive: true });
 const effects = Array.isArray(unified?.effects) ? unified.effects : [];
 const records = [];
@@ -40,6 +60,8 @@ for (const effect of effects) {
       createdAt: new Date().toISOString(),
       effectName,
       parameterName,
+      sourceDefinition: upstreamSummary(meta),
+      sourceDescription: str(meta?.upstream?.description),
       semanticAxis: inferAxis(parameterName),
       observedDirectionality: valueRegions.length > 1 ? "observed_multi_region" : "narrow_or_unknown",
       interactionSensitivity: Array.isArray(meta?.interactionHypotheses) && meta.interactionHypotheses.length ? "suspected" : "unknown",
@@ -53,7 +75,7 @@ for (const effect of effects) {
       },
       evidenceCount: valueRegions.reduce((sum, row) => sum + Number(row.evidenceCount || 0), 0),
       traceability: {
-        sourceArtifactIds: ["sequencer_unified_training_set_v1", "effect_parameter_registry"],
+        sourceArtifactIds: ["sequencer_unified_training_set_v1", "effective_effect_parameter_registry"],
         sourceGeometryProfiles: [...new Set(valueRegions.flatMap((row) => row.geometrySpecificNotes || []))],
         generatedBy: "build-parameter-semantics-records.mjs"
       }

@@ -12,7 +12,7 @@ const unified = JSON.parse(
   readFileSync(resolve("scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json"), "utf8")
 );
 const registry = JSON.parse(
-  readFileSync(resolve("scripts/sequencer-render-training/catalog/effect-parameter-registry.json"), "utf8")
+  readFileSync(resolve("scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json"), "utf8")
 );
 
 const manifestsDir = resolve("scripts/sequencer-render-training/manifests");

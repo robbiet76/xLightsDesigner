@@ -1,0 +1,355 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "pinwheel-armsize",
+  "createdAt": "2026-04-16T18:35:28.023Z",
+  "effectName": "Pinwheel",
+  "parameterName": "armSize",
+  "sourceDefinition": {
+    "id": "Pinwheel_ArmSize",
+    "label": "Size",
+    "description": "Length of each arm as a percentage of the maximum radius. Values above 100 extend the arms beyond the model edges.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 100,
+    "min": 0,
+    "max": 400,
+    "options": [],
+    "valueCurve": true,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Length of each arm as a percentage of the maximum radius. Values above 100 extend the arms beyond the model edges.",
+  "semanticAxis": "variation",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "armSize_100",
+    "few_arm_pinwheel",
+    "pinwheel_motion",
+    "pinwheel_pattern",
+    "radial_pattern_fit",
+    "spinner_pinwheel",
+    "static_pinwheel",
+    "armSize_75",
+    "armSize_50",
+    "armSize_25",
+    "star_pattern_fit"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "pinwheel-armsize-spinner-standard-100",
+      "valueSummary": "100",
+      "behaviorImpactSummary": "armSize_100,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "armSize_100",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-spinner-standard-75",
+      "valueSummary": "75",
+      "behaviorImpactSummary": "armSize_75,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "armSize_75",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-spinner-standard-50",
+      "valueSummary": "50",
+      "behaviorImpactSummary": "armSize_50,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "armSize_50",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-spinner-standard-25",
+      "valueSummary": "25",
+      "behaviorImpactSummary": "armSize_25,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "armSize_25",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-spinner-standard-100",
+      "valueSummary": "100",
+      "behaviorImpactSummary": "armSize_100,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "armSize_100",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-spinner-standard-75",
+      "valueSummary": "75",
+      "behaviorImpactSummary": "armSize_75,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "armSize_75",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-spinner-standard-50",
+      "valueSummary": "50",
+      "behaviorImpactSummary": "armSize_50,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "armSize_50",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-spinner-standard-25",
+      "valueSummary": "25",
+      "behaviorImpactSummary": "armSize_25,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel",
+      "affectedSignals": [
+        "armSize_25",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "radial_pattern_fit",
+        "spinner_pinwheel",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "spinner_standard"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-star-single-layer-25",
+      "valueSummary": "25",
+      "behaviorImpactSummary": "armSize_25,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "armSize_25",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-star-single-layer-100",
+      "valueSummary": "100",
+      "behaviorImpactSummary": "armSize_100,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "armSize_100",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-star-single-layer-50",
+      "valueSummary": "50",
+      "behaviorImpactSummary": "armSize_50,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "armSize_50",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-star-single-layer-75",
+      "valueSummary": "75",
+      "behaviorImpactSummary": "armSize_75,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "armSize_75",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-star-single-layer-25",
+      "valueSummary": "25",
+      "behaviorImpactSummary": "armSize_25,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "armSize_25",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-star-single-layer-100",
+      "valueSummary": "100",
+      "behaviorImpactSummary": "armSize_100,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "armSize_100",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-star-single-layer-75",
+      "valueSummary": "75",
+      "behaviorImpactSummary": "armSize_75,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "armSize_75",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "pinwheel-armsize-star-single-layer-50",
+      "valueSummary": "50",
+      "behaviorImpactSummary": "armSize_50,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,star_pattern_fit,static_pinwheel",
+      "affectedSignals": [
+        "armSize_50",
+        "few_arm_pinwheel",
+        "pinwheel_motion",
+        "pinwheel_pattern",
+        "star_pattern_fit",
+        "static_pinwheel"
+      ],
+      "geometrySpecificNotes": [
+        "star_single_layer"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 16,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "spinner_standard",
+      "star_single_layer"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

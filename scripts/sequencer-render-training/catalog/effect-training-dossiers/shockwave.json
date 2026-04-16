@@ -1,0 +1,3146 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.274Z",
+  "status": "transitional_current_evidence",
+  "effectName": "Shockwave",
+  "family": "compact_shockwave_ring",
+  "intentSurface": {
+    "supportedSettingsIntent": [],
+    "supportedPaletteIntent": [],
+    "supportedLayerIntent": [],
+    "supportedRenderIntent": []
+  },
+  "currentCoverage": {
+    "coverageStatus": "screened_parameter_subset",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [
+      "accel",
+      "blendEdges",
+      "centerX",
+      "centerY",
+      "cycles",
+      "endRadius",
+      "endWidth",
+      "scale",
+      "startRadius",
+      "startWidth"
+    ],
+    "retainedParameterNames": [],
+    "screenedParameterNames": [
+      "accel",
+      "blendEdges",
+      "centerX",
+      "centerY",
+      "cycles",
+      "endRadius",
+      "endWidth",
+      "scale",
+      "startRadius",
+      "startWidth"
+    ],
+    "screeningRecordCount": 66
+  },
+  "upstreamMetadata": {
+    "sourceFile": "Shockwave.json",
+    "propertyCount": 10,
+    "visibilityRuleCount": 0,
+    "parameters": {
+      "accel": {
+        "upstreamId": "Shockwave_Accel",
+        "label": "Acceleration",
+        "description": "Adjusts the expansion speed curve. Positive values make the ring expand slowly then accelerate; negative values make it start fast then decelerate.",
+        "default": 0,
+        "min": -10,
+        "max": 10,
+        "options": []
+      },
+      "blendEdges": {
+        "upstreamId": "Shockwave_Blend_Edges",
+        "label": "Blend Edges",
+        "description": "When enabled, the ring edges fade out smoothly based on distance from the ring center, creating a soft glow instead of hard edges.",
+        "default": true,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "centerX": {
+        "upstreamId": "Shockwave_CenterX",
+        "label": "Center X",
+        "description": "Horizontal center of the shockwave ring as a percentage of the buffer width.",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "options": []
+      },
+      "centerY": {
+        "upstreamId": "Shockwave_CenterY",
+        "label": "Center Y",
+        "description": "Vertical center of the shockwave ring as a percentage of the buffer height.",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "options": []
+      },
+      "cycles": {
+        "upstreamId": "Shockwave_Cycles",
+        "label": "Cycles",
+        "description": "Number of times the shockwave ring expands from Radius1 to Radius2 over the effect duration.",
+        "default": 1,
+        "min": 1,
+        "max": 100,
+        "options": []
+      },
+      "endRadius": {
+        "upstreamId": "Shockwave_End_Radius",
+        "label": "Radius2",
+        "description": "Ending radius of the expanding ring at the end of each cycle.",
+        "default": 10,
+        "min": 0,
+        "max": 750,
+        "options": []
+      },
+      "endWidth": {
+        "upstreamId": "Shockwave_End_Width",
+        "label": "Width2",
+        "description": "Thickness of the ring band at the end of each cycle.",
+        "default": 10,
+        "min": 0,
+        "max": 255,
+        "options": []
+      },
+      "scale": {
+        "upstreamId": "Shockwave_Scale",
+        "label": "Scale to Buffer",
+        "description": "When enabled, radius and width values are treated as percentages of the buffer size. When disabled, values are in absolute pixels.",
+        "default": true,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "startRadius": {
+        "upstreamId": "Shockwave_Start_Radius",
+        "label": "Radius1",
+        "description": "Starting radius of the expanding ring at the beginning of each cycle.",
+        "default": 1,
+        "min": 0,
+        "max": 750,
+        "options": []
+      },
+      "startWidth": {
+        "upstreamId": "Shockwave_Start_Width",
+        "label": "Width1",
+        "description": "Thickness of the ring band at the start of each cycle.",
+        "default": 5,
+        "min": 0,
+        "max": 255,
+        "options": []
+      }
+    }
+  },
+  "registryDefinition": {
+    "complexityClass": "complex",
+    "earlySamplingPolicy": "broad_geometry_first",
+    "notes": "Spatial expansion effect. Best on matrix/radial/tree classes, but worth early inclusion because center/radius/width semantics are highly interpretable.",
+    "parameters": {
+      "accel": {
+        "type": "numeric",
+        "range": {
+          "min": -10,
+          "max": 10
+        },
+        "anchors": [
+          -5,
+          0,
+          5
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "cycles",
+          "endRadius"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Shockwave_Accel",
+          "label": "Acceleration",
+          "description": "Adjusts the expansion speed curve. Positive values make the ring expand slowly then accelerate; negative values make it start fast then decelerate.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 0,
+          "min": -10,
+          "max": 10,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "blendEdges": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "startWidth",
+          "endWidth"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Shockwave_Blend_Edges",
+          "label": "Blend Edges",
+          "description": "When enabled, the ring edges fade out smoothly based on distance from the ring center, creating a soft glow instead of hard edges.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": true,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "centerX": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          25,
+          50,
+          75
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "centerY",
+          "geometryProfile"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Shockwave_CenterX",
+          "label": "Center X",
+          "description": "Horizontal center of the shockwave ring as a percentage of the buffer width.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 50,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "centerY": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          25,
+          50,
+          75
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "centerX",
+          "geometryProfile"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Shockwave_CenterY",
+          "label": "Center Y",
+          "description": "Vertical center of the shockwave ring as a percentage of the buffer height.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 50,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "cycles": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 5
+        },
+        "anchors": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "startRadius",
+          "endRadius",
+          "accel"
+        ],
+        "stopRule": "stop_when_regions_stabilize",
+        "upstream": {
+          "id": "Shockwave_Cycles",
+          "label": "Cycles",
+          "description": "Number of times the shockwave ring expands from Radius1 to Radius2 over the effect duration.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "endRadius": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          10,
+          25,
+          50,
+          75
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "startRadius",
+          "scale"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Shockwave_End_Radius",
+          "label": "Radius2",
+          "description": "Ending radius of the expanding ring at the end of each cycle.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 10,
+          "min": 0,
+          "max": 750,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "endWidth": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 50
+        },
+        "anchors": [
+          2,
+          5,
+          10,
+          20
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "startWidth",
+          "blendEdges"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Shockwave_End_Width",
+          "label": "Width2",
+          "description": "Thickness of the ring band at the end of each cycle.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 10,
+          "min": 0,
+          "max": 255,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "scale": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "startRadius",
+          "endRadius",
+          "geometryProfile"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Shockwave_Scale",
+          "label": "Scale to Buffer",
+          "description": "When enabled, radius and width values are treated as percentages of the buffer size. When disabled, values are in absolute pixels.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": true,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "startRadius": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          0,
+          10,
+          25,
+          50
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "endRadius",
+          "scale"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Shockwave_Start_Radius",
+          "label": "Radius1",
+          "description": "Starting radius of the expanding ring at the beginning of each cycle.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 1,
+          "min": 0,
+          "max": 750,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "startWidth": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 50
+        },
+        "anchors": [
+          2,
+          5,
+          10,
+          20
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "endWidth",
+          "blendEdges"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Shockwave_Start_Width",
+          "label": "Width1",
+          "description": "Thickness of the ring band at the start of each cycle.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 5,
+          "min": 0,
+          "max": 255,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Shockwave",
+    "upstreamSourceFile": "Shockwave.json",
+    "upstreamPropertyCount": 10,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": []
+  },
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [
+      "shockwave-spinner-expanded-sweep-v1.json",
+      "shockwave-starsingle-expanded-sweep-v1.json",
+      "shockwave-treeflat-expanded-sweep-v1.json",
+      "shockwave-treeround-expanded-sweep-v1.json",
+      "shockwave-treespiral-expanded-sweep-v1.json"
+    ],
+    "range": [],
+    "combos": [],
+    "interactions": [
+      "shockwave-spinner-interactions-v1.json",
+      "shockwave-treeround-interactions-v1.json",
+      "shockwave-treespiral-interactions-v1.json"
+    ],
+    "all": [
+      "shockwave-spinner-expanded-sweep-v1.json",
+      "shockwave-spinner-interactions-v1.json",
+      "shockwave-starsingle-expanded-sweep-v1.json",
+      "shockwave-treeflat-expanded-sweep-v1.json",
+      "shockwave-treeround-expanded-sweep-v1.json",
+      "shockwave-treeround-interactions-v1.json",
+      "shockwave-treespiral-expanded-sweep-v1.json",
+      "shockwave-treespiral-interactions-v1.json"
+    ]
+  },
+  "evidenceIndex": {
+    "screeningRecords": [
+      "shockwave-spinner-standard-shockwave-accel-0-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-accel-0-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-accel-5-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-accel-5-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-blendedges-false-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-blendedges-false-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-blendedges-true-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-blendedges-true-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centerx-25-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centerx-25-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centerx-50-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centerx-50-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centerx-75-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centerx-75-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centery-25-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centery-25-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centery-50-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centery-50-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centery-75-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-centery-75-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-1-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-1-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-2-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-2-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-3-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-3-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-4-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-4-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-5-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-cycles-5-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endradius-10-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endradius-10-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endradius-25-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endradius-25-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endradius-50-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endradius-50-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endradius-75-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endradius-75-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endwidth-10-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endwidth-10-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endwidth-2-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endwidth-2-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endwidth-20-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endwidth-20-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endwidth-5-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-endwidth-5-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-scale-false-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-scale-false-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-scale-true-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-scale-true-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startradius-0-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startradius-0-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startradius-10-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startradius-10-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startradius-25-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startradius-25-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startradius-50-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startradius-50-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startwidth-10-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startwidth-10-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startwidth-2-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startwidth-2-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startwidth-20-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startwidth-20-rgb-primary-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startwidth-5-mono-white-generated-v1.record.json",
+      "shockwave-spinner-standard-shockwave-startwidth-5-rgb-primary-generated-v1.record.json"
+    ],
+    "screeningRecordPaths": [
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-accel-0-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-accel-0-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-accel-5-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-accel-5-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-blendedges-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-blendedges-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-blendedges-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-blendedges-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centerx-25-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centerx-25-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centerx-50-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centerx-50-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centerx-75-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centerx-75-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centery-25-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centery-25-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centery-50-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centery-50-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centery-75-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-centery-75-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-1-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-1-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-2-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-2-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-3-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-3-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-4-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-4-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-5-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-cycles-5-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endradius-10-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endradius-10-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endradius-25-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endradius-25-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endradius-50-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endradius-50-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endradius-75-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endradius-75-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endwidth-10-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endwidth-10-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endwidth-2-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endwidth-2-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endwidth-20-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endwidth-20-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endwidth-5-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-endwidth-5-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-scale-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-scale-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-scale-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-scale-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startradius-0-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startradius-0-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startradius-10-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startradius-10-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startradius-25-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startradius-25-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startradius-50-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startradius-50-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startwidth-10-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startwidth-10-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startwidth-2-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startwidth-2-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startwidth-20-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startwidth-20-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startwidth-5-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/shockwave-spinner-standard-shockwave-startwidth-5-rgb-primary-generated-v1.record.json"
+    ]
+  },
+  "currentTrainingReference": {
+    "effectName": "Shockwave",
+    "baseline": {
+      "currentStage": "selector_ready",
+      "selectorReady": true,
+      "selectorEvidence": {
+        "selectedCaseCount": 3,
+        "passedCaseCount": 3,
+        "caseIds": [
+          "select_shockwave_fill_spinner",
+          "select_shockwave_crisp_spinner",
+          "select_shockwave_helical_compact"
+        ]
+      },
+      "supportedModelTypes": [
+        "arch",
+        "cane",
+        "icicles",
+        "matrix",
+        "single_line",
+        "spinner",
+        "star",
+        "tree_360",
+        "tree_flat"
+      ],
+      "supportedGeometryProfiles": [
+        "arch_grouped",
+        "arch_multi_layer",
+        "arch_single",
+        "cane_grouped",
+        "cane_single",
+        "cane_stick_grouped",
+        "icicles_drop_pattern",
+        "matrix_high_density",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "single_line_horizontal",
+        "single_line_single_node",
+        "single_line_vertical",
+        "spinner_standard",
+        "star_multi_layer",
+        "star_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "tree_flat_single_layer"
+      ],
+      "intentTags": [
+        "animated",
+        "bold",
+        "directional",
+        "fill",
+        "geometry_coupled",
+        "patterned",
+        "restrained"
+      ],
+      "patternFamilies": [
+        "compact_shockwave_ring",
+        "crisp_shockwave",
+        "diffuse_shockwave",
+        "helical_compact_shockwave",
+        "helical_crisp_shockwave",
+        "helical_diffuse_shockwave",
+        "helical_shockwave",
+        "offcenter_radial_shockwave",
+        "offcenter_shockwave",
+        "radial_compact_shockwave",
+        "radial_crisp_shockwave",
+        "radial_diffuse_shockwave",
+        "radial_shockwave"
+      ],
+      "retainedParameters": []
+    },
+    "capability": {
+      "family": "compact_shockwave_ring",
+      "supportedSettingsIntent": [],
+      "supportedPaletteIntent": [],
+      "supportedLayerIntent": [],
+      "supportedRenderIntent": []
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "accel",
+        "blendEdges",
+        "centerX",
+        "centerY",
+        "cycles",
+        "endRadius",
+        "endWidth",
+        "scale",
+        "startRadius",
+        "startWidth"
+      ],
+      "retainedParameterNames": [],
+      "supportedIntentAxes": {
+        "settings": [],
+        "palette": [],
+        "layer": [],
+        "render": []
+      },
+      "coverageStatus": "screened_parameter_subset",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [
+        "accel",
+        "blendEdges",
+        "centerX",
+        "centerY",
+        "cycles",
+        "endRadius",
+        "endWidth",
+        "scale",
+        "startRadius",
+        "startWidth"
+      ],
+      "derivedPriors": {
+        "status": "populated",
+        "priorCount": 20,
+        "priors": [
+          {
+            "parameterName": "accel",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": 0,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "accel_0",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01844,
+                "meanTemporalColorDelta": 0.013372,
+                "meanTemporalBrightnessDelta": 0.013372,
+                "meanNonBlankRatio": 0.25,
+                "behaviorHints": [
+                  "accel_5",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "accel",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": 0,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "accel_0",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.011235,
+                "meanTemporalColorDelta": 0.004797,
+                "meanTemporalBrightnessDelta": 0.004453,
+                "meanNonBlankRatio": 0.2,
+                "behaviorHints": [
+                  "accel_5",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "blendEdges",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "blendEdges_false",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "blendEdges_true",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "blendEdges",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "blendEdges_false",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "blendEdges_true",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "centerX",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 3,
+            "distinctAnchorCount": 3,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerX_25",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerX_50",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.016775,
+                "meanTemporalColorDelta": 0.013154,
+                "meanTemporalBrightnessDelta": 0.013154,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerX_75",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "centerX",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 3,
+            "distinctAnchorCount": 3,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerX_25",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerX_50",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.011099,
+                "meanTemporalColorDelta": 0.005091,
+                "meanTemporalBrightnessDelta": 0.004365,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerX_75",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "centerY",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 3,
+            "distinctAnchorCount": 3,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerY_25",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerY_50",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerY_75",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "centerY",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 3,
+            "distinctAnchorCount": 3,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerY_25",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerY_50",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "centerY_75",
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "cycles",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.046339,
+                "meanTemporalColorDelta": 0.034971,
+                "meanTemporalBrightnessDelta": 0.034971,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_4",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.044077,
+                "meanTemporalColorDelta": 0.034087,
+                "meanTemporalBrightnessDelta": 0.034087,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_5",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "moderate_motion"
+                ],
+                "meanTemporalMotion": 0.041077,
+                "meanTemporalColorDelta": 0.031146,
+                "meanTemporalBrightnessDelta": 0.031146,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_3",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.030126,
+                "meanTemporalColorDelta": 0.028937,
+                "meanTemporalBrightnessDelta": 0.028937,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_2",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_1",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "cycles",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 4,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.032176,
+                "meanTemporalColorDelta": 0.014799,
+                "meanTemporalBrightnessDelta": 0.012047,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_4",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.03021,
+                "meanTemporalColorDelta": 0.013908,
+                "meanTemporalBrightnessDelta": 0.011637,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_5",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.028528,
+                "meanTemporalColorDelta": 0.012281,
+                "meanTemporalBrightnessDelta": 0.010581,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_3",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.015944,
+                "meanTemporalColorDelta": 0.010451,
+                "meanTemporalBrightnessDelta": 0.009508,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_2",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "cycles_1",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "endRadius",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.030937,
+                "meanTemporalColorDelta": 0.026584,
+                "meanTemporalBrightnessDelta": 0.026584,
+                "meanNonBlankRatio": 0.65,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endRadius_75",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.023305,
+                "meanTemporalColorDelta": 0.017014,
+                "meanTemporalBrightnessDelta": 0.017014,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endRadius_50",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.010026,
+                "meanTemporalColorDelta": 0.006207,
+                "meanTemporalBrightnessDelta": 0.006207,
+                "meanNonBlankRatio": 0.35,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endRadius_25",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001055,
+                "meanTemporalColorDelta": 0.000422,
+                "meanTemporalBrightnessDelta": 0.000422,
+                "meanNonBlankRatio": 0,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endRadius_10",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "endRadius",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 75,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.018219,
+                "meanTemporalColorDelta": 0.009666,
+                "meanTemporalBrightnessDelta": 0.008937,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endRadius_75",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01381,
+                "meanTemporalColorDelta": 0.006426,
+                "meanTemporalBrightnessDelta": 0.00571,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endRadius_50",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.007381,
+                "meanTemporalColorDelta": 0.002726,
+                "meanTemporalBrightnessDelta": 0.002145,
+                "meanNonBlankRatio": 0.35,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endRadius_25",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.000906,
+                "meanTemporalColorDelta": 0.00017,
+                "meanTemporalBrightnessDelta": 0.000143,
+                "meanNonBlankRatio": 0,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endRadius_10",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "endWidth",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 20,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.030857,
+                "meanTemporalColorDelta": 0.017826,
+                "meanTemporalBrightnessDelta": 0.017826,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endWidth_20",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endWidth_10",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.018012,
+                "meanTemporalColorDelta": 0.015046,
+                "meanTemporalBrightnessDelta": 0.015046,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endWidth_2",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.018012,
+                "meanTemporalColorDelta": 0.015046,
+                "meanTemporalBrightnessDelta": 0.015046,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endWidth_5",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "endWidth",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 20,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.020518,
+                "meanTemporalColorDelta": 0.008008,
+                "meanTemporalBrightnessDelta": 0.006115,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endWidth_20",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.013486,
+                "meanTemporalColorDelta": 0.005662,
+                "meanTemporalBrightnessDelta": 0.005222,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endWidth_2",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.013486,
+                "meanTemporalColorDelta": 0.005662,
+                "meanTemporalBrightnessDelta": 0.005222,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endWidth_5",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "endWidth_10",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "scale",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scale_false",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scale_true",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "scale",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scale_false",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scale_true",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "startRadius",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 0,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.020835,
+                "meanTemporalColorDelta": 0.016769,
+                "meanTemporalBrightnessDelta": 0.016769,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startRadius_0"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.020731,
+                "meanTemporalColorDelta": 0.019512,
+                "meanTemporalBrightnessDelta": 0.019512,
+                "meanNonBlankRatio": 0.65,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startRadius_10"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.018877,
+                "meanTemporalColorDelta": 0.01614,
+                "meanTemporalBrightnessDelta": 0.01614,
+                "meanNonBlankRatio": 0.65,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startRadius_25"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.013809,
+                "meanTemporalColorDelta": 0.012429,
+                "meanTemporalBrightnessDelta": 0.012429,
+                "meanNonBlankRatio": 0.7,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startRadius_50"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "startRadius",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 0,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.013244,
+                "meanTemporalColorDelta": 0.006242,
+                "meanTemporalBrightnessDelta": 0.005609,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startRadius_0"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.013013,
+                "meanTemporalColorDelta": 0.007492,
+                "meanTemporalBrightnessDelta": 0.006584,
+                "meanNonBlankRatio": 0.65,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startRadius_10"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 25,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.011171,
+                "meanTemporalColorDelta": 0.006735,
+                "meanTemporalBrightnessDelta": 0.005511,
+                "meanNonBlankRatio": 0.65,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startRadius_25"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.009253,
+                "meanTemporalColorDelta": 0.006027,
+                "meanTemporalBrightnessDelta": 0.004197,
+                "meanNonBlankRatio": 0.65,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startRadius_50"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "startWidth",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "mono_white",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.020223,
+                "meanTemporalColorDelta": 0.014699,
+                "meanTemporalBrightnessDelta": 0.014699,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startWidth_10"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startWidth_2"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019761,
+                "meanTemporalColorDelta": 0.016312,
+                "meanTemporalBrightnessDelta": 0.016312,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startWidth_5"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 20,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019545,
+                "meanTemporalColorDelta": 0.013468,
+                "meanTemporalBrightnessDelta": 0.013468,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startWidth_20"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "startWidth",
+            "geometryProfile": "spinner_standard",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 4,
+            "distinctAnchorCount": 4,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "055dbdc56c9d"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.015735,
+                "meanTemporalColorDelta": 0.006507,
+                "meanTemporalBrightnessDelta": 0.005055,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startWidth_10"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 20,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.015357,
+                "meanTemporalColorDelta": 0.006816,
+                "meanTemporalBrightnessDelta": 0.004739,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startWidth_20"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 2,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startWidth_2"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01235,
+                "meanTemporalColorDelta": 0.006185,
+                "meanTemporalBrightnessDelta": 0.005435,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "compact_shockwave",
+                  "hard_edge_shockwave",
+                  "medium_width_shockwave",
+                  "neutral_shockwave",
+                  "offset_shockwave",
+                  "radial_pattern_fit",
+                  "radial_shockwave",
+                  "scaled_shockwave",
+                  "shockwave_pattern",
+                  "single_shockwave",
+                  "spinner_fill",
+                  "startWidth_5"
+                ],
+                "structuralSignatures": [
+                  "055dbdc56c9d"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "populated",
+      "storageClass": "general_training",
+      "screeningRecordCount": 66,
+      "screenedParameterNames": [
+        "accel",
+        "blendEdges",
+        "centerX",
+        "centerY",
+        "cycles",
+        "endRadius",
+        "endWidth",
+        "scale",
+        "startRadius",
+        "startWidth"
+      ],
+      "sampledModelTypes": [
+        "spinner"
+      ],
+      "sampledGeometryProfiles": [
+        "spinner_standard"
+      ],
+      "observedLabelHints": [
+        "accel",
+        "accel_0",
+        "compact_shockwave",
+        "effect:shockwave",
+        "hard_edge_shockwave",
+        "medium_width_shockwave",
+        "model:spinner",
+        "neutral_shockwave",
+        "offset_shockwave",
+        "palette_mono_white",
+        "radial_pattern_fit",
+        "radial_shockwave",
+        "range_sample",
+        "render_style:default",
+        "scaled_shockwave",
+        "shockwave_pattern",
+        "single_shockwave",
+        "spinner_fill",
+        "palette_rgb_primary",
+        "accel_5",
+        "blendEdges",
+        "blendEdges_false",
+        "blendEdges_true",
+        "centerX",
+        "centerX_25",
+        "centerX_50",
+        "centerX_75",
+        "centerY",
+        "centerY_25",
+        "centerY_50",
+        "centerY_75",
+        "cycles",
+        "cycles_1",
+        "cycles_2",
+        "cycles_3",
+        "cycles_4",
+        "cycles_5",
+        "endRadius",
+        "endRadius_10",
+        "endRadius_25",
+        "endRadius_50",
+        "endRadius_75",
+        "endWidth",
+        "endWidth_10",
+        "endWidth_2",
+        "endWidth_20",
+        "endWidth_5",
+        "scale",
+        "scale_false",
+        "scale_true",
+        "startRadius",
+        "startRadius_0",
+        "startRadius_10",
+        "startRadius_25",
+        "startRadius_50",
+        "startWidth",
+        "startWidth_10",
+        "startWidth_2",
+        "startWidth_20",
+        "startWidth_5"
+      ],
+      "configurationRepresentativeness": {
+        "coverageStatus": "single_reference_per_geometry",
+        "profileCount": 1,
+        "profiles": [
+          {
+            "modelType": "spinner",
+            "geometryProfile": "spinner_standard",
+            "analyzerFamily": "radial",
+            "displayAsNormalized": "spinner",
+            "stringType": "RGB Nodes",
+            "nodeCount": 10,
+            "nodeCountBucket": "very_small",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "arms:8",
+              "type:spinner"
+            ],
+            "structuralSettings": {
+              "Alternate": "false",
+              "Arc": "360",
+              "Dir": "L",
+              "DisplayAs": "Spinner",
+              "Hollow": "0",
+              "parm1": "1",
+              "parm2": "10",
+              "parm3": "8",
+              "StartSide": "T",
+              "StringType": "RGB Nodes",
+              "ZigZag": "false"
+            },
+            "structuralSignature": "055dbdc56c9d",
+            "sampleCount": 66
+          }
+        ]
+      }
+    }
+  }
+}

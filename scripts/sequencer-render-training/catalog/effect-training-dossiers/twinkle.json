@@ -1,0 +1,1533 @@
+{
+  "artifactType": "effect_training_dossier_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-16T18:35:28.282Z",
+  "status": "transitional_current_evidence",
+  "effectName": "Twinkle",
+  "family": "classic_random_twinkle",
+  "intentSurface": {
+    "supportedSettingsIntent": [],
+    "supportedPaletteIntent": [],
+    "supportedLayerIntent": [],
+    "supportedRenderIntent": []
+  },
+  "currentCoverage": {
+    "coverageStatus": "screened_parameter_subset",
+    "exhaustiveSettingCoverage": false,
+    "registryParameterNames": [
+      "count",
+      "reRandomize",
+      "steps",
+      "strobe",
+      "style"
+    ],
+    "retainedParameterNames": [],
+    "screenedParameterNames": [
+      "count",
+      "reRandomize",
+      "steps",
+      "strobe",
+      "style"
+    ],
+    "screeningRecordCount": 32
+  },
+  "upstreamMetadata": {
+    "sourceFile": "Twinkle.json",
+    "propertyCount": 5,
+    "visibilityRuleCount": 0,
+    "parameters": {
+      "count": {
+        "upstreamId": "Twinkle_Count",
+        "label": "Percent of Lights",
+        "description": "Percentage of pixels that are actively twinkling at any given time. Higher values create a denser twinkling field.",
+        "default": 3,
+        "min": 2,
+        "max": 100,
+        "options": []
+      },
+      "reRandomize": {
+        "upstreamId": "Twinkle_ReRandom",
+        "label": "Re-Randomize after twinkle",
+        "description": "When enabled, each pixel is assigned a new random position after its twinkle cycle completes. When disabled, pixels twinkle in the same locations repeatedly.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "steps": {
+        "upstreamId": "Twinkle_Steps",
+        "label": "Twinkle Steps",
+        "description": "Number of frames for a complete twinkle cycle (fade up then fade down). Lower values create faster, snappier twinkles; higher values create slow, gentle fades.",
+        "default": 30,
+        "min": 2,
+        "max": 400,
+        "options": []
+      },
+      "strobe": {
+        "upstreamId": "Twinkle_Strobe",
+        "label": "Strobe",
+        "description": "When enabled, twinkling pixels snap on and off instantly instead of fading, creating a strobe-like flash effect.",
+        "default": false,
+        "min": null,
+        "max": null,
+        "options": []
+      },
+      "style": {
+        "upstreamId": "Twinkle_Style",
+        "label": "Style",
+        "description": "Selects the rendering algorithm. Old Render Method uses the original per-frame logic; New Render Method uses an updated approach with smoother transitions.",
+        "default": "New Render Method",
+        "min": null,
+        "max": null,
+        "options": [
+          "Old Render Method",
+          "New Render Method"
+        ]
+      }
+    }
+  },
+  "registryDefinition": {
+    "complexityClass": "complex",
+    "earlySamplingPolicy": "broad_geometry_first",
+    "notes": "Higher-value texture effect than Shimmer for long-term training. Density, dwell, strobe behavior, rerandomization, and render method should be screened first.",
+    "parameters": {
+      "count": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 10
+        },
+        "anchors": [
+          1,
+          3,
+          5,
+          7,
+          9
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "steps",
+          "strobe",
+          "geometryProfile"
+        ],
+        "stopRule": "stop_when_regions_stabilize",
+        "upstream": {
+          "id": "Twinkle_Count",
+          "label": "Percent of Lights",
+          "description": "Percentage of pixels that are actively twinkling at any given time. Higher values create a denser twinkling field.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 3,
+          "min": 2,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "reRandomize": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "interactionHypotheses": [
+          "style",
+          "count"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Twinkle_ReRandom",
+          "label": "Re-Randomize after twinkle",
+          "description": "When enabled, each pixel is assigned a new random position after its twinkle cycle completes. When disabled, pixels twinkle in the same locations repeatedly.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "steps": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 100
+        },
+        "anchors": [
+          10,
+          30,
+          50,
+          70,
+          90
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "count",
+          "strobe",
+          "style"
+        ],
+        "stopRule": "refine_only_near_breakpoints",
+        "upstream": {
+          "id": "Twinkle_Steps",
+          "label": "Twinkle Steps",
+          "description": "Number of frames for a complete twinkle cycle (fade up then fade down). Lower values create faster, snappier twinkles; higher values create slow, gentle fades.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 30,
+          "min": 2,
+          "max": 400,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": 400,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "strobe": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "steps",
+          "style"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Twinkle_Strobe",
+          "label": "Strobe",
+          "description": "When enabled, twinkling pixels snap on and off instantly instead of fading, creating a strobe-like flash effect.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": false,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "style": {
+        "type": "enum",
+        "anchors": [
+          "Old Render Method",
+          "New Render Method"
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "interactionHypotheses": [
+          "count",
+          "steps",
+          "strobe"
+        ],
+        "stopRule": "all_meaningful_options",
+        "upstream": {
+          "id": "Twinkle_Style",
+          "label": "Style",
+          "description": "Selects the rendering algorithm. Old Render Method uses the original per-frame logic; New Render Method uses an updated approach with smoother transitions.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "New Render Method",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [
+            "Old Render Method",
+            "New Render Method"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Twinkle",
+    "upstreamSourceFile": "Twinkle.json",
+    "upstreamPropertyCount": 5,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": []
+  },
+  "interactionCoverage": {
+    "requiresInteractionCoverage": false,
+    "hasInteractionCoverage": false,
+    "interactionCoverageStatus": "",
+    "interactionGeometries": [],
+    "interactionManifestNames": []
+  },
+  "manifestIndex": {
+    "expandedSweep": [
+      "twinkle-singlelinehorizontal-expanded-sweep-v1.json",
+      "twinkle-spinner-expanded-sweep-v1.json",
+      "twinkle-starsingle-expanded-sweep-v1.json",
+      "twinkle-treeround-expanded-sweep-v1.json",
+      "twinkle-treespiral-expanded-sweep-v1.json"
+    ],
+    "range": [],
+    "combos": [],
+    "interactions": [
+      "twinkle-singlelinehorizontal-interactions-v1.json",
+      "twinkle-spinner-interactions-v1.json",
+      "twinkle-treeround-interactions-v1.json"
+    ],
+    "all": [
+      "twinkle-singlelinehorizontal-expanded-sweep-v1.json",
+      "twinkle-singlelinehorizontal-interactions-v1.json",
+      "twinkle-spinner-expanded-sweep-v1.json",
+      "twinkle-spinner-interactions-v1.json",
+      "twinkle-starsingle-expanded-sweep-v1.json",
+      "twinkle-treeround-expanded-sweep-v1.json",
+      "twinkle-treeround-interactions-v1.json",
+      "twinkle-treespiral-expanded-sweep-v1.json"
+    ]
+  },
+  "evidenceIndex": {
+    "screeningRecords": [
+      "twinkle-single-line-horizontal-twinkle-count-1-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-count-1-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-count-3-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-count-3-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-count-5-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-count-5-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-count-7-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-count-7-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-count-9-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-count-9-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-rerandomize-false-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-rerandomize-false-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-rerandomize-true-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-rerandomize-true-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-10-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-10-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-30-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-30-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-50-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-50-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-70-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-70-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-90-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-steps-90-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-strobe-false-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-strobe-false-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-strobe-true-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-strobe-true-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-style-new-render-method-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-style-new-render-method-rgb-primary-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-style-old-render-method-mono-white-generated-v1.record.json",
+      "twinkle-single-line-horizontal-twinkle-style-old-render-method-rgb-primary-generated-v1.record.json"
+    ],
+    "screeningRecordPaths": [
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-1-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-1-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-3-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-3-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-5-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-5-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-7-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-7-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-9-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-count-9-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-rerandomize-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-rerandomize-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-rerandomize-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-rerandomize-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-10-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-10-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-30-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-30-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-50-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-50-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-70-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-70-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-90-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-steps-90-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-strobe-false-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-strobe-false-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-strobe-true-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-strobe-true-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-style-new-render-method-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-style-new-render-method-rgb-primary-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-style-old-render-method-mono-white-generated-v1.record.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records/twinkle-single-line-horizontal-twinkle-style-old-render-method-rgb-primary-generated-v1.record.json"
+    ]
+  },
+  "currentTrainingReference": {
+    "effectName": "Twinkle",
+    "baseline": {
+      "currentStage": "selector_ready",
+      "selectorReady": true,
+      "selectorEvidence": {
+        "selectedCaseCount": 3,
+        "passedCaseCount": 3,
+        "caseIds": [
+          "select_twinkle_restrained_line",
+          "select_twinkle_strobe_spinner",
+          "select_twinkle_varied_spinner"
+        ]
+      },
+      "supportedModelTypes": [
+        "arch",
+        "cane",
+        "icicles",
+        "matrix",
+        "single_line",
+        "spinner",
+        "star",
+        "tree_360",
+        "tree_flat"
+      ],
+      "supportedGeometryProfiles": [
+        "arch_grouped",
+        "arch_multi_layer",
+        "arch_single",
+        "cane_grouped",
+        "cane_single",
+        "cane_stick_grouped",
+        "icicles_drop_pattern",
+        "matrix_high_density",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "single_line_horizontal",
+        "single_line_single_node",
+        "single_line_vertical",
+        "spinner_standard",
+        "star_multi_layer",
+        "star_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "tree_flat_single_layer"
+      ],
+      "intentTags": [
+        "animated",
+        "bold",
+        "busy",
+        "patterned",
+        "restrained",
+        "steady",
+        "varied"
+      ],
+      "patternFamilies": [
+        "classic_random_twinkle",
+        "classic_twinkle",
+        "linear_classic_random_twinkle",
+        "linear_classic_twinkle",
+        "linear_restrained_twinkle",
+        "linear_soft_twinkle",
+        "linear_strobe_twinkle",
+        "linear_surging_twinkle",
+        "radial_classic_random_twinkle",
+        "radial_classic_twinkle",
+        "radial_restrained_twinkle",
+        "radial_soft_twinkle",
+        "radial_strobe_twinkle",
+        "radial_surging_twinkle",
+        "restrained_twinkle",
+        "soft_twinkle",
+        "strobe_twinkle",
+        "surging_twinkle"
+      ],
+      "retainedParameters": []
+    },
+    "capability": {
+      "family": "classic_random_twinkle",
+      "supportedSettingsIntent": [],
+      "supportedPaletteIntent": [],
+      "supportedLayerIntent": [],
+      "supportedRenderIntent": []
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "count",
+        "reRandomize",
+        "steps",
+        "strobe",
+        "style"
+      ],
+      "retainedParameterNames": [],
+      "supportedIntentAxes": {
+        "settings": [],
+        "palette": [],
+        "layer": [],
+        "render": []
+      },
+      "coverageStatus": "screened_parameter_subset",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [
+        "count",
+        "reRandomize",
+        "steps",
+        "strobe",
+        "style"
+      ],
+      "derivedPriors": {
+        "status": "populated",
+        "priorCount": 10,
+        "priors": [
+          {
+            "parameterName": "count",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 9,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.019509,
+                "meanTemporalColorDelta": 0.011451,
+                "meanTemporalBrightnessDelta": 0.011451,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "count_9",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014824,
+                "meanTemporalColorDelta": 0.008292,
+                "meanTemporalBrightnessDelta": 0.008292,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "count_7",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.012602,
+                "meanTemporalColorDelta": 0.007937,
+                "meanTemporalBrightnessDelta": 0.007937,
+                "meanNonBlankRatio": 0.7,
+                "behaviorHints": [
+                  "count_5",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.01047,
+                "meanTemporalColorDelta": 0.009849,
+                "meanTemporalBrightnessDelta": 0.009849,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "count_3",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.003871,
+                "meanTemporalColorDelta": 0.004599,
+                "meanTemporalBrightnessDelta": 0.004599,
+                "meanNonBlankRatio": 0,
+                "behaviorHints": [
+                  "count_1",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "count",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 7,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.015147,
+                "meanTemporalColorDelta": 0.006434,
+                "meanTemporalBrightnessDelta": 0.003512,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "count_7",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 9,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014202,
+                "meanTemporalColorDelta": 0.007262,
+                "meanTemporalBrightnessDelta": 0.004472,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "count_9",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 5,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.010456,
+                "meanTemporalColorDelta": 0.004494,
+                "meanTemporalBrightnessDelta": 0.003999,
+                "meanNonBlankRatio": 0.65,
+                "behaviorHints": [
+                  "count_5",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 3,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.006753,
+                "meanTemporalColorDelta": 0.003691,
+                "meanTemporalBrightnessDelta": 0.002524,
+                "meanNonBlankRatio": 0.45,
+                "behaviorHints": [
+                  "count_3",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 1,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.001888,
+                "meanTemporalColorDelta": 0.002067,
+                "meanTemporalBrightnessDelta": 0.001582,
+                "meanNonBlankRatio": 0,
+                "behaviorHints": [
+                  "count_1",
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "reRandomize",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.011895,
+                "meanTemporalColorDelta": 0.006698,
+                "meanTemporalBrightnessDelta": 0.006698,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "reRandomize_true",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.005501,
+                "meanTemporalColorDelta": 0.003972,
+                "meanTemporalBrightnessDelta": 0.003972,
+                "meanNonBlankRatio": 0.75,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "reRandomize_false",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "reRandomize",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.008307,
+                "meanTemporalColorDelta": 0.004161,
+                "meanTemporalBrightnessDelta": 0.002559,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "reRandomize_false",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.005855,
+                "meanTemporalColorDelta": 0.002559,
+                "meanTemporalBrightnessDelta": 0.001734,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "reRandomize_true",
+                  "soft_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "steps",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "mono_white",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.014922,
+                "meanTemporalColorDelta": 0.008667,
+                "meanTemporalBrightnessDelta": 0.008659,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_10",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 70,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.011462,
+                "meanTemporalColorDelta": 0.006682,
+                "meanTemporalBrightnessDelta": 0.006674,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_70",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 30,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.010374,
+                "meanTemporalColorDelta": 0.010059,
+                "meanTemporalBrightnessDelta": 0.010059,
+                "meanNonBlankRatio": 0.7,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_30",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.009416,
+                "meanTemporalColorDelta": 0.007073,
+                "meanTemporalBrightnessDelta": 0.007073,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_50",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 90,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.005452,
+                "meanTemporalColorDelta": 0.004841,
+                "meanTemporalBrightnessDelta": 0.004841,
+                "meanNonBlankRatio": 0.7,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_90",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "steps",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 5,
+            "distinctAnchorCount": 5,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "medium",
+            "anchorProfiles": [
+              {
+                "parameterValue": 30,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.011697,
+                "meanTemporalColorDelta": 0.005333,
+                "meanTemporalBrightnessDelta": 0.004056,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_30",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 10,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "subtle_motion"
+                ],
+                "meanTemporalMotion": 0.011646,
+                "meanTemporalColorDelta": 0.0077,
+                "meanTemporalBrightnessDelta": 0.002559,
+                "meanNonBlankRatio": 0.45,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_10",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 50,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.005929,
+                "meanTemporalColorDelta": 0.005264,
+                "meanTemporalBrightnessDelta": 0.00303,
+                "meanNonBlankRatio": 0.55,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_50",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 70,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.005852,
+                "meanTemporalColorDelta": 0.00339,
+                "meanTemporalBrightnessDelta": 0.002752,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_70",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": 90,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.00575,
+                "meanTemporalColorDelta": 0.002174,
+                "meanTemporalBrightnessDelta": 0.001651,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "steps_90",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "strobe",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.008173,
+                "meanTemporalColorDelta": 0.004524,
+                "meanTemporalBrightnessDelta": 0.004524,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "strobe_false",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0,
+                "meanTemporalColorDelta": 0,
+                "meanTemporalBrightnessDelta": 0,
+                "meanNonBlankRatio": 0,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "strobe_true",
+                  "strobe_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "strobe",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": false,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.003871,
+                "meanTemporalColorDelta": 0.003148,
+                "meanTemporalBrightnessDelta": 0.002493,
+                "meanNonBlankRatio": 0.7,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "strobe_false",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": true,
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0,
+                "meanTemporalColorDelta": 0,
+                "meanTemporalBrightnessDelta": 0,
+                "meanNonBlankRatio": 0,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "strobe_true",
+                  "strobe_twinkle",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "style",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "mono_white",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": "New Render Method",
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.008441,
+                "meanTemporalColorDelta": 0.006544,
+                "meanTemporalBrightnessDelta": 0.006544,
+                "meanNonBlankRatio": 0.65,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "style_New_Render_Method",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": "Old Render Method",
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.005856,
+                "meanTemporalColorDelta": 0.003853,
+                "meanTemporalBrightnessDelta": 0.003853,
+                "meanNonBlankRatio": 0.65,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "style_Old_Render_Method",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          },
+          {
+            "parameterName": "style",
+            "geometryProfile": "single_line_horizontal",
+            "paletteMode": "rgb_primary",
+            "sampleCount": 2,
+            "distinctAnchorCount": 2,
+            "configurationCoverageStatus": "single_reference_per_geometry",
+            "configurationProfileCount": 1,
+            "structuralSignatures": [
+              "d64e2ecfe7dc"
+            ],
+            "confidence": "low",
+            "anchorProfiles": [
+              {
+                "parameterValue": "New Render Method",
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.007112,
+                "meanTemporalColorDelta": 0.004101,
+                "meanTemporalBrightnessDelta": 0.002939,
+                "meanNonBlankRatio": 0.5,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "style_New_Render_Method",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              },
+              {
+                "parameterValue": "Old Render Method",
+                "sampleCount": 1,
+                "temporalSignatureHints": [
+                  "static_or_near_static"
+                ],
+                "meanTemporalMotion": 0.006783,
+                "meanTemporalColorDelta": 0.002524,
+                "meanTemporalBrightnessDelta": 0.002524,
+                "meanNonBlankRatio": 0.6,
+                "behaviorHints": [
+                  "line_read",
+                  "linear_pattern_fit",
+                  "medium_cadence_twinkle",
+                  "medium_twinkle",
+                  "soft_twinkle",
+                  "style_Old_Render_Method",
+                  "twinkle_pattern"
+                ],
+                "structuralSignatures": [
+                  "d64e2ecfe7dc"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "populated",
+      "storageClass": "general_training",
+      "screeningRecordCount": 32,
+      "screenedParameterNames": [
+        "count",
+        "reRandomize",
+        "steps",
+        "strobe",
+        "style"
+      ],
+      "sampledModelTypes": [
+        "single_line"
+      ],
+      "sampledGeometryProfiles": [
+        "single_line_horizontal"
+      ],
+      "observedLabelHints": [
+        "count",
+        "count_1",
+        "effect:twinkle",
+        "line_read",
+        "linear_pattern_fit",
+        "medium_cadence_twinkle",
+        "medium_twinkle",
+        "model:single_line",
+        "palette_mono_white",
+        "range_sample",
+        "render_style:default",
+        "soft_twinkle",
+        "twinkle_pattern",
+        "palette_rgb_primary",
+        "count_3",
+        "count_5",
+        "count_7",
+        "count_9",
+        "reRandomize",
+        "reRandomize_false",
+        "reRandomize_true",
+        "steps",
+        "steps_10",
+        "steps_30",
+        "steps_50",
+        "steps_70",
+        "steps_90",
+        "strobe",
+        "strobe_false",
+        "strobe_true",
+        "strobe_twinkle",
+        "style",
+        "style_New_Render_Method",
+        "style_Old_Render_Method"
+      ],
+      "configurationRepresentativeness": {
+        "coverageStatus": "single_reference_per_geometry",
+        "profileCount": 1,
+        "profiles": [
+          {
+            "modelType": "single_line",
+            "geometryProfile": "single_line_horizontal",
+            "analyzerFamily": "linear",
+            "displayAsNormalized": "single_line",
+            "stringType": "RGB Nodes",
+            "nodeCount": 50,
+            "nodeCountBucket": "small",
+            "channelsPerNode": 3,
+            "geometryTraits": [
+              "horizontal_orientation",
+              "type:single_line"
+            ],
+            "structuralSettings": {
+              "Dir": "L",
+              "DisplayAs": "Single Line",
+              "parm1": "1",
+              "parm2": "50",
+              "parm3": "1",
+              "StartSide": "B",
+              "StringType": "RGB Nodes"
+            },
+            "structuralSignature": "d64e2ecfe7dc",
+            "sampleCount": 32
+          }
+        ]
+      }
+    }
+  }
+}

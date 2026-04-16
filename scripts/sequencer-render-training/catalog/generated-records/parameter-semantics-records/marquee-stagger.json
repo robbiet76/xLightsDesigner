@@ -1,0 +1,430 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "marquee-stagger",
+  "createdAt": "2026-04-16T18:35:28.019Z",
+  "effectName": "Marquee",
+  "parameterName": "stagger",
+  "sourceDefinition": {
+    "id": "Marquee_Stagger",
+    "label": "Stagger",
+    "description": "Offsets the starting position of each concentric ring so inner rings appear shifted relative to outer rings, creating a spiral-like look.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 0,
+    "min": 0,
+    "max": 50,
+    "options": [],
+    "valueCurve": true,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Offsets the starting position of each concentric ring so inner rings appear shifted relative to outer rings, creating a spiral-like look.",
+  "semanticAxis": "directionality",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "arch_pattern",
+    "arch_pattern_fit",
+    "forward_motion",
+    "marquee_motion",
+    "marquee_pattern",
+    "stagger_0",
+    "tight_marquee",
+    "stagger_2",
+    "stagger_4",
+    "stagger_6",
+    "stagger_8",
+    "linear_pattern_fit"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "marquee-stagger-arch-grouped-0",
+      "valueSummary": "0",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_0,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_0",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-arch-grouped-2",
+      "valueSummary": "2",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_2,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_2",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-arch-grouped-4",
+      "valueSummary": "4",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_4,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_4",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-arch-grouped-6",
+      "valueSummary": "6",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_6,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_6",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-arch-grouped-8",
+      "valueSummary": "8",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_8,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_8",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-arch-grouped-0",
+      "valueSummary": "0",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_0,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_0",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-arch-grouped-2",
+      "valueSummary": "2",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_2,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_2",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-arch-grouped-4",
+      "valueSummary": "4",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_4,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_4",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-arch-grouped-6",
+      "valueSummary": "6",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_6,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_6",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-arch-grouped-8",
+      "valueSummary": "8",
+      "behaviorImpactSummary": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_8,tight_marquee",
+      "affectedSignals": [
+        "arch_pattern",
+        "arch_pattern_fit",
+        "forward_motion",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_8",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-0",
+      "valueSummary": "0",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_0,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_0",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-2",
+      "valueSummary": "2",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_2,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_2",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-4",
+      "valueSummary": "4",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_4,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_4",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-6",
+      "valueSummary": "6",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_6,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_6",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-8",
+      "valueSummary": "8",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_8,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_8",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-0",
+      "valueSummary": "0",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_0,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_0",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-2",
+      "valueSummary": "2",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_2,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_2",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-4",
+      "valueSummary": "4",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_4,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_4",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-6",
+      "valueSummary": "6",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_6,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_6",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "marquee-stagger-single-line-horizontal-8",
+      "valueSummary": "8",
+      "behaviorImpactSummary": "forward_motion,linear_pattern_fit,marquee_motion,marquee_pattern,stagger_8,tight_marquee",
+      "affectedSignals": [
+        "forward_motion",
+        "linear_pattern_fit",
+        "marquee_motion",
+        "marquee_pattern",
+        "stagger_8",
+        "tight_marquee"
+      ],
+      "geometrySpecificNotes": [
+        "single_line_horizontal"
+      ],
+      "confidence": "medium",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 20,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_grouped",
+      "single_line_horizontal"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

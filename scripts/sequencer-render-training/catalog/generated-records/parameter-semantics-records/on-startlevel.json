@@ -1,0 +1,43 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "on-startlevel",
+  "createdAt": "2026-04-16T18:35:28.022Z",
+  "effectName": "On",
+  "parameterName": "startLevel",
+  "sourceDefinition": {
+    "id": "Eff_On_Start",
+    "label": "Start Intensity",
+    "description": "Sets the brightness level at the beginning of the effect as a percentage of the palette color's full value.",
+    "type": "int",
+    "controlType": "slider",
+    "default": 100,
+    "min": 0,
+    "max": 100,
+    "options": [],
+    "valueCurve": false,
+    "lockable": false,
+    "suppressIfDefault": true
+  },
+  "sourceDescription": "Sets the brightness level at the beginning of the effect as a percentage of the palette color's full value.",
+  "semanticAxis": "brightness_profile",
+  "observedDirectionality": "narrow_or_unknown",
+  "interactionSensitivity": "unknown",
+  "geometrySensitivity": "narrow_or_unknown",
+  "affectedSignals": [],
+  "valueRegions": [],
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "registry_only",
+    "coverageStatus": "narrow"
+  },
+  "evidenceCount": 0,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

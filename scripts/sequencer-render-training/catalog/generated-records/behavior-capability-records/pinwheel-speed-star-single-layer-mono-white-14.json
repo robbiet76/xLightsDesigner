@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "pinwheel-speed-star-single-layer-mono-white-14",
+  "createdAt": "2026-04-16T18:35:27.480Z",
+  "effectName": "Pinwheel",
+  "geometryProfile": "star_single_layer",
+  "modelType": "star",
+  "parameterRegion": {
+    "parameterName": "speed",
+    "regionKind": "single_value",
+    "valueSummary": "14",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "mono_white"
+  },
+  "paletteContext": {
+    "paletteMode": "mono_white"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "static_or_near_static",
+    "primaryTexture": "few_arm_pinwheel",
+    "motionPacing": "static_or_near_static",
+    "textureDensity": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,speed_14,star_pattern_fit,static_pinwheel",
+    "energyLevel": "restrained",
+    "coverageLevel": "broad",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "static_or_near_static",
+    "densityRead": "dense",
+    "nonBlankRatio": 0.75,
+    "temporalMotion": 0.001277,
+    "temporalColorDelta": 0.000688,
+    "temporalBrightnessDelta": 0.000688,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "star_single_layer"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

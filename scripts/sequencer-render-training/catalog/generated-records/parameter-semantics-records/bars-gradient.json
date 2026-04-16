@@ -1,0 +1,126 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "bars-gradient",
+  "createdAt": "2026-04-16T18:35:28.013Z",
+  "effectName": "Bars",
+  "parameterName": "gradient",
+  "sourceDefinition": {
+    "id": "Bars_Gradient",
+    "label": "Gradient",
+    "description": "Smoothly blends colors between adjacent bars instead of using hard edges, creating a continuous gradient across the palette.",
+    "type": "bool",
+    "controlType": "checkbox",
+    "default": false,
+    "min": null,
+    "max": null,
+    "options": [],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Smoothly blends colors between adjacent bars instead of using hard edges, creating a continuous gradient across the palette.",
+  "semanticAxis": "edge_softness",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "arch_pattern_fit",
+    "bar_motion",
+    "bar_pattern",
+    "gradient_false",
+    "grouped_arch_read",
+    "single_bar",
+    "gradient_true"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "bars-gradient-arch-grouped-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,gradient_false,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "gradient_false",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-gradient-arch-grouped-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,gradient_true,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "gradient_true",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-gradient-arch-grouped-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,gradient_false,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "gradient_false",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-gradient-arch-grouped-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "arch_pattern_fit,bar_motion,bar_pattern,gradient_true,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "gradient_true",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 4,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_grouped"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}

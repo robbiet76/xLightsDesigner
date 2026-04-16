@@ -1,0 +1,126 @@
+{
+  "artifactType": "parameter_semantics_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "bars-3d",
+  "createdAt": "2026-04-16T18:35:28.009Z",
+  "effectName": "Bars",
+  "parameterName": "3D",
+  "sourceDefinition": {
+    "id": "Bars_3D",
+    "label": "3D",
+    "description": "Applies a brightness or alpha gradient within each bar so it fades from full brightness at one edge to dark at the other, giving a three-dimensional appearance.",
+    "type": "bool",
+    "controlType": "checkbox",
+    "default": false,
+    "min": null,
+    "max": null,
+    "options": [],
+    "valueCurve": false,
+    "lockable": true,
+    "suppressIfDefault": false
+  },
+  "sourceDescription": "Applies a brightness or alpha gradient within each bar so it fades from full brightness at one edge to dark at the other, giving a three-dimensional appearance.",
+  "semanticAxis": "variation",
+  "observedDirectionality": "observed_multi_region",
+  "interactionSensitivity": "suspected",
+  "geometrySensitivity": "observed",
+  "affectedSignals": [
+    "3D_false",
+    "arch_pattern_fit",
+    "bar_motion",
+    "bar_pattern",
+    "grouped_arch_read",
+    "single_bar",
+    "3D_true"
+  ],
+  "valueRegions": [
+    {
+      "regionId": "bars-3d-arch-grouped-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "3D_false,arch_pattern_fit,bar_motion,bar_pattern,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "3D_false",
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-3d-arch-grouped-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "3D_true,arch_pattern_fit,bar_motion,bar_pattern,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "3D_true",
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-3d-arch-grouped-false",
+      "valueSummary": "false",
+      "behaviorImpactSummary": "3D_false,arch_pattern_fit,bar_motion,bar_pattern,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "3D_false",
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    },
+    {
+      "regionId": "bars-3d-arch-grouped-true",
+      "valueSummary": "true",
+      "behaviorImpactSummary": "3D_true,arch_pattern_fit,bar_motion,bar_pattern,grouped_arch_read,single_bar",
+      "affectedSignals": [
+        "3D_true",
+        "arch_pattern_fit",
+        "bar_motion",
+        "bar_pattern",
+        "grouped_arch_read",
+        "single_bar"
+      ],
+      "geometrySpecificNotes": [
+        "arch_grouped"
+      ],
+      "confidence": "low",
+      "evidenceCount": 1
+    }
+  ],
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "moderate"
+  },
+  "evidenceCount": 4,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1",
+      "effective_effect_parameter_registry"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_grouped"
+    ],
+    "generatedBy": "build-parameter-semantics-records.mjs"
+  }
+}
