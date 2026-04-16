@@ -73,7 +73,7 @@ effect_settings_json="$(jq -c '.effectSettings // {}' <<<"${sample_json}")"
 palette_json="$(jq -c '.sharedSettings.palette // {}' <<<"${sample_json}")"
 palette_activation_mode="$(jq -r '.sharedSettings.paletteActivationMode // "explicit"' <<<"${sample_json}")"
 palette_active_slots_json="$(jq -c '.sharedSettings.paletteActiveSlots // []' <<<"${sample_json}")"
-export_mode="$(jq -r '.export.mode' <<<"${sample_json}")"
+export_mode="$(jq -r '.export.mode // "model_with_render"' <<<"${sample_json}")"
 export_format="$(jq -r '.export.format // "gif"' <<<"${sample_json}")"
 start_ms="$(jq -r --argjson fixture "${fixture_json}" '(.timingWindow.startMs // $fixture.startMs)' <<<"${sample_json}")"
 end_ms="$(jq -r --argjson fixture "${fixture_json}" '(.timingWindow.endMs // $fixture.endMs)' <<<"${sample_json}")"
@@ -156,6 +156,9 @@ if [[ "${current_show_dir}" != "${show_dir}" ]]; then
   log_step "close-before-show-change sampleId=${SAMPLE_ID}"
   post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
   sleep 1
+  log_step "restart-before-show-change sampleId=${SAMPLE_ID}"
+  restart_xlights_app >/dev/null
+  sleep 3
   ensure_xlights_ready >/dev/null
   log_step "change-show-folder sampleId=${SAMPLE_ID} folder=${show_dir}"
   run_and_require_ok "$(jq -cn --arg folder "${show_dir}" '{cmd:"changeShowFolder",folder:$folder}')" >/dev/null

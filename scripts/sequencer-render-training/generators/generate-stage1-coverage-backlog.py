@@ -48,15 +48,32 @@ def recommended_depth(effect: str, coverage_type: str, equalized: bool) -> str:
 def main():
     parser = argparse.ArgumentParser(description='Generate a machine-readable Stage 1 coverage backlog from the audit artifact.')
     parser.add_argument('--audit', required=True)
+    parser.add_argument('--validation-report')
     parser.add_argument('--out', required=True)
     args = parser.parse_args()
 
     with open(args.audit, 'r', encoding='utf-8') as f:
         audit = json.load(f)
+    validation = None
+    if args.validation_report:
+        with open(args.validation_report, 'r', encoding='utf-8') as f:
+            validation = json.load(f)
 
     priority_rank = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
     items = []
+    extra_reasons = {}
+    if validation:
+        for row in validation.get('missingCoverage', []):
+            extra_reasons.setdefault((row['effect'], row['geometryProfile']), set()).add('missing_coverage')
+        for row in validation.get('paletteGaps', []):
+            extra_reasons.setdefault((row['effect'], row['geometryProfile']), set()).add('palette_gap')
+        for row in validation.get('parameterGaps', []):
+            extra_reasons.setdefault((row['effect'], row['geometryProfile']), set()).add('parameter_gap')
+        for row in validation.get('patternFamilyGaps', []):
+            extra_reasons.setdefault((row['effect'], row['geometryProfile']), set()).add('pattern_family_gap')
+
     for effect_entry in audit['effects']:
+        staged = set()
         for group_name, coverage_type in [('primaryCoverage', 'primary'), ('probeCoverage', 'probe')]:
             for profile in effect_entry[group_name]['missingProfiles']:
                 family = geometry_family(profile)
@@ -69,8 +86,35 @@ def main():
                     'coverageType': coverage_type,
                     'geometryProfile': profile,
                     'geometryFamily': family,
-                    'recommendedDepth': recommended_depth(effect_entry['effect'], coverage_type, effect_entry['equalized'])
+                    'recommendedDepth': recommended_depth(effect_entry['effect'], coverage_type, effect_entry['equalized']),
+                    'reasons': ['missing_coverage']
                 })
+                staged.add((effect_entry['effect'], profile))
+        coverage_type_by_profile = {}
+        for profile in effect_entry['primaryCoverage']['missingProfiles'] + effect_entry['primaryCoverage']['coveredProfiles']:
+            coverage_type_by_profile[profile] = 'primary'
+        for profile in effect_entry['probeCoverage']['missingProfiles'] + effect_entry['probeCoverage']['coveredProfiles']:
+            coverage_type_by_profile.setdefault(profile, 'probe')
+
+        for (effect_name, profile), reasons in extra_reasons.items():
+            if effect_name != effect_entry['effect']:
+                continue
+            if (effect_name, profile) in staged:
+                continue
+            family = geometry_family(profile)
+            coverage_type = coverage_type_by_profile.get(profile, 'primary')
+            items.append({
+                'effect': effect_entry['effect'],
+                'priority': 'critical',
+                'status': 'invalid_existing_coverage',
+                'equalized': effect_entry['equalized'],
+                'complexityClass': effect_entry['complexityClass'],
+                'coverageType': coverage_type,
+                'geometryProfile': profile,
+                'geometryFamily': family,
+                'recommendedDepth': recommended_depth(effect_entry['effect'], coverage_type, effect_entry['equalized']),
+                'reasons': sorted(reasons)
+            })
 
     items.sort(key=lambda x: (
         priority_rank.get(x['priority'], 9),

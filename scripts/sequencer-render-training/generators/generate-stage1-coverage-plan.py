@@ -20,38 +20,37 @@ EFFECT_TEMPLATE_MANIFESTS = {
     'Twinkle': 'scripts/sequencer-render-training/manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json',
 }
 
-PRIMARY_PARAMETERS = {
-    'On': ['startLevel', 'endLevel', 'shimmer'],
-    'SingleStrand': ['numberChases', 'chaseSize', 'chaseType', 'cycles'],
-    'Shimmer': ['dutyFactor', 'cycles', 'useAllColors'],
-    'Color Wash': ['cycles', 'vFade', 'hFade', 'reverseFades'],
-    'Bars': ['barCount', 'direction', 'cycles'],
-    'Marquee': ['bandSize', 'skipSize', 'reverse'],
-    'Pinwheel': ['arms', 'thickness', 'rotation', '3DMode'],
-    'Spirals': ['count', 'movement', 'rotation', 'thickness'],
-    'Shockwave': ['centerX', 'centerY', 'startRadius', 'endRadius', 'blendEdges'],
-    'Twinkle': ['style', 'count', 'steps', 'strobe'],
+DEFAULT_XLIGHTS_PALETTE = {
+    "C_BUTTON_Palette1": "#FFFFFF",
+    "C_BUTTON_Palette2": "#FF0000",
+    "C_BUTTON_Palette3": "#00FF00",
+    "C_BUTTON_Palette4": "#0000FF",
+    "C_BUTTON_Palette5": "#FFFF00",
+    "C_BUTTON_Palette6": "#000000",
 }
 
-PROBE_PARAMETERS = {
-    'On': ['startLevel', 'endLevel', 'shimmer'],
-    'SingleStrand': ['numberChases', 'chaseType'],
-    'Shimmer': ['dutyFactor', 'cycles'],
-    'Color Wash': ['cycles', 'vFade', 'hFade'],
-    'Bars': ['barCount', 'direction'],
-    'Marquee': ['bandSize', 'skipSize'],
-    'Pinwheel': ['arms', 'rotation'],
-    'Spirals': ['count', 'rotation'],
-    'Shockwave': ['centerX', 'startRadius', 'endRadius'],
-    'Twinkle': ['style', 'count', 'strobe'],
-}
-
+PALETTE_VARIANTS = [
+    {
+        "suffix": "mono-white",
+        "profile": "mono_white",
+        "activationMode": "xlights_default",
+        "activeSlots": [1],
+        "labelHints": ["palette_mono_white"],
+    },
+    {
+        "suffix": "rgb-primary",
+        "profile": "rgb_primary",
+        "activationMode": "xlights_default",
+        "activeSlots": [2, 3, 4],
+        "labelHints": ["palette_rgb_primary"],
+    },
+]
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Generate a runnable Stage 1 coverage plan from the ordered backlog.')
     parser.add_argument('--backlog', required=True)
     parser.add_argument('--catalog', default='scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json')
-    parser.add_argument('--registry', default='scripts/sequencer-render-training/catalog/effect-parameter-registry.json')
+    parser.add_argument('--registry', default='scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json')
     parser.add_argument('--manifest-dir', default='scripts/sequencer-render-training/manifests')
     parser.add_argument('--out-plan', required=True)
     parser.add_argument('--out-manifest-dir', required=True)
@@ -89,31 +88,16 @@ def canonical_model_maps(catalog: dict):
     return by_profile
 
 
-def index_existing_manifests(manifest_dir: Path, profile_by_model: dict[str, str]) -> dict[tuple[str, str], str]:
-    indexed = {}
-    for path in manifest_dir.glob('*.json'):
-        if '-interactions-' in path.name:
-            continue
-        try:
-            data = load_json(path)
-        except Exception:
-            continue
-        model_name = data.get('fixture', {}).get('modelName')
-        geometry_profile = profile_by_model.get(model_name)
-        if not geometry_profile:
-            continue
-        effect_names = {sample.get('effectName') for sample in data.get('samples', []) if sample.get('effectName')}
-        if len(effect_names) != 1:
-            continue
-        effect = next(iter(effect_names))
-        indexed[(effect, geometry_profile)] = str(path)
-    return indexed
-
-
 def choose_parameters(effect: str, coverage_type: str, registry: dict) -> list[str]:
-    desired = PROBE_PARAMETERS.get(effect, []) if coverage_type == 'probe' else PRIMARY_PARAMETERS.get(effect, [])
-    available = registry['effects'][effect]['parameters'].keys()
-    return [p for p in desired if p in available]
+    effect_registry = registry['effects'][effect]['parameters']
+    ordered = list(effect_registry.keys())
+    if coverage_type == 'primary':
+        return ordered
+    return [
+        name for name, meta in effect_registry.items()
+        if meta.get('phase') in {'baseline', 'screen'}
+        and meta.get('importance') in {'high', 'medium'}
+    ]
 
 
 def slugify_geometry(profile: str) -> str:
@@ -135,13 +119,31 @@ def generate_manifest(effect: str, geometry_profile: str, target_model: dict, te
     generated['packId'] = pack_id
     generated['description'] = f"Auto-generated Stage 1 coverage base manifest for {effect} on {target_model['modelName']} in the canonical render-training layout."
 
+    expanded_samples = []
     for idx, sample in enumerate(generated.get('samples', []), start=1):
         effect_name = sample.get('effectName', effect)
-        sample['effectName'] = effect_name
-        sample['sampleId'] = f"{effect_slug}-{slugify_geometry(geometry_profile)}-base-{idx:02d}-v1"
-        hints = list(sample.get('labelHints', []))
-        hints.extend(['stage1_coverage', geometry_profile, 'autogenerated'])
-        sample['labelHints'] = sorted(set(hints))
+        base_hints = list(sample.get('labelHints', []))
+        base_shared = deepcopy(sample.get('sharedSettings', {}))
+        for variant in PALETTE_VARIANTS:
+            variant_sample = deepcopy(sample)
+            variant_sample['effectName'] = effect_name
+            variant_sample['sampleId'] = f"{effect_slug}-{slugify_geometry(geometry_profile)}-{variant['suffix']}-{idx:02d}-v1"
+            variant_sample['sharedSettings'] = {
+                **base_shared,
+                'paletteProfile': variant['profile'],
+                'palette': deepcopy(DEFAULT_XLIGHTS_PALETTE),
+                'paletteActivationMode': variant['activationMode'],
+                'paletteActiveSlots': list(variant['activeSlots']),
+            }
+            variant_sample['export'] = {
+                'mode': 'model_with_render',
+                'format': 'gif',
+            }
+            hints = list(base_hints)
+            hints.extend(['stage1_coverage', geometry_profile, 'autogenerated', *variant['labelHints']])
+            variant_sample['labelHints'] = sorted(set(hints))
+            expanded_samples.append(variant_sample)
+    generated['samples'] = expanded_samples
 
     out_path.write_text(json.dumps(generated, indent=2) + '\n', encoding='utf-8')
     return str(out_path)
@@ -153,7 +155,6 @@ def main() -> int:
     catalog = load_json(args.catalog)
     registry = load_json(args.registry)
     completed_keys = load_completed_keys(args.completed_ledger)
-    manifest_dir = Path(args.manifest_dir)
     out_manifest_dir = Path(args.out_manifest_dir)
     out_manifest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -164,9 +165,6 @@ def main() -> int:
     ]
     target_items = filtered_items[: args.limit]
     target_by_profile = canonical_model_maps(catalog)
-    profile_by_model = {v['modelName']: k for k, v in target_by_profile.items()}
-    existing = index_existing_manifests(manifest_dir, profile_by_model)
-
     grouped = {}
     for item in target_items:
         key = (item['effect'], item['geometryProfile'], item['coverageType'])
@@ -180,16 +178,10 @@ def main() -> int:
         if not parameters:
             continue
 
-        existing_path = existing.get((effect, geometry_profile))
-        source = 'existing'
-        if existing_path:
-            manifest_path = existing_path
-            template_path = existing_path
-        else:
-            template_path = EFFECT_TEMPLATE_MANIFESTS[effect]
-            manifest_path = str(out_manifest_dir / f"{effect.lower().replace(' ', '')}-{geometry_profile}-stage1-base.json")
-            generate_manifest(effect, geometry_profile, target_model, Path(template_path), Path(manifest_path))
-            source = 'generated'
+        source = 'generated'
+        template_path = EFFECT_TEMPLATE_MANIFESTS[effect]
+        manifest_path = str(out_manifest_dir / f"{effect.lower().replace(' ', '')}-{geometry_profile}-stage1-base.json")
+        generate_manifest(effect, geometry_profile, target_model, Path(template_path), Path(manifest_path))
 
         plan_id = f"stage1-{effect.lower().replace(' ', '')}-{slugify_geometry(geometry_profile)}"
         plans.append({

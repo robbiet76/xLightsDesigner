@@ -3,13 +3,27 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${ROOT_DIR}/tooling/lib.sh"
 
 DEBUG_APP_DEFAULT="/Users/robterry/Library/Developer/Xcode/DerivedData/xLights-ewiqueswvnjesbbydtiylmstqbkg/Build/Products/Debug/xLights.app"
 export XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-${DEBUG_APP_DEFAULT}}"
 
+wait_owned_ready() {
+  local attempts="${1:-30}"
+  local delay="${2:-2}"
+  local idx
+  for idx in $(seq 1 "${attempts}"); do
+    if curl --max-time 10 -fsS "http://127.0.0.1:49915/xlightsdesigner/api/health" \
+      | jq -e '.ok == true and (((.data.state // "") | ascii_downcase) == "ready" or ((.data.state // "") == ""))' >/dev/null; then
+      return 0
+    fi
+    sleep "${delay}"
+  done
+  echo "Owned xLights API is not ready after ${attempts} attempts." >&2
+  return 1
+}
+
 PLAN_FILE="${ROOT_DIR}/registry/registry-planning-phase1.json"
-REGISTRY_FILE="${ROOT_DIR}/catalog/effect-parameter-registry.json"
+REGISTRY_FILE="${ROOT_DIR}/catalog/effective-effect-parameter-registry.json"
 RUN_ROOT=""
 STAMP="$(date -u +"%Y%m%dT%H%M%SZ")"
 
@@ -52,7 +66,7 @@ log() {
   printf '[registry-plan] %s\n' "$*" | tee -a "${LOG_PATH}" >/dev/null
 }
 
-ensure_xlights_ready >>"${LOG_PATH}" 2>&1
+wait_owned_ready >>"${LOG_PATH}" 2>&1
 
 python3 "${ROOT_DIR}/generators/generate-registry-plan-manifests.py" \
   --registry "${REGISTRY_FILE}" \
@@ -102,7 +116,7 @@ while IFS= read -r row; do
     :
   else
     log "pack-retry ${pack_id} attempt=2"
-    ensure_xlights_ready >>"${LOG_PATH}" 2>&1 || true
+    wait_owned_ready >>"${LOG_PATH}" 2>&1 || true
     attempt_count=$((attempt_count + 1))
     if run_pack && post_process_pack; then
       status="passed"

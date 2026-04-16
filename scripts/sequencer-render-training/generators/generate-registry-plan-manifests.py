@@ -6,6 +6,35 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
+SINGLESTRAND_MODE_PRESETS = {
+    "Chase": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": False,
+    },
+    "Skips": {
+        "mode": "Skips",
+        "bandSize": 2,
+        "skipSize": 1,
+        "startPos": 1,
+        "advances": 24,
+        "direction": "Left",
+    },
+    "FX": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 40,
+        "speed": 90,
+    },
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -63,17 +92,30 @@ def applies_when_ok(sample_settings: dict, applies_when: dict | None) -> bool:
     return True
 
 
+def normalize_effect_settings_for_applies_when(effect: str, base_settings: dict, applies_when: dict | None) -> dict:
+    settings = deepcopy(base_settings)
+    if not applies_when:
+        return settings
+    if effect == "SingleStrand":
+        mode_values = applies_when.get("mode") or []
+        if mode_values:
+            preset = SINGLESTRAND_MODE_PRESETS.get(mode_values[0])
+            if preset:
+                settings = deepcopy(preset)
+    for key, allowed in applies_when.items():
+        if not allowed:
+            continue
+        settings[key] = allowed[0]
+    return settings
+
+
 def generate_manifest(registry: dict, base_manifest: dict, parameter: str, out_file: Path) -> dict:
     effect = load_single_effect(base_manifest)
     param_registry, target = lookup_parameter_registry(registry, effect, parameter)
     anchors = param_registry.get("anchors", [])
-    template = deepcopy(base_manifest["samples"][0])
-    base_settings = deepcopy(template.get("effectSettings", {}))
-    base_shared = deepcopy(template.get("sharedSettings", {}))
-    if not applies_when_ok(base_settings, param_registry.get("appliesWhen")):
-        raise ValueError(
-            f"base manifest sample does not satisfy appliesWhen for {effect}.{parameter}"
-        )
+    templates = [deepcopy(sample) for sample in base_manifest.get("samples", [])]
+    if not templates:
+        raise ValueError("base manifest contains no samples")
 
     out = deepcopy(base_manifest)
     out["samples"] = []
@@ -93,20 +135,39 @@ def generate_manifest(registry: dict, base_manifest: dict, parameter: str, out_f
         "target": target,
     }
 
-    for value in anchors:
-        sample = deepcopy(template)
-        sample["effectSettings"] = deepcopy(base_settings)
-        sample["sharedSettings"] = deepcopy(base_shared)
-        if target == "sharedSettings":
-            sample["sharedSettings"][parameter] = value
-        else:
-            sample["effectSettings"][parameter] = value
-        token = build_value_token(value)
-        sample["sampleId"] = f"{effect.lower()}-{parameter.lower()}-{token}-registry-v1"
-        hints = list(sample.get("labelHints", []))
-        hints.extend(["range_sample", parameter, f"{parameter}_{token}", "registry_generated"])
-        sample["labelHints"] = sorted(set(hints))
-        out["samples"].append(sample)
+    for template_index, template in enumerate(templates, start=1):
+        base_settings = normalize_effect_settings_for_applies_when(
+            effect,
+            template.get("effectSettings", {}),
+            param_registry.get("appliesWhen"),
+        )
+        base_shared = deepcopy(template.get("sharedSettings", {}))
+        if not applies_when_ok(base_settings, param_registry.get("appliesWhen")):
+            raise ValueError(
+                f"base manifest sample does not satisfy appliesWhen for {effect}.{parameter}"
+            )
+        palette_profile = base_shared.get("paletteProfile")
+        palette_suffix = build_value_token(palette_profile) if palette_profile else None
+        source_sample_id = build_value_token(template.get("sampleId", f"source-{template_index:02d}"))
+        for value in anchors:
+            sample = deepcopy(template)
+            sample["effectSettings"] = deepcopy(base_settings)
+            sample["sharedSettings"] = deepcopy(base_shared)
+            if target == "sharedSettings":
+                sample["sharedSettings"][parameter] = value
+            else:
+                sample["effectSettings"][parameter] = value
+            token = build_value_token(value)
+            sample_id_parts = [effect.lower(), parameter.lower(), token]
+            if palette_suffix:
+                sample_id_parts.append(palette_suffix)
+            sample_id_parts.append(source_sample_id)
+            sample_id_parts.append("registry-v1")
+            sample["sampleId"] = "-".join(sample_id_parts)
+            hints = list(sample.get("labelHints", []))
+            hints.extend(["range_sample", parameter, f"{parameter}_{token}", "registry_generated"])
+            sample["labelHints"] = sorted(set(hints))
+            out["samples"].append(sample)
 
     out_file.write_text(json.dumps(out, indent=2) + "\n")
     return {

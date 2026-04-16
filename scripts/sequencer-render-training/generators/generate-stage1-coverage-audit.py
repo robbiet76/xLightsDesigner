@@ -4,6 +4,7 @@ import glob
 import json
 import os
 from collections import defaultdict
+from pathlib import Path
 
 
 def load_json(path):
@@ -27,6 +28,30 @@ def build_manifest_coverage(manifest_dir, model_to_profile):
         for sample in data.get('samples', []):
             effect = sample.get('effectName')
             if effect:
+                coverage[effect].add(profile)
+    return coverage
+
+
+def build_record_coverage(record_roots):
+    coverage = defaultdict(set)
+    for root in record_roots or []:
+        root_path = Path(root)
+        if not root_path.exists():
+            continue
+        for path in root_path.rglob('*.record.json'):
+            try:
+                data = load_json(path)
+            except Exception:
+                continue
+            effect = data.get('effectName')
+            model_metadata = data.get('modelMetadata', {})
+            fixture = data.get('fixture', {})
+            profile = (
+                model_metadata.get('resolvedGeometryProfile')
+                or fixture.get('geometryProfile')
+                or data.get('analysis', {}).get('geometryProfile')
+            )
+            if effect and profile:
                 coverage[effect].add(profile)
     return coverage
 
@@ -90,10 +115,11 @@ def main():
     parser = argparse.ArgumentParser(description='Audit Stage 1 effect x model coverage against the canonical scope contract.')
     parser.add_argument('--scope', default='scripts/sequencer-render-training/catalog/stage1-effect-model-scope.json')
     parser.add_argument('--catalog', default='scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json')
-    parser.add_argument('--registry', default='scripts/sequencer-render-training/catalog/effect-parameter-registry.json')
+    parser.add_argument('--registry', default='scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json')
     parser.add_argument('--manifest-dir', default='scripts/sequencer-render-training/manifests')
     parser.add_argument('--equalization', default='/tmp/render-training-current-effect-equalization.v5.json')
     parser.add_argument('--completed-ledger')
+    parser.add_argument('--record-root', action='append', default=[])
     parser.add_argument('--out', required=True)
     args = parser.parse_args()
 
@@ -106,11 +132,12 @@ def main():
     model_to_profile = {v['modelName']: v['geometryProfile'] for v in canonical_models.values()}
     profile_to_model = {v['geometryProfile']: v['modelName'] for v in canonical_models.values()}
     manifest_coverage = build_manifest_coverage(args.manifest_dir, model_to_profile)
+    record_coverage = build_record_coverage(args.record_root)
     ledger_coverage = build_ledger_coverage(args.completed_ledger)
     effective_coverage = defaultdict(set)
-    all_effects = set(manifest_coverage.keys()) | set(ledger_coverage.keys())
+    all_effects = set(manifest_coverage.keys()) | set(ledger_coverage.keys()) | set(record_coverage.keys())
     for effect in all_effects:
-        effective_coverage[effect] = set(manifest_coverage.get(effect, set())) | set(ledger_coverage.get(effect, set()))
+        effective_coverage[effect] = set(record_coverage.get(effect, set())) | set(ledger_coverage.get(effect, set()))
 
     results = []
     for effect_name, effect_scope in scope['effects'].items():
@@ -169,6 +196,7 @@ def main():
         'catalogPath': os.path.abspath(args.catalog),
         'manifestDir': os.path.abspath(args.manifest_dir),
         'completedLedgerPath': os.path.abspath(args.completed_ledger) if args.completed_ledger else None,
+        'recordRoots': [os.path.abspath(path) for path in args.record_root],
         'equalizationPath': os.path.abspath(args.equalization) if args.equalization else None,
         'effectCount': len(results),
         'effectsNeedingWork': len([r for r in results if r['priority'] != 'low']),

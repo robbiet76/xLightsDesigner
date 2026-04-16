@@ -581,6 +581,206 @@ class LinearAnalyzer(BaseAnalyzer):
         return base
 
 
+class MatrixAnalyzer(BaseAnalyzer):
+    family = "matrix"
+
+    def analyze(self, inp: SequenceAnalysisInput) -> Dict[str, Any]:
+        base = super().analyze(inp)
+        coverage = self._f(inp, "averageActiveNodeRatio")
+        temporal = self._f(inp, "temporalChangeMean")
+        longest_run = self._f(inp, "averageLongestRunRatio")
+        run_count = self._f(inp, "averageRunCount")
+        centroid_motion = self._f(inp, "centroidMotionMean")
+        settings = inp.effect_settings
+        effect = inp.effect_name
+
+        pattern_family = "matrix_fill"
+        if effect == "On":
+            start = float(settings.get("startLevel", 100) or 100)
+            end = float(settings.get("endLevel", 100) or 100)
+            shimmer = bool(settings.get("shimmer", False))
+            if shimmer:
+                pattern_family = "matrix_shimmer_hold"
+            elif start != end:
+                pattern_family = "matrix_level_ramp"
+            else:
+                pattern_family = "matrix_static_fill"
+        elif effect == "Shimmer":
+            duty = float(settings.get("dutyFactor", 50) or 50)
+            use_all = bool(settings.get("useAllColors", False))
+            if duty <= 25:
+                pattern_family = "matrix_sparse_shimmer"
+            elif duty >= 75:
+                pattern_family = "matrix_dense_shimmer"
+            elif use_all:
+                pattern_family = "matrix_multicolor_shimmer"
+            else:
+                pattern_family = "matrix_shimmer_texture"
+        elif effect == "Bars":
+            direction_setting = self._lower_setting(settings, "direction")
+            bar_count = int(settings.get("barCount", 1) or 1)
+            if direction_setting == "expand":
+                pattern_family = "matrix_expanding_bars"
+            elif direction_setting == "compress":
+                pattern_family = "matrix_compressing_bars"
+            elif bar_count >= 4:
+                pattern_family = "matrix_dense_bars"
+            elif bar_count >= 2:
+                pattern_family = "matrix_multi_bars"
+            else:
+                pattern_family = "matrix_single_bar"
+        elif effect == "Color Wash":
+            shimmer = bool(settings.get("shimmer", False))
+            circular = bool(settings.get("circularPalette", False))
+            reverse = bool(settings.get("reverseFades", False))
+            if circular and shimmer:
+                pattern_family = "matrix_circular_shimmer_wash"
+            elif circular:
+                pattern_family = "matrix_circular_wash"
+            elif reverse:
+                pattern_family = "matrix_reverse_fade_wash"
+            elif shimmer:
+                pattern_family = "matrix_shimmer_wash"
+            else:
+                pattern_family = "matrix_color_wash"
+        elif effect == "Marquee":
+            reverse = bool(settings.get("reverse", False))
+            skip_size = int(settings.get("skipSize", 0) or 0)
+            band_size = int(settings.get("bandSize", 1) or 1)
+            if skip_size >= 4:
+                pattern_family = "matrix_segmented_marquee"
+            elif band_size >= 6:
+                pattern_family = "matrix_wide_marquee"
+            elif reverse:
+                pattern_family = "matrix_reverse_marquee"
+            else:
+                pattern_family = "matrix_marquee_motion"
+        elif effect == "Pinwheel":
+            arms = int(settings.get("arms", 3) or 3)
+            rotation = bool(settings.get("rotation", False))
+            mode_3d = self._lower_setting(settings, "3DMode")
+            if rotation and arms >= 6:
+                pattern_family = "matrix_dense_rotating_pinwheel"
+            elif rotation:
+                pattern_family = "matrix_rotating_pinwheel"
+            elif "sweep" in mode_3d:
+                pattern_family = "matrix_sweep_pinwheel"
+            else:
+                pattern_family = "matrix_pinwheel"
+        elif effect == "Shockwave":
+            shock = self._shockwave_signals(settings)
+            variant = self._shockwave_variant(shock)
+            if shock["centerClass"] != "centered":
+                pattern_family = "matrix_offcenter_shockwave"
+            elif variant == "compact":
+                pattern_family = "matrix_compact_shockwave"
+            elif variant == "diffuse":
+                pattern_family = "matrix_diffuse_shockwave"
+            elif variant == "crisp":
+                pattern_family = "matrix_crisp_shockwave"
+            elif variant == "surging":
+                pattern_family = "matrix_surging_shockwave"
+            else:
+                pattern_family = "matrix_shockwave_ring"
+        elif effect == "SingleStrand":
+            mode = str(settings.get("mode", "") or "")
+            direction = self._lower_setting(settings, "direction")
+            chase_type = self._lower_setting(settings, "chaseType")
+            if mode == "FX":
+                pattern_family = "matrix_fx_texture"
+            elif mode == "Skips":
+                pattern_family = "matrix_skip_bands"
+            elif "bounce" in chase_type:
+                pattern_family = "matrix_bounce_chase"
+            elif direction in {"left", "right"}:
+                pattern_family = "matrix_directional_chase"
+            else:
+                pattern_family = "matrix_chase_motion"
+        elif effect == "Spirals":
+            movement = float(settings.get("movement", 0) or 0)
+            rotation = float(settings.get("rotation", 0) or 0)
+            count = int(settings.get("count", 1) or 1)
+            if abs(movement) > 0 and abs(rotation) > 0:
+                pattern_family = "matrix_spiral_flow"
+            elif abs(rotation) > 0:
+                pattern_family = "matrix_spiral_rotation"
+            elif abs(movement) > 0:
+                pattern_family = "matrix_spiral_drift"
+            elif count >= 3:
+                pattern_family = "matrix_dense_spiral_bands"
+            else:
+                pattern_family = "matrix_spiral_bands"
+        elif effect == "Twinkle":
+            pattern_family = self._twinkle_family(settings, "matrix_")
+
+        base["geometrySignals"] = {
+            "matrixCoverage": coverage,
+            "matrixMotion": temporal,
+            "matrixCentroidMotion": centroid_motion,
+            "matrixRunCount": run_count,
+            "matrixContiguity": longest_run,
+            "configuredBarCount": int(settings.get("barCount", 1) or 1) if effect == "Bars" else None,
+            "configuredMarqueeBandSize": int(settings.get("bandSize", 1) or 1) if effect == "Marquee" else None,
+            "configuredMarqueeSkipSize": int(settings.get("skipSize", 0) or 0) if effect == "Marquee" else None,
+            "configuredTwinkleCount": int(settings.get("count", 5) or 5) if effect == "Twinkle" else None,
+            "configuredTwinkleSteps": int(settings.get("steps", 50) or 50) if effect == "Twinkle" else None,
+        }
+        base["patternFamily"] = pattern_family
+        base["patternSignals"].update(
+            {
+                "matrixStructure": (
+                    "full_fill" if coverage >= 0.85 else
+                    "sparse_fill" if coverage <= 0.2 else
+                    "partial_fill"
+                ),
+                "matrixMotionClass": (
+                    "dynamic" if temporal >= 0.05 or centroid_motion >= 0.05 else
+                    "steady" if temporal <= 0.01 and centroid_motion <= 0.01 else
+                    "moderate"
+                ),
+                "matrixContiguityClass": (
+                    "contiguous" if longest_run >= 0.65 else
+                    "fragmented" if longest_run <= 0.2 else
+                    "segmented"
+                ),
+                "barCountClass": (
+                    "dense" if int(settings.get("barCount", 1) or 1) >= 4 else
+                    "multi" if int(settings.get("barCount", 1) or 1) >= 2 else
+                    "single"
+                ) if effect == "Bars" else None,
+                "marqueeGapClass": (
+                    "wide_gap" if int(settings.get("skipSize", 0) or 0) >= 4 else
+                    "tight_gap" if int(settings.get("skipSize", 0) or 0) <= 1 else
+                    "medium_gap"
+                ) if effect == "Marquee" else None,
+                "twinkleDensityClass": (
+                    "dense" if int(settings.get("count", 5) or 5) >= 7 else
+                    "sparse" if int(settings.get("count", 5) or 5) <= 2 else
+                    "medium"
+                ) if effect == "Twinkle" else None,
+            }
+        )
+        intents = set(base["intentCandidates"])
+        if effect in {"Bars", "Marquee", "Pinwheel", "Shockwave", "Spirals", "Twinkle", "SingleStrand"}:
+            intents.add("patterned")
+        if effect in {"Marquee", "Pinwheel", "Shockwave", "Spirals", "SingleStrand"}:
+            intents.add("animated")
+        if effect == "Shockwave":
+            intents = set(self._shockwave_intents(settings))
+        if effect == "Twinkle":
+            intents = {"animated", "patterned"}
+            if bool(settings.get("strobe", False)):
+                intents.add("bold")
+            if int(settings.get("count", 5) or 5) >= 7:
+                intents.add("busy")
+            else:
+                intents.add("restrained")
+        elif coverage >= 0.85:
+            intents.add("fill")
+        base["intentCandidates"] = sorted(intents)
+        return base
+
+
 class TreeAnalyzer(BaseAnalyzer):
     family = "tree"
 
@@ -1071,6 +1271,10 @@ ANALYZERS = {
     "icicles": LinearAnalyzer(),
     "icicles_standard": LinearAnalyzer(),
     "icicles_drop_pattern": LinearAnalyzer(),
+    "matrix": MatrixAnalyzer(),
+    "matrix_low_density": MatrixAnalyzer(),
+    "matrix_medium_density": MatrixAnalyzer(),
+    "matrix_high_density": MatrixAnalyzer(),
     "tree_flat": TreeAnalyzer(),
     "tree_flat_single_layer": TreeAnalyzer(),
     "tree_360": TreeAnalyzer(),

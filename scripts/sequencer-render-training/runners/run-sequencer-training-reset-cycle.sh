@@ -45,6 +45,7 @@ INTERACTION_RECORD_DIR="$RUN_ROOT/artifacts/parameter-interaction-semantics-reco
 LEARNINGS_SUMMARY="$RUN_ROOT/effect-training-learnings-summary.md"
 RESET_REPORT="$RUN_ROOT/sequencer-training-reset-report.json"
 HARVEST_SUMMARY="$RUN_ROOT/artifacts/harvest-summary.json"
+SCREENING_RECORDS_DIR="$ROOT_DIR/catalog/effect-screening-records"
 
 printf '[training-reset] run-root=%s\n' "$RUN_ROOT"
 
@@ -53,10 +54,14 @@ if [[ -n "$HARVEST_SOURCE" ]]; then
   node "$ROOT_DIR/tooling/harvest-screening-records.mjs" \
     --source "$HARVEST_SOURCE" \
     --out-dir "$RUN_ROOT/harvested-screening-records" | tee "$HARVEST_SUMMARY"
+  SCREENING_RECORDS_DIR="$RUN_ROOT/harvested-screening-records"
 fi
 
 printf '[training-reset] refreshing transitional planning artifacts\n'
-node "$ROOT_DIR/tooling/build-unified-training-set.mjs"
+node "$ROOT_DIR/tooling/build-unified-training-set.mjs" \
+  "$ROOT_DIR/catalog/sequencer-unified-training-set-v1.json" \
+  "$ROOT_DIR/catalog/effect-family-outcomes" \
+  "$SCREENING_RECORDS_DIR"
 node "$ROOT_DIR/tooling/build-effect-settings-coverage-report.mjs" "$SETTINGS_COVERAGE"
 node "$ROOT_DIR/tooling/build-effect-training-automation-plan.mjs" "$AUTOMATION_PLAN"
 node "$ROOT_DIR/tooling/build-effect-parameter-screening-plan.mjs" "$SCREENING_PLAN"
@@ -70,7 +75,7 @@ node "$ROOT_DIR/tooling/build-effect-training-dossiers.mjs" \
   "$ROOT_DIR/catalog/sequencer-unified-training-set-v1.json" \
   "$SETTINGS_COVERAGE" \
   "$INTERACTION_COVERAGE" \
-  "$ROOT_DIR/catalog/effect-parameter-registry.json"
+  "$ROOT_DIR/catalog/effective-effect-parameter-registry.json"
 node "$ROOT_DIR/tooling/build-effect-training-learnings-summary.mjs" "$DOSSIER_DIR" "$LEARNINGS_SUMMARY"
 
 printf '[training-reset] building consolidated reset report\n'

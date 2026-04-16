@@ -191,7 +191,7 @@ while [[ "$(date +%s)" -lt "$DEADLINE_EPOCH" ]]; do
   plan_path="$cycle_dir/stage1-coverage-plan.json"
   plan_summary_path="$cycle_dir/stage1-coverage-plan-summary.json"
 
-  python3 "$SCRIPT_DIR/generate-stage1-coverage-plan.py" \
+  python3 "$ROOT_DIR/generators/generate-stage1-coverage-plan.py" \
     --backlog "$BACKLOG" \
     --completed-ledger "$LEDGER_PATH" \
     --out-plan "$plan_path" \
@@ -208,7 +208,7 @@ while [[ "$(date +%s)" -lt "$DEADLINE_EPOCH" ]]; do
   log "cycle=$cycle plan-generated selectedPlans=$selected_plan_count"
   bash "$SCRIPT_DIR/run-registry-plan.sh" \
     --plan "$plan_path" \
-    --registry "$SCRIPT_DIR/effect-parameter-registry.json" \
+    --registry "$ROOT_DIR/catalog/effective-effect-parameter-registry.json" \
     --out-dir "$cycle_dir/run" >>"$MAIN_LOG" 2>&1 &
   run_pid=$!
   log "cycle=$cycle run-start pid=$run_pid"

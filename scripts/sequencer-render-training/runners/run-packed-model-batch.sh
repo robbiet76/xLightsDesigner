@@ -3,7 +3,31 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${ROOT_DIR}/tooling/lib.sh"
+source "${ROOT_DIR}/tooling/effect-settings.sh"
+RENDER_TRAINING_ROOT="${RENDER_TRAINING_ROOT:-/Users/robterry/Projects/xLightsDesigner/render-training}"
+
+require_cmd() {
+  local cmd="$1"
+  command -v "${cmd}" >/dev/null 2>&1 || {
+    echo "Missing required command: ${cmd}" >&2
+    exit 1
+  }
+}
+
+wait_owned_ready() {
+  local attempts="${1:-30}"
+  local delay="${2:-2}"
+  local idx
+  for idx in $(seq 1 "${attempts}"); do
+    if curl --max-time 10 -fsS "http://127.0.0.1:49915/xlightsdesigner/api/health" \
+      | jq -e '.ok == true and (((.data.state // "") | ascii_downcase) == "ready" or ((.data.state // "") == ""))' >/dev/null; then
+      return 0
+    fi
+    sleep "${delay}"
+  done
+  echo "Owned xLights API is not ready after ${attempts} attempts." >&2
+  exit 1
+}
 
 MANIFEST_FILE=""
 OUT_DIR=""
@@ -29,6 +53,21 @@ done
 require_cmd jq
 require_cmd python3
 
+resolve_show_dir_for_sequence() {
+  local xsq_path="$1"
+  local probe
+  probe="$(cd "$(dirname "${xsq_path}")" && pwd)"
+  while [[ "${probe}" != "/" ]]; do
+    if [[ -f "${probe}/xlights_networks.xml" && -f "${probe}/xlights_rgbeffects.xml" ]]; then
+      printf '%s\n' "${probe}"
+      return 0
+    fi
+    probe="$(dirname "${probe}")"
+  done
+  echo "Unable to resolve show directory for sequence: ${xsq_path}" >&2
+  exit 1
+}
+
 [[ -n "${MANIFEST_FILE}" ]] || { echo "--manifest is required" >&2; exit 1; }
 [[ -f "${MANIFEST_FILE}" ]] || { echo "Manifest not found: ${MANIFEST_FILE}" >&2; exit 1; }
 [[ -n "${OUT_DIR}" ]] || { echo "--out-dir is required" >&2; exit 1; }
@@ -44,7 +83,12 @@ log_batch() {
   printf '[run-packed-model-batch] %s\n' "$*" >>"${log_path}"
 }
 
-standards_path="${SCRIPT_DIR}/training-standards.json"
+compact_features_json() {
+  local file_path="$1"
+  jq 'del(.frames, .decoded)' "${file_path}"
+}
+
+standards_path="${ROOT_DIR}/catalog/training-standards.json"
 normalized_manifest_path="${OUT_DIR}/manifest.normalized.json"
 python3 "${ROOT_DIR}/tooling/normalize-manifest.py" \
   --manifest "${MANIFEST_FILE}" \
@@ -80,10 +124,11 @@ training_manifests_dir="${RENDER_TRAINING_ROOT}/manifests"
 mkdir -p "${training_working_dir}" "${training_fseq_dir}" "${training_records_dir}" "${training_manifests_dir}"
 run_stamp="$(date -u +"%Y%m%dT%H%M%SZ")"
 working_sequence_path="${training_working_dir}/${pack_id}.${run_stamp}.xsq"
-batch_artifact_staged="$(resolve_fseq_path_for_sequence "${working_sequence_path}")"
 batch_artifact_path="${training_fseq_dir}/${pack_id}.${run_stamp}.fseq"
 batch_features_path="${OUT_DIR}/batch-export.features.json"
 batch_manifest_copy="${training_manifests_dir}/${pack_id}.manifest.json"
+batch_payload_path="${OUT_DIR}/owned-batch-plan.json"
+batch_execution_path="${OUT_DIR}/owned-batch-execution.json"
 
 cp "${sequence_path}" "${working_sequence_path}"
 jq '.' "${MANIFEST_FILE}" > "${batch_manifest_copy}"
@@ -95,50 +140,13 @@ while IFS= read -r sample_id; do
 done < <(jq -r '.samples[].sampleId' "${MANIFEST_FILE}")
 [[ "${#sample_ids[@]}" -gt 0 ]] || { echo "Manifest contains no samples" >&2; exit 1; }
 
-log_batch "ensure-ready-begin manifest=${MANIFEST_FILE}"
-ensure_xlights_ready >>"${log_path}" 2>&1
-log_batch "ensure-ready-complete manifest=${MANIFEST_FILE}"
-
-log_batch "close-any-open-sequence"
-post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
-sleep 1
-ensure_xlights_ready >>"${log_path}" 2>&1
-
-warmup_payload="$(jq -cn --arg seq "${sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')"
-log_batch "warmup-open-sequence sequence=${sequence_path}"
-if CURL_MAX_TIME=10 run_allowing_already_open "${warmup_payload}" >/dev/null; then
-  log_batch "warmup-close-sequence"
-  post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
-  sleep 1
-  ensure_xlights_ready >>"${log_path}" 2>&1
-else
-  log_batch "warmup-open-sequence-retry sequence=${sequence_path}"
-  post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
-  sleep 2
-  if ensure_xlights_ready >>"${log_path}" 2>&1 && CURL_MAX_TIME=10 run_allowing_already_open "${warmup_payload}" >/dev/null; then
-    log_batch "warmup-close-sequence"
-    post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
-    sleep 1
-    ensure_xlights_ready >>"${log_path}" 2>&1
-  else
-    log_batch "warmup-skip sequence=${sequence_path}"
-  fi
-fi
-
-open_sequence_payload="$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')"
-log_batch "open-batch-sequence sequence=${working_sequence_path}"
-if ! run_allowing_already_open "${open_sequence_payload}" >/dev/null; then
-  log_batch "open-batch-sequence-retry sequence=${working_sequence_path}"
-  post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
-  sleep 2
-  ensure_xlights_ready >>"${log_path}" 2>&1
-  if ! run_allowing_already_open "${open_sequence_payload}" >/dev/null; then
-    echo "Failed to open packed batch sequence after retry: ${working_sequence_path}" >&2
-    exit 1
-  fi
-fi
+log_batch "owned-health-begin manifest=${MANIFEST_FILE}"
+wait_owned_ready
+log_batch "owned-health-complete manifest=${MANIFEST_FILE}"
 
 sample_plan_json='[]'
+marks_json='[]'
+effects_json='[]'
 current_start_ms="${fixture_start_ms}"
 
 for sample_id in "${sample_ids[@]}"; do
@@ -157,15 +165,24 @@ for sample_id in "${sample_ids[@]}"; do
   settings_string="$(jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")' <<<"${settings_json}")"
   palette_string="$(jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")' <<<"${palette_json}")"
 
-  log_batch "add-effect sampleId=${sample_id} effect=${effect_name} start=${start_ms} end=${end_ms}"
-  run_and_require_ok "$(jq -cn \
-    --arg target "${model_name}" \
-    --arg effect "${effect_name}" \
+  log_batch "queue-effect sampleId=${sample_id} effect=${effect_name} start=${start_ms} end=${end_ms}"
+
+  marks_json="$(jq -cn \
+    --argjson rows "${marks_json}" \
+    --arg label "${sample_id}" \
+    --argjson startMs "${start_ms}" \
+    --argjson endMs "${end_ms}" \
+    '$rows + [{label:$label,startMs:$startMs,endMs:$endMs}]')"
+
+  effects_json="$(jq -cn \
+    --argjson rows "${effects_json}" \
+    --arg element "${model_name}" \
+    --arg effectName "${effect_name}" \
     --arg settings "${settings_string}" \
     --arg palette "${palette_string}" \
-    --arg start "${start_ms}" \
-    --arg end "${end_ms}" \
-    '{cmd:"addEffect",target:$target,effect:$effect,settings:$settings,palette:$palette,layer:"0",startTime:$start,endTime:$end}')" >/dev/null
+    --argjson startMs "${start_ms}" \
+    --argjson endMs "${end_ms}" \
+    '$rows + [{element:$element,layer:0,effectName:$effectName,startMs:$startMs,endMs:$endMs,settings:$settings,palette:$palette,clearExisting:false}]')"
 
   plan_row="$(jq -cn \
     --arg sampleId "${sample_id}" \
@@ -177,21 +194,24 @@ for sample_id in "${sample_ids[@]}"; do
   sample_plan_json="$(jq -cn --argjson rows "${sample_plan_json}" --argjson row "${plan_row}" '$rows + [$row]')"
 done
 
-log_batch "save-sequence sequence=${working_sequence_path}"
-run_and_require_ok "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"saveSequence",seq:$seq}')" >/dev/null
+jq -cn \
+  --arg track "XD: Training Samples" \
+  --argjson marks "${marks_json}" \
+  --argjson effects "${effects_json}" \
+  '{track:$track,replaceExistingMarks:true,marks:$marks,effects:$effects}' \
+  > "${batch_payload_path}"
 
-log_batch "close-batch-sequence-before-render"
-run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null
+log_batch "owned-batch-apply sequence=${working_sequence_path}"
+node "${ROOT_DIR}/tooling/run-owned-packed-batch.mjs" \
+  --sequence "${working_sequence_path}" \
+  --payload-file "${batch_payload_path}" \
+  --result-file "${batch_execution_path}" >>"${log_path}" 2>&1
 
-log_batch "batch-render sequence=${working_sequence_path}"
-run_and_require_ok "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"batchRender",seqs_0:$seq,promptIssues:"false",highdef:"false"}')" >/dev/null
-
-[[ -s "${batch_artifact_staged}" ]] || { echo "Batch artifact missing: ${batch_artifact_staged}" >&2; exit 1; }
-[[ -s "${batch_artifact_path}" ]] || cp "${batch_artifact_staged}" "${batch_artifact_path}"
+rendered_fseq_path="$(jq -r '.fseqPath' "${batch_execution_path}")"
+[[ -n "${rendered_fseq_path}" ]] || { echo "Owned batch execution returned no fseqPath" >&2; exit 1; }
+[[ -s "${rendered_fseq_path}" ]] || { echo "Rendered fseq missing: ${rendered_fseq_path}" >&2; exit 1; }
+[[ -s "${batch_artifact_path}" ]] || cp "${rendered_fseq_path}" "${batch_artifact_path}"
 [[ -s "${batch_artifact_path}" ]] || { echo "Batch artifact copy failed: ${batch_artifact_path}" >&2; exit 1; }
-if [[ "${batch_artifact_staged}" != "${batch_artifact_path}" && -f "${batch_artifact_staged}" ]]; then
-  rm -f "${batch_artifact_staged}"
-fi
 bash "${ROOT_DIR}/tooling/extract-artifact-features.sh" --artifact "${batch_artifact_path}" > "${batch_features_path}"
 
 results_json='[]'
@@ -241,6 +261,8 @@ while IFS= read -r planned_row; do
     "${decoded_features_path}" \
     "${analysis_path}" > "${features_path}.tmp"
   mv "${features_path}.tmp" "${features_path}"
+  compact_features_json "${features_path}" > "${features_path}.compact"
+  mv "${features_path}.compact" "${features_path}"
   observations_json="$(
     bash "${ROOT_DIR}/tooling/extract-observations.sh" \
       --sample-json "${sample_json}" \
@@ -305,6 +327,7 @@ while IFS= read -r planned_row; do
       features: $featuresFile[0],
       comparisons: []
     }' > "${record_path}"
+  rm -f "${decoded_features_path}" "${analysis_path}"
   passed=$((passed + 1))
 
   sample_finished_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -328,9 +351,6 @@ while IFS= read -r planned_row; do
   results_json="$(jq -cn --argjson rows "${results_json}" --argjson row "${result_row}" '$rows + [$row]')"
 done < <(jq -c '.[]' <<<"${sample_plan_json}")
 
-log_batch "close-batch-sequence-final"
-run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null || true
-
 run_finished_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 jq -cn \
   --arg manifest "${MANIFEST_FILE}" \
@@ -340,6 +360,8 @@ jq -cn \
   --arg batchArtifactPath "${batch_artifact_path}" \
   --arg batchFeaturesPath "${batch_features_path}" \
   --arg batchManifestPath "${batch_manifest_copy}" \
+  --arg batchExecutionPath "${batch_execution_path}" \
+  --arg batchPayloadPath "${batch_payload_path}" \
   --arg workingSequencePath "${working_sequence_path}" \
   --argjson total "${#sample_ids[@]}" \
   --argjson passed "${passed}" \
@@ -354,6 +376,8 @@ jq -cn \
     batchArtifactPath: $batchArtifactPath,
     batchFeaturesPath: $batchFeaturesPath,
     batchManifestPath: $batchManifestPath,
+    batchExecutionPath: $batchExecutionPath,
+    batchPayloadPath: $batchPayloadPath,
     workingSequencePath: $workingSequencePath,
     totalSamples: $total,
     passedSamples: $passed,
