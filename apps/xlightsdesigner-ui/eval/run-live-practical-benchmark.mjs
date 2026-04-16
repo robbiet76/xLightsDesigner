@@ -19,6 +19,79 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+function toPosixPath(value = "") {
+  return str(value).replace(/\\/g, "/");
+}
+
+function replacePathPrefix(value = "", fromPrefix = "", toPrefix = "") {
+  const normalizedValue = toPosixPath(value);
+  const normalizedFrom = toPosixPath(fromPrefix).replace(/\/+$/g, "");
+  const normalizedTo = toPosixPath(toPrefix).replace(/\/+$/g, "");
+  if (!normalizedValue || !normalizedFrom) return value;
+  if (normalizedValue === normalizedFrom) return normalizedTo;
+  if (normalizedValue.startsWith(`${normalizedFrom}/`)) {
+    return `${normalizedTo}${normalizedValue.slice(normalizedFrom.length)}`;
+  }
+  return value;
+}
+
+function validationShowRoots(repoRoot) {
+  return [
+    path.join(repoRoot, "var", "sequence-validation-show"),
+    path.join(repoRoot, "sequence-validation-show")
+  ];
+}
+
+function remapValidationAssetPath(filePath = "", repoRoot = "") {
+  const input = str(filePath);
+  if (!input) return input;
+
+  const repoRootPosix = toPosixPath(repoRoot);
+  const oldRoot = toPosixPath(path.join(repoRoot, "sequence-validation-show"));
+  const varRoot = toPosixPath(path.join(repoRoot, "var", "sequence-validation-show"));
+  const candidates = [];
+
+  const addCandidate = (value) => {
+    const resolved = path.resolve(value);
+    if (!candidates.includes(resolved)) candidates.push(resolved);
+  };
+
+  const inputPosix = toPosixPath(input);
+  if (inputPosix.startsWith(`${oldRoot}/`)) {
+    addCandidate(replacePathPrefix(input, oldRoot, varRoot));
+    addCandidate(input);
+  } else if (inputPosix.startsWith(`${varRoot}/`)) {
+    addCandidate(input);
+    addCandidate(replacePathPrefix(input, varRoot, oldRoot));
+  } else if (!path.isAbsolute(input)) {
+    for (const root of validationShowRoots(repoRoot)) {
+      addCandidate(path.join(root, input));
+      addCandidate(path.join(root, "Test", input));
+    }
+    addCandidate(path.resolve(repoRoot, input));
+  } else if (inputPosix.startsWith(`${repoRootPosix}/`)) {
+    addCandidate(input);
+  } else {
+    addCandidate(input);
+  }
+
+  return candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0] || input;
+}
+
+function normalizeValidationSuitePaths(suite = {}, repoRoot = "") {
+  const normalizedSuite = { ...suite };
+  if (normalizedSuite.baselineSequencePath) {
+    normalizedSuite.baselineSequencePath = remapValidationAssetPath(normalizedSuite.baselineSequencePath, repoRoot);
+  }
+  normalizedSuite.scenarios = arr(suite?.scenarios).map((scenario) => {
+    const next = { ...scenario };
+    if (next.sequencePath) next.sequencePath = remapValidationAssetPath(next.sequencePath, repoRoot);
+    if (next.baselineSequencePath) next.baselineSequencePath = remapValidationAssetPath(next.baselineSequencePath, repoRoot);
+    return next;
+  });
+  return normalizedSuite;
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -610,7 +683,7 @@ async function main() {
 
   const suites = buildSuiteCatalog(repoRoot, options.suitePath).map((entry) => ({
     ...entry,
-    suite: readJson(entry.suitePath),
+    suite: normalizeValidationSuitePaths(readJson(entry.suitePath), repoRoot),
     workingShowRoot: path.resolve(options.workingShowRoot)
   }));
   const startedAt = Date.now();
