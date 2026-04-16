@@ -69,3 +69,11 @@ Create a clean, maintainable active spec set and move step-specific historical d
 ## 2026-04-05 Note
 This document records the March 2026 consolidation event. It is not the current execution spine.
 Use `current-app-plan-2026-04-05.md` plus domain READMEs for the current active plan.
+
+## 2026-04-16 Note
+The older sequence-control specs listed here were authoritative for the March 2026 consolidation event, but they are no longer part of the current active sequencing contract.
+
+The active control spine is now:
+- `sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md`
+- `sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
+- `sequence-agent/xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md`

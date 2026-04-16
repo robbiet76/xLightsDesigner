@@ -1,12 +1,24 @@
 # xLights Upstream Tracking Policy
 
-Status: Draft
+Status: Archived
 Date: 2026-04-13
 Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-16
+Superseded By: `xlights-2026-06-api-migration-plan-2026-04-16.md`, `xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md`
 
 ## Purpose
 
 Define how xLightsDesigner should track upstream xLights changes while the upstream repository is undergoing significant refactor work.
+
+## Archive Note
+This policy is no longer aligned with the current integration state.
+
+It assumes:
+- the old local xLights tree at `/Users/robterry/xLights`
+- the old owned branch strategy
+- pre-`2026.06` migration posture
+
+The active integration baseline is now `/Users/robterry/xLights-2026.06`, and migration governance is defined by the `2026.06` specs listed above.
 
 This policy exists to prevent the sequencing POC from being destabilized by upstream churn while still ensuring that render and preview architecture changes are actively monitored.
 

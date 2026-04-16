@@ -11,10 +11,9 @@ Define the shared native visual language for the macOS application before SwiftU
 This document exists to prevent each screen from inventing its own density, hierarchy, status treatment, and form/table/detail-pane style during implementation.
 
 Primary parent sources:
-- `macos-native-design-phase-workstreams-2026-04-06.md`
-- `macos-native-wireframe-and-prototype-method-2026-04-06.md`
 - `macos-native-information-architecture-2026-04-06.md`
 - `macos-native-interaction-model-2026-04-06.md`
+- `native-app-architecture-diagram-2026-04-10.md`
 
 ## Visual-System Rule
 

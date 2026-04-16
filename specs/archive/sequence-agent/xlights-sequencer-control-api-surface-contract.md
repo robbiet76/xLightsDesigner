@@ -1,9 +1,10 @@
 # API Surface Contract: xLights Sequencer Control (Program-Level)
 
-Status: In Progress (Sprint 0)
+Status: Archived
 Date: 2026-03-07
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-11
+Superseded By: `xlights-2026-06-api-migration-plan-2026-04-16.md`, `xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
 
 Version: `v2-alpha-program`
 

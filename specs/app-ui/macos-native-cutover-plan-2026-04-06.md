@@ -13,7 +13,7 @@ This document exists to make cutover a controlled replacement process instead of
 Primary parent sources:
 - `macos-native-migration-phase-plan-2026-04-06.md`
 - `electron-legacy-removal-manifest-2026-04-06.md`
-- `macos-native-design-phase-workstreams-2026-04-06.md`
+- `native-cutover-audit-2026-04-10.md`
 - `macos-native-shared-backend-and-service-boundaries-2026-04-06.md`
 
 ## Cutover Rule

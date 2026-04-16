@@ -39,6 +39,7 @@ We will not run a broad archive or full directory reorganization until the full 
 3. superseded specs must leave active indexes in the same pass
 4. sequencing remains the main development line while the corpus audit is in progress
 5. reorganization must be replacement-based, not additive
+6. new dated implementation specs should keep the date in the filename so age is visible without opening the file
 
 ## Lifecycle States
 

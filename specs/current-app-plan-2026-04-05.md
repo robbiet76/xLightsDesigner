@@ -76,7 +76,8 @@ Stable enough for continued product work:
 - project/session/timing/metadata/analysis/apply/proposal ownership is no longer concentrated in one file
 
 Primary sources:
-- `app-ui/implementation-checklist.md`
+- `app-ui/native-cutover-audit-2026-04-10.md`
+- `app-ui/native-app-architecture-diagram-2026-04-10.md`
 - `sequence-agent/sequence-session-and-live-validation-refactor-plan-2026-04-05.md`
 
 ### 3. Timing-track sequencing substrate

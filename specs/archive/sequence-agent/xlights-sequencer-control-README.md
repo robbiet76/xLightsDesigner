@@ -1,17 +1,18 @@
 # xLights Sequencer Control + Agent Autonomy
 
-Status: Foundational reference
+Status: Archived
 Date: 2026-03-11
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-11
+Superseded By: `README.md`, `xlights-2026-06-api-migration-plan-2026-04-16.md`, `xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
 
 ## Purpose
 Define the full target contract between xLightsDesigner and xLights before further API implementation, with explicit boundaries and autonomous-agent execution requirements.
 
 ## Planning Note
-- This set is retained as the foundational control/API contract.
-- It is no longer the day-to-day execution spine.
-- Current execution is driven by reviewed timing workflow and sequencer quality work.
+- This set is archived historical context.
+- It is not the active execution spine.
+- Current execution is driven by the `2026.06` owned API migration set plus the active `sequence-agent/README.md`.
 
 ## Active Spec Set
 - `xlights-sequencer-control-project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.

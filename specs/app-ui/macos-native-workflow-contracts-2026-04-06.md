@@ -12,8 +12,8 @@ This document exists to prevent workflow overlap, unclear scope boundaries, and 
 
 Primary parent sources:
 - `macos-native-information-architecture-2026-04-06.md`
-- `macos-native-design-phase-workstreams-2026-04-06.md`
-- `macos-native-wireframe-and-prototype-method-2026-04-06.md`
+- `native-cutover-audit-2026-04-10.md`
+- `native-app-architecture-diagram-2026-04-10.md`
 
 ## Workflow-Contract Rule
 

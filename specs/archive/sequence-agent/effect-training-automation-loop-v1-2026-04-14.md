@@ -1,9 +1,10 @@
 # Effect Training Automation Loop v1
 
-Status: Transitional  
+Status: Archived  
 Date: 2026-04-14  
 Owner: xLightsDesigner Team  
 Last Reviewed: 2026-04-15
+Superseded By: `sequencer-training-reset-plan-2026-04-15.md`, `sequencer-validation-matrix-2026-04-15.md`, `sequencer-training-unattended-batch-harness-v1-2026-04-15.md`
 
 ## Status Note
 
@@ -11,7 +12,7 @@ This automation-loop spec assumed the earlier selector abstraction and readiness
 
 It is not the canonical automation definition for the reset rebuild.
 
-It remains useful as historical planning context only.
+It remains useful as historical planning context only and should not be used as the active harness contract.
 
 The rebuild should instead follow:
 

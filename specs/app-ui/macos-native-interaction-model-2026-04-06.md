@@ -11,10 +11,9 @@ Define the shared interaction rules for the native macOS application before Swif
 This document exists to prevent each screen from inventing its own selection, editing, action-placement, and confirmation behavior during implementation.
 
 Primary parent sources:
-- `macos-native-design-phase-workstreams-2026-04-06.md`
 - `macos-native-information-architecture-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
-- `macos-native-wireframe-and-prototype-method-2026-04-06.md`
+- `native-app-architecture-diagram-2026-04-10.md`
 
 ## Interaction-Model Rule
 

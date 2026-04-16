@@ -27,7 +27,7 @@ The current Electron shell is now:
 2. Do not mix Electron UI work and SwiftUI product work inside the same implementation surface.
 3. Do not create dual active UI platforms that both evolve feature behavior.
 4. Do not change backend contracts just because the frontend shell changes.
-5. Do not begin SwiftUI screen implementation until the design phase is complete.
+5. Do not begin new screen work without explicit active workflow and architecture contracts.
 
 ## Stable Platform Boundary
 
@@ -91,8 +91,9 @@ Goal:
 - complete the native application design package before UI implementation
 
 Primary breakdown source:
-- `macos-native-design-phase-workstreams-2026-04-06.md`
-- `macos-native-wireframe-and-prototype-method-2026-04-06.md`
+- `native-cutover-audit-2026-04-10.md`
+- `native-app-architecture-diagram-2026-04-10.md`
+- active workflow and screen contracts in `specs/app-ui/`
 
 Checklist:
 - define app-level information architecture

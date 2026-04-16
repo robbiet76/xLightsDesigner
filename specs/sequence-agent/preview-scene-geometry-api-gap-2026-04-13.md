@@ -14,8 +14,8 @@ This is an implementation boundary note, not a new architecture direction.
 
 - [preview-scene-geometry-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/preview-scene-geometry-v1-2026-04-13.md)
 - [sequencing-feedback-loop-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-feedback-loop-v1-2026-04-13.md)
-- [xlights-sequencer-control-api-surface-contract.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-api-surface-contract.md)
-- [xlights-upstream-tracking-policy-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-upstream-tracking-policy-2026-04-13.md)
+- [xlights-2026-06-api-compatibility-matrix-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md)
+- [xlights-2026-06-api-migration-plan-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md)
 
 ## Current Proof Result
 

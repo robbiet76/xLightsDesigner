@@ -11,10 +11,10 @@ Define the initial reusable component inventory for the native macOS application
 This document exists to prevent each workflow from inventing its own view primitives, state wrappers, and layout fragments during implementation.
 
 Primary parent sources:
-- `macos-native-design-phase-workstreams-2026-04-06.md`
 - `macos-native-visual-system-2026-04-06.md`
 - `macos-native-interaction-model-2026-04-06.md`
 - `macos-native-read-models-and-page-state-contracts-2026-04-06.md`
+- `native-app-architecture-diagram-2026-04-10.md`
 
 ## Component-System Rule
 

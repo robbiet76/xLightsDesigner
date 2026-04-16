@@ -12,10 +12,10 @@ This document exists to prevent the native shell from repeating the Electron fai
 It defines what the UI consumes, what it can mutate, and what belongs to shared backend/platform services.
 
 Primary parent sources:
-- `macos-native-design-phase-workstreams-2026-04-06.md`
 - `macos-native-information-architecture-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `current-app-plan-2026-04-05.md`
+- `native-app-architecture-diagram-2026-04-10.md`
 
 ## State-Contract Rule
 

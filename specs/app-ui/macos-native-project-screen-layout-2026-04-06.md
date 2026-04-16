@@ -14,16 +14,14 @@ It should make project state obvious without turning into a generic settings pag
 Primary parent sources:
 - `macos-native-information-architecture-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
-- `macos-native-wireframe-and-prototype-method-2026-04-06.md`
 - `xlightsdesigner-project-storage-layout.md`
-- `macos-native-project-workflow-review-from-electron-2026-04-06.md`
+- `native-cutover-audit-2026-04-10.md`
 
 
 ## Reference Rule
 
-The current Electron `Project` page is a workflow reference only.
-It may be used to evaluate hierarchy, flow, and action placement, but it is not the target shell.
-If Electron behavior and this screen contract diverge, this screen contract wins unless explicitly revised in the Project workflow review document.
+Older design-reference material may still be consulted for historical rationale, but it is not the target shell.
+If historical reference material and this screen contract diverge, this screen contract wins unless explicitly revised by a newer dated active spec.
 
 ## Screen Purpose
 

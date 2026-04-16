@@ -14,14 +14,13 @@ Primary parent sources:
 - `macos-native-sequence-design-review-relationship-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `macos-native-information-architecture-2026-04-06.md`
-- `macos-native-sequence-workflow-review-from-electron-2026-04-06.md`
+- `native-cutover-audit-2026-04-10.md`
 
 
 ## Reference Rule
 
-The current Electron `Sequence` page is a workflow reference only.
-It may be used to evaluate active-sequence hierarchy, translation browse surfaces, and blocker visibility, but it is not the target shell.
-If Electron behavior and this screen contract diverge, this screen contract wins unless explicitly revised in the Sequence workflow review document.
+Older design-reference material may still be consulted for historical rationale, but it is not the target shell.
+If historical reference material and this screen contract diverge, this screen contract wins unless explicitly revised by a newer dated active spec.
 
 ## Screen Purpose
 

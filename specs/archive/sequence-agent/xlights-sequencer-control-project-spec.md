@@ -1,11 +1,22 @@
 # Project Spec: xLights Full Sequencer Control for xLightsDesigner
 
-Status: In Progress (Sprint 0)
+Status: Archived
 Date: 2026-03-07
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-11
+Superseded By: `xlights-2026-06-api-migration-plan-2026-04-16.md`, `xlights-2026-06-api-compatibility-matrix-2026-04-16.md`, `xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md`
 
 Project type: Program-level control contract (multi-phase)
+
+## Archive Note
+This spec describes the pre-`2026.06` control program and is no longer aligned with the live app.
+
+It assumes:
+- backward compatibility with older xLights automation
+- the old xLights source boundary
+- the earlier local integration tree
+
+The active contract now lives in the `2026.06` migration specs listed above.
 
 ## 1) Objective
 Enable xLightsDesigner to read the xLights environment and perform end-to-end sequence authoring via xLights APIs, while keeping sequencing logic in xLightsDesigner/agents and keeping xLights changes limited to API hooks.

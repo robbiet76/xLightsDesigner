@@ -29,7 +29,7 @@ Do not preserve old shell layers just because they once held product logic.
 These specs remain active through the native migration and should continue evolving:
 - `specs/current-app-plan-2026-04-05.md`
 - `specs/app-ui/macos-native-migration-phase-plan-2026-04-06.md`
-- `specs/app-ui/page-roles-and-flow.md`
+- `specs/app-ui/native-cutover-audit-2026-04-10.md`
 - `specs/README.md`
 - `specs/repo-structure-governance.md`
 - `specs/xlightsdesigner-project-storage-layout.md`
@@ -44,10 +44,10 @@ These specs are useful only as historical/reference material during migration.
 They should not be treated as the target product shell plan.
 
 Legacy-reference set:
-- `specs/app-ui/implementation-checklist.md`
-- `specs/app-ui/end-to-end-audit-2026-03-12.md`
-- `specs/app-ui/history-and-live-dashboards-plan-2026-03-13.md`
-- `specs/app-ui/history-implementation-checklist.md`
+- `specs/archive/app-ui/implementation-checklist.md`
+- `specs/archive/app-ui/end-to-end-audit-2026-03-12.md`
+- `specs/archive/app-ui/history-and-live-dashboards-plan-2026-03-13.md`
+- `specs/archive/app-ui/history-implementation-checklist.md`
 - `specs/app-ui/audio-page-redesign-2026-04-06.md`
 
 Rule:

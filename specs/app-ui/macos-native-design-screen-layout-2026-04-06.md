@@ -14,14 +14,13 @@ Primary parent sources:
 - `macos-native-sequence-design-review-relationship-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `macos-native-information-architecture-2026-04-06.md`
-- `macos-native-design-workflow-review-from-electron-2026-04-06.md`
+- `native-cutover-audit-2026-04-10.md`
 
 
 ## Reference Rule
 
-The current Electron `Design` page is a workflow reference only.
-It may be used to evaluate proposal hierarchy and rationale placement, but it is not the target shell.
-If Electron behavior and this screen contract diverge, this screen contract wins unless explicitly revised in the Design workflow review document.
+Older design-reference material may still be consulted for historical rationale, but it is not the target shell.
+If historical reference material and this screen contract diverge, this screen contract wins unless explicitly revised by a newer dated active spec.
 
 ## Screen Purpose
 

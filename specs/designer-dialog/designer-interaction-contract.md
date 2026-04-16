@@ -575,8 +575,8 @@ When user has timeline/effect selection in UI, agent references must bind to sta
 
 ## 15) Related Specs
 - `xlights-sequencer-control-agent-orchestration-architecture.md`
-- `xlights-sequencer-control-project-spec.md`
-- `xlights-sequencer-control-api-surface-contract.md`
+- `../sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md`
+- `../sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
 
 ## 16) Chat-First UI Contract (Amendment)
 Status: Proposed  

@@ -96,7 +96,7 @@ It makes the categories explicit in the indexes first.
 - `sequence-agent/sequence-revision-gating-policy-v1-2026-04-13.md`
 - `sequence-agent/sequence-artistic-goal-v1-2026-04-13.md`
 - `sequence-agent/sequence-revision-objective-v1-2026-04-13.md`
-- `sequence-agent/xlights-upstream-tracking-policy-2026-04-13.md`
+- `sequence-agent/xlights-upstream-tracking-policy-2026-04-13.md` (historical, now archived)
 
 ## Immediate Cleanup Decisions
 

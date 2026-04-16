@@ -16,7 +16,7 @@ This reset defines one authoritative execution spine so features are delivered i
 
 Use this hierarchy when conflicts exist:
 
-1. `xlights-sequencer-control-project-spec.md` (program scope and hard boundaries)
+1. `xlights-sequencer-control-project-spec.md` (historical program scope and hard boundaries)
 2. `xlights-sequencer-control-training-package-architecture.md` (portable training architecture)
 3. `xlights-sequencer-control-agent-orchestration-architecture.md` (multi-agent role boundaries and handoff contracts)
 4. `xlights-sequencer-control-architecture-reset-plan-2026-03-11.md` (execution plan and gates)
@@ -24,6 +24,12 @@ Use this hierarchy when conflicts exist:
 
 Rule:
 - If a lower document conflicts with higher priority docs, update the lower doc before shipping new feature work.
+
+## 2026-04-16 Note
+This hierarchy is historical. The live sequencing control contract now runs through:
+- `sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md`
+- `sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
+- `sequence-agent/xlights-2026-06-owned-api-implementation-plan-2026-04-16.md`
 
 ## 3) Current State Snapshot
 

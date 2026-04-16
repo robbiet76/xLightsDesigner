@@ -33,7 +33,6 @@ These are the current operating specs for sequencing work.
 - [effect-training-reference-file-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-training-reference-file-v1-2026-04-15.md)
 - [sequencer-validation-matrix-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-validation-matrix-2026-04-15.md)
 - [sequencer-validation-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-validation-audit-2026-04-15.md)
-- [xlights-upstream-tracking-policy-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-upstream-tracking-policy-2026-04-13.md)
 - [xlights-2026-06-api-migration-plan-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md)
 - [xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md)
 - [xlights-2026-06-api-compatibility-matrix-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md)
@@ -60,12 +59,12 @@ These remain active, but they are supporting material rather than the first entr
 
 ## Foundational Control Contracts
 
-These are still important reference documents for the xLights control surface.
+These are the current control-surface and migration references for active sequencing work.
 
-- [xlights-sequencer-control-project-spec.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-project-spec.md)
-- [xlights-sequencer-control-api-surface-contract.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-api-surface-contract.md)
-- [xlights-sequencer-control-agent-orchestration-architecture.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md)
-- [xlights-sequencer-control-training-package-architecture.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-training-package-architecture.md)
+- [xlights-2026-06-api-migration-plan-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md)
+- [xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md)
+- [xlights-2026-06-api-compatibility-matrix-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md)
+- [xlights-2026-06-owned-api-implementation-plan-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-owned-api-implementation-plan-2026-04-16.md)
 
 ## Reference / Older Planning
 
@@ -79,7 +78,22 @@ These are still useful, but they are no longer the primary way into the current 
 - `sequence-agent-semantics-architecture-2026-03-22.md`
 - `sequencer-training-phase2-roadmap-2026-03-22.md`
 - `sequencer-unified-training-set-v1-2026-04-14.md`
-- `effect-training-automation-loop-v1-2026-04-14.md`
+
+## Archived Historical Specs
+
+These are no longer part of the active sequencing path and live under `specs/archive/sequence-agent/`.
+
+- [effect-training-automation-loop-v1-2026-04-14.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/effect-training-automation-loop-v1-2026-04-14.md)
+- [xlights-sequencer-control-project-spec.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-project-spec.md)
+- [xlights-sequencer-control-api-surface-contract.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-api-surface-contract.md)
+- [xlights-sequencer-control-README.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-README.md)
+- [xlights-upstream-tracking-policy-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-upstream-tracking-policy-2026-04-13.md)
+
+## Cleanup Audit
+
+Current cleanup pass and lifecycle classification:
+
+- [sequence-agent-spec-cleanup-audit-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-agent-spec-cleanup-audit-2026-04-16.md)
 
 ## Related Domains
 

@@ -11,11 +11,11 @@ Define the boundary between the native macOS shell and the shared backend/platfo
 This document exists to prevent business logic, persistence truth, and xLights orchestration from being reimplemented inside the native shell.
 
 Primary parent sources:
-- `macos-native-design-phase-workstreams-2026-04-06.md`
 - `macos-native-read-models-and-page-state-contracts-2026-04-06.md`
 - `macos-native-migration-phase-plan-2026-04-06.md`
+- `native-app-architecture-diagram-2026-04-10.md`
 - `xlightsdesigner-project-storage-layout.md`
-- `sequence-agent/xlights-sequencer-control-api-surface-contract.md`
+- `sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
 
 ## Boundary Rule
 

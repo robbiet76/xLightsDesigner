@@ -14,8 +14,8 @@ If they are designed independently too early, they will drift into overlap and r
 Primary parent sources:
 - `macos-native-information-architecture-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
-- `history-and-live-dashboards-plan-2026-03-13.md`
-- `page-roles-and-flow.md`
+- `native-cutover-audit-2026-04-10.md`
+- `macos-native-design-sequence-review-coupled-review-2026-04-06.md`
 
 ## Relationship Rule
 
