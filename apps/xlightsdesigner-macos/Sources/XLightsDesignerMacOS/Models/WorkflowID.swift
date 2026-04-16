@@ -14,19 +14,19 @@ enum WorkflowID: String, CaseIterable, Identifiable {
     var specPath: String {
         switch self {
         case .project:
-            return "specs/app-ui/macos-native-project-layout-build-package-2026-04-06.md"
+            return "specs/app-ui/macos-native-project-screen-layout-2026-04-06.md"
         case .display:
             return "specs/app-ui/macos-native-display-page-2026-04-08.md"
         case .audio:
-            return "specs/app-ui/macos-native-audio-build-package-2026-04-06.md"
+            return "specs/app-ui/macos-native-audio-screen-layout-2026-04-06.md"
         case .design:
-            return "specs/app-ui/macos-native-design-sequence-review-build-package-2026-04-06.md"
+            return "specs/app-ui/macos-native-design-screen-layout-2026-04-06.md"
         case .sequence:
-            return "specs/app-ui/macos-native-design-sequence-review-build-package-2026-04-06.md"
+            return "specs/app-ui/macos-native-sequence-screen-layout-2026-04-06.md"
         case .review:
-            return "specs/app-ui/macos-native-design-sequence-review-build-package-2026-04-06.md"
+            return "specs/app-ui/macos-native-review-screen-layout-2026-04-06.md"
         case .history:
-            return "specs/app-ui/macos-native-history-build-package-2026-04-06.md"
+            return "specs/app-ui/macos-native-history-screen-layout-2026-04-06.md"
         }
     }
 

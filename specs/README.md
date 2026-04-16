@@ -3,7 +3,7 @@
 Status: Active
 Date: 2026-03-11
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-04-05
+Last Reviewed: 2026-04-16
 
 Implementation-facing specifications that drive development work.
 
@@ -35,8 +35,9 @@ Primary policy source:
 ## Root Canonical Entry Points
 - `current-app-plan-2026-04-05.md`
 - `repo-structure-governance.md`
-- `spec-organization-audit-2026-04-13.md`
 - `spec-organization-policy-2026-04-13.md`
+- `requirements-traceability-matrix.md`
+- `spec-lifecycle-policy.md`
 
 ## Domain Indexes
 - `app-assistant/README.md`
@@ -61,9 +62,15 @@ Primary policy source:
 - `sequence-agent/sequence-revision-objective-v1-2026-04-13.md`
 
 ## Consolidation Record
-- `spec-consolidation-audit-2026-03-11.md`
-- `spec-organization-audit-2026-04-13.md`
 - `spec-organization-policy-2026-04-13.md`
 - `spec-lifecycle-policy.md`
 - `requirements-traceability-matrix.md`
 - `agent-release-quality-gates.md`
+
+## Root Cleanup Audits
+- `designer-dialog/designer-dialog-spec-cleanup-audit-2026-04-16.md`
+- `app-ui/app-ui-spec-cleanup-audit-2026-04-16.md`
+- `sequence-agent/sequence-agent-spec-cleanup-audit-2026-04-16.md`
+
+Historical root-level cleanup/reset records now live under:
+- `archive/root/`

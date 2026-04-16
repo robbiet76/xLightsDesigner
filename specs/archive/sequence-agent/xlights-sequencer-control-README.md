@@ -14,7 +14,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - It is not the active execution spine.
 - Current execution is driven by the `2026.06` owned API migration set plus the active `sequence-agent/README.md`.
 
-## Active Spec Set
+## Historical Spec Set
 - `xlights-sequencer-control-project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.
 - `xlights-sequencer-control-api-surface-contract.md`: required endpoint/capability matrix for full sequencer control.
 - `../designer-dialog/designer-interaction-contract.md`: user-to-agent interaction and proposal/apply contract.
@@ -22,7 +22,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `xlights-sequencer-control-sequence-agent-implementation-checklist.md`: implementation checklist for `sequence_agent` planning/execution phases.
 - `xlights-sequencer-control-decision-log.md`: locked decisions to minimize implementation churn.
 - `xlights-sequencer-control-implementation-roadmap.md`: phase ordering and active execution sequence.
-- `xlights-sequencer-control-architecture-reset-plan-2026-03-11.md`: authoritative architecture reset and execution gates.
+- `../root/xlights-sequencer-control-architecture-reset-plan-2026-03-11.md`: historical architecture reset and execution gates.
 - `xlights-sequencer-control-acceptance-test-matrix.md`: cross-domain acceptance tests.
 - `xlights-sequencer-control-training-package-architecture.md`: portable BYO-provider training package architecture.
 - `xlights-sequencer-control-integration-test-harness.md`: non-UI integration scripts and report contract.
