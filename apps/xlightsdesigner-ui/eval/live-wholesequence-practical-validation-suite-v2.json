@@ -3,10 +3,10 @@
   "version": "2.0",
   "name": "phase2_wholesequence_practical_validation_expanded",
   "summary": "Expanded whole-sequence practical validation scenarios on the clean Phase2 sequence baseline with role identity and progression pressure.",
-  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2-Baseline.xsq",
+  "baselineSequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2-Baseline.xsq",
   "scenarios": [
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Design the full song more like a stage-lighting cue stack with restrained washes, clearer key-vs-fill hierarchy, and stronger finale punch.",
       "weakPrompt": "Keep the full song as one broad even look across the yard with minimal hierarchy and mostly uniform effect language.",
@@ -14,7 +14,7 @@
       "scenarioLabel": "phase2-stage-lighting-pass"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Use the perimeter props to frame the song while the centerpiece props take over the key reveals and choruses.",
       "weakPrompt": "Keep the full song visually even so the perimeter and centerpiece props all share the same emphasis most of the time.",
@@ -22,7 +22,7 @@
       "scenarioLabel": "phase2-composition-pass"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Shape the full song with smooth connected transitions, broader cinematic motion, and a more flowing rise into the final chorus.",
       "weakPrompt": "Make the full song choppier and more staccato with punchy pulse changes, sharper accents, and less connected motion between sections.",
@@ -30,7 +30,7 @@
       "scenarioLabel": "phase2-motion-language-pass"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
       "weakPrompt": "Keep changing textures aggressively across the whole song with busier sparkle, harder texture swaps, and less restraint in the base look.",
@@ -38,7 +38,7 @@
       "scenarioLabel": "phase2-render-discipline-pass"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Give the choruses a recognizable common visual language so Chorus 1, Chorus 2, and the Final Chorus feel related, then let each chorus build in size and payoff with the Final Chorus clearly landing biggest.",
       "weakPrompt": "Treat each chorus like a separate unrelated idea so Chorus 1, Chorus 2, and the Final Chorus do not need to share a family resemblance or build pattern.",
@@ -46,7 +46,7 @@
       "scenarioLabel": "phase2-chorus-identity-build-pass"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Keep the verses connected by a shared supporting visual language so Verse 1 and Verse 2 feel like the same narrative world, while still leaving room for the choruses to open up and feel bigger.",
       "weakPrompt": "Make each verse feel unrelated to the other sections with no need for Verse 1 and Verse 2 to share a supporting identity.",

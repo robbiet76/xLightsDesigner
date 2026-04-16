@@ -2,10 +2,10 @@
   "contract": "live_multisection_practical_sequence_validation_suite_v2",
   "version": "2.0",
   "summary": "Expanded live multi-section benchmark for section contrast, target fidelity, and explicit section-level effect routing.",
-  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2-Baseline.xsq",
+  "baselineSequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2-Baseline.xsq",
   "scenarios": [
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
         "Intro",
@@ -53,7 +53,7 @@
       "scenarioLabel": "intro-to-chorus-tree-contrast"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
         "Verse 1",
@@ -99,7 +99,7 @@
       "scenarioLabel": "verse-to-chorus-border-escalation"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
         "Bridge",
@@ -147,7 +147,7 @@
       "scenarioLabel": "bridge-to-finalchorus-radial-shift"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
         "Verse 1",
@@ -195,7 +195,7 @@
       "scenarioLabel": "verse-to-outro-snowman-release"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
         "Verse 2",
@@ -242,7 +242,7 @@
       "scenarioLabel": "verse-to-chorus-canes-to-border-shift"
     },
     {
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "sequencePath": "var/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": [
         "Bridge",
