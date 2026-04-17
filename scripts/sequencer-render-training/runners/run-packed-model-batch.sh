@@ -116,6 +116,8 @@ model_channel_count="$(jq -r '.channelCount' <<<"${model_metadata_json}")"
 model_node_count="$(jq -r '.nodeCount' <<<"${model_metadata_json}")"
 model_channels_per_node="$(jq -r '.channelsPerNode' <<<"${model_metadata_json}")"
 decoder_bin="$("${ROOT_DIR}/tooling/build-fseq-window-decoder.sh")"
+geometry_artifact_path="${GEOMETRY_ARTIFACT_PATH:-${ROOT_DIR}/proofs/preview-scene-geometry-render-training-live.json}"
+preview_window_frame_offsets="${PREVIEW_WINDOW_FRAME_OFFSETS:-8,10,12}"
 pack_id="$(jq -r '.packId // "packed-batch"' "${MANIFEST_FILE}")"
 training_working_dir="${RENDER_TRAINING_ROOT}/working"
 training_fseq_dir="${RENDER_TRAINING_ROOT}/fseq"
@@ -152,6 +154,7 @@ current_start_ms="${fixture_start_ms}"
 for sample_id in "${sample_ids[@]}"; do
   sample_json="$(jq -c --arg sid "${sample_id}" '.samples[] | select(.sampleId == $sid)' "${MANIFEST_FILE}")"
   effect_name="$(jq -r '.effectName' <<<"${sample_json}")"
+  placement_id="$(jq -r '.placementId // empty' <<<"${sample_json}")"
   shared_settings_json="$(jq -c '.sharedSettings // {}' <<<"${sample_json}")"
   effect_settings_json="$(jq -c '.effectSettings // {}' <<<"${sample_json}")"
   palette_json="$(jq -c '.sharedSettings.palette // {}' <<<"${sample_json}")"
@@ -229,6 +232,8 @@ while IFS= read -r planned_row; do
   mkdir -p "${sample_dir}"
   record_path="${sample_dir}/${sample_id}.record.json"
   features_path="${sample_dir}/${sample_id}.features.json"
+  preview_window_path="${sample_dir}/${sample_id}.preview-window.json"
+  render_observation_path="${sample_dir}/${sample_id}.render-observation.json"
   sample_started_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
   status="passed"
@@ -267,9 +272,20 @@ while IFS= read -r planned_row; do
       --model-type "${resolved_model_type}" \
       --features-file "${features_path}"
   )"
+  python3 "${ROOT_DIR}/tooling/reconstruct-preview-scene-window.py" \
+    --geometry "${geometry_artifact_path}" \
+    --fseq "${batch_artifact_path}" \
+    --window-start-ms "${start_ms}" \
+    --window-end-ms "${end_ms}" \
+    --frame-offsets "${preview_window_frame_offsets}" \
+    --out "${preview_window_path}" >>"${log_path}" 2>&1
+  python3 "${ROOT_DIR}/tooling/extract-render-observation.py" \
+    --window "${preview_window_path}" \
+    --out "${render_observation_path}" >>"${log_path}" 2>&1
   jq -cn \
     --arg version "1.0" \
     --arg sampleId "${sample_id}" \
+    --arg placementId "${placement_id}" \
     --arg effectName "$(jq -r '.effectName' <<<"${sample_json}")" \
     --arg sequencePath "${sequence_path}" \
     --arg workingSequencePath "${working_sequence_path}" \
@@ -282,6 +298,8 @@ while IFS= read -r planned_row; do
     --arg path "${batch_artifact_path}" \
     --arg batchPath "${batch_artifact_path}" \
     --arg batchManifestPath "${batch_manifest_copy}" \
+    --arg previewSceneWindowRef "${preview_window_path}" \
+    --arg renderObservationRef "${render_observation_path}" \
     --argjson startMs "${start_ms}" \
     --argjson endMs "${end_ms}" \
     --argjson durationMs "$((end_ms-start_ms))" \
@@ -295,6 +313,7 @@ while IFS= read -r planned_row; do
     '{
       recordVersion: $version,
       sampleId: $sampleId,
+      placementId: (if ($placementId | length) > 0 then $placementId else null end),
       effectName: $effectName,
       fixture: {
         sequencePath: $sequencePath,
@@ -316,6 +335,8 @@ while IFS= read -r planned_row; do
         path: $path,
         batchArtifactPath: $batchPath,
         batchManifestPath: $batchManifestPath,
+        previewSceneWindowRef: $previewSceneWindowRef,
+        renderObservationRef: $renderObservationRef,
         windowStartMs: $startMs,
         windowEndMs: $endMs
       },

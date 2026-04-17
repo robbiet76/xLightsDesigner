@@ -64,6 +64,7 @@ Proof entry:
 Current tool:
 
 - [build-layering-render-proof.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-layering-render-proof.py)
+- [build-layering-placement-evidence.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-layering-placement-evidence.py)
 
 Inputs:
 
@@ -97,6 +98,20 @@ Shape:
   ]
 }
 ```
+
+## Current Record Seam
+
+`run-packed-model-batch.sh` now emits these refs into each sample record artifact:
+
+- `artifact.previewSceneWindowRef`
+- `artifact.renderObservationRef`
+
+And it preserves `placementId` when the manifest sample provides one.
+
+That means placement-linked layering evidence is now possible without another render pass, as long as:
+
+- the execution manifest carries `placementId`
+- the run writes standard record artifacts
 
 ## What The Generator Does Now
 
