@@ -408,6 +408,7 @@ export function createProposalGenerationRuntime(deps = {}) {
         sequenceArtisticGoal: state.creative?.sequenceArtisticGoal || null,
         sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null,
         analysisHandoff,
+        renderValidationEvidence: state.agentPlan?.handoff?.metadata?.renderValidationEvidence || null,
         planningScope: {
           sections: selected,
           targetIds: revisionTarget?.targetIds?.length ? revisionTarget.targetIds : normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
@@ -437,6 +438,7 @@ export function createProposalGenerationRuntime(deps = {}) {
           sequencingDesignHandoff: sequenceAgentInput.sequencingDesignHandoff,
           sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
           sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
+          renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
           priorPassMemory,
           sourceLines: proposalSeedLines,
           baseRevision: str(state.draftBaseRevision || state.revision || "unknown"),

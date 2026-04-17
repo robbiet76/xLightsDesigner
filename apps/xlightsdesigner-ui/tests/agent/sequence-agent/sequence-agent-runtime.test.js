@@ -241,3 +241,29 @@ test("sequence agent input preserves artistic goal and revision objective artifa
   assert.equal(input.sequenceArtisticGoal.artifactType, "sequence_artistic_goal_v1");
   assert.equal(input.sequenceRevisionObjective.artifactType, "sequence_revision_objective_v1");
 });
+
+test("sequence agent input preserves render validation evidence", () => {
+  const input = buildSequenceAgentInput({
+    requestId: "req-validation",
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    sequenceRevision: "rev-1",
+    sequenceSettings: {},
+    displayElements: [],
+    groupIds: [],
+    groupsById: {},
+    submodelsById: {},
+    intentHandoff: { role: "designer_dialog" },
+    renderValidationEvidence: {
+      renderObservationRef: "/tmp/render-observation.json",
+      progressionObservationRef: "/tmp/progression-observation.json"
+    },
+    safety: {
+      timingOwnership: [],
+      manualXdLocks: [],
+      allowTimingWrites: true
+    }
+  });
+
+  assert.equal(input.renderValidationEvidence.renderObservationRef, "/tmp/render-observation.json");
+  assert.equal(input.renderValidationEvidence.progressionObservationRef, "/tmp/progression-observation.json");
+});

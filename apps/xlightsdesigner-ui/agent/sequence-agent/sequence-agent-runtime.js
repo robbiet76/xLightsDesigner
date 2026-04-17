@@ -26,6 +26,7 @@ export function buildSequenceAgentInput({
   sequenceRevisionObjective = null,
   analysisHandoff = null,
   planningScope = null,
+  renderValidationEvidence = null,
   timingOwnership = [],
   manualXdLocks = [],
   allowTimingWrites = true
@@ -57,6 +58,9 @@ export function buildSequenceAgentInput({
     sequenceRevisionObjective: sequenceRevisionObjective && typeof sequenceRevisionObjective === "object" ? sequenceRevisionObjective : null,
     analysisHandoff: analysisHandoff && typeof analysisHandoff === "object" ? analysisHandoff : null,
     planningScope: planningScope && typeof planningScope === "object" ? planningScope : null,
+    renderValidationEvidence: renderValidationEvidence && typeof renderValidationEvidence === "object" && !Array.isArray(renderValidationEvidence)
+      ? renderValidationEvidence
+      : null,
     safety: {
       timingOwnership: Array.isArray(timingOwnership) ? timingOwnership : [],
       manualXdLocks: Array.isArray(manualXdLocks) ? manualXdLocks : [],

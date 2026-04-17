@@ -119,6 +119,7 @@ export async function executeApplyCore({
       sequenceArtisticGoal,
       sequenceRevisionObjective,
       analysisHandoff,
+      renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null,
       planningScope: {
         sections: getSelectedSections(),
         targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
@@ -164,6 +165,7 @@ export async function executeApplyCore({
       sequencingDesignHandoff: sequenceAgentInput.sequencingDesignHandoff,
       sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
       sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
+      renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
       priorPassMemory,
       sourceLines,
       baseRevision: state.draftBaseRevision,
