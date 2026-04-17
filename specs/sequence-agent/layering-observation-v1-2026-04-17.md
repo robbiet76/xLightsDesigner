@@ -49,7 +49,7 @@ That is where the system needs evidence for:
 - reinforcement
 - palette fighting
 - cadence clash
-- loss of focal clarity
+- loss of same-structure clarity
 
 ## Role Boundary
 
@@ -129,6 +129,12 @@ Suggested fields per entry:
 - `realizationId`
 - `roleHint`
 
+Preferred `roleHint` values should stay neutral, for example:
+
+- `primary`
+- `secondary`
+- `handoff_window`
+
 ## Separation
 
 Purpose:
@@ -148,10 +154,18 @@ Purpose:
 
 Suggested fields:
 
+- `attentionCompetition`
+- `elementObscuration`
+- `frontLayerLoss`
 - `maskingRisk`
 - `dominanceConflict`
 - `supportObscuration`
 - `foregroundLoss`
+
+Compatibility note:
+
+- legacy dominance/support names may remain for pipeline compatibility
+- neutral masking and attention fields are the preferred interpretation surface
 
 ## Cadence
 
@@ -172,6 +186,10 @@ Purpose:
 
 Suggested fields:
 
+- `colorReinforcement`
+- `colorConflict`
+- `colorCompetition`
+- `colorRoleLoss`
 - `paletteReinforcement`
 - `paletteConflict`
 - `colorCompetition`
@@ -181,8 +199,8 @@ Suggested fields:
 
 The first implementation of this artifact should answer only a compact set of questions:
 
-1. Can the lead layer still be read clearly?
-2. Is the support layer staying subordinate on the same structure?
+1. Are same-structure layers still visually distinct enough to read?
+2. Is one layer obscuring or overpowering another?
 3. Are the stacked layers visually distinct enough?
 4. Are cadence/motion behaviors reinforcing or clashing?
 5. Are palette behaviors reinforcing or fighting each other?
@@ -223,3 +241,22 @@ This first version should remain constrained to:
 - color
 
 Do not infer same-target layering quality from cross-model composition artifacts.
+
+## Neutral Observation Rule
+
+`layering_observation_v1` must stay neutral.
+
+Hardcode:
+
+- same-structure separation
+- obscuration
+- cadence alignment or clash
+- color reinforcement or conflict
+
+Do not hardcode:
+
+- that one layer must always behave as a lead
+- that one layer must always subordinate
+- that stacked layers are weak unless one clearly dominates
+
+Judgment belongs later, relative to intent.

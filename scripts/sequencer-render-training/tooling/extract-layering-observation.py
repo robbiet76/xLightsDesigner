@@ -128,11 +128,17 @@ def score_masking(proof, isolated, composite):
     masking = clamp(avg([family_collapse, low_separation, dominant_loss]))
     support_obscuration = clamp(masking + (0.15 if len(observations) > 1 else 0.0))
     return {
+        "attentionCompetition": classify_band(clamp(masking * 0.85)),
+        "elementObscuration": classify_band(support_obscuration),
+        "frontLayerLoss": classify_band(clamp(masking * 0.75)),
         "maskingRisk": classify_band(masking),
         "dominanceConflict": classify_band(clamp(masking * 0.85)),
         "supportObscuration": classify_band(support_obscuration),
         "foregroundLoss": classify_band(clamp(masking * 0.75)),
         "scores": {
+            "attentionCompetition": round(clamp(masking * 0.85), 4),
+            "elementObscuration": round(support_obscuration, 4),
+            "frontLayerLoss": round(clamp(masking * 0.75), 4),
             "maskingRisk": round(masking, 4),
             "dominanceConflict": round(clamp(masking * 0.85), 4),
             "supportObscuration": round(support_obscuration, 4),
@@ -190,11 +196,19 @@ def score_color(isolated, handoff=None):
         competition = 0.2 if signals.get("dominantColorStable") else 0.55
         dominant_loss = 0.15 if signals.get("dominantColorStable") else 0.5
         return {
+            "colorReinforcement": classify_band(reinforce),
+            "colorConflict": classify_band(conflict),
+            "colorCompetition": classify_band(competition),
+            "colorRoleLoss": classify_band(dominant_loss),
             "paletteReinforcement": classify_band(reinforce),
             "paletteConflict": classify_band(conflict),
             "colorCompetition": classify_band(competition),
             "dominantRoleLoss": classify_band(dominant_loss),
             "scores": {
+                "colorReinforcement": round(reinforce, 4),
+                "colorConflict": round(conflict, 4),
+                "colorCompetition": round(competition, 4),
+                "colorRoleLoss": round(dominant_loss, 4),
                 "paletteReinforcement": round(reinforce, 4),
                 "paletteConflict": round(conflict, 4),
                 "colorCompetition": round(competition, 4),
@@ -210,11 +224,19 @@ def score_color(isolated, handoff=None):
     competition = clamp((0.15 if spread < 0.25 else 0.45) + (0.2 if dominant_roles > 1 else 0.0))
     dominant_loss = clamp((0.15 if dominant_roles <= 1 else 0.5) + min(0.2, spread))
     return {
+        "colorReinforcement": classify_band(reinforce),
+        "colorConflict": classify_band(conflict),
+        "colorCompetition": classify_band(competition),
+        "colorRoleLoss": classify_band(dominant_loss),
         "paletteReinforcement": classify_band(reinforce),
         "paletteConflict": classify_band(conflict),
         "colorCompetition": classify_band(competition),
         "dominantRoleLoss": classify_band(dominant_loss),
         "scores": {
+            "colorReinforcement": round(reinforce, 4),
+            "colorConflict": round(conflict, 4),
+            "colorCompetition": round(competition, 4),
+            "colorRoleLoss": round(dominant_loss, 4),
             "paletteReinforcement": round(reinforce, 4),
             "paletteConflict": round(conflict, 4),
             "colorCompetition": round(competition, 4),
@@ -246,7 +268,7 @@ def main():
             "layerIndex": int(ref.get("layerIndex") or 0),
             "effectName": str(ref.get("effectName") or "").strip(),
             "realizationId": str(ref.get("placementId") or "").strip(),
-            "roleHint": "lead" if idx == 0 else "support",
+            "roleHint": "primary" if idx == 0 else "secondary",
         })
 
     notes = [

@@ -31,13 +31,14 @@ test("extract-sequence-critique incorporates layering weaknesses and refs", () =
     },
     masking: {
       maskingRisk: "high",
-      supportObscuration: "high"
+      attentionCompetition: "high",
+      elementObscuration: "high"
     },
     cadence: {
       phaseClashRisk: "high"
     },
     color: {
-      paletteConflict: "high"
+      colorConflict: "high"
     }
   }));
 
@@ -55,7 +56,7 @@ test("extract-sequence-critique incorporates layering weaknesses and refs", () =
   assert.equal(critique.artifactType, "sequence_critique_v1");
   assert.equal(critique.source.layeringObservationRef, layering);
   assert.ok(critique.designerSummary.strengths.some((line) => line.includes("Same-structure layers remain visually distinct")));
-  assert.ok(critique.designerSummary.weaknesses.some((line) => line.includes("Layering on the same structure is masking")));
+  assert.ok(critique.designerSummary.weaknesses.some((line) => line.includes("masking one element")));
   assert.ok(critique.sequencerSummary.weaknesses.some((line) => line.includes("Same-target layering is obscuring")));
   assert.ok(critique.nextMoves.some((move) => move.level === "layering"));
 });

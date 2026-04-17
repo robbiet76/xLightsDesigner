@@ -130,12 +130,15 @@ test("extract-layering-observation derives compact same-structure layering evide
   assert.equal(result.artifactType, "layering_observation_v1");
   assert.equal(result.scope.scopeLevel, "parent_submodel_window");
   assert.equal(result.elementRefs.length, 2);
-  assert.equal(result.elementRefs[0].roleHint, "lead");
-  assert.equal(result.elementRefs[1].roleHint, "support");
+  assert.equal(result.elementRefs[0].roleHint, "primary");
+  assert.equal(result.elementRefs[1].roleHint, "secondary");
   assert.equal(result.separation.identityClarity, "high");
   assert.equal(result.masking.maskingRisk, "medium");
+  assert.equal(result.masking.attentionCompetition, "medium");
+  assert.equal(result.masking.elementObscuration, "medium");
   assert.equal(result.cadence.phaseClashRisk, "medium");
   assert.equal(result.color.paletteConflict, "medium");
+  assert.equal(result.color.colorConflict, "medium");
   assert.ok(result.notes.some((note) => note.includes("handoff_observation_v1")));
   assert.ok(result.notes.some((note) => note.includes("ownership_observation_v1")));
   assert.equal(result.source.renderObservationRefs.length, 2);

@@ -151,26 +151,34 @@ def main():
             sequencer_weaknesses.append("Local novelty is underpowered; the rendered pass is reusing too much of the same pattern behavior.")
 
     if layering:
+        layering_attention_competition = layering_masking.get("attentionCompetition") or layering_masking.get("dominanceConflict")
+        layering_element_obscuration = layering_masking.get("elementObscuration") or layering_masking.get("supportObscuration")
+        layering_color_conflict = layering_color.get("colorConflict") or layering_color.get("paletteConflict")
+
         if layering_separation.get("identityClarity") == "high":
             designer_strengths.append("Same-structure layers remain visually distinct enough to read cleanly.")
             sequencer_strengths.append("Layered elements preserve readable separation on the shared structure.")
 
         if layering_masking.get("maskingRisk") == "high":
-            designer_weaknesses.append("Layering on the same structure is masking the weaker element too aggressively.")
+            designer_weaknesses.append("Layering on the same structure is masking one element too aggressively.")
             sequencer_weaknesses.append("Same-target layering is obscuring one realized element in the render.")
             next_moves.append({
                 "priority": 1,
                 "owner": "sequencer",
                 "level": "layering",
-                "instruction": "Reduce same-target layering conflict by lowering support coverage or simplifying one layered realization."
+                "instruction": "Reduce same-target layering conflict by lowering overlap, coverage, or complexity in one layered realization."
             })
 
-        if layering_masking.get("supportObscuration") == "high":
-            designer_weaknesses.append("Same-structure layers are no longer separating their roles clearly.")
+        if layering_element_obscuration == "high":
+            designer_weaknesses.append("Same-structure layers are no longer separating their visual roles clearly.")
             sequencer_weaknesses.append("One layered element is obscuring another within the same-target stack.")
 
+        if layering_attention_competition == "high" and layering_masking.get("maskingRisk") != "high":
+            designer_weaknesses.append("Layered elements are competing for attention on the same structure.")
+            sequencer_weaknesses.append("Same-target layering is producing contested attention rather than clear separation.")
+
         if layering_cadence.get("phaseClashRisk") == "high":
-            designer_weaknesses.append("Layered cadence is clashing on the same structure instead of reinforcing the focal read.")
+            designer_weaknesses.append("Layered cadence is clashing on the same structure instead of reinforcing a clear same-target read.")
             sequencer_weaknesses.append("Same-target timing behaviors are conflicting in the rendered layer stack.")
             next_moves.append({
                 "priority": 2,
@@ -179,7 +187,7 @@ def main():
                 "instruction": "Align or simplify layered cadence so stacked realizations do not compete on the same structure."
             })
 
-        if layering_color.get("paletteConflict") == "high":
+        if layering_color_conflict == "high":
             designer_weaknesses.append("Layered color behavior is muddying the shared structure instead of reinforcing it.")
             sequencer_weaknesses.append("Same-target color interaction is conflicting inside the layer stack.")
             next_moves.append({
