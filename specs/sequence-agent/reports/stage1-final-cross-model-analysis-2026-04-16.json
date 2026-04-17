@@ -1,7 +1,7 @@
 {
   "artifactType": "stage1_final_cross_model_analysis_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T00:45:27.262Z",
+  "generatedAt": "2026-04-17T00:47:14.592Z",
   "totalModels": 18,
   "totalRecords": 46804,
   "totalEffects": 10,
@@ -85,7 +85,7 @@
       "models": [
         "spinner_standard"
       ],
-      "averagePatternFamilyCount": 38,
+      "averagePatternFamilyCount": 43,
       "modelsWithUnclassified": []
     },
     {
@@ -95,7 +95,7 @@
         "star_multi_layer",
         "star_single_layer"
       ],
-      "averagePatternFamilyCount": 38,
+      "averagePatternFamilyCount": 43,
       "modelsWithUnclassified": []
     },
     {
@@ -112,222 +112,6 @@
   ],
   "modelsWithUnclassified": [],
   "effectSummary": [
-    {
-      "effectName": "SingleStrand",
-      "modelsPresent": 18,
-      "totalDistinctFamilies": 60,
-      "minDistinctFamilies": 1,
-      "maxDistinctFamilies": 5,
-      "collapsedModelCount": 3,
-      "unclassifiedModelCount": 0,
-      "models": [
-        {
-          "geometryProfile": "matrix_high_density",
-          "modelName": "MatrixHighDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "matrix_bounce_chase",
-            "matrix_chase_motion",
-            "matrix_directional_chase",
-            "matrix_fx_texture",
-            "matrix_skip_bands"
-          ]
-        },
-        {
-          "geometryProfile": "matrix_low_density",
-          "modelName": "MatrixLowDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "matrix_bounce_chase",
-            "matrix_chase_motion",
-            "matrix_directional_chase",
-            "matrix_fx_texture",
-            "matrix_skip_bands"
-          ]
-        },
-        {
-          "geometryProfile": "matrix_medium_density",
-          "modelName": "MatrixMedDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "matrix_bounce_chase",
-            "matrix_chase_motion",
-            "matrix_directional_chase",
-            "matrix_fx_texture",
-            "matrix_skip_bands"
-          ]
-        },
-        {
-          "geometryProfile": "spinner_standard",
-          "modelName": "Spinner",
-          "analyzerFamily": "radial",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "radial_fill"
-          ]
-        },
-        {
-          "geometryProfile": "star_single_layer",
-          "modelName": "StarSingle",
-          "analyzerFamily": "star",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "star_fill"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_horizontal",
-          "modelName": "SingleLineHorizontal",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "bounce",
-            "burst_texture",
-            "directional_chase",
-            "skips"
-          ]
-        },
-        {
-          "geometryProfile": "tree_360_round",
-          "modelName": "TreeRound",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 2,
-          "patternFamilies": [
-            "spiral_travel",
-            "tree_band_motion"
-          ]
-        },
-        {
-          "geometryProfile": "tree_360_spiral",
-          "modelName": "TreeSpiral",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 2,
-          "patternFamilies": [
-            "spiral_travel",
-            "tree_band_motion"
-          ]
-        },
-        {
-          "geometryProfile": "tree_flat_single_layer",
-          "modelName": "TreeFlat",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 2,
-          "patternFamilies": [
-            "spiral_travel",
-            "tree_band_motion"
-          ]
-        },
-        {
-          "geometryProfile": "star_multi_layer",
-          "modelName": "StarTripleLayer",
-          "analyzerFamily": "star",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "star_fill"
-          ]
-        },
-        {
-          "geometryProfile": "arch_multi_layer",
-          "modelName": "ArchTripleLayer",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "bounce",
-            "burst_texture",
-            "directional_chase",
-            "skips"
-          ]
-        },
-        {
-          "geometryProfile": "arch_single",
-          "modelName": "ArchSingle",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "bounce",
-            "burst_texture",
-            "directional_chase",
-            "skips"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_vertical",
-          "modelName": "SingleLineVertical",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "bounce",
-            "burst_texture",
-            "directional_chase",
-            "skips"
-          ]
-        },
-        {
-          "geometryProfile": "icicles_drop_pattern",
-          "modelName": "Icicles",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "bounce",
-            "burst_texture",
-            "directional_chase",
-            "skips"
-          ]
-        },
-        {
-          "geometryProfile": "cane_grouped",
-          "modelName": "CaneGroup",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "bounce",
-            "burst_texture",
-            "directional_chase",
-            "skips"
-          ]
-        },
-        {
-          "geometryProfile": "cane_single",
-          "modelName": "CaneSingle",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "bounce",
-            "burst_texture",
-            "directional_chase",
-            "skips"
-          ]
-        },
-        {
-          "geometryProfile": "cane_stick_grouped",
-          "modelName": "CaneStickGroup",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "bounce",
-            "burst_texture",
-            "directional_chase",
-            "skips"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_single_node",
-          "modelName": "SingleLineSingleNode",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "bounce",
-            "burst_texture",
-            "directional_chase",
-            "skips"
-          ]
-        }
-      ],
-      "averageDistinctFamilies": 3.33
-    },
     {
       "effectName": "Bars",
       "modelsPresent": 18,
@@ -1655,6 +1439,234 @@
       "averageDistinctFamilies": 4
     },
     {
+      "effectName": "SingleStrand",
+      "modelsPresent": 18,
+      "totalDistinctFamilies": 72,
+      "minDistinctFamilies": 2,
+      "maxDistinctFamilies": 5,
+      "collapsedModelCount": 0,
+      "unclassifiedModelCount": 0,
+      "models": [
+        {
+          "geometryProfile": "matrix_high_density",
+          "modelName": "MatrixHighDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "matrix_bounce_chase",
+            "matrix_chase_motion",
+            "matrix_directional_chase",
+            "matrix_fx_texture",
+            "matrix_skip_bands"
+          ]
+        },
+        {
+          "geometryProfile": "matrix_low_density",
+          "modelName": "MatrixLowDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "matrix_bounce_chase",
+            "matrix_chase_motion",
+            "matrix_directional_chase",
+            "matrix_fx_texture",
+            "matrix_skip_bands"
+          ]
+        },
+        {
+          "geometryProfile": "matrix_medium_density",
+          "modelName": "MatrixMedDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "matrix_bounce_chase",
+            "matrix_chase_motion",
+            "matrix_directional_chase",
+            "matrix_fx_texture",
+            "matrix_skip_bands"
+          ]
+        },
+        {
+          "geometryProfile": "spinner_standard",
+          "modelName": "Spinner",
+          "analyzerFamily": "radial",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "radial_bounce_chase",
+            "radial_chase_motion",
+            "radial_directional_chase",
+            "radial_fx_texture",
+            "radial_skip_bands"
+          ]
+        },
+        {
+          "geometryProfile": "star_single_layer",
+          "modelName": "StarSingle",
+          "analyzerFamily": "star",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "star_bounce_chase",
+            "star_chase_motion",
+            "star_directional_chase",
+            "star_fx_texture",
+            "star_skip_bands"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_horizontal",
+          "modelName": "SingleLineHorizontal",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "bounce",
+            "burst_texture",
+            "directional_chase",
+            "skips"
+          ]
+        },
+        {
+          "geometryProfile": "tree_360_round",
+          "modelName": "TreeRound",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 2,
+          "patternFamilies": [
+            "spiral_travel",
+            "tree_band_motion"
+          ]
+        },
+        {
+          "geometryProfile": "tree_360_spiral",
+          "modelName": "TreeSpiral",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 2,
+          "patternFamilies": [
+            "spiral_travel",
+            "tree_band_motion"
+          ]
+        },
+        {
+          "geometryProfile": "tree_flat_single_layer",
+          "modelName": "TreeFlat",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 2,
+          "patternFamilies": [
+            "spiral_travel",
+            "tree_band_motion"
+          ]
+        },
+        {
+          "geometryProfile": "star_multi_layer",
+          "modelName": "StarTripleLayer",
+          "analyzerFamily": "star",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "star_bounce_chase",
+            "star_chase_motion",
+            "star_directional_chase",
+            "star_fx_texture",
+            "star_skip_bands"
+          ]
+        },
+        {
+          "geometryProfile": "arch_multi_layer",
+          "modelName": "ArchTripleLayer",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "bounce",
+            "burst_texture",
+            "directional_chase",
+            "skips"
+          ]
+        },
+        {
+          "geometryProfile": "arch_single",
+          "modelName": "ArchSingle",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "bounce",
+            "burst_texture",
+            "directional_chase",
+            "skips"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_vertical",
+          "modelName": "SingleLineVertical",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "bounce",
+            "burst_texture",
+            "directional_chase",
+            "skips"
+          ]
+        },
+        {
+          "geometryProfile": "icicles_drop_pattern",
+          "modelName": "Icicles",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "bounce",
+            "burst_texture",
+            "directional_chase",
+            "skips"
+          ]
+        },
+        {
+          "geometryProfile": "cane_grouped",
+          "modelName": "CaneGroup",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "bounce",
+            "burst_texture",
+            "directional_chase",
+            "skips"
+          ]
+        },
+        {
+          "geometryProfile": "cane_single",
+          "modelName": "CaneSingle",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "bounce",
+            "burst_texture",
+            "directional_chase",
+            "skips"
+          ]
+        },
+        {
+          "geometryProfile": "cane_stick_grouped",
+          "modelName": "CaneStickGroup",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "bounce",
+            "burst_texture",
+            "directional_chase",
+            "skips"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_single_node",
+          "modelName": "SingleLineSingleNode",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "bounce",
+            "burst_texture",
+            "directional_chase",
+            "skips"
+          ]
+        }
+      ],
+      "averageDistinctFamilies": 4
+    },
+    {
       "effectName": "Color Wash",
       "modelsPresent": 18,
       "totalDistinctFamilies": 90,
@@ -2839,7 +2851,7 @@
       "modelType": "spinner",
       "analyzerFamily": "radial",
       "recordCount": 2608,
-      "patternFamilyCount": 38,
+      "patternFamilyCount": 43,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -2917,9 +2929,13 @@
         },
         {
           "effectName": "SingleStrand",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 5,
           "patternFamilies": [
-            "radial_fill"
+            "radial_bounce_chase",
+            "radial_chase_motion",
+            "radial_directional_chase",
+            "radial_fx_texture",
+            "radial_skip_bands"
           ]
         },
         {
@@ -2953,7 +2969,7 @@
       "modelType": "star",
       "analyzerFamily": "star",
       "recordCount": 2608,
-      "patternFamilyCount": 38,
+      "patternFamilyCount": 43,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -3031,9 +3047,13 @@
         },
         {
           "effectName": "SingleStrand",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 5,
           "patternFamilies": [
-            "star_fill"
+            "star_bounce_chase",
+            "star_chase_motion",
+            "star_directional_chase",
+            "star_fx_texture",
+            "star_skip_bands"
           ]
         },
         {
@@ -3542,7 +3562,7 @@
       "modelType": "star",
       "analyzerFamily": "star",
       "recordCount": 2608,
-      "patternFamilyCount": 38,
+      "patternFamilyCount": 43,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -3620,9 +3640,13 @@
         },
         {
           "effectName": "SingleStrand",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 5,
           "patternFamilies": [
-            "star_fill"
+            "star_bounce_chase",
+            "star_chase_motion",
+            "star_directional_chase",
+            "star_fx_texture",
+            "star_skip_bands"
           ]
         },
         {

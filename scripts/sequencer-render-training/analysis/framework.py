@@ -339,6 +339,31 @@ class BaseAnalyzer:
             name = "spiral_bands"
         return f"{prefix}{name}" if prefix else name
 
+    def _single_strand_family(
+        self,
+        settings: Dict[str, Any],
+        prefix: str = "",
+        mean_segment_count: float = 0.0,
+        max_segment_length_ratio: float = 1.0,
+    ) -> str:
+        mode = str(settings.get("mode", "") or "")
+        direction = self._lower_setting(settings, "direction")
+        chase_type = self._lower_setting(settings, "chaseType")
+
+        if mode == "FX":
+            name = "fx_texture"
+        elif mode == "Skips":
+            name = "skip_bands"
+        elif "bounce" in chase_type:
+            name = "bounce_chase"
+        elif direction in {"left", "right"}:
+            name = "directional_chase"
+        elif mean_segment_count >= 2.0 and max_segment_length_ratio < 0.35:
+            name = "segmented_chase"
+        else:
+            name = "chase_motion"
+        return f"{prefix}{name}" if prefix else name
+
     def _on_family(
         self,
         settings: Dict[str, Any],
@@ -1117,6 +1142,8 @@ class StarAnalyzer(BaseAnalyzer):
             pattern_family = self._marquee_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Spirals":
             pattern_family = self._spiral_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "SingleStrand":
+            pattern_family = self._single_strand_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Pinwheel":
             pattern_family = self._pinwheel_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Shockwave":
@@ -1197,6 +1224,9 @@ class StarAnalyzer(BaseAnalyzer):
         if inp.effect_name == "Spirals":
             intents.add("patterned")
             intents.add("directional")
+        if inp.effect_name == "SingleStrand":
+            intents.add("patterned")
+            intents.add("directional")
         if inp.effect_name == "Pinwheel":
             intents.add("patterned")
             intents.add("directional")
@@ -1238,6 +1268,8 @@ class RadialAnalyzer(BaseAnalyzer):
             pattern_family = self._marquee_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Spirals":
             pattern_family = self._spiral_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "SingleStrand":
+            pattern_family = self._single_strand_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Pinwheel":
             pattern_family = self._pinwheel_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Shockwave":
@@ -1316,6 +1348,10 @@ class RadialAnalyzer(BaseAnalyzer):
         if inp.effect_name in ("Spirals", "Pinwheel", "Shockwave"):
             intents.add("patterned")
             intents.add("animated")
+        if inp.effect_name == "SingleStrand":
+            intents.add("patterned")
+            intents.add("animated")
+            intents.add("directional")
         if inp.effect_name == "Pinwheel":
             intents.add("directional")
         if inp.effect_name == "Shockwave":
