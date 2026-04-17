@@ -12,6 +12,7 @@ CHUNK_BY="geometry-profile"
 RECORD_ROOTS=()
 STAMP="$(date -u +"%Y%m%dT%H%M%SZ")"
 RESUME=false
+FAST_STARTUP=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -41,6 +42,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --resume)
       RESUME=true
+      shift
+      ;;
+    --fast-startup)
+      FAST_STARTUP=true
       shift
       ;;
     *)
@@ -117,7 +122,7 @@ with open(meta_path, "w", encoding="utf-8") as f:
     f.write("\n")
 PY
 
-log "startup pid=$$ resume=$RESUME runRoot=$RUN_ROOT"
+log "startup pid=$$ resume=$RESUME fastStartup=$FAST_STARTUP runRoot=$RUN_ROOT"
 
 if [[ "$RESUME" == "true" && -f "$CURRENT_LEDGER_PATH" ]]; then
   log "resume using existing current ledger"
@@ -129,23 +134,32 @@ else
   log "initialized empty current ledger"
 fi
 
-record_root_args=()
+startup_record_root_args=()
 for root in "${RECORD_ROOTS[@]}"; do
-  record_root_args+=(--record-root "$root")
+  startup_record_root_args+=(--record-root "$root")
 done
 
+if [[ "$RESUME" == "true" && "$FAST_STARTUP" == "true" ]]; then
+  startup_record_root_args=()
+  log "fast-startup enabled: startup audit will use current ledger only"
+fi
+
 log "audit generating path=$AUDIT_PATH"
-python3 "$ROOT_DIR/generators/generate-stage1-coverage-audit.py" \
-  "${record_root_args[@]}" \
-  --completed-ledger "$CURRENT_LEDGER_PATH" \
-  --out "$AUDIT_PATH"
+audit_cmd=(python3 "$ROOT_DIR/generators/generate-stage1-coverage-audit.py")
+if [[ "${#startup_record_root_args[@]}" -gt 0 ]]; then
+  audit_cmd+=("${startup_record_root_args[@]}")
+fi
+audit_cmd+=(--completed-ledger "$CURRENT_LEDGER_PATH" --out "$AUDIT_PATH")
+"${audit_cmd[@]}"
 log "audit generated path=$AUDIT_PATH"
 
 validation_args=("$VALIDATION_DIR" "$ROOT_DIR/catalog/stage1-effect-model-scope.json" "$ROOT_DIR/catalog/effective-effect-parameter-registry.json")
 for root in "${RECORD_ROOTS[@]}"; do
   validation_args+=("$root")
 done
-if [[ "${#RECORD_ROOTS[@]}" -gt 0 ]]; then
+if [[ "$RESUME" == "true" && "$FAST_STARTUP" == "true" ]]; then
+  log "fast-startup enabled: startup preflight validation skipped"
+elif [[ "${#RECORD_ROOTS[@]}" -gt 0 ]]; then
   log "preflight validation generating path=$VALIDATION_DIR/stage1-validation-report.json"
   node "$ROOT_DIR/tooling/build-stage1-validation-report.mjs" "${validation_args[@]}" >/dev/null
   log "preflight validation generated path=$VALIDATION_DIR/stage1-validation-report.json"

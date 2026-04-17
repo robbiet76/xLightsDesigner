@@ -53,7 +53,7 @@ case "$ACTION" in
       exit 1
     fi
     if [[ "$ACTION" == "resume" ]]; then
-      RUNNER_ARGS+=(--resume)
+      RUNNER_ARGS+=(--resume --fast-startup)
     fi
     : > "$LAUNCHER_LOG"
     if command -v screen >/dev/null 2>&1; then
