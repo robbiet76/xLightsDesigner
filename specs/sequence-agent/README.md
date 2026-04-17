@@ -27,6 +27,7 @@ These are the current operating specs for sequencing work.
 - [composition-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/composition-observation-v1-2026-04-17.md)
 - [layering-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-observation-v1-2026-04-17.md)
 - [layering-placement-groups-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-placement-groups-v1-2026-04-17.md)
+- [layering-proof-plan-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-proof-plan-v1-2026-04-17.md)
 - [xlights-layering-render-order-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-layering-render-order-audit-2026-04-17.md)
 - [sequencing-bias-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-bias-audit-2026-04-15.md)
 - [sequencer-training-reset-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md)
