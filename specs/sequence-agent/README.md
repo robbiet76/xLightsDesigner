@@ -23,6 +23,7 @@ These are the current operating specs for sequencing work.
 - [translation-layer-training-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/translation-layer-training-plan-2026-04-15.md)
 - [visual-behavior-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/visual-behavior-v1-2026-04-15.md)
 - [translation-intent-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/translation-intent-v1-2026-04-15.md)
+- [render-visualizer-gap-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-visualizer-gap-audit-2026-04-17.md)
 - [sequencing-bias-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-bias-audit-2026-04-15.md)
 - [sequencer-training-reset-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md)
 - [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)

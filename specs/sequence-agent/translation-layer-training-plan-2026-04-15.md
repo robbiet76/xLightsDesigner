@@ -182,6 +182,22 @@ Only after behavior selection, choose how to realize that behavior using:
 
 Multiple realizations may be valid for the same behavior.
 
+Rule:
+
+- realization scoring must happen at the realized-settings level
+- not at the effect-family level alone
+
+A realization is:
+
+- effect family
+- effect settings
+- shared settings
+- palette
+- layering or transition context
+- target geometry context
+
+The translation layer must not collapse into effect-level ranking doctrine.
+
 ### 5. Render-Feedback Validation
 
 Compare the intended translation behavior to:
@@ -190,6 +206,11 @@ Compare the intended translation behavior to:
 - render critique
 - artistic goal alignment
 - revision objective alignment
+
+The render validator is allowed to be metric-driven.
+
+It is not required to mimic human vision.
+It is required to produce machine-usable observations that can separate meaningfully different realized behaviors.
 
 ### 6. Outcome Learning
 
@@ -305,6 +326,11 @@ These are still active in parts of the system, but they should be treated as sus
 - benchmark shorthand that encodes effect, prop, or section semantics in identifiers
 - realization hints that flow back into semantic or behavior inference
 - hand-authored use-case mappings that imply fixed relationships between section type, prop type, and effect family
+
+Additional rule:
+
+- if a setting-level meaning claim cannot be defended from rendered observation, it must be treated as provisional
+- the next fix is stronger render observation, not stronger effect-level heuristics
 
 Quarantined logic must not be treated as the future architecture.
 It may remain temporarily only when:

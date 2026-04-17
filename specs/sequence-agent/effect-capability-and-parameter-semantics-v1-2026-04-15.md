@@ -106,6 +106,31 @@ before:
 
 - effect family labels
 
+### Rule 5: No Effect-Level Scoring
+
+Effect-level capability records are allowed to describe:
+
+- what an effect can produce
+- what controls it exposes
+- what geometry constraints matter
+
+They are not allowed to become direct scoring doctrine such as:
+
+- effect `X` is the best answer for behavior `Y`
+- effect `A` is inherently calm, aggressive, or elegant
+- effect-family identity alone is sufficient for ranking
+
+Selection and validation must happen at the realization level:
+
+- effect family
+- parameter settings
+- shared settings
+- palette
+- layering
+- geometry
+
+That is the unit that rendered evidence can actually validate.
+
 ## Required Training Understanding
 
 For each effect, the rebuilt training corpus must capture:
