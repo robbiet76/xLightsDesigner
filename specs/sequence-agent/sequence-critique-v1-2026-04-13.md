@@ -69,6 +69,8 @@ If these are merged:
 
 Suggested fields:
 - `renderObservationRef`
+- `compositionObservationRef`
+- `layeringObservationRef`
 - `previewSceneWindowRef`
 - `designHandoffRef`
 - `revisionBatchRef`
@@ -148,6 +150,7 @@ For the current proof phase:
 - generate `macro` critique only
 - keep it compact and structured
 - derive it from `render_observation_v1`
+- allow composition and layering evidence to refine the critique when those artifacts exist
 - split the output into `designerSummary` and `sequencerSummary`
 
 That is enough to start feeding both agents from the same render checkpoint without overcommitting to a deeper critique system too early.

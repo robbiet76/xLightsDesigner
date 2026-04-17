@@ -8,6 +8,7 @@ def parse_args():
     parser.add_argument("--observation", required=True)
     parser.add_argument("--composition-observation")
     parser.add_argument("--interaction-observation")
+    parser.add_argument("--layering-observation")
     parser.add_argument("--ladder-level", choices=["macro", "section"], default="macro")
     parser.add_argument("--out", required=True)
     return parser.parse_args()
@@ -22,6 +23,10 @@ def main():
     if composition_ref:
         with open(composition_ref, "r", encoding="utf-8") as handle:
             composition = json.load(handle)
+    layering = None
+    if args.layering_observation:
+        with open(args.layering_observation, "r", encoding="utf-8") as handle:
+            layering = json.load(handle)
 
     macro = obs["macro"]
     section = obs.get("section")
@@ -37,6 +42,10 @@ def main():
     composition_motion = ((composition or {}).get("motionInteraction") or {})
     composition_color = ((composition or {}).get("colorInteraction") or {})
     composition_novelty = ((composition or {}).get("novelty") or {})
+    layering_separation = ((layering or {}).get("separation") or {})
+    layering_masking = ((layering or {}).get("masking") or {})
+    layering_cadence = ((layering or {}).get("cadence") or {})
+    layering_color = ((layering or {}).get("color") or {})
 
     designer_strengths = []
     designer_weaknesses = []
@@ -133,6 +142,45 @@ def main():
             designer_weaknesses.append("The section is too similar to its own recent behavior to feel progressive.")
             sequencer_weaknesses.append("Local novelty is underpowered; the rendered pass is reusing too much of the same pattern behavior.")
 
+    if layering:
+        if layering_separation.get("identityClarity") == "high":
+            designer_strengths.append("Same-structure layers remain visually distinct enough to read cleanly.")
+            sequencer_strengths.append("Layered elements preserve readable separation on the shared structure.")
+
+        if layering_masking.get("maskingRisk") == "high":
+            designer_weaknesses.append("Layering on the same structure is masking the weaker element too aggressively.")
+            sequencer_weaknesses.append("Same-target layering is obscuring one realized element in the render.")
+            next_moves.append({
+                "priority": 1,
+                "owner": "sequencer",
+                "level": "layering",
+                "instruction": "Reduce same-target layering conflict by lowering support coverage or simplifying one layered realization."
+            })
+
+        if layering_masking.get("supportObscuration") == "high":
+            designer_weaknesses.append("Support layering is no longer subordinate on the shared structure.")
+            sequencer_weaknesses.append("Support is obscuring the lead within the same-target layer stack.")
+
+        if layering_cadence.get("phaseClashRisk") == "high":
+            designer_weaknesses.append("Layered cadence is clashing on the same structure instead of reinforcing the focal read.")
+            sequencer_weaknesses.append("Same-target timing behaviors are conflicting in the rendered layer stack.")
+            next_moves.append({
+                "priority": 2,
+                "owner": "sequencer",
+                "level": "layering",
+                "instruction": "Align or simplify layered cadence so stacked realizations do not compete on the same structure."
+            })
+
+        if layering_color.get("paletteConflict") == "high":
+            designer_weaknesses.append("Layered color behavior is muddying the shared structure instead of reinforcing it.")
+            sequencer_weaknesses.append("Same-target color interaction is conflicting inside the layer stack.")
+            next_moves.append({
+                "priority": 2,
+                "owner": "designer",
+                "level": "layering",
+                "instruction": "Clarify whether same-target layers should reinforce one palette role or intentionally separate by color."
+            })
+
     ladder_level = args.ladder_level
     if ladder_level == "section" and not section:
         raise RuntimeError("section ladder requested but observation has no section data")
@@ -170,6 +218,7 @@ def main():
             "renderObservationRef": args.observation,
             "compositionObservationRef": composition_ref,
             "interactionObservationRef": args.interaction_observation,
+            "layeringObservationRef": args.layering_observation,
         },
         "ladderLevel": ladder_level,
         "designerSummary": {
