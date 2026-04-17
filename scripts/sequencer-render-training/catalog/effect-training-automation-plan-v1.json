@@ -1,12 +1,12 @@
 {
   "artifactType": "effect_training_automation_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T17:53:56.011Z",
+  "generatedAt": "2026-04-17T01:05:22.733Z",
   "summary": {
-    "effectCount": 20,
-    "runnableNowCount": 0,
+    "effectCount": 23,
+    "runnableNowCount": 8,
     "runnableLaterCount": 10,
-    "blockedCount": 10
+    "blockedCount": 5
   },
   "orderingRule": [
     "ready_for_parameter_screening",
@@ -14,6 +14,102 @@
     "needs_registry"
   ],
   "effects": [
+    {
+      "effectName": "Butterfly",
+      "family": "motion_texture",
+      "coverageStatus": "registry_defined_not_screened",
+      "readiness": "ready_for_parameter_screening",
+      "priority": "now",
+      "nextAction": "generate_parameter_sweeps",
+      "registryParameterCount": 5,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
+    {
+      "effectName": "Circles",
+      "family": "particle_motion",
+      "coverageStatus": "registry_defined_not_screened",
+      "readiness": "ready_for_parameter_screening",
+      "priority": "now",
+      "nextAction": "generate_parameter_sweeps",
+      "registryParameterCount": 5,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
+    {
+      "effectName": "Fire",
+      "family": "organic_texture",
+      "coverageStatus": "registry_defined_not_screened",
+      "readiness": "ready_for_parameter_screening",
+      "priority": "now",
+      "nextAction": "generate_parameter_sweeps",
+      "registryParameterCount": 4,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
+    {
+      "effectName": "Fireworks",
+      "family": "particle_motion",
+      "coverageStatus": "registry_defined_not_screened",
+      "readiness": "ready_for_parameter_screening",
+      "priority": "now",
+      "nextAction": "generate_parameter_sweeps",
+      "registryParameterCount": 6,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
+    {
+      "effectName": "Lightning",
+      "family": "radial_motion",
+      "coverageStatus": "registry_defined_not_screened",
+      "readiness": "ready_for_parameter_screening",
+      "priority": "now",
+      "nextAction": "generate_parameter_sweeps",
+      "registryParameterCount": 5,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
+    {
+      "effectName": "Snowflakes",
+      "family": "particle_motion",
+      "coverageStatus": "registry_defined_not_screened",
+      "readiness": "ready_for_parameter_screening",
+      "priority": "now",
+      "nextAction": "generate_parameter_sweeps",
+      "registryParameterCount": 4,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
+    {
+      "effectName": "Strobe",
+      "family": "rhythmic",
+      "coverageStatus": "registry_defined_not_screened",
+      "readiness": "ready_for_parameter_screening",
+      "priority": "now",
+      "nextAction": "generate_parameter_sweeps",
+      "registryParameterCount": 3,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
+    {
+      "effectName": "Wave",
+      "family": "motion_texture",
+      "coverageStatus": "registry_defined_not_screened",
+      "readiness": "ready_for_parameter_screening",
+      "priority": "now",
+      "nextAction": "generate_parameter_sweeps",
+      "registryParameterCount": 6,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
     {
       "effectName": "Bars",
       "family": "rhythmic",
@@ -135,30 +231,6 @@
       "outcomeRecordCount": 0
     },
     {
-      "effectName": "Butterfly",
-      "family": "motion_texture",
-      "coverageStatus": "intent_translatable_only",
-      "readiness": "needs_registry",
-      "priority": "blocked",
-      "nextAction": "author_registry_and_base_manifests",
-      "registryParameterCount": 0,
-      "retainedParameterCount": 0,
-      "screenedParameterCount": 0,
-      "outcomeRecordCount": 0
-    },
-    {
-      "effectName": "Circles",
-      "family": "particle_motion",
-      "coverageStatus": "intent_translatable_only",
-      "readiness": "needs_registry",
-      "priority": "blocked",
-      "nextAction": "author_registry_and_base_manifests",
-      "registryParameterCount": 0,
-      "retainedParameterCount": 0,
-      "screenedParameterCount": 0,
-      "outcomeRecordCount": 0
-    },
-    {
       "effectName": "Curtain",
       "family": "transition_motion",
       "coverageStatus": "intent_translatable_only",
@@ -173,18 +245,6 @@
     {
       "effectName": "Fan",
       "family": "radial_motion",
-      "coverageStatus": "intent_translatable_only",
-      "readiness": "needs_registry",
-      "priority": "blocked",
-      "nextAction": "author_registry_and_base_manifests",
-      "registryParameterCount": 0,
-      "retainedParameterCount": 0,
-      "screenedParameterCount": 0,
-      "outcomeRecordCount": 0
-    },
-    {
-      "effectName": "Fire",
-      "family": "organic_texture",
       "coverageStatus": "intent_translatable_only",
       "readiness": "needs_registry",
       "priority": "blocked",
@@ -219,32 +279,8 @@
       "outcomeRecordCount": 0
     },
     {
-      "effectName": "Snowflakes",
-      "family": "particle_motion",
-      "coverageStatus": "intent_translatable_only",
-      "readiness": "needs_registry",
-      "priority": "blocked",
-      "nextAction": "author_registry_and_base_manifests",
-      "registryParameterCount": 0,
-      "retainedParameterCount": 0,
-      "screenedParameterCount": 0,
-      "outcomeRecordCount": 0
-    },
-    {
       "effectName": "VU Meter",
       "family": "audio_reactive",
-      "coverageStatus": "intent_translatable_only",
-      "readiness": "needs_registry",
-      "priority": "blocked",
-      "nextAction": "author_registry_and_base_manifests",
-      "registryParameterCount": 0,
-      "retainedParameterCount": 0,
-      "screenedParameterCount": 0,
-      "outcomeRecordCount": 0
-    },
-    {
-      "effectName": "Wave",
-      "family": "motion_texture",
       "coverageStatus": "intent_translatable_only",
       "readiness": "needs_registry",
       "priority": "blocked",

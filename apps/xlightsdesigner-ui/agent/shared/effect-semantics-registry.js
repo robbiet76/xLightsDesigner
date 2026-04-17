@@ -45,6 +45,8 @@ export const EFFECT_NAME_ALIASES = Object.freeze({
   bars: "Bars",
   pinwheel: "Pinwheel",
   butterfly: "Butterfly",
+  fireworks: "Fireworks",
+  lightning: "Lightning",
   meteors: "Meteors",
   on: "On",
   off: "Off"
@@ -60,12 +62,15 @@ export const EFFECT_FAMILY_BY_NAME = Object.freeze({
   Curtain: "transition_motion",
   Fan: "radial_motion",
   Fire: "organic_texture",
+  Fireworks: "particle_motion",
+  Lightning: "radial_motion",
   Morph: "path_motion",
   Meteors: "particle_motion",
   Pinwheel: "radial_motion",
   SingleStrand: "strand_pattern",
   Snowflakes: "particle_motion",
   Spirals: "motion_texture",
+  Strobe: "rhythmic",
   "VU Meter": "audio_reactive",
   Wave: "motion_texture"
 });

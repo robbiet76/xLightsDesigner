@@ -135,6 +135,181 @@ const PARAMETER_ALIASES = {
     reverseFades: ["ColorWash_ReverseFades"],
     shimmer: ["ColorWash_Shimmer"],
     circularPalette: ["ColorWash_CircularPalette"]
+  },
+  Butterfly: {
+    colors: ["Butterfly_Colors"],
+    style: ["Butterfly_Style"],
+    chunks: ["Butterfly_Chunks"],
+    skip: ["Butterfly_Skip"],
+    speed: ["Butterfly_Speed"],
+    direction: ["Butterfly_Direction"]
+  },
+  Circles: {
+    count: ["Circles_Count"],
+    size: ["Circles_Size"],
+    speed: ["Circles_Speed"],
+    bounce: ["Circles_Bounce"],
+    radial: ["Circles_Radial"],
+    plasma: ["Circles_Plasma"],
+    radial3D: ["Circles_Radial_3D"],
+    bubbles: ["Circles_Bubbles"],
+    linearFade: ["Circles_Linear_Fade"],
+    xCenter: ["Circles_XC"],
+    yCenter: ["Circles_YC"]
+  },
+  Fire: {
+    height: ["Fire_Height"],
+    hueShift: ["Fire_HueShift"],
+    growthCycles: ["Fire_GrowthCycles"],
+    growWithMusic: ["Fire_GrowWithMusic"],
+    location: ["Fire_Location"]
+  },
+  Fireworks: {
+    explosions: ["Fireworks_Explosions"],
+    count: ["Fireworks_Count"],
+    velocity: ["Fireworks_Velocity"],
+    xVelocity: ["Fireworks_XVelocity"],
+    yVelocity: ["Fireworks_YVelocity"],
+    xLocation: ["Fireworks_XLocation"],
+    yLocation: ["Fireworks_YLocation"],
+    holdColour: ["Fireworks_HoldColour"],
+    gravity: ["Fireworks_Gravity"],
+    fade: ["Fireworks_Fade"],
+    useMusic: ["Fireworks_UseMusic"],
+    sensitivity: ["Fireworks_Sensitivity"],
+    fireTiming: ["FIRETIMING"],
+    fireTimingTrack: ["FIRETIMINGTRACK"]
+  },
+  Lightning: {
+    numberBolts: ["Number_Bolts"],
+    numberSegments: ["Number_Segments"],
+    forked: ["ForkedLightning"],
+    topX: ["Lightning_TopX"],
+    topY: ["Lightning_TopY"],
+    bottomX: ["Lightning_BOTX"],
+    width: ["Lightning_WIDTH"],
+    direction: ["Lightning_Direction"]
+  },
+  Snowflakes: {
+    count: ["Snowflakes_Count"],
+    type: ["Snowflakes_Type"],
+    speed: ["Snowflakes_Speed"],
+    falling: ["Falling"],
+    warmupFrames: ["Snowflakes_WarmupFrames"]
+  },
+  Strobe: {
+    numberStrobes: ["Number_Strobes"],
+    duration: ["Strobe_Duration"],
+    type: ["Strobe_Type"],
+    music: ["Strobe_Music"]
+  },
+  Wave: {
+    type: ["Wave_Type"],
+    fillColors: ["Fill_Colors"],
+    mirrorWave: ["Mirror_Wave"],
+    numberWaves: ["Number_Waves"],
+    thickness: ["Thickness_Percentage"],
+    waveHeight: ["Wave_Height"],
+    waveSpeed: ["Wave_Speed"],
+    direction: ["Wave_Direction"],
+    yOffset: ["Wave_YOffset"]
+  }
+};
+
+const SYNTHETIC_EFFECT_REGISTRY = {
+  Butterfly: {
+    complexityClass: "complex",
+    earlySamplingPolicy: "broad_geometry_first",
+    notes: "Expansion-wave motion texture effect. Style, chunking, palette source, and direction are first-order levers; skip acts as a secondary texture control.",
+    parameters: {
+      colors: { type: "enum", anchors: ["Rainbow", "Palette"], importance: "high", phase: "baseline", practicalPriority: "high", stopRule: "all_meaningful_options", interactionHypotheses: ["style", "direction"] },
+      style: { type: "numeric", range: { min: 1, max: 10 }, anchors: [1, 3, 5, 8, 10], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["colors", "speed", "geometryProfile"] },
+      chunks: { type: "numeric", range: { min: 1, max: 10 }, anchors: [1, 3, 6, 10], importance: "medium", phase: "screen", practicalPriority: "medium", stopRule: "refine_only_near_breakpoints", interactionHypotheses: ["skip", "style"] },
+      speed: { type: "numeric", range: { min: 0, max: 100 }, anchors: [0, 10, 35, 70, 100], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["direction", "style", "geometryProfile"] },
+      direction: { type: "enum", anchors: ["Normal", "Reverse"], importance: "medium", phase: "baseline", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["speed", "style"] }
+    }
+  },
+  Circles: {
+    complexityClass: "complex",
+    earlySamplingPolicy: "broad_geometry_first",
+    notes: "Expansion-wave particle motion effect. Count, size, speed, and radial/plasma modes are first-order controls; spatial offsets are deferred.",
+    parameters: {
+      count: { type: "numeric", range: { min: 1, max: 10 }, anchors: [1, 3, 5, 8, 10], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["size", "speed", "geometryProfile"] },
+      size: { type: "numeric", range: { min: 1, max: 20 }, anchors: [2, 5, 10, 15, 20], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "refine_only_near_breakpoints", interactionHypotheses: ["count", "radial"] },
+      speed: { type: "numeric", range: { min: 1, max: 30 }, anchors: [1, 5, 10, 20, 30], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["bounce", "geometryProfile"] },
+      bounce: { type: "boolean", anchors: [false, true], importance: "medium", phase: "baseline", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["speed"] },
+      radial: { type: "boolean", anchors: [false, true], importance: "medium", phase: "baseline", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["count", "size", "geometryProfile"] }
+    }
+  },
+  Fire: {
+    complexityClass: "complex",
+    earlySamplingPolicy: "broad_geometry_first",
+    notes: "Expansion-wave organic texture effect. Height, growth, hue shift, and location are first-order levers. Music-coupled growth is deferred for the first sweep.",
+    parameters: {
+      height: { type: "numeric", range: { min: 1, max: 100 }, anchors: [10, 30, 50, 70, 100], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["growthCycles", "location", "geometryProfile"] },
+      hueShift: { type: "numeric", range: { min: 0, max: 100 }, anchors: [0, 25, 50, 75, 100], importance: "medium", phase: "screen", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["height"] },
+      growthCycles: { type: "numeric", range: { min: 0, max: 20 }, anchors: [0, 2, 5, 10, 20], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "refine_only_near_breakpoints", interactionHypotheses: ["height", "location"] },
+      location: { type: "enum", anchors: ["Bottom", "Top", "Left", "Right"], importance: "high", phase: "baseline", practicalPriority: "high", stopRule: "all_meaningful_options", interactionHypotheses: ["height", "geometryProfile"] }
+    }
+  },
+  Fireworks: {
+    complexityClass: "complex",
+    earlySamplingPolicy: "broad_geometry_first",
+    notes: "Expansion-wave particle burst effect. Explosion cadence, particle count, velocity, fade, and launch placement are the primary levers. Music/timing modes are deferred.",
+    parameters: {
+      explosions: { type: "numeric", range: { min: 1, max: 50 }, anchors: [1, 8, 16, 32, 50], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["count", "velocity", "geometryProfile"] },
+      count: { type: "numeric", range: { min: 1, max: 100 }, anchors: [10, 30, 50, 75, 100], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "refine_only_near_breakpoints", interactionHypotheses: ["explosions", "fade"] },
+      velocity: { type: "numeric", range: { min: 1, max: 10 }, anchors: [1, 2, 4, 7, 10], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["fade", "gravity"] },
+      fade: { type: "numeric", range: { min: 1, max: 100 }, anchors: [10, 30, 50, 75, 100], importance: "medium", phase: "screen", practicalPriority: "medium", stopRule: "refine_only_near_breakpoints", interactionHypotheses: ["velocity", "count"] },
+      gravity: { type: "boolean", anchors: [false, true], importance: "medium", phase: "baseline", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["velocity"] },
+      xLocation: { type: "numeric", range: { min: -1, max: 100 }, anchors: [-1, 25, 50, 75], importance: "medium", phase: "screen", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["yLocation", "geometryProfile"] }
+    }
+  },
+  Lightning: {
+    complexityClass: "complex",
+    earlySamplingPolicy: "broad_geometry_first",
+    notes: "Expansion-wave directional strike effect. Bolt count, segmentation, branching, width, and direction are first-order levers; strike origin offsets are secondary.",
+    parameters: {
+      numberBolts: { type: "numeric", range: { min: 1, max: 50 }, anchors: [1, 5, 10, 25, 50], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["forked", "width"] },
+      numberSegments: { type: "numeric", range: { min: 1, max: 20 }, anchors: [1, 5, 10, 15, 20], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "refine_only_near_breakpoints", interactionHypotheses: ["forked", "geometryProfile"] },
+      forked: { type: "boolean", anchors: [false, true], importance: "high", phase: "baseline", practicalPriority: "high", stopRule: "all_meaningful_options", interactionHypotheses: ["numberBolts", "numberSegments"] },
+      width: { type: "numeric", range: { min: 1, max: 7 }, anchors: [1, 2, 4, 7], importance: "medium", phase: "screen", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["forked"] },
+      direction: { type: "enum", anchors: ["Up", "Down"], importance: "medium", phase: "baseline", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["topY", "geometryProfile"] }
+    }
+  },
+  Snowflakes: {
+    complexityClass: "moderate",
+    earlySamplingPolicy: "broad_geometry_first",
+    notes: "Expansion-wave particle texture effect. Count, type, speed, and falling mode are the main levers; warmup is secondary.",
+    parameters: {
+      count: { type: "numeric", range: { min: 1, max: 100 }, anchors: [1, 5, 15, 40, 100], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["type", "speed", "geometryProfile"] },
+      type: { type: "numeric", range: { min: 0, max: 9 }, anchors: [0, 1, 3, 6, 9], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "all_meaningful_options", interactionHypotheses: ["count", "falling"] },
+      speed: { type: "numeric", range: { min: 0, max: 50 }, anchors: [0, 5, 10, 25, 50], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["falling"] },
+      falling: { type: "enum", anchors: ["Driving", "Falling", "Falling & Accumulating"], importance: "medium", phase: "baseline", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["speed", "type"] }
+    }
+  },
+  Strobe: {
+    complexityClass: "moderate",
+    earlySamplingPolicy: "broad_geometry_first",
+    notes: "Expansion-wave cadence effect. Strobe count, duration, and type are the primary levers. Music mode is deferred for the first sweep.",
+    parameters: {
+      numberStrobes: { type: "numeric", range: { min: 1, max: 300 }, anchors: [1, 3, 10, 50, 150], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["duration", "type"] },
+      duration: { type: "numeric", range: { min: 1, max: 100 }, anchors: [1, 5, 10, 25, 50], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "refine_only_near_breakpoints", interactionHypotheses: ["numberStrobes", "type"] },
+      type: { type: "numeric", range: { min: 1, max: 4 }, anchors: [1, 2, 3, 4], importance: "high", phase: "baseline", practicalPriority: "high", stopRule: "all_meaningful_options", interactionHypotheses: ["duration"] }
+    }
+  },
+  Wave: {
+    complexityClass: "complex",
+    earlySamplingPolicy: "broad_geometry_first",
+    notes: "Expansion-wave motion texture effect. Wave type, count, speed, amplitude, fill, and direction are the first-order levers; mirroring and offsets are secondary.",
+    parameters: {
+      type: { type: "enum", anchors: ["Sine", "Triangle", "Square", "Decaying Sine", "Fractal/ivy"], importance: "high", phase: "baseline", practicalPriority: "high", stopRule: "all_meaningful_options", interactionHypotheses: ["numberWaves", "fillColors"] },
+      fillColors: { type: "enum", anchors: ["None", "Rainbow", "Palette"], importance: "medium", phase: "baseline", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["type"] },
+      numberWaves: { type: "numeric", range: { min: 0.5, max: 10 }, anchors: [0.5, 1.0, 2.5, 5.0, 10.0], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["waveSpeed", "direction", "geometryProfile"] },
+      waveSpeed: { type: "numeric", range: { min: 0, max: 50 }, anchors: [0, 5, 10, 25, 50], importance: "high", phase: "screen", practicalPriority: "high", stopRule: "stop_when_regions_stabilize", interactionHypotheses: ["numberWaves", "direction"] },
+      waveHeight: { type: "numeric", range: { min: 0, max: 100 }, anchors: [0, 25, 50, 75, 100], importance: "medium", phase: "screen", practicalPriority: "medium", stopRule: "refine_only_near_breakpoints", interactionHypotheses: ["thickness", "type"] },
+      direction: { type: "enum", anchors: ["Right to Left", "Left to Right"], importance: "medium", phase: "baseline", practicalPriority: "medium", stopRule: "all_meaningful_options", interactionHypotheses: ["numberWaves", "waveSpeed"] }
+    }
   }
 };
 
@@ -183,6 +358,10 @@ const xlightsVersion = process.argv[5] || "2026.06";
 mkdirSync(outputDir, { recursive: true });
 
 const registry = loadJson(registryPath);
+const mergedRegistryEffects = {
+  ...(registry.effects || {}),
+  ...SYNTHETIC_EFFECT_REGISTRY
+};
 const sharedDir = join(sourceDir, "shared");
 const schemaPath = join(sourceDir, "_schema.json");
 
@@ -292,7 +471,7 @@ const diff = {
   xlightsVersion,
   sourceDir,
   registryPath,
-  localRegistryEffectCount: Object.keys(registry.effects || {}).length,
+  localRegistryEffectCount: Object.keys(mergedRegistryEffects).length,
   upstreamEffectCount: effects.length,
   overlapEffects: [],
   registryOnlyEffects: [],
@@ -301,11 +480,11 @@ const diff = {
   warnings: []
 };
 
-const localEffectNames = Object.keys(registry.effects || {}).sort((a, b) => a.localeCompare(b));
+const localEffectNames = Object.keys(mergedRegistryEffects).sort((a, b) => a.localeCompare(b));
 const upstreamEffectNames = new Set(effects.map((effect) => effect.effectName));
 
 for (const effectName of localEffectNames) {
-  const localEffect = registry.effects?.[effectName] || {};
+  const localEffect = mergedRegistryEffects[effectName] || {};
   const upstreamEffect = upstreamEffectsByLocalName.get(effectName) || null;
   if (!upstreamEffect) {
     effectiveRegistry.effects[effectName] = localEffect;
@@ -409,7 +588,7 @@ for (const effectName of localEffectNames) {
 
 for (const effect of effects) {
   const localName = EFFECT_ALIASES.get(normalizeKey(effect.effectName)) || effect.effectName;
-  if (!registry.effects?.[localName]) {
+  if (!mergedRegistryEffects[localName]) {
     diff.upstreamOnlyEffects.push(effect.effectName);
   }
 }

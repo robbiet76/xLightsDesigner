@@ -4,8 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_BIN="${SCRIPT_DIR}/fseq_window_decoder"
 SRC_CPP="${SCRIPT_DIR}/fseq_window_decoder.cpp"
-FSEQ_CPP="/Users/robterry/xLights/xLights/FSEQFile.cpp"
-LOG4CPP_A="/Users/robterry/xLights/macOS/xLights-macOS-dependencies-2026.02/libdbg/liblog4cpp.a"
+XLIGHTS_ROOT="/Users/robterry/xLights-2026.06"
+FSEQ_CPP="${XLIGHTS_ROOT}/src-core/render/FSEQFile.cpp"
 
 if [[ -x "${OUT_BIN}" && "${OUT_BIN}" -nt "${SRC_CPP}" && "${OUT_BIN}" -nt "${FSEQ_CPP}" ]]; then
   printf '%s\n' "${OUT_BIN}"
@@ -13,16 +13,17 @@ if [[ -x "${OUT_BIN}" && "${OUT_BIN}" -nt "${SRC_CPP}" && "${OUT_BIN}" -nt "${FS
 fi
 
 clang++ -std=c++20 -O2 \
-  -I/Users/robterry/xLights/xLights \
-  -I/Users/robterry/xLights/include \
-  -I/Users/robterry/xLights/macOS/xLights-macOS-dependencies-2026.02/include \
+  -I"${XLIGHTS_ROOT}/src-core/render" \
+  -I"${XLIGHTS_ROOT}/src-core" \
+  -I"${XLIGHTS_ROOT}/include" \
+  -I"${XLIGHTS_ROOT}/dependencies/spdlog/include" \
+  -I"${XLIGHTS_ROOT}/macOS/xLights-macOS-dependencies-2026.06/include" \
   -I/opt/homebrew/include \
   -I/usr/local/include \
   "${SRC_CPP}" \
   "${FSEQ_CPP}" \
-  "${LOG4CPP_A}" \
   -o "${OUT_BIN}" \
-  -L/Users/robterry/xLights/macOS/xLights-macOS-dependencies-2026.02/libdbg \
+  -L"${XLIGHTS_ROOT}/macOS/xLights-macOS-dependencies-2026.06/libdbg" \
   -L/opt/homebrew/lib \
   -L/usr/local/lib \
   -lzstd -lz

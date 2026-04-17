@@ -25,5 +25,5 @@ test("build-effect-training-automation-plan classifies runnable and blocked effe
   assert.ok(plan.summary.runnableLaterCount >= 2);
   assert.ok(plan.effects.some((row) => row.effectName === "Shockwave" && (row.readiness === "ready_for_expansion" || row.readiness === "screened_current_registry")));
   assert.ok(plan.effects.some((row) => row.effectName === "Twinkle" && (row.readiness === "ready_for_expansion" || row.readiness === "screened_current_registry")));
-  assert.ok(plan.effects.some((row) => row.effectName === "Butterfly" && row.readiness === "needs_registry"));
+  assert.ok(plan.effects.some((row) => row.effectName === "Butterfly" && row.readiness === "ready_for_parameter_screening"));
 });

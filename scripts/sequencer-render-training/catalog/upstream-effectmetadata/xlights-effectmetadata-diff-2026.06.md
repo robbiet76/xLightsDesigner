@@ -1,17 +1,17 @@
 # xLights Effect Metadata Import
 
-Generated: 2026-04-16T18:35:27.345Z
+Generated: 2026-04-17T01:04:15.813Z
 
 xLights version: `2026.06`
 Upstream effects: 56
 Shared metadata files: 3
-Bundle hash: `1a4ecccb147b043045e612463d3ca42a7bfab6b44413e3c53a772449deef645b`
+Bundle hash: `4382a39313eaca60cc9cb3eb089788978e90ce8f4b502eee8b492032a64b6292`
 
 ## Diff Summary
 
-- overlap effects: 10
+- overlap effects: 18
 - local-only effects: 0
-- upstream-only effects: 46
+- upstream-only effects: 38
 - breaking changes: 0
 
 ## Registry-Only Effects
@@ -21,24 +21,19 @@ Bundle hash: `1a4ecccb147b043045e612463d3ca42a7bfab6b44413e3c53a772449deef645b`
 ## Upstream-Only Effects
 
 - Adjust
-- Butterfly
 - Candle
-- Circles
 - Curtain
 - DMX
 - Duplicate
 - Faces
 - Fan
 - Fill
-- Fire
-- Fireworks
 - Galaxy
 - Garlands
 - Glediator
 - Guitar
 - Kaleidoscope
 - Life
-- Lightning
 - Lines
 - Liquid
 - Meteors
@@ -54,18 +49,15 @@ Bundle hash: `1a4ecccb147b043045e612463d3ca42a7bfab6b44413e3c53a772449deef645b`
 - Shader
 - Shape
 - Sketch
-- Snowflakes
 - Snowstorm
 - Spirograph
 - State
-- Strobe
 - Tendril
 - Text
 - Tree
 - Video
 - VU Meter
 - Warp
-- Wave
 
 ## Overlap Effects
 
@@ -77,11 +69,46 @@ Bundle hash: `1a4ecccb147b043045e612463d3ca42a7bfab6b44413e3c53a772449deef645b`
 - missing mappings: 0
 - unmapped upstream properties: Bars_Center (Center Point), Bars_UseFirstColorForHighlight (Use First Color for Highlight)
 
+### Butterfly
+
+- local parameters: 5
+- upstream properties: 6
+- matched parameters: 5
+- missing mappings: 0
+
+### Circles
+
+- local parameters: 5
+- upstream properties: 11
+- matched parameters: 5
+- missing mappings: 0
+
 ### Color Wash
 
 - local parameters: 6
 - upstream properties: 6
 - matched parameters: 6
+- missing mappings: 0
+
+### Fire
+
+- local parameters: 4
+- upstream properties: 5
+- matched parameters: 4
+- missing mappings: 0
+
+### Fireworks
+
+- local parameters: 6
+- upstream properties: 14
+- matched parameters: 6
+- missing mappings: 0
+
+### Lightning
+
+- local parameters: 5
+- upstream properties: 8
+- matched parameters: 5
 - missing mappings: 0
 
 ### Marquee
@@ -131,6 +158,13 @@ Bundle hash: `1a4ecccb147b043045e612463d3ca42a7bfab6b44413e3c53a772449deef645b`
 - missing mappings: 0
 - unmapped upstream properties: Chase_Offset (Offset), Chase_Group_All (Group All Strands), Skips_StartPos (Starting Position), Skips_Direction (Direction), SingleStrand_FX_Palette (Palette), FX_Speed (Speed)
 
+### Snowflakes
+
+- local parameters: 4
+- upstream properties: 5
+- matched parameters: 4
+- missing mappings: 0
+
 ### Spirals
 
 - local parameters: 8
@@ -138,11 +172,25 @@ Bundle hash: `1a4ecccb147b043045e612463d3ca42a7bfab6b44413e3c53a772449deef645b`
 - matched parameters: 8
 - missing mappings: 0
 
+### Strobe
+
+- local parameters: 3
+- upstream properties: 4
+- matched parameters: 3
+- missing mappings: 0
+
 ### Twinkle
 
 - local parameters: 5
 - upstream properties: 5
 - matched parameters: 5
+- missing mappings: 0
+
+### Wave
+
+- local parameters: 6
+- upstream properties: 9
+- matched parameters: 6
 - missing mappings: 0
 
 ## Breaking Changes

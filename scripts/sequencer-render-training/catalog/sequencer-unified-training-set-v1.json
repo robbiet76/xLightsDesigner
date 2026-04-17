@@ -1,14 +1,14 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-16T18:35:27.828Z",
+  "generatedAt": "2026-04-17T01:05:22.705Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
       "artifactType": "sequencer_stage1_training_bundle",
       "artifactVersion": "1.0",
       "targetState": "selector_ready_with_evidence",
-      "effectCount": 10,
+      "effectCount": 18,
       "equalizedCount": 10,
       "selectorReadyEffects": [
         "Bars",
@@ -1033,6 +1033,320 @@
               "sampleCount": 22
             }
           ]
+        }
+      }
+    },
+    {
+      "effectName": "Butterfly",
+      "baseline": {
+        "currentStage": "",
+        "selectorReady": false,
+        "selectorEvidence": {},
+        "supportedModelTypes": [],
+        "supportedGeometryProfiles": [],
+        "intentTags": [],
+        "patternFamilies": [],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "motion_texture",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "chunks",
+          "colors",
+          "direction",
+          "speed",
+          "style"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "direction",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [],
+        "derivedPriors": {
+          "status": "empty",
+          "priorCount": 0,
+          "priors": []
+        }
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "outcomeRecordCount": 0,
+        "seedRolePriors": [],
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
+        }
+      }
+    },
+    {
+      "effectName": "Circles",
+      "baseline": {
+        "currentStage": "",
+        "selectorReady": false,
+        "selectorEvidence": {},
+        "supportedModelTypes": [],
+        "supportedGeometryProfiles": [],
+        "intentTags": [],
+        "patternFamilies": [],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "particle_motion",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "bounce",
+          "count",
+          "radial",
+          "size",
+          "speed"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [],
+        "derivedPriors": {
+          "status": "empty",
+          "priorCount": 0,
+          "priors": []
+        }
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "outcomeRecordCount": 0,
+        "seedRolePriors": [],
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
         }
       }
     },
@@ -2062,6 +2376,474 @@
               "sampleCount": 22
             }
           ]
+        }
+      }
+    },
+    {
+      "effectName": "Fire",
+      "baseline": {
+        "currentStage": "",
+        "selectorReady": false,
+        "selectorEvidence": {},
+        "supportedModelTypes": [],
+        "supportedGeometryProfiles": [],
+        "intentTags": [],
+        "patternFamilies": [],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "organic_texture",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "growthCycles",
+          "height",
+          "hueShift",
+          "location"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "coverage",
+            "motion",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [],
+        "derivedPriors": {
+          "status": "empty",
+          "priorCount": 0,
+          "priors": []
+        }
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "outcomeRecordCount": 0,
+        "seedRolePriors": [],
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
+        }
+      }
+    },
+    {
+      "effectName": "Fireworks",
+      "baseline": {
+        "currentStage": "",
+        "selectorReady": false,
+        "selectorEvidence": {},
+        "supportedModelTypes": [],
+        "supportedGeometryProfiles": [],
+        "intentTags": [],
+        "patternFamilies": [],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "particle_motion",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "count",
+          "explosions",
+          "fade",
+          "gravity",
+          "velocity",
+          "xLocation"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [],
+        "derivedPriors": {
+          "status": "empty",
+          "priorCount": 0,
+          "priors": []
+        }
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "outcomeRecordCount": 0,
+        "seedRolePriors": [],
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
+        }
+      }
+    },
+    {
+      "effectName": "Lightning",
+      "baseline": {
+        "currentStage": "",
+        "selectorReady": false,
+        "selectorEvidence": {},
+        "supportedModelTypes": [],
+        "supportedGeometryProfiles": [],
+        "intentTags": [],
+        "patternFamilies": [],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "radial_motion",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "direction",
+          "forked",
+          "numberBolts",
+          "numberSegments",
+          "width"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "direction",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [],
+        "derivedPriors": {
+          "status": "empty",
+          "priorCount": 0,
+          "priors": []
+        }
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "outcomeRecordCount": 0,
+        "seedRolePriors": [],
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
         }
       }
     },
@@ -12882,6 +13664,161 @@
       }
     },
     {
+      "effectName": "Snowflakes",
+      "baseline": {
+        "currentStage": "",
+        "selectorReady": false,
+        "selectorEvidence": {},
+        "supportedModelTypes": [],
+        "supportedGeometryProfiles": [],
+        "intentTags": [],
+        "patternFamilies": [],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "particle_motion",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "count",
+          "falling",
+          "speed",
+          "type"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [],
+        "derivedPriors": {
+          "status": "empty",
+          "priorCount": 0,
+          "priors": []
+        }
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "outcomeRecordCount": 0,
+        "seedRolePriors": [],
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
+        }
+      }
+    },
+    {
       "effectName": "Spirals",
       "baseline": {
         "currentStage": "selector_ready",
@@ -14304,6 +15241,160 @@
       }
     },
     {
+      "effectName": "Strobe",
+      "baseline": {
+        "currentStage": "",
+        "selectorReady": false,
+        "selectorEvidence": {},
+        "supportedModelTypes": [],
+        "supportedGeometryProfiles": [],
+        "intentTags": [],
+        "patternFamilies": [],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "rhythmic",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "duration",
+          "numberStrobes",
+          "type"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [],
+        "derivedPriors": {
+          "status": "empty",
+          "priorCount": 0,
+          "priors": []
+        }
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "outcomeRecordCount": 0,
+        "seedRolePriors": [],
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
+        }
+      }
+    },
+    {
       "effectName": "Twinkle",
       "baseline": {
         "currentStage": "selector_ready",
@@ -15439,6 +16530,167 @@
               "sampleCount": 32
             }
           ]
+        }
+      }
+    },
+    {
+      "effectName": "Wave",
+      "baseline": {
+        "currentStage": "",
+        "selectorReady": false,
+        "selectorEvidence": {},
+        "supportedModelTypes": [],
+        "supportedGeometryProfiles": [],
+        "intentTags": [],
+        "patternFamilies": [],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "motion_texture",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "thickness",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "direction",
+          "fillColors",
+          "numberWaves",
+          "type",
+          "waveHeight",
+          "waveSpeed"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "direction",
+            "thickness",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [],
+        "derivedPriors": {
+          "status": "empty",
+          "priorCount": 0,
+          "priors": []
+        }
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "outcomeRecordCount": 0,
+        "seedRolePriors": [],
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        },
+        "parameterOutcomeMemory": {},
+        "sharedSettingOutcomeMemory": {}
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
         }
       }
     }

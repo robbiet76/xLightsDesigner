@@ -25,6 +25,14 @@ struct Args {
     uint32_t maxFrameCells = 250000;
 };
 
+static uint32_t computeSampleStride(uint64_t frameCells, uint32_t maxFrameCells) {
+    if (frameCells == 0 || maxFrameCells == 0 || frameCells <= static_cast<uint64_t>(maxFrameCells)) {
+        return 1;
+    }
+    uint64_t stride = (frameCells + static_cast<uint64_t>(maxFrameCells) - 1) / static_cast<uint64_t>(maxFrameCells);
+    return static_cast<uint32_t>(std::max<uint64_t>(1, stride));
+}
+
 static bool parseUInt(const std::string& raw, uint32_t& out) {
     char* end = nullptr;
     unsigned long value = std::strtoul(raw.c_str(), &end, 10);
@@ -118,9 +126,11 @@ int main(int argc, char** argv) {
     const uint32_t endFrameExclusive = std::min<uint32_t>((args.windowEndMs + stepMs - 1) / stepMs, static_cast<uint32_t>(totalFrames));
     const uint32_t frameCountWindow = endFrameExclusive > startFrame ? endFrameExclusive - startFrame : 0;
     const uint64_t frameCells = static_cast<uint64_t>(frameCountWindow) * static_cast<uint64_t>(args.nodeCount);
+    const uint32_t sampleStride =
+        args.frameMode == "full" ? 1 : computeSampleStride(frameCells, args.maxFrameCells);
     const bool emitFrames =
         args.frameMode == "full" ||
-        (args.frameMode == "auto" && frameCells > 0 && frameCells <= static_cast<uint64_t>(args.maxFrameCells));
+        (args.frameMode == "auto" && frameCells > 0);
     if (endFrameExclusive <= startFrame) {
         nlohmann::json out = {
             {"decoded", true},
@@ -128,7 +138,8 @@ int main(int argc, char** argv) {
             {"windowStartFrame", startFrame},
             {"windowEndFrameExclusive", endFrameExclusive},
             {"frameMode", args.frameMode},
-            {"emittedFrames", false}
+            {"emittedFrames", false},
+            {"sampleStride", sampleStride}
         };
         std::cout << out.dump();
         return 0;
@@ -263,7 +274,7 @@ int main(int argc, char** argv) {
         }
         prevNodeBrightnesses = std::move(nodeBrightnesses);
 
-        if (emitFrames) {
+        if (emitFrames && ((frame - startFrame) % sampleStride == 0)) {
             frames.push_back({
                 {"frameIndex", frame},
                 {"frameOffset", frame - startFrame},
@@ -326,6 +337,7 @@ int main(int argc, char** argv) {
     out["activeThreshold"] = args.activeThreshold;
     out["frameMode"] = args.frameMode;
     out["emittedFrames"] = emitFrames;
+    out["sampleStride"] = sampleStride;
     out["maxFrameCells"] = args.maxFrameCells;
     out["averageChannelLevel"] = totalChannelsSeen == 0 ? 0.0 : totalChannelLevel / static_cast<double>(totalChannelsSeen);
     out["maxChannelLevel"] = maxChannelLevel;

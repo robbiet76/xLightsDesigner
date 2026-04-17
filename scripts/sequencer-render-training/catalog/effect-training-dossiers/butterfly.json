@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_training_dossier_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-16T18:35:28.245Z",
+  "generatedAt": "2026-04-17T01:05:22.817Z",
   "status": "transitional_current_evidence",
   "effectName": "Butterfly",
   "family": "motion_texture",
@@ -15,25 +15,309 @@
       "direction",
       "variation"
     ],
-    "supportedPaletteIntent": [],
-    "supportedLayerIntent": [],
-    "supportedRenderIntent": []
+    "supportedPaletteIntent": [
+      "colors",
+      "temperature",
+      "contrast",
+      "brightness",
+      "saturation",
+      "accentUsage"
+    ],
+    "supportedLayerIntent": [
+      "priority",
+      "blendRole",
+      "mixAmount",
+      "overlayPolicy"
+    ],
+    "supportedRenderIntent": [
+      "groupPolicy",
+      "bufferStyle",
+      "expansionPolicy",
+      "riskTolerance"
+    ]
   },
   "currentCoverage": {
-    "coverageStatus": "intent_translatable_only",
+    "coverageStatus": "registry_defined_not_screened",
     "exhaustiveSettingCoverage": false,
-    "registryParameterNames": [],
+    "registryParameterNames": [
+      "chunks",
+      "colors",
+      "direction",
+      "speed",
+      "style"
+    ],
     "retainedParameterNames": [],
     "screenedParameterNames": [],
     "screeningRecordCount": 0
   },
   "upstreamMetadata": {
-    "sourceFile": "",
-    "propertyCount": 0,
+    "sourceFile": "Butterfly.json",
+    "propertyCount": 6,
     "visibilityRuleCount": 0,
-    "parameters": {}
+    "parameters": {
+      "chunks": {
+        "upstreamId": "Butterfly_Chunks",
+        "label": "Bkgrd Chunks",
+        "description": "Divides the pattern into repeated segments, increasing the frequency of the mathematical function to create more detailed or tiled patterns.",
+        "default": 1,
+        "min": 1,
+        "max": 10,
+        "options": []
+      },
+      "colors": {
+        "upstreamId": "Butterfly_Colors",
+        "label": "Colors",
+        "description": "Selects the color source. Rainbow uses a full HSV rainbow cycle, while Palette uses the user-defined palette colors.",
+        "default": "Rainbow",
+        "min": null,
+        "max": null,
+        "options": [
+          "Rainbow",
+          "Palette"
+        ]
+      },
+      "direction": {
+        "upstreamId": "Butterfly_Direction",
+        "label": "Direction",
+        "description": "Sets the animation direction. Reverse inverts the pattern movement so it scrolls in the opposite direction.",
+        "default": "Normal",
+        "min": null,
+        "max": null,
+        "options": [
+          "Normal",
+          "Reverse"
+        ]
+      },
+      "speed": {
+        "upstreamId": "Butterfly_Speed",
+        "label": "Speed",
+        "description": "Controls how fast the pattern animates. For styles 1-5 this sets the scroll rate; for plasma styles 6-10 higher values produce slower, smoother animation.",
+        "default": 10,
+        "min": 0,
+        "max": 100,
+        "options": []
+      },
+      "style": {
+        "upstreamId": "Butterfly_Style",
+        "label": "Style",
+        "description": "Selects the mathematical pattern formula. Styles 1-5 produce geometric butterfly-like patterns; styles 6-10 generate animated plasma effects.",
+        "default": 1,
+        "min": 1,
+        "max": 10,
+        "options": []
+      }
+    }
   },
-  "registryDefinition": {},
+  "registryDefinition": {
+    "complexityClass": "complex",
+    "earlySamplingPolicy": "broad_geometry_first",
+    "notes": "Expansion-wave motion texture effect. Style, chunking, palette source, and direction are first-order levers; skip acts as a secondary texture control.",
+    "parameters": {
+      "chunks": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 10
+        },
+        "anchors": [
+          1,
+          3,
+          6,
+          10
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "stopRule": "refine_only_near_breakpoints",
+        "interactionHypotheses": [
+          "skip",
+          "style"
+        ],
+        "upstream": {
+          "id": "Butterfly_Chunks",
+          "label": "Bkgrd Chunks",
+          "description": "Divides the pattern into repeated segments, increasing the frequency of the mathematical function to create more detailed or tiled patterns.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 10,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "colors": {
+        "type": "enum",
+        "anchors": [
+          "Rainbow",
+          "Palette"
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "style",
+          "direction"
+        ],
+        "upstream": {
+          "id": "Butterfly_Colors",
+          "label": "Colors",
+          "description": "Selects the color source. Rainbow uses a full HSV rainbow cycle, while Palette uses the user-defined palette colors.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "Rainbow",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [
+            "Rainbow",
+            "Palette"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "direction": {
+        "type": "enum",
+        "anchors": [
+          "Normal",
+          "Reverse"
+        ],
+        "importance": "medium",
+        "phase": "baseline",
+        "practicalPriority": "medium",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "speed",
+          "style"
+        ],
+        "upstream": {
+          "id": "Butterfly_Direction",
+          "label": "Direction",
+          "description": "Sets the animation direction. Reverse inverts the pattern movement so it scrolls in the opposite direction.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "Normal",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [
+            "Normal",
+            "Reverse"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "speed": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          0,
+          10,
+          35,
+          70,
+          100
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "stopRule": "stop_when_regions_stabilize",
+        "interactionHypotheses": [
+          "direction",
+          "style",
+          "geometryProfile"
+        ],
+        "upstream": {
+          "id": "Butterfly_Speed",
+          "label": "Speed",
+          "description": "Controls how fast the pattern animates. For styles 1-5 this sets the scroll rate; for plasma styles 6-10 higher values produce slower, smoother animation.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 10,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "style": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 10
+        },
+        "anchors": [
+          1,
+          3,
+          5,
+          8,
+          10
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "stopRule": "stop_when_regions_stabilize",
+        "interactionHypotheses": [
+          "colors",
+          "speed",
+          "geometryProfile"
+        ],
+        "upstream": {
+          "id": "Butterfly_Style",
+          "label": "Style",
+          "description": "Selects the mathematical pattern formula. Styles 1-5 produce geometric butterfly-like patterns; styles 6-10 generate animated plasma effects.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 10,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Butterfly",
+    "upstreamSourceFile": "Butterfly.json",
+    "upstreamPropertyCount": 6,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": []
+  },
   "interactionCoverage": {
     "requiresInteractionCoverage": false,
     "hasInteractionCoverage": false,
@@ -52,5 +336,162 @@
     "screeningRecords": [],
     "screeningRecordPaths": []
   },
-  "currentTrainingReference": {}
+  "currentTrainingReference": {
+    "effectName": "Butterfly",
+    "baseline": {
+      "currentStage": "",
+      "selectorReady": false,
+      "selectorEvidence": {},
+      "supportedModelTypes": [],
+      "supportedGeometryProfiles": [],
+      "intentTags": [],
+      "patternFamilies": [],
+      "retainedParameters": []
+    },
+    "capability": {
+      "family": "motion_texture",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "variation"
+      ],
+      "supportedPaletteIntent": [
+        "colors",
+        "temperature",
+        "contrast",
+        "brightness",
+        "saturation",
+        "accentUsage"
+      ],
+      "supportedLayerIntent": [
+        "priority",
+        "blendRole",
+        "mixAmount",
+        "overlayPolicy"
+      ],
+      "supportedRenderIntent": [
+        "groupPolicy",
+        "bufferStyle",
+        "expansionPolicy",
+        "riskTolerance"
+      ]
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "chunks",
+        "colors",
+        "direction",
+        "speed",
+        "style"
+      ],
+      "retainedParameterNames": [],
+      "supportedIntentAxes": {
+        "settings": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "variation"
+        ],
+        "palette": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "layer": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "render": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "coverageStatus": "registry_defined_not_screened",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [],
+      "derivedPriors": {
+        "status": "empty",
+        "priorCount": 0,
+        "priors": []
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "empty",
+      "storageClass": "general_training",
+      "screeningRecordCount": 0,
+      "screenedParameterNames": [],
+      "sampledModelTypes": [],
+      "sampledGeometryProfiles": [],
+      "observedLabelHints": [],
+      "configurationRepresentativeness": {
+        "coverageStatus": "none",
+        "profileCount": 0,
+        "profiles": []
+      }
+    }
+  }
 }

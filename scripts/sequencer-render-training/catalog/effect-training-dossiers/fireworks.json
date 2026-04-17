@@ -1,9 +1,9 @@
 {
   "artifactType": "effect_training_dossier_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T01:05:22.818Z",
+  "generatedAt": "2026-04-17T01:05:22.821Z",
   "status": "transitional_current_evidence",
-  "effectName": "Circles",
+  "effectName": "Fireworks",
   "family": "particle_motion",
   "intentSurface": {
     "supportedSettingsIntent": [
@@ -39,64 +39,74 @@
     "coverageStatus": "registry_defined_not_screened",
     "exhaustiveSettingCoverage": false,
     "registryParameterNames": [
-      "bounce",
       "count",
-      "radial",
-      "size",
-      "speed"
+      "explosions",
+      "fade",
+      "gravity",
+      "velocity",
+      "xLocation"
     ],
     "retainedParameterNames": [],
     "screenedParameterNames": [],
     "screeningRecordCount": 0
   },
   "upstreamMetadata": {
-    "sourceFile": "Circles.json",
-    "propertyCount": 11,
-    "visibilityRuleCount": 1,
+    "sourceFile": "Fireworks.json",
+    "propertyCount": 14,
+    "visibilityRuleCount": 3,
     "parameters": {
-      "bounce": {
-        "upstreamId": "Circles_Bounce",
-        "label": "Bounce",
-        "description": "When enabled, circles bounce off the edges of the model instead of wrapping around to the opposite side.",
-        "default": false,
+      "count": {
+        "upstreamId": "Fireworks_Count",
+        "label": "Particles in Explosion",
+        "description": "Number of particles created in each explosion. More particles create denser, more dramatic bursts.",
+        "default": 50,
+        "min": 1,
+        "max": 100,
+        "options": []
+      },
+      "explosions": {
+        "upstreamId": "Fireworks_Explosions",
+        "label": "Number of Explosions",
+        "description": "Total number of firework explosions randomly distributed across the effect duration. Disabled when using music or timing triggers.",
+        "default": 16,
+        "min": 1,
+        "max": 50,
+        "options": []
+      },
+      "fade": {
+        "upstreamId": "Fireworks_Fade",
+        "label": "Particle Fade",
+        "description": "How long particles remain visible before fading out. Higher values make particles last longer.",
+        "default": 50,
+        "min": 1,
+        "max": 100,
+        "options": []
+      },
+      "gravity": {
+        "upstreamId": "Fireworks_Gravity",
+        "label": "Gravity",
+        "description": "When enabled, particles arc downward over time simulating gravity. When disabled, particles fly in straight lines.",
+        "default": true,
         "min": null,
         "max": null,
         "options": []
       },
-      "count": {
-        "upstreamId": "Circles_Count",
-        "label": "Number of Circles",
-        "description": "Sets the number of circles drawn on the model. In radial mode, controls the number of color rings.",
-        "default": 3,
+      "velocity": {
+        "upstreamId": "Fireworks_Velocity",
+        "label": "Velocity of Particles",
+        "description": "Maximum speed of particles as they fly outward from the explosion center. Higher values create larger bursts.",
+        "default": 2,
         "min": 1,
         "max": 10,
         "options": []
       },
-      "radial": {
-        "upstreamId": "Circles_Radial",
-        "label": "Radial",
-        "description": "Draws expanding concentric rings radiating outward from the center point, using palette colors in alternating bands.",
-        "default": false,
-        "min": null,
-        "max": null,
-        "options": []
-      },
-      "size": {
-        "upstreamId": "Circles_Size",
-        "label": "Size",
-        "description": "Controls the radius of each circle. In radial mode, this sets the thickness of the concentric rings.",
-        "default": 5,
-        "min": 1,
-        "max": 20,
-        "options": []
-      },
-      "speed": {
-        "upstreamId": "Circles_Speed",
-        "label": "Speed",
-        "description": "Controls how fast the circles move across the model. In radial mode, controls the speed of the outward ring expansion.",
-        "default": 10,
-        "min": 1,
-        "max": 30,
+      "xLocation": {
+        "upstreamId": "Fireworks_XLocation",
+        "label": "X Location",
+        "description": "Fixed horizontal position for explosions as a percentage of buffer width. Set to -1 for random placement.",
+        "default": -1,
+        "min": -1,
+        "max": 100,
         "options": []
       }
     }
@@ -104,30 +114,79 @@
   "registryDefinition": {
     "complexityClass": "complex",
     "earlySamplingPolicy": "broad_geometry_first",
-    "notes": "Expansion-wave particle motion effect. Count, size, speed, and radial/plasma modes are first-order controls; spatial offsets are deferred.",
+    "notes": "Expansion-wave particle burst effect. Explosion cadence, particle count, velocity, fade, and launch placement are the primary levers. Music/timing modes are deferred.",
     "parameters": {
-      "bounce": {
-        "type": "boolean",
+      "count": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 100
+        },
         "anchors": [
-          false,
-          true
+          10,
+          30,
+          50,
+          75,
+          100
         ],
-        "importance": "medium",
-        "phase": "baseline",
-        "practicalPriority": "medium",
-        "stopRule": "all_meaningful_options",
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "stopRule": "refine_only_near_breakpoints",
         "interactionHypotheses": [
-          "speed"
+          "explosions",
+          "fade"
         ],
         "upstream": {
-          "id": "Circles_Bounce",
-          "label": "Bounce",
-          "description": "When enabled, circles bounce off the edges of the model instead of wrapping around to the opposite side.",
-          "type": "bool",
-          "controlType": "checkbox",
-          "default": false,
-          "min": null,
-          "max": null,
+          "id": "Fireworks_Count",
+          "label": "Particles in Explosion",
+          "description": "Number of particles created in each explosion. More particles create denser, more dramatic bursts.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 50,
+          "min": 1,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "explosions": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 50
+        },
+        "anchors": [
+          1,
+          8,
+          16,
+          32,
+          50
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "stopRule": "stop_when_regions_stabilize",
+        "interactionHypotheses": [
+          "count",
+          "velocity",
+          "geometryProfile"
+        ],
+        "upstream": {
+          "id": "Fireworks_Explosions",
+          "label": "Number of Explosions",
+          "description": "Total number of firework explosions randomly distributed across the effect duration. Disabled when using music or timing triggers.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 16,
+          "min": 1,
+          "max": 50,
           "divisor": 1,
           "valueCurve": false,
           "vcMin": null,
@@ -138,7 +197,79 @@
           "suppressIfDefault": false
         }
       },
-      "count": {
+      "fade": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 100
+        },
+        "anchors": [
+          10,
+          30,
+          50,
+          75,
+          100
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "stopRule": "refine_only_near_breakpoints",
+        "interactionHypotheses": [
+          "velocity",
+          "count"
+        ],
+        "upstream": {
+          "id": "Fireworks_Fade",
+          "label": "Particle Fade",
+          "description": "How long particles remain visible before fading out. Higher values make particles last longer.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 50,
+          "min": 1,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "gravity": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "medium",
+        "phase": "baseline",
+        "practicalPriority": "medium",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "velocity"
+        ],
+        "upstream": {
+          "id": "Fireworks_Gravity",
+          "label": "Gravity",
+          "description": "When enabled, particles arc downward over time simulating gravity. When disabled, particles fly in straight lines.",
+          "type": "bool",
+          "controlType": "checkbox",
+          "default": true,
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "velocity": {
         "type": "numeric",
         "range": {
           "min": 1,
@@ -146,9 +277,9 @@
         },
         "anchors": [
           1,
-          3,
-          5,
-          8,
+          2,
+          4,
+          7,
           10
         ],
         "importance": "high",
@@ -156,17 +287,16 @@
         "practicalPriority": "high",
         "stopRule": "stop_when_regions_stabilize",
         "interactionHypotheses": [
-          "size",
-          "speed",
-          "geometryProfile"
+          "fade",
+          "gravity"
         ],
         "upstream": {
-          "id": "Circles_Count",
-          "label": "Number of Circles",
-          "description": "Sets the number of circles drawn on the model. In radial mode, controls the number of color rings.",
+          "id": "Fireworks_Velocity",
+          "label": "Velocity of Particles",
+          "description": "Maximum speed of particles as they fly outward from the explosion center. Higher values create larger bursts.",
           "type": "int",
           "controlType": "slider",
-          "default": 3,
+          "default": 2,
           "min": 1,
           "max": 10,
           "divisor": 1,
@@ -179,125 +309,50 @@
           "suppressIfDefault": false
         }
       },
-      "radial": {
-        "type": "boolean",
+      "xLocation": {
+        "type": "numeric",
+        "range": {
+          "min": -1,
+          "max": 100
+        },
         "anchors": [
-          false,
-          true
+          -1,
+          25,
+          50,
+          75
         ],
         "importance": "medium",
-        "phase": "baseline",
+        "phase": "screen",
         "practicalPriority": "medium",
         "stopRule": "all_meaningful_options",
         "interactionHypotheses": [
-          "count",
-          "size",
+          "yLocation",
           "geometryProfile"
         ],
         "upstream": {
-          "id": "Circles_Radial",
-          "label": "Radial",
-          "description": "Draws expanding concentric rings radiating outward from the center point, using palette colors in alternating bands.",
-          "type": "bool",
-          "controlType": "checkbox",
-          "default": false,
-          "min": null,
-          "max": null,
-          "divisor": 1,
-          "valueCurve": false,
-          "vcMin": null,
-          "vcMax": null,
-          "lockable": true,
-          "options": [],
-          "dynamicOptions": null,
-          "suppressIfDefault": false
-        }
-      },
-      "size": {
-        "type": "numeric",
-        "range": {
-          "min": 1,
-          "max": 20
-        },
-        "anchors": [
-          2,
-          5,
-          10,
-          15,
-          20
-        ],
-        "importance": "high",
-        "phase": "screen",
-        "practicalPriority": "high",
-        "stopRule": "refine_only_near_breakpoints",
-        "interactionHypotheses": [
-          "count",
-          "radial"
-        ],
-        "upstream": {
-          "id": "Circles_Size",
-          "label": "Size",
-          "description": "Controls the radius of each circle. In radial mode, this sets the thickness of the concentric rings.",
+          "id": "Fireworks_XLocation",
+          "label": "X Location",
+          "description": "Fixed horizontal position for explosions as a percentage of buffer width. Set to -1 for random placement.",
           "type": "int",
           "controlType": "slider",
-          "default": 5,
-          "min": 1,
-          "max": 20,
+          "default": -1,
+          "min": -1,
+          "max": 100,
           "divisor": 1,
           "valueCurve": true,
           "vcMin": null,
           "vcMax": null,
-          "lockable": true,
-          "options": [],
-          "dynamicOptions": null,
-          "suppressIfDefault": false
-        }
-      },
-      "speed": {
-        "type": "numeric",
-        "range": {
-          "min": 1,
-          "max": 30
-        },
-        "anchors": [
-          1,
-          5,
-          10,
-          20,
-          30
-        ],
-        "importance": "high",
-        "phase": "screen",
-        "practicalPriority": "high",
-        "stopRule": "stop_when_regions_stabilize",
-        "interactionHypotheses": [
-          "bounce",
-          "geometryProfile"
-        ],
-        "upstream": {
-          "id": "Circles_Speed",
-          "label": "Speed",
-          "description": "Controls how fast the circles move across the model. In radial mode, controls the speed of the outward ring expansion.",
-          "type": "int",
-          "controlType": "slider",
-          "default": 10,
-          "min": 1,
-          "max": 30,
-          "divisor": 1,
-          "valueCurve": true,
-          "vcMin": null,
-          "vcMax": null,
-          "lockable": true,
+          "lockable": false,
           "options": [],
           "dynamicOptions": null,
           "suppressIfDefault": false
         }
       }
     },
-    "upstreamEffectName": "Circles",
-    "upstreamSourceFile": "Circles.json",
-    "upstreamPropertyCount": 11,
-    "upstreamVisibilityRuleCount": 1,
+    "upstreamEffectName": "Fireworks",
+    "upstreamSourceFile": "Fireworks.json",
+    "upstreamPropertyCount": 14,
+    "upstreamVisibilityRuleCount": 3,
     "upstreamSharedMetadata": [
       "Buffer",
       "Color",
@@ -324,7 +379,7 @@
     "screeningRecordPaths": []
   },
   "currentTrainingReference": {
-    "effectName": "Circles",
+    "effectName": "Fireworks",
     "baseline": {
       "currentStage": "",
       "selectorReady": false,
@@ -368,11 +423,12 @@
     },
     "parameterLearning": {
       "registryParameterNames": [
-        "bounce",
         "count",
-        "radial",
-        "size",
-        "speed"
+        "explosions",
+        "fade",
+        "gravity",
+        "velocity",
+        "xLocation"
       ],
       "retainedParameterNames": [],
       "supportedIntentAxes": {

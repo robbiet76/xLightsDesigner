@@ -380,6 +380,143 @@ class BaseAnalyzer:
             name = "single_bar_motion"
         return f"{prefix}{name}" if prefix else name
 
+    def _butterfly_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        style = int(settings.get("style", 1) or 1)
+        chunks = int(settings.get("chunks", 1) or 1)
+        speed = float(settings.get("speed", 10) or 10)
+        direction = self._lower_setting(settings, "direction")
+
+        if chunks >= 4:
+            name = "layered_butterfly"
+        elif style >= 4 and speed >= 15:
+            name = "rapid_butterfly"
+        elif direction == "reverse":
+            name = "reverse_butterfly"
+        elif style >= 3:
+            name = "textured_butterfly"
+        else:
+            name = "butterfly_motion"
+        return f"{prefix}{name}" if prefix else name
+
+    def _circles_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        count = int(settings.get("count", 8) or 8)
+        size = float(settings.get("size", 25) or 25)
+        speed = float(settings.get("speed", 10) or 10)
+        bounce = bool(settings.get("bounce", False))
+        radial = bool(settings.get("radial", False))
+
+        if bounce:
+            name = "bouncing_circles"
+        elif radial:
+            name = "radial_circles"
+        elif count >= 16:
+            name = "dense_circles"
+        elif size >= 50 and speed >= 15:
+            name = "burst_circles"
+        else:
+            name = "circles_motion"
+        return f"{prefix}{name}" if prefix else name
+
+    def _fire_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        height = float(settings.get("height", 50) or 50)
+        hue_shift = float(settings.get("hueShift", 0) or 0)
+        growth_cycles = float(settings.get("growthCycles", 0) or 0)
+        location = self._lower_setting(settings, "location")
+
+        if growth_cycles >= 3:
+            name = "surging_fire"
+        elif location in {"bottom", "ground"} and height >= 70:
+            name = "towering_fire"
+        elif hue_shift >= 25:
+            name = "shifting_fire"
+        else:
+            name = "fire_texture"
+        return f"{prefix}{name}" if prefix else name
+
+    def _fireworks_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        explosions = int(settings.get("explosions", 4) or 4)
+        velocity = float(settings.get("velocity", 50) or 50)
+        gravity = float(settings.get("gravity", 50) or 50)
+        fade = float(settings.get("fade", 50) or 50)
+
+        if explosions >= 8:
+            name = "dense_fireworks"
+        elif velocity >= 65 and gravity <= 35:
+            name = "soaring_fireworks"
+        elif fade >= 70:
+            name = "lingering_fireworks"
+        else:
+            name = "fireworks_burst"
+        return f"{prefix}{name}" if prefix else name
+
+    def _lightning_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        bolts = int(settings.get("numberBolts", 3) or 3)
+        segments = int(settings.get("numberSegments", 6) or 6)
+        forked = bool(settings.get("forked", True))
+        width = float(settings.get("width", 50) or 50)
+        direction = self._lower_setting(settings, "direction")
+
+        if forked and bolts >= 4:
+            name = "forked_lightning"
+        elif width >= 65:
+            name = "broad_lightning"
+        elif direction in {"left", "right", "down", "up"} and segments >= 8:
+            name = "directional_lightning"
+        else:
+            name = "lightning_strike"
+        return f"{prefix}{name}" if prefix else name
+
+    def _snowflakes_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        count = int(settings.get("count", 20) or 20)
+        flake_type = self._lower_setting(settings, "type")
+        speed = float(settings.get("speed", 10) or 10)
+        falling = bool(settings.get("falling", True))
+
+        if falling and speed >= 15:
+            name = "falling_snow"
+        elif "spiral" in flake_type or "spin" in flake_type:
+            name = "spiral_snowflakes"
+        elif count >= 40:
+            name = "dense_snowflakes"
+        else:
+            name = "snowflake_drift"
+        return f"{prefix}{name}" if prefix else name
+
+    def _strobe_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        number_strobes = int(settings.get("numberStrobes", 5) or 5)
+        duration = float(settings.get("duration", 50) or 50)
+        strobe_type = self._lower_setting(settings, "type")
+
+        if "random" in strobe_type:
+            name = "random_strobe"
+        elif number_strobes >= 10:
+            name = "dense_strobe"
+        elif duration <= 20:
+            name = "rapid_strobe"
+        else:
+            name = "strobe_pulse"
+        return f"{prefix}{name}" if prefix else name
+
+    def _wave_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        wave_type = self._lower_setting(settings, "type")
+        fill_colors = bool(settings.get("fillColors", False))
+        number_waves = int(settings.get("numberWaves", 1) or 1)
+        wave_speed = float(settings.get("waveSpeed", 10) or 10)
+        wave_height = float(settings.get("waveHeight", 50) or 50)
+        direction = self._lower_setting(settings, "direction")
+
+        if number_waves >= 3:
+            name = "layered_wave"
+        elif fill_colors:
+            name = "filled_wave"
+        elif "sine" in wave_type and wave_speed >= 15:
+            name = "fast_sine_wave"
+        elif wave_height >= 65 or direction in {"up", "down"}:
+            name = "cresting_wave"
+        else:
+            name = "wave_motion"
+        return f"{prefix}{name}" if prefix else name
+
     def _on_family(
         self,
         settings: Dict[str, Any],
@@ -612,6 +749,22 @@ class LinearAnalyzer(BaseAnalyzer):
             pattern_family = self._spiral_family(settings, "linear_")
         elif effect == "Twinkle":
             pattern_family = self._twinkle_family(settings, "linear_")
+        elif effect == "Butterfly":
+            pattern_family = self._butterfly_family(settings, "linear_")
+        elif effect == "Circles":
+            pattern_family = self._circles_family(settings, "linear_")
+        elif effect == "Fire":
+            pattern_family = self._fire_family(settings, "linear_")
+        elif effect == "Fireworks":
+            pattern_family = self._fireworks_family(settings, "linear_")
+        elif effect == "Lightning":
+            pattern_family = self._lightning_family(settings, "linear_")
+        elif effect == "Snowflakes":
+            pattern_family = self._snowflakes_family(settings, "linear_")
+        elif effect == "Strobe":
+            pattern_family = self._strobe_family(settings, "linear_")
+        elif effect == "Wave":
+            pattern_family = self._wave_family(settings, "linear_")
 
         base["geometrySignals"] = {
             "centroidMotionMean": centroid_motion,
@@ -806,6 +959,22 @@ class MatrixAnalyzer(BaseAnalyzer):
             pattern_family = self._spiral_family(settings, "matrix_")
         elif effect == "Twinkle":
             pattern_family = self._twinkle_family(settings, "matrix_")
+        elif effect == "Butterfly":
+            pattern_family = self._butterfly_family(settings, "matrix_")
+        elif effect == "Circles":
+            pattern_family = self._circles_family(settings, "matrix_")
+        elif effect == "Fire":
+            pattern_family = self._fire_family(settings, "matrix_")
+        elif effect == "Fireworks":
+            pattern_family = self._fireworks_family(settings, "matrix_")
+        elif effect == "Lightning":
+            pattern_family = self._lightning_family(settings, "matrix_")
+        elif effect == "Snowflakes":
+            pattern_family = self._snowflakes_family(settings, "matrix_")
+        elif effect == "Strobe":
+            pattern_family = self._strobe_family(settings, "matrix_")
+        elif effect == "Wave":
+            pattern_family = self._wave_family(settings, "matrix_")
 
         base["geometrySignals"] = {
             "matrixCoverage": coverage,
@@ -990,6 +1159,22 @@ class TreeAnalyzer(BaseAnalyzer):
             pattern_family = self._twinkle_family(settings)
         elif inp.effect_name == "On":
             pattern_family = self._on_family(settings, "tree_")
+        elif inp.effect_name == "Butterfly":
+            pattern_family = self._butterfly_family(settings, "tree_")
+        elif inp.effect_name == "Circles":
+            pattern_family = self._circles_family(settings, "tree_")
+        elif inp.effect_name == "Fire":
+            pattern_family = self._fire_family(settings, "tree_")
+        elif inp.effect_name == "Fireworks":
+            pattern_family = self._fireworks_family(settings, "tree_")
+        elif inp.effect_name == "Lightning":
+            pattern_family = self._lightning_family(settings, "tree_")
+        elif inp.effect_name == "Snowflakes":
+            pattern_family = self._snowflakes_family(settings, "tree_")
+        elif inp.effect_name == "Strobe":
+            pattern_family = self._strobe_family(settings, "tree_")
+        elif inp.effect_name == "Wave":
+            pattern_family = self._wave_family(settings, "tree_")
 
         base["geometrySignals"] = {
             "treeCoverage": coverage,
@@ -1161,6 +1346,22 @@ class StarAnalyzer(BaseAnalyzer):
             pattern_family = self._twinkle_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "On":
             pattern_family = self._on_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Butterfly":
+            pattern_family = self._butterfly_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Circles":
+            pattern_family = self._circles_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Fire":
+            pattern_family = self._fire_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Fireworks":
+            pattern_family = self._fireworks_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Lightning":
+            pattern_family = self._lightning_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Snowflakes":
+            pattern_family = self._snowflakes_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Strobe":
+            pattern_family = self._strobe_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Wave":
+            pattern_family = self._wave_family(inp.effect_settings, "star_")
 
         base["geometrySignals"] = {
             "radialCoverage": coverage,
@@ -1289,6 +1490,22 @@ class RadialAnalyzer(BaseAnalyzer):
             pattern_family = self._twinkle_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "On":
             pattern_family = self._on_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Butterfly":
+            pattern_family = self._butterfly_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Circles":
+            pattern_family = self._circles_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Fire":
+            pattern_family = self._fire_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Fireworks":
+            pattern_family = self._fireworks_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Lightning":
+            pattern_family = self._lightning_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Snowflakes":
+            pattern_family = self._snowflakes_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Strobe":
+            pattern_family = self._strobe_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Wave":
+            pattern_family = self._wave_family(inp.effect_settings, "radial_")
 
         base["geometrySignals"] = {
             "radialCoverage": coverage,

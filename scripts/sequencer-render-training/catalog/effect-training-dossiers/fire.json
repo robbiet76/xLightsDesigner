@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_training_dossier_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-16T18:35:28.254Z",
+  "generatedAt": "2026-04-17T01:05:22.820Z",
   "status": "transitional_current_evidence",
   "effectName": "Fire",
   "family": "organic_texture",
@@ -13,25 +13,265 @@
       "motion",
       "variation"
     ],
-    "supportedPaletteIntent": [],
-    "supportedLayerIntent": [],
-    "supportedRenderIntent": []
+    "supportedPaletteIntent": [
+      "colors",
+      "temperature",
+      "contrast",
+      "brightness",
+      "saturation",
+      "accentUsage"
+    ],
+    "supportedLayerIntent": [
+      "priority",
+      "blendRole",
+      "mixAmount",
+      "overlayPolicy"
+    ],
+    "supportedRenderIntent": [
+      "groupPolicy",
+      "bufferStyle",
+      "expansionPolicy",
+      "riskTolerance"
+    ]
   },
   "currentCoverage": {
-    "coverageStatus": "intent_translatable_only",
+    "coverageStatus": "registry_defined_not_screened",
     "exhaustiveSettingCoverage": false,
-    "registryParameterNames": [],
+    "registryParameterNames": [
+      "growthCycles",
+      "height",
+      "hueShift",
+      "location"
+    ],
     "retainedParameterNames": [],
     "screenedParameterNames": [],
     "screeningRecordCount": 0
   },
   "upstreamMetadata": {
-    "sourceFile": "",
-    "propertyCount": 0,
-    "visibilityRuleCount": 0,
-    "parameters": {}
+    "sourceFile": "Fire.json",
+    "propertyCount": 5,
+    "visibilityRuleCount": 1,
+    "parameters": {
+      "growthCycles": {
+        "upstreamId": "Fire_GrowthCycles",
+        "label": "Growth Cycles",
+        "description": "Number of times the fire height oscillates (grows and shrinks) over the effect duration. Zero means no oscillation.",
+        "default": 0,
+        "min": 0,
+        "max": 200,
+        "options": []
+      },
+      "height": {
+        "upstreamId": "Fire_Height",
+        "label": "Height",
+        "description": "Controls how tall the flames reach. Higher values produce taller flames that extend further across the buffer.",
+        "default": 50,
+        "min": 1,
+        "max": 100,
+        "options": []
+      },
+      "hueShift": {
+        "upstreamId": "Fire_HueShift",
+        "label": "Hue Shift",
+        "description": "Shifts the fire color palette hue. At zero the fire is red/yellow; increasing values shift toward other colors like blue or green.",
+        "default": 0,
+        "min": 0,
+        "max": 100,
+        "options": []
+      },
+      "location": {
+        "upstreamId": "Fire_Location",
+        "label": "Location",
+        "description": "Which edge of the buffer the fire originates from.",
+        "default": "Bottom",
+        "min": null,
+        "max": null,
+        "options": [
+          "Bottom",
+          "Top",
+          "Left",
+          "Right"
+        ]
+      }
+    }
   },
-  "registryDefinition": {},
+  "registryDefinition": {
+    "complexityClass": "complex",
+    "earlySamplingPolicy": "broad_geometry_first",
+    "notes": "Expansion-wave organic texture effect. Height, growth, hue shift, and location are first-order levers. Music-coupled growth is deferred for the first sweep.",
+    "parameters": {
+      "growthCycles": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 20
+        },
+        "anchors": [
+          0,
+          2,
+          5,
+          10,
+          20
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "stopRule": "refine_only_near_breakpoints",
+        "interactionHypotheses": [
+          "height",
+          "location"
+        ],
+        "upstream": {
+          "id": "Fire_GrowthCycles",
+          "label": "Growth Cycles",
+          "description": "Number of times the fire height oscillates (grows and shrinks) over the effect duration. Zero means no oscillation.",
+          "type": "float",
+          "controlType": "slider",
+          "default": 0,
+          "min": 0,
+          "max": 200,
+          "divisor": 10,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "height": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 100
+        },
+        "anchors": [
+          10,
+          30,
+          50,
+          70,
+          100
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "stopRule": "stop_when_regions_stabilize",
+        "interactionHypotheses": [
+          "growthCycles",
+          "location",
+          "geometryProfile"
+        ],
+        "upstream": {
+          "id": "Fire_Height",
+          "label": "Height",
+          "description": "Controls how tall the flames reach. Higher values produce taller flames that extend further across the buffer.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 50,
+          "min": 1,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "hueShift": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          0,
+          25,
+          50,
+          75,
+          100
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "height"
+        ],
+        "upstream": {
+          "id": "Fire_HueShift",
+          "label": "Hue Shift",
+          "description": "Shifts the fire color palette hue. At zero the fire is red/yellow; increasing values shift toward other colors like blue or green.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 0,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "location": {
+        "type": "enum",
+        "anchors": [
+          "Bottom",
+          "Top",
+          "Left",
+          "Right"
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "height",
+          "geometryProfile"
+        ],
+        "upstream": {
+          "id": "Fire_Location",
+          "label": "Location",
+          "description": "Which edge of the buffer the fire originates from.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "Bottom",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [
+            "Bottom",
+            "Top",
+            "Left",
+            "Right"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Fire",
+    "upstreamSourceFile": "Fire.json",
+    "upstreamPropertyCount": 5,
+    "upstreamVisibilityRuleCount": 1,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": []
+  },
   "interactionCoverage": {
     "requiresInteractionCoverage": false,
     "hasInteractionCoverage": false,
@@ -50,5 +290,157 @@
     "screeningRecords": [],
     "screeningRecordPaths": []
   },
-  "currentTrainingReference": {}
+  "currentTrainingReference": {
+    "effectName": "Fire",
+    "baseline": {
+      "currentStage": "",
+      "selectorReady": false,
+      "selectorEvidence": {},
+      "supportedModelTypes": [],
+      "supportedGeometryProfiles": [],
+      "intentTags": [],
+      "patternFamilies": [],
+      "retainedParameters": []
+    },
+    "capability": {
+      "family": "organic_texture",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "supportedPaletteIntent": [
+        "colors",
+        "temperature",
+        "contrast",
+        "brightness",
+        "saturation",
+        "accentUsage"
+      ],
+      "supportedLayerIntent": [
+        "priority",
+        "blendRole",
+        "mixAmount",
+        "overlayPolicy"
+      ],
+      "supportedRenderIntent": [
+        "groupPolicy",
+        "bufferStyle",
+        "expansionPolicy",
+        "riskTolerance"
+      ]
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "growthCycles",
+        "height",
+        "hueShift",
+        "location"
+      ],
+      "retainedParameterNames": [],
+      "supportedIntentAxes": {
+        "settings": [
+          "intensity",
+          "speed",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "palette": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "layer": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "render": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "coverageStatus": "registry_defined_not_screened",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [],
+      "derivedPriors": {
+        "status": "empty",
+        "priorCount": 0,
+        "priors": []
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "empty",
+      "storageClass": "general_training",
+      "screeningRecordCount": 0,
+      "screenedParameterNames": [],
+      "sampledModelTypes": [],
+      "sampledGeometryProfiles": [],
+      "observedLabelHints": [],
+      "configurationRepresentativeness": {
+        "coverageStatus": "none",
+        "profileCount": 0,
+        "profiles": []
+      }
+    }
+  }
 }

@@ -687,7 +687,10 @@ function buildTrainingSet() {
     : resolve("scripts/sequencer-render-training/catalog/effect-screening-records");
   const outcomeRecords = loadOutcomeRecords(recordsDirPath);
   const screeningRecords = loadScreeningRecords(screeningRecordsDirPath);
-  const effectNames = Object.keys(bundle?.effectsByName || {}).sort((a, b) => a.localeCompare(b));
+  const effectNames = [...new Set([
+    ...Object.keys(bundle?.effectsByName || {}),
+    ...Object.keys(EFFECT_PARAMETER_REGISTRY?.effects || {})
+  ])].sort((a, b) => a.localeCompare(b));
   const crossEffectSharedSettingOutcomeMemory = mergeCrossEffectSharedSettingOutcomeMemory(outcomeRecords);
   return {
     artifactType: "sequencer_unified_training_set_v1",
@@ -699,7 +702,7 @@ function buildTrainingSet() {
         artifactType: String(bundle?.artifactType || "").trim(),
         artifactVersion: String(bundle?.artifactVersion || "").trim(),
         targetState: String(bundle?.stage1?.targetState || "").trim(),
-        effectCount: Number(bundle?.stage1?.effectCount || 0),
+        effectCount: effectNames.length,
         equalizedCount: Number(bundle?.stage1?.equalizedCount || 0),
         selectorReadyEffects: Array.isArray(bundle?.selectorReadyEffects) ? bundle.selectorReadyEffects : []
       },

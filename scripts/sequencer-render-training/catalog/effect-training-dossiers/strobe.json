@@ -1,10 +1,10 @@
 {
   "artifactType": "effect_training_dossier_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T01:05:22.818Z",
+  "generatedAt": "2026-04-17T01:05:22.830Z",
   "status": "transitional_current_evidence",
-  "effectName": "Circles",
-  "family": "particle_motion",
+  "effectName": "Strobe",
+  "family": "rhythmic",
   "intentSurface": {
     "supportedSettingsIntent": [
       "intensity",
@@ -39,212 +39,85 @@
     "coverageStatus": "registry_defined_not_screened",
     "exhaustiveSettingCoverage": false,
     "registryParameterNames": [
-      "bounce",
-      "count",
-      "radial",
-      "size",
-      "speed"
+      "duration",
+      "numberStrobes",
+      "type"
     ],
     "retainedParameterNames": [],
     "screenedParameterNames": [],
     "screeningRecordCount": 0
   },
   "upstreamMetadata": {
-    "sourceFile": "Circles.json",
-    "propertyCount": 11,
-    "visibilityRuleCount": 1,
+    "sourceFile": "Strobe.json",
+    "propertyCount": 4,
+    "visibilityRuleCount": 0,
     "parameters": {
-      "bounce": {
-        "upstreamId": "Circles_Bounce",
-        "label": "Bounce",
-        "description": "When enabled, circles bounce off the edges of the model instead of wrapping around to the opposite side.",
-        "default": false,
-        "min": null,
-        "max": null,
-        "options": []
-      },
-      "count": {
-        "upstreamId": "Circles_Count",
-        "label": "Number of Circles",
-        "description": "Sets the number of circles drawn on the model. In radial mode, controls the number of color rings.",
-        "default": 3,
-        "min": 1,
-        "max": 10,
-        "options": []
-      },
-      "radial": {
-        "upstreamId": "Circles_Radial",
-        "label": "Radial",
-        "description": "Draws expanding concentric rings radiating outward from the center point, using palette colors in alternating bands.",
-        "default": false,
-        "min": null,
-        "max": null,
-        "options": []
-      },
-      "size": {
-        "upstreamId": "Circles_Size",
-        "label": "Size",
-        "description": "Controls the radius of each circle. In radial mode, this sets the thickness of the concentric rings.",
-        "default": 5,
-        "min": 1,
-        "max": 20,
-        "options": []
-      },
-      "speed": {
-        "upstreamId": "Circles_Speed",
-        "label": "Speed",
-        "description": "Controls how fast the circles move across the model. In radial mode, controls the speed of the outward ring expansion.",
+      "duration": {
+        "upstreamId": "Strobe_Duration",
+        "label": "Strobe Duration",
+        "description": "How many frames each strobe flash remains visible before fading out. Higher values make flashes linger longer.",
         "default": 10,
         "min": 1,
-        "max": 30,
+        "max": 100,
+        "options": []
+      },
+      "numberStrobes": {
+        "upstreamId": "Number_Strobes",
+        "label": "Number Strobes",
+        "description": "How many strobe flashes are active at the same time. Higher values create a denser strobe field.",
+        "default": 3,
+        "min": 1,
+        "max": 300,
+        "options": []
+      },
+      "type": {
+        "upstreamId": "Strobe_Type",
+        "label": "Strobe Type",
+        "description": "Shape of each strobe flash. Type 1 is a single pixel, type 2 adds a random cross arm, type 3 is a full plus shape, and type 4 alternates between plus and X shapes.",
+        "default": 1,
+        "min": 1,
+        "max": 4,
         "options": []
       }
     }
   },
   "registryDefinition": {
-    "complexityClass": "complex",
+    "complexityClass": "moderate",
     "earlySamplingPolicy": "broad_geometry_first",
-    "notes": "Expansion-wave particle motion effect. Count, size, speed, and radial/plasma modes are first-order controls; spatial offsets are deferred.",
+    "notes": "Expansion-wave cadence effect. Strobe count, duration, and type are the primary levers. Music mode is deferred for the first sweep.",
     "parameters": {
-      "bounce": {
-        "type": "boolean",
-        "anchors": [
-          false,
-          true
-        ],
-        "importance": "medium",
-        "phase": "baseline",
-        "practicalPriority": "medium",
-        "stopRule": "all_meaningful_options",
-        "interactionHypotheses": [
-          "speed"
-        ],
-        "upstream": {
-          "id": "Circles_Bounce",
-          "label": "Bounce",
-          "description": "When enabled, circles bounce off the edges of the model instead of wrapping around to the opposite side.",
-          "type": "bool",
-          "controlType": "checkbox",
-          "default": false,
-          "min": null,
-          "max": null,
-          "divisor": 1,
-          "valueCurve": false,
-          "vcMin": null,
-          "vcMax": null,
-          "lockable": true,
-          "options": [],
-          "dynamicOptions": null,
-          "suppressIfDefault": false
-        }
-      },
-      "count": {
+      "duration": {
         "type": "numeric",
         "range": {
           "min": 1,
-          "max": 10
+          "max": 100
         },
         "anchors": [
           1,
-          3,
-          5,
-          8,
-          10
-        ],
-        "importance": "high",
-        "phase": "screen",
-        "practicalPriority": "high",
-        "stopRule": "stop_when_regions_stabilize",
-        "interactionHypotheses": [
-          "size",
-          "speed",
-          "geometryProfile"
-        ],
-        "upstream": {
-          "id": "Circles_Count",
-          "label": "Number of Circles",
-          "description": "Sets the number of circles drawn on the model. In radial mode, controls the number of color rings.",
-          "type": "int",
-          "controlType": "slider",
-          "default": 3,
-          "min": 1,
-          "max": 10,
-          "divisor": 1,
-          "valueCurve": true,
-          "vcMin": null,
-          "vcMax": null,
-          "lockable": true,
-          "options": [],
-          "dynamicOptions": null,
-          "suppressIfDefault": false
-        }
-      },
-      "radial": {
-        "type": "boolean",
-        "anchors": [
-          false,
-          true
-        ],
-        "importance": "medium",
-        "phase": "baseline",
-        "practicalPriority": "medium",
-        "stopRule": "all_meaningful_options",
-        "interactionHypotheses": [
-          "count",
-          "size",
-          "geometryProfile"
-        ],
-        "upstream": {
-          "id": "Circles_Radial",
-          "label": "Radial",
-          "description": "Draws expanding concentric rings radiating outward from the center point, using palette colors in alternating bands.",
-          "type": "bool",
-          "controlType": "checkbox",
-          "default": false,
-          "min": null,
-          "max": null,
-          "divisor": 1,
-          "valueCurve": false,
-          "vcMin": null,
-          "vcMax": null,
-          "lockable": true,
-          "options": [],
-          "dynamicOptions": null,
-          "suppressIfDefault": false
-        }
-      },
-      "size": {
-        "type": "numeric",
-        "range": {
-          "min": 1,
-          "max": 20
-        },
-        "anchors": [
-          2,
           5,
           10,
-          15,
-          20
+          25,
+          50
         ],
         "importance": "high",
         "phase": "screen",
         "practicalPriority": "high",
         "stopRule": "refine_only_near_breakpoints",
         "interactionHypotheses": [
-          "count",
-          "radial"
+          "numberStrobes",
+          "type"
         ],
         "upstream": {
-          "id": "Circles_Size",
-          "label": "Size",
-          "description": "Controls the radius of each circle. In radial mode, this sets the thickness of the concentric rings.",
+          "id": "Strobe_Duration",
+          "label": "Strobe Duration",
+          "description": "How many frames each strobe flash remains visible before fading out. Higher values make flashes linger longer.",
           "type": "int",
           "controlType": "slider",
-          "default": 5,
+          "default": 10,
           "min": 1,
-          "max": 20,
+          "max": 100,
           "divisor": 1,
-          "valueCurve": true,
+          "valueCurve": false,
           "vcMin": null,
           "vcMax": null,
           "lockable": true,
@@ -253,38 +126,76 @@
           "suppressIfDefault": false
         }
       },
-      "speed": {
+      "numberStrobes": {
         "type": "numeric",
         "range": {
           "min": 1,
-          "max": 30
+          "max": 300
         },
         "anchors": [
           1,
-          5,
+          3,
           10,
-          20,
-          30
+          50,
+          150
         ],
         "importance": "high",
         "phase": "screen",
         "practicalPriority": "high",
         "stopRule": "stop_when_regions_stabilize",
         "interactionHypotheses": [
-          "bounce",
-          "geometryProfile"
+          "duration",
+          "type"
         ],
         "upstream": {
-          "id": "Circles_Speed",
-          "label": "Speed",
-          "description": "Controls how fast the circles move across the model. In radial mode, controls the speed of the outward ring expansion.",
+          "id": "Number_Strobes",
+          "label": "Number Strobes",
+          "description": "How many strobe flashes are active at the same time. Higher values create a denser strobe field.",
           "type": "int",
           "controlType": "slider",
-          "default": 10,
+          "default": 3,
           "min": 1,
-          "max": 30,
+          "max": 300,
           "divisor": 1,
-          "valueCurve": true,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "type": {
+        "type": "numeric",
+        "range": {
+          "min": 1,
+          "max": 4
+        },
+        "anchors": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "duration"
+        ],
+        "upstream": {
+          "id": "Strobe_Type",
+          "label": "Strobe Type",
+          "description": "Shape of each strobe flash. Type 1 is a single pixel, type 2 adds a random cross arm, type 3 is a full plus shape, and type 4 alternates between plus and X shapes.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 4,
+          "divisor": 1,
+          "valueCurve": false,
           "vcMin": null,
           "vcMax": null,
           "lockable": true,
@@ -294,10 +205,10 @@
         }
       }
     },
-    "upstreamEffectName": "Circles",
-    "upstreamSourceFile": "Circles.json",
-    "upstreamPropertyCount": 11,
-    "upstreamVisibilityRuleCount": 1,
+    "upstreamEffectName": "Strobe",
+    "upstreamSourceFile": "Strobe.json",
+    "upstreamPropertyCount": 4,
+    "upstreamVisibilityRuleCount": 0,
     "upstreamSharedMetadata": [
       "Buffer",
       "Color",
@@ -324,7 +235,7 @@
     "screeningRecordPaths": []
   },
   "currentTrainingReference": {
-    "effectName": "Circles",
+    "effectName": "Strobe",
     "baseline": {
       "currentStage": "",
       "selectorReady": false,
@@ -336,7 +247,7 @@
       "retainedParameters": []
     },
     "capability": {
-      "family": "particle_motion",
+      "family": "rhythmic",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -368,11 +279,9 @@
     },
     "parameterLearning": {
       "registryParameterNames": [
-        "bounce",
-        "count",
-        "radial",
-        "size",
-        "speed"
+        "duration",
+        "numberStrobes",
+        "type"
       ],
       "retainedParameterNames": [],
       "supportedIntentAxes": {

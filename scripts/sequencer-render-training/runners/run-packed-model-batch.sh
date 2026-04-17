@@ -261,8 +261,6 @@ while IFS= read -r planned_row; do
     "${decoded_features_path}" \
     "${analysis_path}" > "${features_path}.tmp"
   mv "${features_path}.tmp" "${features_path}"
-  compact_features_json "${features_path}" > "${features_path}.compact"
-  mv "${features_path}.compact" "${features_path}"
   observations_json="$(
     bash "${ROOT_DIR}/tooling/extract-observations.sh" \
       --sample-json "${sample_json}" \
@@ -327,6 +325,8 @@ while IFS= read -r planned_row; do
       features: $featuresFile[0],
       comparisons: []
     }' > "${record_path}"
+  compact_features_json "${features_path}" > "${features_path}.compact"
+  mv "${features_path}.compact" "${features_path}"
   rm -f "${decoded_features_path}" "${analysis_path}"
   passed=$((passed + 1))
 

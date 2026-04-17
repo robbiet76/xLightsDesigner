@@ -1,10 +1,10 @@
 {
   "artifactType": "effect_training_dossier_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T01:05:22.818Z",
+  "generatedAt": "2026-04-17T01:05:22.821Z",
   "status": "transitional_current_evidence",
-  "effectName": "Circles",
-  "family": "particle_motion",
+  "effectName": "Lightning",
+  "family": "radial_motion",
   "intentSurface": {
     "supportedSettingsIntent": [
       "intensity",
@@ -12,6 +12,7 @@
       "density",
       "coverage",
       "motion",
+      "direction",
       "variation"
     ],
     "supportedPaletteIntent": [
@@ -39,64 +40,67 @@
     "coverageStatus": "registry_defined_not_screened",
     "exhaustiveSettingCoverage": false,
     "registryParameterNames": [
-      "bounce",
-      "count",
-      "radial",
-      "size",
-      "speed"
+      "direction",
+      "forked",
+      "numberBolts",
+      "numberSegments",
+      "width"
     ],
     "retainedParameterNames": [],
     "screenedParameterNames": [],
     "screeningRecordCount": 0
   },
   "upstreamMetadata": {
-    "sourceFile": "Circles.json",
-    "propertyCount": 11,
-    "visibilityRuleCount": 1,
+    "sourceFile": "Lightning.json",
+    "propertyCount": 8,
+    "visibilityRuleCount": 0,
     "parameters": {
-      "bounce": {
-        "upstreamId": "Circles_Bounce",
-        "label": "Bounce",
-        "description": "When enabled, circles bounce off the edges of the model instead of wrapping around to the opposite side.",
+      "direction": {
+        "upstreamId": "Lightning_Direction",
+        "label": "Direction",
+        "description": "Direction the lightning bolt extends. 'Up' draws from bottom to top, 'Down' draws from top to bottom.",
+        "default": "Up",
+        "min": null,
+        "max": null,
+        "options": [
+          "Up",
+          "Down"
+        ]
+      },
+      "forked": {
+        "upstreamId": "ForkedLightning",
+        "label": "Forked Lightning",
+        "description": "When enabled, the bolt splits into a secondary fork partway through, creating a branching lightning appearance.",
         "default": false,
         "min": null,
         "max": null,
         "options": []
       },
-      "count": {
-        "upstreamId": "Circles_Count",
-        "label": "Number of Circles",
-        "description": "Sets the number of circles drawn on the model. In radial mode, controls the number of color rings.",
-        "default": 3,
+      "numberBolts": {
+        "upstreamId": "Number_Bolts",
+        "label": "Number of Segments",
+        "description": "Number of zigzag segments that make up the lightning bolt. More segments create a longer, more detailed bolt.",
+        "default": 10,
         "min": 1,
-        "max": 10,
+        "max": 50,
         "options": []
       },
-      "radial": {
-        "upstreamId": "Circles_Radial",
-        "label": "Radial",
-        "description": "Draws expanding concentric rings radiating outward from the center point, using palette colors in alternating bands.",
-        "default": false,
-        "min": null,
-        "max": null,
-        "options": []
-      },
-      "size": {
-        "upstreamId": "Circles_Size",
-        "label": "Size",
-        "description": "Controls the radius of each circle. In radial mode, this sets the thickness of the concentric rings.",
+      "numberSegments": {
+        "upstreamId": "Number_Segments",
+        "label": "Width of Bolt",
+        "description": "Controls the horizontal deviation of each zigzag segment. Higher values make the bolt spread wider side-to-side.",
         "default": 5,
         "min": 1,
         "max": 20,
         "options": []
       },
-      "speed": {
-        "upstreamId": "Circles_Speed",
-        "label": "Speed",
-        "description": "Controls how fast the circles move across the model. In radial mode, controls the speed of the outward ring expansion.",
-        "default": 10,
+      "width": {
+        "upstreamId": "Lightning_WIDTH",
+        "label": "Width",
+        "description": "Pixel thickness of each bolt segment line. Higher values draw a wider, more visible bolt.",
+        "default": 1,
         "min": 1,
-        "max": 30,
+        "max": 7,
         "options": []
       }
     }
@@ -104,25 +108,62 @@
   "registryDefinition": {
     "complexityClass": "complex",
     "earlySamplingPolicy": "broad_geometry_first",
-    "notes": "Expansion-wave particle motion effect. Count, size, speed, and radial/plasma modes are first-order controls; spatial offsets are deferred.",
+    "notes": "Expansion-wave directional strike effect. Bolt count, segmentation, branching, width, and direction are first-order levers; strike origin offsets are secondary.",
     "parameters": {
-      "bounce": {
-        "type": "boolean",
+      "direction": {
+        "type": "enum",
         "anchors": [
-          false,
-          true
+          "Up",
+          "Down"
         ],
         "importance": "medium",
         "phase": "baseline",
         "practicalPriority": "medium",
         "stopRule": "all_meaningful_options",
         "interactionHypotheses": [
-          "speed"
+          "topY",
+          "geometryProfile"
         ],
         "upstream": {
-          "id": "Circles_Bounce",
-          "label": "Bounce",
-          "description": "When enabled, circles bounce off the edges of the model instead of wrapping around to the opposite side.",
+          "id": "Lightning_Direction",
+          "label": "Direction",
+          "description": "Direction the lightning bolt extends. 'Up' draws from bottom to top, 'Down' draws from top to bottom.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "Up",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": false,
+          "options": [
+            "Up",
+            "Down"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "forked": {
+        "type": "boolean",
+        "anchors": [
+          false,
+          true
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "numberBolts",
+          "numberSegments"
+        ],
+        "upstream": {
+          "id": "ForkedLightning",
+          "label": "Forked Lightning",
+          "description": "When enabled, the bolt splits into a secondary fork partway through, creating a branching lightning appearance.",
           "type": "bool",
           "controlType": "checkbox",
           "default": false,
@@ -138,37 +179,36 @@
           "suppressIfDefault": false
         }
       },
-      "count": {
+      "numberBolts": {
         "type": "numeric",
         "range": {
           "min": 1,
-          "max": 10
+          "max": 50
         },
         "anchors": [
           1,
-          3,
           5,
-          8,
-          10
+          10,
+          25,
+          50
         ],
         "importance": "high",
         "phase": "screen",
         "practicalPriority": "high",
         "stopRule": "stop_when_regions_stabilize",
         "interactionHypotheses": [
-          "size",
-          "speed",
-          "geometryProfile"
+          "forked",
+          "width"
         ],
         "upstream": {
-          "id": "Circles_Count",
-          "label": "Number of Circles",
-          "description": "Sets the number of circles drawn on the model. In radial mode, controls the number of color rings.",
+          "id": "Number_Bolts",
+          "label": "Number of Segments",
+          "description": "Number of zigzag segments that make up the lightning bolt. More segments create a longer, more detailed bolt.",
           "type": "int",
           "controlType": "slider",
-          "default": 3,
+          "default": 10,
           "min": 1,
-          "max": 10,
+          "max": 50,
           "divisor": 1,
           "valueCurve": true,
           "vcMin": null,
@@ -179,48 +219,14 @@
           "suppressIfDefault": false
         }
       },
-      "radial": {
-        "type": "boolean",
-        "anchors": [
-          false,
-          true
-        ],
-        "importance": "medium",
-        "phase": "baseline",
-        "practicalPriority": "medium",
-        "stopRule": "all_meaningful_options",
-        "interactionHypotheses": [
-          "count",
-          "size",
-          "geometryProfile"
-        ],
-        "upstream": {
-          "id": "Circles_Radial",
-          "label": "Radial",
-          "description": "Draws expanding concentric rings radiating outward from the center point, using palette colors in alternating bands.",
-          "type": "bool",
-          "controlType": "checkbox",
-          "default": false,
-          "min": null,
-          "max": null,
-          "divisor": 1,
-          "valueCurve": false,
-          "vcMin": null,
-          "vcMax": null,
-          "lockable": true,
-          "options": [],
-          "dynamicOptions": null,
-          "suppressIfDefault": false
-        }
-      },
-      "size": {
+      "numberSegments": {
         "type": "numeric",
         "range": {
           "min": 1,
           "max": 20
         },
         "anchors": [
-          2,
+          1,
           5,
           10,
           15,
@@ -231,13 +237,13 @@
         "practicalPriority": "high",
         "stopRule": "refine_only_near_breakpoints",
         "interactionHypotheses": [
-          "count",
-          "radial"
+          "forked",
+          "geometryProfile"
         ],
         "upstream": {
-          "id": "Circles_Size",
-          "label": "Size",
-          "description": "Controls the radius of each circle. In radial mode, this sets the thickness of the concentric rings.",
+          "id": "Number_Segments",
+          "label": "Width of Bolt",
+          "description": "Controls the horizontal deviation of each zigzag segment. Higher values make the bolt spread wider side-to-side.",
           "type": "int",
           "controlType": "slider",
           "default": 5,
@@ -253,38 +259,36 @@
           "suppressIfDefault": false
         }
       },
-      "speed": {
+      "width": {
         "type": "numeric",
         "range": {
           "min": 1,
-          "max": 30
+          "max": 7
         },
         "anchors": [
           1,
-          5,
-          10,
-          20,
-          30
+          2,
+          4,
+          7
         ],
-        "importance": "high",
+        "importance": "medium",
         "phase": "screen",
-        "practicalPriority": "high",
-        "stopRule": "stop_when_regions_stabilize",
+        "practicalPriority": "medium",
+        "stopRule": "all_meaningful_options",
         "interactionHypotheses": [
-          "bounce",
-          "geometryProfile"
+          "forked"
         ],
         "upstream": {
-          "id": "Circles_Speed",
-          "label": "Speed",
-          "description": "Controls how fast the circles move across the model. In radial mode, controls the speed of the outward ring expansion.",
+          "id": "Lightning_WIDTH",
+          "label": "Width",
+          "description": "Pixel thickness of each bolt segment line. Higher values draw a wider, more visible bolt.",
           "type": "int",
           "controlType": "slider",
-          "default": 10,
+          "default": 1,
           "min": 1,
-          "max": 30,
+          "max": 7,
           "divisor": 1,
-          "valueCurve": true,
+          "valueCurve": false,
           "vcMin": null,
           "vcMax": null,
           "lockable": true,
@@ -294,10 +298,10 @@
         }
       }
     },
-    "upstreamEffectName": "Circles",
-    "upstreamSourceFile": "Circles.json",
-    "upstreamPropertyCount": 11,
-    "upstreamVisibilityRuleCount": 1,
+    "upstreamEffectName": "Lightning",
+    "upstreamSourceFile": "Lightning.json",
+    "upstreamPropertyCount": 8,
+    "upstreamVisibilityRuleCount": 0,
     "upstreamSharedMetadata": [
       "Buffer",
       "Color",
@@ -324,7 +328,7 @@
     "screeningRecordPaths": []
   },
   "currentTrainingReference": {
-    "effectName": "Circles",
+    "effectName": "Lightning",
     "baseline": {
       "currentStage": "",
       "selectorReady": false,
@@ -336,13 +340,14 @@
       "retainedParameters": []
     },
     "capability": {
-      "family": "particle_motion",
+      "family": "radial_motion",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
         "density",
         "coverage",
         "motion",
+        "direction",
         "variation"
       ],
       "supportedPaletteIntent": [
@@ -368,11 +373,11 @@
     },
     "parameterLearning": {
       "registryParameterNames": [
-        "bounce",
-        "count",
-        "radial",
-        "size",
-        "speed"
+        "direction",
+        "forked",
+        "numberBolts",
+        "numberSegments",
+        "width"
       ],
       "retainedParameterNames": [],
       "supportedIntentAxes": {
@@ -382,6 +387,7 @@
           "density",
           "coverage",
           "motion",
+          "direction",
           "variation"
         ],
         "palette": [

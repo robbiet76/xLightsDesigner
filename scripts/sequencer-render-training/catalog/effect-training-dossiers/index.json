@@ -1,8 +1,8 @@
 {
   "artifactType": "effect_training_dossier_index_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-16T18:35:28.285Z",
-  "effectCount": 20,
+  "generatedAt": "2026-04-17T01:05:22.833Z",
+  "effectCount": 23,
   "outputDir": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-training-dossiers",
   "unifiedPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json",
   "coveragePath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-settings-coverage-report-v1.json",
@@ -36,6 +36,14 @@
     {
       "effectName": "Fire",
       "fileName": "fire.json"
+    },
+    {
+      "effectName": "Fireworks",
+      "fileName": "fireworks.json"
+    },
+    {
+      "effectName": "Lightning",
+      "fileName": "lightning.json"
     },
     {
       "effectName": "Marquee",
@@ -76,6 +84,10 @@
     {
       "effectName": "Spirals",
       "fileName": "spirals.json"
+    },
+    {
+      "effectName": "Strobe",
+      "fileName": "strobe.json"
     },
     {
       "effectName": "Twinkle",

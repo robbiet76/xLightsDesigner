@@ -101,6 +101,28 @@ const EFFECT_INTENT_CAPABILITIES = {
       direction: [/location/]
     }
   },
+  Fireworks: {
+    supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "variation"],
+    supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
+    supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
+    supportedRenderIntent: ["groupPolicy", "bufferStyle", "expansionPolicy", "riskTolerance"],
+    effectParamPatterns: {
+      speed: [/velocity/, /fade/, /sensitivity/],
+      density: [/explosion/, /count/],
+      direction: [/location/, /gravity/]
+    }
+  },
+  Lightning: {
+    supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "variation"],
+    supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
+    supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
+    supportedRenderIntent: ["groupPolicy", "bufferStyle", "expansionPolicy", "riskTolerance"],
+    effectParamPatterns: {
+      density: [/bolts?/, /segments?/],
+      direction: [/direction/, /top/, /bottom/],
+      thickness: [/width/]
+    }
+  },
   Morph: {
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
@@ -158,6 +180,17 @@ const EFFECT_INTENT_CAPABILITIES = {
       speed: [/speed/],
       density: [/count/, /type/],
       direction: [/falling/]
+    }
+  },
+  Strobe: {
+    supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "variation"],
+    supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
+    supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
+    supportedRenderIntent: ["groupPolicy", "bufferStyle", "expansionPolicy", "riskTolerance"],
+    effectParamPatterns: {
+      speed: [/duration/],
+      density: [/strobes?/],
+      variation: [/type/, /music/]
     }
   },
   Spirals: {

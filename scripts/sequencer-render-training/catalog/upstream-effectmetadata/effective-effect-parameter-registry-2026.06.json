@@ -279,6 +279,420 @@
         }
       ]
     },
+    "Butterfly": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Expansion-wave motion texture effect. Style, chunking, palette source, and direction are first-order levers; skip acts as a secondary texture control.",
+      "parameters": {
+        "chunks": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [
+            1,
+            3,
+            6,
+            10
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "stopRule": "refine_only_near_breakpoints",
+          "interactionHypotheses": [
+            "skip",
+            "style"
+          ],
+          "upstream": {
+            "id": "Butterfly_Chunks",
+            "label": "Bkgrd Chunks",
+            "description": "Divides the pattern into repeated segments, increasing the frequency of the mathematical function to create more detailed or tiled patterns.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 10,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "colors": {
+          "type": "enum",
+          "anchors": [
+            "Rainbow",
+            "Palette"
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "style",
+            "direction"
+          ],
+          "upstream": {
+            "id": "Butterfly_Colors",
+            "label": "Colors",
+            "description": "Selects the color source. Rainbow uses a full HSV rainbow cycle, while Palette uses the user-defined palette colors.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "Rainbow",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "Rainbow",
+              "Palette"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "direction": {
+          "type": "enum",
+          "anchors": [
+            "Normal",
+            "Reverse"
+          ],
+          "importance": "medium",
+          "phase": "baseline",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "speed",
+            "style"
+          ],
+          "upstream": {
+            "id": "Butterfly_Direction",
+            "label": "Direction",
+            "description": "Sets the animation direction. Reverse inverts the pattern movement so it scrolls in the opposite direction.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "Normal",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "Normal",
+              "Reverse"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "speed": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            0,
+            10,
+            35,
+            70,
+            100
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "direction",
+            "style",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Butterfly_Speed",
+            "label": "Speed",
+            "description": "Controls how fast the pattern animates. For styles 1-5 this sets the scroll rate; for plasma styles 6-10 higher values produce slower, smoother animation.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 10,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "style": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [
+            1,
+            3,
+            5,
+            8,
+            10
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "colors",
+            "speed",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Butterfly_Style",
+            "label": "Style",
+            "description": "Selects the mathematical pattern formula. Styles 1-5 produce geometric butterfly-like patterns; styles 6-10 generate animated plasma effects.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 10,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Butterfly",
+      "upstreamSourceFile": "Butterfly.json",
+      "upstreamPropertyCount": 6,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
+    "Circles": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Expansion-wave particle motion effect. Count, size, speed, and radial/plasma modes are first-order controls; spatial offsets are deferred.",
+      "parameters": {
+        "bounce": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "baseline",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "speed"
+          ],
+          "upstream": {
+            "id": "Circles_Bounce",
+            "label": "Bounce",
+            "description": "When enabled, circles bounce off the edges of the model instead of wrapping around to the opposite side.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "count": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [
+            1,
+            3,
+            5,
+            8,
+            10
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "size",
+            "speed",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Circles_Count",
+            "label": "Number of Circles",
+            "description": "Sets the number of circles drawn on the model. In radial mode, controls the number of color rings.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 3,
+            "min": 1,
+            "max": 10,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "radial": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "baseline",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "count",
+            "size",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Circles_Radial",
+            "label": "Radial",
+            "description": "Draws expanding concentric rings radiating outward from the center point, using palette colors in alternating bands.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "size": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 20
+          },
+          "anchors": [
+            2,
+            5,
+            10,
+            15,
+            20
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "refine_only_near_breakpoints",
+          "interactionHypotheses": [
+            "count",
+            "radial"
+          ],
+          "upstream": {
+            "id": "Circles_Size",
+            "label": "Size",
+            "description": "Controls the radius of each circle. In radial mode, this sets the thickness of the concentric rings.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 5,
+            "min": 1,
+            "max": 20,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "speed": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 30
+          },
+          "anchors": [
+            1,
+            5,
+            10,
+            20,
+            30
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "bounce",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Circles_Speed",
+            "label": "Speed",
+            "description": "Controls how fast the circles move across the model. In radial mode, controls the speed of the outward ring expansion.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 10,
+            "min": 1,
+            "max": 30,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Circles",
+      "upstreamSourceFile": "Circles.json",
+      "upstreamPropertyCount": 11,
+      "upstreamVisibilityRuleCount": 1,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
     "Color Wash": {
       "complexityClass": "moderate",
       "earlySamplingPolicy": "standard_screening",
@@ -473,6 +887,636 @@
       "upstreamEffectName": "Color Wash",
       "upstreamSourceFile": "ColorWash.json",
       "upstreamPropertyCount": 6,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
+    "Fire": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Expansion-wave organic texture effect. Height, growth, hue shift, and location are first-order levers. Music-coupled growth is deferred for the first sweep.",
+      "parameters": {
+        "growthCycles": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 20
+          },
+          "anchors": [
+            0,
+            2,
+            5,
+            10,
+            20
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "refine_only_near_breakpoints",
+          "interactionHypotheses": [
+            "height",
+            "location"
+          ],
+          "upstream": {
+            "id": "Fire_GrowthCycles",
+            "label": "Growth Cycles",
+            "description": "Number of times the fire height oscillates (grows and shrinks) over the effect duration. Zero means no oscillation.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 0,
+            "min": 0,
+            "max": 200,
+            "divisor": 10,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "height": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 100
+          },
+          "anchors": [
+            10,
+            30,
+            50,
+            70,
+            100
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "growthCycles",
+            "location",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Fire_Height",
+            "label": "Height",
+            "description": "Controls how tall the flames reach. Higher values produce taller flames that extend further across the buffer.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 50,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "hueShift": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            0,
+            25,
+            50,
+            75,
+            100
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "height"
+          ],
+          "upstream": {
+            "id": "Fire_HueShift",
+            "label": "Hue Shift",
+            "description": "Shifts the fire color palette hue. At zero the fire is red/yellow; increasing values shift toward other colors like blue or green.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 0,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "location": {
+          "type": "enum",
+          "anchors": [
+            "Bottom",
+            "Top",
+            "Left",
+            "Right"
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "height",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Fire_Location",
+            "label": "Location",
+            "description": "Which edge of the buffer the fire originates from.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "Bottom",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [
+              "Bottom",
+              "Top",
+              "Left",
+              "Right"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Fire",
+      "upstreamSourceFile": "Fire.json",
+      "upstreamPropertyCount": 5,
+      "upstreamVisibilityRuleCount": 1,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
+    "Fireworks": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Expansion-wave particle burst effect. Explosion cadence, particle count, velocity, fade, and launch placement are the primary levers. Music/timing modes are deferred.",
+      "parameters": {
+        "count": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 100
+          },
+          "anchors": [
+            10,
+            30,
+            50,
+            75,
+            100
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "refine_only_near_breakpoints",
+          "interactionHypotheses": [
+            "explosions",
+            "fade"
+          ],
+          "upstream": {
+            "id": "Fireworks_Count",
+            "label": "Particles in Explosion",
+            "description": "Number of particles created in each explosion. More particles create denser, more dramatic bursts.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 50,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "explosions": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 50
+          },
+          "anchors": [
+            1,
+            8,
+            16,
+            32,
+            50
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "count",
+            "velocity",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Fireworks_Explosions",
+            "label": "Number of Explosions",
+            "description": "Total number of firework explosions randomly distributed across the effect duration. Disabled when using music or timing triggers.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 16,
+            "min": 1,
+            "max": 50,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "fade": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 100
+          },
+          "anchors": [
+            10,
+            30,
+            50,
+            75,
+            100
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "stopRule": "refine_only_near_breakpoints",
+          "interactionHypotheses": [
+            "velocity",
+            "count"
+          ],
+          "upstream": {
+            "id": "Fireworks_Fade",
+            "label": "Particle Fade",
+            "description": "How long particles remain visible before fading out. Higher values make particles last longer.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 50,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "gravity": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "medium",
+          "phase": "baseline",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "velocity"
+          ],
+          "upstream": {
+            "id": "Fireworks_Gravity",
+            "label": "Gravity",
+            "description": "When enabled, particles arc downward over time simulating gravity. When disabled, particles fly in straight lines.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": true,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "velocity": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [
+            1,
+            2,
+            4,
+            7,
+            10
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "fade",
+            "gravity"
+          ],
+          "upstream": {
+            "id": "Fireworks_Velocity",
+            "label": "Velocity of Particles",
+            "description": "Maximum speed of particles as they fly outward from the explosion center. Higher values create larger bursts.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 2,
+            "min": 1,
+            "max": 10,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "xLocation": {
+          "type": "numeric",
+          "range": {
+            "min": -1,
+            "max": 100
+          },
+          "anchors": [
+            -1,
+            25,
+            50,
+            75
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "yLocation",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Fireworks_XLocation",
+            "label": "X Location",
+            "description": "Fixed horizontal position for explosions as a percentage of buffer width. Set to -1 for random placement.",
+            "type": "int",
+            "controlType": "slider",
+            "default": -1,
+            "min": -1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Fireworks",
+      "upstreamSourceFile": "Fireworks.json",
+      "upstreamPropertyCount": 14,
+      "upstreamVisibilityRuleCount": 3,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
+    "Lightning": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Expansion-wave directional strike effect. Bolt count, segmentation, branching, width, and direction are first-order levers; strike origin offsets are secondary.",
+      "parameters": {
+        "direction": {
+          "type": "enum",
+          "anchors": [
+            "Up",
+            "Down"
+          ],
+          "importance": "medium",
+          "phase": "baseline",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "topY",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Lightning_Direction",
+            "label": "Direction",
+            "description": "Direction the lightning bolt extends. 'Up' draws from bottom to top, 'Down' draws from top to bottom.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "Up",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": false,
+            "options": [
+              "Up",
+              "Down"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "forked": {
+          "type": "boolean",
+          "anchors": [
+            false,
+            true
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "numberBolts",
+            "numberSegments"
+          ],
+          "upstream": {
+            "id": "ForkedLightning",
+            "label": "Forked Lightning",
+            "description": "When enabled, the bolt splits into a secondary fork partway through, creating a branching lightning appearance.",
+            "type": "bool",
+            "controlType": "checkbox",
+            "default": false,
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "numberBolts": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 50
+          },
+          "anchors": [
+            1,
+            5,
+            10,
+            25,
+            50
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "forked",
+            "width"
+          ],
+          "upstream": {
+            "id": "Number_Bolts",
+            "label": "Number of Segments",
+            "description": "Number of zigzag segments that make up the lightning bolt. More segments create a longer, more detailed bolt.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 10,
+            "min": 1,
+            "max": 50,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "numberSegments": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 20
+          },
+          "anchors": [
+            1,
+            5,
+            10,
+            15,
+            20
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "refine_only_near_breakpoints",
+          "interactionHypotheses": [
+            "forked",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Number_Segments",
+            "label": "Width of Bolt",
+            "description": "Controls the horizontal deviation of each zigzag segment. Higher values make the bolt spread wider side-to-side.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 5,
+            "min": 1,
+            "max": 20,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "width": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 7
+          },
+          "anchors": [
+            1,
+            2,
+            4,
+            7
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "forked"
+          ],
+          "upstream": {
+            "id": "Lightning_WIDTH",
+            "label": "Width",
+            "description": "Pixel thickness of each bolt segment line. Higher values draw a wider, more visible bolt.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 7,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Lightning",
+      "upstreamSourceFile": "Lightning.json",
+      "upstreamPropertyCount": 8,
       "upstreamVisibilityRuleCount": 0,
       "upstreamSharedMetadata": [
         "Buffer",
@@ -2270,6 +3314,181 @@
         }
       ]
     },
+    "Snowflakes": {
+      "complexityClass": "moderate",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Expansion-wave particle texture effect. Count, type, speed, and falling mode are the main levers; warmup is secondary.",
+      "parameters": {
+        "count": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 100
+          },
+          "anchors": [
+            1,
+            5,
+            15,
+            40,
+            100
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "type",
+            "speed",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Snowflakes_Count",
+            "label": "Max flakes",
+            "description": "Maximum number of snowflakes visible on the buffer at the same time.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 5,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "falling": {
+          "type": "enum",
+          "anchors": [
+            "Driving",
+            "Falling",
+            "Falling & Accumulating"
+          ],
+          "importance": "medium",
+          "phase": "baseline",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "speed",
+            "type"
+          ],
+          "upstream": {
+            "id": "Falling",
+            "label": "Falling",
+            "description": "Selects the snowflake movement mode. 'Driving' scrolls flakes diagonally across the buffer. 'Falling' drops flakes from top to bottom. 'Falling & Accumulating' drops flakes that pile up at the bottom.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "Driving",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "Driving",
+              "Falling",
+              "Falling & Accumulating"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "speed": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 50
+          },
+          "anchors": [
+            0,
+            5,
+            10,
+            25,
+            50
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "falling"
+          ],
+          "upstream": {
+            "id": "Snowflakes_Speed",
+            "label": "Speed",
+            "description": "Controls how fast snowflakes move. In Driving mode this affects horizontal and vertical scroll speed; in Falling modes it controls the rate of downward movement.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 10,
+            "min": 0,
+            "max": 50,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "type": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 9
+          },
+          "anchors": [
+            0,
+            1,
+            3,
+            6,
+            9
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "count",
+            "falling"
+          ],
+          "upstream": {
+            "id": "Snowflakes_Type",
+            "label": "Type",
+            "description": "Selects the snowflake shape. 0 uses a random mix of all types each frame. Types 1-9 are specific shapes ranging from single pixels to multi-node crosses, diamonds, and squares.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 0,
+            "max": 9,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Snowflakes",
+      "upstreamSourceFile": "Snowflakes.json",
+      "upstreamPropertyCount": 5,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
     "Spirals": {
       "complexityClass": "complex",
       "earlySamplingPolicy": "broad_geometry_first",
@@ -2589,6 +3808,141 @@
       ],
       "upstreamUnmappedProperties": []
     },
+    "Strobe": {
+      "complexityClass": "moderate",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Expansion-wave cadence effect. Strobe count, duration, and type are the primary levers. Music mode is deferred for the first sweep.",
+      "parameters": {
+        "duration": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 100
+          },
+          "anchors": [
+            1,
+            5,
+            10,
+            25,
+            50
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "refine_only_near_breakpoints",
+          "interactionHypotheses": [
+            "numberStrobes",
+            "type"
+          ],
+          "upstream": {
+            "id": "Strobe_Duration",
+            "label": "Strobe Duration",
+            "description": "How many frames each strobe flash remains visible before fading out. Higher values make flashes linger longer.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 10,
+            "min": 1,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "numberStrobes": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 300
+          },
+          "anchors": [
+            1,
+            3,
+            10,
+            50,
+            150
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "duration",
+            "type"
+          ],
+          "upstream": {
+            "id": "Number_Strobes",
+            "label": "Number Strobes",
+            "description": "How many strobe flashes are active at the same time. Higher values create a denser strobe field.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 3,
+            "min": 1,
+            "max": 300,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "type": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 4
+          },
+          "anchors": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "duration"
+          ],
+          "upstream": {
+            "id": "Strobe_Type",
+            "label": "Strobe Type",
+            "description": "Shape of each strobe flash. Type 1 is a single pixel, type 2 adds a random cross arm, type 3 is a full plus shape, and type 4 alternates between plus and X shapes.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 1,
+            "min": 1,
+            "max": 4,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Strobe",
+      "upstreamSourceFile": "Strobe.json",
+      "upstreamPropertyCount": 4,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
+    },
     "Twinkle": {
       "complexityClass": "complex",
       "earlySamplingPolicy": "broad_geometry_first",
@@ -2790,12 +4144,265 @@
         "Timing"
       ],
       "upstreamUnmappedProperties": []
+    },
+    "Wave": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "Expansion-wave motion texture effect. Wave type, count, speed, amplitude, fill, and direction are the first-order levers; mirroring and offsets are secondary.",
+      "parameters": {
+        "direction": {
+          "type": "enum",
+          "anchors": [
+            "Right to Left",
+            "Left to Right"
+          ],
+          "importance": "medium",
+          "phase": "baseline",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "numberWaves",
+            "waveSpeed"
+          ],
+          "upstream": {
+            "id": "Wave_Direction",
+            "label": "Wave Direction",
+            "description": "The horizontal direction the wave scrolls. Right to Left moves the pattern leftward, Left to Right moves it rightward.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "Right to Left",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "Right to Left",
+              "Left to Right"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "fillColors": {
+          "type": "enum",
+          "anchors": [
+            "None",
+            "Rainbow",
+            "Palette"
+          ],
+          "importance": "medium",
+          "phase": "baseline",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "type"
+          ],
+          "upstream": {
+            "id": "Fill_Colors",
+            "label": "Fill Colors",
+            "description": "How the area below the wave is filled. None leaves it empty, Rainbow fills with a hue gradient, and Palette fills using the effect color palette.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "None",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "None",
+              "Rainbow",
+              "Palette"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "numberWaves": {
+          "type": "numeric",
+          "range": {
+            "min": 0.5,
+            "max": 10
+          },
+          "anchors": [
+            0.5,
+            1,
+            2.5,
+            5,
+            10
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "waveSpeed",
+            "direction",
+            "geometryProfile"
+          ],
+          "upstream": {
+            "id": "Number_Waves",
+            "label": "Number of Waves",
+            "description": "Number of wave cycles drawn across the buffer width. 1.0 is one full wave; fractional values draw partial waves. Higher values fit more wave cycles onto the model.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 2.5,
+            "min": 180,
+            "max": 3600,
+            "divisor": 360,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "type": {
+          "type": "enum",
+          "anchors": [
+            "Sine",
+            "Triangle",
+            "Square",
+            "Decaying Sine",
+            "Fractal/ivy"
+          ],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "stopRule": "all_meaningful_options",
+          "interactionHypotheses": [
+            "numberWaves",
+            "fillColors"
+          ],
+          "upstream": {
+            "id": "Wave_Type",
+            "label": "Wave Type",
+            "description": "The waveform shape drawn across the model. Sine produces smooth curves, Triangle creates sharp zigzags, Square makes flat-topped waves, Decaying Sine fades over time, and Fractal/ivy generates random branching patterns.",
+            "type": "enum",
+            "controlType": "choice",
+            "default": "Sine",
+            "min": null,
+            "max": null,
+            "divisor": 1,
+            "valueCurve": false,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [
+              "Sine",
+              "Triangle",
+              "Square",
+              "Decaying Sine",
+              "Fractal/ivy"
+            ],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "waveHeight": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [
+            0,
+            25,
+            50,
+            75,
+            100
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "stopRule": "refine_only_near_breakpoints",
+          "interactionHypotheses": [
+            "thickness",
+            "type"
+          ],
+          "upstream": {
+            "id": "Wave_Height",
+            "label": "Scale Height of Wave",
+            "description": "Scales the vertical amplitude of the wave as a percentage. Lower values flatten the wave; higher values make it reach closer to the buffer edges.",
+            "type": "int",
+            "controlType": "slider",
+            "default": 50,
+            "min": 0,
+            "max": 100,
+            "divisor": 1,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        },
+        "waveSpeed": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 50
+          },
+          "anchors": [
+            0,
+            5,
+            10,
+            25,
+            50
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "stopRule": "stop_when_regions_stabilize",
+          "interactionHypotheses": [
+            "numberWaves",
+            "direction"
+          ],
+          "upstream": {
+            "id": "Wave_Speed",
+            "label": "Speed",
+            "description": "How fast the wave scrolls horizontally across the model. Higher values create faster-moving waves.",
+            "type": "float",
+            "controlType": "slider",
+            "default": 10,
+            "min": 0,
+            "max": 5000,
+            "divisor": 100,
+            "valueCurve": true,
+            "vcMin": null,
+            "vcMax": null,
+            "lockable": true,
+            "options": [],
+            "dynamicOptions": null,
+            "suppressIfDefault": false
+          }
+        }
+      },
+      "upstreamEffectName": "Wave",
+      "upstreamSourceFile": "Wave.json",
+      "upstreamPropertyCount": 9,
+      "upstreamVisibilityRuleCount": 0,
+      "upstreamSharedMetadata": [
+        "Buffer",
+        "Color",
+        "Timing"
+      ],
+      "upstreamUnmappedProperties": []
     }
   },
   "metadataSource": {
     "type": "xlights_effectmetadata_overlay",
     "xlightsVersion": "2026.06",
-    "generatedAt": "2026-04-16T18:35:27.345Z",
+    "generatedAt": "2026-04-17T01:04:15.813Z",
     "bundlePath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/upstream-effectmetadata/xlights-effectmetadata-bundle-2026.06.json"
   }
 }

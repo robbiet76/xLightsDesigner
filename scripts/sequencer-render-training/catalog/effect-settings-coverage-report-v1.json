@@ -1,12 +1,12 @@
 {
   "artifactType": "effect_settings_coverage_report_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T17:53:55.941Z",
+  "generatedAt": "2026-04-17T01:05:22.802Z",
   "summary": {
-    "effectCount": 20,
+    "effectCount": 23,
     "screenedParameterSubsetCount": 10,
-    "registryDefinedNotScreenedCount": 0,
-    "intentTranslatableOnlyCount": 10,
+    "registryDefinedNotScreenedCount": 8,
+    "intentTranslatableOnlyCount": 5,
     "familyOnlyCount": 0,
     "exhaustiveSettingCoverage": false
   },
@@ -48,7 +48,7 @@
     {
       "effectName": "Butterfly",
       "family": "motion_texture",
-      "coverageStatus": "intent_translatable_only",
+      "coverageStatus": "registry_defined_not_screened",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -58,7 +58,13 @@
         "direction",
         "variation"
       ],
-      "registryParameterNames": [],
+      "registryParameterNames": [
+        "chunks",
+        "colors",
+        "direction",
+        "speed",
+        "style"
+      ],
       "retainedParameterNames": [],
       "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
@@ -66,7 +72,7 @@
     {
       "effectName": "Circles",
       "family": "particle_motion",
-      "coverageStatus": "intent_translatable_only",
+      "coverageStatus": "registry_defined_not_screened",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -75,7 +81,13 @@
         "motion",
         "variation"
       ],
-      "registryParameterNames": [],
+      "registryParameterNames": [
+        "bounce",
+        "count",
+        "radial",
+        "size",
+        "speed"
+      ],
       "retainedParameterNames": [],
       "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
@@ -150,7 +162,7 @@
     {
       "effectName": "Fire",
       "family": "organic_texture",
-      "coverageStatus": "intent_translatable_only",
+      "coverageStatus": "registry_defined_not_screened",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -158,7 +170,60 @@
         "motion",
         "variation"
       ],
-      "registryParameterNames": [],
+      "registryParameterNames": [
+        "growthCycles",
+        "height",
+        "hueShift",
+        "location"
+      ],
+      "retainedParameterNames": [],
+      "screenedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Fireworks",
+      "family": "particle_motion",
+      "coverageStatus": "registry_defined_not_screened",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "registryParameterNames": [
+        "count",
+        "explosions",
+        "fade",
+        "gravity",
+        "velocity",
+        "xLocation"
+      ],
+      "retainedParameterNames": [],
+      "screenedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Lightning",
+      "family": "radial_motion",
+      "coverageStatus": "registry_defined_not_screened",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "variation"
+      ],
+      "registryParameterNames": [
+        "direction",
+        "forked",
+        "numberBolts",
+        "numberSegments",
+        "width"
+      ],
       "retainedParameterNames": [],
       "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
@@ -389,7 +454,7 @@
     {
       "effectName": "Snowflakes",
       "family": "particle_motion",
-      "coverageStatus": "intent_translatable_only",
+      "coverageStatus": "registry_defined_not_screened",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -398,7 +463,12 @@
         "motion",
         "variation"
       ],
-      "registryParameterNames": [],
+      "registryParameterNames": [
+        "count",
+        "falling",
+        "speed",
+        "type"
+      ],
       "retainedParameterNames": [],
       "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
@@ -439,6 +509,27 @@
         "grow",
         "shrink"
       ],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Strobe",
+      "family": "rhythmic",
+      "coverageStatus": "registry_defined_not_screened",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "registryParameterNames": [
+        "duration",
+        "numberStrobes",
+        "type"
+      ],
+      "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -484,7 +575,7 @@
     {
       "effectName": "Wave",
       "family": "motion_texture",
-      "coverageStatus": "intent_translatable_only",
+      "coverageStatus": "registry_defined_not_screened",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -495,7 +586,14 @@
         "thickness",
         "variation"
       ],
-      "registryParameterNames": [],
+      "registryParameterNames": [
+        "direction",
+        "fillColors",
+        "numberWaves",
+        "type",
+        "waveHeight",
+        "waveSpeed"
+      ],
       "retainedParameterNames": [],
       "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false

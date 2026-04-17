@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_training_dossier_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-16T18:35:28.284Z",
+  "generatedAt": "2026-04-17T01:05:22.832Z",
   "status": "transitional_current_evidence",
   "effectName": "Wave",
   "family": "motion_texture",
@@ -16,25 +16,369 @@
       "thickness",
       "variation"
     ],
-    "supportedPaletteIntent": [],
-    "supportedLayerIntent": [],
-    "supportedRenderIntent": []
+    "supportedPaletteIntent": [
+      "colors",
+      "temperature",
+      "contrast",
+      "brightness",
+      "saturation",
+      "accentUsage"
+    ],
+    "supportedLayerIntent": [
+      "priority",
+      "blendRole",
+      "mixAmount",
+      "overlayPolicy"
+    ],
+    "supportedRenderIntent": [
+      "groupPolicy",
+      "bufferStyle",
+      "expansionPolicy",
+      "riskTolerance"
+    ]
   },
   "currentCoverage": {
-    "coverageStatus": "intent_translatable_only",
+    "coverageStatus": "registry_defined_not_screened",
     "exhaustiveSettingCoverage": false,
-    "registryParameterNames": [],
+    "registryParameterNames": [
+      "direction",
+      "fillColors",
+      "numberWaves",
+      "type",
+      "waveHeight",
+      "waveSpeed"
+    ],
     "retainedParameterNames": [],
     "screenedParameterNames": [],
     "screeningRecordCount": 0
   },
   "upstreamMetadata": {
-    "sourceFile": "",
-    "propertyCount": 0,
+    "sourceFile": "Wave.json",
+    "propertyCount": 9,
     "visibilityRuleCount": 0,
-    "parameters": {}
+    "parameters": {
+      "direction": {
+        "upstreamId": "Wave_Direction",
+        "label": "Wave Direction",
+        "description": "The horizontal direction the wave scrolls. Right to Left moves the pattern leftward, Left to Right moves it rightward.",
+        "default": "Right to Left",
+        "min": null,
+        "max": null,
+        "options": [
+          "Right to Left",
+          "Left to Right"
+        ]
+      },
+      "fillColors": {
+        "upstreamId": "Fill_Colors",
+        "label": "Fill Colors",
+        "description": "How the area below the wave is filled. None leaves it empty, Rainbow fills with a hue gradient, and Palette fills using the effect color palette.",
+        "default": "None",
+        "min": null,
+        "max": null,
+        "options": [
+          "None",
+          "Rainbow",
+          "Palette"
+        ]
+      },
+      "numberWaves": {
+        "upstreamId": "Number_Waves",
+        "label": "Number of Waves",
+        "description": "Number of wave cycles drawn across the buffer width. 1.0 is one full wave; fractional values draw partial waves. Higher values fit more wave cycles onto the model.",
+        "default": 2.5,
+        "min": 180,
+        "max": 3600,
+        "options": []
+      },
+      "type": {
+        "upstreamId": "Wave_Type",
+        "label": "Wave Type",
+        "description": "The waveform shape drawn across the model. Sine produces smooth curves, Triangle creates sharp zigzags, Square makes flat-topped waves, Decaying Sine fades over time, and Fractal/ivy generates random branching patterns.",
+        "default": "Sine",
+        "min": null,
+        "max": null,
+        "options": [
+          "Sine",
+          "Triangle",
+          "Square",
+          "Decaying Sine",
+          "Fractal/ivy"
+        ]
+      },
+      "waveHeight": {
+        "upstreamId": "Wave_Height",
+        "label": "Scale Height of Wave",
+        "description": "Scales the vertical amplitude of the wave as a percentage. Lower values flatten the wave; higher values make it reach closer to the buffer edges.",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "options": []
+      },
+      "waveSpeed": {
+        "upstreamId": "Wave_Speed",
+        "label": "Speed",
+        "description": "How fast the wave scrolls horizontally across the model. Higher values create faster-moving waves.",
+        "default": 10,
+        "min": 0,
+        "max": 5000,
+        "options": []
+      }
+    }
   },
-  "registryDefinition": {},
+  "registryDefinition": {
+    "complexityClass": "complex",
+    "earlySamplingPolicy": "broad_geometry_first",
+    "notes": "Expansion-wave motion texture effect. Wave type, count, speed, amplitude, fill, and direction are the first-order levers; mirroring and offsets are secondary.",
+    "parameters": {
+      "direction": {
+        "type": "enum",
+        "anchors": [
+          "Right to Left",
+          "Left to Right"
+        ],
+        "importance": "medium",
+        "phase": "baseline",
+        "practicalPriority": "medium",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "numberWaves",
+          "waveSpeed"
+        ],
+        "upstream": {
+          "id": "Wave_Direction",
+          "label": "Wave Direction",
+          "description": "The horizontal direction the wave scrolls. Right to Left moves the pattern leftward, Left to Right moves it rightward.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "Right to Left",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [
+            "Right to Left",
+            "Left to Right"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "fillColors": {
+        "type": "enum",
+        "anchors": [
+          "None",
+          "Rainbow",
+          "Palette"
+        ],
+        "importance": "medium",
+        "phase": "baseline",
+        "practicalPriority": "medium",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "type"
+        ],
+        "upstream": {
+          "id": "Fill_Colors",
+          "label": "Fill Colors",
+          "description": "How the area below the wave is filled. None leaves it empty, Rainbow fills with a hue gradient, and Palette fills using the effect color palette.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "None",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [
+            "None",
+            "Rainbow",
+            "Palette"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "numberWaves": {
+        "type": "numeric",
+        "range": {
+          "min": 0.5,
+          "max": 10
+        },
+        "anchors": [
+          0.5,
+          1,
+          2.5,
+          5,
+          10
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "stopRule": "stop_when_regions_stabilize",
+        "interactionHypotheses": [
+          "waveSpeed",
+          "direction",
+          "geometryProfile"
+        ],
+        "upstream": {
+          "id": "Number_Waves",
+          "label": "Number of Waves",
+          "description": "Number of wave cycles drawn across the buffer width. 1.0 is one full wave; fractional values draw partial waves. Higher values fit more wave cycles onto the model.",
+          "type": "float",
+          "controlType": "slider",
+          "default": 2.5,
+          "min": 180,
+          "max": 3600,
+          "divisor": 360,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "type": {
+        "type": "enum",
+        "anchors": [
+          "Sine",
+          "Triangle",
+          "Square",
+          "Decaying Sine",
+          "Fractal/ivy"
+        ],
+        "importance": "high",
+        "phase": "baseline",
+        "practicalPriority": "high",
+        "stopRule": "all_meaningful_options",
+        "interactionHypotheses": [
+          "numberWaves",
+          "fillColors"
+        ],
+        "upstream": {
+          "id": "Wave_Type",
+          "label": "Wave Type",
+          "description": "The waveform shape drawn across the model. Sine produces smooth curves, Triangle creates sharp zigzags, Square makes flat-topped waves, Decaying Sine fades over time, and Fractal/ivy generates random branching patterns.",
+          "type": "enum",
+          "controlType": "choice",
+          "default": "Sine",
+          "min": null,
+          "max": null,
+          "divisor": 1,
+          "valueCurve": false,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [
+            "Sine",
+            "Triangle",
+            "Square",
+            "Decaying Sine",
+            "Fractal/ivy"
+          ],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "waveHeight": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "anchors": [
+          0,
+          25,
+          50,
+          75,
+          100
+        ],
+        "importance": "medium",
+        "phase": "screen",
+        "practicalPriority": "medium",
+        "stopRule": "refine_only_near_breakpoints",
+        "interactionHypotheses": [
+          "thickness",
+          "type"
+        ],
+        "upstream": {
+          "id": "Wave_Height",
+          "label": "Scale Height of Wave",
+          "description": "Scales the vertical amplitude of the wave as a percentage. Lower values flatten the wave; higher values make it reach closer to the buffer edges.",
+          "type": "int",
+          "controlType": "slider",
+          "default": 50,
+          "min": 0,
+          "max": 100,
+          "divisor": 1,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      },
+      "waveSpeed": {
+        "type": "numeric",
+        "range": {
+          "min": 0,
+          "max": 50
+        },
+        "anchors": [
+          0,
+          5,
+          10,
+          25,
+          50
+        ],
+        "importance": "high",
+        "phase": "screen",
+        "practicalPriority": "high",
+        "stopRule": "stop_when_regions_stabilize",
+        "interactionHypotheses": [
+          "numberWaves",
+          "direction"
+        ],
+        "upstream": {
+          "id": "Wave_Speed",
+          "label": "Speed",
+          "description": "How fast the wave scrolls horizontally across the model. Higher values create faster-moving waves.",
+          "type": "float",
+          "controlType": "slider",
+          "default": 10,
+          "min": 0,
+          "max": 5000,
+          "divisor": 100,
+          "valueCurve": true,
+          "vcMin": null,
+          "vcMax": null,
+          "lockable": true,
+          "options": [],
+          "dynamicOptions": null,
+          "suppressIfDefault": false
+        }
+      }
+    },
+    "upstreamEffectName": "Wave",
+    "upstreamSourceFile": "Wave.json",
+    "upstreamPropertyCount": 9,
+    "upstreamVisibilityRuleCount": 0,
+    "upstreamSharedMetadata": [
+      "Buffer",
+      "Color",
+      "Timing"
+    ],
+    "upstreamUnmappedProperties": []
+  },
   "interactionCoverage": {
     "requiresInteractionCoverage": false,
     "hasInteractionCoverage": false,
@@ -53,5 +397,165 @@
     "screeningRecords": [],
     "screeningRecordPaths": []
   },
-  "currentTrainingReference": {}
+  "currentTrainingReference": {
+    "effectName": "Wave",
+    "baseline": {
+      "currentStage": "",
+      "selectorReady": false,
+      "selectorEvidence": {},
+      "supportedModelTypes": [],
+      "supportedGeometryProfiles": [],
+      "intentTags": [],
+      "patternFamilies": [],
+      "retainedParameters": []
+    },
+    "capability": {
+      "family": "motion_texture",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "supportedPaletteIntent": [
+        "colors",
+        "temperature",
+        "contrast",
+        "brightness",
+        "saturation",
+        "accentUsage"
+      ],
+      "supportedLayerIntent": [
+        "priority",
+        "blendRole",
+        "mixAmount",
+        "overlayPolicy"
+      ],
+      "supportedRenderIntent": [
+        "groupPolicy",
+        "bufferStyle",
+        "expansionPolicy",
+        "riskTolerance"
+      ]
+    },
+    "parameterLearning": {
+      "registryParameterNames": [
+        "direction",
+        "fillColors",
+        "numberWaves",
+        "type",
+        "waveHeight",
+        "waveSpeed"
+      ],
+      "retainedParameterNames": [],
+      "supportedIntentAxes": {
+        "settings": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "thickness",
+          "variation"
+        ],
+        "palette": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "layer": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "render": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "coverageStatus": "registry_defined_not_screened",
+      "exhaustiveSettingCoverage": false,
+      "screenedParameterNames": [],
+      "derivedPriors": {
+        "status": "empty",
+        "priorCount": 0,
+        "priors": []
+      }
+    },
+    "liveOutcomeLearning": {
+      "status": "seeded_empty",
+      "storageClass": "general_training",
+      "outcomeRecordCount": 0,
+      "seedRolePriors": [],
+      "roleOutcomeMemory": {
+        "strengthen_lead": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "reduce_competing_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "widen_support": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "increase_section_contrast": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        },
+        "add_section_development": {
+          "sampleCount": 0,
+          "successfulUses": 0,
+          "failedUses": 0,
+          "favoredScopes": [],
+          "favoredSignals": [],
+          "cautionSignals": []
+        }
+      },
+      "parameterOutcomeMemory": {},
+      "sharedSettingOutcomeMemory": {}
+    },
+    "screeningLearning": {
+      "status": "empty",
+      "storageClass": "general_training",
+      "screeningRecordCount": 0,
+      "screenedParameterNames": [],
+      "sampledModelTypes": [],
+      "sampledGeometryProfiles": [],
+      "observedLabelHints": [],
+      "configurationRepresentativeness": {
+        "coverageStatus": "none",
+        "profileCount": 0,
+        "profiles": []
+      }
+    }
+  }
 }

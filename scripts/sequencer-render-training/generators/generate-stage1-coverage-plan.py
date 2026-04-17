@@ -104,6 +104,58 @@ def slugify_geometry(profile: str) -> str:
     return profile.replace('_', '-')
 
 
+def default_effect_settings(effect: str, registry: dict) -> dict:
+    effect_registry = registry.get('effects', {}).get(effect, {})
+    parameters = effect_registry.get('parameters', {})
+    settings = {}
+    for parameter_name, meta in parameters.items():
+        upstream = meta.get('upstream') or {}
+        if upstream.get('default') is not None:
+            settings[parameter_name] = upstream.get('default')
+            continue
+        anchors = meta.get('anchors') or []
+        if anchors:
+            settings[parameter_name] = anchors[0]
+            continue
+        if meta.get('type') == 'boolean':
+            settings[parameter_name] = False
+    return settings
+
+
+def generate_registry_seed_manifest(effect: str, geometry_profile: str, target_model: dict, registry: dict, out_path: Path) -> str:
+    effect_slug = effect.lower().replace(' ', '')
+    model_slug = target_model['modelName'].lower()
+    pack_id = f"{effect_slug}-{model_slug}-stage1-seed-v1"
+    shared_settings = {}
+    if target_model['modelType'] == 'single_line':
+        shared_settings['renderStyle'] = 'Single Line'
+    manifest = {
+        'manifestVersion': '1.0',
+        'packId': pack_id,
+        'description': f"Registry-seeded Stage 1 baseline manifest for {effect} on {target_model['modelName']} in the canonical render-training layout.",
+        'fixture': {
+            'sequencePath': '/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq',
+            'modelName': target_model['modelName'],
+            'modelType': target_model['modelType'],
+            'startMs': 1000,
+            'endMs': 5000,
+            'durationClass': 'long',
+            'notes': f"Registry-seeded Stage 1 baseline manifest for {effect} on {target_model['modelName']} ({geometry_profile})."
+        },
+        'samples': [
+            {
+                'sampleId': f"{effect_slug}-{slugify_geometry(geometry_profile)}-baseline-seed-v1",
+                'effectName': effect,
+                'effectSettings': default_effect_settings(effect, registry),
+                'sharedSettings': shared_settings,
+                'labelHints': ['baseline_seed', 'registry_seed', geometry_profile]
+            }
+        ]
+    }
+    out_path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    return str(out_path)
+
+
 def generate_manifest(effect: str, geometry_profile: str, target_model: dict, template_path: Path, out_path: Path) -> str:
     manifest = load_json(template_path)
     generated = deepcopy(manifest)
@@ -178,10 +230,14 @@ def main() -> int:
         if not parameters:
             continue
 
-        source = 'generated'
-        template_path = EFFECT_TEMPLATE_MANIFESTS[effect]
         manifest_path = str(out_manifest_dir / f"{effect.lower().replace(' ', '')}-{geometry_profile}-stage1-base.json")
-        generate_manifest(effect, geometry_profile, target_model, Path(template_path), Path(manifest_path))
+        template_path = EFFECT_TEMPLATE_MANIFESTS.get(effect)
+        if template_path:
+            source = 'template'
+            generate_manifest(effect, geometry_profile, target_model, Path(template_path), Path(manifest_path))
+        else:
+            source = 'registry_seed'
+            generate_registry_seed_manifest(effect, geometry_profile, target_model, registry, Path(manifest_path))
 
         plan_id = f"stage1-{effect.lower().replace(' ', '')}-{slugify_geometry(geometry_profile)}"
         plans.append({

@@ -1,11 +1,11 @@
 {
   "artifactType": "xlights_effect_metadata_diff_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-16T18:35:27.361Z",
+  "generatedAt": "2026-04-17T01:04:15.826Z",
   "xlightsVersion": "2026.06",
   "sourceDir": "/Users/robterry/xLights-2026.06/resources/effectmetadata",
   "registryPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-parameter-registry.json",
-  "localRegistryEffectCount": 10,
+  "localRegistryEffectCount": 18,
   "upstreamEffectCount": 56,
   "overlapEffects": [
     {
@@ -165,6 +165,263 @@
       ]
     },
     {
+      "effectName": "Butterfly",
+      "localParameterCount": 5,
+      "upstreamPropertyCount": 6,
+      "upstreamVisibilityRuleCount": 0,
+      "matchedParameterCount": 5,
+      "missingParameterCount": 0,
+      "parameterMappings": [
+        {
+          "localParameter": "chunks",
+          "upstreamId": "Butterfly_Chunks",
+          "upstreamLabel": "Bkgrd Chunks",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 10
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 10
+          },
+          "localAnchors": [
+            1,
+            3,
+            6,
+            10
+          ],
+          "upstreamDefault": 1,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "colors",
+          "upstreamId": "Butterfly_Colors",
+          "upstreamLabel": "Colors",
+          "matched": true,
+          "localType": "enum",
+          "upstreamType": "enum",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            "Rainbow",
+            "Palette"
+          ],
+          "upstreamDefault": "Rainbow",
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "direction",
+          "upstreamId": "Butterfly_Direction",
+          "upstreamLabel": "Direction",
+          "matched": true,
+          "localType": "enum",
+          "upstreamType": "enum",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            "Normal",
+            "Reverse"
+          ],
+          "upstreamDefault": "Normal",
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "speed",
+          "upstreamId": "Butterfly_Speed",
+          "upstreamLabel": "Speed",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 0,
+            "max": 100
+          },
+          "upstreamRange": {
+            "min": 0,
+            "max": 100
+          },
+          "localAnchors": [
+            0,
+            10,
+            35,
+            70,
+            100
+          ],
+          "upstreamDefault": 10,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "style",
+          "upstreamId": "Butterfly_Style",
+          "upstreamLabel": "Style",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 10
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 10
+          },
+          "localAnchors": [
+            1,
+            3,
+            5,
+            8,
+            10
+          ],
+          "upstreamDefault": 1,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        }
+      ],
+      "unmappedUpstreamProperties": []
+    },
+    {
+      "effectName": "Circles",
+      "localParameterCount": 5,
+      "upstreamPropertyCount": 11,
+      "upstreamVisibilityRuleCount": 1,
+      "matchedParameterCount": 5,
+      "missingParameterCount": 0,
+      "parameterMappings": [
+        {
+          "localParameter": "bounce",
+          "upstreamId": "Circles_Bounce",
+          "upstreamLabel": "Bounce",
+          "matched": true,
+          "localType": "boolean",
+          "upstreamType": "bool",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            false,
+            true
+          ],
+          "upstreamDefault": false,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 1
+        },
+        {
+          "localParameter": "count",
+          "upstreamId": "Circles_Count",
+          "upstreamLabel": "Number of Circles",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 10
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 10
+          },
+          "localAnchors": [
+            1,
+            3,
+            5,
+            8,
+            10
+          ],
+          "upstreamDefault": 3,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 1
+        },
+        {
+          "localParameter": "radial",
+          "upstreamId": "Circles_Radial",
+          "upstreamLabel": "Radial",
+          "matched": true,
+          "localType": "boolean",
+          "upstreamType": "bool",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            false,
+            true
+          ],
+          "upstreamDefault": false,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 1
+        },
+        {
+          "localParameter": "size",
+          "upstreamId": "Circles_Size",
+          "upstreamLabel": "Size",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 20
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 20
+          },
+          "localAnchors": [
+            2,
+            5,
+            10,
+            15,
+            20
+          ],
+          "upstreamDefault": 5,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 1
+        },
+        {
+          "localParameter": "speed",
+          "upstreamId": "Circles_Speed",
+          "upstreamLabel": "Speed",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 30
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 30
+          },
+          "localAnchors": [
+            1,
+            5,
+            10,
+            20,
+            30
+          ],
+          "upstreamDefault": 10,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 1
+        }
+      ],
+      "unmappedUpstreamProperties": []
+    },
+    {
       "effectName": "Color Wash",
       "localParameterCount": 6,
       "upstreamPropertyCount": 6,
@@ -295,6 +552,405 @@
             true
           ],
           "upstreamDefault": false,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        }
+      ],
+      "unmappedUpstreamProperties": []
+    },
+    {
+      "effectName": "Fire",
+      "localParameterCount": 4,
+      "upstreamPropertyCount": 5,
+      "upstreamVisibilityRuleCount": 1,
+      "matchedParameterCount": 4,
+      "missingParameterCount": 0,
+      "parameterMappings": [
+        {
+          "localParameter": "growthCycles",
+          "upstreamId": "Fire_GrowthCycles",
+          "upstreamLabel": "Growth Cycles",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "float",
+          "localRange": {
+            "min": 0,
+            "max": 20
+          },
+          "upstreamRange": {
+            "min": 0,
+            "max": 200
+          },
+          "localAnchors": [
+            0,
+            2,
+            5,
+            10,
+            20
+          ],
+          "upstreamDefault": 0,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 1
+        },
+        {
+          "localParameter": "height",
+          "upstreamId": "Fire_Height",
+          "upstreamLabel": "Height",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 100
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 100
+          },
+          "localAnchors": [
+            10,
+            30,
+            50,
+            70,
+            100
+          ],
+          "upstreamDefault": 50,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 1
+        },
+        {
+          "localParameter": "hueShift",
+          "upstreamId": "Fire_HueShift",
+          "upstreamLabel": "Hue Shift",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 0,
+            "max": 100
+          },
+          "upstreamRange": {
+            "min": 0,
+            "max": 100
+          },
+          "localAnchors": [
+            0,
+            25,
+            50,
+            75,
+            100
+          ],
+          "upstreamDefault": 0,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 1
+        },
+        {
+          "localParameter": "location",
+          "upstreamId": "Fire_Location",
+          "upstreamLabel": "Location",
+          "matched": true,
+          "localType": "enum",
+          "upstreamType": "enum",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            "Bottom",
+            "Top",
+            "Left",
+            "Right"
+          ],
+          "upstreamDefault": "Bottom",
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 1
+        }
+      ],
+      "unmappedUpstreamProperties": []
+    },
+    {
+      "effectName": "Fireworks",
+      "localParameterCount": 6,
+      "upstreamPropertyCount": 14,
+      "upstreamVisibilityRuleCount": 3,
+      "matchedParameterCount": 6,
+      "missingParameterCount": 0,
+      "parameterMappings": [
+        {
+          "localParameter": "count",
+          "upstreamId": "Fireworks_Count",
+          "upstreamLabel": "Particles in Explosion",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 100
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 100
+          },
+          "localAnchors": [
+            10,
+            30,
+            50,
+            75,
+            100
+          ],
+          "upstreamDefault": 50,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 3
+        },
+        {
+          "localParameter": "explosions",
+          "upstreamId": "Fireworks_Explosions",
+          "upstreamLabel": "Number of Explosions",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 50
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 50
+          },
+          "localAnchors": [
+            1,
+            8,
+            16,
+            32,
+            50
+          ],
+          "upstreamDefault": 16,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 3
+        },
+        {
+          "localParameter": "fade",
+          "upstreamId": "Fireworks_Fade",
+          "upstreamLabel": "Particle Fade",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 100
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 100
+          },
+          "localAnchors": [
+            10,
+            30,
+            50,
+            75,
+            100
+          ],
+          "upstreamDefault": 50,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 3
+        },
+        {
+          "localParameter": "gravity",
+          "upstreamId": "Fireworks_Gravity",
+          "upstreamLabel": "Gravity",
+          "matched": true,
+          "localType": "boolean",
+          "upstreamType": "bool",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            false,
+            true
+          ],
+          "upstreamDefault": true,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 3
+        },
+        {
+          "localParameter": "velocity",
+          "upstreamId": "Fireworks_Velocity",
+          "upstreamLabel": "Velocity of Particles",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 10
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 10
+          },
+          "localAnchors": [
+            1,
+            2,
+            4,
+            7,
+            10
+          ],
+          "upstreamDefault": 2,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 3
+        },
+        {
+          "localParameter": "xLocation",
+          "upstreamId": "Fireworks_XLocation",
+          "upstreamLabel": "X Location",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": -1,
+            "max": 100
+          },
+          "upstreamRange": {
+            "min": -1,
+            "max": 100
+          },
+          "localAnchors": [
+            -1,
+            25,
+            50,
+            75
+          ],
+          "upstreamDefault": -1,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 3
+        }
+      ],
+      "unmappedUpstreamProperties": []
+    },
+    {
+      "effectName": "Lightning",
+      "localParameterCount": 5,
+      "upstreamPropertyCount": 8,
+      "upstreamVisibilityRuleCount": 0,
+      "matchedParameterCount": 5,
+      "missingParameterCount": 0,
+      "parameterMappings": [
+        {
+          "localParameter": "direction",
+          "upstreamId": "Lightning_Direction",
+          "upstreamLabel": "Direction",
+          "matched": true,
+          "localType": "enum",
+          "upstreamType": "enum",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            "Up",
+            "Down"
+          ],
+          "upstreamDefault": "Up",
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "forked",
+          "upstreamId": "ForkedLightning",
+          "upstreamLabel": "Forked Lightning",
+          "matched": true,
+          "localType": "boolean",
+          "upstreamType": "bool",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            false,
+            true
+          ],
+          "upstreamDefault": false,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "numberBolts",
+          "upstreamId": "Number_Bolts",
+          "upstreamLabel": "Number of Segments",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 50
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 50
+          },
+          "localAnchors": [
+            1,
+            5,
+            10,
+            25,
+            50
+          ],
+          "upstreamDefault": 10,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "numberSegments",
+          "upstreamId": "Number_Segments",
+          "upstreamLabel": "Width of Bolt",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 20
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 20
+          },
+          "localAnchors": [
+            1,
+            5,
+            10,
+            15,
+            20
+          ],
+          "upstreamDefault": 5,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "width",
+          "upstreamId": "Lightning_WIDTH",
+          "upstreamLabel": "Width",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 7
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 7
+          },
+          "localAnchors": [
+            1,
+            2,
+            4,
+            7
+          ],
+          "upstreamDefault": 1,
           "localAppliesWhen": null,
           "upstreamVisibilityRuleCount": 0
         }
@@ -1472,6 +2128,116 @@
       ]
     },
     {
+      "effectName": "Snowflakes",
+      "localParameterCount": 4,
+      "upstreamPropertyCount": 5,
+      "upstreamVisibilityRuleCount": 0,
+      "matchedParameterCount": 4,
+      "missingParameterCount": 0,
+      "parameterMappings": [
+        {
+          "localParameter": "count",
+          "upstreamId": "Snowflakes_Count",
+          "upstreamLabel": "Max flakes",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 100
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 100
+          },
+          "localAnchors": [
+            1,
+            5,
+            15,
+            40,
+            100
+          ],
+          "upstreamDefault": 5,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "falling",
+          "upstreamId": "Falling",
+          "upstreamLabel": "Falling",
+          "matched": true,
+          "localType": "enum",
+          "upstreamType": "enum",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            "Driving",
+            "Falling",
+            "Falling & Accumulating"
+          ],
+          "upstreamDefault": "Driving",
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "speed",
+          "upstreamId": "Snowflakes_Speed",
+          "upstreamLabel": "Speed",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 0,
+            "max": 50
+          },
+          "upstreamRange": {
+            "min": 0,
+            "max": 50
+          },
+          "localAnchors": [
+            0,
+            5,
+            10,
+            25,
+            50
+          ],
+          "upstreamDefault": 10,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "type",
+          "upstreamId": "Snowflakes_Type",
+          "upstreamLabel": "Type",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 0,
+            "max": 9
+          },
+          "upstreamRange": {
+            "min": 0,
+            "max": 9
+          },
+          "localAnchors": [
+            0,
+            1,
+            3,
+            6,
+            9
+          ],
+          "upstreamDefault": 1,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        }
+      ],
+      "unmappedUpstreamProperties": []
+    },
+    {
       "effectName": "Spirals",
       "localParameterCount": 8,
       "upstreamPropertyCount": 8,
@@ -1667,6 +2433,94 @@
       "unmappedUpstreamProperties": []
     },
     {
+      "effectName": "Strobe",
+      "localParameterCount": 3,
+      "upstreamPropertyCount": 4,
+      "upstreamVisibilityRuleCount": 0,
+      "matchedParameterCount": 3,
+      "missingParameterCount": 0,
+      "parameterMappings": [
+        {
+          "localParameter": "duration",
+          "upstreamId": "Strobe_Duration",
+          "upstreamLabel": "Strobe Duration",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 100
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 100
+          },
+          "localAnchors": [
+            1,
+            5,
+            10,
+            25,
+            50
+          ],
+          "upstreamDefault": 10,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "numberStrobes",
+          "upstreamId": "Number_Strobes",
+          "upstreamLabel": "Number Strobes",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 300
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 300
+          },
+          "localAnchors": [
+            1,
+            3,
+            10,
+            50,
+            150
+          ],
+          "upstreamDefault": 3,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "type",
+          "upstreamId": "Strobe_Type",
+          "upstreamLabel": "Strobe Type",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 1,
+            "max": 4
+          },
+          "upstreamRange": {
+            "min": 1,
+            "max": 4
+          },
+          "localAnchors": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "upstreamDefault": 1,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        }
+      ],
+      "unmappedUpstreamProperties": []
+    },
+    {
       "effectName": "Twinkle",
       "localParameterCount": 5,
       "upstreamPropertyCount": 5,
@@ -1788,29 +2642,177 @@
         }
       ],
       "unmappedUpstreamProperties": []
+    },
+    {
+      "effectName": "Wave",
+      "localParameterCount": 6,
+      "upstreamPropertyCount": 9,
+      "upstreamVisibilityRuleCount": 0,
+      "matchedParameterCount": 6,
+      "missingParameterCount": 0,
+      "parameterMappings": [
+        {
+          "localParameter": "direction",
+          "upstreamId": "Wave_Direction",
+          "upstreamLabel": "Wave Direction",
+          "matched": true,
+          "localType": "enum",
+          "upstreamType": "enum",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            "Right to Left",
+            "Left to Right"
+          ],
+          "upstreamDefault": "Right to Left",
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "fillColors",
+          "upstreamId": "Fill_Colors",
+          "upstreamLabel": "Fill Colors",
+          "matched": true,
+          "localType": "enum",
+          "upstreamType": "enum",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            "None",
+            "Rainbow",
+            "Palette"
+          ],
+          "upstreamDefault": "None",
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "numberWaves",
+          "upstreamId": "Number_Waves",
+          "upstreamLabel": "Number of Waves",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "float",
+          "localRange": {
+            "min": 0.5,
+            "max": 10
+          },
+          "upstreamRange": {
+            "min": 180,
+            "max": 3600
+          },
+          "localAnchors": [
+            0.5,
+            1,
+            2.5,
+            5,
+            10
+          ],
+          "upstreamDefault": 2.5,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "type",
+          "upstreamId": "Wave_Type",
+          "upstreamLabel": "Wave Type",
+          "matched": true,
+          "localType": "enum",
+          "upstreamType": "enum",
+          "localRange": null,
+          "upstreamRange": {
+            "min": null,
+            "max": null
+          },
+          "localAnchors": [
+            "Sine",
+            "Triangle",
+            "Square",
+            "Decaying Sine",
+            "Fractal/ivy"
+          ],
+          "upstreamDefault": "Sine",
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "waveHeight",
+          "upstreamId": "Wave_Height",
+          "upstreamLabel": "Scale Height of Wave",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "int",
+          "localRange": {
+            "min": 0,
+            "max": 100
+          },
+          "upstreamRange": {
+            "min": 0,
+            "max": 100
+          },
+          "localAnchors": [
+            0,
+            25,
+            50,
+            75,
+            100
+          ],
+          "upstreamDefault": 50,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        },
+        {
+          "localParameter": "waveSpeed",
+          "upstreamId": "Wave_Speed",
+          "upstreamLabel": "Speed",
+          "matched": true,
+          "localType": "numeric",
+          "upstreamType": "float",
+          "localRange": {
+            "min": 0,
+            "max": 50
+          },
+          "upstreamRange": {
+            "min": 0,
+            "max": 5000
+          },
+          "localAnchors": [
+            0,
+            5,
+            10,
+            25,
+            50
+          ],
+          "upstreamDefault": 10,
+          "localAppliesWhen": null,
+          "upstreamVisibilityRuleCount": 0
+        }
+      ],
+      "unmappedUpstreamProperties": []
     }
   ],
   "registryOnlyEffects": [],
   "upstreamOnlyEffects": [
     "Adjust",
-    "Butterfly",
     "Candle",
-    "Circles",
     "Curtain",
     "DMX",
     "Duplicate",
     "Faces",
     "Fan",
     "Fill",
-    "Fire",
-    "Fireworks",
     "Galaxy",
     "Garlands",
     "Glediator",
     "Guitar",
     "Kaleidoscope",
     "Life",
-    "Lightning",
     "Lines",
     "Liquid",
     "Meteors",
@@ -1826,18 +2828,15 @@
     "Shader",
     "Shape",
     "Sketch",
-    "Snowflakes",
     "Snowstorm",
     "Spirograph",
     "State",
-    "Strobe",
     "Tendril",
     "Text",
     "Tree",
     "Video",
     "VU Meter",
-    "Warp",
-    "Wave"
+    "Warp"
   ],
   "breakingChanges": [],
   "warnings": [],

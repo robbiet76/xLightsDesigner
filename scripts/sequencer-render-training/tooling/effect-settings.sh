@@ -218,6 +218,61 @@ twinkle_effect_settings_json() {
     '
 }
 
+generic_registry_effect_settings_json() {
+  local effect_name="$1"
+  local effect_settings_json="$2"
+  local shared_settings_json="$3"
+  local registry_path
+  registry_path="${XLD_EFFECT_REGISTRY_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/catalog/effective-effect-parameter-registry.json}"
+
+  jq -cn \
+    --arg effect "${effect_name}" \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" \
+    --slurpfile registry "${registry_path}" '
+      def as_string(v):
+        if (v | type) == "boolean" then (if v then "1" else "0" end)
+        else (v | tostring)
+        end;
+
+      def slider_scaled(v; p):
+        if ((p.upstream.divisor // 1) | tonumber) != 1
+        then (((v | tonumber) * ((p.upstream.divisor // 1) | tonumber)) | round | tostring)
+        else (v | tostring)
+        end;
+
+      def param_settings(name; value; param):
+        if (param | type) != "object" or ((param.upstream.id // "") | length) == 0 then
+          {}
+        elif (param.upstream.controlType // "") == "checkbox" then
+          {("E_CHECKBOX_" + param.upstream.id): (if value then "1" else "0" end)}
+        elif (param.upstream.controlType // "") == "choice" then
+          {("E_CHOICE_" + param.upstream.id): (value | tostring)}
+        elif (param.upstream.controlType // "") == "slider" and (param.upstream.type // "") == "float" then
+          {
+            ("E_TEXTCTRL_" + param.upstream.id): (value | tostring),
+            ("E_SLIDER_" + param.upstream.id): slider_scaled(value; param)
+          }
+        elif (param.upstream.controlType // "") == "slider" then
+          {
+            ("E_SLIDER_" + param.upstream.id): (value | tostring)
+          }
+        else
+          {}
+        end;
+
+      ($registry[0].effects[$effect] // {}) as $effectRegistry
+      | ($effectRegistry.parameters // {}) as $params
+      | (
+          reduce ($eff | to_entries[]) as $entry
+            ({};
+             . + param_settings($entry.key; $entry.value; ($params[$entry.key] // {})))
+        )
+      + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+      + ($shared.settingsOverrides // {})
+    '
+}
+
 settings_json_for_effect() {
   local effect_name="$1"
   local effect_settings_json="$2"
@@ -255,8 +310,7 @@ settings_json_for_effect() {
       twinkle_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
       ;;
     *)
-      echo "Unsupported effect in training harness: ${effect_name}" >&2
-      exit 1
+      generic_registry_effect_settings_json "${effect_name}" "${effect_settings_json}" "${shared_settings_json}"
       ;;
   esac
 }
