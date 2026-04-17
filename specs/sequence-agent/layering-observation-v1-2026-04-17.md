@@ -192,27 +192,34 @@ That is enough for the first usable layering layer.
 ## Data Constraint
 
 The current `render_observation_v1` pipeline is scene-oriented.
-It does not yet isolate same-target layers as separate rendered contributors.
+It does not by itself isolate same-target layers as separate rendered contributors.
 
 That means:
 
-- `layering_observation_v1` should not be faked from scene-wide composition metrics
-- it needs either:
-  - layer-aware render sampling
+- `layering_observation_v1` must not be faked from scene-wide composition metrics
+- it must be derived from:
   - layer-isolated render proofs
-  - or explicit same-target placement reconstruction strong enough to distinguish contributors
+  - composite same-structure proofs when available
+  - explicit handoff or ownership evidence for supported same-structure cases
 
-Until that exists, layering should be treated as:
+The first implemented version is therefore intentionally constrained.
+It is valid only for layering cases where the proof contract is satisfied.
+Unsupported layering cases remain blocked rather than inferred.
 
-- specified
-- not yet fully instrumented
+## First Implemented Boundary
 
-## Immediate Next Step
+The first implementation of `layering_observation_v1` should answer the canonical questions using:
 
-The next implementation pass should:
+1. isolated element `render_observation_v1` refs
+2. optional `compositeObservationRef` from `layering_render_proof_v1`
+3. optional `handoffObservationRef`
+4. optional `ownershipObservationRef`
 
-1. identify same-target placement groups from `effectPlacements`
-2. define the minimum layer-aware render proof needed for those groups
-3. then implement `layering_observation_v1` from actual same-target evidence
+This first version should remain constrained to:
+
+- separation
+- masking
+- cadence
+- color
 
 Do not infer same-target layering quality from cross-model composition artifacts.
