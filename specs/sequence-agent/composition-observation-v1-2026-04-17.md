@@ -1,4 +1,4 @@
-# Interaction Observation v1
+# Composition Observation v1
 
 Status: Active
 Date: 2026-04-17
@@ -7,7 +7,7 @@ Last Reviewed: 2026-04-17
 
 ## Purpose
 
-Define the observation artifact for how realized elements interact inside a section or sequence window.
+Define the observation artifact for how realized elements compose across different physical structures inside a section or sequence window.
 
 This artifact exists because isolated realization metrics are not enough to judge sequencing quality.
 The project needs a machine-readable description of compositional interplay:
@@ -22,12 +22,12 @@ The project needs a machine-readable description of compositional interplay:
 ## Core Rule
 
 Single-realization metrics are descriptive primitives.
-Interaction metrics are where sequencing quality is judged.
+Composition metrics are where sequencing quality is judged.
 
 That means:
 
 - realization metrics should stay compact and representative
-- interaction metrics should carry more of the compositional burden
+- composition metrics should carry more of the compositional burden
 
 ## Why This Matters
 
@@ -39,32 +39,32 @@ The art lives in how elements are combined across:
 - targets
 - adjacent sections
 
-The system therefore needs a separate observation layer for interplay, not just more effect-local metrics.
+The system therefore needs a separate observation layer for cross-model composition, not just more effect-local metrics.
 
 ## Role Boundary
 
-`interaction_observation_v1` is not:
+`composition_observation_v1` is not:
 
 - another effect-capability record
 - another parameter-semantics record
 - a selector shortcut bundle
 
-It is the render-derived evidence layer for compositional interaction.
+It is the render-derived evidence layer for cross-model composition.
 
 ## Scope
 
 This artifact may operate at:
 
-- layer pair
 - target pair
+- model group
 - section window
 - adjacent-section window
 - sequence slice
 
 Suggested `scopeLevel` values:
 
-- `layer_pair`
 - `target_pair`
+- `model_group`
 - `section_window`
 - `section_transition`
 - `sequence_slice`
@@ -73,7 +73,7 @@ Suggested `scopeLevel` values:
 
 ```json
 {
-  "artifactType": "interaction_observation_v1",
+  "artifactType": "composition_observation_v1",
   "artifactVersion": 1,
   "createdAt": "ISO-8601",
   "source": {},
@@ -110,12 +110,11 @@ Suggested fields:
 
 ## Element Refs
 
-This should identify which realized elements are being compared.
+This should identify which realized elements are being compared across distinct physical structures.
 
 Suggested fields per entry:
 
 - `targetId`
-- `layerIndex`
 - `effectName`
 - `realizationId`
 - `roleHint`
@@ -123,7 +122,7 @@ Suggested fields per entry:
 ## Contrast
 
 Purpose:
-- describe whether adjacent or simultaneous elements read as distinct enough
+- describe whether different physical structures read as distinct enough inside the same composition
 
 Suggested fields:
 
@@ -137,7 +136,7 @@ Suggested fields:
 ## Hierarchy
 
 Purpose:
-- describe whether the intended focal ordering is preserved
+- describe whether the intended focal ordering across models is preserved
 
 Suggested fields:
 
@@ -150,7 +149,7 @@ Suggested fields:
 ## Motion Interaction
 
 Purpose:
-- describe whether motion behaviors reinforce or fight each other
+- describe whether motion behaviors across different structures reinforce or fight each other
 
 Suggested fields:
 
@@ -163,7 +162,7 @@ Suggested fields:
 ## Color Interaction
 
 Purpose:
-- describe whether palette behaviors reinforce or undermine the section read
+- describe whether palette behaviors across different structures reinforce or undermine the section read
 
 Suggested fields:
 
@@ -197,7 +196,7 @@ The first implementation of this artifact should answer only a compact set of qu
 5. Are palette behaviors reinforcing or fighting each other?
 6. Is this section too similar to the recent surrounding context?
 
-That is enough for the first usable interaction layer.
+That is enough for the first usable composition layer.
 
 ## Constraint
 
@@ -216,7 +215,7 @@ The goal is a compact compositional evidence layer that supports:
 The next implementation pass should:
 
 1. keep realization observation compact
-2. derive a first `interaction_observation_v1` from:
+2. derive a first `composition_observation_v1` from:
    - coverage
    - density
    - color behavior

@@ -6,6 +6,7 @@ import json
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--observation", required=True)
+    parser.add_argument("--composition-observation")
     parser.add_argument("--interaction-observation")
     parser.add_argument("--ladder-level", choices=["macro", "section"], default="macro")
     parser.add_argument("--out", required=True)
@@ -16,10 +17,11 @@ def main():
     args = parse_args()
     with open(args.observation, "r", encoding="utf-8") as handle:
         obs = json.load(handle)
-    interaction = None
-    if args.interaction_observation:
-        with open(args.interaction_observation, "r", encoding="utf-8") as handle:
-            interaction = json.load(handle)
+    composition_ref = args.composition_observation or args.interaction_observation
+    composition = None
+    if composition_ref:
+        with open(composition_ref, "r", encoding="utf-8") as handle:
+            composition = json.load(handle)
 
     macro = obs["macro"]
     section = obs.get("section")
@@ -30,11 +32,11 @@ def main():
     motion = macro.get("centroidMotionMean", 0.0)
     lead_model = macro.get("leadModel")
     lead_model_share = macro.get("leadModelShare", 0.0)
-    interaction_contrast = ((interaction or {}).get("contrast") or {})
-    interaction_hierarchy = ((interaction or {}).get("hierarchy") or {})
-    interaction_motion = ((interaction or {}).get("motionInteraction") or {})
-    interaction_color = ((interaction or {}).get("colorInteraction") or {})
-    interaction_novelty = ((interaction or {}).get("novelty") or {})
+    composition_contrast = ((composition or {}).get("contrast") or {})
+    composition_hierarchy = ((composition or {}).get("hierarchy") or {})
+    composition_motion = ((composition or {}).get("motionInteraction") or {})
+    composition_color = ((composition or {}).get("colorInteraction") or {})
+    composition_novelty = ((composition or {}).get("novelty") or {})
 
     designer_strengths = []
     designer_weaknesses = []
@@ -95,11 +97,11 @@ def main():
     else:
         sequencer_weaknesses.append("Active centroid is static across the sampled frames.")
 
-    if interaction:
-        if interaction_hierarchy.get("leadSupportSeparation") == "high":
+    if composition:
+        if composition_hierarchy.get("leadSupportSeparation") == "high":
             designer_strengths.append("Lead and support are separated clearly enough to preserve the focal read.")
             sequencer_strengths.append("Support remains subordinate to the lead target in the rendered window.")
-        if interaction_hierarchy.get("dominanceConflict") == "high":
+        if composition_hierarchy.get("dominanceConflict") == "high":
             designer_weaknesses.append("Support is competing too strongly with the lead for attention.")
             sequencer_weaknesses.append("Rendered hierarchy is unstable; support is challenging the lead read.")
             next_moves.append({
@@ -109,7 +111,7 @@ def main():
                 "instruction": "Reduce support intensity or coverage so the lead remains clearly dominant."
             })
 
-        if interaction_contrast.get("contrastAdequacy") == "low":
+        if composition_contrast.get("contrastAdequacy") == "low":
             designer_weaknesses.append("The composition does not separate its elements strongly enough yet.")
             sequencer_weaknesses.append("Rendered contrast is too weak across coverage, texture, color, or timing.")
             next_moves.append({
@@ -119,15 +121,15 @@ def main():
                 "instruction": "Clarify which element should differentiate by coverage, texture, color, or timing instead of letting all elements read similarly."
             })
 
-        if interaction_color.get("paletteConflict") == "high":
+        if composition_color.get("paletteConflict") == "high":
             designer_weaknesses.append("Palette behavior is fighting itself instead of reinforcing the section read.")
             sequencer_weaknesses.append("Color interaction is too conflicted; palette behaviors are competing in the render.")
 
-        if interaction_motion.get("phaseClashRisk") == "high":
+        if composition_motion.get("phaseClashRisk") == "high":
             designer_weaknesses.append("Motion timing is clashing enough to muddy the section rhythm.")
             sequencer_weaknesses.append("Rendered cadence conflict is too high for a clean section read.")
 
-        if interaction_novelty.get("noveltyAdequacy") == "low":
+        if composition_novelty.get("noveltyAdequacy") == "low":
             designer_weaknesses.append("The section is too similar to its own recent behavior to feel progressive.")
             sequencer_weaknesses.append("Local novelty is underpowered; the rendered pass is reusing too much of the same pattern behavior.")
 
@@ -166,6 +168,7 @@ def main():
         "createdAt": None,
         "source": {
             "renderObservationRef": args.observation,
+            "compositionObservationRef": composition_ref,
             "interactionObservationRef": args.interaction_observation,
         },
         "ladderLevel": ladder_level,

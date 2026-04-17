@@ -91,8 +91,8 @@ def main():
     recent_role_reuse_score = clamp((0.2 if distinct_leads <= 1 else 0.45 if distinct_leads == 2 else 0.65) + (0.15 if lead_share > 0.85 else 0.0))
     novelty_adequacy_score = clamp(1.0 - ((recent_pattern_reuse_score + recent_motion_reuse_score + recent_palette_reuse_score + recent_role_reuse_score) / 4.0))
 
-    interaction = {
-        "artifactType": "interaction_observation_v1",
+    composition = {
+        "artifactType": "composition_observation_v1",
         "artifactVersion": 1,
         "createdAt": datetime.now(timezone.utc).isoformat(),
         "source": {
@@ -185,22 +185,22 @@ def main():
             },
         },
         "notes": [
-            "interaction_observation_v1 derives compact compositional evidence from render_observation_v1.",
+            "composition_observation_v1 derives compact compositional evidence from render_observation_v1.",
             "Scores are realization-window evidence, not effect-level rankings.",
         ],
     }
 
     with open(args.out, "w", encoding="utf-8") as handle:
-        json.dump(interaction, handle, indent=2)
+        json.dump(composition, handle, indent=2)
         handle.write("\n")
 
     print(json.dumps({
         "ok": True,
         "out": args.out,
-        "scopeLevel": interaction["scope"]["scopeLevel"],
-        "contrastAdequacy": interaction["contrast"]["contrastAdequacy"],
-        "leadSupportSeparation": interaction["hierarchy"]["leadSupportSeparation"],
-        "noveltyAdequacy": interaction["novelty"]["noveltyAdequacy"],
+        "scopeLevel": composition["scope"]["scopeLevel"],
+        "contrastAdequacy": composition["contrast"]["contrastAdequacy"],
+        "leadSupportSeparation": composition["hierarchy"]["leadSupportSeparation"],
+        "noveltyAdequacy": composition["novelty"]["noveltyAdequacy"],
     }, indent=2))
 
 
