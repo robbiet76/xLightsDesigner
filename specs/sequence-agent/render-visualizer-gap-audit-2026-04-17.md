@@ -261,6 +261,9 @@ It is incomplete.
 
 The project will continue to build the visualizer as a metric-driven observation system.
 
+Single-realization metrics must stay concise and representative.
+The richer metric surface should move upward into interaction and sequence-level observation.
+
 It will not pivot to:
 
 - effect-family doctrine
@@ -272,11 +275,11 @@ It will not pivot to:
 
 Implementation priority order:
 
-1. color dynamics
-2. temporal cadence and transition structure
-3. spatial structure
-4. hierarchy and role metrics
-5. sequence-level contrast and novelty metrics
+1. compact canonical realization metrics
+2. interaction observation metrics
+3. sequence-level contrast and novelty metrics
+
+Additional realization metrics should only be added when the compact set cannot support a justified interaction or critique signal.
 
 ## Acceptance Standard For New Metrics
 

@@ -198,6 +198,9 @@ A realization is:
 
 The translation layer must not collapse into effect-level ranking doctrine.
 
+Single-realization evidence should stay compact.
+The project should prefer richer interaction and sequence-level validation over ever-expanding per-effect metric catalogs.
+
 ### 5. Render-Feedback Validation
 
 Compare the intended translation behavior to:
