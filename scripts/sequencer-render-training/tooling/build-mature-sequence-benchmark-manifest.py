@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 INITIAL_SUBSET = [
-    "Greeting",
+    "Intro_ElectricChristmas",
     "Intro_Magical",
     "CozyLittleChristmas",
     "CarolOfTheBells",

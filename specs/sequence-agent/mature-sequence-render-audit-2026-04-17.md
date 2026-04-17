@@ -59,7 +59,7 @@ Current inventory summary:
 ## Initial Audit Subset
 
 Start with a deliberately varied subset of `12` sequences:
-- `Greeting`
+- `Intro_ElectricChristmas`
 - `Intro_Magical`
 - `CozyLittleChristmas`
 - `CarolOfTheBells`
@@ -73,7 +73,7 @@ Start with a deliberately varied subset of `12` sequences:
 - `YouMakeItFeelLikeXmas`
 
 Selection goals:
-- intro/greeting material
+- intro material
 - warm low-to-mid energy material
 - dramatic material
 - denser/high-energy material

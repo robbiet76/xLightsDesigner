@@ -19,7 +19,7 @@
     "initialAuditSubsetCount": 12
   },
   "initialAuditSubset": [
-    "Greeting",
+    "Intro_ElectricChristmas",
     "Intro_Magical",
     "CozyLittleChristmas",
     "CarolOfTheBells",
@@ -314,7 +314,7 @@
       "styleTags": [
         "intro"
       ],
-      "initialAuditSubset": true
+      "initialAuditSubset": false
     },
     {
       "folderName": "Grinch",
@@ -396,7 +396,7 @@
         "intro",
         "seasonal"
       ],
-      "initialAuditSubset": false
+      "initialAuditSubset": true
     },
     {
       "folderName": "Intro_Magical",
