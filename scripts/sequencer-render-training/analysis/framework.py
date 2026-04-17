@@ -364,6 +364,22 @@ class BaseAnalyzer:
             name = "chase_motion"
         return f"{prefix}{name}" if prefix else name
 
+    def _bars_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        bar_count = int(settings.get("barCount", 1) or 1)
+        direction_setting = self._lower_setting(settings, "direction")
+
+        if direction_setting == "expand":
+            name = "expanding_bars"
+        elif direction_setting == "compress":
+            name = "compressing_bars"
+        elif bar_count >= 4:
+            name = "dense_bars"
+        elif bar_count >= 2:
+            name = "multi_bars"
+        else:
+            name = "single_bar_motion"
+        return f"{prefix}{name}" if prefix else name
+
     def _on_family(
         self,
         settings: Dict[str, Any],
@@ -568,18 +584,7 @@ class LinearAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "directional_chase"
         elif effect == "Bars":
-            bar_count = int(settings.get("barCount", 1) or 1)
-            direction_setting = self._lower_setting(settings, "direction")
-            if direction_setting == "expand":
-                pattern_family = "expanding_bars"
-            elif direction_setting == "compress":
-                pattern_family = "compressing_bars"
-            elif bar_count >= 4:
-                pattern_family = "dense_bars"
-            elif bar_count >= 2:
-                pattern_family = "multi_bars"
-            else:
-                pattern_family = "single_bar_motion"
+            pattern_family = self._bars_family(settings)
         elif effect == "Color Wash":
             pattern_family = self._color_wash_family(settings, "linear_")
         elif effect == "Marquee":
@@ -761,18 +766,7 @@ class MatrixAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "matrix_shimmer_texture"
         elif effect == "Bars":
-            direction_setting = self._lower_setting(settings, "direction")
-            bar_count = int(settings.get("barCount", 1) or 1)
-            if direction_setting == "expand":
-                pattern_family = "matrix_expanding_bars"
-            elif direction_setting == "compress":
-                pattern_family = "matrix_compressing_bars"
-            elif bar_count >= 4:
-                pattern_family = "matrix_dense_bars"
-            elif bar_count >= 2:
-                pattern_family = "matrix_multi_bars"
-            else:
-                pattern_family = "matrix_single_bar"
+            pattern_family = self._bars_family(settings, "matrix_")
         elif effect == "Color Wash":
             pattern_family = self._color_wash_family(settings, "matrix_")
         elif effect == "Marquee":
@@ -1136,6 +1130,8 @@ class StarAnalyzer(BaseAnalyzer):
         pattern_family = "star_fill"
         if inp.effect_name == "Shimmer":
             pattern_family = self._shimmer_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Bars":
+            pattern_family = self._bars_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Color Wash":
             pattern_family = self._color_wash_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Marquee":
@@ -1262,6 +1258,8 @@ class RadialAnalyzer(BaseAnalyzer):
         pattern_family = "radial_fill"
         if inp.effect_name == "Shimmer":
             pattern_family = self._shimmer_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Bars":
+            pattern_family = self._bars_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Color Wash":
             pattern_family = self._color_wash_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Marquee":

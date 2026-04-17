@@ -1,7 +1,7 @@
 {
   "artifactType": "stage1_final_cross_model_analysis_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T00:47:14.592Z",
+  "generatedAt": "2026-04-17T00:49:56.919Z",
   "totalModels": 18,
   "totalRecords": 46804,
   "totalEffects": 10,
@@ -85,7 +85,7 @@
       "models": [
         "spinner_standard"
       ],
-      "averagePatternFamilyCount": 43,
+      "averagePatternFamilyCount": 47,
       "modelsWithUnclassified": []
     },
     {
@@ -95,7 +95,7 @@
         "star_multi_layer",
         "star_single_layer"
       ],
-      "averagePatternFamilyCount": 43,
+      "averagePatternFamilyCount": 47,
       "modelsWithUnclassified": []
     },
     {
@@ -112,237 +112,6 @@
   ],
   "modelsWithUnclassified": [],
   "effectSummary": [
-    {
-      "effectName": "Bars",
-      "modelsPresent": 18,
-      "totalDistinctFamilies": 75,
-      "minDistinctFamilies": 1,
-      "maxDistinctFamilies": 5,
-      "collapsedModelCount": 3,
-      "unclassifiedModelCount": 0,
-      "models": [
-        {
-          "geometryProfile": "matrix_high_density",
-          "modelName": "MatrixHighDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "matrix_compressing_bars",
-            "matrix_dense_bars",
-            "matrix_expanding_bars",
-            "matrix_multi_bars",
-            "matrix_single_bar"
-          ]
-        },
-        {
-          "geometryProfile": "matrix_low_density",
-          "modelName": "MatrixLowDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "matrix_compressing_bars",
-            "matrix_dense_bars",
-            "matrix_expanding_bars",
-            "matrix_multi_bars",
-            "matrix_single_bar"
-          ]
-        },
-        {
-          "geometryProfile": "matrix_medium_density",
-          "modelName": "MatrixMedDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "matrix_compressing_bars",
-            "matrix_dense_bars",
-            "matrix_expanding_bars",
-            "matrix_multi_bars",
-            "matrix_single_bar"
-          ]
-        },
-        {
-          "geometryProfile": "spinner_standard",
-          "modelName": "Spinner",
-          "analyzerFamily": "radial",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "radial_fill"
-          ]
-        },
-        {
-          "geometryProfile": "star_single_layer",
-          "modelName": "StarSingle",
-          "analyzerFamily": "star",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "star_fill"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_horizontal",
-          "modelName": "SingleLineHorizontal",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "compressing_bars",
-            "dense_bars",
-            "expanding_bars",
-            "multi_bars",
-            "single_bar_motion"
-          ]
-        },
-        {
-          "geometryProfile": "tree_360_round",
-          "modelName": "TreeRound",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "tree_bar_bands",
-            "tree_compressing_bars",
-            "tree_dense_bars",
-            "tree_expanding_bars"
-          ]
-        },
-        {
-          "geometryProfile": "tree_360_spiral",
-          "modelName": "TreeSpiral",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "tree_bar_bands",
-            "tree_compressing_bars",
-            "tree_dense_bars",
-            "tree_expanding_bars"
-          ]
-        },
-        {
-          "geometryProfile": "tree_flat_single_layer",
-          "modelName": "TreeFlat",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "tree_bar_bands",
-            "tree_compressing_bars",
-            "tree_dense_bars",
-            "tree_expanding_bars"
-          ]
-        },
-        {
-          "geometryProfile": "star_multi_layer",
-          "modelName": "StarTripleLayer",
-          "analyzerFamily": "star",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "star_fill"
-          ]
-        },
-        {
-          "geometryProfile": "arch_multi_layer",
-          "modelName": "ArchTripleLayer",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "compressing_bars",
-            "dense_bars",
-            "expanding_bars",
-            "multi_bars",
-            "single_bar_motion"
-          ]
-        },
-        {
-          "geometryProfile": "arch_single",
-          "modelName": "ArchSingle",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "compressing_bars",
-            "dense_bars",
-            "expanding_bars",
-            "multi_bars",
-            "single_bar_motion"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_vertical",
-          "modelName": "SingleLineVertical",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "compressing_bars",
-            "dense_bars",
-            "expanding_bars",
-            "multi_bars",
-            "single_bar_motion"
-          ]
-        },
-        {
-          "geometryProfile": "icicles_drop_pattern",
-          "modelName": "Icicles",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "compressing_bars",
-            "dense_bars",
-            "expanding_bars",
-            "multi_bars",
-            "single_bar_motion"
-          ]
-        },
-        {
-          "geometryProfile": "cane_grouped",
-          "modelName": "CaneGroup",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "compressing_bars",
-            "dense_bars",
-            "expanding_bars",
-            "multi_bars",
-            "single_bar_motion"
-          ]
-        },
-        {
-          "geometryProfile": "cane_single",
-          "modelName": "CaneSingle",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "compressing_bars",
-            "dense_bars",
-            "expanding_bars",
-            "multi_bars",
-            "single_bar_motion"
-          ]
-        },
-        {
-          "geometryProfile": "cane_stick_grouped",
-          "modelName": "CaneStickGroup",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "compressing_bars",
-            "dense_bars",
-            "expanding_bars",
-            "multi_bars",
-            "single_bar_motion"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_single_node",
-          "modelName": "SingleLineSingleNode",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 5,
-          "patternFamilies": [
-            "compressing_bars",
-            "dense_bars",
-            "expanding_bars",
-            "multi_bars",
-            "single_bar_motion"
-          ]
-        }
-      ],
-      "averageDistinctFamilies": 4.17
-    },
     {
       "effectName": "On",
       "modelsPresent": 18,
@@ -1667,6 +1436,249 @@
       "averageDistinctFamilies": 4
     },
     {
+      "effectName": "Bars",
+      "modelsPresent": 18,
+      "totalDistinctFamilies": 87,
+      "minDistinctFamilies": 4,
+      "maxDistinctFamilies": 5,
+      "collapsedModelCount": 0,
+      "unclassifiedModelCount": 0,
+      "models": [
+        {
+          "geometryProfile": "matrix_high_density",
+          "modelName": "MatrixHighDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "matrix_compressing_bars",
+            "matrix_dense_bars",
+            "matrix_expanding_bars",
+            "matrix_multi_bars",
+            "matrix_single_bar"
+          ]
+        },
+        {
+          "geometryProfile": "matrix_low_density",
+          "modelName": "MatrixLowDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "matrix_compressing_bars",
+            "matrix_dense_bars",
+            "matrix_expanding_bars",
+            "matrix_multi_bars",
+            "matrix_single_bar"
+          ]
+        },
+        {
+          "geometryProfile": "matrix_medium_density",
+          "modelName": "MatrixMedDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "matrix_compressing_bars",
+            "matrix_dense_bars",
+            "matrix_expanding_bars",
+            "matrix_multi_bars",
+            "matrix_single_bar"
+          ]
+        },
+        {
+          "geometryProfile": "spinner_standard",
+          "modelName": "Spinner",
+          "analyzerFamily": "radial",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "radial_compressing_bars",
+            "radial_dense_bars",
+            "radial_expanding_bars",
+            "radial_multi_bars",
+            "radial_single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "star_single_layer",
+          "modelName": "StarSingle",
+          "analyzerFamily": "star",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "star_compressing_bars",
+            "star_dense_bars",
+            "star_expanding_bars",
+            "star_multi_bars",
+            "star_single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_horizontal",
+          "modelName": "SingleLineHorizontal",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "compressing_bars",
+            "dense_bars",
+            "expanding_bars",
+            "multi_bars",
+            "single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "tree_360_round",
+          "modelName": "TreeRound",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "tree_bar_bands",
+            "tree_compressing_bars",
+            "tree_dense_bars",
+            "tree_expanding_bars"
+          ]
+        },
+        {
+          "geometryProfile": "tree_360_spiral",
+          "modelName": "TreeSpiral",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "tree_bar_bands",
+            "tree_compressing_bars",
+            "tree_dense_bars",
+            "tree_expanding_bars"
+          ]
+        },
+        {
+          "geometryProfile": "tree_flat_single_layer",
+          "modelName": "TreeFlat",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "tree_bar_bands",
+            "tree_compressing_bars",
+            "tree_dense_bars",
+            "tree_expanding_bars"
+          ]
+        },
+        {
+          "geometryProfile": "star_multi_layer",
+          "modelName": "StarTripleLayer",
+          "analyzerFamily": "star",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "star_compressing_bars",
+            "star_dense_bars",
+            "star_expanding_bars",
+            "star_multi_bars",
+            "star_single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "arch_multi_layer",
+          "modelName": "ArchTripleLayer",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "compressing_bars",
+            "dense_bars",
+            "expanding_bars",
+            "multi_bars",
+            "single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "arch_single",
+          "modelName": "ArchSingle",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "compressing_bars",
+            "dense_bars",
+            "expanding_bars",
+            "multi_bars",
+            "single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_vertical",
+          "modelName": "SingleLineVertical",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "compressing_bars",
+            "dense_bars",
+            "expanding_bars",
+            "multi_bars",
+            "single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "icicles_drop_pattern",
+          "modelName": "Icicles",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "compressing_bars",
+            "dense_bars",
+            "expanding_bars",
+            "multi_bars",
+            "single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "cane_grouped",
+          "modelName": "CaneGroup",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "compressing_bars",
+            "dense_bars",
+            "expanding_bars",
+            "multi_bars",
+            "single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "cane_single",
+          "modelName": "CaneSingle",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "compressing_bars",
+            "dense_bars",
+            "expanding_bars",
+            "multi_bars",
+            "single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "cane_stick_grouped",
+          "modelName": "CaneStickGroup",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "compressing_bars",
+            "dense_bars",
+            "expanding_bars",
+            "multi_bars",
+            "single_bar_motion"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_single_node",
+          "modelName": "SingleLineSingleNode",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 5,
+          "patternFamilies": [
+            "compressing_bars",
+            "dense_bars",
+            "expanding_bars",
+            "multi_bars",
+            "single_bar_motion"
+          ]
+        }
+      ],
+      "averageDistinctFamilies": 4.83
+    },
+    {
       "effectName": "Color Wash",
       "modelsPresent": 18,
       "totalDistinctFamilies": 90,
@@ -2851,7 +2863,7 @@
       "modelType": "spinner",
       "analyzerFamily": "radial",
       "recordCount": 2608,
-      "patternFamilyCount": 43,
+      "patternFamilyCount": 47,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -2860,9 +2872,13 @@
       "effects": [
         {
           "effectName": "Bars",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 5,
           "patternFamilies": [
-            "radial_fill"
+            "radial_compressing_bars",
+            "radial_dense_bars",
+            "radial_expanding_bars",
+            "radial_multi_bars",
+            "radial_single_bar_motion"
           ]
         },
         {
@@ -2969,7 +2985,7 @@
       "modelType": "star",
       "analyzerFamily": "star",
       "recordCount": 2608,
-      "patternFamilyCount": 43,
+      "patternFamilyCount": 47,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -2978,9 +2994,13 @@
       "effects": [
         {
           "effectName": "Bars",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 5,
           "patternFamilies": [
-            "star_fill"
+            "star_compressing_bars",
+            "star_dense_bars",
+            "star_expanding_bars",
+            "star_multi_bars",
+            "star_single_bar_motion"
           ]
         },
         {
@@ -3562,7 +3582,7 @@
       "modelType": "star",
       "analyzerFamily": "star",
       "recordCount": 2608,
-      "patternFamilyCount": 43,
+      "patternFamilyCount": 47,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -3571,9 +3591,13 @@
       "effects": [
         {
           "effectName": "Bars",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 5,
           "patternFamilies": [
-            "star_fill"
+            "star_compressing_bars",
+            "star_dense_bars",
+            "star_expanding_bars",
+            "star_multi_bars",
+            "star_single_bar_motion"
           ]
         },
         {
