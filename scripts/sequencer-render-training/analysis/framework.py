@@ -322,6 +322,23 @@ class BaseAnalyzer:
             name = "pinwheel"
         return f"{prefix}{name}" if prefix else name
 
+    def _spiral_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        movement = float(settings.get("movement", 0) or 0)
+        rotation = float(settings.get("rotation", 0) or 0)
+        count = int(settings.get("count", 1) or 1)
+
+        if abs(movement) > 0 and abs(rotation) > 0:
+            name = "spiral_flow"
+        elif abs(rotation) > 0:
+            name = "spiral_rotation"
+        elif abs(movement) > 0:
+            name = "spiral_drift"
+        elif count >= 3:
+            name = "dense_spiral_bands"
+        else:
+            name = "spiral_bands"
+        return f"{prefix}{name}" if prefix else name
+
     def _on_family(
         self,
         settings: Dict[str, Any],
@@ -562,19 +579,7 @@ class LinearAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "linear_shockwave"
         elif effect == "Spirals":
-            movement = float(settings.get("movement", 0) or 0)
-            rotation = float(settings.get("rotation", 0) or 0)
-            count = int(settings.get("count", 1) or 1)
-            if abs(movement) > 0 and abs(rotation) > 0:
-                pattern_family = "linear_spiral_flow"
-            elif abs(rotation) > 0:
-                pattern_family = "linear_spiral_rotation"
-            elif abs(movement) > 0:
-                pattern_family = "linear_spiral_drift"
-            elif count >= 3:
-                pattern_family = "linear_dense_spiral_bands"
-            else:
-                pattern_family = "linear_spiral_bands"
+            pattern_family = self._spiral_family(settings, "linear_")
         elif effect == "Twinkle":
             pattern_family = self._twinkle_family(settings, "linear_")
 
@@ -779,19 +784,7 @@ class MatrixAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "matrix_chase_motion"
         elif effect == "Spirals":
-            movement = float(settings.get("movement", 0) or 0)
-            rotation = float(settings.get("rotation", 0) or 0)
-            count = int(settings.get("count", 1) or 1)
-            if abs(movement) > 0 and abs(rotation) > 0:
-                pattern_family = "matrix_spiral_flow"
-            elif abs(rotation) > 0:
-                pattern_family = "matrix_spiral_rotation"
-            elif abs(movement) > 0:
-                pattern_family = "matrix_spiral_drift"
-            elif count >= 3:
-                pattern_family = "matrix_dense_spiral_bands"
-            else:
-                pattern_family = "matrix_spiral_bands"
+            pattern_family = self._spiral_family(settings, "matrix_")
         elif effect == "Twinkle":
             pattern_family = self._twinkle_family(settings, "matrix_")
 
@@ -1123,7 +1116,7 @@ class StarAnalyzer(BaseAnalyzer):
         elif inp.effect_name == "Marquee":
             pattern_family = self._marquee_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Spirals":
-            pattern_family = "radial_spiral_motion"
+            pattern_family = self._spiral_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Pinwheel":
             pattern_family = self._pinwheel_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Shockwave":
@@ -1244,7 +1237,7 @@ class RadialAnalyzer(BaseAnalyzer):
         elif inp.effect_name == "Marquee":
             pattern_family = self._marquee_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Spirals":
-            pattern_family = "radial_spiral_motion"
+            pattern_family = self._spiral_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Pinwheel":
             pattern_family = self._pinwheel_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Shockwave":

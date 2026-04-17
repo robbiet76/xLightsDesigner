@@ -1,7 +1,7 @@
 {
   "artifactType": "stage1_final_cross_model_analysis_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T00:44:01.934Z",
+  "generatedAt": "2026-04-17T00:45:27.262Z",
   "totalModels": 18,
   "totalRecords": 46804,
   "totalEffects": 10,
@@ -85,7 +85,7 @@
       "models": [
         "spinner_standard"
       ],
-      "averagePatternFamilyCount": 36,
+      "averagePatternFamilyCount": 38,
       "modelsWithUnclassified": []
     },
     {
@@ -95,7 +95,7 @@
         "star_multi_layer",
         "star_single_layer"
       ],
-      "averagePatternFamilyCount": 36,
+      "averagePatternFamilyCount": 38,
       "modelsWithUnclassified": []
     },
     {
@@ -112,210 +112,6 @@
   ],
   "modelsWithUnclassified": [],
   "effectSummary": [
-    {
-      "effectName": "Spirals",
-      "modelsPresent": 18,
-      "totalDistinctFamilies": 48,
-      "minDistinctFamilies": 1,
-      "maxDistinctFamilies": 3,
-      "collapsedModelCount": 3,
-      "unclassifiedModelCount": 0,
-      "models": [
-        {
-          "geometryProfile": "matrix_high_density",
-          "modelName": "MatrixHighDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "matrix_spiral_drift",
-            "matrix_spiral_flow",
-            "matrix_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "matrix_low_density",
-          "modelName": "MatrixLowDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "matrix_spiral_drift",
-            "matrix_spiral_flow",
-            "matrix_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "matrix_medium_density",
-          "modelName": "MatrixMedDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "matrix_spiral_drift",
-            "matrix_spiral_flow",
-            "matrix_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "spinner_standard",
-          "modelName": "Spinner",
-          "analyzerFamily": "radial",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "radial_spiral_motion"
-          ]
-        },
-        {
-          "geometryProfile": "star_single_layer",
-          "modelName": "StarSingle",
-          "analyzerFamily": "star",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "radial_spiral_motion"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_horizontal",
-          "modelName": "SingleLineHorizontal",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "linear_spiral_drift",
-            "linear_spiral_flow",
-            "linear_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "tree_360_round",
-          "modelName": "TreeRound",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "spiral_drift",
-            "spiral_flow",
-            "spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "tree_360_spiral",
-          "modelName": "TreeSpiral",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "helical_spiral_drift",
-            "helical_spiral_flow",
-            "helical_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "tree_flat_single_layer",
-          "modelName": "TreeFlat",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "spiral_drift",
-            "spiral_flow",
-            "spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "star_multi_layer",
-          "modelName": "StarTripleLayer",
-          "analyzerFamily": "star",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "radial_spiral_motion"
-          ]
-        },
-        {
-          "geometryProfile": "arch_multi_layer",
-          "modelName": "ArchTripleLayer",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "linear_spiral_drift",
-            "linear_spiral_flow",
-            "linear_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "arch_single",
-          "modelName": "ArchSingle",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "linear_spiral_drift",
-            "linear_spiral_flow",
-            "linear_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_vertical",
-          "modelName": "SingleLineVertical",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "linear_spiral_drift",
-            "linear_spiral_flow",
-            "linear_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "icicles_drop_pattern",
-          "modelName": "Icicles",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "linear_spiral_drift",
-            "linear_spiral_flow",
-            "linear_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "cane_grouped",
-          "modelName": "CaneGroup",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "linear_spiral_drift",
-            "linear_spiral_flow",
-            "linear_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "cane_single",
-          "modelName": "CaneSingle",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "linear_spiral_drift",
-            "linear_spiral_flow",
-            "linear_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "cane_stick_grouped",
-          "modelName": "CaneStickGroup",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "linear_spiral_drift",
-            "linear_spiral_flow",
-            "linear_spiral_rotation"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_single_node",
-          "modelName": "SingleLineSingleNode",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "linear_spiral_drift",
-            "linear_spiral_flow",
-            "linear_spiral_rotation"
-          ]
-        }
-      ],
-      "averageDistinctFamilies": 2.67
-    },
     {
       "effectName": "SingleStrand",
       "modelsPresent": 18,
@@ -968,6 +764,216 @@
             "falling_level_ramp",
             "shimmer_hold",
             "static_hold"
+          ]
+        }
+      ],
+      "averageDistinctFamilies": 3
+    },
+    {
+      "effectName": "Spirals",
+      "modelsPresent": 18,
+      "totalDistinctFamilies": 54,
+      "minDistinctFamilies": 3,
+      "maxDistinctFamilies": 3,
+      "collapsedModelCount": 0,
+      "unclassifiedModelCount": 0,
+      "models": [
+        {
+          "geometryProfile": "matrix_high_density",
+          "modelName": "MatrixHighDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "matrix_spiral_drift",
+            "matrix_spiral_flow",
+            "matrix_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "matrix_low_density",
+          "modelName": "MatrixLowDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "matrix_spiral_drift",
+            "matrix_spiral_flow",
+            "matrix_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "matrix_medium_density",
+          "modelName": "MatrixMedDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "matrix_spiral_drift",
+            "matrix_spiral_flow",
+            "matrix_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "spinner_standard",
+          "modelName": "Spinner",
+          "analyzerFamily": "radial",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "radial_spiral_drift",
+            "radial_spiral_flow",
+            "radial_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "star_single_layer",
+          "modelName": "StarSingle",
+          "analyzerFamily": "star",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "star_spiral_drift",
+            "star_spiral_flow",
+            "star_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_horizontal",
+          "modelName": "SingleLineHorizontal",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "linear_spiral_drift",
+            "linear_spiral_flow",
+            "linear_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "tree_360_round",
+          "modelName": "TreeRound",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "spiral_drift",
+            "spiral_flow",
+            "spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "tree_360_spiral",
+          "modelName": "TreeSpiral",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "helical_spiral_drift",
+            "helical_spiral_flow",
+            "helical_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "tree_flat_single_layer",
+          "modelName": "TreeFlat",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "spiral_drift",
+            "spiral_flow",
+            "spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "star_multi_layer",
+          "modelName": "StarTripleLayer",
+          "analyzerFamily": "star",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "star_spiral_drift",
+            "star_spiral_flow",
+            "star_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "arch_multi_layer",
+          "modelName": "ArchTripleLayer",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "linear_spiral_drift",
+            "linear_spiral_flow",
+            "linear_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "arch_single",
+          "modelName": "ArchSingle",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "linear_spiral_drift",
+            "linear_spiral_flow",
+            "linear_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_vertical",
+          "modelName": "SingleLineVertical",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "linear_spiral_drift",
+            "linear_spiral_flow",
+            "linear_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "icicles_drop_pattern",
+          "modelName": "Icicles",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "linear_spiral_drift",
+            "linear_spiral_flow",
+            "linear_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "cane_grouped",
+          "modelName": "CaneGroup",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "linear_spiral_drift",
+            "linear_spiral_flow",
+            "linear_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "cane_single",
+          "modelName": "CaneSingle",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "linear_spiral_drift",
+            "linear_spiral_flow",
+            "linear_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "cane_stick_grouped",
+          "modelName": "CaneStickGroup",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "linear_spiral_drift",
+            "linear_spiral_flow",
+            "linear_spiral_rotation"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_single_node",
+          "modelName": "SingleLineSingleNode",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "linear_spiral_drift",
+            "linear_spiral_flow",
+            "linear_spiral_rotation"
           ]
         }
       ],
@@ -2833,7 +2839,7 @@
       "modelType": "spinner",
       "analyzerFamily": "radial",
       "recordCount": 2608,
-      "patternFamilyCount": 36,
+      "patternFamilyCount": 38,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -2918,9 +2924,11 @@
         },
         {
           "effectName": "Spirals",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 3,
           "patternFamilies": [
-            "radial_spiral_motion"
+            "radial_spiral_drift",
+            "radial_spiral_flow",
+            "radial_spiral_rotation"
           ]
         },
         {
@@ -2945,7 +2953,7 @@
       "modelType": "star",
       "analyzerFamily": "star",
       "recordCount": 2608,
-      "patternFamilyCount": 36,
+      "patternFamilyCount": 38,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -3030,9 +3038,11 @@
         },
         {
           "effectName": "Spirals",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 3,
           "patternFamilies": [
-            "radial_spiral_motion"
+            "star_spiral_drift",
+            "star_spiral_flow",
+            "star_spiral_rotation"
           ]
         },
         {
@@ -3532,7 +3542,7 @@
       "modelType": "star",
       "analyzerFamily": "star",
       "recordCount": 2608,
-      "patternFamilyCount": 36,
+      "patternFamilyCount": 38,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -3617,9 +3627,11 @@
         },
         {
           "effectName": "Spirals",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 3,
           "patternFamilies": [
-            "radial_spiral_motion"
+            "star_spiral_drift",
+            "star_spiral_flow",
+            "star_spiral_rotation"
           ]
         },
         {
