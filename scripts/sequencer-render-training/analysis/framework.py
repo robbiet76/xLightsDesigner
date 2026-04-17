@@ -448,6 +448,20 @@ class LinearAnalyzer(BaseAnalyzer):
                 pattern_family = "multi_bars"
             else:
                 pattern_family = "single_bar_motion"
+        elif effect == "Color Wash":
+            shimmer = bool(settings.get("shimmer", False))
+            circular = bool(settings.get("circularPalette", False))
+            reverse = bool(settings.get("reverseFades", False))
+            if circular and shimmer:
+                pattern_family = "linear_circular_shimmer_wash"
+            elif circular:
+                pattern_family = "linear_circular_wash"
+            elif reverse:
+                pattern_family = "linear_reverse_fade_wash"
+            elif shimmer:
+                pattern_family = "linear_shimmer_wash"
+            else:
+                pattern_family = "linear_color_wash"
         elif effect == "Marquee":
             reverse = bool(settings.get("reverse", False))
             skip_size = int(settings.get("skipSize", 0) or 0)
@@ -461,6 +475,47 @@ class LinearAnalyzer(BaseAnalyzer):
                 pattern_family = "wide_marquee"
             else:
                 pattern_family = "marquee_motion"
+        elif effect == "Pinwheel":
+            arms = int(settings.get("arms", 3) or 3)
+            rotation = bool(settings.get("rotation", False))
+            mode_3d = self._lower_setting(settings, "3DMode")
+            if rotation and arms >= 6:
+                pattern_family = "linear_dense_rotating_pinwheel"
+            elif rotation:
+                pattern_family = "linear_rotating_pinwheel"
+            elif "sweep" in mode_3d:
+                pattern_family = "linear_sweep_pinwheel"
+            else:
+                pattern_family = "linear_pinwheel"
+        elif effect == "Shockwave":
+            shock = self._shockwave_signals(settings)
+            variant = self._shockwave_variant(shock)
+            if shock["centerClass"] != "centered":
+                pattern_family = "linear_offcenter_shockwave"
+            elif variant == "compact":
+                pattern_family = "linear_compact_shockwave"
+            elif variant == "diffuse":
+                pattern_family = "linear_diffuse_shockwave"
+            elif variant == "crisp":
+                pattern_family = "linear_crisp_shockwave"
+            elif variant == "surging":
+                pattern_family = "linear_surging_shockwave"
+            else:
+                pattern_family = "linear_shockwave"
+        elif effect == "Spirals":
+            movement = float(settings.get("movement", 0) or 0)
+            rotation = float(settings.get("rotation", 0) or 0)
+            count = int(settings.get("count", 1) or 1)
+            if abs(movement) > 0 and abs(rotation) > 0:
+                pattern_family = "linear_spiral_flow"
+            elif abs(rotation) > 0:
+                pattern_family = "linear_spiral_rotation"
+            elif abs(movement) > 0:
+                pattern_family = "linear_spiral_drift"
+            elif count >= 3:
+                pattern_family = "linear_dense_spiral_bands"
+            else:
+                pattern_family = "linear_spiral_bands"
         elif effect == "Twinkle":
             pattern_family = self._twinkle_family(settings, "linear_")
 
