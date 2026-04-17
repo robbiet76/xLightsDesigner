@@ -398,6 +398,30 @@ class BaseAnalyzer:
             name = "butterfly_motion"
         return f"{prefix}{name}" if prefix else name
 
+    def _butterfly_signals(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        style = int(settings.get("style", 1) or 1)
+        chunks = int(settings.get("chunks", 1) or 1)
+        speed = float(settings.get("speed", 10) or 10)
+        direction = self._lower_setting(settings, "direction")
+        return {
+            "butterflyStyleClass": (
+                "complex" if style >= 4 else
+                "textured" if style >= 3 else
+                "simple"
+            ),
+            "butterflyChunkClass": (
+                "layered" if chunks >= 4 else
+                "split" if chunks >= 2 else
+                "single"
+            ),
+            "butterflySpeedClass": (
+                "fast" if speed >= 15 else
+                "slow" if speed <= 5 else
+                "medium"
+            ),
+            "butterflyDirectionClass": direction or "normal",
+        }
+
     def _circles_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
         count = int(settings.get("count", 8) or 8)
         size = float(settings.get("size", 25) or 25)
@@ -417,6 +441,32 @@ class BaseAnalyzer:
             name = "circles_motion"
         return f"{prefix}{name}" if prefix else name
 
+    def _circles_signals(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        count = int(settings.get("count", 8) or 8)
+        size = float(settings.get("size", 25) or 25)
+        speed = float(settings.get("speed", 10) or 10)
+        bounce = bool(settings.get("bounce", False))
+        radial = bool(settings.get("radial", False))
+        return {
+            "circlesCountClass": (
+                "dense" if count >= 16 else
+                "multi" if count >= 8 else
+                "few"
+            ),
+            "circlesSizeClass": (
+                "large" if size >= 50 else
+                "small" if size <= 15 else
+                "medium"
+            ),
+            "circlesSpeedClass": (
+                "fast" if speed >= 15 else
+                "slow" if speed <= 5 else
+                "medium"
+            ),
+            "circlesBounceClass": "bouncing" if bounce else "steady",
+            "circlesRadialClass": "radial" if radial else "free",
+        }
+
     def _fire_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
         height = float(settings.get("height", 50) or 50)
         hue_shift = float(settings.get("hueShift", 0) or 0)
@@ -433,6 +483,28 @@ class BaseAnalyzer:
             name = "fire_texture"
         return f"{prefix}{name}" if prefix else name
 
+    def _fire_signals(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        height = float(settings.get("height", 50) or 50)
+        hue_shift = float(settings.get("hueShift", 0) or 0)
+        growth_cycles = float(settings.get("growthCycles", 0) or 0)
+        location = self._lower_setting(settings, "location")
+        return {
+            "fireHeightClass": (
+                "tall" if height >= 70 else
+                "short" if height <= 30 else
+                "medium"
+            ),
+            "fireHueShiftClass": (
+                "shifting" if hue_shift >= 25 else
+                "stable"
+            ),
+            "fireGrowthClass": (
+                "surging" if growth_cycles >= 3 else
+                "steady"
+            ),
+            "fireLocationClass": location or "default",
+        }
+
     def _fireworks_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
         explosions = int(settings.get("explosions", 4) or 4)
         velocity = float(settings.get("velocity", 50) or 50)
@@ -448,6 +520,34 @@ class BaseAnalyzer:
         else:
             name = "fireworks_burst"
         return f"{prefix}{name}" if prefix else name
+
+    def _fireworks_signals(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        explosions = int(settings.get("explosions", 4) or 4)
+        velocity = float(settings.get("velocity", 50) or 50)
+        gravity = float(settings.get("gravity", 50) or 50)
+        fade = float(settings.get("fade", 50) or 50)
+        return {
+            "fireworksExplosionClass": (
+                "dense" if explosions >= 8 else
+                "multi" if explosions >= 4 else
+                "few"
+            ),
+            "fireworksVelocityClass": (
+                "high" if velocity >= 65 else
+                "low" if velocity <= 35 else
+                "medium"
+            ),
+            "fireworksGravityClass": (
+                "low" if gravity <= 35 else
+                "high" if gravity >= 65 else
+                "medium"
+            ),
+            "fireworksFadeClass": (
+                "lingering" if fade >= 70 else
+                "short" if fade <= 30 else
+                "medium"
+            ),
+        }
 
     def _lightning_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
         bolts = int(settings.get("numberBolts", 3) or 3)
@@ -466,6 +566,31 @@ class BaseAnalyzer:
             name = "lightning_strike"
         return f"{prefix}{name}" if prefix else name
 
+    def _lightning_signals(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        bolts = int(settings.get("numberBolts", 3) or 3)
+        segments = int(settings.get("numberSegments", 6) or 6)
+        forked = bool(settings.get("forked", True))
+        width = float(settings.get("width", 50) or 50)
+        direction = self._lower_setting(settings, "direction")
+        return {
+            "lightningBoltClass": (
+                "dense" if bolts >= 4 else
+                "few"
+            ),
+            "lightningSegmentClass": (
+                "long" if segments >= 8 else
+                "short" if segments <= 4 else
+                "medium"
+            ),
+            "lightningForkClass": "forked" if forked else "single",
+            "lightningWidthClass": (
+                "broad" if width >= 65 else
+                "thin" if width <= 35 else
+                "medium"
+            ),
+            "lightningDirectionClass": direction or "default",
+        }
+
     def _snowflakes_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
         count = int(settings.get("count", 20) or 20)
         flake_type = self._lower_setting(settings, "type")
@@ -482,6 +607,29 @@ class BaseAnalyzer:
             name = "snowflake_drift"
         return f"{prefix}{name}" if prefix else name
 
+    def _snowflakes_signals(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        count = int(settings.get("count", 20) or 20)
+        flake_type = self._lower_setting(settings, "type")
+        speed = float(settings.get("speed", 10) or 10)
+        falling = bool(settings.get("falling", True))
+        return {
+            "snowflakeCountClass": (
+                "dense" if count >= 40 else
+                "few" if count <= 10 else
+                "medium"
+            ),
+            "snowflakeTypeClass": (
+                "spiral" if ("spiral" in flake_type or "spin" in flake_type) else
+                flake_type or "default"
+            ),
+            "snowflakeSpeedClass": (
+                "fast" if speed >= 15 else
+                "slow" if speed <= 5 else
+                "medium"
+            ),
+            "snowflakeFallClass": "falling" if falling else "static",
+        }
+
     def _strobe_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
         number_strobes = int(settings.get("numberStrobes", 5) or 5)
         duration = float(settings.get("duration", 50) or 50)
@@ -496,6 +644,24 @@ class BaseAnalyzer:
         else:
             name = "strobe_pulse"
         return f"{prefix}{name}" if prefix else name
+
+    def _strobe_signals(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        number_strobes = int(settings.get("numberStrobes", 5) or 5)
+        duration = float(settings.get("duration", 50) or 50)
+        strobe_type = self._lower_setting(settings, "type")
+        return {
+            "strobeCountClass": (
+                "dense" if number_strobes >= 10 else
+                "few" if number_strobes <= 3 else
+                "medium"
+            ),
+            "strobeDurationClass": (
+                "rapid" if duration <= 20 else
+                "long" if duration >= 70 else
+                "medium"
+            ),
+            "strobeTypeClass": strobe_type or "default",
+        }
 
     def _wave_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
         wave_type = self._lower_setting(settings, "type")
@@ -516,6 +682,53 @@ class BaseAnalyzer:
         else:
             name = "wave_motion"
         return f"{prefix}{name}" if prefix else name
+
+    def _wave_signals(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        wave_type = self._lower_setting(settings, "type")
+        fill_colors = bool(settings.get("fillColors", False))
+        number_waves = int(settings.get("numberWaves", 1) or 1)
+        wave_speed = float(settings.get("waveSpeed", 10) or 10)
+        wave_height = float(settings.get("waveHeight", 50) or 50)
+        direction = self._lower_setting(settings, "direction")
+        return {
+            "waveTypeClass": wave_type or "default",
+            "waveFillClass": "filled" if fill_colors else "outline",
+            "waveCountClass": (
+                "layered" if number_waves >= 3 else
+                "multi" if number_waves >= 2 else
+                "single"
+            ),
+            "waveSpeedClass": (
+                "fast" if wave_speed >= 15 else
+                "slow" if wave_speed <= 5 else
+                "medium"
+            ),
+            "waveHeightClass": (
+                "high" if wave_height >= 65 else
+                "low" if wave_height <= 35 else
+                "medium"
+            ),
+            "waveDirectionClass": direction or "default",
+        }
+
+    def _expansion_effect_signals(self, effect: str, settings: Dict[str, Any]) -> Dict[str, Any]:
+        if effect == "Butterfly":
+            return self._butterfly_signals(settings)
+        if effect == "Circles":
+            return self._circles_signals(settings)
+        if effect == "Fire":
+            return self._fire_signals(settings)
+        if effect == "Fireworks":
+            return self._fireworks_signals(settings)
+        if effect == "Lightning":
+            return self._lightning_signals(settings)
+        if effect == "Snowflakes":
+            return self._snowflakes_signals(settings)
+        if effect == "Strobe":
+            return self._strobe_signals(settings)
+        if effect == "Wave":
+            return self._wave_signals(settings)
+        return {}
 
     def _on_family(
         self,
@@ -843,6 +1056,7 @@ class LinearAnalyzer(BaseAnalyzer):
                 ) if effect == "Twinkle" else None,
             }
         )
+        base["patternSignals"].update(self._expansion_effect_signals(effect, settings))
         intents = set(base["intentCandidates"])
         if direction in {"left", "right", "left_to_right", "right_to_left"}:
             intents.add("directional")
@@ -1023,6 +1237,7 @@ class MatrixAnalyzer(BaseAnalyzer):
                 ) if effect == "Twinkle" else None,
             }
         )
+        base["patternSignals"].update(self._expansion_effect_signals(effect, settings))
         intents = set(base["intentCandidates"])
         if effect in {"Bars", "Marquee", "Pinwheel", "Shockwave", "Spirals", "Twinkle", "SingleStrand"}:
             intents.add("patterned")
@@ -1251,6 +1466,7 @@ class TreeAnalyzer(BaseAnalyzer):
                 ) if inp.effect_name == "Twinkle" else None,
             }
         )
+        base["patternSignals"].update(self._expansion_effect_signals(inp.effect_name, inp.effect_settings))
         intents = set(base["intentCandidates"])
         if coverage >= 0.85:
             intents.add("fill")
@@ -1415,6 +1631,7 @@ class StarAnalyzer(BaseAnalyzer):
                 ) if inp.effect_name == "Twinkle" else None,
             }
         )
+        base["patternSignals"].update(self._expansion_effect_signals(inp.effect_name, inp.effect_settings))
         intents = set(base["intentCandidates"])
         if inp.effect_name == "Shimmer":
             intents.add("texture_heavy")
@@ -1559,6 +1776,7 @@ class RadialAnalyzer(BaseAnalyzer):
                 ) if inp.effect_name == "Twinkle" else None,
             }
         )
+        base["patternSignals"].update(self._expansion_effect_signals(inp.effect_name, inp.effect_settings))
         intents = set(base["intentCandidates"])
         if inp.effect_name in ("Spirals", "Pinwheel", "Shockwave"):
             intents.add("patterned")
