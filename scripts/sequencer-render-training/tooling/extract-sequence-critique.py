@@ -9,6 +9,7 @@ def parse_args():
     parser.add_argument("--composition-observation")
     parser.add_argument("--interaction-observation")
     parser.add_argument("--layering-observation")
+    parser.add_argument("--progression-observation")
     parser.add_argument("--ladder-level", choices=["macro", "section"], default="macro")
     parser.add_argument("--out", required=True)
     return parser.parse_args()
@@ -27,6 +28,10 @@ def main():
     if args.layering_observation:
         with open(args.layering_observation, "r", encoding="utf-8") as handle:
             layering = json.load(handle)
+    progression = None
+    if args.progression_observation:
+        with open(args.progression_observation, "r", encoding="utf-8") as handle:
+            progression = json.load(handle)
 
     macro = obs["macro"]
     section = obs.get("section")
@@ -46,6 +51,10 @@ def main():
     layering_masking = ((layering or {}).get("masking") or {})
     layering_cadence = ((layering or {}).get("cadence") or {})
     layering_color = ((layering or {}).get("color") or {})
+    progression_handoff = ((progression or {}).get("handoff") or {})
+    progression_development = ((progression or {}).get("development") or {})
+    progression_repetition = ((progression or {}).get("repetition") or {})
+    progression_energy = ((progression or {}).get("energyArc") or {})
 
     designer_strengths = []
     designer_weaknesses = []
@@ -181,6 +190,45 @@ def main():
                 "instruction": "Clarify whether same-target layers should reinforce one palette role or intentionally separate by color."
             })
 
+    if progression:
+        if progression_handoff.get("handoffClarity") == "high":
+            designer_strengths.append("The temporal handoff reads cleanly across the scoped window.")
+            sequencer_strengths.append("Adjacent windows hand off cleanly without losing the read.")
+
+        if progression_development.get("developmentStrength") == "high":
+            designer_strengths.append("The scoped passage develops over time instead of holding one static treatment.")
+            sequencer_strengths.append("Rendered progression shows measurable development across the sampled windows.")
+
+        if progression_development.get("stagnationRisk") == "high":
+            designer_weaknesses.append("The scoped passage is stagnating instead of developing.")
+            sequencer_weaknesses.append("Over-time progression is too flat; the render is not evolving enough.")
+            next_moves.append({
+                "priority": 1,
+                "owner": "designer",
+                "level": "progression",
+                "instruction": "Clarify how this passage should evolve over time instead of holding one static visual treatment."
+            })
+            next_moves.append({
+                "priority": 2,
+                "owner": "sequencer",
+                "level": "progression",
+                "instruction": "Introduce a bounded temporal change in density, focus, or motion so the passage develops across the window."
+            })
+
+        if progression_repetition.get("stalenessRisk") == "high":
+            designer_weaknesses.append("Local repetition is starting to feel stale rather than intentional.")
+            sequencer_weaknesses.append("Recent reuse across adjacent windows is too strong; progression is underpowered.")
+
+        if progression_energy.get("arcCoherence") == "low":
+            designer_weaknesses.append("The local energy arc is not reading coherently yet.")
+            sequencer_weaknesses.append("Temporal energy shaping is unclear across the sampled window.")
+            next_moves.append({
+                "priority": 2,
+                "owner": "designer",
+                "level": "progression",
+                "instruction": "Clarify whether this passage should build, hold, or release so the local energy arc reads intentionally."
+            })
+
     ladder_level = args.ladder_level
     if ladder_level == "section" and not section:
         raise RuntimeError("section ladder requested but observation has no section data")
@@ -219,6 +267,7 @@ def main():
             "compositionObservationRef": composition_ref,
             "interactionObservationRef": args.interaction_observation,
             "layeringObservationRef": args.layering_observation,
+            "progressionObservationRef": args.progression_observation,
         },
         "ladderLevel": ladder_level,
         "designerSummary": {
