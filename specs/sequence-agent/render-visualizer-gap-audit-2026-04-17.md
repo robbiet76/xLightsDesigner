@@ -277,7 +277,8 @@ Implementation priority order:
 
 1. compact canonical realization metrics
 2. composition observation metrics
-3. sequence-level contrast and novelty metrics
+3. layering observation metrics
+4. sequence-level contrast and novelty metrics
 
 Additional realization metrics should only be added when the compact set cannot support a justified interaction or critique signal.
 
