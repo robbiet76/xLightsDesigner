@@ -1,0 +1,889 @@
+{
+  "schema": "mature_sequence_benchmark_manifest_v1",
+  "date": "2026-04-17",
+  "showRoot": "/Users/robterry/Documents/Lights/Current/Christmas/Show",
+  "readOnly": true,
+  "excludedFolders": [
+    "Static"
+  ],
+  "policy": {
+    "purpose": "render_understanding_audit_only",
+    "trainSequencingPolicy": false,
+    "copyStylisticPatterns": false,
+    "allowRenderFromXSQWhenNeeded": true
+  },
+  "summary": {
+    "sequenceCount": 42,
+    "withFseq": 37,
+    "requiresRender": 5,
+    "initialAuditSubsetCount": 12
+  },
+  "initialAuditSubset": [
+    "Greeting",
+    "Intro_Magical",
+    "CozyLittleChristmas",
+    "CarolOfTheBells",
+    "ChristmasMedley",
+    "HolidayRoad",
+    "LittleDrummerBoy_TobyMac",
+    "PolarExpress",
+    "SleighRide",
+    "WeWishYouXmas_Muppets",
+    "WinterWonderland",
+    "YouMakeItFeelLikeXmas"
+  ],
+  "sequences": [
+    {
+      "folderName": "Auld Lang Syne",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Auld Lang Syne",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Auld Lang Syne/AuldLangSyne.xsq",
+        "name": "AuldLangSyne.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Auld Lang Syne/AuldLangSyne.fseq",
+        "name": "AuldLangSyne.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "general"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "BabySharkEDM",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/BabySharkEDM",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/BabySharkEDM/BabySharkEDM.xsq",
+        "name": "BabySharkEDM.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/BabySharkEDM/BabySharkEDM.fseq",
+        "name": "BabySharkEDM.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "novelty"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "BeginningToLookXmas",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/BeginningToLookXmas",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/BeginningToLookXmas/BeginningToLookXmas.xsq",
+        "name": "BeginningToLookXmas.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/BeginningToLookXmas/BeginningToLookXmas.fseq",
+        "name": "BeginningToLookXmas.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "CandyCaneLane",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CandyCaneLane",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CandyCaneLane/CandyCaneLane.xsq",
+        "name": "CandyCaneLane.xsq"
+      },
+      "fseq": {
+        "present": false,
+        "path": null,
+        "name": null,
+        "count": 0
+      },
+      "requiresRender": true,
+      "styleTags": [
+        "general"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "CantStopTheFeeling",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CantStopTheFeeling",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CantStopTheFeeling/CantStopTheFeeling.xsq",
+        "name": "CantStopTheFeeling.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CantStopTheFeeling/CantStopTheFeeling.fseq",
+        "name": "CantStopTheFeeling.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "high_energy"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "CarolOfTheBells",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CarolOfTheBells",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CarolOfTheBells/CarolOfTheBells.xsq",
+        "name": "CarolOfTheBells.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CarolOfTheBells/CarolOfTheBells.fseq",
+        "name": "CarolOfTheBells.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "dramatic"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "CarolOfTheBells - SnoMutt",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CarolOfTheBells - SnoMutt",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CarolOfTheBells - SnoMutt/CarolOfTheBells-SnoMutt.xsq",
+        "name": "CarolOfTheBells-SnoMutt.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CarolOfTheBells - SnoMutt/CarolOfTheBells-SnoMutt.fseq",
+        "name": "CarolOfTheBells-SnoMutt.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "dramatic"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "ChristmasEveSarajevo",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasEveSarajevo",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasEveSarajevo/ChristmasEveSarajevo.xsq",
+        "name": "ChristmasEveSarajevo.xsq"
+      },
+      "fseq": {
+        "present": false,
+        "path": null,
+        "name": null,
+        "count": 0
+      },
+      "requiresRender": true,
+      "styleTags": [
+        "dramatic",
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "ChristmasMedley",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasMedley",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasMedley/ChristmasMedley.xsq",
+        "name": "ChristmasMedley.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasMedley/ChristmasMedley.fseq",
+        "name": "ChristmasMedley.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "novelty",
+        "seasonal"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "ChristmasVacation",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasVacation",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasVacation/ChristmasVacation.xsq",
+        "name": "ChristmasVacation.xsq"
+      },
+      "fseq": {
+        "present": false,
+        "path": null,
+        "name": null,
+        "count": 0
+      },
+      "requiresRender": true,
+      "styleTags": [
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "CozyLittleChristmas",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CozyLittleChristmas",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CozyLittleChristmas/CozyLittleChristmas.xsq",
+        "name": "CozyLittleChristmas.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CozyLittleChristmas/CozyLittleChristmas.fseq",
+        "name": "CozyLittleChristmas.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "warm",
+        "seasonal"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "ElfMedley",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ElfMedley",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ElfMedley/ElfMedley.xsq",
+        "name": "ElfMedley.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ElfMedley/ElfMedley.fseq",
+        "name": "ElfMedley.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "novelty"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "FrostyTheSnowman",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/FrostyTheSnowman",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/FrostyTheSnowman/FrostyTheSnowman.xsq",
+        "name": "FrostyTheSnowman.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/FrostyTheSnowman/FrostyTheSnowman.fseq",
+        "name": "FrostyTheSnowman.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "Greeting",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Greeting",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Greeting/Greeting_2018.xsq",
+        "name": "Greeting_2018.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Greeting/Greeting_2018.fseq",
+        "name": "Greeting_2018.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "intro"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "Grinch",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Grinch",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Grinch/Grinch.xsq",
+        "name": "Grinch.xsq"
+      },
+      "fseq": {
+        "present": false,
+        "path": null,
+        "name": null,
+        "count": 0
+      },
+      "requiresRender": true,
+      "styleTags": [
+        "general"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "HolidayRoad",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/HolidayRoad",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/HolidayRoad/HolidayRoad.xsq",
+        "name": "HolidayRoad.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/HolidayRoad/HolidayRoad.fseq",
+        "name": "HolidayRoad.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "high_energy"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "HollyJollyChristmas",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/HollyJollyChristmas",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/HollyJollyChristmas/HollyJollyChristmas.xsq",
+        "name": "HollyJollyChristmas.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/HollyJollyChristmas/HollyJollyChristmas.fseq",
+        "name": "HollyJollyChristmas.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "warm",
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "Intro_ElectricChristmas",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Intro_ElectricChristmas",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Intro_ElectricChristmas/IntroElectricChristmas.xsq",
+        "name": "IntroElectricChristmas.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Intro_ElectricChristmas/IntroElectricChristmas.fseq",
+        "name": "IntroElectricChristmas.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "intro",
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "Intro_Magical",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Intro_Magical",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Intro_Magical/IntroMagical.xsq",
+        "name": "IntroMagical.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Intro_Magical/IntroMagical.fseq",
+        "name": "IntroMagical.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "intro"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "Intro_WishYouAMerryXmas",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Intro_WishYouAMerryXmas",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Intro_WishYouAMerryXmas/Intro_WishYouMerryXmas.xsq",
+        "name": "Intro_WishYouMerryXmas.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Intro_WishYouAMerryXmas/Intro_WishYouMerryXmas.fseq",
+        "name": "Intro_WishYouMerryXmas.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "intro",
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "JingleBellRock",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBellRock",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBellRock/JingleBellRock.xsq",
+        "name": "JingleBellRock.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBellRock/JingleBellRock.fseq",
+        "name": "JingleBellRock.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "high_energy"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "JingleBells",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBells",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBells/JingleBells.xsq",
+        "name": "JingleBells.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBells/JingleBells.fseq",
+        "name": "JingleBells.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "dramatic"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "JingleBells - Sinatra",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBells - Sinatra",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBells - Sinatra/JingleBells_Sinatra.xsq",
+        "name": "JingleBells_Sinatra.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBells - Sinatra/JingleBells_Sinatra.fseq",
+        "name": "JingleBells_Sinatra.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "dramatic"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "LightOfChristmas",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LightOfChristmas",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LightOfChristmas/LightOfChristmas.xsq",
+        "name": "LightOfChristmas.xsq"
+      },
+      "fseq": {
+        "present": false,
+        "path": null,
+        "name": null,
+        "count": 0
+      },
+      "requiresRender": true,
+      "styleTags": [
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "LinusAndLucy",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LinusAndLucy",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LinusAndLucy/LinusAndLucy.xsq",
+        "name": "LinusAndLucy.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LinusAndLucy/LinusAndLucy.fseq",
+        "name": "LinusAndLucy.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "warm"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "LittleDrummerBoy",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LittleDrummerBoy",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LittleDrummerBoy/LittleDrummerBoy.xsq",
+        "name": "LittleDrummerBoy.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LittleDrummerBoy/LittleDrummerBoy.fseq",
+        "name": "LittleDrummerBoy.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "dramatic"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "LittleDrummerBoy_TobyMac",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LittleDrummerBoy_TobyMac",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LittleDrummerBoy_TobyMac/LittleDrummerBoy_TobyMac.xsq",
+        "name": "LittleDrummerBoy_TobyMac.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/LittleDrummerBoy_TobyMac/LittleDrummerBoy_TobyMac.fseq",
+        "name": "LittleDrummerBoy_TobyMac.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "dramatic"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "MostWonderfulTime",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/MostWonderfulTime",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/MostWonderfulTime/MostWonderfulTime.xsq",
+        "name": "MostWonderfulTime.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/MostWonderfulTime/MostWonderfulTime.fseq",
+        "name": "MostWonderfulTime.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "warm"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "OSURemix",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/OSURemix",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/OSURemix/HangOnSloopy.xsq",
+        "name": "HangOnSloopy.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/OSURemix/HangOnSloopy.fseq",
+        "name": "HangOnSloopy.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "novelty"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "PolarExpress",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/PolarExpress",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/PolarExpress/PolarExpress.xsq",
+        "name": "PolarExpress.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/PolarExpress/PolarExpress.fseq",
+        "name": "PolarExpress.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "dramatic"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "RockinAroundXmasTree",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/RockinAroundXmasTree",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/RockinAroundXmasTree/RockinAroundXmasTree.xsq",
+        "name": "RockinAroundXmasTree.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/RockinAroundXmasTree/RockinAroundXmasTree.fseq",
+        "name": "RockinAroundXmasTree.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "high_energy",
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "RudolphRedNosedReindeer",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/RudolphRedNosedReindeer",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/RudolphRedNosedReindeer/RudolphRedNosedReindeer.xsq",
+        "name": "RudolphRedNosedReindeer.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/RudolphRedNosedReindeer/RudolphRedNosedReindeer.fseq",
+        "name": "RudolphRedNosedReindeer.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "RunRunRudolph",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/RunRunRudolph",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/RunRunRudolph/RunRunRudolph.xsq",
+        "name": "RunRunRudolph.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/RunRunRudolph/RunRunRudolph.fseq",
+        "name": "RunRunRudolph.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "high_energy",
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "SantaClaus",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SantaClaus",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SantaClaus/SantaClaus.xsq",
+        "name": "SantaClaus.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SantaClaus/SantaClaus.fseq",
+        "name": "SantaClaus.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "SleighRide",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SleighRide",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SleighRide/SleighRide.xsq",
+        "name": "SleighRide.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SleighRide/SleighRide.fseq",
+        "name": "SleighRide.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "seasonal"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "SleighRide - SnoMutt",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SleighRide - SnoMutt",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SleighRide - SnoMutt/SleighRide-SnoMutt.xsq",
+        "name": "SleighRide-SnoMutt.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SleighRide - SnoMutt/SleighRide-SnoMutt.fseq",
+        "name": "SleighRide-SnoMutt.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "SleigherChristmas",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SleigherChristmas",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SleigherChristmas/SleigherChristmas.xsq",
+        "name": "SleigherChristmas.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/SleigherChristmas/SleigherChristmas.fseq",
+        "name": "SleigherChristmas.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "TrollsWorldTour",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/TrollsWorldTour",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/TrollsWorldTour/TrollsWorldTour.xsq",
+        "name": "TrollsWorldTour.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/TrollsWorldTour/TrollsWorldTour.fseq",
+        "name": "TrollsWorldTour.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "novelty"
+      ],
+      "initialAuditSubset": false
+    },
+    {
+      "folderName": "WeWishYouXmas_Muppets",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/WeWishYouXmas_Muppets",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/WeWishYouXmas_Muppets/WeWishYouXmas_Muppets.xsq",
+        "name": "WeWishYouXmas_Muppets.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/WeWishYouXmas_Muppets/WeWishYouXmas_Muppets.fseq",
+        "name": "WeWishYouXmas_Muppets.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "novelty",
+        "seasonal"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "WinterWonderland",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/WinterWonderland",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/WinterWonderland/WinterWonderland.xsq",
+        "name": "WinterWonderland.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/WinterWonderland/WinterWonderland.fseq",
+        "name": "WinterWonderland.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "dramatic",
+        "seasonal"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "YouMakeItFeelLikeXmas",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/YouMakeItFeelLikeXmas",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/YouMakeItFeelLikeXmas/YouMakeItFeelLikeXmas.xsq",
+        "name": "YouMakeItFeelLikeXmas.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/YouMakeItFeelLikeXmas/YouMakeItFeelLikeXmas.fseq",
+        "name": "YouMakeItFeelLikeXmas.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "warm",
+        "seasonal"
+      ],
+      "initialAuditSubset": true
+    },
+    {
+      "folderName": "ZydecoChristmas",
+      "folderPath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ZydecoChristmas",
+      "readOnly": true,
+      "xsq": {
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ZydecoChristmas/ZydecoChristmas.xsq",
+        "name": "ZydecoChristmas.xsq"
+      },
+      "fseq": {
+        "present": true,
+        "path": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ZydecoChristmas/ZydecoChristmas.fseq",
+        "name": "ZydecoChristmas.fseq",
+        "count": 1
+      },
+      "requiresRender": false,
+      "styleTags": [
+        "high_energy",
+        "seasonal"
+      ],
+      "initialAuditSubset": false
+    }
+  ]
+}
