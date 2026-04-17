@@ -101,6 +101,18 @@ test("sequence_agent input contract accepts artistic goal and revision objective
   assert.deepEqual(errors, []);
 });
 
+test("sequence_agent input contract accepts optional render validation evidence object", () => {
+  const errors = validateSequenceAgentInput(sampleInput({
+    renderValidationEvidence: {
+      renderObservationRef: "/tmp/render-observation.json",
+      compositionObservationRef: "/tmp/composition-observation.json",
+      layeringObservationRef: "/tmp/layering-observation.json",
+      progressionObservationRef: "/tmp/progression-observation.json"
+    }
+  }));
+  assert.deepEqual(errors, []);
+});
+
 test("sequence_agent input contract rejects missing required fields", () => {
   const errors = validateSequenceAgentInput(sampleInput({ requestId: "", safety: {} }));
   assert.ok(errors.some((e) => /requestId is required/i.test(e)));
@@ -112,10 +124,12 @@ test("sequence_agent input contract rejects missing required fields", () => {
 test("sequence_agent input contract rejects non-object artistic goal and revision objective", () => {
   const errors = validateSequenceAgentInput(sampleInput({
     sequenceArtisticGoal: "bad",
-    sequenceRevisionObjective: 42
+    sequenceRevisionObjective: 42,
+    renderValidationEvidence: "bad"
   }));
   assert.ok(errors.some((e) => /sequenceArtisticGoal must be an object/i.test(e)));
   assert.ok(errors.some((e) => /sequenceRevisionObjective must be an object/i.test(e)));
+  assert.ok(errors.some((e) => /renderValidationEvidence must be an object/i.test(e)));
 });
 
 test("sequence_agent plan output contract requires metadata.degradedMode", () => {

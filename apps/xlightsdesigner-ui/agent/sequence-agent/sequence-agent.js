@@ -443,6 +443,20 @@ function sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments = []) {
     .filter(Boolean);
 }
 
+function sanitizeRenderValidationEvidence(evidence = null) {
+  if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) return null;
+  return {
+    renderObservationRef: normText(evidence?.renderObservationRef) || null,
+    compositionObservationRef: normText(evidence?.compositionObservationRef) || null,
+    layeringObservationRef: normText(evidence?.layeringObservationRef) || null,
+    progressionObservationRef: normText(evidence?.progressionObservationRef) || null,
+    sequenceCritiqueRef: normText(evidence?.sequenceCritiqueRef) || null,
+    scopeLevel: normText(evidence?.scopeLevel) || null,
+    sectionNames: normArray(evidence?.sectionNames).map((row) => normText(row)).filter(Boolean),
+    targetIds: normArray(evidence?.targetIds).map((row) => normText(row)).filter(Boolean)
+  };
+}
+
 function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
   const out = [];
   const seen = new Set();
@@ -1392,6 +1406,7 @@ export function buildSequenceAgentPlan({
   timingOwnership = [],
   allowTimingWrites = true,
   metadataAssignments = [],
+  renderValidationEvidence = null,
   stageOverrides = {}
 } = {}) {
   const warnings = [];
@@ -1535,7 +1550,8 @@ export function buildSequenceAgentPlan({
         strategy: normText(effect?.strategy),
         seedRecommendations: normArray(effect?.seedRecommendations)
       },
-      metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments)
+      metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
+      renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
     }
   };
   plan.createdAt = new Date().toISOString();

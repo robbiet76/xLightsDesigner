@@ -116,6 +116,9 @@ export function validateSequenceAgentInput(payload = {}) {
   if (obj.planningScope != null && !isPlainObject(obj.planningScope)) {
     errors.push("planningScope must be an object when provided");
   }
+  if (obj.renderValidationEvidence != null && !isPlainObject(obj.renderValidationEvidence)) {
+    errors.push("renderValidationEvidence must be an object when provided");
+  }
 
   return errors;
 }

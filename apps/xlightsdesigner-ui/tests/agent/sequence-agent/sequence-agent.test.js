@@ -285,6 +285,37 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.sharedSettingTrainingKnowledge.artifactType, "sequencer_cross_effect_shared_settings_bundle");
 });
 
+test("sequence_agent plan metadata carries render validation evidence refs", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / build then release"],
+    baseRevision: "rev-77",
+    effectCatalog: sampleCatalog(),
+    renderValidationEvidence: {
+      renderObservationRef: "/tmp/render-observation.json",
+      compositionObservationRef: "/tmp/composition-observation.json",
+      layeringObservationRef: "/tmp/layering-observation.json",
+      progressionObservationRef: "/tmp/progression-observation.json",
+      sequenceCritiqueRef: "/tmp/sequence-critique.json",
+      scopeLevel: "section_window",
+      sectionNames: ["Chorus 1"],
+      targetIds: ["MegaTree"]
+    }
+  });
+
+  assert.deepEqual(out.metadata.renderValidationEvidence, {
+    renderObservationRef: "/tmp/render-observation.json",
+    compositionObservationRef: "/tmp/composition-observation.json",
+    layeringObservationRef: "/tmp/layering-observation.json",
+    progressionObservationRef: "/tmp/progression-observation.json",
+    sequenceCritiqueRef: "/tmp/sequence-critique.json",
+    scopeLevel: "section_window",
+    sectionNames: ["Chorus 1"],
+    targetIds: ["MegaTree"]
+  });
+});
+
 test("sequence_agent exposes bounded parameter prior guidance for matched target geometry", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {
