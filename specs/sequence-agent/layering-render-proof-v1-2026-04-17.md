@@ -65,6 +65,7 @@ Current tool:
 
 - [build-layering-render-proof.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-layering-render-proof.py)
 - [build-layering-placement-evidence.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-layering-placement-evidence.py)
+- [build-layering-group-evidence.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-layering-group-evidence.py)
 
 Inputs:
 
@@ -125,11 +126,12 @@ If all isolated placement windows exist:
 
 ### For `same_target_transition`
 
-Requires:
+Requires one of:
 
 - explicit `handoffWindowRef`
+- derived `handoffObservationRef`
 
-If present and no handoff observation exists yet:
+If a handoff window exists and no handoff observation exists yet:
 
 - derives `handoffObservationRef`
 
@@ -147,6 +149,7 @@ If isolated placement windows exist:
 Also requires:
 
 - explicit `ownershipWindowRef`
+- or derived `ownershipObservationRef`
 
 If ownership observation is missing:
 
@@ -166,7 +169,7 @@ The generator may:
 It may not:
 
 - invent missing handoff windows
-- invent ownership evidence
+- invent unsupported ownership evidence
 - convert unresolved taxonomy into usable proof
 
 ## Current Limitation

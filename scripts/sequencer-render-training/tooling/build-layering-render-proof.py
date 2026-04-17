@@ -41,18 +41,24 @@ def normalize_path(value):
 
 def build_maps(evidence):
     placements = {}
+    groups = {}
+    blocked = {}
     for row in evidence.get("placements") or []:
         placement_id = str(row.get("placementId") or "").strip()
         if not placement_id:
             continue
         placements[placement_id] = row
-    groups = {}
     for row in evidence.get("groups") or []:
         group_id = str(row.get("groupId") or "").strip()
         if not group_id:
             continue
         groups[group_id] = row
-    return placements, groups
+    for row in evidence.get("blocked") or []:
+        group_id = str(row.get("groupId") or "").strip()
+        if not group_id:
+            continue
+        blocked[group_id] = row
+    return placements, groups, blocked
 
 
 def ensure_render_observation(window_ref, out_dir, stem):
@@ -103,7 +109,7 @@ def main():
     args = parse_args()
     proof_plan = read_json(args.proof_plan)
     evidence = read_json(args.placement_evidence)
-    placement_map, group_map = build_maps(evidence)
+    placement_map, group_map, blocked_group_map = build_maps(evidence)
 
     out_root = os.path.abspath(args.out)
     os.makedirs(out_root, exist_ok=True)
@@ -155,9 +161,9 @@ def main():
             )
 
         blocked_reasons = list(missing)
-        if taxonomy == "same_target_transition" and not handoff_window_ref:
+        if taxonomy == "same_target_transition" and not handoff_window_ref and not handoff_observation_ref:
             blocked_reasons.append("group:handoffWindowRef")
-        if taxonomy == "parent_submodel_overlap" and not ownership_window_ref:
+        if taxonomy == "parent_submodel_overlap" and not ownership_window_ref and not ownership_observation_ref:
             blocked_reasons.append("group:ownershipWindowRef")
 
         proof_artifact = {
@@ -185,13 +191,21 @@ def main():
             proofs_out.append(proof_artifact)
 
     for blocked in proof_plan.get("blocked") or []:
+        blocked_group = blocked_group_map.get(str(blocked.get("groupId") or "").strip()) or {}
+        reasons = []
+        if blocked_group.get("blockedReason"):
+            reasons.append(blocked_group.get("blockedReason"))
+        if blocked.get("unresolvedReason"):
+            reasons.append(blocked.get("unresolvedReason"))
+        if not reasons:
+            reasons.append("blocked by proof plan")
         blocked_out.append({
             "artifactType": "layering_render_proof_v1",
             "artifactVersion": 1,
             "groupId": blocked.get("groupId"),
             "taxonomy": blocked.get("taxonomy"),
             "blocked": True,
-            "blockedReasons": [blocked.get("unresolvedReason") or "blocked by proof plan"],
+            "blockedReasons": reasons,
             "critiqueEnabled": False,
         })
 
