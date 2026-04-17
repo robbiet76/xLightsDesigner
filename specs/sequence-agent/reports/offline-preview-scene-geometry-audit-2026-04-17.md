@@ -10,8 +10,13 @@ Exporter: [export-preview-scene-geometry-offline.py](/Users/robterry/Projects/xL
 First offline whole-scene geometry export succeeded against the production Christmas show.
 
 Summary:
-- exported models: `108`
-- unresolved models: `5`
+- exported models: `113`
+- unresolved models: `0`
+- audit-eligible models: `98`
+- audit-excluded `Unassigned` models: `15`
+- exclusivity groups: `18`
+  - exact shared-channel groups: `1`
+  - shadow-model groups: `17`
 - views discovered from XML: `3`
 - model groups discovered from XML: `74`
 
@@ -27,26 +32,26 @@ The current exporter handled these show-local display types:
 - `Star`
 - `Icicles`
 
-## Remaining Unresolved Models
+## Audit Scope Rules
 
-The remaining `5` unresolved models are blocked by alias-style `StartChannel` references that do not appear in either:
-- `xlights_rgbeffects.xml`
-- `xlights_networks.xml`
+The current exporter follows xLights source semantics for:
+- `@Model:n`
+- `>Model:n`
+- `ShadowModelFor`
 
-Current unresolved set:
-- `Train_Gondola`
-- `PorchTree`
-- `Snowball_SM`
-- `Snowman`
-- `NorthPoleSpiral`
+Default mature-sequence audit behavior:
+- include normal sequencing models
+- include shadow/shared-channel models in raw geometry export
+- exclude `LayoutGroup == Unassigned` models from audit scope by default
 
-These are not geometry-format failures. They are channel-reference resolution failures.
+That matches the production-show usage pattern:
+- `Unassigned` models are backend/helper models
+- shadow/shared-channel models remain valid sequencing representations
+- but same-output alternatives are treated as mutually exclusive targets
 
 ## Practical Meaning
 
-This exporter is already good enough to start whole-scene mature-sequence audit work on the production show with materially better coverage than the previous live-only path.
-
-It is not yet full parity.
+This exporter is now good enough to start whole-scene mature-sequence audit work on the production show with materially better coverage than the previous live-only path.
 
 The next offline-geometry improvement target is:
-- resolve the remaining alias-style `StartChannel` references
+- validate exclusivity-group handling against more mature-sequence windows

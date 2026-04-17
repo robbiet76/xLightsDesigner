@@ -45,6 +45,9 @@ Relevant xLights source references:
 - `src-core/models/CustomModel.cpp`
 - `src-core/models/PolyLineModel.cpp`
 - `src-core/models/TreeModel.cpp`
+- `src-core/models/Model.cpp`
+- `src-core/models/ModelManager.cpp`
+- `src-ui-wx/xLightsMain.cpp`
 
 ## v1 Coverage Goal
 
@@ -93,8 +96,30 @@ The exporter must resolve `StartChannel` from:
 1. direct numeric absolute channels
 2. controller references from `xlights_networks.xml`
 3. model-to-model chained references found in `xlights_rgbeffects.xml`
+4. first-channel references using `@Model:n`
+5. after-last-channel references using `>Model:n`
 
-The exporter is allowed to leave a model unsupported when the chain terminates in an unresolved alias that does not exist in either file.
+The exporter must follow xLights source semantics:
+- `@Model:n` means offset `n` from the referenced model's first channel
+- `>Model:n` means offset `n` after the referenced model's last channel
+
+## Shadow Models And Audit Scope
+
+xLights distinguishes:
+- aliases: alternate import/mapping names, not sequencing geometry
+- shadow models: first-class models with shared-output relationships
+
+The exporter must:
+- preserve `Aliases` as model metadata only
+- preserve `ShadowModelFor` as source-truth metadata
+- emit exclusivity groups for:
+  - exact same-channel models
+  - explicit shadow-model relationships
+
+Default audit policy:
+- models in `LayoutGroup == Unassigned` are exported
+- but they are marked `auditEligible: false`
+- mature-sequence audit excludes them by default
 
 ## v1 Geometry Semantics
 

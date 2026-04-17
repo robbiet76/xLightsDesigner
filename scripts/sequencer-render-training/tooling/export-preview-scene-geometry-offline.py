@@ -6,7 +6,7 @@ import json
 import math
 import re
 import xml.etree.ElementTree as ET
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 
@@ -65,11 +65,12 @@ def parse_start_channel(raw, controller_bases, model_lookup=None, seen=None):
         raise ValueError('missing StartChannel')
     if raw.isdigit():
         return int(raw) - 1
-    m = re.match(r'^[!>]?(.*?):(\d+)$', raw)
+    m = re.match(r'^([!@<>]?)(.*?):(\d+)$', raw)
     if not m:
         raise ValueError(f'unsupported StartChannel format: {raw}')
-    ref_name = m.group(1)
-    offset_one = int(m.group(2))
+    ref_kind = m.group(1)
+    ref_name = norm(m.group(2))
+    offset_one = int(m.group(3))
     if ref_name in controller_bases:
         return controller_bases[ref_name]['baseZero'] + offset_one - 1
     model_lookup = model_lookup or {}
@@ -81,7 +82,73 @@ def parse_start_channel(raw, controller_bases, model_lookup=None, seen=None):
         raise ValueError(f'controller/model not found for StartChannel reference: {ref_name}')
     seen.add(ref_name)
     base_zero = parse_start_channel(ref_model.attrib.get('StartChannel', ''), controller_bases, model_lookup=model_lookup, seen=seen)
+    channels_per_node = infer_channels_per_node(ref_model.attrib.get('StringType'))
+    node_count = estimate_node_count(ref_model)
+    if ref_kind == '>':
+        return base_zero + node_count * channels_per_node + offset_one - 1
     return base_zero + offset_one - 1
+
+
+def parse_start_channel_reference(raw):
+    raw = norm(raw)
+    if not raw:
+        return {'raw': raw, 'kind': 'missing'}
+    if raw.isdigit():
+        return {'raw': raw, 'kind': 'absolute_numeric'}
+    m = re.match(r'^([!@<>]?)(.*?):(\d+)$', raw)
+    if not m:
+        return {'raw': raw, 'kind': 'unsupported'}
+    prefix = m.group(1)
+    name = norm(m.group(2))
+    offset_one = int(m.group(3))
+    if prefix == '!':
+        kind = 'controller_relative'
+    elif prefix == '@':
+        kind = 'model_first_channel'
+    elif prefix == '>':
+        kind = 'model_after_last_channel'
+    elif prefix == '<':
+        kind = 'model_before_first_channel'
+    else:
+        kind = 'legacy_output_relative'
+    return {'raw': raw, 'kind': kind, 'referenceName': name, 'offsetOne': offset_one}
+
+
+def parse_aliases(model):
+    aliases = []
+    aliases_node = model.find('Aliases')
+    if aliases_node is None:
+        aliases_node = model.find('aliases')
+    if aliases_node is None:
+        return aliases
+    for child in aliases_node.findall('alias'):
+        name = norm(child.attrib.get('name'))
+        if name:
+            aliases.append(name)
+    return aliases
+
+
+def estimate_node_count(model):
+    attrs = model.attrib
+    display_as = norm(attrs.get('DisplayAs'))
+    if display_as in ('Horiz Matrix', 'Vert Matrix'):
+        rows = max(1, to_int(attrs.get('parm1', 1), 1))
+        cols = max(1, to_int(attrs.get('parm2', 1), 1))
+        return rows * cols
+    if display_as in ('Tree 360', 'Tree Flat', 'Star', 'Icicles'):
+        return max(1, to_int(attrs.get('parm1', 1), 1)) * max(1, to_int(attrs.get('parm2', 1), 1))
+    if display_as in ('Single Line', 'Poly Line'):
+        return max(1, to_int(attrs.get('parm1', attrs.get('PixelCount', 1)), 1)) * max(1, to_int(attrs.get('parm2', 1), 1) if display_as == 'Single Line' else 1)
+    if display_as == 'Custom':
+        locations = parse_custom_model_data(attrs)
+        found = set()
+        for layer in locations:
+            for row in layer:
+                for value in row:
+                    if value > 0:
+                        found.add(value)
+        return max(1, len(found))
+    return max(1, to_int(attrs.get('PixelCount', 1), 1))
 
 
 def euler_rotate(x, y, z, rx_deg, ry_deg, rz_deg):
@@ -491,6 +558,7 @@ def compute_bounds(models):
 def build_model_entry(model, controller_bases, model_lookup):
     attrs = dict(model.attrib)
     display_as = norm(attrs.get('DisplayAs'))
+    start_channel_ref = parse_start_channel_reference(attrs.get('StartChannel', ''))
     start_channel_zero = parse_start_channel(attrs.get('StartChannel', ''), controller_bases, model_lookup=model_lookup)
     channels_per_node = infer_channels_per_node(attrs.get('StringType'))
     if display_as in ('Single Line', 'Poly Line'):
@@ -516,10 +584,15 @@ def build_model_entry(model, controller_bases, model_lookup):
         'type': display_as or 'Model',
         'displayAs': display_as or 'Model',
         'layoutGroup': attrs.get('LayoutGroup', ''),
+        'auditEligible': low(attrs.get('LayoutGroup')) != 'unassigned',
         'groupNames': [],
         'renderLayout': '',
         'defaultBufferStyle': '',
         'availableBufferStyles': [],
+        'aliases': parse_aliases(model),
+        'shadowModelFor': norm(attrs.get('ShadowModelFor')),
+        'isShadowModel': bool(norm(attrs.get('ShadowModelFor'))),
+        'startChannelReference': start_channel_ref,
         'startChannel': start_channel_zero,
         'endChannel': start_channel_zero + len(nodes) * channels_per_node - 1 if nodes else start_channel_zero,
         'dimensions': None,
@@ -543,6 +616,65 @@ def build_model_entry(model, controller_bases, model_lookup):
         'submodels': [],
         'nodes': nodes,
     }
+
+
+def annotate_shared_channel_groups(scene_models):
+    by_range = defaultdict(list)
+    for model in scene_models:
+        model.setdefault('exclusivityGroupIds', [])
+        by_range[(model['startChannel'], model['endChannel'])].append(model)
+
+    groups = []
+    for members in by_range.values():
+        if len(members) < 2:
+            continue
+        group_id = f"shared_channels:{members[0]['startChannel']}:{members[0]['endChannel']}"
+        group = {
+            'groupId': group_id,
+            'kind': 'shared_channel_exclusive',
+            'startChannel': members[0]['startChannel'],
+            'endChannel': members[0]['endChannel'],
+            'members': [m['name'] for m in members],
+        }
+        groups.append(group)
+        for model in members:
+            model['exclusivityGroupIds'].append(group_id)
+
+    by_name = {m['name']: m for m in scene_models}
+    shadow_sets = []
+    handled = set()
+    for model in scene_models:
+        target = model.get('shadowModelFor')
+        if not target:
+            continue
+        members = sorted({model['name'], target})
+        key = tuple(members)
+        if key in handled:
+            continue
+        handled.add(key)
+        shadow_sets.append(members)
+    for members in shadow_sets:
+        group_id = f"shadow_models:{':'.join(members)}"
+        group = {
+            'groupId': group_id,
+            'kind': 'shadow_model_exclusive',
+            'members': members,
+        }
+        groups.append(group)
+        for name in members:
+            model = by_name.get(name)
+            if model is not None:
+                model['exclusivityGroupIds'].append(group_id)
+
+    for model in scene_models:
+        exclusive = set()
+        for group in groups:
+            if model['name'] in group['members']:
+                exclusive.update(m for m in group['members'] if m != model['name'])
+        model['mutuallyExclusiveSequencingTargets'] = sorted(exclusive) or None
+        model['sharedChannelGroupId'] = next((gid for gid in model['exclusivityGroupIds'] if gid.startswith('shared_channels:')), None)
+
+    return groups
 
 
 def parse_model_groups(root):
@@ -603,6 +735,18 @@ def main():
     for model in scene_models:
         model['groupNames'] = memberships.get(model['name'], [])
 
+    shared_channel_groups = annotate_shared_channel_groups(scene_models)
+    audit_models = [m for m in scene_models if m.get('auditEligible', True)]
+    excluded_models = [
+        {
+            'name': m['name'],
+            'displayAs': m['displayAs'],
+            'layoutGroup': m.get('layoutGroup', ''),
+            'reason': 'layout_group_unassigned',
+        }
+        for m in scene_models if not m.get('auditEligible', True)
+    ]
+
     artifact = {
         'artifactType': 'preview_scene_geometry_v1',
         'artifactVersion': 1,
@@ -624,13 +768,21 @@ def main():
             'cameras': [],
             'models': scene_models,
             'modelGroups': group_map,
+            'sharedChannelGroups': shared_channel_groups,
         },
         'summaries': {
             'modelCount': len(scene_models),
+            'auditEligibleModelCount': len(audit_models),
+            'auditExcludedModelCount': len(excluded_models),
+            'auditExcludedModels': excluded_models,
+            'exclusivityGroupCount': len(shared_channel_groups),
+            'sharedChannelGroupCount': sum(1 for g in shared_channel_groups if g['kind'] == 'shared_channel_exclusive'),
+            'shadowModelGroupCount': sum(1 for g in shared_channel_groups if g['kind'] == 'shadow_model_exclusive'),
             'unsupportedModelCount': len(unsupported),
             'unsupportedModels': unsupported,
             'displayTypeCounts': dict(type_counts),
             'sceneBounds': compute_bounds(scene_models),
+            'auditSceneBounds': compute_bounds(audit_models),
         },
     }
     out = Path(args.out)
