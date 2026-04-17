@@ -1,7 +1,7 @@
 {
   "artifactType": "stage1_final_cross_model_analysis_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T00:33:05.904Z",
+  "generatedAt": "2026-04-17T00:41:33.540Z",
   "totalModels": 18,
   "totalRecords": 46804,
   "totalEffects": 10,
@@ -85,7 +85,7 @@
       "models": [
         "spinner_standard"
       ],
-      "averagePatternFamilyCount": 29,
+      "averagePatternFamilyCount": 33,
       "modelsWithUnclassified": []
     },
     {
@@ -95,7 +95,7 @@
         "star_multi_layer",
         "star_single_layer"
       ],
-      "averagePatternFamilyCount": 29,
+      "averagePatternFamilyCount": 33,
       "modelsWithUnclassified": []
     },
     {
@@ -106,213 +106,12 @@
         "tree_360_spiral",
         "tree_flat_single_layer"
       ],
-      "averagePatternFamilyCount": 38.67,
+      "averagePatternFamilyCount": 41.67,
       "modelsWithUnclassified": []
     }
   ],
   "modelsWithUnclassified": [],
   "effectSummary": [
-    {
-      "effectName": "Marquee",
-      "modelsPresent": 18,
-      "totalDistinctFamilies": 45,
-      "minDistinctFamilies": 1,
-      "maxDistinctFamilies": 4,
-      "collapsedModelCount": 6,
-      "unclassifiedModelCount": 0,
-      "models": [
-        {
-          "geometryProfile": "matrix_high_density",
-          "modelName": "MatrixHighDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "matrix_marquee_motion",
-            "matrix_reverse_marquee",
-            "matrix_segmented_marquee",
-            "matrix_wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "matrix_low_density",
-          "modelName": "MatrixLowDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "matrix_marquee_motion",
-            "matrix_reverse_marquee",
-            "matrix_segmented_marquee",
-            "matrix_wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "matrix_medium_density",
-          "modelName": "MatrixMedDensity",
-          "analyzerFamily": "matrix",
-          "distinctFamilyCount": 4,
-          "patternFamilies": [
-            "matrix_marquee_motion",
-            "matrix_reverse_marquee",
-            "matrix_segmented_marquee",
-            "matrix_wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "spinner_standard",
-          "modelName": "Spinner",
-          "analyzerFamily": "radial",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "radial_fill"
-          ]
-        },
-        {
-          "geometryProfile": "star_single_layer",
-          "modelName": "StarSingle",
-          "analyzerFamily": "star",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "star_fill"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_horizontal",
-          "modelName": "SingleLineHorizontal",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "marquee_motion",
-            "segmented_marquee",
-            "wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "tree_360_round",
-          "modelName": "TreeRound",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "tree_fill"
-          ]
-        },
-        {
-          "geometryProfile": "tree_360_spiral",
-          "modelName": "TreeSpiral",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "tree_fill"
-          ]
-        },
-        {
-          "geometryProfile": "tree_flat_single_layer",
-          "modelName": "TreeFlat",
-          "analyzerFamily": "tree",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "tree_fill"
-          ]
-        },
-        {
-          "geometryProfile": "star_multi_layer",
-          "modelName": "StarTripleLayer",
-          "analyzerFamily": "star",
-          "distinctFamilyCount": 1,
-          "patternFamilies": [
-            "star_fill"
-          ]
-        },
-        {
-          "geometryProfile": "arch_multi_layer",
-          "modelName": "ArchTripleLayer",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "marquee_motion",
-            "segmented_marquee",
-            "wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "arch_single",
-          "modelName": "ArchSingle",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "marquee_motion",
-            "segmented_marquee",
-            "wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_vertical",
-          "modelName": "SingleLineVertical",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "marquee_motion",
-            "segmented_marquee",
-            "wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "icicles_drop_pattern",
-          "modelName": "Icicles",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "marquee_motion",
-            "segmented_marquee",
-            "wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "cane_grouped",
-          "modelName": "CaneGroup",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "marquee_motion",
-            "segmented_marquee",
-            "wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "cane_single",
-          "modelName": "CaneSingle",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "marquee_motion",
-            "segmented_marquee",
-            "wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "cane_stick_grouped",
-          "modelName": "CaneStickGroup",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "marquee_motion",
-            "segmented_marquee",
-            "wide_marquee"
-          ]
-        },
-        {
-          "geometryProfile": "single_line_single_node",
-          "modelName": "SingleLineSingleNode",
-          "analyzerFamily": "linear",
-          "distinctFamilyCount": 3,
-          "patternFamilies": [
-            "marquee_motion",
-            "segmented_marquee",
-            "wide_marquee"
-          ]
-        }
-      ],
-      "averageDistinctFamilies": 2.5
-    },
     {
       "effectName": "Pinwheel",
       "modelsPresent": 18,
@@ -1387,6 +1186,225 @@
         }
       ],
       "averageDistinctFamilies": 3
+    },
+    {
+      "effectName": "Marquee",
+      "modelsPresent": 18,
+      "totalDistinctFamilies": 63,
+      "minDistinctFamilies": 3,
+      "maxDistinctFamilies": 4,
+      "collapsedModelCount": 0,
+      "unclassifiedModelCount": 0,
+      "models": [
+        {
+          "geometryProfile": "matrix_high_density",
+          "modelName": "MatrixHighDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "matrix_marquee_motion",
+            "matrix_reverse_marquee",
+            "matrix_segmented_marquee",
+            "matrix_wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "matrix_low_density",
+          "modelName": "MatrixLowDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "matrix_marquee_motion",
+            "matrix_reverse_marquee",
+            "matrix_segmented_marquee",
+            "matrix_wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "matrix_medium_density",
+          "modelName": "MatrixMedDensity",
+          "analyzerFamily": "matrix",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "matrix_marquee_motion",
+            "matrix_reverse_marquee",
+            "matrix_segmented_marquee",
+            "matrix_wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "spinner_standard",
+          "modelName": "Spinner",
+          "analyzerFamily": "radial",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "radial_marquee_motion",
+            "radial_reverse_marquee",
+            "radial_segmented_marquee",
+            "radial_wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "star_single_layer",
+          "modelName": "StarSingle",
+          "analyzerFamily": "star",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "star_marquee_motion",
+            "star_reverse_marquee",
+            "star_segmented_marquee",
+            "star_wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_horizontal",
+          "modelName": "SingleLineHorizontal",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "marquee_motion",
+            "segmented_marquee",
+            "wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "tree_360_round",
+          "modelName": "TreeRound",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "tree_marquee_motion",
+            "tree_reverse_marquee",
+            "tree_segmented_marquee",
+            "tree_wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "tree_360_spiral",
+          "modelName": "TreeSpiral",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "tree_marquee_motion",
+            "tree_reverse_marquee",
+            "tree_segmented_marquee",
+            "tree_wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "tree_flat_single_layer",
+          "modelName": "TreeFlat",
+          "analyzerFamily": "tree",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "tree_marquee_motion",
+            "tree_reverse_marquee",
+            "tree_segmented_marquee",
+            "tree_wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "star_multi_layer",
+          "modelName": "StarTripleLayer",
+          "analyzerFamily": "star",
+          "distinctFamilyCount": 4,
+          "patternFamilies": [
+            "star_marquee_motion",
+            "star_reverse_marquee",
+            "star_segmented_marquee",
+            "star_wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "arch_multi_layer",
+          "modelName": "ArchTripleLayer",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "marquee_motion",
+            "segmented_marquee",
+            "wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "arch_single",
+          "modelName": "ArchSingle",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "marquee_motion",
+            "segmented_marquee",
+            "wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_vertical",
+          "modelName": "SingleLineVertical",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "marquee_motion",
+            "segmented_marquee",
+            "wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "icicles_drop_pattern",
+          "modelName": "Icicles",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "marquee_motion",
+            "segmented_marquee",
+            "wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "cane_grouped",
+          "modelName": "CaneGroup",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "marquee_motion",
+            "segmented_marquee",
+            "wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "cane_single",
+          "modelName": "CaneSingle",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "marquee_motion",
+            "segmented_marquee",
+            "wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "cane_stick_grouped",
+          "modelName": "CaneStickGroup",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "marquee_motion",
+            "segmented_marquee",
+            "wide_marquee"
+          ]
+        },
+        {
+          "geometryProfile": "single_line_single_node",
+          "modelName": "SingleLineSingleNode",
+          "analyzerFamily": "linear",
+          "distinctFamilyCount": 3,
+          "patternFamilies": [
+            "marquee_motion",
+            "segmented_marquee",
+            "wide_marquee"
+          ]
+        }
+      ],
+      "averageDistinctFamilies": 3.5
     },
     {
       "effectName": "Shimmer",
@@ -2801,7 +2819,7 @@
       "modelType": "spinner",
       "analyzerFamily": "radial",
       "recordCount": 2608,
-      "patternFamilyCount": 29,
+      "patternFamilyCount": 33,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -2828,9 +2846,12 @@
         },
         {
           "effectName": "Marquee",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 4,
           "patternFamilies": [
-            "radial_fill"
+            "radial_marquee_motion",
+            "radial_reverse_marquee",
+            "radial_segmented_marquee",
+            "radial_wide_marquee"
           ]
         },
         {
@@ -2907,7 +2928,7 @@
       "modelType": "star",
       "analyzerFamily": "star",
       "recordCount": 2608,
-      "patternFamilyCount": 29,
+      "patternFamilyCount": 33,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -2934,9 +2955,12 @@
         },
         {
           "effectName": "Marquee",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 4,
           "patternFamilies": [
-            "star_fill"
+            "star_marquee_motion",
+            "star_reverse_marquee",
+            "star_segmented_marquee",
+            "star_wide_marquee"
           ]
         },
         {
@@ -3133,7 +3157,7 @@
       "modelType": "tree_360",
       "analyzerFamily": "tree",
       "recordCount": 2608,
-      "patternFamilyCount": 40,
+      "patternFamilyCount": 43,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -3163,9 +3187,12 @@
         },
         {
           "effectName": "Marquee",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 4,
           "patternFamilies": [
-            "tree_fill"
+            "tree_marquee_motion",
+            "tree_reverse_marquee",
+            "tree_segmented_marquee",
+            "tree_wide_marquee"
           ]
         },
         {
@@ -3248,7 +3275,7 @@
       "modelType": "tree_360",
       "analyzerFamily": "tree",
       "recordCount": 2608,
-      "patternFamilyCount": 36,
+      "patternFamilyCount": 39,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -3278,9 +3305,12 @@
         },
         {
           "effectName": "Marquee",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 4,
           "patternFamilies": [
-            "tree_fill"
+            "tree_marquee_motion",
+            "tree_reverse_marquee",
+            "tree_segmented_marquee",
+            "tree_wide_marquee"
           ]
         },
         {
@@ -3359,7 +3389,7 @@
       "modelType": "tree_flat",
       "analyzerFamily": "tree",
       "recordCount": 2608,
-      "patternFamilyCount": 40,
+      "patternFamilyCount": 43,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -3389,9 +3419,12 @@
         },
         {
           "effectName": "Marquee",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 4,
           "patternFamilies": [
-            "tree_fill"
+            "tree_marquee_motion",
+            "tree_reverse_marquee",
+            "tree_segmented_marquee",
+            "tree_wide_marquee"
           ]
         },
         {
@@ -3474,7 +3507,7 @@
       "modelType": "star",
       "analyzerFamily": "star",
       "recordCount": 2608,
-      "patternFamilyCount": 29,
+      "patternFamilyCount": 33,
       "paletteProfiles": [
         "mono_white",
         "rgb_primary"
@@ -3501,9 +3534,12 @@
         },
         {
           "effectName": "Marquee",
-          "distinctFamilyCount": 1,
+          "distinctFamilyCount": 4,
           "patternFamilies": [
-            "star_fill"
+            "star_marquee_motion",
+            "star_reverse_marquee",
+            "star_segmented_marquee",
+            "star_wide_marquee"
           ]
         },
         {

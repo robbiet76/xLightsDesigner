@@ -292,6 +292,21 @@ class BaseAnalyzer:
             name = "color_wash"
         return f"{prefix}{name}" if prefix else name
 
+    def _marquee_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        reverse = bool(settings.get("reverse", False))
+        skip_size = int(settings.get("skipSize", 0) or 0)
+        band_size = int(settings.get("bandSize", 1) or 1)
+
+        if skip_size >= 4:
+            name = "segmented_marquee"
+        elif band_size >= 6:
+            name = "wide_marquee"
+        elif reverse:
+            name = "reverse_marquee"
+        else:
+            name = "marquee_motion"
+        return f"{prefix}{name}" if prefix else name
+
     def _on_family(
         self,
         settings: Dict[str, Any],
@@ -512,17 +527,8 @@ class LinearAnalyzer(BaseAnalyzer):
             pattern_family = self._color_wash_family(settings, "linear_")
         elif effect == "Marquee":
             reverse = bool(settings.get("reverse", False))
-            skip_size = int(settings.get("skipSize", 0) or 0)
-            band_size = int(settings.get("bandSize", 1) or 1)
             direction = "reverse" if reverse else "forward"
-            if reverse:
-                pass
-            if skip_size >= 4:
-                pattern_family = "segmented_marquee"
-            elif band_size >= 6:
-                pattern_family = "wide_marquee"
-            else:
-                pattern_family = "marquee_motion"
+            pattern_family = self._marquee_family(settings)
         elif effect == "Pinwheel":
             arms = int(settings.get("arms", 3) or 3)
             rotation = bool(settings.get("rotation", False))
@@ -735,17 +741,7 @@ class MatrixAnalyzer(BaseAnalyzer):
         elif effect == "Color Wash":
             pattern_family = self._color_wash_family(settings, "matrix_")
         elif effect == "Marquee":
-            reverse = bool(settings.get("reverse", False))
-            skip_size = int(settings.get("skipSize", 0) or 0)
-            band_size = int(settings.get("bandSize", 1) or 1)
-            if skip_size >= 4:
-                pattern_family = "matrix_segmented_marquee"
-            elif band_size >= 6:
-                pattern_family = "matrix_wide_marquee"
-            elif reverse:
-                pattern_family = "matrix_reverse_marquee"
-            else:
-                pattern_family = "matrix_marquee_motion"
+            pattern_family = self._marquee_family(settings, "matrix_")
         elif effect == "Pinwheel":
             arms = int(settings.get("arms", 3) or 3)
             rotation = bool(settings.get("rotation", False))
@@ -891,6 +887,8 @@ class TreeAnalyzer(BaseAnalyzer):
             pattern_family = self._shimmer_family(settings, "tree_")
         elif inp.effect_name == "Color Wash":
             pattern_family = self._color_wash_family(settings, "tree_")
+        elif inp.effect_name == "Marquee":
+            pattern_family = self._marquee_family(settings, "tree_")
         elif inp.effect_name == "SingleStrand":
             pattern_family = "spiral_travel" if centroid_motion > 0.01 else "tree_band_motion"
         elif inp.effect_name == "Bars":
@@ -1133,6 +1131,8 @@ class StarAnalyzer(BaseAnalyzer):
             pattern_family = self._shimmer_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Color Wash":
             pattern_family = self._color_wash_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Marquee":
+            pattern_family = self._marquee_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Spirals":
             pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "Pinwheel":
@@ -1252,6 +1252,8 @@ class RadialAnalyzer(BaseAnalyzer):
             pattern_family = self._shimmer_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Color Wash":
             pattern_family = self._color_wash_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Marquee":
+            pattern_family = self._marquee_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Spirals":
             pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "Pinwheel":
