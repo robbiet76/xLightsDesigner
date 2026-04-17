@@ -11,6 +11,7 @@ import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_PLAN_OUTPUT_CONTRACT, S
 import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js";
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
 import { translatePlacementIntentToXlights } from "./effect-intent-translation.js";
+import { resolveTranslationLayer } from "./translation-layer.js";
 import {
   buildCrossEffectSharedSettingsKnowledgeMetadata,
   buildDerivedParameterKnowledgeMetadata,
@@ -609,6 +610,7 @@ function inferEffectNameFromSectionPlan({
   availableEffects = null,
   effectAvoidances = [],
   visualHintBehaviorText = [],
+  translationVisualFamilies = [],
   sequencerRevisionBrief = null
 } = {}) {
   const briefPreferred = selectPreferredEffect(
@@ -634,7 +636,10 @@ function inferEffectNameFromSectionPlan({
   );
   if (directCueChosen) return directCueChosen;
   const familyDriven = recommendEffectsForVisualFamilies({
-    preferredVisualFamilies: normArray(sectionDirective?.preferredVisualFamilies),
+    preferredVisualFamilies: [
+      ...normArray(sectionDirective?.preferredVisualFamilies),
+      ...normArray(translationVisualFamilies)
+    ],
     targetIds,
     displayElements,
     limit: 3
@@ -800,27 +805,31 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
         const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
         const effectAvoidances = collectEffectAvoidancesForTargets(prioritizedTargetIds, metadataAssignmentIndex);
         const visualHintBehaviorText = collectDefinedVisualHintBehaviorTextForTargets(prioritizedTargetIds, metadataAssignmentIndex);
-        const translationBehaviorText = normArray(scope?.executionStrategy?.translationIntent?.behaviorTargets)
-          .filter((target) => {
-            const appliesTo = normText(target?.appliesTo);
-            const targetId = normText(target?.targetId);
-            if (appliesTo === "section") return normText(target?.section) === normText(row?.section) || !normText(target?.section);
-            return prioritizedTargetIds.includes(targetId);
-          })
-          .map((target) => normText(target?.behaviorSummary))
-          .filter(Boolean);
+        const translationLayer = resolveTranslationLayer({
+          translationIntent: scope?.executionStrategy?.translationIntent,
+          section: row?.section,
+          targetIds: prioritizedTargetIds,
+          availableEffects
+        });
         const effectName = inferEffectNameFromSectionPlan({
           section: row?.section,
           energy: sectionDirective?.energyTarget || row?.energy,
           density: sectionDirective?.densityTarget || row?.density,
           intentSummary: row?.intentSummary || scope.goal,
-          effectHints: row?.effectHints,
+          effectHints: [
+            ...normArray(row?.effectHints),
+            ...normArray(translationLayer?.preferredEffectHints)
+          ],
           targetIds: prioritizedTargetIds,
           displayElements,
           sectionDirective,
           availableEffects,
           effectAvoidances,
-          visualHintBehaviorText: [...visualHintBehaviorText, ...translationBehaviorText],
+          visualHintBehaviorText: [
+            ...visualHintBehaviorText,
+            ...normArray(translationLayer?.behaviorTexts)
+          ],
+          translationVisualFamilies: normArray(translationLayer?.preferredVisualFamilies),
           sequencerRevisionBrief
         });
         const intentSummary = `${normText(row?.intentSummary || scope.goal)}${toneText}`;
