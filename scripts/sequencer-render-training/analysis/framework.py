@@ -307,6 +307,21 @@ class BaseAnalyzer:
             name = "marquee_motion"
         return f"{prefix}{name}" if prefix else name
 
+    def _pinwheel_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        arms = int(settings.get("arms", 3) or 3)
+        rotation = bool(settings.get("rotation", False))
+        mode_3d = self._lower_setting(settings, "3DMode")
+
+        if rotation and arms >= 6:
+            name = "dense_rotating_pinwheel"
+        elif rotation:
+            name = "rotating_pinwheel"
+        elif "sweep" in mode_3d:
+            name = "sweep_pinwheel"
+        else:
+            name = "pinwheel"
+        return f"{prefix}{name}" if prefix else name
+
     def _on_family(
         self,
         settings: Dict[str, Any],
@@ -530,17 +545,7 @@ class LinearAnalyzer(BaseAnalyzer):
             direction = "reverse" if reverse else "forward"
             pattern_family = self._marquee_family(settings)
         elif effect == "Pinwheel":
-            arms = int(settings.get("arms", 3) or 3)
-            rotation = bool(settings.get("rotation", False))
-            mode_3d = self._lower_setting(settings, "3DMode")
-            if rotation and arms >= 6:
-                pattern_family = "linear_dense_rotating_pinwheel"
-            elif rotation:
-                pattern_family = "linear_rotating_pinwheel"
-            elif "sweep" in mode_3d:
-                pattern_family = "linear_sweep_pinwheel"
-            else:
-                pattern_family = "linear_pinwheel"
+            pattern_family = self._pinwheel_family(settings, "linear_")
         elif effect == "Shockwave":
             shock = self._shockwave_signals(settings)
             variant = self._shockwave_variant(shock)
@@ -743,17 +748,7 @@ class MatrixAnalyzer(BaseAnalyzer):
         elif effect == "Marquee":
             pattern_family = self._marquee_family(settings, "matrix_")
         elif effect == "Pinwheel":
-            arms = int(settings.get("arms", 3) or 3)
-            rotation = bool(settings.get("rotation", False))
-            mode_3d = self._lower_setting(settings, "3DMode")
-            if rotation and arms >= 6:
-                pattern_family = "matrix_dense_rotating_pinwheel"
-            elif rotation:
-                pattern_family = "matrix_rotating_pinwheel"
-            elif "sweep" in mode_3d:
-                pattern_family = "matrix_sweep_pinwheel"
-            else:
-                pattern_family = "matrix_pinwheel"
+            pattern_family = self._pinwheel_family(settings, "matrix_")
         elif effect == "Shockwave":
             shock = self._shockwave_signals(settings)
             variant = self._shockwave_variant(shock)
@@ -947,16 +942,10 @@ class TreeAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "spiral_bands"
         elif inp.effect_name == "Pinwheel":
-            arms = int(settings.get("arms", 3) or 3)
-            rotation = bool(settings.get("rotation", False))
             if geometry_profile == "tree_360_spiral":
-                pattern_family = "helical_pinwheel"
-            elif rotation:
-                pattern_family = "tree_pinwheel_rotation"
-            elif arms >= 6:
-                pattern_family = "dense_pinwheel"
+                pattern_family = self._pinwheel_family(settings, "helical_")
             else:
-                pattern_family = "tree_pinwheel"
+                pattern_family = self._pinwheel_family(settings, "tree_")
         elif inp.effect_name == "Shockwave":
             shock = self._shockwave_signals(settings)
             variant = self._shockwave_variant(shock)
@@ -1136,7 +1125,7 @@ class StarAnalyzer(BaseAnalyzer):
         elif inp.effect_name == "Spirals":
             pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "Pinwheel":
-            pattern_family = "radial_pinwheel"
+            pattern_family = self._pinwheel_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Shockwave":
             shock = self._shockwave_signals(inp.effect_settings)
             variant = self._shockwave_variant(shock)
@@ -1257,7 +1246,7 @@ class RadialAnalyzer(BaseAnalyzer):
         elif inp.effect_name == "Spirals":
             pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "Pinwheel":
-            pattern_family = "radial_pinwheel"
+            pattern_family = self._pinwheel_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Shockwave":
             shock = self._shockwave_signals(inp.effect_settings)
             variant = self._shockwave_variant(shock)
