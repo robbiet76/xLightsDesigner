@@ -26,6 +26,7 @@ These are the current operating specs for sequencing work.
 - [render-visualizer-gap-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-visualizer-gap-audit-2026-04-17.md)
 - [composition-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/composition-observation-v1-2026-04-17.md)
 - [layering-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-observation-v1-2026-04-17.md)
+- [progression-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/progression-observation-v1-2026-04-17.md)
 - [layering-placement-groups-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-placement-groups-v1-2026-04-17.md)
 - [layering-proof-plan-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-proof-plan-v1-2026-04-17.md)
 - [layering-group-evidence-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-group-evidence-v1-2026-04-17.md)
