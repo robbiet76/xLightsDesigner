@@ -104,10 +104,15 @@ def main():
         sequencer_weaknesses.append("Active centroid is static across the sampled frames.")
 
     if composition:
-        if composition_hierarchy.get("leadSupportSeparation") == "high":
-            designer_strengths.append("The composition maintains clear attention separation between dominant and supporting structures.")
+        attention_separation = composition_hierarchy.get("attentionSeparation") or composition_hierarchy.get("leadSupportSeparation")
+        attention_competition = composition_hierarchy.get("attentionCompetition") or composition_hierarchy.get("dominanceConflict")
+        occlusion_risk = composition_hierarchy.get("occlusionRisk") or composition_hierarchy.get("maskingRisk")
+        secondary_subordination = composition_hierarchy.get("secondarySubordination") or composition_hierarchy.get("supportSubordination")
+
+        if attention_separation == "high":
+            designer_strengths.append("The composition maintains clear attention separation across the active structures.")
             sequencer_strengths.append("Rendered attention remains differentiated across the active structures.")
-        if composition_hierarchy.get("dominanceConflict") == "high":
+        if attention_competition == "high":
             designer_weaknesses.append("Multiple structures are drawing comparable attention, which makes the hierarchy less clear.")
             sequencer_weaknesses.append("Rendered attention is contested across several structures.")
             next_moves.append({
@@ -116,6 +121,12 @@ def main():
                 "level": "section",
                 "instruction": "Redistribute intensity or coverage so the intended attention structure reads more clearly."
             })
+        if occlusion_risk == "high":
+            designer_weaknesses.append("Some active structures are crowding or occluding each other in the scene read.")
+            sequencer_weaknesses.append("Cross-structure visibility is crowded enough to reduce compositional clarity.")
+        if secondary_subordination == "low" and attention_competition != "high":
+            designer_weaknesses.append("Secondary structures are not differentiating their visual role clearly enough yet.")
+            sequencer_weaknesses.append("Rendered secondary behavior is too similar to the dominant read.")
 
         if composition_contrast.get("contrastAdequacy") == "low":
             designer_weaknesses.append("The composition does not separate its elements strongly enough yet.")

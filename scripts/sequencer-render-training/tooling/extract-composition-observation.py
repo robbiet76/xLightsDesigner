@@ -38,6 +38,7 @@ def main():
     lead_model = macro.get("leadModel")
     lead_share = float(macro.get("leadModelShare") or 0.0)
     max_active_model_ratio = float(macro.get("maxActiveModelRatio") or 0.0)
+    mean_scene_spread_ratio = float(macro.get("meanSceneSpreadRatio") or 0.0)
     distinct_leads = int(macro.get("distinctLeadModelCount") or 0)
     energy_variation = float(macro.get("energyVariation") or 0.0)
     brightness_delta_mean = float(macro.get("brightnessDeltaMean") or 0.0)
@@ -71,7 +72,8 @@ def main():
     lead_support_separation_score = clamp((lead_share * 1.2) - (max_active_model_ratio * 0.2))
     dominance_conflict_score = clamp((1.0 - lead_share) + (0.2 if distinct_leads > 1 else 0.0))
     focus_stability_score = clamp((0.8 if distinct_leads <= 1 else 0.45 if distinct_leads == 2 else 0.2) + (lead_share * 0.2))
-    masking_risk_score = clamp((1.0 - lead_share) + (0.3 if len(active_models) > 3 else 0.0) + (0.15 if max_active_model_ratio > 0.5 else 0.0))
+    compactness = clamp(1.0 - min(1.0, mean_scene_spread_ratio))
+    masking_risk_score = clamp((compactness * 0.55) + (max_active_model_ratio * 0.35) + (0.15 if distinct_leads > 2 and compactness > 0.5 else 0.0))
     support_subordination_score = clamp(lead_share - (0.2 if len(active_families) > 3 else 0.0))
 
     motion_conflict_score = clamp((0.35 if temporal_read == "evolving" else 0.15 if temporal_read == "modulated" else 0.05) + (0.25 if burst_ratio > 0.35 and hold_ratio > 0.35 else 0.0) + min(0.25, transition_sharpness * 10.0))
@@ -109,7 +111,7 @@ def main():
         "elementRefs": [
             {
                 "targetId": name,
-                "roleHint": "lead" if name == lead_model else "support",
+                "roleHint": "dominant" if name == lead_model else "secondary",
             }
             for name in active_models
         ],
@@ -130,12 +132,22 @@ def main():
             },
         },
         "hierarchy": {
+            "attentionSeparation": classify_band(lead_support_separation_score),
+            "attentionCompetition": classify_band(dominance_conflict_score),
+            "attentionStability": classify_band(focus_stability_score),
+            "occlusionRisk": classify_band(masking_risk_score),
+            "secondarySubordination": classify_band(support_subordination_score),
             "leadSupportSeparation": classify_band(lead_support_separation_score),
             "dominanceConflict": classify_band(dominance_conflict_score),
             "focusStability": classify_band(focus_stability_score),
             "maskingRisk": classify_band(masking_risk_score),
             "supportSubordination": classify_band(support_subordination_score),
             "scores": {
+                "attentionSeparation": round(lead_support_separation_score, 4),
+                "attentionCompetition": round(dominance_conflict_score, 4),
+                "attentionStability": round(focus_stability_score, 4),
+                "occlusionRisk": round(masking_risk_score, 4),
+                "secondarySubordination": round(support_subordination_score, 4),
                 "leadSupportSeparation": round(lead_support_separation_score, 4),
                 "dominanceConflict": round(dominance_conflict_score, 4),
                 "focusStability": round(focus_stability_score, 4),
@@ -199,7 +211,7 @@ def main():
         "out": args.out,
         "scopeLevel": composition["scope"]["scopeLevel"],
         "contrastAdequacy": composition["contrast"]["contrastAdequacy"],
-        "leadSupportSeparation": composition["hierarchy"]["leadSupportSeparation"],
+        "attentionSeparation": composition["hierarchy"]["attentionSeparation"],
         "noveltyAdequacy": composition["novelty"]["noveltyAdequacy"],
     }, indent=2))
 

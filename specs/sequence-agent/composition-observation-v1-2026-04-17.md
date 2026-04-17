@@ -10,10 +10,10 @@ Last Reviewed: 2026-04-17
 Define the observation artifact for how realized elements compose across different physical structures inside a section or sequence window.
 
 This artifact exists because isolated realization metrics are not enough to judge sequencing quality.
-The project needs a machine-readable description of compositional interplay:
+The project needs a machine-readable description of cross-structure composition:
 
-- lead vs support separation
-- layer masking or reinforcement
+- attention separation
+- attention competition
 - local contrast
 - novelty and repetition
 - motion conflict or reinforcement
@@ -136,15 +136,25 @@ Suggested fields:
 ## Hierarchy
 
 Purpose:
-- describe whether the intended focal ordering across models is preserved
+- describe how attention is distributed across structures
 
 Suggested fields:
 
+- `attentionSeparation`
+- `attentionCompetition`
+- `attentionStability`
+- `occlusionRisk`
+- `secondarySubordination`
 - `leadSupportSeparation`
 - `dominanceConflict`
 - `focusStability`
 - `maskingRisk`
 - `supportSubordination`
+
+Compatibility note:
+
+- the `lead*` / `support*` field names may remain for pipeline compatibility
+- neutral `attention*` fields are the preferred interpretation surface
 
 ## Motion Interaction
 
@@ -189,12 +199,11 @@ Suggested fields:
 
 The first implementation of this artifact should answer only a compact set of questions:
 
-1. Is the lead still clearly readable?
-2. Is support staying subordinate?
-3. Are adjacent elements distinct enough?
-4. Are motion behaviors reinforcing or fighting each other?
-5. Are palette behaviors reinforcing or fighting each other?
-6. Is this section too similar to the recent surrounding context?
+1. Is attention concentrated, weighted, or distributed?
+2. Are active structures distinct enough from one another?
+3. Are motion behaviors reinforcing or fighting each other?
+4. Are palette behaviors reinforcing or fighting each other?
+5. Is this section too similar to the recent surrounding context?
 
 That is enough for the first usable composition layer.
 
@@ -209,6 +218,25 @@ The goal is a compact compositional evidence layer that supports:
 - revision planning
 - translation-layer validation
 - sequence-level learning
+
+## Neutral Observation Rule
+
+`composition_observation_v1` must stay neutral.
+
+Hardcode:
+
+- cross-structure measurements
+- attention distribution
+- contrast and occlusion
+- motion and palette relationships
+
+Do not hardcode:
+
+- that every scene needs one lead
+- that distributed attention is automatically weak
+- that secondary structures are always supposed to subordinate
+
+Judgment belongs later, relative to intent.
 
 ## Immediate Next Step
 
