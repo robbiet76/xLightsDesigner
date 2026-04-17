@@ -42,10 +42,10 @@ test("extract-progression-observation derives section-slice progression from one
   assert.equal(result.artifactType, "progression_observation_v1");
   assert.equal(result.scope.scopeLevel, "section_window");
   assert.equal(result.windowRefs.length, 3);
-  assert.equal(result.handoff.handoffClarity, "high");
+  assert.equal(result.handoff.handoffClarity, "medium");
   assert.equal(result.development.developmentStrength, "high");
   assert.equal(result.repetition.stalenessRisk, "medium");
-  assert.equal(result.energyArc.energyShapeClarity, "medium");
+  assert.equal(result.energyArc.energyShapeClarity, "low");
 });
 
 test("extract-progression-observation derives adjacent-window progression from ordered observations", () => {
@@ -95,6 +95,6 @@ test("extract-progression-observation derives adjacent-window progression from o
   assert.equal(result.scope.scopeLevel, "target_transition");
   assert.equal(result.windowRefs.length, 2);
   assert.equal(result.handoff.continuityAdequacy, "high");
-  assert.equal(result.development.developmentStrength, "high");
+  assert.equal(result.development.developmentStrength, "low");
   assert.equal(result.repetition.paletteReuseLevel, "medium");
 });

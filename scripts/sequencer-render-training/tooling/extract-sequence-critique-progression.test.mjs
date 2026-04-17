@@ -55,8 +55,8 @@ test("extract-sequence-critique incorporates progression weaknesses and refs", (
   assert.equal(critique.artifactType, "sequence_critique_v1");
   assert.equal(critique.source.progressionObservationRef, progression);
   assert.ok(critique.designerSummary.strengths.some((line) => line.includes("temporal handoff reads cleanly")));
-  assert.ok(critique.designerSummary.weaknesses.some((line) => line.includes("stagnating")));
-  assert.ok(critique.designerSummary.weaknesses.some((line) => line.includes("stale")));
-  assert.ok(critique.sequencerSummary.weaknesses.some((line) => line.includes("not evolving enough")));
+  assert.ok(critique.designerSummary.weaknesses.some((line) => line.includes("temporal profile")));
+  assert.ok(critique.designerSummary.weaknesses.some((line) => line.includes("read very similarly")));
+  assert.ok(critique.sequencerSummary.weaknesses.some((line) => line.includes("variation is limited")));
   assert.ok(critique.nextMoves.some((move) => move.level === "progression"));
 });

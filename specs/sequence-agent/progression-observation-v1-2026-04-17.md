@@ -7,15 +7,15 @@ Last Reviewed: 2026-04-17
 
 ## Purpose
 
-Define the observation artifact for how a sequence develops over time.
+Define the observation artifact for how a sequence changes over time.
 
 This is the `progression` problem:
 
 - how one realized treatment hands off to the next
-- whether a section evolves or stalls
+- whether a section changes materially or stays similar
 - whether adjacent sections differentiate enough
 - whether repetition is intentional or stale
-- whether escalation and de-escalation are readable
+- whether the temporal profile shifts in a readable way
 
 This is not the same as:
 
@@ -48,14 +48,14 @@ A sequence can have:
 - good composition
 - good layering
 
-and still fail because it does not progress.
+and still fail because its over-time behavior is unreadable or overly uniform.
 
 That is where the system needs evidence for:
 
 - handoff quality
 - pacing
-- escalation
-- restraint
+- temporal shift
+- temporal restraint
 - repetition
 - development
 
@@ -146,7 +146,7 @@ Suggested fields:
 ## Development
 
 Purpose:
-- describe whether the scoped window evolves enough over time
+- describe whether the scoped window changes materially over time
 
 Suggested fields:
 
@@ -154,6 +154,9 @@ Suggested fields:
 - `stagnationRisk`
 - `escalationRead`
 - `deescalationRead`
+
+These labels are retained for compatibility, but the underlying evidence should stay neutral.
+The artifact should measure temporal change, not assume escalation is always desirable.
 
 ## Repetition
 
@@ -184,7 +187,7 @@ Suggested fields:
 The first implementation of this artifact should answer only a compact set of questions:
 
 1. Does the handoff from one state to the next read cleanly?
-2. Does the scoped window actually develop over time?
+2. Does the scoped window change materially over time?
 3. Is repetition intentional or stale?
 4. Does the local energy arc read coherently?
 
@@ -210,6 +213,33 @@ The first implementation of `progression_observation_v1` should be constrained t
 2. section-slice development
 3. local repetition risk
 4. energy arc coherence
+
+## Neutral Observation Rule
+
+`progression_observation_v1` must stay neutral.
+
+Hardcode:
+
+- measurements
+- temporal comparisons
+- change intensity
+- reuse intensity
+
+Do not hardcode:
+
+- that every passage needs a single lead
+- that every passage must escalate
+- that every passage must avoid steadiness
+- that distributed attention is automatically weak
+
+The artifact may describe temporal profiles such as:
+
+- steady
+- pulsing
+- modulated
+- evolving
+
+but judgment should only happen later, relative to intent.
 
 Do not expand into broad sequence-level storytelling claims in the first version.
 

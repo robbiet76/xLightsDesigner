@@ -73,21 +73,15 @@ def main():
         designer_strengths.append("The section reads as a single focused idea.")
         sequencer_strengths.append("Active content is concentrated enough to make the lead target legible.")
     elif coherent_support_case:
-        designer_strengths.append(f"The section still reads as one idea with {lead_model} carrying the lead and restrained support around it.")
-        sequencer_strengths.append("Model balance is weighted enough to preserve a clear lead-plus-support hierarchy.")
+        designer_strengths.append(f"The section still reads with a clear weighted center around {lead_model}.")
+        sequencer_strengths.append("Model balance is weighted enough to keep attention concentrated instead of diffuse.")
     else:
-        designer_weaknesses.append("The scene is split across too many active models to read as one idea.")
-        sequencer_weaknesses.append("Too many models are active at once for this checkpoint.")
+        designer_strengths.append("Attention is distributed across multiple structures rather than collapsing into one focal cluster.")
+        sequencer_strengths.append("Activity is spread across multiple structures at this checkpoint.")
 
     if spread < 0.01:
-        designer_weaknesses.append("The visual footprint is very narrow relative to the full scene.")
-        sequencer_weaknesses.append("Scene spread is too tight; add restrained support targets before polishing detail.")
-        next_moves.append({
-            "priority": 1,
-            "owner": "sequencer",
-            "level": "group",
-            "instruction": "Broaden the active footprint with one secondary support family while preserving the lead target."
-        })
+        designer_strengths.append("The visual footprint stays intentionally narrow relative to the full scene.")
+        sequencer_strengths.append("Scene spread is tightly bounded in this checkpoint.")
     else:
         designer_strengths.append("The active footprint is broad enough to register at scene scale.")
         sequencer_strengths.append("Scene spread is large enough to support broader composition.")
@@ -98,14 +92,8 @@ def main():
 
     if len(active_families) == 1:
         family_name = next(iter(active_families))
-        designer_weaknesses.append(f"Only one family is carrying the section ({family_name}).")
-        sequencer_weaknesses.append(f"Family balance is narrow; current output relies entirely on {family_name}.")
-        next_moves.append({
-            "priority": 2,
-            "owner": "designer",
-            "level": "section",
-            "instruction": f"Decide whether this section should remain {family_name}-only or intentionally add a support family."
-        })
+        designer_strengths.append(f"The section is carried by a single family ({family_name}).")
+        sequencer_strengths.append(f"Family usage is intentionally narrow around {family_name}.")
     elif coherent_support_case:
         designer_strengths.append("Multiple families are present, but the support family does not overpower the lead.")
         sequencer_strengths.append("Family spread is broad enough without losing the lead-target hierarchy.")
@@ -117,16 +105,16 @@ def main():
 
     if composition:
         if composition_hierarchy.get("leadSupportSeparation") == "high":
-            designer_strengths.append("Lead and support are separated clearly enough to preserve the focal read.")
-            sequencer_strengths.append("Support remains subordinate to the lead target in the rendered window.")
+            designer_strengths.append("The composition maintains clear attention separation between dominant and supporting structures.")
+            sequencer_strengths.append("Rendered attention remains differentiated across the active structures.")
         if composition_hierarchy.get("dominanceConflict") == "high":
-            designer_weaknesses.append("Support is competing too strongly with the lead for attention.")
-            sequencer_weaknesses.append("Rendered hierarchy is unstable; support is challenging the lead read.")
+            designer_weaknesses.append("Multiple structures are drawing comparable attention, which makes the hierarchy less clear.")
+            sequencer_weaknesses.append("Rendered attention is contested across several structures.")
             next_moves.append({
                 "priority": 1,
                 "owner": "sequencer",
                 "level": "section",
-                "instruction": "Reduce support intensity or coverage so the lead remains clearly dominant."
+                "instruction": "Redistribute intensity or coverage so the intended attention structure reads more clearly."
             })
 
         if composition_contrast.get("contrastAdequacy") == "low":
@@ -167,8 +155,8 @@ def main():
             })
 
         if layering_masking.get("supportObscuration") == "high":
-            designer_weaknesses.append("Support layering is no longer subordinate on the shared structure.")
-            sequencer_weaknesses.append("Support is obscuring the lead within the same-target layer stack.")
+            designer_weaknesses.append("Same-structure layers are no longer separating their roles clearly.")
+            sequencer_weaknesses.append("One layered element is obscuring another within the same-target stack.")
 
         if layering_cadence.get("phaseClashRisk") == "high":
             designer_weaknesses.append("Layered cadence is clashing on the same structure instead of reinforcing the focal read.")
@@ -196,28 +184,28 @@ def main():
             sequencer_strengths.append("Adjacent windows hand off cleanly without losing the read.")
 
         if progression_development.get("developmentStrength") == "high":
-            designer_strengths.append("The scoped passage develops over time instead of holding one static treatment.")
-            sequencer_strengths.append("Rendered progression shows measurable development across the sampled windows.")
+            designer_strengths.append("The scoped passage changes measurably over time instead of holding one static treatment.")
+            sequencer_strengths.append("Rendered progression shows measurable temporal variation across the sampled windows.")
 
         if progression_development.get("stagnationRisk") == "high":
-            designer_weaknesses.append("The scoped passage is stagnating instead of developing.")
-            sequencer_weaknesses.append("Over-time progression is too flat; the render is not evolving enough.")
+            designer_weaknesses.append("The scoped passage maintains a very similar temporal profile across the sampled window.")
+            sequencer_weaknesses.append("Over-time variation is limited; the render stays too similar across the sampled window.")
             next_moves.append({
                 "priority": 1,
                 "owner": "designer",
                 "level": "progression",
-                "instruction": "Clarify how this passage should evolve over time instead of holding one static visual treatment."
+                "instruction": "Clarify whether this passage should hold, pulse, shift focus, or otherwise change over time."
             })
             next_moves.append({
                 "priority": 2,
                 "owner": "sequencer",
                 "level": "progression",
-                "instruction": "Introduce a bounded temporal change in density, focus, or motion so the passage develops across the window."
+                "instruction": "Introduce a bounded temporal change in density, attention distribution, color behavior, or motion so the passage does not stay overly uniform."
             })
 
         if progression_repetition.get("stalenessRisk") == "high":
-            designer_weaknesses.append("Local repetition is starting to feel stale rather than intentional.")
-            sequencer_weaknesses.append("Recent reuse across adjacent windows is too strong; progression is underpowered.")
+            designer_weaknesses.append("Local reuse is strong enough that adjacent windows read very similarly.")
+            sequencer_weaknesses.append("Recent window-to-window reuse is strong; variation is underpowered.")
 
         if progression_energy.get("arcCoherence") == "low":
             designer_weaknesses.append("The local energy arc is not reading coherently yet.")
@@ -237,19 +225,19 @@ def main():
         slices = section["slices"]
         contrast = section["contrast"]
         if not contrast["densityVaries"] and contrast["spreadRange"] < 0.005:
-            designer_weaknesses.append("Section development is too flat across opening, middle, and closing slices.")
-            sequencer_weaknesses.append("Section contrast is underdeveloped; the pass is not evolving enough over time.")
+            designer_weaknesses.append("Section slices maintain a very similar temporal and spatial profile from opening to closing.")
+            sequencer_weaknesses.append("Section contrast is limited; the pass changes very little over time.")
             next_moves.append({
                 "priority": 1,
                 "owner": "designer",
                 "level": "section",
-                "instruction": "Clarify how the section should evolve from opening to closing instead of holding one static treatment."
+                "instruction": "Clarify whether the section should stay intentionally steady or show a more visible shift from opening to closing."
             })
             next_moves.append({
                 "priority": 2,
                 "owner": "sequencer",
                 "level": "section",
-                "instruction": "Introduce a bounded section-level evolution in spread, density, or support role across the sampled window."
+                "instruction": "Introduce a bounded section-level change in spread, density, attention distribution, or timing across the sampled window."
             })
         else:
             designer_strengths.append("The section shows measurable development across the sampled window.")
@@ -271,10 +259,10 @@ def main():
         },
         "ladderLevel": ladder_level,
         "designerSummary": {
-            "intentRead": "single-idea section read" if (len(active_models) == 1 or coherent_support_case) else "multi-idea section read",
+            "intentRead": "focused_attention" if (len(active_models) == 1 or coherent_support_case) else "distributed_attention",
             "focusRead": "narrow" if spread < 0.01 else "broad_enough",
             "contrastRead": density_series[0] if density_series else "unknown",
-            "compositionRead": "concentrated" if (len(active_models) == 1 or coherent_support_case) else "split",
+            "compositionRead": "concentrated" if (len(active_models) == 1 or coherent_support_case) else "distributed",
             "strengths": designer_strengths,
             "weaknesses": designer_weaknesses,
             "designAdjustmentSuggestions": [m["instruction"] for m in next_moves if m["owner"] == "designer"],
