@@ -33,6 +33,7 @@ These are the current operating specs for sequencing work.
 - [layering-group-evidence-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-group-evidence-v1-2026-04-17.md)
 - [layering-render-proof-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-render-proof-v1-2026-04-17.md)
 - [xlights-layering-render-order-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-layering-render-order-audit-2026-04-17.md)
+- [offline-preview-scene-geometry-export-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/offline-preview-scene-geometry-export-v1-2026-04-17.md)
 - [sequencing-bias-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-bias-audit-2026-04-15.md)
 - [sequencer-training-reset-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md)
 - [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
