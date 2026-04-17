@@ -7,6 +7,7 @@ import {
   refreshSequenceRevisionObjectiveFromRenderCritique
 } from "../agent/designer-dialog/sequence-artifacts.js";
 import { buildRenderCritiqueContext } from "../agent/sequence-agent/render-critique-context.js";
+import { buildRenderValidationEvidence } from "../agent/sequence-agent/render-validation-evidence.js";
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
@@ -346,6 +347,18 @@ export async function executeApplyCore({
       musicDesignContext
     });
     state.sequenceAgentRuntime.renderCritiqueContext = renderCritiqueContext;
+    const nextRenderValidationEvidence = buildRenderValidationEvidence({
+      priorEvidence: planHandoff?.metadata?.renderValidationEvidence || state.sequenceAgentRuntime?.renderValidationEvidence || null,
+      renderObservation,
+      renderCritiqueContext,
+      sectionNames: getSelectedSections(),
+      targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || [])
+    });
+    state.sequenceAgentRuntime.renderValidationEvidence = nextRenderValidationEvidence;
+    if (planHandoff && typeof planHandoff === "object") {
+      planHandoff.metadata = planHandoff.metadata && typeof planHandoff.metadata === "object" ? planHandoff.metadata : {};
+      planHandoff.metadata.renderValidationEvidence = nextRenderValidationEvidence;
+    }
     state.creative = state.creative && typeof state.creative === "object" ? state.creative : {};
     state.creative.sequenceArtisticGoal = renderCritiqueContext
       ? refreshSequenceArtisticGoalFromRenderCritique({
