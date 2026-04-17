@@ -275,6 +275,23 @@ class BaseAnalyzer:
             name = "shimmer_texture"
         return f"{prefix}{name}" if prefix else name
 
+    def _color_wash_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        shimmer = bool(settings.get("shimmer", False))
+        circular = bool(settings.get("circularPalette", False))
+        reverse = bool(settings.get("reverseFades", False))
+
+        if circular and shimmer:
+            name = "circular_shimmer_wash"
+        elif circular:
+            name = "circular_wash"
+        elif reverse:
+            name = "reverse_fade_wash"
+        elif shimmer:
+            name = "shimmer_wash"
+        else:
+            name = "color_wash"
+        return f"{prefix}{name}" if prefix else name
+
     def _on_family(
         self,
         settings: Dict[str, Any],
@@ -492,19 +509,7 @@ class LinearAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "single_bar_motion"
         elif effect == "Color Wash":
-            shimmer = bool(settings.get("shimmer", False))
-            circular = bool(settings.get("circularPalette", False))
-            reverse = bool(settings.get("reverseFades", False))
-            if circular and shimmer:
-                pattern_family = "linear_circular_shimmer_wash"
-            elif circular:
-                pattern_family = "linear_circular_wash"
-            elif reverse:
-                pattern_family = "linear_reverse_fade_wash"
-            elif shimmer:
-                pattern_family = "linear_shimmer_wash"
-            else:
-                pattern_family = "linear_color_wash"
+            pattern_family = self._color_wash_family(settings, "linear_")
         elif effect == "Marquee":
             reverse = bool(settings.get("reverse", False))
             skip_size = int(settings.get("skipSize", 0) or 0)
@@ -728,19 +733,7 @@ class MatrixAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "matrix_single_bar"
         elif effect == "Color Wash":
-            shimmer = bool(settings.get("shimmer", False))
-            circular = bool(settings.get("circularPalette", False))
-            reverse = bool(settings.get("reverseFades", False))
-            if circular and shimmer:
-                pattern_family = "matrix_circular_shimmer_wash"
-            elif circular:
-                pattern_family = "matrix_circular_wash"
-            elif reverse:
-                pattern_family = "matrix_reverse_fade_wash"
-            elif shimmer:
-                pattern_family = "matrix_shimmer_wash"
-            else:
-                pattern_family = "matrix_color_wash"
+            pattern_family = self._color_wash_family(settings, "matrix_")
         elif effect == "Marquee":
             reverse = bool(settings.get("reverse", False))
             skip_size = int(settings.get("skipSize", 0) or 0)
@@ -896,6 +889,8 @@ class TreeAnalyzer(BaseAnalyzer):
         pattern_family = "tree_fill"
         if inp.effect_name == "Shimmer":
             pattern_family = self._shimmer_family(settings, "tree_")
+        elif inp.effect_name == "Color Wash":
+            pattern_family = self._color_wash_family(settings, "tree_")
         elif inp.effect_name == "SingleStrand":
             pattern_family = "spiral_travel" if centroid_motion > 0.01 else "tree_band_motion"
         elif inp.effect_name == "Bars":
@@ -1136,6 +1131,8 @@ class StarAnalyzer(BaseAnalyzer):
         pattern_family = "star_fill"
         if inp.effect_name == "Shimmer":
             pattern_family = self._shimmer_family(inp.effect_settings, "star_")
+        elif inp.effect_name == "Color Wash":
+            pattern_family = self._color_wash_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Spirals":
             pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "Pinwheel":
@@ -1253,6 +1250,8 @@ class RadialAnalyzer(BaseAnalyzer):
         pattern_family = "radial_fill"
         if inp.effect_name == "Shimmer":
             pattern_family = self._shimmer_family(inp.effect_settings, "radial_")
+        elif inp.effect_name == "Color Wash":
+            pattern_family = self._color_wash_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Spirals":
             pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "Pinwheel":
