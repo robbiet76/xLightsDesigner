@@ -212,3 +212,12 @@ The first implementation of `progression_observation_v1` should be constrained t
 4. energy arc coherence
 
 Do not expand into broad sequence-level storytelling claims in the first version.
+
+## First Implemented Input Modes
+
+The first implementation may use either of these proof shapes:
+
+1. one `render_observation_v1` with `section.slices`
+2. multiple ordered `render_observation_v1` refs passed explicitly in sequence order
+
+This keeps the extractor grounded in already-available render evidence rather than inventing a new proof pipeline prematurely.
