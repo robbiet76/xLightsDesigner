@@ -256,6 +256,49 @@ class BaseAnalyzer:
             name = "soft_twinkle"
         return f"{prefix}{name}" if prefix else name
 
+    def _shimmer_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        cycles = float(settings.get("cycles", 1) or 1)
+        duty = int(settings.get("dutyFactor", 50) or 50)
+        use_all_colors = bool(settings.get("useAllColors", False))
+
+        if use_all_colors:
+            name = "multicolor_shimmer"
+        elif duty <= 25:
+            name = "sparse_shimmer"
+        elif duty >= 70 and cycles >= 30:
+            name = "rapid_dense_shimmer"
+        elif duty >= 65:
+            name = "dense_shimmer"
+        elif cycles >= 30:
+            name = "rapid_shimmer"
+        else:
+            name = "shimmer_texture"
+        return f"{prefix}{name}" if prefix else name
+
+    def _on_family(
+        self,
+        settings: Dict[str, Any],
+        prefix: str = "",
+        static_name: str = "static_fill",
+    ) -> str:
+        shimmer = bool(settings.get("shimmer", False))
+        cycles = float(settings.get("cycles", 1) or 1)
+        start = int(settings.get("startLevel", 100) or 100)
+        end = int(settings.get("endLevel", 100) or 100)
+        delta = end - start
+
+        if shimmer:
+            name = "shimmer_hold"
+        elif abs(delta) >= 15 and cycles > 1:
+            name = "pulsing_level_ramp"
+        elif delta >= 15:
+            name = "rising_level_ramp"
+        elif delta <= -15:
+            name = "falling_level_ramp"
+        else:
+            name = static_name
+        return f"{prefix}{name}" if prefix else name
+
     def _shockwave_variant(self, shock: Dict[str, Any]) -> str | None:
         if shock["centerClass"] != "centered":
             return None
@@ -420,9 +463,9 @@ class LinearAnalyzer(BaseAnalyzer):
 
         pattern_family = "unclassified"
         if effect == "On":
-            pattern_family = "static_hold"
+            pattern_family = self._on_family(settings, static_name="static_hold")
         elif effect == "Shimmer":
-            pattern_family = "shimmer"
+            pattern_family = self._shimmer_family(settings, "linear_")
         elif effect == "SingleStrand":
             mode = settings.get("mode", "")
             if mode == "FX":
@@ -852,7 +895,7 @@ class TreeAnalyzer(BaseAnalyzer):
 
         pattern_family = "tree_fill"
         if inp.effect_name == "Shimmer":
-            pattern_family = "tree_shimmer"
+            pattern_family = self._shimmer_family(settings, "tree_")
         elif inp.effect_name == "SingleStrand":
             pattern_family = "spiral_travel" if centroid_motion > 0.01 else "tree_band_motion"
         elif inp.effect_name == "Bars":
@@ -952,7 +995,7 @@ class TreeAnalyzer(BaseAnalyzer):
         elif inp.effect_name == "Twinkle":
             pattern_family = self._twinkle_family(settings)
         elif inp.effect_name == "On":
-            pattern_family = "static_fill"
+            pattern_family = self._on_family(settings, "tree_")
 
         base["geometrySignals"] = {
             "treeCoverage": coverage,
@@ -1092,7 +1135,7 @@ class StarAnalyzer(BaseAnalyzer):
 
         pattern_family = "star_fill"
         if inp.effect_name == "Shimmer":
-            pattern_family = "radial_sparkle"
+            pattern_family = self._shimmer_family(inp.effect_settings, "star_")
         elif inp.effect_name == "Spirals":
             pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "Pinwheel":
@@ -1115,7 +1158,7 @@ class StarAnalyzer(BaseAnalyzer):
         elif inp.effect_name == "Twinkle":
             pattern_family = self._twinkle_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "On":
-            pattern_family = "static_fill"
+            pattern_family = self._on_family(inp.effect_settings, "star_")
 
         base["geometrySignals"] = {
             "radialCoverage": coverage,
@@ -1209,7 +1252,7 @@ class RadialAnalyzer(BaseAnalyzer):
 
         pattern_family = "radial_fill"
         if inp.effect_name == "Shimmer":
-            pattern_family = "radial_sparkle"
+            pattern_family = self._shimmer_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "Spirals":
             pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "Pinwheel":
@@ -1232,7 +1275,7 @@ class RadialAnalyzer(BaseAnalyzer):
         elif inp.effect_name == "Twinkle":
             pattern_family = self._twinkle_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "On":
-            pattern_family = "static_fill"
+            pattern_family = self._on_family(inp.effect_settings, "radial_")
 
         base["geometrySignals"] = {
             "radialCoverage": coverage,
