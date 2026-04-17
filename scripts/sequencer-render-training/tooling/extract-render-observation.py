@@ -30,6 +30,25 @@ def bounds_union(bounds_list):
     }
 
 
+def model_bounds_from_nodes(model):
+    xs = []
+    ys = []
+    zs = []
+    for node in model.get("nodes") or []:
+        for coord in node.get("coords") or []:
+            screen = coord.get("screen") or {}
+            if {"x", "y", "z"} <= set(screen.keys()):
+                xs.append(screen["x"])
+                ys.append(screen["y"])
+                zs.append(screen["z"])
+    if not xs:
+        return None
+    return {
+        "min": {"x": min(xs), "y": min(ys), "z": min(zs)},
+        "max": {"x": max(xs), "y": max(ys), "z": max(zs)},
+    }
+
+
 def bounds_area_2d(bounds):
     if not bounds:
         return 0.0
@@ -216,7 +235,10 @@ def main():
     geometry_model_count = window["geometryReference"].get("modelCount") or 0
     geometry_scene_bounds = None
     if geometry:
-        geometry_scene_bounds = bounds_union([m.get("bounds") for m in geometry["scene"]["models"]])
+        geometry_scene_bounds = bounds_union([
+            m.get("bounds") or model_bounds_from_nodes(m)
+            for m in geometry["scene"]["models"]
+        ])
     geometry_scene_area = bounds_area_2d(geometry_scene_bounds)
     frame_observations = []
     active_centroids = []

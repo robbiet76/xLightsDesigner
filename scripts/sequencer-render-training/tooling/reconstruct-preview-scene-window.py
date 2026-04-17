@@ -13,6 +13,7 @@ def parse_args():
     parser.add_argument("--window-end-ms", type=int, required=True)
     parser.add_argument("--frame-offsets", required=True, help="Comma-separated offsets within the decoded window, e.g. 8,10,12")
     parser.add_argument("--out", required=True)
+    parser.add_argument("--include-audit-excluded", action="store_true")
     return parser.parse_args()
 
 
@@ -114,8 +115,12 @@ def main():
     geometry = load_geometry(args.geometry)
     decoder = build_decoder()
 
+    geometry_models = geometry["scene"]["models"]
+    if not args.include_audit_excluded:
+        geometry_models = [m for m in geometry_models if m.get("auditEligible", True)]
+
     per_model = {}
-    for model in geometry["scene"]["models"]:
+    for model in geometry_models:
         per_model[model["name"]] = decode_model_window(
             decoder,
             args.fseq,
@@ -124,7 +129,7 @@ def main():
             args.window_end_ms,
         )
 
-    model_lookup = {m["name"]: m for m in geometry["scene"]["models"]}
+    model_lookup = {m["name"]: m for m in geometry_models}
     window_frames = []
     for frame_offset in frame_offsets:
         frame_models = []
@@ -172,6 +177,7 @@ def main():
             "windowStartMs": args.window_start_ms,
             "windowEndMs": args.window_end_ms,
             "frameOffsets": frame_offsets,
+            "auditExcludedIncluded": bool(args.include_audit_excluded),
         },
         "geometryReference": {
             "artifactType": geometry["artifactType"],
@@ -179,7 +185,7 @@ def main():
             "artifactPath": os.path.abspath(args.geometry),
             "layoutName": geometry.get("source", {}).get("layoutName"),
             "showFolder": geometry.get("source", {}).get("showFolder"),
-            "modelCount": geometry.get("summaries", {}).get("modelCount"),
+            "modelCount": len(geometry_models),
         },
         "frames": window_frames,
         "summaries": {
