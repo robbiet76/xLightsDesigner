@@ -34,6 +34,8 @@ Primary system roadmap:
 - `runners/run-overnight-approved-matrix.sh`
 - `runners/run-registry-plan.sh`
 - `runners/run-stage1-coverage-round.sh`
+- `runners/run-stage1-coverage-chunked.sh`
+- `runners/run-stage1-coverage-chunked-background.sh`
 - `runners/run-sequencer-training-reset-cycle.sh`
 - `runners/run-effect-training-automation-cycle.sh`
 - `runners/run-effect-parameter-screening-plan.sh`
@@ -104,6 +106,34 @@ bash scripts/sequencer-render-training/runners/run-model-batch.sh \
 bash scripts/sequencer-render-training/runners/run-packed-model-batch.sh \
   --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-packed-batch
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-stage1-coverage-chunked-background.sh start \
+  --out-dir /tmp/stage1-effect-expansion-v7 \
+  --seed-ledger /tmp/seed-ledger.json \
+  --record-root /tmp/existing-run-a \
+  --record-root /tmp/existing-run-b \
+  --minutes-per-chunk 180 \
+  --poll-seconds 300
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-stage1-coverage-chunked-background.sh resume \
+  --out-dir /tmp/stage1-effect-expansion-v7 \
+  --seed-ledger /tmp/seed-ledger.json \
+  --record-root /tmp/existing-run-a \
+  --record-root /tmp/existing-run-b
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-stage1-coverage-chunked-background.sh status \
+  --out-dir /tmp/stage1-effect-expansion-v7
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-stage1-coverage-chunked-background.sh tail \
+  --out-dir /tmp/stage1-effect-expansion-v7
 ```
 
 ```bash
