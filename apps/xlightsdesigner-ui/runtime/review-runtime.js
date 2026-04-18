@@ -8,6 +8,7 @@ import {
 } from "../agent/designer-dialog/sequence-artifacts.js";
 import { buildRenderCritiqueContext } from "../agent/sequence-agent/render-critique-context.js";
 import { buildRenderValidationEvidence } from "../agent/sequence-agent/render-validation-evidence.js";
+import { buildCandidateSelectionContext } from "../agent/sequence-agent/candidate-selection-context.js";
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
@@ -121,6 +122,13 @@ export async function executeApplyCore({
       sequenceRevisionObjective,
       analysisHandoff,
       renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null,
+      candidateSelectionContext: buildCandidateSelectionContext({
+        requestId: `${orchestrationRun.id}-apply`,
+        phase: "review",
+        sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+        priorPassMemory,
+        renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null
+      }),
       planningScope: {
         sections: getSelectedSections(),
         targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
@@ -167,6 +175,7 @@ export async function executeApplyCore({
       sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
       sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
       renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
+      candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
       priorPassMemory,
       sourceLines,
       baseRevision: state.draftBaseRevision,

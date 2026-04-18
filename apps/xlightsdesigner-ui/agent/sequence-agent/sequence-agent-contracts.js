@@ -119,6 +119,9 @@ export function validateSequenceAgentInput(payload = {}) {
   if (obj.renderValidationEvidence != null && !isPlainObject(obj.renderValidationEvidence)) {
     errors.push("renderValidationEvidence must be an object when provided");
   }
+  if (obj.candidateSelectionContext != null && !isPlainObject(obj.candidateSelectionContext)) {
+    errors.push("candidateSelectionContext must be an object when provided");
+  }
 
   return errors;
 }

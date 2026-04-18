@@ -73,7 +73,8 @@ export function buildCandidateSelectionV1({
   intentEnvelope = null,
   realizationCandidates = null,
   renderValidationEvidence = null,
-  selectionSeed = ''
+  selectionSeed = '',
+  selectionContext = null
 } = {}) {
   const candidates = arr(realizationCandidates?.candidates);
   const scoredCandidates = candidates
@@ -109,7 +110,9 @@ export function buildCandidateSelectionV1({
       mode: selectionMode(selectionSeed),
       explorationReady: true,
       deterministicPreview: !str(selectionSeed),
-      boundedBandWidth: 0.12
+      boundedBandWidth: 0.12,
+      phase: str(selectionContext?.phase || 'plan'),
+      explorationEnabled: Boolean(selectionContext?.explorationEnabled)
     },
     scoredCandidates: scoredCandidates.map((candidate) => ({
       ...candidate,
@@ -121,6 +124,14 @@ export function buildCandidateSelectionV1({
       topScore: Number(topScore.toFixed(4))
     },
     primaryCandidateId,
+    selectionContext: selectionContext && typeof selectionContext === 'object'
+      ? {
+          phase: str(selectionContext.phase || 'plan'),
+          seed: str(selectionContext.seed),
+          explorationEnabled: Boolean(selectionContext.explorationEnabled),
+          unresolvedSignals: arr(selectionContext.unresolvedSignals).map((row) => str(row)).filter(Boolean)
+        }
+      : null,
     notes: [
       'candidate_selection_v1 narrows the valid comparison band without collapsing the system into one mandatory deterministic answer.',
       str(selectionSeed)

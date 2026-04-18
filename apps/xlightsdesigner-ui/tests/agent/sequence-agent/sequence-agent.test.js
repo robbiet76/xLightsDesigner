@@ -297,7 +297,29 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.candidateSelection.source.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
   assert.equal(out.metadata.candidateSelection.source.realizationCandidatesRef, out.metadata.realizationCandidates.artifactId);
   assert.equal(out.metadata.candidateSelection.policy.mode, "deterministic_preview");
+  assert.equal(out.metadata.candidateSelection.policy.phase, "plan");
   assert.equal(typeof out.metadata.candidateSelection.primaryCandidateId, "string");
+});
+
+test("sequence_agent candidate selection switches to bounded exploration when runtime context provides a seed", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / increase pulse contrast and faster motion"],
+    baseRevision: "rev-56",
+    effectCatalog: sampleCatalog(),
+    candidateSelectionContext: {
+      phase: "review",
+      seed: "review::orch-1::rev-56",
+      explorationEnabled: true,
+      unresolvedSignals: ["lead_mismatch"]
+    }
+  });
+
+  assert.equal(out.metadata.candidateSelection.policy.mode, "bounded_exploration");
+  assert.equal(out.metadata.candidateSelection.policy.phase, "review");
+  assert.equal(out.metadata.candidateSelection.selectionContext.seed, "review::orch-1::rev-56");
+  assert.equal(out.metadata.candidateSelectionContext.seed, "review::orch-1::rev-56");
 });
 
 test("sequence_agent plan metadata carries render validation evidence refs", () => {

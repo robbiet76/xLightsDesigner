@@ -113,6 +113,17 @@ test("sequence_agent input contract accepts optional render validation evidence 
   assert.deepEqual(errors, []);
 });
 
+test("sequence_agent input contract accepts optional candidate selection context object", () => {
+  const errors = validateSequenceAgentInput(sampleInput({
+    candidateSelectionContext: {
+      phase: "proposal",
+      seed: "proposal::req-1::rev-1",
+      explorationEnabled: true
+    }
+  }));
+  assert.deepEqual(errors, []);
+});
+
 test("sequence_agent input contract rejects missing required fields", () => {
   const errors = validateSequenceAgentInput(sampleInput({ requestId: "", safety: {} }));
   assert.ok(errors.some((e) => /requestId is required/i.test(e)));
@@ -125,11 +136,13 @@ test("sequence_agent input contract rejects non-object artistic goal and revisio
   const errors = validateSequenceAgentInput(sampleInput({
     sequenceArtisticGoal: "bad",
     sequenceRevisionObjective: 42,
-    renderValidationEvidence: "bad"
+    renderValidationEvidence: "bad",
+    candidateSelectionContext: "bad"
   }));
   assert.ok(errors.some((e) => /sequenceArtisticGoal must be an object/i.test(e)));
   assert.ok(errors.some((e) => /sequenceRevisionObjective must be an object/i.test(e)));
   assert.ok(errors.some((e) => /renderValidationEvidence must be an object/i.test(e)));
+  assert.ok(errors.some((e) => /candidateSelectionContext must be an object/i.test(e)));
 });
 
 test("sequence_agent plan output contract requires metadata.degradedMode", () => {

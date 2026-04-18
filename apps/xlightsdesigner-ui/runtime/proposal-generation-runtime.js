@@ -1,3 +1,5 @@
+import { buildCandidateSelectionContext } from "../agent/sequence-agent/candidate-selection-context.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -409,6 +411,13 @@ export function createProposalGenerationRuntime(deps = {}) {
         sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null,
         analysisHandoff,
         renderValidationEvidence: state.agentPlan?.handoff?.metadata?.renderValidationEvidence || null,
+        candidateSelectionContext: buildCandidateSelectionContext({
+          requestId: `${orchestrationRun.id}-generate`,
+          phase: "proposal",
+          sequenceRevision: str(state.draftBaseRevision || state.revision || "unknown"),
+          priorPassMemory,
+          renderValidationEvidence: state.agentPlan?.handoff?.metadata?.renderValidationEvidence || null
+        }),
         planningScope: {
           sections: selected,
           targetIds: revisionTarget?.targetIds?.length ? revisionTarget.targetIds : normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
@@ -439,6 +448,7 @@ export function createProposalGenerationRuntime(deps = {}) {
           sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
           sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
           renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
+          candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
           priorPassMemory,
           sourceLines: proposalSeedLines,
           baseRevision: str(state.draftBaseRevision || state.revision || "unknown"),

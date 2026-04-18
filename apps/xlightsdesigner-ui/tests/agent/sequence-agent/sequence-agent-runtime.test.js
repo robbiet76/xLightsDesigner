@@ -267,3 +267,23 @@ test("sequence agent input preserves render validation evidence", () => {
   assert.equal(input.renderValidationEvidence.renderObservationRef, "/tmp/render-observation.json");
   assert.equal(input.renderValidationEvidence.progressionObservationRef, "/tmp/progression-observation.json");
 });
+
+test("sequence agent input preserves candidate selection context", () => {
+  const input = buildSequenceAgentInput({
+    requestId: "req-selection",
+    endpoint: "http://127.0.0.1:49914",
+    sequenceRevision: "rev-selection",
+    sequenceSettings: { durationMs: 30000 },
+    intentHandoff: { artifactType: "intent_handoff_v1" },
+    candidateSelectionContext: {
+      phase: "review",
+      seed: "review::req-selection::rev-selection",
+      explorationEnabled: true,
+      unresolvedSignals: ["weak_contrast"]
+    }
+  });
+
+  assert.equal(input.candidateSelectionContext.phase, "review");
+  assert.equal(input.candidateSelectionContext.seed, "review::req-selection::rev-selection");
+  assert.equal(input.candidateSelectionContext.explorationEnabled, true);
+});

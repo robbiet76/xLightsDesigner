@@ -27,6 +27,7 @@ export function buildSequenceAgentInput({
   analysisHandoff = null,
   planningScope = null,
   renderValidationEvidence = null,
+  candidateSelectionContext = null,
   timingOwnership = [],
   manualXdLocks = [],
   allowTimingWrites = true
@@ -60,6 +61,9 @@ export function buildSequenceAgentInput({
     planningScope: planningScope && typeof planningScope === "object" ? planningScope : null,
     renderValidationEvidence: renderValidationEvidence && typeof renderValidationEvidence === "object" && !Array.isArray(renderValidationEvidence)
       ? renderValidationEvidence
+      : null,
+    candidateSelectionContext: candidateSelectionContext && typeof candidateSelectionContext === "object" && !Array.isArray(candidateSelectionContext)
+      ? candidateSelectionContext
       : null,
     safety: {
       timingOwnership: Array.isArray(timingOwnership) ? timingOwnership : [],

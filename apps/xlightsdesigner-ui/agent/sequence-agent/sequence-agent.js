@@ -34,6 +34,7 @@ import {
 import { buildArtifactId } from "../shared/artifact-ids.js";
 import { buildMusicDesignContext } from "../designer-dialog/music-design-context.js";
 import { buildCandidateSelectionV1 } from "./candidate-selection.js";
+import { buildCandidateSelectionContext } from "./candidate-selection-context.js";
 import { buildIntentEnvelopeV1 } from "./intent-envelope.js";
 import { buildRealizationCandidatesV1 } from "./realization-candidates.js";
 
@@ -1410,6 +1411,7 @@ export function buildSequenceAgentPlan({
   allowTimingWrites = true,
   metadataAssignments = [],
   renderValidationEvidence = null,
+  candidateSelectionContext = null,
   stageOverrides = {}
 } = {}) {
   const warnings = [];
@@ -1463,6 +1465,16 @@ export function buildSequenceAgentPlan({
       : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements, effectCatalog, metadataAssignments, sequencerRevisionBrief }))
   });
 
+  const resolvedCandidateSelectionContext = candidateSelectionContext && typeof candidateSelectionContext === "object"
+    ? candidateSelectionContext
+    : buildCandidateSelectionContext({
+        requestId: baseRevision,
+        phase: "plan",
+        sequenceRevision: baseRevision,
+        priorPassMemory,
+        renderValidationEvidence
+      });
+
   const intentEnvelope = buildIntentEnvelopeV1({
     translationIntent: scope?.executionStrategy?.translationIntent,
     sequenceArtisticGoal,
@@ -1482,7 +1494,9 @@ export function buildSequenceAgentPlan({
   const candidateSelection = buildCandidateSelectionV1({
     intentEnvelope,
     realizationCandidates,
-    renderValidationEvidence
+    renderValidationEvidence,
+    selectionSeed: resolvedCandidateSelectionContext?.explorationEnabled ? resolvedCandidateSelectionContext?.seed : "",
+    selectionContext: resolvedCandidateSelectionContext
   });
 
   const graph = runStage({
@@ -1578,6 +1592,7 @@ export function buildSequenceAgentPlan({
       intentEnvelope,
       realizationCandidates,
       candidateSelection,
+      candidateSelectionContext: resolvedCandidateSelectionContext,
       metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
       renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
     }
