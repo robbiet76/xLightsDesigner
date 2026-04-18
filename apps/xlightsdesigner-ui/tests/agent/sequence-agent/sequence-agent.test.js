@@ -275,8 +275,13 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.sequencerRevisionBrief.artifactType, "sequencer_revision_brief_v1");
   assert.equal(out.metadata.intentEnvelope.artifactType, "intent_envelope_v1");
   assert.equal(out.metadata.realizationCandidates.artifactType, "realization_candidates_v1");
+  assert.equal(out.metadata.candidateSelection.artifactType, "candidate_selection_v1");
   assert.ok(Array.isArray(out.metadata.realizationCandidates.candidates));
   assert.ok(out.metadata.realizationCandidates.candidates.length >= 2);
+  assert.ok(Array.isArray(out.metadata.candidateSelection.scoredCandidates));
+  assert.ok(out.metadata.candidateSelection.scoredCandidates.length >= 2);
+  assert.ok(Array.isArray(out.metadata.candidateSelection.selectedBand.candidateIds));
+  assert.ok(out.metadata.candidateSelection.selectedBand.candidateIds.length >= 1);
   assert.equal(out.metadata.sequencerRevisionBrief.leadTarget, "MegaTree");
   assert.deepEqual(out.metadata.sequencerRevisionBrief.supportTargets, ["Roofline"]);
   assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionTargets, []);
@@ -289,6 +294,10 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.sharedSettingTrainingKnowledge.artifactType, "sequencer_cross_effect_shared_settings_bundle");
   assert.equal(out.metadata.intentEnvelope.attention.profile, "weighted");
   assert.equal(out.metadata.realizationCandidates.source.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
+  assert.equal(out.metadata.candidateSelection.source.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
+  assert.equal(out.metadata.candidateSelection.source.realizationCandidatesRef, out.metadata.realizationCandidates.artifactId);
+  assert.equal(out.metadata.candidateSelection.policy.mode, "deterministic_preview");
+  assert.equal(typeof out.metadata.candidateSelection.primaryCandidateId, "string");
 });
 
 test("sequence_agent plan metadata carries render validation evidence refs", () => {

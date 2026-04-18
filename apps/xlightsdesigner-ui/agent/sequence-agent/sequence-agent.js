@@ -33,6 +33,7 @@ import {
 } from "../shared/effect-semantics-registry.js";
 import { buildArtifactId } from "../shared/artifact-ids.js";
 import { buildMusicDesignContext } from "../designer-dialog/music-design-context.js";
+import { buildCandidateSelectionV1 } from "./candidate-selection.js";
 import { buildIntentEnvelopeV1 } from "./intent-envelope.js";
 import { buildRealizationCandidatesV1 } from "./realization-candidates.js";
 
@@ -1478,6 +1479,11 @@ export function buildSequenceAgentPlan({
     effectCatalog,
     translationIntent: scope?.executionStrategy?.translationIntent
   });
+  const candidateSelection = buildCandidateSelectionV1({
+    intentEnvelope,
+    realizationCandidates,
+    renderValidationEvidence
+  });
 
   const graph = runStage({
     stage: STAGE_ORDER[3],
@@ -1571,6 +1577,7 @@ export function buildSequenceAgentPlan({
       },
       intentEnvelope,
       realizationCandidates,
+      candidateSelection,
       metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
       renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
     }
