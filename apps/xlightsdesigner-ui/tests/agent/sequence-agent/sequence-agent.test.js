@@ -298,6 +298,8 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.candidateSelection.source.realizationCandidatesRef, out.metadata.realizationCandidates.artifactId);
   assert.equal(out.metadata.candidateSelection.policy.mode, "deterministic_preview");
   assert.equal(out.metadata.candidateSelection.policy.phase, "plan");
+  assert.equal(out.metadata.candidateChoice.selectionMode, "deterministic_preview");
+  assert.equal(out.metadata.effectStrategy.selectedCandidateId, out.metadata.candidateChoice.chosenCandidateId);
   assert.equal(typeof out.metadata.candidateSelection.primaryCandidateId, "string");
 });
 
@@ -320,6 +322,8 @@ test("sequence_agent candidate selection switches to bounded exploration when ru
   assert.equal(out.metadata.candidateSelection.policy.phase, "review");
   assert.equal(out.metadata.candidateSelection.selectionContext.seed, "review::orch-1::rev-56");
   assert.equal(out.metadata.candidateSelectionContext.seed, "review::orch-1::rev-56");
+  assert.equal(out.metadata.candidateChoice.selectionMode, "bounded_exploration");
+  assert.equal(typeof out.metadata.effectStrategy.selectedCandidateId, "string");
 });
 
 test("sequence_agent plan metadata carries render validation evidence refs", () => {

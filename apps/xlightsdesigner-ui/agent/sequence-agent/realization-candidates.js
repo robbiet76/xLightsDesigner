@@ -86,6 +86,18 @@ function buildCandidate({ id = '', summary = '', seeds = [], scopeTargets = [], 
       separationStrategy: str(intentEnvelope?.layering?.separationNeed) || 'medium',
       cadenceStrategy: str(intentEnvelope?.layering?.cadenceInteractionPreference) || 'unconstrained'
     },
+    seedRecommendations: seeds.map((row) => ({
+      section: str(row?.section),
+      targetIds: unique(row?.targetIds),
+      effectName: str(row?.effectName),
+      executionLine: str(row?.executionLine),
+      parameterPriorGuidance: row?.parameterPriorGuidance && typeof row.parameterPriorGuidance === 'object'
+        ? row.parameterPriorGuidance
+        : null,
+      sharedSettingPriorGuidance: row?.sharedSettingPriorGuidance && typeof row.sharedSettingPriorGuidance === 'object'
+        ? row.sharedSettingPriorGuidance
+        : null
+    })),
     realizationRefs: seeds.map((row, index) => ({
       realizationId: `${id}:realization:${index + 1}`,
       section: str(row?.section),

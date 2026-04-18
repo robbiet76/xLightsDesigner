@@ -34,6 +34,7 @@ import {
 import { buildArtifactId } from "../shared/artifact-ids.js";
 import { buildMusicDesignContext } from "../designer-dialog/music-design-context.js";
 import { buildCandidateSelectionV1 } from "./candidate-selection.js";
+import { chooseCandidateFromSelection, projectChosenCandidateToEffectStrategy } from "./candidate-band-chooser.js";
 import { buildCandidateSelectionContext } from "./candidate-selection-context.js";
 import { buildIntentEnvelopeV1 } from "./intent-envelope.js";
 import { buildRealizationCandidatesV1 } from "./realization-candidates.js";
@@ -1498,15 +1499,23 @@ export function buildSequenceAgentPlan({
     selectionSeed: resolvedCandidateSelectionContext?.explorationEnabled ? resolvedCandidateSelectionContext?.seed : "",
     selectionContext: resolvedCandidateSelectionContext
   });
+  const candidateChoice = chooseCandidateFromSelection({
+    realizationCandidates,
+    candidateSelection
+  });
+  const effectiveEffectStrategy = projectChosenCandidateToEffectStrategy({
+    baseEffectStrategy: effect,
+    chosenCandidate: candidateChoice?.chosenCandidate
+  });
 
   const graph = runStage({
     stage: STAGE_ORDER[3],
     stageTelemetry,
     fn: () => (typeof stageOverrides.command_graph_synthesis === "function"
-      ? stageOverrides.command_graph_synthesis({ sourceLines, effect, warnings })
+      ? stageOverrides.command_graph_synthesis({ sourceLines, effect: effectiveEffectStrategy, warnings })
         : stageCommandGraphSynthesis({
           sourceLines,
-          effect,
+          effect: effectiveEffectStrategy,
           executionStrategy: scope.executionStrategy,
           analysisHandoff: safeAnalysis,
           warnings,
@@ -1584,14 +1593,21 @@ export function buildSequenceAgentPlan({
       parameterTrainingKnowledge: buildDerivedParameterKnowledgeMetadata(),
       sharedSettingTrainingKnowledge: buildCrossEffectSharedSettingsKnowledgeMetadata(),
       effectStrategy: {
-        toneHint: normText(effect?.toneHint),
-        preferSynthesized: Boolean(effect?.preferSynthesized),
-        strategy: normText(effect?.strategy),
-        seedRecommendations: normArray(effect?.seedRecommendations)
+        toneHint: normText(effectiveEffectStrategy?.toneHint),
+        preferSynthesized: Boolean(effectiveEffectStrategy?.preferSynthesized),
+        strategy: normText(effectiveEffectStrategy?.strategy),
+        seedRecommendations: normArray(effectiveEffectStrategy?.seedRecommendations),
+        selectedCandidateId: normText(effectiveEffectStrategy?.selectedCandidateId),
+        selectedCandidateSummary: normText(effectiveEffectStrategy?.selectedCandidateSummary)
       },
       intentEnvelope,
       realizationCandidates,
       candidateSelection,
+      candidateChoice: {
+        chosenCandidateId: normText(candidateChoice?.chosenCandidateId),
+        selectionMode: normText(candidateChoice?.selectionMode),
+        selectedFromBand: Boolean(candidateChoice?.selectedFromBand)
+      },
       candidateSelectionContext: resolvedCandidateSelectionContext,
       metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
       renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
