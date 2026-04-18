@@ -33,6 +33,8 @@ import {
 } from "../shared/effect-semantics-registry.js";
 import { buildArtifactId } from "../shared/artifact-ids.js";
 import { buildMusicDesignContext } from "../designer-dialog/music-design-context.js";
+import { buildIntentEnvelopeV1 } from "./intent-envelope.js";
+import { buildRealizationCandidatesV1 } from "./realization-candidates.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
 
@@ -1460,6 +1462,23 @@ export function buildSequenceAgentPlan({
       : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements, effectCatalog, metadataAssignments, sequencerRevisionBrief }))
   });
 
+  const intentEnvelope = buildIntentEnvelopeV1({
+    translationIntent: scope?.executionStrategy?.translationIntent,
+    sequenceArtisticGoal,
+    sequenceRevisionObjective,
+    sequencerRevisionBrief,
+    scope,
+    sequencingDesignHandoff: scope.sequencingDesignHandoff
+  });
+  const realizationCandidates = buildRealizationCandidatesV1({
+    intentEnvelope,
+    effectStrategy: effect,
+    scope,
+    displayElements,
+    effectCatalog,
+    translationIntent: scope?.executionStrategy?.translationIntent
+  });
+
   const graph = runStage({
     stage: STAGE_ORDER[3],
     stageTelemetry,
@@ -1550,6 +1569,8 @@ export function buildSequenceAgentPlan({
         strategy: normText(effect?.strategy),
         seedRecommendations: normArray(effect?.seedRecommendations)
       },
+      intentEnvelope,
+      realizationCandidates,
       metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
       renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
     }

@@ -273,6 +273,10 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.sequenceArtisticGoal.artifactType, "sequence_artistic_goal_v1");
   assert.equal(out.metadata.sequenceRevisionObjective.artifactType, "sequence_revision_objective_v1");
   assert.equal(out.metadata.sequencerRevisionBrief.artifactType, "sequencer_revision_brief_v1");
+  assert.equal(out.metadata.intentEnvelope.artifactType, "intent_envelope_v1");
+  assert.equal(out.metadata.realizationCandidates.artifactType, "realization_candidates_v1");
+  assert.ok(Array.isArray(out.metadata.realizationCandidates.candidates));
+  assert.ok(out.metadata.realizationCandidates.candidates.length >= 2);
   assert.equal(out.metadata.sequencerRevisionBrief.leadTarget, "MegaTree");
   assert.deepEqual(out.metadata.sequencerRevisionBrief.supportTargets, ["Roofline"]);
   assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionTargets, []);
@@ -283,6 +287,8 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.sectionScopeKind, "timing_track_windows");
   assert.equal(out.metadata.parameterTrainingKnowledge.artifactType, "sequencer_derived_parameter_priors_bundle");
   assert.equal(out.metadata.sharedSettingTrainingKnowledge.artifactType, "sequencer_cross_effect_shared_settings_bundle");
+  assert.equal(out.metadata.intentEnvelope.attention.profile, "weighted");
+  assert.equal(out.metadata.realizationCandidates.source.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
 });
 
 test("sequence_agent plan metadata carries render validation evidence refs", () => {
