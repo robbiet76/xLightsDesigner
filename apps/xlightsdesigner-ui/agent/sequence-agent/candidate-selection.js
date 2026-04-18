@@ -42,6 +42,7 @@ function reuseToleranceWeight(intentEnvelope = null) {
 function computeCandidateScore(candidate = null, intentEnvelope = null) {
   const fitScore = bandToScore(candidate?.fitSignals?.overallFit);
   const noveltyScore = clamp01(candidate?.noveltySignals?.noveltyScore);
+  const memoryPenalty = clamp01(candidate?.noveltySignals?.memoryPenalty);
   const riskBands = [
     candidate?.riskSignals?.attentionConflictRisk,
     candidate?.riskSignals?.layeringConflictRisk,
@@ -56,7 +57,8 @@ function computeCandidateScore(candidate = null, intentEnvelope = null) {
   const fitComponent = fitScore * 0.55;
   const noveltyComponent = noveltyScore * (0.15 + (exploration * 0.2));
   const safetyComponent = (1 - meanRisk) * (0.15 + ((1 - reuseTolerance) * 0.1));
-  return Number((fitComponent + noveltyComponent + safetyComponent).toFixed(4));
+  const reusePenaltyComponent = memoryPenalty * (0.08 + ((1 - reuseTolerance) * 0.08));
+  return Number((fitComponent + noveltyComponent + safetyComponent - reusePenaltyComponent).toFixed(4));
 }
 
 function selectionMode(selectionSeed = '') {

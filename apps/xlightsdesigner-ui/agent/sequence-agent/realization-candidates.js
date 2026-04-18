@@ -14,6 +14,17 @@ function unique(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
+function overlapRatio(left = [], right = []) {
+  const a = new Set(unique(left));
+  const b = new Set(unique(right));
+  if (!a.size || !b.size) return 0;
+  let overlap = 0;
+  for (const value of a) {
+    if (b.has(value)) overlap += 1;
+  }
+  return overlap / Math.max(a.size, b.size);
+}
+
 function inferCandidateAttentionProfile(targetIds = []) {
   const count = unique(targetIds).length;
   if (count <= 1) return 'concentrated';
@@ -51,12 +62,26 @@ function temporalFitScore(intentProfile = '', candidateProfile = '') {
   return pairs.has(`${intentProfile}:${candidateProfile}`) ? 0.6 : 0.25;
 }
 
-function buildCandidate({ id = '', summary = '', seeds = [], scopeTargets = [], intentEnvelope = null, noveltyScore = 0.5, riskBias = 'medium' } = {}) {
+function buildCandidate({
+  id = '',
+  summary = '',
+  seeds = [],
+  scopeTargets = [],
+  intentEnvelope = null,
+  noveltyScore = 0.5,
+  riskBias = 'medium',
+  priorPassMemory = null
+} = {}) {
   const allTargets = unique(seeds.flatMap((row) => arr(row?.targetIds)));
+  const allEffects = unique(seeds.map((row) => row?.effectName));
   const attentionProfile = inferCandidateAttentionProfile(allTargets);
   const temporalProfile = str(intentEnvelope?.temporal?.profile) || 'modulated';
   const overallFit = (attentionFitScore(intentEnvelope?.attention?.profile, attentionProfile) + temporalFitScore(intentEnvelope?.temporal?.profile, temporalProfile)) / 2;
   const riskValue = riskBias === 'low' ? 0.25 : riskBias === 'high' ? 0.75 : 0.5;
+  const targetReuseRatio = overlapRatio(allTargets, priorPassMemory?.previousTargetIds);
+  const effectReuseRatio = overlapRatio(allEffects, priorPassMemory?.previousEffectNames);
+  const memoryPenalty = Math.min(0.35, (targetReuseRatio * 0.2) + (effectReuseRatio * 0.25));
+  const adjustedNoveltyScore = Math.max(0.05, Number((noveltyScore - memoryPenalty).toFixed(4)));
   return {
     candidateId: id,
     summary,
@@ -117,11 +142,12 @@ function buildCandidate({ id = '', summary = '', seeds = [], scopeTargets = [], 
       overallFit: fitBand(overallFit)
     },
     noveltySignals: {
-      recentTargetReuse: noveltyScore > 0.66 ? 'low' : noveltyScore > 0.33 ? 'medium' : 'high',
-      recentMotionReuse: 'medium',
+      recentTargetReuse: targetReuseRatio >= 0.66 ? 'high' : targetReuseRatio >= 0.33 ? 'medium' : 'low',
+      recentMotionReuse: effectReuseRatio >= 0.66 ? 'high' : effectReuseRatio >= 0.33 ? 'medium' : 'low',
       recentPaletteReuse: 'medium',
-      recentCompositionReuse: noveltyScore > 0.66 ? 'low' : 'medium',
-      noveltyScore: Number(noveltyScore.toFixed(4))
+      recentCompositionReuse: targetReuseRatio >= 0.5 ? 'high' : 'medium',
+      noveltyScore: adjustedNoveltyScore,
+      memoryPenalty: Number(memoryPenalty.toFixed(4))
     },
     riskSignals: {
       attentionConflictRisk: fitBand(riskValue),
@@ -143,7 +169,8 @@ export function buildRealizationCandidatesV1({
   scope = {},
   displayElements = [],
   effectCatalog = null,
-  translationIntent = null
+  translationIntent = null,
+  priorPassMemory = null
 } = {}) {
   const seeds = arr(effectStrategy?.seedRecommendations).filter((row) => row && typeof row === 'object');
   const scopeTargets = unique(scope?.targetIds);
@@ -183,7 +210,8 @@ export function buildRealizationCandidatesV1({
     scopeTargets,
     intentEnvelope,
     noveltyScore: 0.35,
-    riskBias: 'medium'
+    riskBias: 'medium',
+    priorPassMemory
   });
 
   const focusedSeeds = primarySeeds.map((row) => ({
@@ -197,7 +225,8 @@ export function buildRealizationCandidatesV1({
     scopeTargets,
     intentEnvelope,
     noveltyScore: 0.55,
-    riskBias: 'low'
+    riskBias: 'low',
+    priorPassMemory
   });
 
   const alternateSeeds = alternativeBySection.map(({ seed, alternatives }) => ({
@@ -211,7 +240,8 @@ export function buildRealizationCandidatesV1({
     scopeTargets,
     intentEnvelope,
     noveltyScore: 0.75,
-    riskBias: 'medium'
+    riskBias: 'medium',
+    priorPassMemory
   });
 
   const candidates = [baseCandidate, focusedCandidate, alternateCandidate]

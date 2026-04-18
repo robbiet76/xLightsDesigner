@@ -263,7 +263,9 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
     },
     priorPassMemory: {
       artifactType: "sequencer_prior_pass_memory_v1",
-      unresolvedSignals: ["lead_mismatch"]
+      unresolvedSignals: ["lead_mismatch"],
+      previousEffectNames: ["Shimmer", "Twinkle"],
+      previousTargetIds: ["MegaTree", "Roofline"]
     },
     sourceLines: ["Chorus 1 / MegaTree / increase pulse contrast and faster motion"],
     baseRevision: "rev-56",
@@ -287,6 +289,8 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionTargets, []);
   assert.deepEqual(out.metadata.priorPassMemory.unresolvedSignals, ["lead_mismatch"]);
   assert.deepEqual(out.metadata.sequencerRevisionBrief.priorPassMemory.unresolvedSignals, ["lead_mismatch"]);
+  assert.deepEqual(out.metadata.priorPassMemory.previousEffectNames, ["Shimmer", "Twinkle"]);
+  assert.deepEqual(out.metadata.priorPassMemory.previousTargetIds, ["MegaTree", "Roofline"]);
   assert.equal(out.metadata.requestScopeMode, "section_target_refinement");
   assert.equal(out.metadata.reviewStartLevel, "section");
   assert.equal(out.metadata.sectionScopeKind, "timing_track_windows");

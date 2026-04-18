@@ -18,7 +18,15 @@ export function buildPriorPassMemory({ historySnapshot = null } = {}) {
   const snapshot = isPlainObject(historySnapshot) ? historySnapshot : null;
   const renderCritiqueContext = isPlainObject(snapshot?.renderCritiqueContext) ? snapshot.renderCritiqueContext : null;
   const sequenceRevisionObjective = isPlainObject(snapshot?.sequenceRevisionObjective) ? snapshot.sequenceRevisionObjective : null;
+  const priorPlanMetadata = isPlainObject(snapshot?.planHandoff?.metadata) ? snapshot.planHandoff.metadata : null;
   if (!renderCritiqueContext && !sequenceRevisionObjective) return null;
+
+  const previousEffectNames = uniqueStrings(
+    arr(priorPlanMetadata?.effectStrategy?.seedRecommendations).map((row) => row?.effectName)
+  );
+  const previousTargetIds = uniqueStrings(
+    arr(priorPlanMetadata?.effectStrategy?.seedRecommendations).flatMap((row) => arr(row?.targetIds))
+  );
 
   const comparison = isPlainObject(renderCritiqueContext?.comparison) ? renderCritiqueContext.comparison : {};
   const observed = isPlainObject(renderCritiqueContext?.observed) ? renderCritiqueContext.observed : {};
@@ -43,6 +51,8 @@ export function buildPriorPassMemory({ historySnapshot = null } = {}) {
     previousBreadthRead: str(observed.breadthRead),
     previousTemporalRead: str(observed.temporalRead),
     previousCoverageRead: str(observed.coverageRead),
+    previousEffectNames,
+    previousTargetIds,
     unresolvedSignals
   };
 }

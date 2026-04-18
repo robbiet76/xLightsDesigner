@@ -28,6 +28,16 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
           revisionRoles: ["strengthen_lead", "increase_section_contrast"],
           revisionTargets: ["MegaTree", "Verse"]
         }
+      },
+      planHandoff: {
+        metadata: {
+          effectStrategy: {
+            seedRecommendations: [
+              { effectName: "Shimmer", targetIds: ["MegaTree"] },
+              { effectName: "Twinkle", targetIds: ["Roofline"] }
+            ]
+          }
+        }
       }
     }
   });
@@ -38,4 +48,6 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
   assert.deepEqual(out.previousRevisionRoles, ["strengthen_lead", "increase_section_contrast"]);
   assert.deepEqual(out.previousRevisionTargets, ["MegaTree", "Verse"]);
   assert.deepEqual(out.unresolvedSignals, ["lead_mismatch", "flat_development", "weak_section_contrast", "under_coverage"]);
+  assert.deepEqual(out.previousEffectNames, ["Shimmer", "Twinkle"]);
+  assert.deepEqual(out.previousTargetIds, ["MegaTree", "Roofline"]);
 });
