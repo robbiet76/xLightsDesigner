@@ -25,6 +25,32 @@ function overlapRatio(left = [], right = []) {
   return overlap / Math.max(a.size, b.size);
 }
 
+function computeRevisionFit({ sequencerRevisionBrief = null, targetIds = [], attentionProfile = '' } = {}) {
+  const revisionRoles = new Set(arr(sequencerRevisionBrief?.revisionRoles).map((row) => str(row)));
+  const revisionTargets = unique(sequencerRevisionBrief?.revisionTargets);
+  const focusTargets = unique(sequencerRevisionBrief?.focusTargets);
+  const targetOverlap = overlapRatio(targetIds, [...revisionTargets, ...focusTargets]);
+  let roleScore = 0.5;
+  if (revisionRoles.has('strengthen_lead')) {
+    roleScore = attentionProfile === 'concentrated' ? 0.9 : attentionProfile === 'weighted' ? 0.7 : 0.35;
+  } else if (revisionRoles.has('reduce_competing_support')) {
+    roleScore = attentionProfile === 'concentrated' ? 0.85 : attentionProfile === 'weighted' ? 0.65 : 0.3;
+  } else if (revisionRoles.has('increase_section_contrast') || revisionRoles.has('add_section_development')) {
+    roleScore = attentionProfile === 'weighted' ? 0.8 : attentionProfile === 'distributed' ? 0.65 : 0.55;
+  } else if (revisionRoles.has('widen_support')) {
+    roleScore = attentionProfile === 'distributed' ? 0.85 : attentionProfile === 'weighted' ? 0.7 : 0.4;
+  }
+  const overall = revisionTargets.length || focusTargets.length
+    ? ((targetOverlap * 0.6) + (roleScore * 0.4))
+    : roleScore;
+  return {
+    roleAlignment: fitBand(roleScore),
+    targetAlignment: fitBand(targetOverlap),
+    overallAlignment: fitBand(overall),
+    score: Number(overall.toFixed(4))
+  };
+}
+
 function inferCandidateAttentionProfile(targetIds = []) {
   const count = unique(targetIds).length;
   if (count <= 1) return 'concentrated';
@@ -70,7 +96,8 @@ function buildCandidate({
   intentEnvelope = null,
   noveltyScore = 0.5,
   riskBias = 'medium',
-  priorPassMemory = null
+  priorPassMemory = null,
+  sequencerRevisionBrief = null
 } = {}) {
   const allTargets = unique(seeds.flatMap((row) => arr(row?.targetIds)));
   const allEffects = unique(seeds.map((row) => row?.effectName));
@@ -78,6 +105,11 @@ function buildCandidate({
   const temporalProfile = str(intentEnvelope?.temporal?.profile) || 'modulated';
   const overallFit = (attentionFitScore(intentEnvelope?.attention?.profile, attentionProfile) + temporalFitScore(intentEnvelope?.temporal?.profile, temporalProfile)) / 2;
   const riskValue = riskBias === 'low' ? 0.25 : riskBias === 'high' ? 0.75 : 0.5;
+  const revisionFit = computeRevisionFit({
+    sequencerRevisionBrief,
+    targetIds: allTargets,
+    attentionProfile
+  });
   const targetReuseRatio = overlapRatio(allTargets, priorPassMemory?.previousTargetIds);
   const effectReuseRatio = overlapRatio(allEffects, priorPassMemory?.previousEffectNames);
   const memoryPenalty = Math.min(0.35, (targetReuseRatio * 0.2) + (effectReuseRatio * 0.25));
@@ -139,7 +171,14 @@ function buildCandidate({
       spatialFit: fitBand(0.7),
       textureFit: fitBand(0.6),
       colorFit: fitBand(0.5),
+      revisionFit: revisionFit.overallAlignment,
       overallFit: fitBand(overallFit)
+    },
+    revisionSignals: {
+      roleAlignment: revisionFit.roleAlignment,
+      targetAlignment: revisionFit.targetAlignment,
+      overallAlignment: revisionFit.overallAlignment,
+      revisionScore: revisionFit.score
     },
     noveltySignals: {
       recentTargetReuse: targetReuseRatio >= 0.66 ? 'high' : targetReuseRatio >= 0.33 ? 'medium' : 'low',
@@ -170,7 +209,8 @@ export function buildRealizationCandidatesV1({
   displayElements = [],
   effectCatalog = null,
   translationIntent = null,
-  priorPassMemory = null
+  priorPassMemory = null,
+  sequencerRevisionBrief = null
 } = {}) {
   const seeds = arr(effectStrategy?.seedRecommendations).filter((row) => row && typeof row === 'object');
   const scopeTargets = unique(scope?.targetIds);
@@ -211,7 +251,8 @@ export function buildRealizationCandidatesV1({
     intentEnvelope,
     noveltyScore: 0.35,
     riskBias: 'medium',
-    priorPassMemory
+    priorPassMemory,
+    sequencerRevisionBrief
   });
 
   const focusedSeeds = primarySeeds.map((row) => ({
@@ -226,7 +267,8 @@ export function buildRealizationCandidatesV1({
     intentEnvelope,
     noveltyScore: 0.55,
     riskBias: 'low',
-    priorPassMemory
+    priorPassMemory,
+    sequencerRevisionBrief
   });
 
   const alternateSeeds = alternativeBySection.map(({ seed, alternatives }) => ({
@@ -241,7 +283,8 @@ export function buildRealizationCandidatesV1({
     intentEnvelope,
     noveltyScore: 0.75,
     riskBias: 'medium',
-    priorPassMemory
+    priorPassMemory,
+    sequencerRevisionBrief
   });
 
   const candidates = [baseCandidate, focusedCandidate, alternateCandidate]

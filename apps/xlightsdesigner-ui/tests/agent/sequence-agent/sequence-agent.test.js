@@ -304,6 +304,8 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.candidateSelection.policy.phase, "plan");
   assert.equal(out.metadata.candidateChoice.selectionMode, "deterministic_preview");
   assert.equal(out.metadata.effectStrategy.selectedCandidateId, out.metadata.candidateChoice.chosenCandidateId);
+  assert.equal(out.metadata.realizationCandidates.candidates[0].revisionSignals.overallAlignment, "medium");
+  assert.equal(typeof out.metadata.candidateSelection.scoredCandidates[0].revisionScore, "number");
   assert.equal(typeof out.metadata.candidateSelection.primaryCandidateId, "string");
 });
 

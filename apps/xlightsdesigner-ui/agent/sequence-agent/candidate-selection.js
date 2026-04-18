@@ -41,6 +41,7 @@ function reuseToleranceWeight(intentEnvelope = null) {
 
 function computeCandidateScore(candidate = null, intentEnvelope = null) {
   const fitScore = bandToScore(candidate?.fitSignals?.overallFit);
+  const revisionScore = clamp01(candidate?.revisionSignals?.revisionScore);
   const noveltyScore = clamp01(candidate?.noveltySignals?.noveltyScore);
   const memoryPenalty = clamp01(candidate?.noveltySignals?.memoryPenalty);
   const riskBands = [
@@ -54,11 +55,12 @@ function computeCandidateScore(candidate = null, intentEnvelope = null) {
     : 0.5;
   const exploration = explorationWeight(intentEnvelope);
   const reuseTolerance = reuseToleranceWeight(intentEnvelope);
-  const fitComponent = fitScore * 0.55;
+  const fitComponent = fitScore * 0.42;
+  const revisionComponent = revisionScore * 0.18;
   const noveltyComponent = noveltyScore * (0.15 + (exploration * 0.2));
   const safetyComponent = (1 - meanRisk) * (0.15 + ((1 - reuseTolerance) * 0.1));
   const reusePenaltyComponent = memoryPenalty * (0.08 + ((1 - reuseTolerance) * 0.08));
-  return Number((fitComponent + noveltyComponent + safetyComponent - reusePenaltyComponent).toFixed(4));
+  return Number((fitComponent + revisionComponent + noveltyComponent + safetyComponent - reusePenaltyComponent).toFixed(4));
 }
 
 function selectionMode(selectionSeed = '') {
@@ -84,6 +86,7 @@ export function buildCandidateSelectionV1({
       candidateId: str(candidate?.candidateId),
       selectionScore: computeCandidateScore(candidate, intentEnvelope),
       fitScore: bandToScore(candidate?.fitSignals?.overallFit),
+      revisionScore: clamp01(candidate?.revisionSignals?.revisionScore),
       noveltyScore: clamp01(candidate?.noveltySignals?.noveltyScore),
       riskScore: Number((1 - (
         [
