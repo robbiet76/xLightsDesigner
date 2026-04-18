@@ -7,6 +7,13 @@ Last Reviewed: 2026-04-15
 
 Active specifications for `sequence_agent`, xLights control, render-training, and sequencing quality architecture.
 
+Current framing:
+
+- this project is building a generative sequencing system
+- the translation layer stays neutral
+- the sequencer agent makes candidate decisions and revision decisions
+- render validation provides the evidence loop
+
 ## Canonical Entry Points
 
 These are the current operating specs for sequencing work.
@@ -21,6 +28,8 @@ These are the current operating specs for sequencing work.
 - [sequence-artistic-goal-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-artistic-goal-v1-2026-04-13.md)
 - [sequence-revision-objective-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-revision-objective-v1-2026-04-13.md)
 - [translation-layer-training-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/translation-layer-training-plan-2026-04-15.md)
+- [intent-envelope-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/intent-envelope-v1-2026-04-17.md)
+- [realization-candidates-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/realization-candidates-v1-2026-04-17.md)
 - [visual-behavior-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/visual-behavior-v1-2026-04-15.md)
 - [translation-intent-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/translation-intent-v1-2026-04-15.md)
 - [render-visualizer-gap-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-visualizer-gap-audit-2026-04-17.md)

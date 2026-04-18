@@ -11,6 +11,20 @@ Keep the project focused on the real goal:
 
 - `prompt -> physical animated light composition`
 
+This project is explicitly building a generative sequencing system.
+
+That means:
+
+- the translation layer stays neutral
+- the render validator stays descriptive
+- the sequencer agent generates, compares, and revises candidates
+
+The project must not collapse into:
+
+- heuristic sequencing
+- deterministic template sequencing
+- effect-family recipe selection
+
 This spec exists to prevent the sequencing system from drifting into:
 
 - effect-family stereotypes
@@ -48,12 +62,14 @@ Those kinds of rules may exist in narrow benchmark or safety contexts, but they 
 The target behavior is:
 
 1. infer the intended visual story from the prompt
-2. translate that intent into composition goals for physical props in space
-3. choose motion, texture, hierarchy, color, layering, and transitions that realize that picture
-4. express those choices through xLights effect families, parameters, palettes, and timing
-5. validate the rendered result against the intended visual read
+2. translate that intent into a neutral intent envelope for physical props in space
+3. generate multiple materially different valid realization candidates
+4. choose motion, texture, attention structure, color, layering, and transitions that realize that picture
+5. express those choices through xLights effect families, parameters, palettes, and timing
+6. validate the rendered result against the intended visual read
+7. revise until the result is artistically strong
 
-If a change does not improve one of those five steps, it should be treated as secondary work.
+If a change does not improve one of those seven steps, it should be treated as secondary work.
 
 ## Governing Rules
 
@@ -72,6 +88,12 @@ It should not start from:
 
 - a fixed effect family choice
 - a static effect-use rule table
+
+It should also not start from:
+
+- one deterministic candidate
+- one canonical composition shape
+- one canonical section-development recipe
 
 ### 2. Medium Knowledge, Not Stereotypes
 
@@ -96,6 +118,12 @@ Hardcoded rules are allowed only when they are:
 - temporary scaffolding with a retirement plan
 
 Heuristic rules must not become the primary translation strategy.
+
+The same rule applies at the sequencer-agent layer:
+
+- do not replace translation heuristics with sequencing heuristics
+- do not encode `metric X high -> always do Y`
+- make decisions by comparing candidates against intent and rendered evidence
 
 ### 4. Validation Must Move Downward
 
@@ -124,11 +152,13 @@ That makes render observation and critique part of the core path, not optional e
 The desired planning and learning stack is:
 
 1. prompt intent inference
-2. translation-intent model
-3. behavior selection
-4. xLights realization
-5. render-feedback validation
-6. outcome learning
+2. intent envelope
+3. realization candidate generation
+4. candidate selection
+5. xLights realization
+6. render-feedback validation
+7. revision objective
+8. outcome learning
 
 ### 1. Prompt Intent Inference
 
@@ -143,34 +173,54 @@ Interpret prompts in terms of:
 - contrast
 - development over time
 
-### 2. Translation-Intent Model
+### 2. Intent Envelope
 
-Convert prompt intent into section and prop composition goals:
+Convert prompt intent into a neutral artistic target for the current passage:
 
-- which props lead
-- which props support
-- which props stay quiet
-- what role the section plays
-- how the section should evolve
+- attention structure
+- temporal profile
+- spatial footprint
+- density character
+- color character
+- section role
+- intended evolution
 
-### 3. Behavior Selection
+The intent envelope should not choose one realization.
+It should define what success looks like.
 
-Choose desired visual behaviors before choosing xLights tools.
+### 3. Realization Candidate Generation
 
-Examples:
+Generate multiple materially different valid ways to satisfy the intent envelope.
 
-- steady hold
-- restrained shimmer texture
-- radial spin
-- radial burst
-- segmented chase
-- broad wash
-- smooth drift
-- accent pulse
+Candidates may differ by:
 
-### 4. xLights Realization
+- target allocation
+- realization family
+- settings
+- palette mode
+- layering strategy
+- attention distribution
+- section-development shape
 
-Only after behavior selection, choose how to realize that behavior using:
+The system must not collapse to rank-1 deterministic choice too early.
+Candidate diversity is part of the architecture, not an optional extra.
+
+### 4. Candidate Selection
+
+Choose among valid candidates using:
+
+- fit to intent
+- sequence context
+- novelty pressure
+- bounded exploration
+- rendered evidence when available
+
+This is where sequencing decisions belong.
+They do not belong in the neutral translation layer.
+
+### 5. xLights Realization
+
+Only after candidate selection, realize the chosen candidate using:
 
 - effect family
 - effect settings
@@ -197,11 +247,12 @@ A realization is:
 - target geometry context
 
 The translation layer must not collapse into effect-level ranking doctrine.
+The sequencer agent must not collapse into deterministic candidate doctrine.
 
 Single-realization evidence should stay compact.
 The project should prefer richer interaction and sequence-level validation over ever-expanding per-effect metric catalogs.
 
-### 5. Render-Feedback Validation
+### 6. Render-Feedback Validation
 
 Compare the intended translation behavior to:
 
@@ -215,7 +266,23 @@ The render validator is allowed to be metric-driven.
 It is not required to mimic human vision.
 It is required to produce machine-usable observations that can separate meaningfully different realized behaviors.
 
-### 6. Outcome Learning
+### 7. Revision Objective
+
+After critique, convert the mismatch between:
+
+- intent envelope
+- chosen candidate
+- rendered evidence
+
+into a bounded revision objective.
+
+This revision objective should guide:
+
+- what to preserve
+- what to change
+- what to try next
+
+### 8. Outcome Learning
 
 Feed real rendered outcomes back into:
 
@@ -223,6 +290,28 @@ Feed real rendered outcomes back into:
 - realization ranking
 - composition priors
 - revision planning
+
+## Decision Boundary
+
+The translation layer should not decide what art to make.
+
+It should provide:
+
+- neutral intent structure
+- candidate space
+- rendered evidence
+
+The sequencer agent should decide:
+
+- which candidate to try
+- when to revise
+- how to preserve novelty
+- how to trade off fit, risk, and exploration
+
+This is the core boundary between:
+
+- neutral translation
+- generative sequencing
 
 ## Visual Behavior Vocabulary
 
