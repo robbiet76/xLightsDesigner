@@ -89,6 +89,9 @@ test("history dashboard summarizes selected applied revision", () => {
   assert.equal(dashboard.data.selected.designSummary, "Warm focal chorus");
   assert.equal(dashboard.data.selected.passOutcomeStatus, "revise_required");
   assert.equal(dashboard.data.selected.hasRetryPressure, true);
+  assert.equal(dashboard.data.selected.processSummary.status, "revise_required");
+  assert.equal(dashboard.data.selected.processSummary.focus, "concentrated");
+  assert.equal(dashboard.data.selected.processSummary.nextMove, "Restore Snowman as the clear focal element.");
   assert.equal(dashboard.data.selected.audioTitle, "Song");
   assert.equal(dashboard.data.selected.renderObservation.macro.leadModel, "Snowman");
   assert.deepEqual(dashboard.data.selected.planHandoff.metadata.priorPassMemory.unresolvedSignals, ["lead_mismatch"]);

@@ -128,6 +128,56 @@ export function buildGenerativeSummaryFromMetadata(metadata = null) {
   };
 }
 
+function buildSequencingProcessSummary({
+  generativeSummary = null,
+  passOutcome = null,
+  revisionObjective = null
+} = {}) {
+  if ((!generativeSummary || typeof generativeSummary !== "object")
+    && (!passOutcome || typeof passOutcome !== "object")
+    && (!revisionObjective || typeof revisionObjective !== "object")) {
+    return null;
+  }
+  const focus = generativeSummary?.intent?.attentionProfile || "unconstrained";
+  const timing = generativeSummary?.intent?.temporalProfile || "unconstrained";
+  const nextMove = str(
+    generativeSummary?.feedback?.executionObjective
+    || revisionObjective?.sequencerDirection?.executionObjective
+    || ""
+  );
+  const correction = str(
+    generativeSummary?.feedback?.artisticCorrection
+    || revisionObjective?.designerDirection?.artisticCorrection
+    || ""
+  );
+  const newEffects = uniqueStrings(generativeSummary?.delta?.introducedEffectNames).slice(0, 4);
+  const newTargets = uniqueStrings(generativeSummary?.delta?.introducedTargetIds).slice(0, 4);
+  const currentEffects = uniqueStrings(generativeSummary?.delta?.currentEffectNames).slice(0, 4);
+  const currentTargets = uniqueStrings(generativeSummary?.delta?.currentTargetIds).slice(0, 4);
+  const status = str(passOutcome?.status || generativeSummary?.feedback?.status || "unknown");
+  const changeSummary = newEffects.length || newTargets.length
+    ? [
+        newEffects.length ? `new effects ${newEffects.join(", ")}` : "",
+        newTargets.length ? `new targets ${newTargets.join(", ")}` : ""
+      ].filter(Boolean).join(" / ")
+    : (currentEffects.length || currentTargets.length
+        ? [
+            currentEffects.length ? `effects ${currentEffects.join(", ")}` : "",
+            currentTargets.length ? `targets ${currentTargets.join(", ")}` : ""
+          ].filter(Boolean).join(" / ")
+        : "");
+  return {
+    status,
+    focus,
+    timing,
+    nextMove,
+    correction,
+    changeSummary,
+    hasRetryPressure: Boolean(passOutcome?.hasRetryPressure),
+    rejectionReasons: uniqueStrings(generativeSummary?.feedback?.rejectionReasons).slice(0, 3)
+  };
+}
+
 function buildPreferenceCue(profile = null) {
   const preferences = profile?.preferences && typeof profile.preferences === "object"
     ? profile.preferences
@@ -368,6 +418,11 @@ export function buildReviewDashboardState({
   const currentPassOutcome = currentSnapshot?.sequenceSummary?.passOutcome && typeof currentSnapshot.sequenceSummary.passOutcome === "object"
     ? currentSnapshot.sequenceSummary.passOutcome
     : null;
+  const currentProcessSummary = buildSequencingProcessSummary({
+    generativeSummary: currentGenerativeSummary,
+    passOutcome: currentPassOutcome,
+    revisionObjective: state.creative?.sequenceRevisionObjective || null
+  });
   const currentPassOutcomeLabel = currentPassOutcome?.status
     ? `${str(currentPassOutcome.status)}${currentPassOutcome?.hasRetryPressure ? " / retry pressure" : ""}`
     : "";
@@ -471,6 +526,7 @@ export function buildReviewDashboardState({
       verification,
       currentPassOutcome,
       currentPassOutcomeLabel,
+      currentProcessSummary,
       counts: {
         pendingChanges: allVisibleLines.length,
         designGroups: reviewRows.length,
@@ -500,6 +556,16 @@ export function buildReviewDashboardState({
             sequenceArtisticGoal: lastAppliedSnapshot.sequenceArtisticGoal || null,
             sequenceRevisionObjective: lastAppliedSnapshot.sequenceRevisionObjective || null,
             generativeSummary: buildGenerativeSummaryFromMetadata(lastAppliedSnapshot.planHandoff?.metadata || null),
+            processSummary: buildSequencingProcessSummary({
+              generativeSummary: buildGenerativeSummaryFromMetadata(lastAppliedSnapshot.planHandoff?.metadata || null),
+              passOutcome: lastAppliedSnapshot.planHandoff?.metadata?.revisionFeedback
+                ? {
+                    status: lastAppliedSnapshot.planHandoff.metadata.revisionFeedback.status,
+                    hasRetryPressure: Boolean(lastAppliedSnapshot.planHandoff?.metadata?.revisionRetryPressure?.signals?.length)
+                  }
+                : null,
+              revisionObjective: lastAppliedSnapshot.sequenceRevisionObjective || null
+            }),
             artifactRefs: lastApply?.artifactRefs || null
           }
         : null,

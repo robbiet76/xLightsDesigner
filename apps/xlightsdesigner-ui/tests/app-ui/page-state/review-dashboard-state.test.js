@@ -296,6 +296,9 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.feedback.status, "revise_required");
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.feedback.rejectionReasons, ["lead_mismatch", "low_change_retry"]);
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.feedback.executionObjective, "Strengthen MegaTree lead and reduce competing support.");
+  assert.equal(dashboard.data.lastAppliedSnapshot.processSummary.status, "revise_required");
+  assert.equal(dashboard.data.lastAppliedSnapshot.processSummary.focus, "weighted");
+  assert.equal(dashboard.data.lastAppliedSnapshot.processSummary.nextMove, "Strengthen MegaTree lead and reduce competing support.");
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentTargetIds, ["Snowman"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.introducedEffectNames, ["Color Wash"]);
@@ -414,6 +417,9 @@ test("review dashboard state exposes current generative sequencing summary from 
   assert.equal(dashboard.data.currentGenerativeSummary.feedback.status, "revise_required");
   assert.deepEqual(dashboard.data.currentGenerativeSummary.feedback.rejectionReasons, ["weak_section_contrast"]);
   assert.equal(dashboard.data.currentGenerativeSummary.feedback.executionObjective, "Increase contrast between lead and support.");
+  assert.equal(dashboard.data.currentProcessSummary.status, "revise_required");
+  assert.equal(dashboard.data.currentProcessSummary.focus, "concentrated");
+  assert.equal(dashboard.data.currentProcessSummary.nextMove, "Increase contrast between lead and support.");
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedTargetIds, ["Snowman"]);
 });

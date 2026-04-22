@@ -24,6 +24,39 @@ function formatLongDate(value = "") {
   return Number.isNaN(date.getTime()) ? raw : date.toLocaleString();
 }
 
+function buildProcessSummary({
+  generativeSummary = null,
+  passOutcomeStatus = "",
+  hasRetryPressure = false,
+  revisionObjective = null
+} = {}) {
+  const focus = str(generativeSummary?.intent?.attentionProfile || "unconstrained");
+  const timing = str(generativeSummary?.intent?.temporalProfile || "unconstrained");
+  const nextMove = str(
+    generativeSummary?.feedback?.executionObjective
+    || revisionObjective?.sequencerDirection?.executionObjective
+    || ""
+  );
+  const changeSummary = [
+    arr(generativeSummary?.delta?.introducedEffectNames).length
+      ? `new effects ${arr(generativeSummary.delta.introducedEffectNames).slice(0, 3).join(", ")}`
+      : "",
+    arr(generativeSummary?.delta?.introducedTargetIds).length
+      ? `new targets ${arr(generativeSummary.delta.introducedTargetIds).slice(0, 3).join(", ")}`
+      : ""
+  ].filter(Boolean).join(" / ");
+  if (!focus && !timing && !nextMove && !changeSummary && !passOutcomeStatus) return null;
+  return {
+    status: str(passOutcomeStatus || generativeSummary?.feedback?.status || "unknown"),
+    focus,
+    timing,
+    nextMove,
+    changeSummary,
+    hasRetryPressure: Boolean(hasRetryPressure),
+    rejectionReasons: arr(generativeSummary?.feedback?.rejectionReasons).slice(0, 3)
+  };
+}
+
 export function buildHistoryDashboardState({
   state = {}
 } = {}) {
@@ -71,6 +104,7 @@ export function buildHistoryDashboardState({
       })),
       selected: selected
         ? {
+            generativeSummary: buildGenerativeSummaryFromMetadata(selectedSnapshot?.planHandoff?.metadata || null),
             summary: str(selected.summary || "Select an applied revision"),
             status: str(selected.status || "unknown"),
             commandCount: Number(selected.commandCount || 0),
@@ -105,7 +139,12 @@ export function buildHistoryDashboardState({
             renderCritiqueContext: selectedSnapshot?.renderCritiqueContext || null,
             sequenceArtisticGoal: selectedSnapshot?.sequenceArtisticGoal || null,
             sequenceRevisionObjective: selectedSnapshot?.sequenceRevisionObjective || null,
-            generativeSummary: buildGenerativeSummaryFromMetadata(selectedSnapshot?.planHandoff?.metadata || null),
+            processSummary: buildProcessSummary({
+              generativeSummary: buildGenerativeSummaryFromMetadata(selectedSnapshot?.planHandoff?.metadata || null),
+              passOutcomeStatus: str(selectedSnapshot?.planHandoff?.metadata?.revisionFeedback?.status || selected.snapshotSummary?.sequenceSummary?.passOutcome?.status || ""),
+              hasRetryPressure: Boolean(selected.snapshotSummary?.sequenceSummary?.passOutcome?.hasRetryPressure),
+              revisionObjective: selectedSnapshot?.sequenceRevisionObjective || null
+            }),
             artifactRefs: selected?.artifactRefs || null
           }
         : null

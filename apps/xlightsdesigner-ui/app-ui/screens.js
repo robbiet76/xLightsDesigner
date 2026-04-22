@@ -513,6 +513,17 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const generativeCurrentTargets = Array.isArray(generativeSummary?.delta?.currentTargetIds)
       ? generativeSummary.delta.currentTargetIds.filter(Boolean).slice(0, 4)
       : [];
+    const processStatus = String(generativeSummary?.feedback?.status || "").trim();
+    const processNextMove = generativeFeedbackObjective;
+    const processChangeSummary = generativeNewEffects.length || generativeNewTargets.length
+      ? [
+          generativeNewEffects.length ? `new effects ${generativeNewEffects.join(", ")}` : "",
+          generativeNewTargets.length ? `new targets ${generativeNewTargets.join(", ")}` : ""
+        ].filter(Boolean).join(" / ")
+      : [
+          generativeCurrentEffects.length ? `effects ${generativeCurrentEffects.join(", ")}` : "",
+          generativeCurrentTargets.length ? `targets ${generativeCurrentTargets.join(", ")}` : ""
+        ].filter(Boolean).join(" / ");
     const drilldownTargets = Array.isArray(renderCritiqueContext?.comparison?.drilldownTargetIds)
       ? renderCritiqueContext.comparison.drilldownTargetIds.filter(Boolean).slice(0, 5)
       : [];
@@ -608,66 +619,16 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             ${priorSignals.length ? `<p>Carry forward: ${escapeHtml(priorSignals.join(", "))}</p>` : ""}
           </div>
           <div class="dashboard-panel">
-            <div class="artifact-kicker">Generative Sequencing</div>
+            <div class="artifact-kicker">Sequencing Process</div>
             ${
               generativeSummary
                 ? `
-                  <p>Intent: ${escapeHtml(String(generativeSummary.intent?.attentionProfile || "unconstrained"))} attention / ${escapeHtml(String(generativeSummary.intent?.temporalProfile || "unconstrained"))} time / ${escapeHtml(String(generativeSummary.intent?.footprint || "unconstrained"))} footprint</p>
-                  <p>Selection: ${escapeHtml(String(generativeSummary.selection?.mode || "unknown"))}${generativeSummary.selection?.phase ? ` / ${escapeHtml(String(generativeSummary.selection.phase))}` : ""}</p>
-                  <p>Chosen: ${escapeHtml(String(generativeSummary.choice?.chosenCandidateId || "none"))}${generativeSummary.choice?.chosenSummary ? ` - ${escapeHtml(String(generativeSummary.choice.chosenSummary))}` : ""}</p>
-                  <p>Band: ${escapeHtml(String(generativeSummary.selection?.selectedBandSize || 0))} eligible candidate${Number(generativeSummary.selection?.selectedBandSize || 0) === 1 ? "" : "s"}</p>
-                  ${generativeCurrentEffects.length ? `<p>Effects: ${escapeHtml(generativeCurrentEffects.join(", "))}</p>` : ""}
-                  ${generativeCurrentTargets.length ? `<p>Targets: ${escapeHtml(generativeCurrentTargets.join(", "))}</p>` : ""}
-                  ${
-                    generativeBandIds.length
-                      ? `<ul>${generativeBandIds.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
-                      : generativeCandidateIds.length
-                        ? `<ul>${generativeCandidateIds.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
-                        : "<p>No candidate set captured.</p>"
-                  }
-                  ${
-                    generativeUnresolvedSignals.length
-                      ? `<p class="banner warning">Revision pressure: ${escapeHtml(generativeUnresolvedSignals.join(", "))}</p>`
-                      : ""
-                  }
-                  ${
-                    generativeRetrySignals.length
-                      ? `<p class="banner warning">Retry pressure: ${escapeHtml(generativeRetrySignals.join(", "))}</p>`
-                      : ""
-                  }
-                  ${
-                    generativeOscillatingCandidateIds.length
-                      ? `<p class="banner">Avoiding oscillation: ${escapeHtml(generativeOscillatingCandidateIds.join(", "))}</p>`
-                      : ""
-                  }
-                  ${
-                    generativeFeedbackStatus
-                      ? `<p>Feedback: ${escapeHtml(generativeFeedbackStatus)}</p>`
-                      : ""
-                  }
-                  ${
-                    generativeFeedbackReasons.length
-                      ? `<p class="banner warning">Reasons: ${escapeHtml(generativeFeedbackReasons.join(", "))}</p>`
-                      : ""
-                  }
-                  ${
-                    generativeFeedbackObjective
-                      ? `<p>Next move: ${escapeHtml(generativeFeedbackObjective)}</p>`
-                      : ""
-                  }
-                  ${
-                    generativeFeedbackCorrection
-                      ? `<p>Correction: ${escapeHtml(generativeFeedbackCorrection)}</p>`
-                      : ""
-                  }
-                  ${
-                    generativeNewEffects.length || generativeNewTargets.length
-                      ? `<p class="banner impact">Delta: ${escapeHtml([
-                        generativeNewEffects.length ? `new effects ${generativeNewEffects.join(", ")}` : "",
-                        generativeNewTargets.length ? `new targets ${generativeNewTargets.join(", ")}` : ""
-                      ].filter(Boolean).join(" / "))}</p>`
-                      : ""
-                  }
+                  <p>Intent: ${escapeHtml(String(generativeSummary.intent?.attentionProfile || "unconstrained"))} attention / ${escapeHtml(String(generativeSummary.intent?.temporalProfile || "unconstrained"))} time</p>
+                  ${processStatus ? `<p>Status: ${escapeHtml(processStatus)}${generativeRetrySignals.length ? " / retry pressure" : ""}</p>` : ""}
+                  ${processChangeSummary ? `<p>Change: ${escapeHtml(processChangeSummary)}</p>` : ""}
+                  ${processNextMove ? `<p>Next move: ${escapeHtml(processNextMove)}</p>` : ""}
+                  ${generativeFeedbackCorrection ? `<p>Correction: ${escapeHtml(generativeFeedbackCorrection)}</p>` : ""}
+                  ${generativeFeedbackReasons.length ? `<p class="banner warning">Reasons: ${escapeHtml(generativeFeedbackReasons.join(", "))}</p>` : ""}
                 `
                 : "<p>No generative sequencing summary captured.</p>"
             }
@@ -1627,21 +1588,24 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
               <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed. Apply is enabled when the plan is otherwise valid." : "Confirm approval before applying changes to xLights."}</p>
             </div>
             <div class="dashboard-panel">
-              <div class="artifact-kicker">Generative Sequencing</div>
+              <div class="artifact-kicker">Sequencing Process</div>
               ${
                 currentGenerativeSummary
                   ? `
                     <p>Intent: ${escapeHtml(String(currentGenerativeSummary.intent?.attentionProfile || "unconstrained"))} attention / ${escapeHtml(String(currentGenerativeSummary.intent?.temporalProfile || "unconstrained"))} time</p>
-                    <p>Chosen: ${escapeHtml(String(currentGenerativeSummary.choice?.chosenCandidateId || "none"))}</p>
-                    <p>Mode: ${escapeHtml(String(currentGenerativeSummary.selection?.mode || "unknown"))}${currentGenerativeSummary.selection?.phase ? ` / ${escapeHtml(String(currentGenerativeSummary.selection.phase))}` : ""}</p>
-                    <p>Band: ${escapeHtml(String(currentGenerativeSummary.selection?.selectedBandSize || 0))} candidate${Number(currentGenerativeSummary.selection?.selectedBandSize || 0) === 1 ? "" : "s"}</p>
-                    ${Array.isArray(currentGenerativeSummary?.delta?.introducedEffectNames) && currentGenerativeSummary.delta.introducedEffectNames.length ? `<p>New effects: ${escapeHtml(currentGenerativeSummary.delta.introducedEffectNames.join(", "))}</p>` : ""}
-                    ${Array.isArray(currentGenerativeSummary?.delta?.introducedTargetIds) && currentGenerativeSummary.delta.introducedTargetIds.length ? `<p>New targets: ${escapeHtml(currentGenerativeSummary.delta.introducedTargetIds.join(", "))}</p>` : ""}
-                    ${Array.isArray(currentGenerativeSummary?.choice?.retryPressureSignals) && currentGenerativeSummary.choice.retryPressureSignals.length ? `<p>Retry pressure: ${escapeHtml(currentGenerativeSummary.choice.retryPressureSignals.join(", "))}</p>` : ""}
-                    ${Array.isArray(currentGenerativeSummary?.retry?.oscillatingCandidateIds) && currentGenerativeSummary.retry.oscillatingCandidateIds.length ? `<p>Avoiding oscillation: ${escapeHtml(currentGenerativeSummary.retry.oscillatingCandidateIds.join(", "))}</p>` : ""}
                     ${String(currentGenerativeSummary?.feedback?.status || "").trim() ? `<p>Feedback: ${escapeHtml(String(currentGenerativeSummary.feedback.status))}</p>` : ""}
-                    ${Array.isArray(currentGenerativeSummary?.feedback?.rejectionReasons) && currentGenerativeSummary.feedback.rejectionReasons.length ? `<p>Reasons: ${escapeHtml(currentGenerativeSummary.feedback.rejectionReasons.join(", "))}</p>` : ""}
+                    ${(Array.isArray(currentGenerativeSummary?.delta?.introducedEffectNames) && currentGenerativeSummary.delta.introducedEffectNames.length) || (Array.isArray(currentGenerativeSummary?.delta?.introducedTargetIds) && currentGenerativeSummary.delta.introducedTargetIds.length)
+                      ? `<p>Change: ${escapeHtml([
+                          Array.isArray(currentGenerativeSummary?.delta?.introducedEffectNames) && currentGenerativeSummary.delta.introducedEffectNames.length
+                            ? `new effects ${currentGenerativeSummary.delta.introducedEffectNames.join(", ")}`
+                            : "",
+                          Array.isArray(currentGenerativeSummary?.delta?.introducedTargetIds) && currentGenerativeSummary.delta.introducedTargetIds.length
+                            ? `new targets ${currentGenerativeSummary.delta.introducedTargetIds.join(", ")}`
+                            : ""
+                        ].filter(Boolean).join(" / "))}</p>`
+                      : ""}
                     ${String(currentGenerativeSummary?.feedback?.executionObjective || "").trim() ? `<p>Next move: ${escapeHtml(String(currentGenerativeSummary.feedback.executionObjective))}</p>` : ""}
+                    ${Array.isArray(currentGenerativeSummary?.feedback?.rejectionReasons) && currentGenerativeSummary.feedback.rejectionReasons.length ? `<p>Reasons: ${escapeHtml(currentGenerativeSummary.feedback.rejectionReasons.join(", "))}</p>` : ""}
                   `
                   : "<p>No generative sequencing summary captured yet.</p>"
               }
@@ -1833,6 +1797,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <div class="dashboard-panel">
                   <div class="artifact-kicker">Execution</div>
                   <p>Status: ${escapeHtml(String(selected.applyStatus || selected.status || "unknown"))}</p>
+                  ${selected.processSummary?.status ? `<p>Pass outcome: ${escapeHtml(String(selected.processSummary.status))}${selected.processSummary?.hasRetryPressure ? " / retry pressure" : ""}</p>` : ""}
                   <p>Commands: ${escapeHtml(String(selected.applyCommandCount || selected.commandCount || 0))}</p>
                   <p>Impacts: ${escapeHtml(String(selected.applyImpactCount || selected.impactCount || 0))}</p>
                 </div>
@@ -1841,6 +1806,15 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <p>${escapeHtml(String(selected.audioTitle || "Unknown audio"))}</p>
                   <p>${escapeHtml(String(selected.layoutMode || "unknown"))} layout context</p>
                   <p>${escapeHtml(String(selected.musicSummary || "No applied music context summary."))}</p>
+                </div>
+                <div class="dashboard-panel">
+                  <div class="artifact-kicker">Sequencing Process</div>
+                  ${selected.processSummary ? `
+                    <p>Intent: ${escapeHtml(String(selected.processSummary.focus || "unconstrained"))} attention / ${escapeHtml(String(selected.processSummary.timing || "unconstrained"))} time</p>
+                    ${selected.processSummary.changeSummary ? `<p>Change: ${escapeHtml(String(selected.processSummary.changeSummary))}</p>` : ""}
+                    ${selected.processSummary.nextMove ? `<p>Next move: ${escapeHtml(String(selected.processSummary.nextMove))}</p>` : ""}
+                    ${Array.isArray(selected.processSummary.rejectionReasons) && selected.processSummary.rejectionReasons.length ? `<p>Reasons: ${escapeHtml(selected.processSummary.rejectionReasons.join(", "))}</p>` : ""}
+                  ` : `<p>No sequencing process summary captured.</p>`}
                 </div>
               </div>
             `
