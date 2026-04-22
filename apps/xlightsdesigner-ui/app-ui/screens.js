@@ -422,6 +422,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     renderCritiqueContext = null,
     sequenceArtisticGoal = null,
     sequenceRevisionObjective = null,
+    generativeSummary = null,
     artifactRefs = null,
     emptyText = "No snapshot loaded."
   } = {}) {
@@ -479,6 +480,15 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const priorSignals = Array.isArray(priorPassMemory?.unresolvedSignals)
       ? priorPassMemory.unresolvedSignals.filter(Boolean).slice(0, 5)
       : [];
+    const generativeBandIds = Array.isArray(generativeSummary?.selection?.selectedBandIds)
+      ? generativeSummary.selection.selectedBandIds.filter(Boolean).slice(0, 4)
+      : [];
+    const generativeCandidateIds = Array.isArray(generativeSummary?.candidates?.candidateIds)
+      ? generativeSummary.candidates.candidateIds.filter(Boolean).slice(0, 4)
+      : [];
+    const generativeUnresolvedSignals = Array.isArray(generativeSummary?.choice?.unresolvedSignals)
+      ? generativeSummary.choice.unresolvedSignals.filter(Boolean).slice(0, 4)
+      : [];
     const drilldownTargets = Array.isArray(renderCritiqueContext?.comparison?.drilldownTargetIds)
       ? renderCritiqueContext.comparison.drilldownTargetIds.filter(Boolean).slice(0, 5)
       : [];
@@ -493,6 +503,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       renderCritiqueContext ||
       sequenceArtisticGoal ||
       sequenceRevisionObjective ||
+      generativeSummary ||
       safeArtifactRefs.length;
     if (!hasContent) {
       return `
@@ -571,6 +582,31 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             ${revisionTargets.length ? `<p>Targets: ${escapeHtml(revisionTargets.join(", "))}</p>` : ""}
             ${priorPassMemory ? `<p>Prior pass: ${escapeHtml(String(priorPassMemory.previousRevisionLevel || "unknown"))} / ${escapeHtml(String(priorPassMemory.previousOwner || "unknown"))}</p>` : ""}
             ${priorSignals.length ? `<p>Carry forward: ${escapeHtml(priorSignals.join(", "))}</p>` : ""}
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Generative Sequencing</div>
+            ${
+              generativeSummary
+                ? `
+                  <p>Intent: ${escapeHtml(String(generativeSummary.intent?.attentionProfile || "unconstrained"))} attention / ${escapeHtml(String(generativeSummary.intent?.temporalProfile || "unconstrained"))} time / ${escapeHtml(String(generativeSummary.intent?.footprint || "unconstrained"))} footprint</p>
+                  <p>Selection: ${escapeHtml(String(generativeSummary.selection?.mode || "unknown"))}${generativeSummary.selection?.phase ? ` / ${escapeHtml(String(generativeSummary.selection.phase))}` : ""}</p>
+                  <p>Chosen: ${escapeHtml(String(generativeSummary.choice?.chosenCandidateId || "none"))}${generativeSummary.choice?.chosenSummary ? ` - ${escapeHtml(String(generativeSummary.choice.chosenSummary))}` : ""}</p>
+                  <p>Band: ${escapeHtml(String(generativeSummary.selection?.selectedBandSize || 0))} eligible candidate${Number(generativeSummary.selection?.selectedBandSize || 0) === 1 ? "" : "s"}</p>
+                  ${
+                    generativeBandIds.length
+                      ? `<ul>${generativeBandIds.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                      : generativeCandidateIds.length
+                        ? `<ul>${generativeCandidateIds.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                        : "<p>No candidate set captured.</p>"
+                  }
+                  ${
+                    generativeUnresolvedSignals.length
+                      ? `<p class="banner warning">Revision pressure: ${escapeHtml(generativeUnresolvedSignals.join(", "))}</p>`
+                      : ""
+                  }
+                `
+                : "<p>No generative sequencing summary captured.</p>"
+            }
           </div>
         </div>
         ${
@@ -1451,6 +1487,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
     const lastApply = applyHistory.length ? applyHistory[0] : null;
     const currentSnapshot = data.currentSnapshot || {};
+    const currentGenerativeSummary = data.currentGenerativeSummary || null;
     const lastAppliedSnapshot = data.lastAppliedSnapshot || null;
     const counts = data.counts || {};
     const verification = data.verification || null;
@@ -1522,6 +1559,19 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <span>I reviewed the pending changes and approve apply.</span>
               </label>
               <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed. Apply is enabled when the plan is otherwise valid." : "Confirm approval before applying changes to xLights."}</p>
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Generative Sequencing</div>
+              ${
+                currentGenerativeSummary
+                  ? `
+                    <p>Intent: ${escapeHtml(String(currentGenerativeSummary.intent?.attentionProfile || "unconstrained"))} attention / ${escapeHtml(String(currentGenerativeSummary.intent?.temporalProfile || "unconstrained"))} time</p>
+                    <p>Chosen: ${escapeHtml(String(currentGenerativeSummary.choice?.chosenCandidateId || "none"))}</p>
+                    <p>Mode: ${escapeHtml(String(currentGenerativeSummary.selection?.mode || "unknown"))}${currentGenerativeSummary.selection?.phase ? ` / ${escapeHtml(String(currentGenerativeSummary.selection.phase))}` : ""}</p>
+                    <p>Band: ${escapeHtml(String(currentGenerativeSummary.selection?.selectedBandSize || 0))} candidate${Number(currentGenerativeSummary.selection?.selectedBandSize || 0) === 1 ? "" : "s"}</p>
+                  `
+                  : "<p>No generative sequencing summary captured yet.</p>"
+              }
             </div>
           </div>
           ${data.previewError ? `<p class="banner warning">${escapeHtml(String(data.previewError))}</p>` : ""}
@@ -1609,6 +1659,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 renderCritiqueContext: lastAppliedSnapshot.renderCritiqueContext || null,
                 sequenceArtisticGoal: lastAppliedSnapshot.sequenceArtisticGoal || null,
                 sequenceRevisionObjective: lastAppliedSnapshot.sequenceRevisionObjective || null,
+                generativeSummary: lastAppliedSnapshot.generativeSummary || null,
                 artifactRefs: lastApply?.artifactRefs || null,
                 emptyText: "No applied snapshot is available yet."
               })

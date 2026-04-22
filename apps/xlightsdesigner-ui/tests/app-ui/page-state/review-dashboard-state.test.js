@@ -142,7 +142,47 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
         creativeBrief: { summary: "Applied design" },
         proposalBundle: { proposalLines: ["Applied line"] },
         applyResult: { status: "completed" },
-        planHandoff: { metadata: { priorPassMemory: { unresolvedSignals: ["weak_section_contrast"] } } },
+        planHandoff: {
+          metadata: {
+            priorPassMemory: { unresolvedSignals: ["weak_section_contrast"] },
+            intentEnvelope: {
+              artifactType: "intent_envelope_v1",
+              attention: { profile: "weighted" },
+              temporal: { profile: "modulated" },
+              spatial: { footprint: "moderate" },
+              texture: { profile: "mixed" }
+            },
+            realizationCandidates: {
+              artifactType: "realization_candidates_v1",
+              candidates: [
+                { candidateId: "candidate-base", summary: "Base seeded candidate." },
+                { candidateId: "candidate-focused", summary: "Focused alternate." }
+              ]
+            },
+            candidateSelection: {
+              artifactType: "candidate_selection_v1",
+              policy: { mode: "bounded_exploration", phase: "review" },
+              primaryCandidateId: "candidate-focused",
+              selectedBand: {
+                candidateIds: ["candidate-focused", "candidate-base"],
+                size: 2
+              }
+            },
+            candidateChoice: {
+              chosenCandidateId: "candidate-focused",
+              selectionMode: "bounded_exploration",
+              selectedFromBand: true
+            },
+            effectStrategy: {
+              selectedCandidateId: "candidate-focused",
+              selectedCandidateSummary: "Focused alternate."
+            },
+            candidateSelectionContext: {
+              phase: "review",
+              unresolvedSignals: ["weak_section_contrast"]
+            }
+          }
+        },
         analysisArtifact: { trackIdentity: { title: "Song" } },
         designSceneContext: { layoutMode: "2d" },
         musicDesignContext: { sectionArc: ["Intro", "Chorus 1"] },
@@ -200,10 +240,66 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.proposalLines[0], "Applied line");
   assert.equal(dashboard.data.lastAppliedSnapshot.renderObservation.macro.leadModel, "MegaTree");
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.planHandoff.metadata.priorPassMemory.unresolvedSignals, ["weak_section_contrast"]);
+  assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.intent.attentionProfile, "weighted");
+  assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.mode, "bounded_exploration");
+  assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.choice.chosenCandidateId, "candidate-focused");
+  assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.selectedBandIds, ["candidate-focused", "candidate-base"]);
   assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.expected.requestedScope.mode, "section_target_refinement");
   assert.equal(dashboard.data.lastAppliedSnapshot.sequenceArtisticGoal.scope.goalLevel, "section");
   assert.equal(dashboard.data.lastAppliedSnapshot.sequenceRevisionObjective.ladderLevel, "section");
+});
+
+test("review dashboard state exposes current generative sequencing summary from active plan metadata", () => {
+  const dashboard = buildReviewDashboardState({
+    state: {
+      proposed: ["Chorus 1 / Snowman / add Color Wash"],
+      agentPlan: {
+        metadata: {
+          intentEnvelope: {
+            artifactType: "intent_envelope_v1",
+            attention: { profile: "concentrated" },
+            temporal: { profile: "evolving" },
+            spatial: { footprint: "narrow" },
+            texture: { profile: "sparkle" }
+          },
+          realizationCandidates: {
+            artifactType: "realization_candidates_v1",
+            candidates: [
+              { candidateId: "candidate-base", summary: "Base seeded candidate." },
+              { candidateId: "candidate-alternate", summary: "Alternate candidate." }
+            ]
+          },
+          candidateSelection: {
+            artifactType: "candidate_selection_v1",
+            policy: { mode: "deterministic_preview", phase: "plan" },
+            primaryCandidateId: "candidate-base",
+            selectedBand: {
+              candidateIds: ["candidate-base"],
+              size: 1
+            }
+          },
+          candidateChoice: {
+            chosenCandidateId: "candidate-base",
+            selectionMode: "deterministic_preview",
+            selectedFromBand: true
+          },
+          effectStrategy: {
+            selectedCandidateId: "candidate-base",
+            selectedCandidateSummary: "Base seeded candidate."
+          }
+        }
+      },
+      ui: { proposedSelection: [0], applyApprovalChecked: false },
+      flags: { applyInProgress: false, proposalStale: false }
+    },
+    helpers: buildHelpers()
+  });
+
+  assert.equal(dashboard.data.currentGenerativeSummary.intent.attentionProfile, "concentrated");
+  assert.equal(dashboard.data.currentGenerativeSummary.selection.mode, "deterministic_preview");
+  assert.equal(dashboard.data.currentGenerativeSummary.choice.chosenSummary, "Base seeded candidate.");
+  assert.deepEqual(dashboard.data.currentGenerativeSummary.candidates.candidateIds, ["candidate-base", "candidate-alternate"]);
 });
 
 test("review dashboard state falls back to intent handoff execution strategy for grouped rows", () => {

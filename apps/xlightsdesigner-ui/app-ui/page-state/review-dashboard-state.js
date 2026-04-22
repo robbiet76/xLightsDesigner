@@ -10,6 +10,62 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((value) => str(value)).filter(Boolean))];
 }
 
+function buildGenerativeSummaryFromMetadata(metadata = null) {
+  if (!metadata || typeof metadata !== "object") return null;
+  const intentEnvelope = metadata.intentEnvelope && typeof metadata.intentEnvelope === "object"
+    ? metadata.intentEnvelope
+    : null;
+  const realizationCandidates = metadata.realizationCandidates && typeof metadata.realizationCandidates === "object"
+    ? metadata.realizationCandidates
+    : null;
+  const candidateSelection = metadata.candidateSelection && typeof metadata.candidateSelection === "object"
+    ? metadata.candidateSelection
+    : null;
+  const candidateChoice = metadata.candidateChoice && typeof metadata.candidateChoice === "object"
+    ? metadata.candidateChoice
+    : null;
+  const effectStrategy = metadata.effectStrategy && typeof metadata.effectStrategy === "object"
+    ? metadata.effectStrategy
+    : null;
+  const candidates = arr(realizationCandidates?.candidates).filter((row) => row && typeof row === "object");
+  const selectedBandIds = uniqueStrings(candidateSelection?.selectedBand?.candidateIds).slice(0, 4);
+  const chosenCandidateId = str(candidateChoice?.chosenCandidateId || effectStrategy?.selectedCandidateId);
+  const chosenCandidate = chosenCandidateId
+    ? candidates.find((row) => str(row?.candidateId) === chosenCandidateId)
+    : null;
+  const chosenSummary = str(effectStrategy?.selectedCandidateSummary || chosenCandidate?.summary);
+  const selectionMode = str(candidateChoice?.selectionMode || candidateSelection?.policy?.mode);
+  const phase = str(candidateSelection?.policy?.phase || metadata.candidateSelectionContext?.phase);
+  const unresolvedSignals = uniqueStrings(metadata.candidateSelectionContext?.unresolvedSignals).slice(0, 5);
+  const hasContent = intentEnvelope || candidates.length || candidateSelection || candidateChoice || effectStrategy;
+  if (!hasContent) return null;
+  return {
+    intent: {
+      attentionProfile: str(intentEnvelope?.attention?.profile || "unconstrained"),
+      temporalProfile: str(intentEnvelope?.temporal?.profile || "unconstrained"),
+      footprint: str(intentEnvelope?.spatial?.footprint || "unconstrained"),
+      texture: str(intentEnvelope?.texture?.profile || "unconstrained")
+    },
+    candidates: {
+      count: candidates.length,
+      candidateIds: candidates.map((row) => str(row?.candidateId)).filter(Boolean).slice(0, 4)
+    },
+    selection: {
+      mode: selectionMode,
+      phase,
+      primaryCandidateId: str(candidateSelection?.primaryCandidateId),
+      selectedBandIds,
+      selectedBandSize: Number(candidateSelection?.selectedBand?.size || selectedBandIds.length || 0)
+    },
+    choice: {
+      chosenCandidateId,
+      chosenSummary,
+      selectedFromBand: Boolean(candidateChoice?.selectedFromBand),
+      unresolvedSignals
+    }
+  };
+}
+
 function buildPreferenceCue(profile = null) {
   const preferences = profile?.preferences && typeof profile.preferences === "object"
     ? profile.preferences
@@ -246,6 +302,7 @@ export function buildReviewDashboardState({
     ? state.lastApplyVerification
     : null;
   const currentSnapshot = buildCurrentReviewSnapshotSummary() || {};
+  const currentGenerativeSummary = buildGenerativeSummaryFromMetadata(state.agentPlan?.metadata || null);
   const applyHistory = arr(state.applyHistory);
   const lastApply = applyHistory.length ? applyHistory[0] : null;
   const lastAppliedSnapshot =
@@ -357,6 +414,7 @@ export function buildReviewDashboardState({
         canApplyAll
       },
       currentSnapshot,
+      currentGenerativeSummary,
       rows: reviewRows,
       lastAppliedSnapshot: lastAppliedSnapshot
         ? {
@@ -371,6 +429,7 @@ export function buildReviewDashboardState({
             renderCritiqueContext: lastAppliedSnapshot.renderCritiqueContext || null,
             sequenceArtisticGoal: lastAppliedSnapshot.sequenceArtisticGoal || null,
             sequenceRevisionObjective: lastAppliedSnapshot.sequenceRevisionObjective || null,
+            generativeSummary: buildGenerativeSummaryFromMetadata(lastAppliedSnapshot.planHandoff?.metadata || null),
             artifactRefs: lastApply?.artifactRefs || null
           }
         : null,
