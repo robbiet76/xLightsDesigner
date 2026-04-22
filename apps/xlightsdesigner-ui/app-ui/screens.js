@@ -1589,6 +1589,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <p class="artifact-body">${escapeHtml(String(data.planSummary || "No command preview available."))}</p>
           <div class="artifact-chip-row">
             <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(data.reviewStateLabel || "Needs Approval"))}</span>
+            ${data.currentPassOutcomeLabel ? `<span class="artifact-chip">${escapeHtml(String(data.currentPassOutcomeLabel))}</span>` : ""}
             <span class="artifact-chip">${escapeHtml(String(counts.pendingChanges || 0))} pending changes</span>
             <span class="artifact-chip">${escapeHtml(String(counts.targets || 0))} targets</span>
             <span class="artifact-chip">${escapeHtml(String(counts.windows || 0))} windows</span>

@@ -368,6 +368,9 @@ export function buildReviewDashboardState({
   const currentPassOutcome = currentSnapshot?.sequenceSummary?.passOutcome && typeof currentSnapshot.sequenceSummary.passOutcome === "object"
     ? currentSnapshot.sequenceSummary.passOutcome
     : null;
+  const currentPassOutcomeLabel = currentPassOutcome?.status
+    ? `${str(currentPassOutcome.status)}${currentPassOutcome?.hasRetryPressure ? " / retry pressure" : ""}`
+    : "";
   const applyHistory = arr(state.applyHistory);
   const lastApply = applyHistory.length ? applyHistory[0] : null;
   const lastAppliedSnapshot =
@@ -467,6 +470,7 @@ export function buildReviewDashboardState({
       impact,
       verification,
       currentPassOutcome,
+      currentPassOutcomeLabel,
       counts: {
         pendingChanges: allVisibleLines.length,
         designGroups: reviewRows.length,
@@ -500,7 +504,7 @@ export function buildReviewDashboardState({
           }
         : null,
       mobileStatusText: applyReady
-        ? (approvalChecked ? "Ready" : "Awaiting approval")
+        ? [approvalChecked ? "Ready" : "Awaiting approval", currentPassOutcomeLabel].filter(Boolean).join(" / ")
         : disabledReason
     }
   };

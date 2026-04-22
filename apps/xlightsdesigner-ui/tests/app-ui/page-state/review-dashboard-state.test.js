@@ -426,6 +426,8 @@ test("review dashboard state exposes compact current pass outcome from snapshot 
       flags: { applyInProgress: false, proposalStale: false }
     },
     helpers: buildHelpers({
+      applyReadyForApprovalGate: () => true,
+      applyDisabledReason: () => "",
       buildCurrentReviewSnapshotSummary: () => ({
         designSummary: { title: "Current design" },
         sequenceSummary: {
@@ -442,6 +444,8 @@ test("review dashboard state exposes compact current pass outcome from snapshot 
 
   assert.equal(dashboard.data.currentPassOutcome.status, "retry_pressure");
   assert.equal(dashboard.data.currentPassOutcome.hasRetryPressure, true);
+  assert.equal(dashboard.data.currentPassOutcomeLabel, "retry_pressure / retry pressure");
+  assert.equal(dashboard.data.mobileStatusText, "Awaiting approval / retry_pressure / retry pressure");
 });
 
 test("review dashboard state falls back to intent handoff execution strategy for grouped rows", () => {
