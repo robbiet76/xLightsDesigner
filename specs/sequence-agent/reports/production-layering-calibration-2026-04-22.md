@@ -56,6 +56,10 @@ Observed behavior:
 3. a dedicated copied-show xLights process does launch successfully
 4. but the secondary instance still does not expose the owned listener on its configured port
 5. that leaves the isolated render path blocked even though the copied-show workspace itself is valid
+6. direct process inspection confirms the secondary process does receive:
+   - `XLIGHTS_DESIGNER_ENABLED=1`
+   - `XLIGHTS_DESIGNER_PORT=<port>`
+   so the remaining failure is after environment delivery, inside secondary-instance xLights startup/integration
 
 This is not a calibration-model issue.
 It is an xLights integration/runtime issue.
