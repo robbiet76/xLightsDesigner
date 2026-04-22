@@ -32,7 +32,7 @@ That runner now does the following:
    - right effect only
    - composite pair
 5. exports offline preview-scene geometry for the copied show
-6. requires xLights automation to already be attached to that copied workspace, or launches directly into the copied workspace when no automation listener is active
+6. targets a dedicated owned xLightsDesigner API session on its own port
 7. attempts the live render path needed for real layering proof
 
 ## Safety Boundary
@@ -53,7 +53,9 @@ Observed behavior:
 
 1. switching the current live xLights session is no longer considered safe enough for production calibration
 2. the runner now hard-fails instead of mutating that session
-3. the remaining path must use a dedicated xLights instance/session started directly in the copied workspace
+3. a dedicated copied-show xLights process does launch successfully
+4. but the secondary instance still does not expose the owned listener on its configured port
+5. that leaves the isolated render path blocked even though the copied-show workspace itself is valid
 
 This is not a calibration-model issue.
 It is an xLights integration/runtime issue.
@@ -74,14 +76,15 @@ That means the live render path must be able to render temporary isolated `.xsq`
 
 1. production same-target layering inventory is real and usable
 2. the copied-show isolation workflow is correct in principle
-3. the remaining failure is specifically at the dedicated live xLights render/session boundary
+3. the runner can now target the owned xLightsDesigner API instead of the unsafe legacy show-folder switch
+4. the remaining failure is specifically secondary-instance listener startup for the copied-show session
 
 ## Recommended Next Moves
 
 There are two viable options:
 
 1. preferred
-   - stabilize dedicated copied-show live rendering through a separate xLights session started with `-s <copied-show-dir>`
+   - stabilize dedicated copied-show live rendering through a separate xLights session started with `-s <copied-show-dir>` and its own owned API port
    - goal: make temporary external show workspaces render reliably
 
 2. fallback, only with explicit approval
@@ -98,4 +101,4 @@ Layering calibration is no longer blocked on theory or missing candidates.
 
 It is now blocked on one concrete integration seam:
 
-- reliable isolated production render from temporary `.xsq` variants
+- reliable secondary-instance owned-listener startup for temporary copied-show renders

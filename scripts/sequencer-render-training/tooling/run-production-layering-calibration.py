@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import time
+import urllib.parse
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -15,8 +16,8 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
 TOOLING_DIR = ROOT_DIR / "scripts" / "sequencer-render-training" / "tooling"
-XLIGHTS_URL = "http://127.0.0.1:49914/xlDoAutomation"
 XLIGHTS_APP = Path("/Applications/xLights.app")
+DEFAULT_OWNED_PORT = 49925
 DEFAULT_PREFERRED_CASES = [
     ("CozyLittleChristmas", "HiddenTree", ("Lines", "Snowflakes")),
     ("CozyLittleChristmas", "HiddenTreeStar", ("Color Wash", "Strobe")),
@@ -34,6 +35,7 @@ def parse_args():
     parser.add_argument("--case-id", action="append", default=[])
     parser.add_argument("--limit", type=int, default=4)
     parser.add_argument("--launch-xlights", action="store_true")
+    parser.add_argument("--owned-port", type=int, default=DEFAULT_OWNED_PORT)
     return parser.parse_args()
 
 
@@ -59,164 +61,157 @@ def run_capture_json(cmd: list[str], cwd: Path | None = None):
     return json.loads(result.stdout)
 
 
-def post_cmd(command: str, params: dict | None = None):
-    return post_payload({
-        "apiVersion": 2,
-        "cmd": command,
-        "params": params or {},
-    })
+def resolve_xlights_binary():
+    derived_root = Path.home() / "Library" / "Developer" / "Xcode" / "DerivedData"
+    candidates = []
+    if derived_root.exists():
+        for binary in derived_root.glob("xLights-*/Build/Products/Debug/xLights.app/Contents/MacOS/xLights"):
+            try:
+                candidates.append((binary.stat().st_mtime, binary))
+            except FileNotFoundError:
+                continue
+    if candidates:
+        candidates.sort(reverse=True)
+        return candidates[0][1]
+    fallback = XLIGHTS_APP / "Contents" / "MacOS" / "xLights"
+    if fallback.exists():
+        return fallback
+    raise RuntimeError("No xLights binary found in DerivedData or /Applications/xLights.app")
 
 
-def post_payload(payload_obj: dict):
-    payload = json.dumps({
-        **payload_obj,
-    }).encode("utf-8")
-    req = urllib.request.Request(
-        XLIGHTS_URL,
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+def owned_base_url(port: int):
+    return f"http://127.0.0.1:{port}/xlightsdesigner/api"
+
+
+def read_json_url(url: str, method="GET", body: dict | None = None):
+    data = None
+    headers = {}
+    if body is not None:
+        data = json.dumps(body).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(url, data=data, headers=headers, method=method)
     with urllib.request.urlopen(req, timeout=60) as response:
         body = response.read().decode("utf-8")
     return json.loads(body)
 
 
-def command_ok(body: dict):
-    if not isinstance(body, dict):
-        return False
-    if body.get("res") == 200:
-        return True
-    if body.get("worked") in {True, "true", "True"}:
-        return True
-    msg = strv(body.get("msg")).lower()
-    if msg in {
-        "ok",
-        "rendered.",
-        "sequence saved.",
-        "sequence batch rendered.",
-    } or msg.startswith("show folder changed to "):
-        return True
-    if body.get("models"):
-        return True
-    return False
+def owned_health(port: int):
+    return read_json_url(f"{owned_base_url(port)}/health")
 
 
-def xlights_ready():
+def owned_ready(port: int):
     try:
-        body = post_cmd("getModels", {})
+        body = owned_health(port)
     except Exception:
         return False
-    top_models = body.get("models")
-    wrapped_models = ((body.get("data") or {}).get("models"))
-    return command_ok(body) or bool(top_models) or bool(wrapped_models)
+    data = body.get("data") or {}
+    return body.get("ok") is True and strv(data.get("state")) == "ready"
 
 
-def ensure_xlights_ready(launch: bool):
-    if xlights_ready():
-        return
-    if not launch:
-        raise RuntimeError("xLights automation is not reachable on port 49914.")
-    app_path = Path("/Applications/xLights.app")
-    if not app_path.exists():
-        raise RuntimeError("xLights.app not found at /Applications/xLights.app")
-    subprocess.run(["open", str(app_path)], check=True)
-    deadline = time.time() + 180
+def launch_workspace_xlights(show_dir: Path, xsq_path: Path, port: int):
+    binary = resolve_xlights_binary()
+    log_path = Path(f"/tmp/xlights-layering-calibration-{port}.log")
+    env = {
+        **dict(os.environ),
+        "XLIGHTS_DESIGNER_ENABLED": "1",
+        "XLIGHTS_DESIGNER_PORT": str(port),
+        "XLIGHTS_DESIGNER_STARTUP_SETTLE_MS": "30000",
+    }
+    with log_path.open("ab") as log_file:
+        subprocess.Popen(
+            [str(binary), "-s", str(show_dir), str(xsq_path)],
+            stdout=log_file,
+            stderr=log_file,
+            start_new_session=True,
+            env=env,
+        )
+
+
+def wait_for_owned_ready(port: int, timeout_seconds=180):
+    deadline = time.time() + timeout_seconds
     while time.time() < deadline:
-        if xlights_ready():
-            return
+        try:
+            health = owned_health(port)
+            data = health.get("data") or {}
+            if health.get("ok") is True and strv(data.get("state")) == "ready":
+                return health
+        except Exception:
+            pass
         time.sleep(2)
-    raise RuntimeError("xLights did not become ready after launch.")
+    log_path = Path(f"/tmp/xlights-layering-calibration-{port}.log")
+    log_tail = ""
+    if log_path.exists():
+        try:
+            lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+            log_tail = "\n".join(lines[-40:])
+        except Exception:
+            log_tail = ""
+    raise RuntimeError(f"xLightsDesigner owned API did not become ready on port {port}. Log tail:\n{log_tail}")
 
 
-def launch_workspace_xlights(show_dir: Path, xsq_path: Path):
-    binary = XLIGHTS_APP / "Contents" / "MacOS" / "xLights"
-    if not binary.exists():
-        raise RuntimeError(f"xLights binary not found at {binary}")
-    subprocess.Popen(
-        [str(binary), "-s", str(show_dir), str(xsq_path)],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True,
-    )
-
-
-def ensure_workspace_session(workspace_dir: Path, workspace_xsq: Path, launch: bool):
-    if xlights_ready():
-        current_show = Path(get_show_folder() or "").resolve()
-        if current_show != workspace_dir.resolve():
-            raise RuntimeError(
-                "Refusing to switch the current xLights automation session away from its active show. "
-                "Close the existing xLights session first, or let this runner launch a dedicated copied-show "
-                "session when no automation listener is already active."
-            )
+def ensure_workspace_session(workspace_dir: Path, workspace_xsq: Path, launch: bool, port: int):
+    if owned_ready(port):
         return
     if not launch:
         raise RuntimeError(
-            "xLights automation is not reachable on port 49914. Start xLights in the copied workspace, or rerun "
-            "with --launch-xlights so the runner can launch directly into the temp show."
+            f"xLightsDesigner owned API is not reachable on port {port}. Start a copied-show calibration session, "
+            "or rerun with --launch-xlights."
         )
-    launch_workspace_xlights(workspace_dir, workspace_xsq)
+    launch_workspace_xlights(workspace_dir, workspace_xsq, port)
+    wait_for_owned_ready(port)
+
+
+def owned_get(port: int, path: str, params: dict | None = None):
+    url = f"{owned_base_url(port)}{path}"
+    if params:
+        query = urllib.parse.urlencode({key: str(value) for key, value in params.items() if value is not None and value != ""})
+        if query:
+            url = f"{url}?{query}"
+    return read_json_url(url)
+
+
+def owned_post(port: int, path: str, body: dict | None = None):
+    return read_json_url(f"{owned_base_url(port)}{path}", method="POST", body=body or {})
+
+
+def wait_for_owned_job(port: int, job_id: str, timeout_seconds=180):
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        settled = owned_get(port, "/jobs/get", {"jobId": job_id})
+        state = strv(((settled.get("data") or {}).get("state"))).lower()
+        if state in {"queued", "running"}:
+            time.sleep(1)
+            continue
+        result = ((settled.get("data") or {}).get("result")) or {}
+        if state != "completed" or result.get("ok") is not True:
+            raise RuntimeError(f"owned job failed on port {port}: {settled}")
+        return result
+    raise RuntimeError(f"Timed out waiting for owned xLights job {job_id} on port {port}")
+
+
+def owned_post_queued(port: int, path: str, body: dict | None = None):
+    accepted = owned_post(port, path, body)
+    job_id = strv(((accepted.get("data") or {}).get("jobId")))
+    if not job_id:
+        raise RuntimeError(f"owned route {path} returned no jobId: {accepted}")
+    return wait_for_owned_job(port, job_id)
+
+
+def open_and_render_sequence_owned(xsq_path: Path, port: int):
+    open_result = owned_post_queued(port, "/sequence/open", {"file": str(xsq_path), "force": True})
+    sequence = (open_result.get("data") or {}).get("sequence") or {}
+    if Path(strv(sequence.get("path"))).resolve() != xsq_path.resolve():
+        raise RuntimeError(f"owned sequence.open did not open expected file {xsq_path}: {open_result}")
+    expected_fseq = xsq_path.with_suffix(".fseq")
+    if expected_fseq.exists():
+        expected_fseq.unlink()
+    owned_post_queued(port, "/sequence/render-current", {})
     deadline = time.time() + 180
     while time.time() < deadline:
-        if xlights_ready():
-            current_show = Path(get_show_folder() or "").resolve()
-            if current_show == workspace_dir.resolve():
-                return
-        time.sleep(2)
-    raise RuntimeError(f"xLights did not become ready in copied workspace {workspace_dir}")
-
-
-def close_sequence_quiet():
-    try:
-        post_payload({"cmd": "closeSequence", "quiet": "true", "force": "true"})
-    except Exception:
-        return
-
-
-def get_show_folder():
-    body = post_cmd("getShowFolder", {})
-    return strv(body.get("folder"))
-
-
-def change_show_folder(show_dir: Path):
-    close_sequence_quiet()
-    body = post_payload({
-        "cmd": "changeShowFolder",
-        "folder": str(show_dir),
-        "force": "true",
-    })
-    if not command_ok(body):
-        raise RuntimeError(f"changeShowFolder failed for {show_dir}: {body}")
-
-
-def infer_rendered_fseq_path(xsq_path: Path):
-    show_folder = strv((post_cmd("getShowFolder", {}).get("folder")))
-    fseq_dir = strv((post_cmd("getFseqDirectory", {}).get("folder")))
-    xsq_dir = str(xsq_path.parent.resolve())
-    base = xsq_path.stem
-    if fseq_dir and show_folder and Path(fseq_dir).resolve() != Path(show_folder).resolve():
-        return Path(fseq_dir) / f"{base}.fseq"
-    return Path(xsq_dir) / f"{base}.fseq"
-
-
-def open_and_render_sequence(xsq_path: Path):
-    close_sequence_quiet()
-    body = post_cmd("sequence.open", {"file": str(xsq_path), "force": True, "promptIssues": False})
-    if not command_ok(body):
-        raise RuntimeError(f"sequence.open failed for {xsq_path}: {body}")
-    fseq_path = infer_rendered_fseq_path(xsq_path)
-    if fseq_path.exists():
-        fseq_path.unlink()
-    render = post_cmd("sequence.renderCurrent", {})
-    if not command_ok(render):
-        raise RuntimeError(f"sequence.renderCurrent failed for {xsq_path}: {render}")
-    deadline = time.time() + 180
-    while time.time() < deadline:
-        if fseq_path.exists() and fseq_path.stat().st_size > 0:
-            return fseq_path
+        if expected_fseq.exists() and expected_fseq.stat().st_size > 0:
+            return expected_fseq
         time.sleep(1)
-    raise RuntimeError(f"rendered fseq not found for {xsq_path}: expected {fseq_path}")
+    raise RuntimeError(f"rendered fseq not found for {xsq_path}: expected {expected_fseq}")
 
 
 def pick_cases(inventory: dict, requested_case_ids: list[str], limit: int):
@@ -396,7 +391,7 @@ def build_layering_proof(case: dict, isolated_refs: list[dict], composite_window
     }
 
 
-def process_case(show_dir: Path, case: dict, out_dir: Path, launch_xlights: bool):
+def process_case(show_dir: Path, case: dict, out_dir: Path, launch_xlights: bool, owned_port: int):
     sequence_name = strv(case.get("sequenceName"))
     target_id = strv(case.get("targetId"))
     overlap_start = int(case.get("overlapStartMs") or 0)
@@ -418,7 +413,7 @@ def process_case(show_dir: Path, case: dict, out_dir: Path, launch_xlights: bool
         "--out", str(geometry_path),
     ])
 
-    ensure_workspace_session(workspace_dir, workspace_xsq, launch_xlights)
+    ensure_workspace_session(workspace_dir, workspace_xsq, launch_xlights, owned_port)
 
     variant_specs = [
         ("left", {strv(effects[0].get("effectId"))}),
@@ -432,7 +427,7 @@ def process_case(show_dir: Path, case: dict, out_dir: Path, launch_xlights: bool
         isolate_xsq(workspace_xsq, target_id, keep_ids, xsq_variant)
         rendered[variant_name] = {
             "xsq": xsq_variant,
-            "fseq": open_and_render_sequence(xsq_variant),
+            "fseq": open_and_render_sequence_owned(xsq_variant, owned_port),
         }
 
     fseq_summary = read_fseq_summary(rendered["composite"]["fseq"])
@@ -526,7 +521,7 @@ def main():
     failures = []
     for case in cases:
         try:
-            rows.append(process_case(show_dir, case, out_dir, args.launch_xlights))
+            rows.append(process_case(show_dir, case, out_dir, args.launch_xlights, args.owned_port))
         except Exception as err:
             failures.append({
                 "caseId": strv(case.get("caseId")),
@@ -538,6 +533,7 @@ def main():
         "artifactVersion": 1,
         "showDir": str(show_dir),
         "inventoryRef": str(Path(args.inventory).resolve()),
+        "ownedPort": args.owned_port,
         "caseCount": len(cases),
         "completedCount": len(rows),
         "failedCount": len(failures),
