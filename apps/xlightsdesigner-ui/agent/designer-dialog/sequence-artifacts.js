@@ -305,6 +305,63 @@ function deriveRenderDrivenRevisionRoles(renderCritiqueContext = null) {
   return uniqueStrings(roles);
 }
 
+function deriveRevisionChangeBias({
+  renderCritiqueContext = null,
+  revisionObjective = null,
+  rejectionReasons = []
+} = {}) {
+  const comparison = isPlainObject(renderCritiqueContext?.comparison) ? renderCritiqueContext.comparison : {};
+  const observed = isPlainObject(renderCritiqueContext?.observed) ? renderCritiqueContext.observed : {};
+  const revisionRoles = uniqueStrings([
+    ...arr(revisionObjective?.scope?.revisionRoles),
+    ...arr(revisionObjective?.sequencerDirection?.revisionRoles)
+  ]);
+  const reasons = uniqueStrings(rejectionReasons);
+
+  const compositionMismatch = (
+    !comparison.leadMatchesPrimaryFocus
+    || arr(comparison.missingPrimaryFocusTargets).length > 0
+    || comparison.renderUsesBroadScene
+    || comparison.renderCoverageTooSparse
+    || comparison.renderCoverageTooBroad
+    || comparison.renderHasProblematicGaps
+    || comparison.renderIsLeftRightImbalanced
+    || comparison.renderIsTopBottomImbalanced
+    || reasons.some((row) => /\b(display gaps|scene spread|scene breadth|balance|primary focus|focus targets)\b/i.test(String(row)))
+  );
+  const progressionMismatch = (
+    str(observed.temporalRead) === "flat"
+    || arr(comparison.adjacentWindowComparisons).some((row) => row?.windowsReadSimilarly || row?.sameLeadModel)
+    || reasons.some((row) => /\b(section development|adjacent sampled sections|section hierarchy)\b/i.test(String(row)))
+  );
+  const layeringMismatch = (
+    revisionRoles.includes("reduce_competing_support")
+    || reasons.some((row) => /\b(layer|mask|obscur|support targets are not contributing enough)\b/i.test(String(row)))
+  );
+
+  return {
+    composition: {
+      mismatch: compositionMismatch,
+      targetShape: !comparison.leadMatchesPrimaryFocus || arr(comparison.missingPrimaryFocusTargets).length
+        ? "narrow_focus"
+        : (comparison.renderCoverageTooSparse || str(observed.breadthRead) === "tight")
+            ? "broaden_support"
+            : compositionMismatch
+              ? "redistribute_scene"
+              : "preserve"
+    },
+    progression: {
+      mismatch: progressionMismatch,
+      temporalVariation: progressionMismatch ? "increase" : "preserve"
+    },
+    layering: {
+      mismatch: layeringMismatch,
+      separation: revisionRoles.includes("reduce_competing_support") ? "increase" : layeringMismatch ? "clarify" : "preserve",
+      density: revisionRoles.includes("reduce_competing_support") ? "reduce" : "preserve"
+    }
+  };
+}
+
 export function refreshSequenceArtisticGoalFromPracticalValidation({
   priorArtisticGoal = null,
   sequencingDesignHandoff = null,
@@ -524,6 +581,11 @@ export function buildSequenceRevisionFeedback({
   const rejectionReasons = uniqueStrings([
     ...(critiqueReasons.length ? critiqueReasons : validationReasons)
   ]);
+  const changeBias = deriveRevisionChangeBias({
+    renderCritiqueContext,
+    revisionObjective,
+    rejectionReasons
+  });
 
   return finalizeSequenceArtifact({
     artifactType: "revision_feedback_v1",
@@ -552,7 +614,8 @@ export function buildSequenceRevisionFeedback({
         ...arr(revisionObjective?.scope?.revisionTargets),
         ...arr(revisionObjective?.sequencerDirection?.focusTargets)
       ]),
-      successChecks: uniqueStrings(revisionObjective?.successChecks)
+      successChecks: uniqueStrings(revisionObjective?.successChecks),
+      changeBias
     }
   });
 }

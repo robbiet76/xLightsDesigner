@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   buildSequenceArtisticGoalFromDesignHandoff,
   buildSequenceRevisionObjectiveFromArtifacts,
+  buildSequenceRevisionFeedback,
   refreshSequenceArtisticGoalFromPracticalValidation,
   refreshSequenceRevisionObjectiveFromPracticalValidation,
   refreshSequenceArtisticGoalFromRenderCritique,
@@ -445,6 +446,77 @@ test("refreshSequenceArtisticGoalFromRenderCritique does not force broader suppo
   assert.equal(out.evaluationLens.mustImprove.some((row) => /Support targets are not contributing enough/i.test(String(row))), false);
   assert.equal(out.evaluationLens.mustImprove.some((row) => /weighted to one side of the display/i.test(String(row))), false);
   assert.equal(out.evaluationLens.mustImprove.some((row) => /Visible display gaps remain/i.test(String(row))), false);
+});
+
+test("buildSequenceRevisionFeedback derives structured change bias from render critique mismatches", () => {
+  const goal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const objective = refreshSequenceRevisionObjectiveFromRenderCritique({
+    priorRevisionObjective: buildSequenceRevisionObjectiveFromArtifacts({
+      sequenceArtisticGoal: goal,
+      sequencingDesignHandoff: sampleHandoff()
+    }),
+    sequenceArtisticGoal: goal,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "Roofline",
+        breadthRead: "tight",
+        temporalRead: "flat"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: false,
+        missingPrimaryFocusTargets: ["MegaTree"],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: false,
+        adjacentWindowComparisons: [
+          { windowsReadSimilarly: true, sameLeadModel: true }
+        ]
+      },
+      expected: {
+        supportTargetIds: ["Roofline", "Matrix"]
+      }
+    }
+  });
+
+  const out = buildSequenceRevisionFeedback({
+    sequenceArtisticGoal: goal,
+    sequenceRevisionObjective: objective,
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "Roofline",
+        breadthRead: "tight",
+        temporalRead: "flat"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: false,
+        missingPrimaryFocusTargets: ["MegaTree"],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: false,
+        adjacentWindowComparisons: [
+          { windowsReadSimilarly: true, sameLeadModel: true }
+        ]
+      },
+      expected: {
+        supportTargetIds: ["Roofline", "Matrix"]
+      }
+    },
+    revisionRetryPressure: {
+      artifactType: "revision_retry_pressure_v1",
+      signals: ["low_change_retry"]
+    }
+  });
+
+  assert.equal(out.artifactType, "revision_feedback_v1");
+  assert.equal(out.nextDirection.changeBias.composition.mismatch, true);
+  assert.equal(out.nextDirection.changeBias.composition.targetShape, "narrow_focus");
+  assert.equal(out.nextDirection.changeBias.progression.mismatch, true);
+  assert.equal(out.nextDirection.changeBias.progression.temporalVariation, "increase");
+  assert.equal(out.nextDirection.changeBias.layering.mismatch, true);
+  assert.equal(out.nextDirection.changeBias.layering.separation, "clarify");
+  assert.equal(out.nextDirection.changeBias.layering.density, "preserve");
 });
 
 test("buildSequenceArtisticGoalFromDesignHandoff marks selected sections as timing-track scoped section work", () => {

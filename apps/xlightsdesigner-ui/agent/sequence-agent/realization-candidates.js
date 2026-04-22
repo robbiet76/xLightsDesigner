@@ -243,6 +243,9 @@ function buildFeedbackShapedSeeds({
   const feedbackDirection = revisionFeedback && typeof revisionFeedback.nextDirection === 'object'
     ? revisionFeedback.nextDirection
     : null;
+  const changeBias = feedbackDirection && typeof feedbackDirection.changeBias === 'object'
+    ? feedbackDirection.changeBias
+    : null;
   const revisionTargets = unique([
     ...arr(feedbackDirection?.targetIds),
     ...arr(sequencerRevisionBrief?.focusTargets),
@@ -263,13 +266,22 @@ function buildFeedbackShapedSeeds({
   if (!hasTargetShift && !hasEffectCue) return [];
 
   return primarySeeds.map((seed) => {
-    const nextTargets = revisionTargets.length ? revisionTargets : unique(seed?.targetIds);
+    const seedTargets = unique(seed?.targetIds);
+    const targetShape = str(changeBias?.composition?.targetShape);
+    const nextTargets = targetShape === 'broaden_support'
+      ? unique([...seedTargets, ...revisionTargets])
+      : revisionTargets.length
+        ? revisionTargets
+        : seedTargets;
     const preferredEffect = hasEffectCue
       ? selectPreferredEffect(directCueEffects, { availableEffects })
       : '';
+    const narrowedTargets = str(changeBias?.layering?.density) === 'reduce' && nextTargets.length > 1
+      ? nextTargets.slice(0, 1)
+      : nextTargets;
     return {
       ...seed,
-      targetIds: nextTargets,
+      targetIds: narrowedTargets,
       effectName: preferredEffect || str(seed?.effectName)
     };
   });
