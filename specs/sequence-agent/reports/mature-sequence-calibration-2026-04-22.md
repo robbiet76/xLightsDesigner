@@ -11,6 +11,7 @@ Record the first post-generative-loop calibration rerun against the production b
 - revision feedback mismatch bias
 - candidate shaping and selection around structured bias
 - mature-sequence window sampling
+- steady-passage progression calibration
 
 This report is about render-understanding calibration, not sequencing-policy learning.
 
@@ -63,7 +64,7 @@ This materially improved progression separation on the benchmark slice.
   - `attentionCompetition = high`
   - `occlusionRisk = medium`
   - `developmentStrength = low`
-  - `stalenessRisk = high`
+  - `stalenessRisk = medium`
 - `support`
   - `attentionSeparation = low`
   - `attentionCompetition = high`
@@ -75,13 +76,14 @@ This materially improved progression separation on the benchmark slice.
   - `attentionCompetition = high`
   - `occlusionRisk = high`
   - `developmentStrength = medium`
-  - `stalenessRisk = medium`
+  - `stalenessRisk = low`
 
 Interpretation:
 
 - composition still reads as highly contested across all three windows
 - progression is no longer collapsed
 - the support window now separates clearly from the opening and peak windows
+- opening and peak no longer over-read as stagnant simply because their development signal is not maximal
 
 ### `HolidayRoad`
 
@@ -90,7 +92,7 @@ Interpretation:
   - `attentionCompetition = medium`
   - `occlusionRisk = medium`
   - `developmentStrength = medium`
-  - `stalenessRisk = medium`
+  - `stalenessRisk = low`
 - `support`
   - `attentionSeparation = medium`
   - `attentionCompetition = medium`
@@ -107,7 +109,9 @@ Interpretation:
 Interpretation:
 
 - composition reads consistently and plausibly as a stable weighted structure
-- progression no longer collapses to `low/high`, but it may now be too centered on `medium`
+- progression no longer collapses to `low/high`
+- the opening window now reads as steady but still valid instead of artificial stagnation
+- support and peak remain centered on `medium`, which is acceptable for now but still worth watching
 - this sequence remains the best benchmark for distinguishing intentional steadiness from true temporal underdevelopment
 
 ### `CozyLittleChristmas`
@@ -117,13 +121,13 @@ Interpretation:
   - `attentionCompetition = high`
   - `occlusionRisk = medium`
   - `developmentStrength = medium`
-  - `stalenessRisk = medium`
+  - `stalenessRisk = low`
 - `support`
   - `attentionSeparation = low`
   - `attentionCompetition = medium`
   - `occlusionRisk = medium`
   - `developmentStrength = low`
-  - `stalenessRisk = high`
+  - `stalenessRisk = medium`
 - `peak`
   - `attentionSeparation = low`
   - `attentionCompetition = high`
@@ -134,14 +138,16 @@ Interpretation:
 Interpretation:
 
 - broad-scene behavior is no longer being confused with automatic occlusion at peak
-- support and peak still read as temporally underdeveloped
+- support still reads as underdeveloped, but no longer as aggressively stagnant
+- peak still reads as the clearest temporal weak spot in this slice
 - that may be partly true, but this benchmark still needs human review before further progression tuning
 
 ## What Improved
 
 1. progression calibration is materially more credible after broad-window sampling
-2. the benchmark no longer collapses most windows into `developmentStrength = low`
-3. composition reads remain structurally differentiated:
+2. steady single-window passages no longer map as directly to stagnation
+3. the benchmark no longer collapses most windows into `developmentStrength = low`
+4. composition reads remain structurally differentiated:
    - `HolidayRoad` stays more stable and weighted
    - `CarolOfTheBells` stays more contested
    - `CozyLittleChristmas / peak` stays broad without automatic crowding
@@ -149,9 +155,9 @@ Interpretation:
 ## Remaining Gaps
 
 1. mature-sequence progression still lacks enough nuance around intentionally steady passages
-2. `HolidayRoad` may now be over-centered on `medium/medium` across all three windows
+2. `HolidayRoad` support/peak may still be slightly over-centered on `medium/medium`
 3. `CarolOfTheBells` composition may still overstate contested attention in some windows
-4. the benchmark workflow needs a committed consolidated runner so this rerun does not rely on ad hoc shell orchestration
+4. the benchmark workflow is now repeatable, but the report should eventually be generated directly from the runner output
 
 ## Decision
 
@@ -166,6 +172,6 @@ for multi-second benchmark windows when evaluating progression or section-level 
 ## Next Direction
 
 1. keep broad-window sampling as the default mature-sequence audit contract
-2. use `HolidayRoad` to tune steady-but-valid progression reads
+2. use `HolidayRoad` to tune steady-but-valid progression reads further if support/peak remain too centered
 3. use `CarolOfTheBells` to test whether composition attention-competition is overfiring
-4. add a dedicated benchmark runner so calibration can be repeated without manual shell loops
+4. move from manual report updates to runner-backed report generation when the calibration vocabulary stabilizes

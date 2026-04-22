@@ -264,6 +264,15 @@ def score_development(observations, windows):
     }
 
 
+def summarize_temporal_profile(windows):
+    profiles = [strv(w.get("temporalProfile")) for w in windows if strv(w.get("temporalProfile"))]
+    if not profiles:
+        return "unknown"
+    if len(set(profiles)) == 1:
+        return profiles[0]
+    return "mixed"
+
+
 def score_repetition(windows):
     if len(windows) == 1:
         only = windows[0]
@@ -326,6 +335,41 @@ def score_energy_arc(observations, windows):
     }
 
 
+def calibrate_development_block(development, repetition, energy_arc, windows):
+    development_score = float((development.get("scores") or {}).get("developmentStrength") or 0.0)
+    raw_stagnation_score = float((development.get("scores") or {}).get("stagnationRisk") or 0.0)
+    repetition_staleness_score = float((repetition.get("scores") or {}).get("stalenessRisk") or 0.0)
+    energy_shape_score = float((energy_arc.get("scores") or {}).get("energyShapeClarity") or 0.0)
+    arc_coherence_score = float((energy_arc.get("scores") or {}).get("arcCoherence") or 0.0)
+    temporal_profile = summarize_temporal_profile(windows)
+    variation_adequacy = clamp((development_score * 0.6) + (energy_shape_score * 0.25) + ((1.0 - repetition_staleness_score) * 0.15))
+
+    if len(windows) == 1:
+        steady_validity = 0.0
+        development_credit = clamp((development_score - 0.3) / 0.3)
+        if temporal_profile in {"steady", "modulated", "pulsing"}:
+            steady_validity += 0.08
+        if arc_coherence_score >= 0.66:
+            steady_validity += 0.12
+        if energy_shape_score >= 0.66:
+            steady_validity += 0.08
+        if repetition_staleness_score <= 0.5:
+            steady_validity += 0.07
+        calibrated_stagnation = clamp(((raw_stagnation_score * 0.65) + (repetition_staleness_score * 0.35)) - (steady_validity * development_credit))
+    else:
+        calibrated_stagnation = clamp((raw_stagnation_score * 0.55) + (repetition_staleness_score * 0.45))
+
+    updated = dict(development or {})
+    updated["stagnationRisk"] = classify_band(calibrated_stagnation)
+    updated["temporalProfile"] = temporal_profile
+    updated["variationAdequacy"] = classify_band(variation_adequacy)
+    scores = dict(updated.get("scores") or {})
+    scores["stagnationRisk"] = round(calibrated_stagnation, 4)
+    scores["variationAdequacy"] = round(variation_adequacy, 4)
+    updated["scores"] = scores
+    return updated
+
+
 def main():
     args = parse_args()
     if not args.observation:
@@ -335,6 +379,7 @@ def main():
     development = score_development(observations, windows)
     repetition = score_repetition(windows)
     energy_arc = score_energy_arc(observations, windows)
+    development = calibrate_development_block(development, repetition, energy_arc, windows)
 
     payload = {
         "artifactType": "progression_observation_v1",
