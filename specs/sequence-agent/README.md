@@ -39,6 +39,8 @@ These are the current operating specs for sequencing work.
 - [render-visualizer-gap-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-visualizer-gap-audit-2026-04-17.md)
 - [mature-sequence-render-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/mature-sequence-render-audit-2026-04-17.md)
 - [mature-sequence-calibration-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/mature-sequence-calibration-2026-04-22.md)
+- [production-layering-inventory-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/production-layering-inventory-2026-04-22.md)
+- [production-layering-calibration-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/production-layering-calibration-2026-04-22.md)
 - [mature-sequence-window-plan-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/mature-sequence-window-plan-v1-2026-04-17.md)
 - [composition-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/composition-observation-v1-2026-04-17.md)
 - [layering-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-observation-v1-2026-04-17.md)
