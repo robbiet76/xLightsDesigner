@@ -66,6 +66,7 @@ export function buildSequencerRevisionBrief({
   const scope = isPlainObject(objective?.scope) ? objective.scope : {};
   const feedback = isPlainObject(revisionFeedback) ? revisionFeedback : null;
   const feedbackDirection = isPlainObject(feedback?.nextDirection) ? feedback.nextDirection : {};
+  const changeBias = isPlainObject(feedbackDirection?.changeBias) ? feedbackDirection.changeBias : null;
   const requestedScope = isPlainObject(scope?.requestedScope) ? scope.requestedScope : inferRequestedScope(designHandoff);
 
   const targetScope = [...new Set([
@@ -132,6 +133,7 @@ export function buildSequencerRevisionBrief({
       ...arr(feedbackDirection?.successChecks),
       ...arr(objective?.successChecks)
     ]),
+    changeBias,
     priorPassMemory: isPlainObject(priorPassMemory) ? priorPassMemory : null,
     revisionRetryPressure: isPlainObject(revisionRetryPressure) ? revisionRetryPressure : null,
     revisionFeedback: feedback,

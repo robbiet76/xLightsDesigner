@@ -519,6 +519,106 @@ test("buildSequenceRevisionFeedback derives structured change bias from render c
   assert.equal(out.nextDirection.changeBias.layering.density, "preserve");
 });
 
+test("buildSequenceRevisionFeedback chooses broaden_support when coverage is too tight for intended spread", () => {
+  const goal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Broader field with warm distributed support." }
+  });
+  const objective = refreshSequenceRevisionObjectiveFromRenderCritique({
+    priorRevisionObjective: buildSequenceRevisionObjectiveFromArtifacts({
+      sequenceArtisticGoal: goal,
+      sequencingDesignHandoff: sampleHandoff()
+    }),
+    sequenceArtisticGoal: goal,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "MegaTree",
+        breadthRead: "tight",
+        temporalRead: "modulated"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: true,
+        missingPrimaryFocusTargets: [],
+        broadCoverageExpected: true,
+        renderUsesBroadScene: false,
+        renderCoverageTooSparse: true,
+        adjacentWindowComparisons: []
+      },
+      expected: {
+        supportTargetIds: ["Roofline", "Matrix"]
+      }
+    }
+  });
+
+  const out = buildSequenceRevisionFeedback({
+    sequenceArtisticGoal: goal,
+    sequenceRevisionObjective: objective,
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "MegaTree",
+        breadthRead: "tight",
+        temporalRead: "modulated"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: true,
+        missingPrimaryFocusTargets: [],
+        broadCoverageExpected: true,
+        renderUsesBroadScene: false,
+        renderCoverageTooSparse: true,
+        adjacentWindowComparisons: []
+      },
+      expected: {
+        supportTargetIds: ["Roofline", "Matrix"]
+      }
+    }
+  });
+
+  assert.equal(out.nextDirection.changeBias.composition.mismatch, true);
+  assert.equal(out.nextDirection.changeBias.composition.targetShape, "broaden_support");
+  assert.equal(out.nextDirection.changeBias.progression.temporalVariation, "preserve");
+  assert.equal(out.nextDirection.changeBias.layering.separation, "clarify");
+});
+
+test("buildSequenceRevisionFeedback chooses redistribute_scene for imbalanced scenes without focus loss", () => {
+  const goal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Balanced moderate scene." }
+  });
+  const objective = buildSequenceRevisionObjectiveFromArtifacts({
+    sequenceArtisticGoal: goal,
+    sequencingDesignHandoff: sampleHandoff()
+  });
+
+  const out = buildSequenceRevisionFeedback({
+    sequenceArtisticGoal: goal,
+    sequenceRevisionObjective: objective,
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "MegaTree",
+        breadthRead: "moderate",
+        temporalRead: "evolving"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: true,
+        missingPrimaryFocusTargets: [],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: false,
+        renderIsLeftRightImbalanced: true,
+        adjacentWindowComparisons: []
+      },
+      expected: {
+        supportTargetIds: ["Roofline"]
+      }
+    }
+  });
+
+  assert.equal(out.nextDirection.changeBias.composition.mismatch, true);
+  assert.equal(out.nextDirection.changeBias.composition.targetShape, "redistribute_scene");
+  assert.equal(out.nextDirection.changeBias.progression.temporalVariation, "preserve");
+  assert.equal(out.nextDirection.changeBias.layering.density, "preserve");
+});
+
 test("buildSequenceArtisticGoalFromDesignHandoff marks selected sections as timing-track scoped section work", () => {
   const out = buildSequenceArtisticGoalFromDesignHandoff({
     sequencingDesignHandoff: sampleHandoff()

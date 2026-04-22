@@ -317,6 +317,9 @@ function deriveRevisionChangeBias({
     ...arr(revisionObjective?.sequencerDirection?.revisionRoles)
   ]);
   const reasons = uniqueStrings(rejectionReasons);
+  const breadthRead = str(observed.breadthRead);
+  const temporalRead = str(observed.temporalRead);
+  const adjacentWindowComparisons = arr(comparison.adjacentWindowComparisons);
 
   const compositionMismatch = (
     !comparison.leadMatchesPrimaryFocus
@@ -330,34 +333,81 @@ function deriveRevisionChangeBias({
     || reasons.some((row) => /\b(display gaps|scene spread|scene breadth|balance|primary focus|focus targets)\b/i.test(String(row)))
   );
   const progressionMismatch = (
-    str(observed.temporalRead) === "flat"
-    || arr(comparison.adjacentWindowComparisons).some((row) => row?.windowsReadSimilarly || row?.sameLeadModel)
+    temporalRead === "flat"
+    || adjacentWindowComparisons.some((row) => row?.windowsReadSimilarly || row?.sameLeadModel)
     || reasons.some((row) => /\b(section development|adjacent sampled sections|section hierarchy)\b/i.test(String(row)))
   );
-  const layeringMismatch = (
+  const supportUnderused = breadthRead === "tight" && arr(renderCritiqueContext?.expected?.supportTargetIds).length > 0 && !comparison.localizedFocusExpected;
+  const needsBroaderCoverage = (
+    (comparison.broadCoverageExpected && !comparison.renderUsesBroadScene)
+    || comparison.renderCoverageTooSparse
+    || comparison.renderHasProblematicGaps
+    || supportUnderused
+  );
+  const needsNarrowerFocus = (
+    ((!comparison.leadMatchesPrimaryFocus || arr(comparison.missingPrimaryFocusTargets).length > 0) && !comparison.broadCoverageExpected)
+    || (!comparison.localizedFocusExpected && comparison.renderUsesBroadScene && !comparison.broadCoverageExpected)
+    || comparison.renderCoverageTooBroad
+    || (!comparison.leadMatchesPrimaryFocus && comparison.renderUsesBroadScene)
+    || (arr(comparison.missingPrimaryFocusTargets).length > 0 && comparison.renderUsesBroadScene)
+  );
+  const needsRedistribution = (
+    !needsNarrowerFocus
+    && !needsBroaderCoverage
+    && (
+      comparison.renderIsLeftRightImbalanced
+      || comparison.renderIsTopBottomImbalanced
+      || (!comparison.localizedFocusExpected && comparison.renderUsesBroadScene)
+    )
+  );
+  const needsMoreTemporalVariation = (
+    temporalRead === "flat"
+    || adjacentWindowComparisons.some((row) => row?.windowsReadSimilarly)
+    || adjacentWindowComparisons.every((row) => row?.sameLeadModel) && adjacentWindowComparisons.length > 0
+  );
+  const layeringNeedsDensityReduction = (
     revisionRoles.includes("reduce_competing_support")
+    || comparison.renderCoverageTooBroad
+    || (!comparison.localizedFocusExpected && comparison.renderUsesBroadScene)
+  );
+  const layeringNeedsSeparationIncrease = (
+    revisionRoles.includes("reduce_competing_support")
+    || reasons.some((row) => /\bmask|obscur\b/i.test(String(row)))
+  );
+  const layeringNeedsClarification = (
+    !layeringNeedsSeparationIncrease
+    && (
+      supportUnderused
+      || arr(comparison.missingPrimaryFocusTargets).length > 0
+      || reasons.some((row) => /\bsupport targets are not contributing enough\b/i.test(String(row)))
+    )
+  );
+  const layeringMismatch = (
+    layeringNeedsDensityReduction
+    || layeringNeedsSeparationIncrease
+    || layeringNeedsClarification
     || reasons.some((row) => /\b(layer|mask|obscur|support targets are not contributing enough)\b/i.test(String(row)))
   );
 
   return {
     composition: {
       mismatch: compositionMismatch,
-      targetShape: !comparison.leadMatchesPrimaryFocus || arr(comparison.missingPrimaryFocusTargets).length
+      targetShape: needsNarrowerFocus
         ? "narrow_focus"
-        : (comparison.renderCoverageTooSparse || str(observed.breadthRead) === "tight")
-            ? "broaden_support"
-            : compositionMismatch
-              ? "redistribute_scene"
-              : "preserve"
+        : needsBroaderCoverage
+          ? "broaden_support"
+          : needsRedistribution
+            ? "redistribute_scene"
+            : "preserve"
     },
     progression: {
       mismatch: progressionMismatch,
-      temporalVariation: progressionMismatch ? "increase" : "preserve"
+      temporalVariation: needsMoreTemporalVariation ? "increase" : "preserve"
     },
     layering: {
       mismatch: layeringMismatch,
-      separation: revisionRoles.includes("reduce_competing_support") ? "increase" : layeringMismatch ? "clarify" : "preserve",
-      density: revisionRoles.includes("reduce_competing_support") ? "reduce" : "preserve"
+      separation: layeringNeedsSeparationIncrease ? "increase" : layeringNeedsClarification ? "clarify" : "preserve",
+      density: layeringNeedsDensityReduction ? "reduce" : "preserve"
     }
   };
 }

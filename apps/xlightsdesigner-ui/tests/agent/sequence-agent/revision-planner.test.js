@@ -123,7 +123,22 @@ test("buildSequencerRevisionBrief prefers revision feedback direction when prese
         executionObjective: "Strengthen MegaTree lead and reduce competing support.",
         revisionRoles: ["strengthen_lead", "reduce_competing_support"],
         targetIds: ["MegaTree", "Roofline"],
-        successChecks: ["Rendered composition issue addressed: focus restored."]
+        successChecks: ["Rendered composition issue addressed: focus restored."],
+        changeBias: {
+          composition: {
+            mismatch: true,
+            targetShape: "narrow_focus"
+          },
+          progression: {
+            mismatch: false,
+            temporalVariation: "preserve"
+          },
+          layering: {
+            mismatch: true,
+            separation: "increase",
+            density: "reduce"
+          }
+        }
       }
     }
   });
@@ -134,5 +149,7 @@ test("buildSequencerRevisionBrief prefers revision feedback direction when prese
   assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline"]);
   assert.deepEqual(out.focusTargets, ["MegaTree", "Roofline"]);
   assert.ok(out.successChecks.includes("Rendered composition issue addressed: focus restored."));
+  assert.equal(out.changeBias.composition.targetShape, "narrow_focus");
+  assert.equal(out.changeBias.layering.separation, "increase");
   assert.match(out.summary, /Rendered lead does not match the intended primary focus/i);
 });
