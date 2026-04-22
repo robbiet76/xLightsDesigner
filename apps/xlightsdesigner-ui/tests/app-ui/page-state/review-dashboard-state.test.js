@@ -175,7 +175,13 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
             },
             effectStrategy: {
               selectedCandidateId: "candidate-focused",
-              selectedCandidateSummary: "Focused alternate."
+              selectedCandidateSummary: "Focused alternate.",
+              seedRecommendations: [
+                {
+                  effectName: "Color Wash",
+                  targetIds: ["Snowman"]
+                }
+              ]
             },
             candidateSelectionContext: {
               phase: "review",
@@ -244,6 +250,10 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.mode, "bounded_exploration");
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.choice.chosenCandidateId, "candidate-focused");
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.selectedBandIds, ["candidate-focused", "candidate-base"]);
+  assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentEffectNames, ["Color Wash"]);
+  assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentTargetIds, ["Snowman"]);
+  assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.introducedEffectNames, ["Color Wash"]);
+  assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.introducedTargetIds, ["Snowman"]);
   assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.expected.requestedScope.mode, "section_target_refinement");
   assert.equal(dashboard.data.lastAppliedSnapshot.sequenceArtisticGoal.scope.goalLevel, "section");
@@ -256,6 +266,10 @@ test("review dashboard state exposes current generative sequencing summary from 
       proposed: ["Chorus 1 / Snowman / add Color Wash"],
       agentPlan: {
         metadata: {
+          priorPassMemory: {
+            previousEffectNames: ["Shimmer"],
+            previousTargetIds: ["MegaTree"]
+          },
           intentEnvelope: {
             artifactType: "intent_envelope_v1",
             attention: { profile: "concentrated" },
@@ -286,7 +300,13 @@ test("review dashboard state exposes current generative sequencing summary from 
           },
           effectStrategy: {
             selectedCandidateId: "candidate-base",
-            selectedCandidateSummary: "Base seeded candidate."
+            selectedCandidateSummary: "Base seeded candidate.",
+            seedRecommendations: [
+              {
+                effectName: "Color Wash",
+                targetIds: ["Snowman"]
+              }
+            ]
           }
         }
       },
@@ -300,6 +320,8 @@ test("review dashboard state exposes current generative sequencing summary from 
   assert.equal(dashboard.data.currentGenerativeSummary.selection.mode, "deterministic_preview");
   assert.equal(dashboard.data.currentGenerativeSummary.choice.chosenSummary, "Base seeded candidate.");
   assert.deepEqual(dashboard.data.currentGenerativeSummary.candidates.candidateIds, ["candidate-base", "candidate-alternate"]);
+  assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedEffectNames, ["Color Wash"]);
+  assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedTargetIds, ["Snowman"]);
 });
 
 test("review dashboard state falls back to intent handoff execution strategy for grouped rows", () => {

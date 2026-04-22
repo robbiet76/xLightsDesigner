@@ -489,6 +489,18 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const generativeUnresolvedSignals = Array.isArray(generativeSummary?.choice?.unresolvedSignals)
       ? generativeSummary.choice.unresolvedSignals.filter(Boolean).slice(0, 4)
       : [];
+    const generativeNewEffects = Array.isArray(generativeSummary?.delta?.introducedEffectNames)
+      ? generativeSummary.delta.introducedEffectNames.filter(Boolean).slice(0, 4)
+      : [];
+    const generativeNewTargets = Array.isArray(generativeSummary?.delta?.introducedTargetIds)
+      ? generativeSummary.delta.introducedTargetIds.filter(Boolean).slice(0, 4)
+      : [];
+    const generativeCurrentEffects = Array.isArray(generativeSummary?.delta?.currentEffectNames)
+      ? generativeSummary.delta.currentEffectNames.filter(Boolean).slice(0, 4)
+      : [];
+    const generativeCurrentTargets = Array.isArray(generativeSummary?.delta?.currentTargetIds)
+      ? generativeSummary.delta.currentTargetIds.filter(Boolean).slice(0, 4)
+      : [];
     const drilldownTargets = Array.isArray(renderCritiqueContext?.comparison?.drilldownTargetIds)
       ? renderCritiqueContext.comparison.drilldownTargetIds.filter(Boolean).slice(0, 5)
       : [];
@@ -592,6 +604,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <p>Selection: ${escapeHtml(String(generativeSummary.selection?.mode || "unknown"))}${generativeSummary.selection?.phase ? ` / ${escapeHtml(String(generativeSummary.selection.phase))}` : ""}</p>
                   <p>Chosen: ${escapeHtml(String(generativeSummary.choice?.chosenCandidateId || "none"))}${generativeSummary.choice?.chosenSummary ? ` - ${escapeHtml(String(generativeSummary.choice.chosenSummary))}` : ""}</p>
                   <p>Band: ${escapeHtml(String(generativeSummary.selection?.selectedBandSize || 0))} eligible candidate${Number(generativeSummary.selection?.selectedBandSize || 0) === 1 ? "" : "s"}</p>
+                  ${generativeCurrentEffects.length ? `<p>Effects: ${escapeHtml(generativeCurrentEffects.join(", "))}</p>` : ""}
+                  ${generativeCurrentTargets.length ? `<p>Targets: ${escapeHtml(generativeCurrentTargets.join(", "))}</p>` : ""}
                   ${
                     generativeBandIds.length
                       ? `<ul>${generativeBandIds.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
@@ -602,6 +616,14 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   ${
                     generativeUnresolvedSignals.length
                       ? `<p class="banner warning">Revision pressure: ${escapeHtml(generativeUnresolvedSignals.join(", "))}</p>`
+                      : ""
+                  }
+                  ${
+                    generativeNewEffects.length || generativeNewTargets.length
+                      ? `<p class="banner impact">Delta: ${escapeHtml([
+                        generativeNewEffects.length ? `new effects ${generativeNewEffects.join(", ")}` : "",
+                        generativeNewTargets.length ? `new targets ${generativeNewTargets.join(", ")}` : ""
+                      ].filter(Boolean).join(" / "))}</p>`
                       : ""
                   }
                 `
@@ -1569,6 +1591,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     <p>Chosen: ${escapeHtml(String(currentGenerativeSummary.choice?.chosenCandidateId || "none"))}</p>
                     <p>Mode: ${escapeHtml(String(currentGenerativeSummary.selection?.mode || "unknown"))}${currentGenerativeSummary.selection?.phase ? ` / ${escapeHtml(String(currentGenerativeSummary.selection.phase))}` : ""}</p>
                     <p>Band: ${escapeHtml(String(currentGenerativeSummary.selection?.selectedBandSize || 0))} candidate${Number(currentGenerativeSummary.selection?.selectedBandSize || 0) === 1 ? "" : "s"}</p>
+                    ${Array.isArray(currentGenerativeSummary?.delta?.introducedEffectNames) && currentGenerativeSummary.delta.introducedEffectNames.length ? `<p>New effects: ${escapeHtml(currentGenerativeSummary.delta.introducedEffectNames.join(", "))}</p>` : ""}
+                    ${Array.isArray(currentGenerativeSummary?.delta?.introducedTargetIds) && currentGenerativeSummary.delta.introducedTargetIds.length ? `<p>New targets: ${escapeHtml(currentGenerativeSummary.delta.introducedTargetIds.join(", "))}</p>` : ""}
                   `
                   : "<p>No generative sequencing summary captured yet.</p>"
               }

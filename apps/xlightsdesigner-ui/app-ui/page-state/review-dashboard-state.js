@@ -10,6 +10,11 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((value) => str(value)).filter(Boolean))];
 }
 
+function differenceStrings(nextValues = [], previousValues = []) {
+  const previous = new Set(uniqueStrings(previousValues));
+  return uniqueStrings(nextValues).filter((value) => !previous.has(value));
+}
+
 function buildGenerativeSummaryFromMetadata(metadata = null) {
   if (!metadata || typeof metadata !== "object") return null;
   const intentEnvelope = metadata.intentEnvelope && typeof metadata.intentEnvelope === "object"
@@ -27,6 +32,9 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
   const effectStrategy = metadata.effectStrategy && typeof metadata.effectStrategy === "object"
     ? metadata.effectStrategy
     : null;
+  const priorPassMemory = metadata.priorPassMemory && typeof metadata.priorPassMemory === "object"
+    ? metadata.priorPassMemory
+    : null;
   const candidates = arr(realizationCandidates?.candidates).filter((row) => row && typeof row === "object");
   const selectedBandIds = uniqueStrings(candidateSelection?.selectedBand?.candidateIds).slice(0, 4);
   const chosenCandidateId = str(candidateChoice?.chosenCandidateId || effectStrategy?.selectedCandidateId);
@@ -34,6 +42,17 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
     ? candidates.find((row) => str(row?.candidateId) === chosenCandidateId)
     : null;
   const chosenSummary = str(effectStrategy?.selectedCandidateSummary || chosenCandidate?.summary);
+  const chosenSeedRecommendations = arr(chosenCandidate?.seedRecommendations).filter((row) => row && typeof row === "object");
+  const currentEffectNames = uniqueStrings(
+    chosenSeedRecommendations.length
+      ? chosenSeedRecommendations.map((row) => row?.effectName)
+      : arr(effectStrategy?.seedRecommendations).map((row) => row?.effectName)
+  );
+  const currentTargetIds = uniqueStrings(
+    chosenSeedRecommendations.length
+      ? chosenSeedRecommendations.flatMap((row) => arr(row?.targetIds))
+      : arr(effectStrategy?.seedRecommendations).flatMap((row) => arr(row?.targetIds))
+  );
   const selectionMode = str(candidateChoice?.selectionMode || candidateSelection?.policy?.mode);
   const phase = str(candidateSelection?.policy?.phase || metadata.candidateSelectionContext?.phase);
   const unresolvedSignals = uniqueStrings(metadata.candidateSelectionContext?.unresolvedSignals).slice(0, 5);
@@ -62,6 +81,14 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
       chosenSummary,
       selectedFromBand: Boolean(candidateChoice?.selectedFromBand),
       unresolvedSignals
+    },
+    delta: {
+      currentEffectNames: currentEffectNames.slice(0, 5),
+      currentTargetIds: currentTargetIds.slice(0, 5),
+      previousEffectNames: uniqueStrings(priorPassMemory?.previousEffectNames).slice(0, 5),
+      previousTargetIds: uniqueStrings(priorPassMemory?.previousTargetIds).slice(0, 5),
+      introducedEffectNames: differenceStrings(currentEffectNames, priorPassMemory?.previousEffectNames).slice(0, 5),
+      introducedTargetIds: differenceStrings(currentTargetIds, priorPassMemory?.previousTargetIds).slice(0, 5)
     }
   };
 }
