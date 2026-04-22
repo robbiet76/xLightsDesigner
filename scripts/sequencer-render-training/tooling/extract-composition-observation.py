@@ -23,6 +23,27 @@ def classify_band(value, low=0.33, high=0.66, labels=("low", "medium", "high")):
     return labels[2]
 
 
+def top_share_metrics(model_contribution_shares):
+    shares = sorted(
+        [
+            float(value or 0.0)
+            for value in (model_contribution_shares or {}).values()
+            if float(value or 0.0) > 0.0
+        ],
+        reverse=True,
+    )
+    lead_share = shares[0] if shares else 0.0
+    second_share = shares[1] if len(shares) > 1 else 0.0
+    third_share = shares[2] if len(shares) > 2 else 0.0
+    return {
+        "leadShare": lead_share,
+        "secondShare": second_share,
+        "thirdShare": third_share,
+        "dominanceGap": max(0.0, lead_share - second_share),
+        "topThreeShare": clamp(lead_share + second_share + third_share),
+    }
+
+
 def main():
     args = parse_args()
     with open(args.observation, "r", encoding="utf-8") as handle:
@@ -37,6 +58,10 @@ def main():
     active_families = macro.get("activeFamilyTotals") or {}
     lead_model = macro.get("leadModel")
     lead_share = float(macro.get("leadModelShare") or 0.0)
+    share_metrics = top_share_metrics(macro.get("modelContributionShares") or {})
+    second_share = float(share_metrics.get("secondShare") or 0.0)
+    dominance_gap = float(share_metrics.get("dominanceGap") or 0.0)
+    top_three_share = float(share_metrics.get("topThreeShare") or 0.0)
     max_active_model_ratio = float(macro.get("maxActiveModelRatio") or 0.0)
     mean_scene_spread_ratio = float(macro.get("meanSceneSpreadRatio") or 0.0)
     distinct_leads = int(macro.get("distinctLeadModelCount") or 0)
@@ -69,12 +94,18 @@ def main():
     timing_contrast_score = clamp((brightness_delta_mean * 4.0) + (burst_ratio * 0.4) + (0.25 if temporal_read == "evolving" else 0.1 if temporal_read == "modulated" else 0.0))
     contrast_adequacy_score = clamp((coverage_contrast_score + density_contrast_score + texture_contrast_score + color_contrast_score + timing_contrast_score) / 5.0)
 
-    lead_support_separation_score = clamp((lead_share * 1.2) - (max_active_model_ratio * 0.2))
-    dominance_conflict_score = clamp((1.0 - lead_share) + (0.2 if distinct_leads > 1 else 0.0))
+    lead_support_separation_score = clamp((lead_share * 0.75) + (dominance_gap * 1.8) - (max_active_model_ratio * 0.12))
+    dominance_conflict_score = clamp(
+        (0.2 if distinct_leads <= 1 else 0.38 if distinct_leads == 2 else 0.58)
+        + (0.28 if dominance_gap < 0.04 else 0.12 if dominance_gap < 0.1 else 0.0)
+        + (0.16 if top_three_share > 0.28 else 0.06 if top_three_share > 0.18 else 0.0)
+        + (0.12 if max_active_model_ratio > 0.82 and mean_scene_spread_ratio < 0.24 else 0.0)
+        + (0.08 if second_share > 0.09 and dominance_gap < 0.03 else 0.0)
+    )
     focus_stability_score = clamp((0.8 if distinct_leads <= 1 else 0.45 if distinct_leads == 2 else 0.2) + (lead_share * 0.2))
     compactness = clamp(1.0 - min(1.0, mean_scene_spread_ratio))
     masking_risk_score = clamp((compactness * 0.55) + (max_active_model_ratio * 0.35) + (0.15 if distinct_leads > 2 and compactness > 0.5 else 0.0))
-    support_subordination_score = clamp(lead_share - (0.2 if len(active_families) > 3 else 0.0))
+    support_subordination_score = clamp((lead_share * 0.6) + (dominance_gap * 1.4) - (0.16 if len(active_families) > 3 else 0.0))
 
     motion_conflict_score = clamp((0.35 if temporal_read == "evolving" else 0.15 if temporal_read == "modulated" else 0.05) + (0.25 if burst_ratio > 0.35 and hold_ratio > 0.35 else 0.0) + min(0.25, transition_sharpness * 10.0))
     motion_reinforcement_score = clamp((0.45 if temporal_read in {"evolving", "modulated"} else 0.2) + min(0.25, motion_coupling * 8.0) + (0.15 if burst_ratio > 0 and hold_ratio < 0.5 else 0.0))
