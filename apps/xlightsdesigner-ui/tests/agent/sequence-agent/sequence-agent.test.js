@@ -339,6 +339,47 @@ test("sequence_agent candidate selection switches to bounded exploration when ru
   assert.equal(typeof out.metadata.effectStrategy.selectedCandidateId, "string");
 });
 
+test("sequence_agent adds a feedback-shaped candidate when revision feedback gives new target and motion direction", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared" },
+      designerDirection: {
+        artisticCorrection: "Shift the pass toward the spiral trees."
+      },
+      sequencerDirection: {
+        executionObjective: "Use flowing spiral motion on SpiralTrees."
+      }
+    },
+    revisionFeedback: {
+      artifactType: "revision_feedback_v1",
+      status: "revise_required",
+      rejectionReasons: ["lead_mismatch"],
+      nextDirection: {
+        artisticCorrection: "Shift the pass toward the spiral trees.",
+        executionObjective: "Use flowing spiral motion on SpiralTrees.",
+        targetIds: ["SpiralTrees"]
+      }
+    },
+    sourceLines: ["Chorus 1 / MegaTree / increase pulse contrast and faster motion"],
+    baseRevision: "rev-56",
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Bars", params: [] },
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Spirals", params: [] }
+    ])
+  });
+
+  const feedbackCandidate = out.metadata.realizationCandidates.candidates.find((row) => row.candidateId === "candidate-feedback");
+  assert.ok(feedbackCandidate);
+  assert.deepEqual(feedbackCandidate.targetStrategy.primaryTargets, ["SpiralTrees"]);
+  assert.equal(feedbackCandidate.seedRecommendations[0].effectName, "Spirals");
+});
+
 test("sequence_agent plan metadata carries render validation evidence refs", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

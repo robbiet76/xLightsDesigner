@@ -1,5 +1,10 @@
 import { finalizeArtifact } from '../shared/artifact-ids.js';
-import { recommendEffectsForTargets, recommendEffectsForVisualFamilies } from '../shared/effect-semantics-registry.js';
+import {
+  recommendEffectsForTargets,
+  recommendEffectsForVisualFamilies,
+  resolveDirectCueEffectCandidates,
+  selectPreferredEffect
+} from '../shared/effect-semantics-registry.js';
 import { resolveTranslationLayer } from './translation-layer.js';
 
 function str(value = '') {
@@ -229,6 +234,47 @@ function buildCandidate({
   };
 }
 
+function buildFeedbackShapedSeeds({
+  primarySeeds = [],
+  availableEffects = null,
+  sequencerRevisionBrief = null,
+  revisionFeedback = null
+} = {}) {
+  const feedbackDirection = revisionFeedback && typeof revisionFeedback.nextDirection === 'object'
+    ? revisionFeedback.nextDirection
+    : null;
+  const revisionTargets = unique([
+    ...arr(feedbackDirection?.targetIds),
+    ...arr(sequencerRevisionBrief?.focusTargets),
+    ...arr(sequencerRevisionBrief?.revisionTargets)
+  ]);
+  const goalText = [
+    str(feedbackDirection?.executionObjective),
+    str(feedbackDirection?.artisticCorrection),
+    str(sequencerRevisionBrief?.executionObjective),
+    str(sequencerRevisionBrief?.artisticGoalSummary)
+  ].filter(Boolean).join('. ');
+  const directCueEffects = resolveDirectCueEffectCandidates({
+    goalText,
+    smoothBias: /\b(flow|flowing|restrained|smooth|gentle|soft)\b/i.test(goalText)
+  });
+  const hasTargetShift = revisionTargets.length > 0;
+  const hasEffectCue = directCueEffects.length > 0;
+  if (!hasTargetShift && !hasEffectCue) return [];
+
+  return primarySeeds.map((seed) => {
+    const nextTargets = revisionTargets.length ? revisionTargets : unique(seed?.targetIds);
+    const preferredEffect = hasEffectCue
+      ? selectPreferredEffect(directCueEffects, { availableEffects })
+      : '';
+    return {
+      ...seed,
+      targetIds: nextTargets,
+      effectName: preferredEffect || str(seed?.effectName)
+    };
+  });
+}
+
 export function buildRealizationCandidatesV1({
   intentEnvelope = null,
   effectStrategy = null,
@@ -237,7 +283,8 @@ export function buildRealizationCandidatesV1({
   effectCatalog = null,
   translationIntent = null,
   priorPassMemory = null,
-  sequencerRevisionBrief = null
+  sequencerRevisionBrief = null,
+  revisionFeedback = null
 } = {}) {
   const seeds = arr(effectStrategy?.seedRecommendations).filter((row) => row && typeof row === 'object');
   const scopeTargets = unique(scope?.targetIds);
@@ -314,7 +361,28 @@ export function buildRealizationCandidatesV1({
     sequencerRevisionBrief
   });
 
-  const candidates = [baseCandidate, focusedCandidate, alternateCandidate]
+  const feedbackSeeds = buildFeedbackShapedSeeds({
+    primarySeeds,
+    availableEffects,
+    sequencerRevisionBrief,
+    revisionFeedback
+  });
+  const feedbackCandidate = feedbackSeeds.length
+    ? buildCandidate({
+        id: 'candidate-feedback',
+        summary: 'Feedback-shaped candidate aligned to the current revision direction.',
+        seeds: feedbackSeeds,
+        scopeTargets,
+        intentEnvelope,
+        noveltyScore: 0.68,
+        riskBias: 'medium',
+        priorPassMemory,
+        sequencerRevisionBrief
+      })
+    : null;
+
+  const candidates = [baseCandidate, focusedCandidate, alternateCandidate, feedbackCandidate]
+    .filter(Boolean)
     .filter((row, index, list) => list.findIndex((other) => JSON.stringify(other.realizationRefs) === JSON.stringify(row.realizationRefs)) === index);
 
   return finalizeArtifact({

@@ -1499,7 +1499,8 @@ export function buildSequenceAgentPlan({
     effectCatalog,
     translationIntent: scope?.executionStrategy?.translationIntent,
     priorPassMemory,
-    sequencerRevisionBrief
+    sequencerRevisionBrief,
+    revisionFeedback
   });
   const candidateSelection = buildCandidateSelectionV1({
     intentEnvelope,
