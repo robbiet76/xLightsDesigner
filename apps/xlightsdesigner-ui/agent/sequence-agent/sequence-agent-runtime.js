@@ -28,6 +28,7 @@ export function buildSequenceAgentInput({
   planningScope = null,
   renderValidationEvidence = null,
   revisionRetryPressure = null,
+  revisionFeedback = null,
   candidateSelectionContext = null,
   timingOwnership = [],
   manualXdLocks = [],
@@ -65,6 +66,9 @@ export function buildSequenceAgentInput({
       : null,
     revisionRetryPressure: revisionRetryPressure && typeof revisionRetryPressure === "object" && !Array.isArray(revisionRetryPressure)
       ? revisionRetryPressure
+      : null,
+    revisionFeedback: revisionFeedback && typeof revisionFeedback === "object" && !Array.isArray(revisionFeedback)
+      ? revisionFeedback
       : null,
     candidateSelectionContext: candidateSelectionContext && typeof candidateSelectionContext === "object" && !Array.isArray(candidateSelectionContext)
       ? candidateSelectionContext

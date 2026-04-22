@@ -295,6 +295,33 @@ test("sequence agent input preserves revision retry pressure artifact", () => {
   assert.deepEqual(input.revisionRetryPressure.signals, ["low_change_retry"]);
 });
 
+test("sequence agent input preserves revision feedback artifact", () => {
+  const input = buildSequenceAgentInput({
+    requestId: "req-revision-feedback",
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    sequenceRevision: "rev-1",
+    sequenceSettings: {},
+    layoutMode: "2d",
+    displayElements: [],
+    groupIds: [],
+    groupsById: {},
+    submodelsById: {},
+    intentHandoff: { artifactType: "intent_handoff_v1" },
+    safety: {
+      timingOwnership: [],
+      manualXdLocks: [],
+      allowTimingWrites: true
+    },
+    revisionFeedback: {
+      artifactType: "revision_feedback_v1",
+      rejectionReasons: ["Rendered lead does not match the intended primary focus."]
+    }
+  });
+
+  assert.equal(input.revisionFeedback.artifactType, "revision_feedback_v1");
+  assert.deepEqual(input.revisionFeedback.rejectionReasons, ["Rendered lead does not match the intended primary focus."]);
+});
+
 test("sequence agent input preserves candidate selection context", () => {
   const input = buildSequenceAgentInput({
     requestId: "req-selection",

@@ -1401,6 +1401,7 @@ export function buildSequenceAgentPlan({
   sequenceRevisionObjective = null,
   priorPassMemory = null,
   revisionRetryPressure = null,
+  revisionFeedback = null,
   sourceLines = [],
   baseRevision = "unknown",
   capabilityCommands = [],
@@ -1451,7 +1452,8 @@ export function buildSequenceAgentPlan({
     sequenceRevisionObjective,
     sequencingDesignHandoff: scope.sequencingDesignHandoff,
     priorPassMemory: priorPassMemory && typeof priorPassMemory === "object" ? priorPassMemory : null,
-    revisionRetryPressure: revisionRetryPressure && typeof revisionRetryPressure === "object" ? revisionRetryPressure : null
+    revisionRetryPressure: revisionRetryPressure && typeof revisionRetryPressure === "object" ? revisionRetryPressure : null,
+    revisionFeedback: revisionFeedback && typeof revisionFeedback === "object" ? revisionFeedback : null
   });
 
   const timing = runStage({
@@ -1590,6 +1592,7 @@ export function buildSequenceAgentPlan({
       sequenceRevisionObjective: sequenceRevisionObjective && typeof sequenceRevisionObjective === "object" ? sequenceRevisionObjective : null,
       priorPassMemory: priorPassMemory && typeof priorPassMemory === "object" ? priorPassMemory : null,
       sequencerRevisionBrief,
+      revisionFeedback: revisionFeedback && typeof revisionFeedback === "object" ? revisionFeedback : null,
       requestScopeMode: normText(sequencerRevisionBrief?.requestScopeMode),
       reviewStartLevel: normText(sequencerRevisionBrief?.reviewStartLevel),
       sectionScopeKind: normText(sequencerRevisionBrief?.sectionScopeKind),

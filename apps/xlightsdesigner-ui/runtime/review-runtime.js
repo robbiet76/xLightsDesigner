@@ -112,6 +112,11 @@ export async function executeApplyCore({
       state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
       || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
       || null;
+    const revisionFeedback =
+      state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionFeedback
+      || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionFeedback
+      || state.sequenceAgentRuntime?.revisionFeedback
+      || null;
     const sequenceAgentInput = buildSequenceAgentInput({
       requestId: `${orchestrationRun.id}-apply`,
       endpoint: state.endpoint,
@@ -129,6 +134,7 @@ export async function executeApplyCore({
       analysisHandoff,
       renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null,
       revisionRetryPressure,
+      revisionFeedback,
       candidateSelectionContext: buildCandidateSelectionContext({
         requestId: `${orchestrationRun.id}-apply`,
         phase: "review",
@@ -184,6 +190,7 @@ export async function executeApplyCore({
       sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
       renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
       revisionRetryPressure: sequenceAgentInput.revisionRetryPressure,
+      revisionFeedback: sequenceAgentInput.revisionFeedback,
       candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
       priorPassMemory,
       sourceLines,

@@ -97,3 +97,42 @@ test("buildSequencerRevisionBrief prefers retry pressure artifact signals when p
   assert.equal(out.revisionRetryPressure.artifactType, "revision_retry_pressure_v1");
   assert.match(out.summary, /oscillation_retry/i);
 });
+
+test("buildSequencerRevisionBrief prefers revision feedback direction when present", () => {
+  const out = buildSequencerRevisionBrief({
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      artisticIntent: {
+        leadTarget: "MegaTree",
+        supportTargets: ["Roofline"]
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared", revisionRoles: ["strengthen_lead"], revisionTargets: ["MegaTree"] },
+      designerDirection: { artisticCorrection: "Keep the tree dominant." },
+      sequencerDirection: { executionObjective: "Tighten the lead." },
+      successChecks: ["tree remains dominant"]
+    },
+    revisionFeedback: {
+      artifactType: "revision_feedback_v1",
+      rejectionReasons: ["Rendered lead does not match the intended primary focus."],
+      nextDirection: {
+        artisticCorrection: "Restore MegaTree as the dominant lead.",
+        executionObjective: "Strengthen MegaTree lead and reduce competing support.",
+        revisionRoles: ["strengthen_lead", "reduce_competing_support"],
+        targetIds: ["MegaTree", "Roofline"],
+        successChecks: ["Rendered composition issue addressed: focus restored."]
+      }
+    }
+  });
+
+  assert.equal(out.artisticGoalSummary, "Restore MegaTree as the dominant lead.");
+  assert.equal(out.executionObjective, "Strengthen MegaTree lead and reduce competing support.");
+  assert.deepEqual(out.revisionRoles, ["strengthen_lead", "reduce_competing_support"]);
+  assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline"]);
+  assert.deepEqual(out.focusTargets, ["MegaTree", "Roofline"]);
+  assert.ok(out.successChecks.includes("Rendered composition issue addressed: focus restored."));
+  assert.match(out.summary, /Rendered lead does not match the intended primary focus/i);
+});

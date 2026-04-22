@@ -399,6 +399,11 @@ export function createProposalGenerationRuntime(deps = {}) {
         state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
         || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
         || null;
+      const revisionFeedback =
+        state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionFeedback
+        || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionFeedback
+        || state.sequenceAgentRuntime?.revisionFeedback
+        || null;
       const sequenceAgentInput = buildSequenceAgentInput({
         requestId: `${orchestrationRun.id}-generate`,
         endpoint: state.endpoint,
@@ -416,6 +421,7 @@ export function createProposalGenerationRuntime(deps = {}) {
         analysisHandoff,
         renderValidationEvidence: state.agentPlan?.handoff?.metadata?.renderValidationEvidence || null,
         revisionRetryPressure,
+        revisionFeedback,
         candidateSelectionContext: buildCandidateSelectionContext({
           requestId: `${orchestrationRun.id}-generate`,
           phase: "proposal",
@@ -455,6 +461,7 @@ export function createProposalGenerationRuntime(deps = {}) {
           sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
           renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
           revisionRetryPressure: sequenceAgentInput.revisionRetryPressure,
+          revisionFeedback: sequenceAgentInput.revisionFeedback,
           candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
           priorPassMemory,
           sourceLines: proposalSeedLines,

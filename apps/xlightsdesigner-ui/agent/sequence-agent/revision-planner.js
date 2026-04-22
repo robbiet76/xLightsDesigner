@@ -51,7 +51,8 @@ export function buildSequencerRevisionBrief({
   sequenceRevisionObjective = null,
   sequencingDesignHandoff = null,
   priorPassMemory = null,
-  revisionRetryPressure = null
+  revisionRetryPressure = null,
+  revisionFeedback = null
 } = {}) {
   const objective = isPlainObject(sequenceRevisionObjective) ? sequenceRevisionObjective : null;
   const artisticGoal = isPlainObject(sequenceArtisticGoal) ? sequenceArtisticGoal : null;
@@ -63,9 +64,12 @@ export function buildSequencerRevisionBrief({
   const sequencerDirection = isPlainObject(objective?.sequencerDirection) ? objective.sequencerDirection : {};
   const artisticIntent = isPlainObject(artisticGoal?.artisticIntent) ? artisticGoal.artisticIntent : {};
   const scope = isPlainObject(objective?.scope) ? objective.scope : {};
+  const feedback = isPlainObject(revisionFeedback) ? revisionFeedback : null;
+  const feedbackDirection = isPlainObject(feedback?.nextDirection) ? feedback.nextDirection : {};
   const requestedScope = isPlainObject(scope?.requestedScope) ? scope.requestedScope : inferRequestedScope(designHandoff);
 
   const targetScope = [...new Set([
+    ...arr(feedbackDirection?.targetIds),
     ...arr(sequencerDirection?.focusTargets),
     ...arr(scope?.revisionTargets),
     ...arr(designHandoff?.scope?.targetIds)
@@ -79,14 +83,18 @@ export function buildSequencerRevisionBrief({
   );
 
   const summaryParts = [
-    str(designerDirection.artisticCorrection),
-    str(sequencerDirection.executionObjective),
+    str(feedbackDirection.artisticCorrection || designerDirection.artisticCorrection),
+    str(feedbackDirection.executionObjective || sequencerDirection.executionObjective),
     arr(priorPassMemory?.unresolvedSignals).length
       ? `Carry forward unresolved prior-pass signals: ${arr(priorPassMemory.unresolvedSignals).join(", ")}.`
       : ""
     ,
     retryPressureSignals.length
       ? `Retry pressure: ${retryPressureSignals.join(", ")}.`
+      : ""
+    ,
+    arr(feedback?.rejectionReasons).length
+      ? `Revision feedback: ${arr(feedback.rejectionReasons).join(", ")}.`
       : ""
   ].filter(Boolean);
 
@@ -98,22 +106,35 @@ export function buildSequencerRevisionBrief({
     requestScopeMode: str(requestedScope.mode),
     reviewStartLevel: str(scope.reviewStartLevel || requestedScope.reviewStartLevel),
     sectionScopeKind: str(requestedScope.sectionScopeKind),
-    artisticGoalSummary: str(designerDirection.artisticCorrection || artisticGoal?.evaluationLens?.comparisonQuestions?.[0]),
-    executionObjective: str(sequencerDirection.executionObjective),
+    artisticGoalSummary: str(feedbackDirection.artisticCorrection || designerDirection.artisticCorrection || artisticGoal?.evaluationLens?.comparisonQuestions?.[0]),
+    executionObjective: str(feedbackDirection.executionObjective || sequencerDirection.executionObjective),
     leadTarget: str(artisticIntent.leadTarget),
     supportTargets: arr(artisticIntent.supportTargets),
     sectionArc: str(artisticIntent.sectionArc),
     motionCharacter: str(artisticIntent.motionCharacter),
     densityCharacter: str(artisticIntent.densityCharacter),
     targetScope,
-    revisionRoles: arr(scope?.revisionRoles),
-    revisionTargets: arr(scope?.revisionTargets),
-    focusTargets: arr(sequencerDirection?.focusTargets),
+    revisionRoles: uniqueStrings([
+      ...arr(feedbackDirection?.revisionRoles),
+      ...arr(scope?.revisionRoles)
+    ]),
+    revisionTargets: uniqueStrings([
+      ...arr(feedbackDirection?.targetIds),
+      ...arr(scope?.revisionTargets)
+    ]),
+    focusTargets: uniqueStrings([
+      ...arr(feedbackDirection?.targetIds),
+      ...arr(sequencerDirection?.focusTargets)
+    ]),
     sectionScope,
     blockedMoves: arr(sequencerDirection.blockedMoves),
-    successChecks: arr(objective?.successChecks),
+    successChecks: uniqueStrings([
+      ...arr(feedbackDirection?.successChecks),
+      ...arr(objective?.successChecks)
+    ]),
     priorPassMemory: isPlainObject(priorPassMemory) ? priorPassMemory : null,
     revisionRetryPressure: isPlainObject(revisionRetryPressure) ? revisionRetryPressure : null,
+    revisionFeedback: feedback,
     retryPressureSignals,
     summary: summaryParts.join(" "),
   };
