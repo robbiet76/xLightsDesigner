@@ -15,7 +15,7 @@ function differenceStrings(nextValues = [], previousValues = []) {
   return uniqueStrings(nextValues).filter((value) => !previous.has(value));
 }
 
-function buildGenerativeSummaryFromMetadata(metadata = null) {
+export function buildGenerativeSummaryFromMetadata(metadata = null) {
   if (!metadata || typeof metadata !== "object") return null;
   const intentEnvelope = metadata.intentEnvelope && typeof metadata.intentEnvelope === "object"
     ? metadata.intentEnvelope
@@ -37,6 +37,9 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
     : null;
   const revisionRetryPressure = metadata.revisionRetryPressure && typeof metadata.revisionRetryPressure === "object"
     ? metadata.revisionRetryPressure
+    : null;
+  const revisionFeedback = metadata.revisionFeedback && typeof metadata.revisionFeedback === "object"
+    ? metadata.revisionFeedback
     : null;
   const priorPassMemory = metadata.priorPassMemory && typeof metadata.priorPassMemory === "object"
     ? metadata.priorPassMemory
@@ -113,6 +116,14 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
       artifactId: str(revisionRetryPressure?.artifactId),
       signals: retryPressureSignals,
       oscillatingCandidateIds
+    },
+    feedback: {
+      artifactType: str(revisionFeedback?.artifactType || "revision_feedback_v1"),
+      artifactId: str(revisionFeedback?.artifactId),
+      status: str(revisionFeedback?.status || "unknown"),
+      rejectionReasons: uniqueStrings(revisionFeedback?.rejectionReasons).slice(0, 5),
+      executionObjective: str(revisionFeedback?.nextDirection?.executionObjective),
+      artisticCorrection: str(revisionFeedback?.nextDirection?.artisticCorrection)
     }
   };
 }

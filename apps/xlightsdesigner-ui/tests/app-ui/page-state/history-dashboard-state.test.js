@@ -40,7 +40,27 @@ test("history dashboard summarizes selected applied revision", () => {
           creativeBrief: { summary: "Warm focal chorus", goals: ["Keep Snowman leading"] },
           proposalBundle: { proposalLines: ["Chorus 1 / Snowman / warm focal lift"] },
           applyResult: { status: "completed", commandCount: 4, impactCount: 2 },
-          planHandoff: { metadata: { priorPassMemory: { unresolvedSignals: ["lead_mismatch"] } } },
+          planHandoff: {
+            metadata: {
+              priorPassMemory: { unresolvedSignals: ["lead_mismatch"] },
+              intentEnvelope: {
+                artifactType: "intent_envelope_v1",
+                attention: { profile: "concentrated" },
+                temporal: { profile: "steady" },
+                spatial: { footprint: "moderate" },
+                texture: { profile: "soft" }
+              },
+              revisionFeedback: {
+                artifactType: "revision_feedback_v1",
+                artifactId: "feedback-1",
+                status: "revise_required",
+                rejectionReasons: ["lead_mismatch"],
+                nextDirection: {
+                  executionObjective: "Restore Snowman as the clear focal element."
+                }
+              }
+            }
+          },
           analysisArtifact: { trackIdentity: { title: "Song" } },
           designSceneContext: { layoutMode: "2d" },
           musicDesignContext: { summary: "Intro hold, chorus reveal." },
@@ -60,6 +80,10 @@ test("history dashboard summarizes selected applied revision", () => {
   assert.equal(dashboard.data.selected.audioTitle, "Song");
   assert.equal(dashboard.data.selected.renderObservation.macro.leadModel, "Snowman");
   assert.deepEqual(dashboard.data.selected.planHandoff.metadata.priorPassMemory.unresolvedSignals, ["lead_mismatch"]);
+  assert.equal(dashboard.data.selected.generativeSummary.feedback.artifactType, "revision_feedback_v1");
+  assert.equal(dashboard.data.selected.generativeSummary.feedback.status, "revise_required");
+  assert.deepEqual(dashboard.data.selected.generativeSummary.feedback.rejectionReasons, ["lead_mismatch"]);
+  assert.equal(dashboard.data.selected.generativeSummary.feedback.executionObjective, "Restore Snowman as the clear focal element.");
   assert.equal(dashboard.data.selected.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(dashboard.data.selected.sequenceArtisticGoal.scope.goalLevel, "section");
   assert.equal(dashboard.data.selected.sequenceRevisionObjective.ladderLevel, "section");

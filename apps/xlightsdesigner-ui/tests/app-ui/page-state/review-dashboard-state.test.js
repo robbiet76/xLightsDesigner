@@ -210,6 +210,16 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
                 candidateIds: ["candidate-base"]
               }
             },
+            revisionFeedback: {
+              artifactType: "revision_feedback_v1",
+              artifactId: "feedback-1",
+              status: "revise_required",
+              rejectionReasons: ["lead_mismatch", "low_change_retry"],
+              nextDirection: {
+                artisticCorrection: "Restore MegaTree as the dominant lead.",
+                executionObjective: "Strengthen MegaTree lead and reduce competing support."
+              }
+            },
             candidateSelectionContext: {
               phase: "review",
               unresolvedSignals: ["weak_section_contrast"],
@@ -279,9 +289,13 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.choice.chosenCandidateId, "candidate-focused");
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.artifactType, "revision_delta_v1");
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.retry.artifactType, "revision_retry_pressure_v1");
+  assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.feedback.artifactType, "revision_feedback_v1");
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.selectedBandIds, ["candidate-focused", "candidate-base"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.choice.retryPressureSignals, ["low_change_retry"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.retry.oscillatingCandidateIds, ["candidate-base"]);
+  assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.feedback.status, "revise_required");
+  assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.feedback.rejectionReasons, ["lead_mismatch", "low_change_retry"]);
+  assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.feedback.executionObjective, "Strengthen MegaTree lead and reduce competing support.");
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentTargetIds, ["Snowman"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.introducedEffectNames, ["Color Wash"]);
@@ -367,6 +381,15 @@ test("review dashboard state exposes current generative sequencing summary from 
               candidateIds: ["candidate-alternate"]
             }
           },
+          revisionFeedback: {
+            artifactType: "revision_feedback_v1",
+            artifactId: "feedback-2",
+            status: "revise_required",
+            rejectionReasons: ["weak_section_contrast"],
+            nextDirection: {
+              executionObjective: "Increase contrast between lead and support."
+            }
+          },
           candidateSelectionContext: {
             phase: "plan",
             retryPressureSignals: ["low_change_retry"]
@@ -384,9 +407,13 @@ test("review dashboard state exposes current generative sequencing summary from 
   assert.equal(dashboard.data.currentGenerativeSummary.choice.chosenSummary, "Base seeded candidate.");
   assert.equal(dashboard.data.currentGenerativeSummary.delta.artifactType, "revision_delta_v1");
   assert.equal(dashboard.data.currentGenerativeSummary.retry.artifactType, "revision_retry_pressure_v1");
+  assert.equal(dashboard.data.currentGenerativeSummary.feedback.artifactType, "revision_feedback_v1");
   assert.deepEqual(dashboard.data.currentGenerativeSummary.candidates.candidateIds, ["candidate-base", "candidate-alternate"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.choice.retryPressureSignals, ["low_change_retry"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.retry.oscillatingCandidateIds, ["candidate-alternate"]);
+  assert.equal(dashboard.data.currentGenerativeSummary.feedback.status, "revise_required");
+  assert.deepEqual(dashboard.data.currentGenerativeSummary.feedback.rejectionReasons, ["weak_section_contrast"]);
+  assert.equal(dashboard.data.currentGenerativeSummary.feedback.executionObjective, "Increase contrast between lead and support.");
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedTargetIds, ["Snowman"]);
 });

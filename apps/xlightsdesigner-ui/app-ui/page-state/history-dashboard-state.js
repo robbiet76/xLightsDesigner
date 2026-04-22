@@ -1,3 +1,5 @@
+import { buildGenerativeSummaryFromMetadata } from "./review-dashboard-state.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -99,6 +101,7 @@ export function buildHistoryDashboardState({
             renderCritiqueContext: selectedSnapshot?.renderCritiqueContext || null,
             sequenceArtisticGoal: selectedSnapshot?.sequenceArtisticGoal || null,
             sequenceRevisionObjective: selectedSnapshot?.sequenceRevisionObjective || null,
+            generativeSummary: buildGenerativeSummaryFromMetadata(selectedSnapshot?.planHandoff?.metadata || null),
             artifactRefs: selected?.artifactRefs || null
           }
         : null

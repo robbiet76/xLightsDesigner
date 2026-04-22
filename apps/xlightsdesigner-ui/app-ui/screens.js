@@ -495,6 +495,12 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const generativeOscillatingCandidateIds = Array.isArray(generativeSummary?.retry?.oscillatingCandidateIds)
       ? generativeSummary.retry.oscillatingCandidateIds.filter(Boolean).slice(0, 4)
       : [];
+    const generativeFeedbackReasons = Array.isArray(generativeSummary?.feedback?.rejectionReasons)
+      ? generativeSummary.feedback.rejectionReasons.filter(Boolean).slice(0, 4)
+      : [];
+    const generativeFeedbackStatus = String(generativeSummary?.feedback?.status || "").trim();
+    const generativeFeedbackObjective = String(generativeSummary?.feedback?.executionObjective || "").trim();
+    const generativeFeedbackCorrection = String(generativeSummary?.feedback?.artisticCorrection || "").trim();
     const generativeNewEffects = Array.isArray(generativeSummary?.delta?.introducedEffectNames)
       ? generativeSummary.delta.introducedEffectNames.filter(Boolean).slice(0, 4)
       : [];
@@ -632,6 +638,26 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   ${
                     generativeOscillatingCandidateIds.length
                       ? `<p class="banner">Avoiding oscillation: ${escapeHtml(generativeOscillatingCandidateIds.join(", "))}</p>`
+                      : ""
+                  }
+                  ${
+                    generativeFeedbackStatus
+                      ? `<p>Feedback: ${escapeHtml(generativeFeedbackStatus)}</p>`
+                      : ""
+                  }
+                  ${
+                    generativeFeedbackReasons.length
+                      ? `<p class="banner warning">Reasons: ${escapeHtml(generativeFeedbackReasons.join(", "))}</p>`
+                      : ""
+                  }
+                  ${
+                    generativeFeedbackObjective
+                      ? `<p>Next move: ${escapeHtml(generativeFeedbackObjective)}</p>`
+                      : ""
+                  }
+                  ${
+                    generativeFeedbackCorrection
+                      ? `<p>Correction: ${escapeHtml(generativeFeedbackCorrection)}</p>`
                       : ""
                   }
                   ${
@@ -1611,6 +1637,9 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     ${Array.isArray(currentGenerativeSummary?.delta?.introducedTargetIds) && currentGenerativeSummary.delta.introducedTargetIds.length ? `<p>New targets: ${escapeHtml(currentGenerativeSummary.delta.introducedTargetIds.join(", "))}</p>` : ""}
                     ${Array.isArray(currentGenerativeSummary?.choice?.retryPressureSignals) && currentGenerativeSummary.choice.retryPressureSignals.length ? `<p>Retry pressure: ${escapeHtml(currentGenerativeSummary.choice.retryPressureSignals.join(", "))}</p>` : ""}
                     ${Array.isArray(currentGenerativeSummary?.retry?.oscillatingCandidateIds) && currentGenerativeSummary.retry.oscillatingCandidateIds.length ? `<p>Avoiding oscillation: ${escapeHtml(currentGenerativeSummary.retry.oscillatingCandidateIds.join(", "))}</p>` : ""}
+                    ${String(currentGenerativeSummary?.feedback?.status || "").trim() ? `<p>Feedback: ${escapeHtml(String(currentGenerativeSummary.feedback.status))}</p>` : ""}
+                    ${Array.isArray(currentGenerativeSummary?.feedback?.rejectionReasons) && currentGenerativeSummary.feedback.rejectionReasons.length ? `<p>Reasons: ${escapeHtml(currentGenerativeSummary.feedback.rejectionReasons.join(", "))}</p>` : ""}
+                    ${String(currentGenerativeSummary?.feedback?.executionObjective || "").trim() ? `<p>Next move: ${escapeHtml(String(currentGenerativeSummary.feedback.executionObjective))}</p>` : ""}
                   `
                   : "<p>No generative sequencing summary captured yet.</p>"
               }
@@ -1829,6 +1858,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 renderCritiqueContext: selected.renderCritiqueContext || null,
                 sequenceArtisticGoal: selected.sequenceArtisticGoal || null,
                 sequenceRevisionObjective: selected.sequenceRevisionObjective || null,
+                generativeSummary: selected.generativeSummary || null,
                 artifactRefs: selected.artifactRefs || null,
                 emptyText: "No applied snapshot chain is available for this revision."
               })
