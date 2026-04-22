@@ -16,7 +16,7 @@ test("buildArtifactRefs captures artifact ids only", () => {
     creativeBrief: { artifactId: "brief-1" },
     proposalBundle: { artifactId: "proposal-1" },
     intentHandoff: { artifactId: "intent-1" },
-    planHandoff: { artifactId: "plan-1" },
+    planHandoff: { artifactId: "plan-1", metadata: { revisionDelta: { artifactId: "revision-delta-1" } } },
     applyResult: { artifactId: "apply-1" },
     renderObservation: { artifactId: "render-1" },
     renderCritiqueContext: { artifactId: "critique-1" },
@@ -37,7 +37,8 @@ test("buildArtifactRefs captures artifact ids only", () => {
     renderObservationId: "render-1",
     renderCritiqueContextId: "critique-1",
     sequenceArtisticGoalId: "goal-1",
-    sequenceRevisionObjectiveId: "objective-1"
+    sequenceRevisionObjectiveId: "objective-1",
+    revisionDeltaId: "revision-delta-1"
   });
 });
 
@@ -63,7 +64,18 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
       metadata: {
         requestScopeMode: "section_target_refinement",
         reviewStartLevel: "section",
-        sectionScopeKind: "timing_track_windows"
+        sectionScopeKind: "timing_track_windows",
+        revisionDelta: {
+          artifactType: "revision_delta_v1",
+          current: {
+            effectNames: ["Color Wash"],
+            targetIds: ["Snowman"]
+          },
+          introduced: {
+            effectNames: ["Color Wash"],
+            targetIds: ["Snowman"]
+          }
+        }
       }
     },
     applyResult: {
@@ -81,6 +93,8 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
   assert.equal(summary.sequenceSummary.requestScope.mode, "section_target_refinement");
   assert.equal(summary.sequenceSummary.requestScope.reviewStartLevel, "section");
   assert.equal(summary.sequenceSummary.requestScope.sectionScopeKind, "timing_track_windows");
+  assert.deepEqual(summary.sequenceSummary.revisionDelta.currentEffects, ["Color Wash"]);
+  assert.deepEqual(summary.sequenceSummary.revisionDelta.introducedTargets, ["Snowman"]);
   assert.equal(summary.applySummary.commandCount, 5);
   assert.equal(summary.verificationSummary.ok, true);
 });
@@ -99,7 +113,8 @@ test("buildHistoryEntry produces deterministic history ids from entry content", 
     renderObservationId: "render-1",
     renderCritiqueContextId: "critique-1",
     sequenceArtisticGoalId: "goal-1",
-    sequenceRevisionObjectiveId: "objective-1"
+    sequenceRevisionObjectiveId: "objective-1",
+    revisionDeltaId: "revision-delta-1"
   };
   const snapshotSummary = {
     designSummary: { title: "Brief" },

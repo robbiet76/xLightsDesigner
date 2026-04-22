@@ -23,6 +23,9 @@ export function buildArtifactRefs({
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null
 } = {}) {
+  const revisionDelta = planHandoff?.metadata?.revisionDelta && typeof planHandoff.metadata.revisionDelta === "object"
+    ? planHandoff.metadata.revisionDelta
+    : null;
   return {
     analysisArtifactId: ensureString(analysisArtifact?.artifactId, null),
     sceneContextId: ensureString(designSceneContext?.artifactId, null),
@@ -36,7 +39,8 @@ export function buildArtifactRefs({
     renderObservationId: ensureString(renderObservation?.artifactId, null),
     renderCritiqueContextId: ensureString(renderCritiqueContext?.artifactId, null),
     sequenceArtisticGoalId: ensureString(sequenceArtisticGoal?.artifactId, null),
-    sequenceRevisionObjectiveId: ensureString(sequenceRevisionObjective?.artifactId, null)
+    sequenceRevisionObjectiveId: ensureString(sequenceRevisionObjective?.artifactId, null),
+    revisionDeltaId: ensureString(revisionDelta?.artifactId, null)
   };
 }
 
@@ -58,6 +62,9 @@ export function buildHistorySnapshotSummary({
   const warnings = compactList(planHandoff?.warnings, 6);
   const targets = compactList(planHandoff?.targetIds, 8);
   const selectedSections = compactList(planHandoff?.selectedSections, 8);
+  const revisionDelta = planHandoff?.metadata?.revisionDelta && typeof planHandoff.metadata.revisionDelta === "object"
+    ? planHandoff.metadata.revisionDelta
+    : null;
   const requestScopeSummary = {
     mode: ensureString(planHandoff?.metadata?.requestScopeMode, null),
     reviewStartLevel: ensureString(planHandoff?.metadata?.reviewStartLevel, null),
@@ -74,7 +81,15 @@ export function buildHistorySnapshotSummary({
       targets,
       sections: selectedSections,
       warnings,
-      requestScope: requestScopeSummary
+      requestScope: requestScopeSummary,
+      revisionDelta: revisionDelta
+        ? {
+            currentEffects: compactList(revisionDelta?.current?.effectNames, 6),
+            currentTargets: compactList(revisionDelta?.current?.targetIds, 6),
+            introducedEffects: compactList(revisionDelta?.introduced?.effectNames, 6),
+            introducedTargets: compactList(revisionDelta?.introduced?.targetIds, 6)
+          }
+        : null
     },
     applySummary: {
       status: ensureString(applyResult?.status, "pending"),
@@ -146,7 +161,8 @@ export function buildHistoryEntry({
       renderObservationId: ensureString(artifactRefs?.renderObservationId, null),
       renderCritiqueContextId: ensureString(artifactRefs?.renderCritiqueContextId, null),
       sequenceArtisticGoalId: ensureString(artifactRefs?.sequenceArtisticGoalId, null),
-      sequenceRevisionObjectiveId: ensureString(artifactRefs?.sequenceRevisionObjectiveId, null)
+      sequenceRevisionObjectiveId: ensureString(artifactRefs?.sequenceRevisionObjectiveId, null),
+      revisionDeltaId: ensureString(artifactRefs?.revisionDeltaId, null)
     },
     snapshotSummary: snapshotSummary && typeof snapshotSummary === "object" ? snapshotSummary : {},
     applyStage: ensureString(applyStage, null),

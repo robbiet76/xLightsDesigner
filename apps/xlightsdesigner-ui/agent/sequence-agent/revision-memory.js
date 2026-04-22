@@ -21,11 +21,16 @@ export function buildPriorPassMemory({ historySnapshot = null } = {}) {
   const priorPlanMetadata = isPlainObject(snapshot?.planHandoff?.metadata) ? snapshot.planHandoff.metadata : null;
   if (!renderCritiqueContext && !sequenceRevisionObjective) return null;
 
+  const revisionDelta = isPlainObject(priorPlanMetadata?.revisionDelta) ? priorPlanMetadata.revisionDelta : null;
   const previousEffectNames = uniqueStrings(
-    arr(priorPlanMetadata?.effectStrategy?.seedRecommendations).map((row) => row?.effectName)
+    arr(revisionDelta?.current?.effectNames).length
+      ? revisionDelta.current.effectNames
+      : arr(priorPlanMetadata?.effectStrategy?.seedRecommendations).map((row) => row?.effectName)
   );
   const previousTargetIds = uniqueStrings(
-    arr(priorPlanMetadata?.effectStrategy?.seedRecommendations).flatMap((row) => arr(row?.targetIds))
+    arr(revisionDelta?.current?.targetIds).length
+      ? revisionDelta.current.targetIds
+      : arr(priorPlanMetadata?.effectStrategy?.seedRecommendations).flatMap((row) => arr(row?.targetIds))
   );
 
   const comparison = isPlainObject(renderCritiqueContext?.comparison) ? renderCritiqueContext.comparison : {};

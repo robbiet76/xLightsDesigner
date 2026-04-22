@@ -51,3 +51,44 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
   assert.deepEqual(out.previousEffectNames, ["Shimmer", "Twinkle"]);
   assert.deepEqual(out.previousTargetIds, ["MegaTree", "Roofline"]);
 });
+
+test("buildPriorPassMemory prefers revision delta current values when available", () => {
+  const out = buildPriorPassMemory({
+    historySnapshot: {
+      renderCritiqueContext: {
+        observed: {
+          leadModel: "Snowman",
+          breadthRead: "broad",
+          temporalRead: "evolving",
+          coverageRead: "balanced"
+        },
+        comparison: {}
+      },
+      sequenceRevisionObjective: {
+        ladderLevel: "section",
+        scope: {
+          nextOwner: "shared"
+        }
+      },
+      planHandoff: {
+        metadata: {
+          revisionDelta: {
+            artifactType: "revision_delta_v1",
+            current: {
+              effectNames: ["Color Wash"],
+              targetIds: ["Snowman"]
+            }
+          },
+          effectStrategy: {
+            seedRecommendations: [
+              { effectName: "Shimmer", targetIds: ["MegaTree"] }
+            ]
+          }
+        }
+      }
+    }
+  });
+
+  assert.deepEqual(out.previousEffectNames, ["Color Wash"]);
+  assert.deepEqual(out.previousTargetIds, ["Snowman"]);
+});
