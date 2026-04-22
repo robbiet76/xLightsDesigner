@@ -60,6 +60,7 @@ Observed behavior:
    - `XLIGHTS_DESIGNER_ENABLED=1`
    - `XLIGHTS_DESIGNER_PORT=<port>`
    so the remaining failure is after environment delivery, inside secondary-instance xLights startup/integration
+7. suppressing the command-line startup information modal with `-o` removed that blocking dialog, but did not restore owned-listener startup
 
 This is not a calibration-model issue.
 It is an xLights integration/runtime issue.
