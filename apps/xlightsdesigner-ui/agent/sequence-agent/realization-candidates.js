@@ -3,6 +3,7 @@ import {
   recommendEffectsForTargets,
   recommendEffectsForVisualFamilies,
   resolveDirectCueEffectCandidates,
+  resolveContextualEffectCandidates,
   selectPreferredEffect
 } from '../shared/effect-semantics-registry.js';
 import { resolveTranslationLayer } from './translation-layer.js';
@@ -109,12 +110,14 @@ function buildCandidate({
   noveltyScore = 0.5,
   riskBias = 'medium',
   priorPassMemory = null,
-  sequencerRevisionBrief = null
+  sequencerRevisionBrief = null,
+  temporalProfileOverride = '',
+  layeringProfileOverride = null
 } = {}) {
   const allTargets = unique(seeds.flatMap((row) => arr(row?.targetIds)));
   const allEffects = unique(seeds.map((row) => row?.effectName));
   const attentionProfile = inferCandidateAttentionProfile(allTargets);
-  const temporalProfile = str(intentEnvelope?.temporal?.profile) || 'modulated';
+  const temporalProfile = str(temporalProfileOverride || intentEnvelope?.temporal?.profile) || 'modulated';
   const overallFit = (attentionFitScore(intentEnvelope?.attention?.profile, attentionProfile) + temporalFitScore(intentEnvelope?.temporal?.profile, temporalProfile)) / 2;
   const riskValue = riskBias === 'low' ? 0.25 : riskBias === 'high' ? 0.75 : 0.5;
   const revisionFit = computeRevisionFit({
@@ -169,9 +172,9 @@ function buildCandidate({
       colorStrategy: 'unconstrained'
     },
     layeringProfile: {
-      sameStructureDensity: str(intentEnvelope?.layering?.sameStructureDensity) || 'unconstrained',
-      separationStrategy: str(intentEnvelope?.layering?.separationNeed) || 'medium',
-      cadenceStrategy: str(intentEnvelope?.layering?.cadenceInteractionPreference) || 'unconstrained'
+      sameStructureDensity: str(layeringProfileOverride?.sameStructureDensity || intentEnvelope?.layering?.sameStructureDensity) || 'unconstrained',
+      separationStrategy: str(layeringProfileOverride?.separationStrategy || intentEnvelope?.layering?.separationNeed) || 'medium',
+      cadenceStrategy: str(layeringProfileOverride?.cadenceStrategy || intentEnvelope?.layering?.cadenceInteractionPreference) || 'unconstrained'
     },
     seedRecommendations: seeds.map((row) => ({
       section: str(row?.section),
@@ -234,7 +237,7 @@ function buildCandidate({
   };
 }
 
-function buildFeedbackShapedSeeds({
+function buildFeedbackShapedCandidateShape({
   primarySeeds = [],
   availableEffects = null,
   sequencerRevisionBrief = null,
@@ -261,11 +264,18 @@ function buildFeedbackShapedSeeds({
     goalText,
     smoothBias: /\b(flow|flowing|restrained|smooth|gentle|soft)\b/i.test(goalText)
   });
+  const contextualCueEffects = str(changeBias?.progression?.temporalVariation) === 'increase'
+    ? resolveContextualEffectCandidates({
+        contextKey: 'genericFlow',
+        variant: /\b(pulse|hit|strobe|rhythm)\b/i.test(goalText) ? 'pulse' : 'default'
+      })
+    : [];
   const hasTargetShift = revisionTargets.length > 0;
-  const hasEffectCue = directCueEffects.length > 0;
-  if (!hasTargetShift && !hasEffectCue) return [];
+  const preferredCueEffects = unique([...directCueEffects, ...contextualCueEffects]);
+  const hasEffectCue = preferredCueEffects.length > 0;
+  if (!hasTargetShift && !hasEffectCue && !changeBias) return null;
 
-  return primarySeeds.map((seed) => {
+  const seeds = primarySeeds.map((seed) => {
     const seedTargets = unique(seed?.targetIds);
     const targetShape = str(changeBias?.composition?.targetShape);
     const nextTargets = targetShape === 'broaden_support'
@@ -274,7 +284,7 @@ function buildFeedbackShapedSeeds({
         ? revisionTargets
         : seedTargets;
     const preferredEffect = hasEffectCue
-      ? selectPreferredEffect(directCueEffects, { availableEffects })
+      ? selectPreferredEffect(preferredCueEffects, { availableEffects })
       : '';
     const narrowedTargets = str(changeBias?.layering?.density) === 'reduce' && nextTargets.length > 1
       ? nextTargets.slice(0, 1)
@@ -285,6 +295,26 @@ function buildFeedbackShapedSeeds({
       effectName: preferredEffect || str(seed?.effectName)
     };
   });
+  const temporalProfileOverride = str(changeBias?.progression?.temporalVariation) === 'increase'
+    ? 'evolving'
+    : '';
+  const layeringProfileOverride = changeBias
+    ? {
+        sameStructureDensity: str(changeBias?.layering?.density) === 'reduce' ? 'low' : '',
+        separationStrategy: str(changeBias?.layering?.separation) === 'increase'
+          ? 'high'
+          : str(changeBias?.layering?.separation) === 'clarify'
+            ? 'medium'
+            : '',
+        cadenceStrategy: str(changeBias?.progression?.temporalVariation) === 'increase' ? 'contrasting' : ''
+      }
+    : null;
+
+  return {
+    seeds,
+    temporalProfileOverride,
+    layeringProfileOverride
+  };
 }
 
 export function buildRealizationCandidatesV1({
@@ -373,23 +403,25 @@ export function buildRealizationCandidatesV1({
     sequencerRevisionBrief
   });
 
-  const feedbackSeeds = buildFeedbackShapedSeeds({
+  const feedbackShape = buildFeedbackShapedCandidateShape({
     primarySeeds,
     availableEffects,
     sequencerRevisionBrief,
     revisionFeedback
   });
-  const feedbackCandidate = feedbackSeeds.length
+  const feedbackCandidate = feedbackShape?.seeds?.length
     ? buildCandidate({
         id: 'candidate-feedback',
         summary: 'Feedback-shaped candidate aligned to the current revision direction.',
-        seeds: feedbackSeeds,
+        seeds: feedbackShape.seeds,
         scopeTargets,
         intentEnvelope,
         noveltyScore: 0.68,
         riskBias: 'medium',
         priorPassMemory,
-        sequencerRevisionBrief
+        sequencerRevisionBrief,
+        temporalProfileOverride: feedbackShape.temporalProfileOverride,
+        layeringProfileOverride: feedbackShape.layeringProfileOverride
       })
     : null;
 

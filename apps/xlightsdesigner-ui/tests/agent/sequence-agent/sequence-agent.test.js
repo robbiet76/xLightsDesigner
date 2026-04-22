@@ -380,6 +380,55 @@ test("sequence_agent adds a feedback-shaped candidate when revision feedback giv
   assert.equal(feedbackCandidate.seedRecommendations[0].effectName, "Spirals");
 });
 
+test("sequence_agent feedback-shaped candidate carries progression and layering bias", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: {
+        nextOwner: "shared",
+        revisionRoles: ["reduce_competing_support"]
+      },
+      designerDirection: {
+        artisticCorrection: "Keep the scene readable while making the section evolve."
+      },
+      sequencerDirection: {
+        executionObjective: "Add development without crowding the same structure."
+      }
+    },
+    revisionFeedback: {
+      artifactType: "revision_feedback_v1",
+      status: "revise_required",
+      rejectionReasons: ["Rendered section development is too flat across the sampled window."],
+      nextDirection: {
+        executionObjective: "Add development without crowding the same structure.",
+        changeBias: {
+          composition: { mismatch: false, targetShape: "preserve" },
+          progression: { mismatch: true, temporalVariation: "increase" },
+          layering: { mismatch: true, separation: "increase", density: "reduce" }
+        }
+      }
+    },
+    sourceLines: ["Chorus 1 / MegaTree + Roofline / hold current support shape"],
+    baseRevision: "rev-56",
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Bars", params: [] },
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Morph", params: [] }
+    ])
+  });
+
+  const feedbackCandidate = out.metadata.realizationCandidates.candidates.find((row) => row.candidateId === "candidate-feedback");
+  assert.ok(feedbackCandidate);
+  assert.equal(feedbackCandidate.temporalProfile.profile, "evolving");
+  assert.equal(feedbackCandidate.layeringProfile.sameStructureDensity, "low");
+  assert.equal(feedbackCandidate.layeringProfile.separationStrategy, "high");
+  assert.equal(feedbackCandidate.layeringProfile.cadenceStrategy, "contrasting");
+});
+
 test("sequence_agent plan metadata carries render validation evidence refs", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),
