@@ -141,7 +141,8 @@ export async function executeApplyCore({
         sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
         priorPassMemory,
         revisionRetryPressure,
-        renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null
+        renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null,
+        revisionFeedback
       }),
       planningScope: {
         sections: getSelectedSections(),

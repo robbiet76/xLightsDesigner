@@ -39,10 +39,64 @@ function reuseToleranceWeight(intentEnvelope = null) {
   return weightFromBand(intentEnvelope?.novelty?.reuseTolerance);
 }
 
+function biasAlignmentScore(candidate = null, selectionContext = null) {
+  const changeBias = selectionContext && typeof selectionContext?.changeBias === 'object'
+    ? selectionContext.changeBias
+    : null;
+  if (!changeBias) return 0.5;
+
+  let score = 0.5;
+  let signalCount = 0;
+  const footprint = str(candidate?.compositionProfile?.footprint);
+  const temporalProfile = str(candidate?.temporalProfile?.profile);
+  const sameStructureDensity = str(candidate?.layeringProfile?.sameStructureDensity);
+  const separationStrategy = str(candidate?.layeringProfile?.separationStrategy);
+
+  const targetShape = str(changeBias?.composition?.targetShape);
+  if (changeBias?.composition?.mismatch && targetShape) {
+    signalCount += 1;
+    if (targetShape === 'narrow_focus') {
+      score += ['narrow', 'moderate'].includes(footprint) ? 0.22 : -0.12;
+    } else if (targetShape === 'broaden_support') {
+      score += ['broad', 'full_scene'].includes(footprint) ? 0.22 : -0.12;
+    }
+  }
+
+  const temporalVariation = str(changeBias?.progression?.temporalVariation);
+  if (changeBias?.progression?.mismatch && temporalVariation) {
+    signalCount += 1;
+    if (temporalVariation === 'increase') {
+      score += temporalProfile === 'evolving' ? 0.22 : temporalProfile === 'modulated' ? 0.08 : -0.12;
+    } else if (temporalVariation === 'preserve') {
+      score += temporalProfile === 'steady' || temporalProfile === 'modulated' ? 0.18 : -0.08;
+    }
+  }
+
+  const density = str(changeBias?.layering?.density);
+  const separation = str(changeBias?.layering?.separation);
+  if (changeBias?.layering?.mismatch && (density || separation)) {
+    signalCount += 1;
+    if (density === 'reduce') {
+      score += sameStructureDensity === 'low' ? 0.18 : sameStructureDensity === 'medium' ? 0.05 : -0.12;
+    } else if (density === 'preserve') {
+      score += sameStructureDensity === 'unconstrained' ? 0.08 : 0.12;
+    }
+    if (separation === 'increase') {
+      score += separationStrategy === 'high' ? 0.18 : separationStrategy === 'medium' ? 0.05 : -0.1;
+    } else if (separation === 'clarify') {
+      score += ['medium', 'high'].includes(separationStrategy) ? 0.14 : -0.08;
+    }
+  }
+
+  if (!signalCount) return 0.5;
+  return clamp01(score);
+}
+
 function computeCandidateScore(candidate = null, intentEnvelope = null, selectionContext = null) {
   const fitScore = bandToScore(candidate?.fitSignals?.overallFit);
   const revisionScore = clamp01(candidate?.revisionSignals?.revisionScore);
   const noveltyScore = clamp01(candidate?.noveltySignals?.noveltyScore);
+  const biasAlignment = biasAlignmentScore(candidate, selectionContext);
   const memoryPenalty = clamp01(candidate?.noveltySignals?.memoryPenalty);
   const oscillationPenalty = clamp01(candidate?.noveltySignals?.oscillationPenalty);
   const riskBands = [
@@ -60,12 +114,13 @@ function computeCandidateScore(candidate = null, intentEnvelope = null, selectio
   const lowChangeRetryPressure = retryPressureSignals.includes('low_change_retry') ? 1 : 0;
   const fitComponent = fitScore * 0.42;
   const revisionComponent = revisionScore * 0.18;
+  const biasAlignmentComponent = biasAlignment * 0.12;
   const noveltyComponent = noveltyScore * (0.15 + (exploration * 0.2) + (lowChangeRetryPressure * 0.08));
   const safetyComponent = (1 - meanRisk) * (0.15 + ((1 - reuseTolerance) * 0.1));
   const reusePenaltyComponent = memoryPenalty * (0.08 + ((1 - reuseTolerance) * 0.08));
   const lowChangePenaltyComponent = lowChangeRetryPressure * (0.06 * (1 - noveltyScore));
   const oscillationPenaltyComponent = oscillationPenalty * 0.18;
-  return Number((fitComponent + revisionComponent + noveltyComponent + safetyComponent - reusePenaltyComponent - lowChangePenaltyComponent - oscillationPenaltyComponent).toFixed(4));
+  return Number((fitComponent + revisionComponent + biasAlignmentComponent + noveltyComponent + safetyComponent - reusePenaltyComponent - lowChangePenaltyComponent - oscillationPenaltyComponent).toFixed(4));
 }
 
 function selectionMode(selectionSeed = '') {
@@ -92,6 +147,7 @@ export function buildCandidateSelectionV1({
       selectionScore: computeCandidateScore(candidate, intentEnvelope, selectionContext),
       fitScore: bandToScore(candidate?.fitSignals?.overallFit),
       revisionScore: clamp01(candidate?.revisionSignals?.revisionScore),
+      biasAlignmentScore: biasAlignmentScore(candidate, selectionContext),
       noveltyScore: clamp01(candidate?.noveltySignals?.noveltyScore),
       oscillationRisk: str(candidate?.noveltySignals?.oscillationRisk),
       riskScore: Number((1 - (
@@ -141,7 +197,30 @@ export function buildCandidateSelectionV1({
           seed: str(selectionContext.seed),
           explorationEnabled: Boolean(selectionContext.explorationEnabled),
           unresolvedSignals: arr(selectionContext.unresolvedSignals).map((row) => str(row)).filter(Boolean),
-          retryPressureSignals: arr(selectionContext.retryPressureSignals).map((row) => str(row)).filter(Boolean)
+          retryPressureSignals: arr(selectionContext.retryPressureSignals).map((row) => str(row)).filter(Boolean),
+          changeBias: selectionContext.changeBias && typeof selectionContext.changeBias === 'object'
+            ? {
+                composition: selectionContext.changeBias.composition && typeof selectionContext.changeBias.composition === 'object'
+                  ? {
+                      mismatch: Boolean(selectionContext.changeBias.composition.mismatch),
+                      targetShape: str(selectionContext.changeBias.composition.targetShape)
+                    }
+                  : null,
+                progression: selectionContext.changeBias.progression && typeof selectionContext.changeBias.progression === 'object'
+                  ? {
+                      mismatch: Boolean(selectionContext.changeBias.progression.mismatch),
+                      temporalVariation: str(selectionContext.changeBias.progression.temporalVariation)
+                    }
+                  : null,
+                layering: selectionContext.changeBias.layering && typeof selectionContext.changeBias.layering === 'object'
+                  ? {
+                      mismatch: Boolean(selectionContext.changeBias.layering.mismatch),
+                      separation: str(selectionContext.changeBias.layering.separation),
+                      density: str(selectionContext.changeBias.layering.density)
+                    }
+                  : null
+              }
+            : null
         }
       : null,
     notes: [

@@ -1480,7 +1480,8 @@ export function buildSequenceAgentPlan({
         sequenceRevision: baseRevision,
         priorPassMemory,
         revisionRetryPressure,
-        renderValidationEvidence
+        renderValidationEvidence,
+        revisionFeedback
       });
 
   const intentEnvelope = buildIntentEnvelopeV1({

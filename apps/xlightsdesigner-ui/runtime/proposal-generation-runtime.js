@@ -428,7 +428,8 @@ export function createProposalGenerationRuntime(deps = {}) {
           sequenceRevision: str(state.draftBaseRevision || state.revision || "unknown"),
           priorPassMemory,
           revisionRetryPressure,
-          renderValidationEvidence: state.agentPlan?.handoff?.metadata?.renderValidationEvidence || null
+          renderValidationEvidence: state.agentPlan?.handoff?.metadata?.renderValidationEvidence || null,
+          revisionFeedback
         }),
         planningScope: {
           sections: selected,
