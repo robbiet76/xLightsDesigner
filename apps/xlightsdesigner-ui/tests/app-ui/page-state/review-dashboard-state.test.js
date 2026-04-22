@@ -163,6 +163,10 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
               artifactType: "candidate_selection_v1",
               policy: { mode: "bounded_exploration", phase: "review" },
               primaryCandidateId: "candidate-focused",
+              scoredCandidates: [
+                { candidateId: "candidate-focused", oscillationRisk: "low" },
+                { candidateId: "candidate-base", oscillationRisk: "high" }
+              ],
               selectedBand: {
                 candidateIds: ["candidate-focused", "candidate-base"],
                 size: 2
@@ -200,7 +204,8 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
             },
             candidateSelectionContext: {
               phase: "review",
-              unresolvedSignals: ["weak_section_contrast"]
+              unresolvedSignals: ["weak_section_contrast"],
+              retryPressureSignals: ["low_change_retry"]
             }
           }
         },
@@ -266,6 +271,8 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.choice.chosenCandidateId, "candidate-focused");
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.artifactType, "revision_delta_v1");
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.selectedBandIds, ["candidate-focused", "candidate-base"]);
+  assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.choice.retryPressureSignals, ["low_change_retry"]);
+  assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.retry.oscillatingCandidateIds, ["candidate-base"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentTargetIds, ["Snowman"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.introducedEffectNames, ["Color Wash"]);
@@ -304,6 +311,10 @@ test("review dashboard state exposes current generative sequencing summary from 
             artifactType: "candidate_selection_v1",
             policy: { mode: "deterministic_preview", phase: "plan" },
             primaryCandidateId: "candidate-base",
+            scoredCandidates: [
+              { candidateId: "candidate-base", oscillationRisk: "low" },
+              { candidateId: "candidate-alternate", oscillationRisk: "high" }
+            ],
             selectedBand: {
               candidateIds: ["candidate-base"],
               size: 1
@@ -338,6 +349,10 @@ test("review dashboard state exposes current generative sequencing summary from 
               effectNames: ["Color Wash"],
               targetIds: ["Snowman"]
             }
+          },
+          candidateSelectionContext: {
+            phase: "plan",
+            retryPressureSignals: ["low_change_retry"]
           }
         }
       },
@@ -352,6 +367,8 @@ test("review dashboard state exposes current generative sequencing summary from 
   assert.equal(dashboard.data.currentGenerativeSummary.choice.chosenSummary, "Base seeded candidate.");
   assert.equal(dashboard.data.currentGenerativeSummary.delta.artifactType, "revision_delta_v1");
   assert.deepEqual(dashboard.data.currentGenerativeSummary.candidates.candidateIds, ["candidate-base", "candidate-alternate"]);
+  assert.deepEqual(dashboard.data.currentGenerativeSummary.choice.retryPressureSignals, ["low_change_retry"]);
+  assert.deepEqual(dashboard.data.currentGenerativeSummary.retry.oscillatingCandidateIds, ["candidate-alternate"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedTargetIds, ["Snowman"]);
 });

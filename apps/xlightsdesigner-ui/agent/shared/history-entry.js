@@ -65,6 +65,12 @@ export function buildHistorySnapshotSummary({
   const revisionDelta = planHandoff?.metadata?.revisionDelta && typeof planHandoff.metadata.revisionDelta === "object"
     ? planHandoff.metadata.revisionDelta
     : null;
+  const priorPassMemory = planHandoff?.metadata?.priorPassMemory && typeof planHandoff.metadata.priorPassMemory === "object"
+    ? planHandoff.metadata.priorPassMemory
+    : null;
+  const candidateSelection = planHandoff?.metadata?.candidateSelection && typeof planHandoff.metadata.candidateSelection === "object"
+    ? planHandoff.metadata.candidateSelection
+    : null;
   const requestScopeSummary = {
     mode: ensureString(planHandoff?.metadata?.requestScopeMode, null),
     reviewStartLevel: ensureString(planHandoff?.metadata?.reviewStartLevel, null),
@@ -82,6 +88,14 @@ export function buildHistorySnapshotSummary({
       sections: selectedSections,
       warnings,
       requestScope: requestScopeSummary,
+      retryPressure: {
+        signals: compactList(priorPassMemory?.retryPressureSignals, 6),
+        oscillatingCandidates: ensureArray(candidateSelection?.scoredCandidates)
+          .filter((row) => ensureString(row?.oscillationRisk) === "high")
+          .map((row) => ensureString(row?.candidateId, ""))
+          .filter(Boolean)
+          .slice(0, 6)
+      },
       revisionDelta: revisionDelta
         ? {
             currentEffects: compactList(revisionDelta?.current?.effectNames, 6),

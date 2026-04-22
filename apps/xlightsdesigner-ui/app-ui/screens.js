@@ -489,6 +489,12 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const generativeUnresolvedSignals = Array.isArray(generativeSummary?.choice?.unresolvedSignals)
       ? generativeSummary.choice.unresolvedSignals.filter(Boolean).slice(0, 4)
       : [];
+    const generativeRetrySignals = Array.isArray(generativeSummary?.choice?.retryPressureSignals)
+      ? generativeSummary.choice.retryPressureSignals.filter(Boolean).slice(0, 4)
+      : [];
+    const generativeOscillatingCandidateIds = Array.isArray(generativeSummary?.retry?.oscillatingCandidateIds)
+      ? generativeSummary.retry.oscillatingCandidateIds.filter(Boolean).slice(0, 4)
+      : [];
     const generativeNewEffects = Array.isArray(generativeSummary?.delta?.introducedEffectNames)
       ? generativeSummary.delta.introducedEffectNames.filter(Boolean).slice(0, 4)
       : [];
@@ -616,6 +622,16 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   ${
                     generativeUnresolvedSignals.length
                       ? `<p class="banner warning">Revision pressure: ${escapeHtml(generativeUnresolvedSignals.join(", "))}</p>`
+                      : ""
+                  }
+                  ${
+                    generativeRetrySignals.length
+                      ? `<p class="banner warning">Retry pressure: ${escapeHtml(generativeRetrySignals.join(", "))}</p>`
+                      : ""
+                  }
+                  ${
+                    generativeOscillatingCandidateIds.length
+                      ? `<p class="banner">Avoiding oscillation: ${escapeHtml(generativeOscillatingCandidateIds.join(", "))}</p>`
                       : ""
                   }
                   ${
@@ -1593,6 +1609,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     <p>Band: ${escapeHtml(String(currentGenerativeSummary.selection?.selectedBandSize || 0))} candidate${Number(currentGenerativeSummary.selection?.selectedBandSize || 0) === 1 ? "" : "s"}</p>
                     ${Array.isArray(currentGenerativeSummary?.delta?.introducedEffectNames) && currentGenerativeSummary.delta.introducedEffectNames.length ? `<p>New effects: ${escapeHtml(currentGenerativeSummary.delta.introducedEffectNames.join(", "))}</p>` : ""}
                     ${Array.isArray(currentGenerativeSummary?.delta?.introducedTargetIds) && currentGenerativeSummary.delta.introducedTargetIds.length ? `<p>New targets: ${escapeHtml(currentGenerativeSummary.delta.introducedTargetIds.join(", "))}</p>` : ""}
+                    ${Array.isArray(currentGenerativeSummary?.choice?.retryPressureSignals) && currentGenerativeSummary.choice.retryPressureSignals.length ? `<p>Retry pressure: ${escapeHtml(currentGenerativeSummary.choice.retryPressureSignals.join(", "))}</p>` : ""}
+                    ${Array.isArray(currentGenerativeSummary?.retry?.oscillatingCandidateIds) && currentGenerativeSummary.retry.oscillatingCandidateIds.length ? `<p>Avoiding oscillation: ${escapeHtml(currentGenerativeSummary.retry.oscillatingCandidateIds.join(", "))}</p>` : ""}
                   `
                   : "<p>No generative sequencing summary captured yet.</p>"
               }

@@ -39,6 +39,7 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
     ? metadata.priorPassMemory
     : null;
   const candidates = arr(realizationCandidates?.candidates).filter((row) => row && typeof row === "object");
+  const scoredCandidates = arr(candidateSelection?.scoredCandidates).filter((row) => row && typeof row === "object");
   const selectedBandIds = uniqueStrings(candidateSelection?.selectedBand?.candidateIds).slice(0, 4);
   const chosenCandidateId = str(candidateChoice?.chosenCandidateId || effectStrategy?.selectedCandidateId);
   const chosenCandidate = chosenCandidateId
@@ -59,6 +60,14 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
   const selectionMode = str(candidateChoice?.selectionMode || candidateSelection?.policy?.mode);
   const phase = str(candidateSelection?.policy?.phase || metadata.candidateSelectionContext?.phase);
   const unresolvedSignals = uniqueStrings(metadata.candidateSelectionContext?.unresolvedSignals).slice(0, 5);
+  const retryPressureSignals = uniqueStrings(
+    metadata.candidateSelectionContext?.retryPressureSignals || priorPassMemory?.retryPressureSignals
+  ).slice(0, 5);
+  const oscillatingCandidateIds = scoredCandidates
+    .filter((row) => str(row?.oscillationRisk) === "high")
+    .map((row) => str(row?.candidateId))
+    .filter(Boolean)
+    .slice(0, 4);
   const hasContent = intentEnvelope || candidates.length || candidateSelection || candidateChoice || effectStrategy;
   if (!hasContent) return null;
   return {
@@ -83,7 +92,8 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
       chosenCandidateId,
       chosenSummary,
       selectedFromBand: Boolean(candidateChoice?.selectedFromBand),
-      unresolvedSignals
+      unresolvedSignals,
+      retryPressureSignals
     },
     delta: {
       artifactType: str(revisionDelta?.artifactType || "revision_delta_v1"),
@@ -94,6 +104,10 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
       previousTargetIds: uniqueStrings(revisionDelta?.previous?.targetIds || priorPassMemory?.previousTargetIds).slice(0, 5),
       introducedEffectNames: uniqueStrings(revisionDelta?.introduced?.effectNames || differenceStrings(currentEffectNames, priorPassMemory?.previousEffectNames)).slice(0, 5),
       introducedTargetIds: uniqueStrings(revisionDelta?.introduced?.targetIds || differenceStrings(currentTargetIds, priorPassMemory?.previousTargetIds)).slice(0, 5)
+    },
+    retry: {
+      signals: retryPressureSignals,
+      oscillatingCandidateIds
     }
   };
 }

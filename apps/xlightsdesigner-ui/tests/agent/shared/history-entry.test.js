@@ -65,6 +65,15 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
         requestScopeMode: "section_target_refinement",
         reviewStartLevel: "section",
         sectionScopeKind: "timing_track_windows",
+        priorPassMemory: {
+          retryPressureSignals: ["low_change_retry"]
+        },
+        candidateSelection: {
+          scoredCandidates: [
+            { candidateId: "candidate-base", oscillationRisk: "low" },
+            { candidateId: "candidate-alternate", oscillationRisk: "high" }
+          ]
+        },
         revisionDelta: {
           artifactType: "revision_delta_v1",
           current: {
@@ -93,6 +102,8 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
   assert.equal(summary.sequenceSummary.requestScope.mode, "section_target_refinement");
   assert.equal(summary.sequenceSummary.requestScope.reviewStartLevel, "section");
   assert.equal(summary.sequenceSummary.requestScope.sectionScopeKind, "timing_track_windows");
+  assert.deepEqual(summary.sequenceSummary.retryPressure.signals, ["low_change_retry"]);
+  assert.deepEqual(summary.sequenceSummary.retryPressure.oscillatingCandidates, ["candidate-alternate"]);
   assert.deepEqual(summary.sequenceSummary.revisionDelta.currentEffects, ["Color Wash"]);
   assert.deepEqual(summary.sequenceSummary.revisionDelta.introducedTargets, ["Snowman"]);
   assert.equal(summary.applySummary.commandCount, 5);
