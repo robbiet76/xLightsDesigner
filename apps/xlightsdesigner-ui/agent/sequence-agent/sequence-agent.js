@@ -38,6 +38,7 @@ import { chooseCandidateFromSelection, projectChosenCandidateToEffectStrategy } 
 import { buildCandidateSelectionContext } from "./candidate-selection-context.js";
 import { buildIntentEnvelopeV1 } from "./intent-envelope.js";
 import { buildRealizationCandidatesV1 } from "./realization-candidates.js";
+import { buildRevisionDeltaV1 } from "./revision-delta.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
 
@@ -1509,6 +1510,11 @@ export function buildSequenceAgentPlan({
     baseEffectStrategy: effect,
     chosenCandidate: candidateChoice?.chosenCandidate
   });
+  const revisionDelta = buildRevisionDeltaV1({
+    priorPassMemory,
+    effectStrategy: effectiveEffectStrategy,
+    chosenCandidate: candidateChoice?.chosenCandidate
+  });
 
   const graph = runStage({
     stage: STAGE_ORDER[3],
@@ -1602,6 +1608,7 @@ export function buildSequenceAgentPlan({
         selectedCandidateId: normText(effectiveEffectStrategy?.selectedCandidateId),
         selectedCandidateSummary: normText(effectiveEffectStrategy?.selectedCandidateSummary)
       },
+      revisionDelta,
       intentEnvelope,
       realizationCandidates,
       candidateSelection,

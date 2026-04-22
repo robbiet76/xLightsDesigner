@@ -183,6 +183,21 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
                 }
               ]
             },
+            revisionDelta: {
+              artifactType: "revision_delta_v1",
+              current: {
+                effectNames: ["Color Wash"],
+                targetIds: ["Snowman"]
+              },
+              previous: {
+                effectNames: [],
+                targetIds: []
+              },
+              introduced: {
+                effectNames: ["Color Wash"],
+                targetIds: ["Snowman"]
+              }
+            },
             candidateSelectionContext: {
               phase: "review",
               unresolvedSignals: ["weak_section_contrast"]
@@ -249,6 +264,7 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.intent.attentionProfile, "weighted");
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.mode, "bounded_exploration");
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.choice.chosenCandidateId, "candidate-focused");
+  assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.artifactType, "revision_delta_v1");
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.selectedBandIds, ["candidate-focused", "candidate-base"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentTargetIds, ["Snowman"]);
@@ -307,6 +323,21 @@ test("review dashboard state exposes current generative sequencing summary from 
                 targetIds: ["Snowman"]
               }
             ]
+          },
+          revisionDelta: {
+            artifactType: "revision_delta_v1",
+            current: {
+              effectNames: ["Color Wash"],
+              targetIds: ["Snowman"]
+            },
+            previous: {
+              effectNames: ["Shimmer"],
+              targetIds: ["MegaTree"]
+            },
+            introduced: {
+              effectNames: ["Color Wash"],
+              targetIds: ["Snowman"]
+            }
           }
         }
       },
@@ -319,6 +350,7 @@ test("review dashboard state exposes current generative sequencing summary from 
   assert.equal(dashboard.data.currentGenerativeSummary.intent.attentionProfile, "concentrated");
   assert.equal(dashboard.data.currentGenerativeSummary.selection.mode, "deterministic_preview");
   assert.equal(dashboard.data.currentGenerativeSummary.choice.chosenSummary, "Base seeded candidate.");
+  assert.equal(dashboard.data.currentGenerativeSummary.delta.artifactType, "revision_delta_v1");
   assert.deepEqual(dashboard.data.currentGenerativeSummary.candidates.candidateIds, ["candidate-base", "candidate-alternate"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedTargetIds, ["Snowman"]);

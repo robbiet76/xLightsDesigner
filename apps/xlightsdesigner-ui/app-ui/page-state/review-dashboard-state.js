@@ -32,6 +32,9 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
   const effectStrategy = metadata.effectStrategy && typeof metadata.effectStrategy === "object"
     ? metadata.effectStrategy
     : null;
+  const revisionDelta = metadata.revisionDelta && typeof metadata.revisionDelta === "object"
+    ? metadata.revisionDelta
+    : null;
   const priorPassMemory = metadata.priorPassMemory && typeof metadata.priorPassMemory === "object"
     ? metadata.priorPassMemory
     : null;
@@ -83,12 +86,14 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
       unresolvedSignals
     },
     delta: {
-      currentEffectNames: currentEffectNames.slice(0, 5),
-      currentTargetIds: currentTargetIds.slice(0, 5),
-      previousEffectNames: uniqueStrings(priorPassMemory?.previousEffectNames).slice(0, 5),
-      previousTargetIds: uniqueStrings(priorPassMemory?.previousTargetIds).slice(0, 5),
-      introducedEffectNames: differenceStrings(currentEffectNames, priorPassMemory?.previousEffectNames).slice(0, 5),
-      introducedTargetIds: differenceStrings(currentTargetIds, priorPassMemory?.previousTargetIds).slice(0, 5)
+      artifactType: str(revisionDelta?.artifactType || "revision_delta_v1"),
+      artifactId: str(revisionDelta?.artifactId),
+      currentEffectNames: uniqueStrings(revisionDelta?.current?.effectNames || currentEffectNames).slice(0, 5),
+      currentTargetIds: uniqueStrings(revisionDelta?.current?.targetIds || currentTargetIds).slice(0, 5),
+      previousEffectNames: uniqueStrings(revisionDelta?.previous?.effectNames || priorPassMemory?.previousEffectNames).slice(0, 5),
+      previousTargetIds: uniqueStrings(revisionDelta?.previous?.targetIds || priorPassMemory?.previousTargetIds).slice(0, 5),
+      introducedEffectNames: uniqueStrings(revisionDelta?.introduced?.effectNames || differenceStrings(currentEffectNames, priorPassMemory?.previousEffectNames)).slice(0, 5),
+      introducedTargetIds: uniqueStrings(revisionDelta?.introduced?.targetIds || differenceStrings(currentTargetIds, priorPassMemory?.previousTargetIds)).slice(0, 5)
     }
   };
 }
