@@ -1400,6 +1400,7 @@ export function buildSequenceAgentPlan({
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null,
   priorPassMemory = null,
+  revisionRetryPressure = null,
   sourceLines = [],
   baseRevision = "unknown",
   capabilityCommands = [],
@@ -1449,7 +1450,8 @@ export function buildSequenceAgentPlan({
     sequenceArtisticGoal,
     sequenceRevisionObjective,
     sequencingDesignHandoff: scope.sequencingDesignHandoff,
-    priorPassMemory: priorPassMemory && typeof priorPassMemory === "object" ? priorPassMemory : null
+    priorPassMemory: priorPassMemory && typeof priorPassMemory === "object" ? priorPassMemory : null,
+    revisionRetryPressure: revisionRetryPressure && typeof revisionRetryPressure === "object" ? revisionRetryPressure : null
   });
 
   const timing = runStage({
@@ -1469,12 +1471,13 @@ export function buildSequenceAgentPlan({
   });
 
   const resolvedCandidateSelectionContext = candidateSelectionContext && typeof candidateSelectionContext === "object"
-    ? candidateSelectionContext
-    : buildCandidateSelectionContext({
+      ? candidateSelectionContext
+      : buildCandidateSelectionContext({
         requestId: baseRevision,
         phase: "plan",
         sequenceRevision: baseRevision,
         priorPassMemory,
+        revisionRetryPressure,
         renderValidationEvidence
       });
 
@@ -1516,7 +1519,7 @@ export function buildSequenceAgentPlan({
     effectStrategy: effectiveEffectStrategy,
     chosenCandidate: candidateChoice?.chosenCandidate
   });
-  const revisionRetryPressure = buildRevisionRetryPressureV1({
+  const computedRevisionRetryPressure = buildRevisionRetryPressureV1({
     priorPassMemory,
     candidateSelection,
     revisionDelta
@@ -1615,7 +1618,7 @@ export function buildSequenceAgentPlan({
         selectedCandidateSummary: normText(effectiveEffectStrategy?.selectedCandidateSummary)
       },
       revisionDelta,
-      revisionRetryPressure,
+      revisionRetryPressure: computedRevisionRetryPressure,
       intentEnvelope,
       realizationCandidates,
       candidateSelection,

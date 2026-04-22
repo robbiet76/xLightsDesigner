@@ -73,3 +73,27 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
   assert.match(out.summary, /lead_mismatch/i);
   assert.match(out.summary, /low_change_retry/i);
 });
+
+test("buildSequencerRevisionBrief prefers retry pressure artifact signals when present", () => {
+  const out = buildSequencerRevisionBrief({
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared" },
+      designerDirection: { artisticCorrection: "Keep the pass moving." },
+      sequencerDirection: { executionObjective: "Try a more distinct alternate." }
+    },
+    priorPassMemory: {
+      artifactType: "sequencer_prior_pass_memory_v1",
+      retryPressureSignals: ["low_change_retry"]
+    },
+    revisionRetryPressure: {
+      artifactType: "revision_retry_pressure_v1",
+      signals: ["oscillation_retry"]
+    }
+  });
+
+  assert.deepEqual(out.retryPressureSignals, ["oscillation_retry"]);
+  assert.equal(out.revisionRetryPressure.artifactType, "revision_retry_pressure_v1");
+  assert.match(out.summary, /oscillation_retry/i);
+});

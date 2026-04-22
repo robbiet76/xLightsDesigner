@@ -268,6 +268,33 @@ test("sequence agent input preserves render validation evidence", () => {
   assert.equal(input.renderValidationEvidence.progressionObservationRef, "/tmp/progression-observation.json");
 });
 
+test("sequence agent input preserves revision retry pressure artifact", () => {
+  const input = buildSequenceAgentInput({
+    requestId: "req-retry-pressure",
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    sequenceRevision: "rev-1",
+    sequenceSettings: {},
+    layoutMode: "2d",
+    displayElements: [],
+    groupIds: [],
+    groupsById: {},
+    submodelsById: {},
+    intentHandoff: { artifactType: "intent_handoff_v1" },
+    safety: {
+      timingOwnership: [],
+      manualXdLocks: [],
+      allowTimingWrites: true
+    },
+    revisionRetryPressure: {
+      artifactType: "revision_retry_pressure_v1",
+      signals: ["low_change_retry"]
+    }
+  });
+
+  assert.equal(input.revisionRetryPressure.artifactType, "revision_retry_pressure_v1");
+  assert.deepEqual(input.revisionRetryPressure.signals, ["low_change_retry"]);
+});
+
 test("sequence agent input preserves candidate selection context", () => {
   const input = buildSequenceAgentInput({
     requestId: "req-selection",

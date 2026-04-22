@@ -50,7 +50,8 @@ export function buildSequencerRevisionBrief({
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null,
   sequencingDesignHandoff = null,
-  priorPassMemory = null
+  priorPassMemory = null,
+  revisionRetryPressure = null
 } = {}) {
   const objective = isPlainObject(sequenceRevisionObjective) ? sequenceRevisionObjective : null;
   const artisticGoal = isPlainObject(sequenceArtisticGoal) ? sequenceArtisticGoal : null;
@@ -71,6 +72,12 @@ export function buildSequencerRevisionBrief({
   ].map((row) => str(row)).filter(Boolean))];
   const sectionScope = arr(designHandoff?.scope?.sections);
 
+  const retryPressureSignals = uniqueStrings(
+    arr(revisionRetryPressure?.signals).length
+      ? revisionRetryPressure.signals
+      : priorPassMemory?.retryPressureSignals
+  );
+
   const summaryParts = [
     str(designerDirection.artisticCorrection),
     str(sequencerDirection.executionObjective),
@@ -78,8 +85,8 @@ export function buildSequencerRevisionBrief({
       ? `Carry forward unresolved prior-pass signals: ${arr(priorPassMemory.unresolvedSignals).join(", ")}.`
       : ""
     ,
-    arr(priorPassMemory?.retryPressureSignals).length
-      ? `Retry pressure: ${arr(priorPassMemory.retryPressureSignals).join(", ")}.`
+    retryPressureSignals.length
+      ? `Retry pressure: ${retryPressureSignals.join(", ")}.`
       : ""
   ].filter(Boolean);
 
@@ -106,7 +113,8 @@ export function buildSequencerRevisionBrief({
     blockedMoves: arr(sequencerDirection.blockedMoves),
     successChecks: arr(objective?.successChecks),
     priorPassMemory: isPlainObject(priorPassMemory) ? priorPassMemory : null,
-    retryPressureSignals: arr(priorPassMemory?.retryPressureSignals),
+    revisionRetryPressure: isPlainObject(revisionRetryPressure) ? revisionRetryPressure : null,
+    retryPressureSignals,
     summary: summaryParts.join(" "),
   };
 }

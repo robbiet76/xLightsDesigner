@@ -7,6 +7,7 @@ export function buildCandidateSelectionContext({
   phase = "",
   sequenceRevision = "",
   priorPassMemory = null,
+  revisionRetryPressure = null,
   renderValidationEvidence = null
 } = {}) {
   const phaseValue = str(phase) || "plan";
@@ -16,8 +17,10 @@ export function buildCandidateSelectionContext({
   const unresolvedSignals = Array.isArray(priorPassMemory?.unresolvedSignals)
     ? priorPassMemory.unresolvedSignals.map((row) => str(row)).filter(Boolean)
     : [];
-  const retryPressureSignals = Array.isArray(priorPassMemory?.retryPressureSignals)
-    ? priorPassMemory.retryPressureSignals.map((row) => str(row)).filter(Boolean)
+  const retryPressureSignals = Array.isArray(revisionRetryPressure?.signals)
+    ? revisionRetryPressure.signals.map((row) => str(row)).filter(Boolean)
+    : Array.isArray(priorPassMemory?.retryPressureSignals)
+      ? priorPassMemory.retryPressureSignals.map((row) => str(row)).filter(Boolean)
     : [];
   const seedParts = [phaseValue, requestValue, revisionValue];
   if (critiqueRef) seedParts.push(critiqueRef);

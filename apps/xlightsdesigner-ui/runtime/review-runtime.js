@@ -106,6 +106,10 @@ export async function executeApplyCore({
     const priorPassMemory = buildPriorPassMemory({
       historySnapshot: state.ui?.reviewHistorySnapshot || state.ui?.selectedHistorySnapshot || null
     });
+    const revisionRetryPressure =
+      state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
+      || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
+      || null;
     const sequenceAgentInput = buildSequenceAgentInput({
       requestId: `${orchestrationRun.id}-apply`,
       endpoint: state.endpoint,
@@ -122,11 +126,13 @@ export async function executeApplyCore({
       sequenceRevisionObjective,
       analysisHandoff,
       renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null,
+      revisionRetryPressure,
       candidateSelectionContext: buildCandidateSelectionContext({
         requestId: `${orchestrationRun.id}-apply`,
         phase: "review",
         sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
         priorPassMemory,
+        revisionRetryPressure,
         renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null
       }),
       planningScope: {
@@ -175,6 +181,7 @@ export async function executeApplyCore({
       sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
       sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
       renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
+      revisionRetryPressure: sequenceAgentInput.revisionRetryPressure,
       candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
       priorPassMemory,
       sourceLines,

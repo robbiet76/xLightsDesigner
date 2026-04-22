@@ -395,6 +395,10 @@ export function createProposalGenerationRuntime(deps = {}) {
       const priorPassMemory = buildPriorPassMemory({
         historySnapshot: state.ui?.reviewHistorySnapshot || state.ui?.selectedHistorySnapshot || null
       });
+      const revisionRetryPressure =
+        state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
+        || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
+        || null;
       const sequenceAgentInput = buildSequenceAgentInput({
         requestId: `${orchestrationRun.id}-generate`,
         endpoint: state.endpoint,
@@ -411,11 +415,13 @@ export function createProposalGenerationRuntime(deps = {}) {
         sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null,
         analysisHandoff,
         renderValidationEvidence: state.agentPlan?.handoff?.metadata?.renderValidationEvidence || null,
+        revisionRetryPressure,
         candidateSelectionContext: buildCandidateSelectionContext({
           requestId: `${orchestrationRun.id}-generate`,
           phase: "proposal",
           sequenceRevision: str(state.draftBaseRevision || state.revision || "unknown"),
           priorPassMemory,
+          revisionRetryPressure,
           renderValidationEvidence: state.agentPlan?.handoff?.metadata?.renderValidationEvidence || null
         }),
         planningScope: {
@@ -448,6 +454,7 @@ export function createProposalGenerationRuntime(deps = {}) {
           sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
           sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
           renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
+          revisionRetryPressure: sequenceAgentInput.revisionRetryPressure,
           candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
           priorPassMemory,
           sourceLines: proposalSeedLines,
