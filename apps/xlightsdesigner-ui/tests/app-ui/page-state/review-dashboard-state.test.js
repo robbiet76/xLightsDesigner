@@ -202,6 +202,14 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
                 targetIds: ["Snowman"]
               }
             },
+            revisionRetryPressure: {
+              artifactType: "revision_retry_pressure_v1",
+              artifactId: "retry-1",
+              signals: ["low_change_retry"],
+              oscillation: {
+                candidateIds: ["candidate-base"]
+              }
+            },
             candidateSelectionContext: {
               phase: "review",
               unresolvedSignals: ["weak_section_contrast"],
@@ -270,6 +278,7 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.mode, "bounded_exploration");
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.choice.chosenCandidateId, "candidate-focused");
   assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.artifactType, "revision_delta_v1");
+  assert.equal(dashboard.data.lastAppliedSnapshot.generativeSummary.retry.artifactType, "revision_retry_pressure_v1");
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.selection.selectedBandIds, ["candidate-focused", "candidate-base"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.choice.retryPressureSignals, ["low_change_retry"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.retry.oscillatingCandidateIds, ["candidate-base"]);
@@ -350,6 +359,14 @@ test("review dashboard state exposes current generative sequencing summary from 
               targetIds: ["Snowman"]
             }
           },
+          revisionRetryPressure: {
+            artifactType: "revision_retry_pressure_v1",
+            artifactId: "retry-2",
+            signals: ["low_change_retry"],
+            oscillation: {
+              candidateIds: ["candidate-alternate"]
+            }
+          },
           candidateSelectionContext: {
             phase: "plan",
             retryPressureSignals: ["low_change_retry"]
@@ -366,6 +383,7 @@ test("review dashboard state exposes current generative sequencing summary from 
   assert.equal(dashboard.data.currentGenerativeSummary.selection.mode, "deterministic_preview");
   assert.equal(dashboard.data.currentGenerativeSummary.choice.chosenSummary, "Base seeded candidate.");
   assert.equal(dashboard.data.currentGenerativeSummary.delta.artifactType, "revision_delta_v1");
+  assert.equal(dashboard.data.currentGenerativeSummary.retry.artifactType, "revision_retry_pressure_v1");
   assert.deepEqual(dashboard.data.currentGenerativeSummary.candidates.candidateIds, ["candidate-base", "candidate-alternate"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.choice.retryPressureSignals, ["low_change_retry"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.retry.oscillatingCandidateIds, ["candidate-alternate"]);

@@ -39,6 +39,7 @@ import { buildCandidateSelectionContext } from "./candidate-selection-context.js
 import { buildIntentEnvelopeV1 } from "./intent-envelope.js";
 import { buildRealizationCandidatesV1 } from "./realization-candidates.js";
 import { buildRevisionDeltaV1 } from "./revision-delta.js";
+import { buildRevisionRetryPressureV1 } from "./revision-retry-pressure.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
 
@@ -1515,6 +1516,11 @@ export function buildSequenceAgentPlan({
     effectStrategy: effectiveEffectStrategy,
     chosenCandidate: candidateChoice?.chosenCandidate
   });
+  const revisionRetryPressure = buildRevisionRetryPressureV1({
+    priorPassMemory,
+    candidateSelection,
+    revisionDelta
+  });
 
   const graph = runStage({
     stage: STAGE_ORDER[3],
@@ -1609,6 +1615,7 @@ export function buildSequenceAgentPlan({
         selectedCandidateSummary: normText(effectiveEffectStrategy?.selectedCandidateSummary)
       },
       revisionDelta,
+      revisionRetryPressure,
       intentEnvelope,
       realizationCandidates,
       candidateSelection,

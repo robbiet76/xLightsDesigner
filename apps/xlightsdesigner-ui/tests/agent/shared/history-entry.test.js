@@ -16,12 +16,18 @@ test("buildArtifactRefs captures artifact ids only", () => {
     creativeBrief: { artifactId: "brief-1" },
     proposalBundle: { artifactId: "proposal-1" },
     intentHandoff: { artifactId: "intent-1" },
-    planHandoff: { artifactId: "plan-1", metadata: { revisionDelta: { artifactId: "revision-delta-1" } } },
     applyResult: { artifactId: "apply-1" },
     renderObservation: { artifactId: "render-1" },
     renderCritiqueContext: { artifactId: "critique-1" },
     sequenceArtisticGoal: { artifactId: "goal-1" },
-    sequenceRevisionObjective: { artifactId: "objective-1" }
+    sequenceRevisionObjective: { artifactId: "objective-1" },
+    planHandoff: {
+      artifactId: "plan-1",
+      metadata: {
+        revisionDelta: { artifactId: "revision-delta-1" },
+        revisionRetryPressure: { artifactId: "revision-retry-pressure-1" }
+      }
+    }
   });
 
   assert.deepEqual(refs, {
@@ -38,7 +44,8 @@ test("buildArtifactRefs captures artifact ids only", () => {
     renderCritiqueContextId: "critique-1",
     sequenceArtisticGoalId: "goal-1",
     sequenceRevisionObjectiveId: "objective-1",
-    revisionDeltaId: "revision-delta-1"
+    revisionDeltaId: "revision-delta-1",
+    revisionRetryPressureId: "revision-retry-pressure-1"
   });
 });
 
@@ -65,14 +72,12 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
         requestScopeMode: "section_target_refinement",
         reviewStartLevel: "section",
         sectionScopeKind: "timing_track_windows",
-        priorPassMemory: {
-          retryPressureSignals: ["low_change_retry"]
-        },
-        candidateSelection: {
-          scoredCandidates: [
-            { candidateId: "candidate-base", oscillationRisk: "low" },
-            { candidateId: "candidate-alternate", oscillationRisk: "high" }
-          ]
+        revisionRetryPressure: {
+          artifactType: "revision_retry_pressure_v1",
+          signals: ["low_change_retry"],
+          oscillation: {
+            candidateIds: ["candidate-alternate"]
+          }
         },
         revisionDelta: {
           artifactType: "revision_delta_v1",
@@ -125,7 +130,8 @@ test("buildHistoryEntry produces deterministic history ids from entry content", 
     renderCritiqueContextId: "critique-1",
     sequenceArtisticGoalId: "goal-1",
     sequenceRevisionObjectiveId: "objective-1",
-    revisionDeltaId: "revision-delta-1"
+    revisionDeltaId: "revision-delta-1",
+    revisionRetryPressureId: "revision-retry-pressure-1"
   };
   const snapshotSummary = {
     designSummary: { title: "Brief" },

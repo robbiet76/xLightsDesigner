@@ -279,6 +279,7 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.realizationCandidates.artifactType, "realization_candidates_v1");
   assert.equal(out.metadata.candidateSelection.artifactType, "candidate_selection_v1");
   assert.equal(out.metadata.revisionDelta.artifactType, "revision_delta_v1");
+  assert.equal(out.metadata.revisionRetryPressure.artifactType, "revision_retry_pressure_v1");
   assert.ok(Array.isArray(out.metadata.realizationCandidates.candidates));
   assert.ok(out.metadata.realizationCandidates.candidates.length >= 2);
   assert.ok(Array.isArray(out.metadata.candidateSelection.scoredCandidates));
@@ -307,6 +308,7 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.effectStrategy.selectedCandidateId, out.metadata.candidateChoice.chosenCandidateId);
   assert.deepEqual(out.metadata.revisionDelta.previous.effectNames, ["Shimmer", "Twinkle"]);
   assert.deepEqual(out.metadata.revisionDelta.previous.targetIds, ["MegaTree", "Roofline"]);
+  assert.deepEqual(out.metadata.revisionRetryPressure.signals || [], []);
   assert.ok(Array.isArray(out.metadata.revisionDelta.current.effectNames));
   assert.ok(Array.isArray(out.metadata.revisionDelta.current.targetIds));
   assert.equal(out.metadata.realizationCandidates.candidates[0].revisionSignals.overallAlignment, "medium");

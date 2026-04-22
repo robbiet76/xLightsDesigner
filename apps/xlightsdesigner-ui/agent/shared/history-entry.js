@@ -26,6 +26,9 @@ export function buildArtifactRefs({
   const revisionDelta = planHandoff?.metadata?.revisionDelta && typeof planHandoff.metadata.revisionDelta === "object"
     ? planHandoff.metadata.revisionDelta
     : null;
+  const revisionRetryPressure = planHandoff?.metadata?.revisionRetryPressure && typeof planHandoff.metadata.revisionRetryPressure === "object"
+    ? planHandoff.metadata.revisionRetryPressure
+    : null;
   return {
     analysisArtifactId: ensureString(analysisArtifact?.artifactId, null),
     sceneContextId: ensureString(designSceneContext?.artifactId, null),
@@ -40,7 +43,8 @@ export function buildArtifactRefs({
     renderCritiqueContextId: ensureString(renderCritiqueContext?.artifactId, null),
     sequenceArtisticGoalId: ensureString(sequenceArtisticGoal?.artifactId, null),
     sequenceRevisionObjectiveId: ensureString(sequenceRevisionObjective?.artifactId, null),
-    revisionDeltaId: ensureString(revisionDelta?.artifactId, null)
+    revisionDeltaId: ensureString(revisionDelta?.artifactId, null),
+    revisionRetryPressureId: ensureString(revisionRetryPressure?.artifactId, null)
   };
 }
 
@@ -65,11 +69,8 @@ export function buildHistorySnapshotSummary({
   const revisionDelta = planHandoff?.metadata?.revisionDelta && typeof planHandoff.metadata.revisionDelta === "object"
     ? planHandoff.metadata.revisionDelta
     : null;
-  const priorPassMemory = planHandoff?.metadata?.priorPassMemory && typeof planHandoff.metadata.priorPassMemory === "object"
-    ? planHandoff.metadata.priorPassMemory
-    : null;
-  const candidateSelection = planHandoff?.metadata?.candidateSelection && typeof planHandoff.metadata.candidateSelection === "object"
-    ? planHandoff.metadata.candidateSelection
+  const revisionRetryPressure = planHandoff?.metadata?.revisionRetryPressure && typeof planHandoff.metadata.revisionRetryPressure === "object"
+    ? planHandoff.metadata.revisionRetryPressure
     : null;
   const requestScopeSummary = {
     mode: ensureString(planHandoff?.metadata?.requestScopeMode, null),
@@ -88,14 +89,12 @@ export function buildHistorySnapshotSummary({
       sections: selectedSections,
       warnings,
       requestScope: requestScopeSummary,
-      retryPressure: {
-        signals: compactList(priorPassMemory?.retryPressureSignals, 6),
-        oscillatingCandidates: ensureArray(candidateSelection?.scoredCandidates)
-          .filter((row) => ensureString(row?.oscillationRisk) === "high")
-          .map((row) => ensureString(row?.candidateId, ""))
-          .filter(Boolean)
-          .slice(0, 6)
-      },
+      retryPressure: revisionRetryPressure
+        ? {
+            signals: compactList(revisionRetryPressure?.signals, 6),
+            oscillatingCandidates: compactList(revisionRetryPressure?.oscillation?.candidateIds, 6)
+          }
+        : null,
       revisionDelta: revisionDelta
         ? {
             currentEffects: compactList(revisionDelta?.current?.effectNames, 6),
@@ -177,6 +176,8 @@ export function buildHistoryEntry({
       sequenceArtisticGoalId: ensureString(artifactRefs?.sequenceArtisticGoalId, null),
       sequenceRevisionObjectiveId: ensureString(artifactRefs?.sequenceRevisionObjectiveId, null),
       revisionDeltaId: ensureString(artifactRefs?.revisionDeltaId, null)
+      ,
+      revisionRetryPressureId: ensureString(artifactRefs?.revisionRetryPressureId, null)
     },
     snapshotSummary: snapshotSummary && typeof snapshotSummary === "object" ? snapshotSummary : {},
     applyStage: ensureString(applyStage, null),

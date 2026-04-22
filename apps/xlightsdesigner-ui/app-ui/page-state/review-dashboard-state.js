@@ -35,6 +35,9 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
   const revisionDelta = metadata.revisionDelta && typeof metadata.revisionDelta === "object"
     ? metadata.revisionDelta
     : null;
+  const revisionRetryPressure = metadata.revisionRetryPressure && typeof metadata.revisionRetryPressure === "object"
+    ? metadata.revisionRetryPressure
+    : null;
   const priorPassMemory = metadata.priorPassMemory && typeof metadata.priorPassMemory === "object"
     ? metadata.priorPassMemory
     : null;
@@ -61,13 +64,13 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
   const phase = str(candidateSelection?.policy?.phase || metadata.candidateSelectionContext?.phase);
   const unresolvedSignals = uniqueStrings(metadata.candidateSelectionContext?.unresolvedSignals).slice(0, 5);
   const retryPressureSignals = uniqueStrings(
-    metadata.candidateSelectionContext?.retryPressureSignals || priorPassMemory?.retryPressureSignals
+    revisionRetryPressure?.signals || metadata.candidateSelectionContext?.retryPressureSignals || priorPassMemory?.retryPressureSignals
   ).slice(0, 5);
-  const oscillatingCandidateIds = scoredCandidates
-    .filter((row) => str(row?.oscillationRisk) === "high")
-    .map((row) => str(row?.candidateId))
-    .filter(Boolean)
-    .slice(0, 4);
+  const oscillatingCandidateIds = uniqueStrings(
+    revisionRetryPressure?.oscillation?.candidateIds || scoredCandidates
+      .filter((row) => str(row?.oscillationRisk) === "high")
+      .map((row) => str(row?.candidateId))
+  ).slice(0, 4);
   const hasContent = intentEnvelope || candidates.length || candidateSelection || candidateChoice || effectStrategy;
   if (!hasContent) return null;
   return {
@@ -106,6 +109,8 @@ function buildGenerativeSummaryFromMetadata(metadata = null) {
       introducedTargetIds: uniqueStrings(revisionDelta?.introduced?.targetIds || differenceStrings(currentTargetIds, priorPassMemory?.previousTargetIds)).slice(0, 5)
     },
     retry: {
+      artifactType: str(revisionRetryPressure?.artifactType || "revision_retry_pressure_v1"),
+      artifactId: str(revisionRetryPressure?.artifactId),
       signals: retryPressureSignals,
       oscillatingCandidateIds
     }
