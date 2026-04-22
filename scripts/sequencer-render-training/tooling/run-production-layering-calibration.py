@@ -119,7 +119,7 @@ def launch_workspace_xlights(show_dir: Path, xsq_path: Path, port: int):
     }
     with log_path.open("ab") as log_file:
         subprocess.Popen(
-            [str(binary), "-s", str(show_dir), str(xsq_path)],
+            [str(binary), "-o", "-s", str(show_dir), str(xsq_path)],
             stdout=log_file,
             stderr=log_file,
             start_new_session=True,
