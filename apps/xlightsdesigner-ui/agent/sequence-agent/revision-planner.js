@@ -77,6 +77,10 @@ export function buildSequencerRevisionBrief({
     arr(priorPassMemory?.unresolvedSignals).length
       ? `Carry forward unresolved prior-pass signals: ${arr(priorPassMemory.unresolvedSignals).join(", ")}.`
       : ""
+    ,
+    arr(priorPassMemory?.retryPressureSignals).length
+      ? `Retry pressure: ${arr(priorPassMemory.retryPressureSignals).join(", ")}.`
+      : ""
   ].filter(Boolean);
 
   return {
@@ -102,6 +106,7 @@ export function buildSequencerRevisionBrief({
     blockedMoves: arr(sequencerDirection.blockedMoves),
     successChecks: arr(objective?.successChecks),
     priorPassMemory: isPlainObject(priorPassMemory) ? priorPassMemory : null,
+    retryPressureSignals: arr(priorPassMemory?.retryPressureSignals),
     summary: summaryParts.join(" "),
   };
 }

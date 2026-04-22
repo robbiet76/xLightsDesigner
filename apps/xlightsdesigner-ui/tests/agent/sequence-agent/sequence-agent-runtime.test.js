@@ -286,4 +286,5 @@ test("sequence agent input preserves candidate selection context", () => {
   assert.equal(input.candidateSelectionContext.phase, "review");
   assert.equal(input.candidateSelectionContext.seed, "review::req-selection::rev-selection");
   assert.equal(input.candidateSelectionContext.explorationEnabled, true);
+  assert.deepEqual(input.candidateSelectionContext.retryPressureSignals || [], []);
 });

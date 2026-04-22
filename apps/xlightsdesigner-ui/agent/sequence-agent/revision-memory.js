@@ -14,6 +14,13 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
+function valuesChanged(current = [], previous = []) {
+  const a = uniqueStrings(current);
+  const b = uniqueStrings(previous);
+  if (a.length !== b.length) return true;
+  return a.some((value, index) => value !== b[index]);
+}
+
 export function buildPriorPassMemory({ historySnapshot = null } = {}) {
   const snapshot = isPlainObject(historySnapshot) ? historySnapshot : null;
   const renderCritiqueContext = isPlainObject(snapshot?.renderCritiqueContext) ? snapshot.renderCritiqueContext : null;
@@ -44,6 +51,23 @@ export function buildPriorPassMemory({ historySnapshot = null } = {}) {
     comparison.renderCoverageTooSparse ? "under_coverage" : "",
     comparison.renderCoverageTooBroad ? "over_coverage" : ""
   ]);
+  const currentDeltaEffects = uniqueStrings(revisionDelta?.current?.effectNames);
+  const currentDeltaTargets = uniqueStrings(revisionDelta?.current?.targetIds);
+  const previousDeltaEffects = uniqueStrings(revisionDelta?.previous?.effectNames);
+  const previousDeltaTargets = uniqueStrings(revisionDelta?.previous?.targetIds);
+  const introducedEffectNames = uniqueStrings(revisionDelta?.introduced?.effectNames);
+  const introducedTargetIds = uniqueStrings(revisionDelta?.introduced?.targetIds);
+  const lowChangeRetry = Boolean(
+    revisionDelta &&
+    unresolvedSignals.length &&
+    !introducedEffectNames.length &&
+    !introducedTargetIds.length &&
+    !valuesChanged(currentDeltaEffects, previousDeltaEffects) &&
+    !valuesChanged(currentDeltaTargets, previousDeltaTargets)
+  );
+  const retryPressureSignals = uniqueStrings([
+    lowChangeRetry ? "low_change_retry" : ""
+  ]);
 
   return {
     artifactType: "sequencer_prior_pass_memory_v1",
@@ -58,6 +82,17 @@ export function buildPriorPassMemory({ historySnapshot = null } = {}) {
     previousCoverageRead: str(observed.coverageRead),
     previousEffectNames,
     previousTargetIds,
-    unresolvedSignals
+    unresolvedSignals,
+    retryPressureSignals,
+    revisionDeltaSummary: revisionDelta
+      ? {
+          currentEffectNames: currentDeltaEffects,
+          currentTargetIds: currentDeltaTargets,
+          previousEffectNames: previousDeltaEffects,
+          previousTargetIds: previousDeltaTargets,
+          introducedEffectNames,
+          introducedTargetIds
+        }
+      : null
   };
 }

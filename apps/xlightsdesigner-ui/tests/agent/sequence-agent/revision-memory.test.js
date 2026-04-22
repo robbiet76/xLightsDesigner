@@ -91,4 +91,50 @@ test("buildPriorPassMemory prefers revision delta current values when available"
 
   assert.deepEqual(out.previousEffectNames, ["Color Wash"]);
   assert.deepEqual(out.previousTargetIds, ["Snowman"]);
+  assert.deepEqual(out.retryPressureSignals, []);
+});
+
+test("buildPriorPassMemory flags low-change retry when unresolved signals remain and revision delta changed nothing", () => {
+  const out = buildPriorPassMemory({
+    historySnapshot: {
+      renderCritiqueContext: {
+        observed: {
+          leadModel: "Snowman",
+          breadthRead: "tight",
+          temporalRead: "flat",
+          coverageRead: "balanced"
+        },
+        comparison: {
+          leadMatchesPrimaryFocus: false
+        }
+      },
+      sequenceRevisionObjective: {
+        ladderLevel: "section",
+        scope: {
+          nextOwner: "shared"
+        }
+      },
+      planHandoff: {
+        metadata: {
+          revisionDelta: {
+            artifactType: "revision_delta_v1",
+            current: {
+              effectNames: ["Color Wash"],
+              targetIds: ["Snowman"]
+            },
+            previous: {
+              effectNames: ["Color Wash"],
+              targetIds: ["Snowman"]
+            },
+            introduced: {
+              effectNames: [],
+              targetIds: []
+            }
+          }
+        }
+      }
+    }
+  });
+
+  assert.deepEqual(out.retryPressureSignals, ["low_change_retry"]);
 });

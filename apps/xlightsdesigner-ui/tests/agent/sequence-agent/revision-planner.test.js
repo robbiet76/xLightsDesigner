@@ -46,7 +46,8 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
     },
     priorPassMemory: {
       artifactType: "sequencer_prior_pass_memory_v1",
-      unresolvedSignals: ["lead_mismatch", "flat_development"]
+      unresolvedSignals: ["lead_mismatch", "flat_development"],
+      retryPressureSignals: ["low_change_retry"]
     }
   });
 
@@ -66,7 +67,9 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
   assert.deepEqual(out.blockedMoves, ["do_not_add_second_lead"]);
   assert.deepEqual(out.successChecks, ["section arc reads clearly", "lead target remains dominant"]);
   assert.deepEqual(out.priorPassMemory.unresolvedSignals, ["lead_mismatch", "flat_development"]);
+  assert.deepEqual(out.retryPressureSignals, ["low_change_retry"]);
   assert.match(out.summary, /Clarify the section arc/i);
   assert.match(out.summary, /Introduce restrained support evolution/i);
   assert.match(out.summary, /lead_mismatch/i);
+  assert.match(out.summary, /low_change_retry/i);
 });

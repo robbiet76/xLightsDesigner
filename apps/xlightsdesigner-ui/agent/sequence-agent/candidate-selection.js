@@ -39,7 +39,7 @@ function reuseToleranceWeight(intentEnvelope = null) {
   return weightFromBand(intentEnvelope?.novelty?.reuseTolerance);
 }
 
-function computeCandidateScore(candidate = null, intentEnvelope = null) {
+function computeCandidateScore(candidate = null, intentEnvelope = null, selectionContext = null) {
   const fitScore = bandToScore(candidate?.fitSignals?.overallFit);
   const revisionScore = clamp01(candidate?.revisionSignals?.revisionScore);
   const noveltyScore = clamp01(candidate?.noveltySignals?.noveltyScore);
@@ -55,12 +55,15 @@ function computeCandidateScore(candidate = null, intentEnvelope = null) {
     : 0.5;
   const exploration = explorationWeight(intentEnvelope);
   const reuseTolerance = reuseToleranceWeight(intentEnvelope);
+  const retryPressureSignals = arr(selectionContext?.retryPressureSignals).map((row) => str(row)).filter(Boolean);
+  const lowChangeRetryPressure = retryPressureSignals.includes('low_change_retry') ? 1 : 0;
   const fitComponent = fitScore * 0.42;
   const revisionComponent = revisionScore * 0.18;
-  const noveltyComponent = noveltyScore * (0.15 + (exploration * 0.2));
+  const noveltyComponent = noveltyScore * (0.15 + (exploration * 0.2) + (lowChangeRetryPressure * 0.08));
   const safetyComponent = (1 - meanRisk) * (0.15 + ((1 - reuseTolerance) * 0.1));
   const reusePenaltyComponent = memoryPenalty * (0.08 + ((1 - reuseTolerance) * 0.08));
-  return Number((fitComponent + revisionComponent + noveltyComponent + safetyComponent - reusePenaltyComponent).toFixed(4));
+  const lowChangePenaltyComponent = lowChangeRetryPressure * (0.06 * (1 - noveltyScore));
+  return Number((fitComponent + revisionComponent + noveltyComponent + safetyComponent - reusePenaltyComponent - lowChangePenaltyComponent).toFixed(4));
 }
 
 function selectionMode(selectionSeed = '') {
@@ -84,7 +87,7 @@ export function buildCandidateSelectionV1({
   const scoredCandidates = candidates
     .map((candidate) => ({
       candidateId: str(candidate?.candidateId),
-      selectionScore: computeCandidateScore(candidate, intentEnvelope),
+      selectionScore: computeCandidateScore(candidate, intentEnvelope, selectionContext),
       fitScore: bandToScore(candidate?.fitSignals?.overallFit),
       revisionScore: clamp01(candidate?.revisionSignals?.revisionScore),
       noveltyScore: clamp01(candidate?.noveltySignals?.noveltyScore),
@@ -130,11 +133,12 @@ export function buildCandidateSelectionV1({
     },
     primaryCandidateId,
     selectionContext: selectionContext && typeof selectionContext === 'object'
-      ? {
+        ? {
           phase: str(selectionContext.phase || 'plan'),
           seed: str(selectionContext.seed),
           explorationEnabled: Boolean(selectionContext.explorationEnabled),
-          unresolvedSignals: arr(selectionContext.unresolvedSignals).map((row) => str(row)).filter(Boolean)
+          unresolvedSignals: arr(selectionContext.unresolvedSignals).map((row) => str(row)).filter(Boolean),
+          retryPressureSignals: arr(selectionContext.retryPressureSignals).map((row) => str(row)).filter(Boolean)
         }
       : null,
     notes: [
