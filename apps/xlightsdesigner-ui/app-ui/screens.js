@@ -1617,6 +1617,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <div class="dashboard-panel">
               <div class="artifact-kicker">Apply State</div>
               <p>Status: ${escapeHtml(String(currentSnapshot?.applySummary?.status || "pending"))}</p>
+              ${data.currentPassOutcome?.status ? `<p>Pass outcome: ${escapeHtml(String(data.currentPassOutcome.status))}${data.currentPassOutcome?.hasRetryPressure ? " / retry pressure" : ""}</p>` : ""}
               <p>${data.backupReady ? `Backup ready: ${escapeHtml(String(dashboard.refs?.backupPath || "").trim())}` : "No restore point captured yet."}</p>
               <label class="approval-gate-toggle">
                 <input id="apply-approval-checkbox" type="checkbox" ${approvalChecked ? "checked" : ""} />
@@ -1779,7 +1780,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <button data-history-entry="${escapeHtml(String(entry.historyEntryId || ""))}" class="${active}">
                           ${escapeHtml(String(entry.summary || "Unnamed apply snapshot"))}
                         </button>
-                        <div class="banner">${escapeHtml(String(entry.createdLabel || "Unknown time"))} | ${escapeHtml(String(entry.status || "unknown"))}${entry.applyStage ? ` | ${escapeHtml(String(entry.applyStage))}` : ""}</div>
+                        <div class="banner">${escapeHtml(String(entry.createdLabel || "Unknown time"))} | ${escapeHtml(String(entry.status || "unknown"))}${entry.applyStage ? ` | ${escapeHtml(String(entry.applyStage))}` : ""}${entry.passOutcomeStatus ? ` | ${escapeHtml(String(entry.passOutcomeStatus))}` : ""}${entry.hasRetryPressure ? " | retry pressure" : ""}</div>
                       </li>
                     `;
                   })
@@ -1798,6 +1799,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
               <p class="artifact-body">This is the applied design and sequence state captured when the revision was written to xLights.</p>
               <div class="artifact-chip-row">
                 <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(selected.status || "unknown"))}</span>
+                ${selected.passOutcomeStatus ? `<span class="artifact-chip">${escapeHtml(String(selected.passOutcomeStatus))}</span>` : ""}
+                ${selected.hasRetryPressure ? `<span class="artifact-chip">retry pressure</span>` : ""}
                 <span class="artifact-chip">${escapeHtml(String(selected.commandCount || 0))} commands</span>
                 <span class="artifact-chip">${escapeHtml(String(selected.impactCount || 0))} impacts</span>
                 <span class="artifact-chip">${escapeHtml(String(selected.createdLabel || "unknown time"))}</span>

@@ -64,6 +64,8 @@ export function buildHistoryDashboardState({
         summary: str(entry.summary || "Unnamed apply snapshot"),
         status: str(entry.status || "unknown"),
         applyStage: str(entry.applyStage || ""),
+        passOutcomeStatus: str(entry.snapshotSummary?.sequenceSummary?.passOutcome?.status || ""),
+        hasRetryPressure: Boolean(entry.snapshotSummary?.sequenceSummary?.passOutcome?.hasRetryPressure),
         createdLabel: formatShortDate(entry.createdAt),
         active: str(entry.historyEntryId) === str(selected?.historyEntryId)
       })),
@@ -86,6 +88,8 @@ export function buildHistoryDashboardState({
               ? arr(selectedSnapshot.proposalBundle.proposalLines).slice(0, 4)
               : arr(selected.snapshotSummary?.sequenceSummary?.proposalLines).slice(0, 4),
             applyStatus: str(selectedSnapshot?.applyResult?.status || selected.snapshotSummary?.applySummary?.status || selected.status || "unknown"),
+            passOutcomeStatus: str(selectedSnapshot?.planHandoff?.metadata?.revisionFeedback?.status || selected.snapshotSummary?.sequenceSummary?.passOutcome?.status || ""),
+            hasRetryPressure: Boolean(selected.snapshotSummary?.sequenceSummary?.passOutcome?.hasRetryPressure),
             applyCommandCount: Number(selectedSnapshot?.applyResult?.commandCount || selected.snapshotSummary?.applySummary?.commandCount || selected.commandCount || 0),
             applyImpactCount: Number(selectedSnapshot?.applyResult?.impactCount || selected.snapshotSummary?.applySummary?.impactCount || selected.impactCount || 0),
             audioTitle: str(selectedSnapshot?.analysisArtifact?.trackIdentity?.title || "Unknown audio"),

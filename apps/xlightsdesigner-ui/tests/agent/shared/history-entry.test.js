@@ -117,6 +117,8 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
   assert.equal(summary.sequenceSummary.requestScope.mode, "section_target_refinement");
   assert.equal(summary.sequenceSummary.requestScope.reviewStartLevel, "section");
   assert.equal(summary.sequenceSummary.requestScope.sectionScopeKind, "timing_track_windows");
+  assert.equal(summary.sequenceSummary.passOutcome.status, "revise_required");
+  assert.equal(summary.sequenceSummary.passOutcome.hasRetryPressure, true);
   assert.deepEqual(summary.sequenceSummary.retryPressure.signals, ["low_change_retry"]);
   assert.deepEqual(summary.sequenceSummary.retryPressure.oscillatingCandidates, ["candidate-alternate"]);
   assert.equal(summary.sequenceSummary.revisionFeedback.status, "revise_required");

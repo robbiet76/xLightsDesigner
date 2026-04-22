@@ -84,6 +84,12 @@ export function buildHistorySnapshotSummary({
     reviewStartLevel: ensureString(planHandoff?.metadata?.reviewStartLevel, null),
     sectionScopeKind: ensureString(planHandoff?.metadata?.sectionScopeKind, null)
   };
+  const retrySignals = revisionRetryPressure
+    ? compactList(revisionRetryPressure?.signals, 6)
+    : [];
+  const feedbackStatus = ensureString(revisionFeedback?.status, null);
+  const passOutcomeStatus = feedbackStatus
+    || (retrySignals.length ? "retry_pressure" : "stable");
   return {
     designSummary: {
       title: ensureString(creativeBrief?.title, "Design snapshot"),
@@ -96,15 +102,19 @@ export function buildHistorySnapshotSummary({
       sections: selectedSections,
       warnings,
       requestScope: requestScopeSummary,
+      passOutcome: {
+        status: passOutcomeStatus,
+        hasRetryPressure: retrySignals.length > 0
+      },
       retryPressure: revisionRetryPressure
         ? {
-            signals: compactList(revisionRetryPressure?.signals, 6),
+            signals: retrySignals,
             oscillatingCandidates: compactList(revisionRetryPressure?.oscillation?.candidateIds, 6)
           }
         : null,
       revisionFeedback: revisionFeedback
         ? {
-            status: ensureString(revisionFeedback?.status, null),
+            status: feedbackStatus,
             rejectionReasons: compactList(revisionFeedback?.rejectionReasons, 6),
             executionObjective: ensureString(revisionFeedback?.nextDirection?.executionObjective, null)
           }

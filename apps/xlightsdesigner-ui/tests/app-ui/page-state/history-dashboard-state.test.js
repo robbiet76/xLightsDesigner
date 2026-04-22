@@ -25,6 +25,14 @@ test("history dashboard summarizes selected applied revision", () => {
           historyEntryId: "history-1",
           summary: "Applied chorus focal lift",
           status: "completed",
+          snapshotSummary: {
+            sequenceSummary: {
+              passOutcome: {
+                status: "revise_required",
+                hasRetryPressure: true
+              }
+            }
+          },
           commandCount: 4,
           impactCount: 2,
           createdAt: "2026-03-16T13:00:00.000Z",
@@ -76,7 +84,11 @@ test("history dashboard summarizes selected applied revision", () => {
   assert.equal(dashboard.status, "active");
   assert.equal(dashboard.data.rows.length, 1);
   assert.equal(dashboard.data.selected.summary, "Applied chorus focal lift");
+  assert.equal(dashboard.data.rows[0].passOutcomeStatus, "revise_required");
+  assert.equal(dashboard.data.rows[0].hasRetryPressure, true);
   assert.equal(dashboard.data.selected.designSummary, "Warm focal chorus");
+  assert.equal(dashboard.data.selected.passOutcomeStatus, "revise_required");
+  assert.equal(dashboard.data.selected.hasRetryPressure, true);
   assert.equal(dashboard.data.selected.audioTitle, "Song");
   assert.equal(dashboard.data.selected.renderObservation.macro.leadModel, "Snowman");
   assert.deepEqual(dashboard.data.selected.planHandoff.metadata.priorPassMemory.unresolvedSignals, ["lead_mismatch"]);

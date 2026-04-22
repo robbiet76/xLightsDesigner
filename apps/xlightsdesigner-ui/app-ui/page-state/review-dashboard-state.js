@@ -365,6 +365,9 @@ export function buildReviewDashboardState({
     : null;
   const currentSnapshot = buildCurrentReviewSnapshotSummary() || {};
   const currentGenerativeSummary = buildGenerativeSummaryFromMetadata(state.agentPlan?.metadata || null);
+  const currentPassOutcome = currentSnapshot?.sequenceSummary?.passOutcome && typeof currentSnapshot.sequenceSummary.passOutcome === "object"
+    ? currentSnapshot.sequenceSummary.passOutcome
+    : null;
   const applyHistory = arr(state.applyHistory);
   const lastApply = applyHistory.length ? applyHistory[0] : null;
   const lastAppliedSnapshot =
@@ -463,6 +466,7 @@ export function buildReviewDashboardState({
       planSummary,
       impact,
       verification,
+      currentPassOutcome,
       counts: {
         pendingChanges: allVisibleLines.length,
         designGroups: reviewRows.length,

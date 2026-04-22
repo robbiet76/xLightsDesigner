@@ -418,6 +418,32 @@ test("review dashboard state exposes current generative sequencing summary from 
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedTargetIds, ["Snowman"]);
 });
 
+test("review dashboard state exposes compact current pass outcome from snapshot summary", () => {
+  const dashboard = buildReviewDashboardState({
+    state: {
+      proposed: ["Chorus 1 / Snowman / add Color Wash"],
+      ui: { proposedSelection: [0], applyApprovalChecked: false },
+      flags: { applyInProgress: false, proposalStale: false }
+    },
+    helpers: buildHelpers({
+      buildCurrentReviewSnapshotSummary: () => ({
+        designSummary: { title: "Current design" },
+        sequenceSummary: {
+          proposalLines: ["Chorus 1 / Snowman / add Color Wash"],
+          passOutcome: {
+            status: "retry_pressure",
+            hasRetryPressure: true
+          }
+        },
+        applySummary: { status: "pending" }
+      })
+    })
+  });
+
+  assert.equal(dashboard.data.currentPassOutcome.status, "retry_pressure");
+  assert.equal(dashboard.data.currentPassOutcome.hasRetryPressure, true);
+});
+
 test("review dashboard state falls back to intent handoff execution strategy for grouped rows", () => {
   const dashboard = buildReviewDashboardState({
     state: {
