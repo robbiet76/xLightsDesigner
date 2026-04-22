@@ -25,6 +25,13 @@ function overlapRatio(left = [], right = []) {
   return overlap / Math.max(a.size, b.size);
 }
 
+function valuesEquivalent(left = [], right = []) {
+  const a = unique(left);
+  const b = unique(right);
+  if (a.length !== b.length) return false;
+  return a.every((value, index) => value === b[index]);
+}
+
 function computeRevisionFit({ sequencerRevisionBrief = null, targetIds = [], attentionProfile = '' } = {}) {
   const revisionRoles = new Set(arr(sequencerRevisionBrief?.revisionRoles).map((row) => str(row)));
   const revisionTargets = unique(sequencerRevisionBrief?.revisionTargets);
@@ -114,6 +121,24 @@ function buildCandidate({
   const effectReuseRatio = overlapRatio(allEffects, priorPassMemory?.previousEffectNames);
   const memoryPenalty = Math.min(0.35, (targetReuseRatio * 0.2) + (effectReuseRatio * 0.25));
   const adjustedNoveltyScore = Math.max(0.05, Number((noveltyScore - memoryPenalty).toFixed(4)));
+  const unresolvedSignals = unique(arr(priorPassMemory?.unresolvedSignals));
+  const retryPressureSignals = unique(arr(priorPassMemory?.retryPressureSignals));
+  const priorDelta = priorPassMemory?.revisionDeltaSummary && typeof priorPassMemory.revisionDeltaSummary === 'object'
+    ? priorPassMemory.revisionDeltaSummary
+    : null;
+  const priorDeltaCurrentEffects = unique(priorDelta?.currentEffectNames);
+  const priorDeltaCurrentTargets = unique(priorDelta?.currentTargetIds);
+  const priorDeltaPreviousEffects = unique(priorDelta?.previousEffectNames);
+  const priorDeltaPreviousTargets = unique(priorDelta?.previousTargetIds);
+  const priorPassMateriallyChanged = valuesEquivalent(priorDeltaCurrentEffects, priorDeltaPreviousEffects) === false
+    || valuesEquivalent(priorDeltaCurrentTargets, priorDeltaPreviousTargets) === false;
+  const oscillatesBackToPrevious = Boolean(
+    unresolvedSignals.length &&
+    priorPassMateriallyChanged &&
+    valuesEquivalent(allEffects, priorDeltaPreviousEffects) &&
+    valuesEquivalent(allTargets, priorDeltaPreviousTargets)
+  );
+  const oscillationPenalty = oscillatesBackToPrevious ? 0.22 : 0;
   return {
     candidateId: id,
     summary,
@@ -186,7 +211,9 @@ function buildCandidate({
       recentPaletteReuse: 'medium',
       recentCompositionReuse: targetReuseRatio >= 0.5 ? 'high' : 'medium',
       noveltyScore: adjustedNoveltyScore,
-      memoryPenalty: Number(memoryPenalty.toFixed(4))
+      memoryPenalty: Number(memoryPenalty.toFixed(4)),
+      oscillationRisk: oscillatesBackToPrevious ? 'high' : retryPressureSignals.includes('low_change_retry') ? 'medium' : 'low',
+      oscillationPenalty: Number(oscillationPenalty.toFixed(4))
     },
     riskSignals: {
       attentionConflictRisk: fitBand(riskValue),

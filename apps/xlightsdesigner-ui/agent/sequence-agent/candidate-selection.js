@@ -44,6 +44,7 @@ function computeCandidateScore(candidate = null, intentEnvelope = null, selectio
   const revisionScore = clamp01(candidate?.revisionSignals?.revisionScore);
   const noveltyScore = clamp01(candidate?.noveltySignals?.noveltyScore);
   const memoryPenalty = clamp01(candidate?.noveltySignals?.memoryPenalty);
+  const oscillationPenalty = clamp01(candidate?.noveltySignals?.oscillationPenalty);
   const riskBands = [
     candidate?.riskSignals?.attentionConflictRisk,
     candidate?.riskSignals?.layeringConflictRisk,
@@ -63,7 +64,8 @@ function computeCandidateScore(candidate = null, intentEnvelope = null, selectio
   const safetyComponent = (1 - meanRisk) * (0.15 + ((1 - reuseTolerance) * 0.1));
   const reusePenaltyComponent = memoryPenalty * (0.08 + ((1 - reuseTolerance) * 0.08));
   const lowChangePenaltyComponent = lowChangeRetryPressure * (0.06 * (1 - noveltyScore));
-  return Number((fitComponent + revisionComponent + noveltyComponent + safetyComponent - reusePenaltyComponent - lowChangePenaltyComponent).toFixed(4));
+  const oscillationPenaltyComponent = oscillationPenalty * 0.18;
+  return Number((fitComponent + revisionComponent + noveltyComponent + safetyComponent - reusePenaltyComponent - lowChangePenaltyComponent - oscillationPenaltyComponent).toFixed(4));
 }
 
 function selectionMode(selectionSeed = '') {
@@ -91,6 +93,7 @@ export function buildCandidateSelectionV1({
       fitScore: bandToScore(candidate?.fitSignals?.overallFit),
       revisionScore: clamp01(candidate?.revisionSignals?.revisionScore),
       noveltyScore: clamp01(candidate?.noveltySignals?.noveltyScore),
+      oscillationRisk: str(candidate?.noveltySignals?.oscillationRisk),
       riskScore: Number((1 - (
         [
           candidate?.riskSignals?.attentionConflictRisk,
