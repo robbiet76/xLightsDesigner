@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[3]
 TOOLING_DIR = ROOT_DIR / "scripts" / "sequencer-render-training" / "tooling"
 XLIGHTS_URL = "http://127.0.0.1:49914/xlDoAutomation"
+XLIGHTS_APP = Path("/Applications/xLights.app")
 DEFAULT_PREFERRED_CASES = [
     ("CozyLittleChristmas", "HiddenTree", ("Lines", "Snowflakes")),
     ("CozyLittleChristmas", "HiddenTreeStar", ("Color Wash", "Strobe")),
@@ -126,6 +127,44 @@ def ensure_xlights_ready(launch: bool):
             return
         time.sleep(2)
     raise RuntimeError("xLights did not become ready after launch.")
+
+
+def launch_workspace_xlights(show_dir: Path, xsq_path: Path):
+    binary = XLIGHTS_APP / "Contents" / "MacOS" / "xLights"
+    if not binary.exists():
+        raise RuntimeError(f"xLights binary not found at {binary}")
+    subprocess.Popen(
+        [str(binary), "-s", str(show_dir), str(xsq_path)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+
+
+def ensure_workspace_session(workspace_dir: Path, workspace_xsq: Path, launch: bool):
+    if xlights_ready():
+        current_show = Path(get_show_folder() or "").resolve()
+        if current_show != workspace_dir.resolve():
+            raise RuntimeError(
+                "Refusing to switch the current xLights automation session away from its active show. "
+                "Close the existing xLights session first, or let this runner launch a dedicated copied-show "
+                "session when no automation listener is already active."
+            )
+        return
+    if not launch:
+        raise RuntimeError(
+            "xLights automation is not reachable on port 49914. Start xLights in the copied workspace, or rerun "
+            "with --launch-xlights so the runner can launch directly into the temp show."
+        )
+    launch_workspace_xlights(workspace_dir, workspace_xsq)
+    deadline = time.time() + 180
+    while time.time() < deadline:
+        if xlights_ready():
+            current_show = Path(get_show_folder() or "").resolve()
+            if current_show == workspace_dir.resolve():
+                return
+        time.sleep(2)
+    raise RuntimeError(f"xLights did not become ready in copied workspace {workspace_dir}")
 
 
 def close_sequence_quiet():
@@ -379,9 +418,7 @@ def process_case(show_dir: Path, case: dict, out_dir: Path, launch_xlights: bool
         "--out", str(geometry_path),
     ])
 
-    ensure_xlights_ready(launch_xlights)
-    if Path(get_show_folder() or "").resolve() != workspace_dir.resolve():
-        change_show_folder(workspace_dir)
+    ensure_workspace_session(workspace_dir, workspace_xsq, launch_xlights)
 
     variant_specs = [
         ("left", {strv(effects[0].get("effectId"))}),

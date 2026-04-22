@@ -32,8 +32,18 @@ That runner now does the following:
    - right effect only
    - composite pair
 5. exports offline preview-scene geometry for the copied show
-6. switches xLights to the target show folder
+6. requires xLights automation to already be attached to that copied workspace, or launches directly into the copied workspace when no automation listener is active
 7. attempts the live render path needed for real layering proof
+
+## Safety Boundary
+
+The runner now refuses to switch an already-running xLights automation session away from its current show.
+
+This is intentional.
+
+If xLights is currently attached to the production show, the runner aborts instead of calling a live show-folder switch that could surface an `xlights_rgbeffects.xml` save prompt.
+
+That keeps the production show read-only.
 
 ## Current Real Blocker
 
@@ -41,10 +51,9 @@ The runner reaches the live xLights render boundary, but the copied-show render 
 
 Observed behavior:
 
-1. `changeShowFolder` was initially failing with `503`
-   - fixed by using `force=true`
-2. after that fix, the runner progressed into isolated sequence handling
-3. xLights still did not complete the isolated render path cleanly from the copied workspace
+1. switching the current live xLights session is no longer considered safe enough for production calibration
+2. the runner now hard-fails instead of mutating that session
+3. the remaining path must use a dedicated xLights instance/session started directly in the copied workspace
 
 This is not a calibration-model issue.
 It is an xLights integration/runtime issue.
@@ -65,14 +74,14 @@ That means the live render path must be able to render temporary isolated `.xsq`
 
 1. production same-target layering inventory is real and usable
 2. the copied-show isolation workflow is correct in principle
-3. the remaining failure is specifically at the live xLights render/session boundary
+3. the remaining failure is specifically at the dedicated live xLights render/session boundary
 
 ## Recommended Next Moves
 
 There are two viable options:
 
 1. preferred
-   - stabilize copied-show live rendering through the xLights session API
+   - stabilize dedicated copied-show live rendering through a separate xLights session started with `-s <copied-show-dir>`
    - goal: make temporary external show workspaces render reliably
 
 2. fallback, only with explicit approval
