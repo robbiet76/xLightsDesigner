@@ -469,6 +469,9 @@ test("executeApplyCore prefers collected post-apply render observation when avai
   assert.equal(state.sequenceAgentRuntime.renderObservation?.artifactId, "render-1");
   assert.equal(state.sequenceAgentRuntime.renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus, true);
   assert.equal(state.sequenceAgentRuntime.renderCritiqueContext?.source?.renderObservationArtifactId, "render-1");
+  assert.equal(state.sequenceAgentRuntime.revisionFeedback?.artifactType, "revision_feedback_v1");
+  assert.equal(typeof state.sequenceAgentRuntime.revisionFeedback?.status, "string");
+  assert.ok(Array.isArray(state.sequenceAgentRuntime.revisionFeedback?.rejectionReasons));
 });
 
 test("executeApplyCore prefers render critique refresh when render observation is available", async () => {
@@ -640,6 +643,9 @@ test("executeApplyCore prefers render critique refresh when render observation i
   assert.equal(state.sequenceAgentRuntime.renderCritiqueContext.artifactType, "sequence_render_critique_context_v1");
   assert.equal(state.sequenceAgentRuntime.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, false);
   assert.equal(state.sequenceAgentRuntime.renderCritiqueContext.comparison.musicalLiftExpected, true);
+  assert.equal(state.sequenceAgentRuntime.revisionFeedback.artifactType, "revision_feedback_v1");
+  assert.equal(state.sequenceAgentRuntime.revisionFeedback.status, "revise_required");
+  assert.ok(state.sequenceAgentRuntime.revisionFeedback.rejectionReasons.some((row) => /Rendered lead does not match the intended primary focus/i.test(String(row))));
   assert.match(state.creative.sequenceArtisticGoal.evaluationLens.comparisonQuestions[0], /Rendered lead does not match the intended primary focus/i);
   assert.match(state.creative.sequenceRevisionObjective.sequencerDirection.executionObjective, /rendered composition problem/i);
 });

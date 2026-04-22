@@ -25,7 +25,8 @@ test("buildArtifactRefs captures artifact ids only", () => {
       artifactId: "plan-1",
       metadata: {
         revisionDelta: { artifactId: "revision-delta-1" },
-        revisionRetryPressure: { artifactId: "revision-retry-pressure-1" }
+        revisionRetryPressure: { artifactId: "revision-retry-pressure-1" },
+        revisionFeedback: { artifactId: "revision-feedback-1" }
       }
     }
   });
@@ -45,7 +46,8 @@ test("buildArtifactRefs captures artifact ids only", () => {
     sequenceArtisticGoalId: "goal-1",
     sequenceRevisionObjectiveId: "objective-1",
     revisionDeltaId: "revision-delta-1",
-    revisionRetryPressureId: "revision-retry-pressure-1"
+    revisionRetryPressureId: "revision-retry-pressure-1",
+    revisionFeedbackId: "revision-feedback-1"
   });
 });
 
@@ -79,6 +81,14 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
             candidateIds: ["candidate-alternate"]
           }
         },
+        revisionFeedback: {
+          artifactType: "revision_feedback_v1",
+          status: "revise_required",
+          rejectionReasons: ["Rendered lead does not match the intended primary focus."],
+          nextDirection: {
+            executionObjective: "Revise the next pass to resolve the rendered focus problem."
+          }
+        },
         revisionDelta: {
           artifactType: "revision_delta_v1",
           current: {
@@ -109,6 +119,9 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
   assert.equal(summary.sequenceSummary.requestScope.sectionScopeKind, "timing_track_windows");
   assert.deepEqual(summary.sequenceSummary.retryPressure.signals, ["low_change_retry"]);
   assert.deepEqual(summary.sequenceSummary.retryPressure.oscillatingCandidates, ["candidate-alternate"]);
+  assert.equal(summary.sequenceSummary.revisionFeedback.status, "revise_required");
+  assert.deepEqual(summary.sequenceSummary.revisionFeedback.rejectionReasons, ["Rendered lead does not match the intended primary focus."]);
+  assert.equal(summary.sequenceSummary.revisionFeedback.executionObjective, "Revise the next pass to resolve the rendered focus problem.");
   assert.deepEqual(summary.sequenceSummary.revisionDelta.currentEffects, ["Color Wash"]);
   assert.deepEqual(summary.sequenceSummary.revisionDelta.introducedTargets, ["Snowman"]);
   assert.equal(summary.applySummary.commandCount, 5);
@@ -131,7 +144,8 @@ test("buildHistoryEntry produces deterministic history ids from entry content", 
     sequenceArtisticGoalId: "goal-1",
     sequenceRevisionObjectiveId: "objective-1",
     revisionDeltaId: "revision-delta-1",
-    revisionRetryPressureId: "revision-retry-pressure-1"
+    revisionRetryPressureId: "revision-retry-pressure-1",
+    revisionFeedbackId: "revision-feedback-1"
   };
   const snapshotSummary = {
     designSummary: { title: "Brief" },

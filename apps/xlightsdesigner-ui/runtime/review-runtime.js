@@ -4,11 +4,13 @@ import {
   refreshSequenceArtisticGoalFromPracticalValidation,
   refreshSequenceRevisionObjectiveFromPracticalValidation,
   refreshSequenceArtisticGoalFromRenderCritique,
-  refreshSequenceRevisionObjectiveFromRenderCritique
+  refreshSequenceRevisionObjectiveFromRenderCritique,
+  buildSequenceRevisionFeedback
 } from "../agent/designer-dialog/sequence-artifacts.js";
 import { buildRenderCritiqueContext } from "../agent/sequence-agent/render-critique-context.js";
 import { buildRenderValidationEvidence } from "../agent/sequence-agent/render-validation-evidence.js";
 import { buildCandidateSelectionContext } from "../agent/sequence-agent/candidate-selection-context.js";
+import { buildRevisionRetryPressureV1 } from "../agent/sequence-agent/revision-retry-pressure.js";
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
@@ -400,6 +402,27 @@ export async function executeApplyCore({
           sequencingDesignHandoff,
           practicalValidation
         });
+    const activeRevisionRetryPressure =
+      planHandoff?.metadata?.revisionRetryPressure
+      || state.sequenceAgentRuntime?.revisionRetryPressure
+      || buildRevisionRetryPressureV1({
+        priorPassMemory,
+        candidateSelection: planHandoff?.metadata?.candidateSelection,
+        revisionDelta: planHandoff?.metadata?.revisionDelta
+      });
+    state.sequenceAgentRuntime.revisionRetryPressure = activeRevisionRetryPressure;
+    state.sequenceAgentRuntime.revisionFeedback = buildSequenceRevisionFeedback({
+      sequenceArtisticGoal: state.creative.sequenceArtisticGoal,
+      sequenceRevisionObjective: state.creative.sequenceRevisionObjective,
+      renderCritiqueContext,
+      practicalValidation,
+      revisionRetryPressure: activeRevisionRetryPressure
+    });
+    if (planHandoff && typeof planHandoff === "object") {
+      planHandoff.metadata = planHandoff.metadata && typeof planHandoff.metadata === "object" ? planHandoff.metadata : {};
+      planHandoff.metadata.revisionRetryPressure = activeRevisionRetryPressure;
+      planHandoff.metadata.revisionFeedback = state.sequenceAgentRuntime.revisionFeedback;
+    }
     applyResult = buildSequenceAgentApplyResult({
       planId: String(planHandoff?.planId || ""),
       status: "applied",

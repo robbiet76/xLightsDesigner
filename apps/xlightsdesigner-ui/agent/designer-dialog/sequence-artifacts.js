@@ -503,3 +503,56 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
   ]);
   return finalizeSequenceArtifact(base);
 }
+
+export function buildSequenceRevisionFeedback({
+  sequenceArtisticGoal = null,
+  sequenceRevisionObjective = null,
+  renderCritiqueContext = null,
+  practicalValidation = null,
+  revisionRetryPressure = null
+} = {}) {
+  const artisticGoal = isPlainObject(sequenceArtisticGoal) ? sequenceArtisticGoal : null;
+  const revisionObjective = isPlainObject(sequenceRevisionObjective) ? sequenceRevisionObjective : null;
+  if (!artisticGoal && !revisionObjective && !renderCritiqueContext && !practicalValidation && !revisionRetryPressure) {
+    return null;
+  }
+
+  const retrySignals = uniqueStrings(revisionRetryPressure?.signals);
+  const oscillatingCandidateIds = uniqueStrings(revisionRetryPressure?.oscillation?.candidateIds);
+  const critiqueReasons = collectRenderCritiqueFindings(renderCritiqueContext);
+  const validationReasons = collectValidationFailures(practicalValidation).map((row) => row.detail);
+  const rejectionReasons = uniqueStrings([
+    ...(critiqueReasons.length ? critiqueReasons : validationReasons)
+  ]);
+
+  return finalizeSequenceArtifact({
+    artifactType: "revision_feedback_v1",
+    artifactVersion: 1,
+    status: rejectionReasons.length || retrySignals.length ? "revise_required" : "stable",
+    source: {
+      sequenceArtisticGoalRef: str(artisticGoal?.artifactId),
+      sequenceRevisionObjectiveRef: str(revisionObjective?.artifactId),
+      renderCritiqueContextRef: str(renderCritiqueContext?.artifactId),
+      practicalValidationRef: str(practicalValidation?.artifactId),
+      revisionRetryPressureRef: str(revisionRetryPressure?.artifactId)
+    },
+    rejectionReasons,
+    retryPressure: {
+      signals: retrySignals,
+      oscillatingCandidateIds
+    },
+    nextDirection: {
+      artisticCorrection: str(revisionObjective?.designerDirection?.artisticCorrection),
+      executionObjective: str(revisionObjective?.sequencerDirection?.executionObjective),
+      revisionRoles: uniqueStrings([
+        ...arr(revisionObjective?.scope?.revisionRoles),
+        ...arr(revisionObjective?.sequencerDirection?.revisionRoles)
+      ]),
+      targetIds: uniqueStrings([
+        ...arr(revisionObjective?.scope?.revisionTargets),
+        ...arr(revisionObjective?.sequencerDirection?.focusTargets)
+      ]),
+      successChecks: uniqueStrings(revisionObjective?.successChecks)
+    }
+  });
+}

@@ -29,6 +29,9 @@ export function buildArtifactRefs({
   const revisionRetryPressure = planHandoff?.metadata?.revisionRetryPressure && typeof planHandoff.metadata.revisionRetryPressure === "object"
     ? planHandoff.metadata.revisionRetryPressure
     : null;
+  const revisionFeedback = planHandoff?.metadata?.revisionFeedback && typeof planHandoff.metadata.revisionFeedback === "object"
+    ? planHandoff.metadata.revisionFeedback
+    : null;
   return {
     analysisArtifactId: ensureString(analysisArtifact?.artifactId, null),
     sceneContextId: ensureString(designSceneContext?.artifactId, null),
@@ -44,7 +47,8 @@ export function buildArtifactRefs({
     sequenceArtisticGoalId: ensureString(sequenceArtisticGoal?.artifactId, null),
     sequenceRevisionObjectiveId: ensureString(sequenceRevisionObjective?.artifactId, null),
     revisionDeltaId: ensureString(revisionDelta?.artifactId, null),
-    revisionRetryPressureId: ensureString(revisionRetryPressure?.artifactId, null)
+    revisionRetryPressureId: ensureString(revisionRetryPressure?.artifactId, null),
+    revisionFeedbackId: ensureString(revisionFeedback?.artifactId, null)
   };
 }
 
@@ -72,6 +76,9 @@ export function buildHistorySnapshotSummary({
   const revisionRetryPressure = planHandoff?.metadata?.revisionRetryPressure && typeof planHandoff.metadata.revisionRetryPressure === "object"
     ? planHandoff.metadata.revisionRetryPressure
     : null;
+  const revisionFeedback = planHandoff?.metadata?.revisionFeedback && typeof planHandoff.metadata.revisionFeedback === "object"
+    ? planHandoff.metadata.revisionFeedback
+    : null;
   const requestScopeSummary = {
     mode: ensureString(planHandoff?.metadata?.requestScopeMode, null),
     reviewStartLevel: ensureString(planHandoff?.metadata?.reviewStartLevel, null),
@@ -93,6 +100,13 @@ export function buildHistorySnapshotSummary({
         ? {
             signals: compactList(revisionRetryPressure?.signals, 6),
             oscillatingCandidates: compactList(revisionRetryPressure?.oscillation?.candidateIds, 6)
+          }
+        : null,
+      revisionFeedback: revisionFeedback
+        ? {
+            status: ensureString(revisionFeedback?.status, null),
+            rejectionReasons: compactList(revisionFeedback?.rejectionReasons, 6),
+            executionObjective: ensureString(revisionFeedback?.nextDirection?.executionObjective, null)
           }
         : null,
       revisionDelta: revisionDelta
@@ -177,7 +191,8 @@ export function buildHistoryEntry({
       sequenceRevisionObjectiveId: ensureString(artifactRefs?.sequenceRevisionObjectiveId, null),
       revisionDeltaId: ensureString(artifactRefs?.revisionDeltaId, null)
       ,
-      revisionRetryPressureId: ensureString(artifactRefs?.revisionRetryPressureId, null)
+      revisionRetryPressureId: ensureString(artifactRefs?.revisionRetryPressureId, null),
+      revisionFeedbackId: ensureString(artifactRefs?.revisionFeedbackId, null)
     },
     snapshotSummary: snapshotSummary && typeof snapshotSummary === "object" ? snapshotSummary : {},
     applyStage: ensureString(applyStage, null),
