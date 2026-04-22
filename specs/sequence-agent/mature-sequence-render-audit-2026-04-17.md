@@ -90,14 +90,23 @@ For each benchmark sequence:
    - peak/chorus
    - transition/breakdown
    - closing
-3. derive:
+3. sample frames broadly across each window rather than using a narrow clustered offset slice
+   - use `preview_window_frame_offsets_v1`
+   - default broad-window ratios:
+     - `0.08`
+     - `0.28`
+     - `0.50`
+     - `0.72`
+     - `0.92`
+   - this is required for honest progression calibration on multi-second windows
+4. derive:
    - `render_observation_v1`
    - `composition_observation_v1`
    - `layering_observation_v1` when proof-supported
    - `progression_observation_v1`
    - `sequence_critique_v1`
-4. compare the machine reading to a human reading of the rendered result
-5. record mismatches as visualizer gaps, not sequencing-policy gaps
+5. compare the machine reading to a human reading of the rendered result
+6. record mismatches as visualizer gaps, not sequencing-policy gaps
 
 ## Evaluation Questions
 
