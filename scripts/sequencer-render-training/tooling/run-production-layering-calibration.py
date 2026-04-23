@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
 TOOLING_DIR = ROOT_DIR / "scripts" / "sequencer-render-training" / "tooling"
-XLIGHTS_APP = Path("/Applications/xLights.app")
+XLIGHTS_2026_ROOT = Path.home() / "xLights-2026.06"
 DEFAULT_OWNED_PORT = 49925
 DEFAULT_PREFERRED_CASES = [
     ("CozyLittleChristmas", "HiddenTree", ("Lines", "Snowflakes")),
@@ -67,16 +67,21 @@ def resolve_xlights_binary():
     if derived_root.exists():
         for binary in derived_root.glob("xLights-*/Build/Products/Debug/xLights.app/Contents/MacOS/xLights"):
             try:
+                debug_dylib = binary.parent / "xLights.debug.dylib"
+                if not debug_dylib.exists():
+                    continue
+                if b"XLIGHTS_DESIGNER_DIAGNOSTIC_LOG" not in debug_dylib.read_bytes():
+                    continue
                 candidates.append((binary.stat().st_mtime, binary))
             except FileNotFoundError:
                 continue
     if candidates:
         candidates.sort(reverse=True)
         return candidates[0][1]
-    fallback = XLIGHTS_APP / "Contents" / "MacOS" / "xLights"
-    if fallback.exists():
-        return fallback
-    raise RuntimeError("No xLights binary found in DerivedData or /Applications/xLights.app")
+    raise RuntimeError(
+        f"No debug xLights 2026.06 binary found in DerivedData. Build {XLIGHTS_2026_ROOT} first; "
+        "the installed /Applications/xLights.app does not include the xLightsDesigner owned API."
+    )
 
 
 def owned_base_url(port: int):
@@ -99,6 +104,10 @@ def owned_health(port: int):
     return read_json_url(f"{owned_base_url(port)}/health")
 
 
+def owned_layout_settings(port: int):
+    return owned_get(port, "/layout/settings")
+
+
 def owned_ready(port: int):
     try:
         body = owned_health(port)
@@ -108,18 +117,25 @@ def owned_ready(port: int):
     return body.get("ok") is True and strv(data.get("state")) == "ready"
 
 
-def launch_workspace_xlights(port: int):
+def launch_workspace_xlights(port: int, show_dir: Path | None = None):
     binary = resolve_xlights_binary()
     log_path = Path(f"/tmp/xlights-layering-calibration-{port}.log")
+    diagnostic_log_path = Path(f"/tmp/xlights-layering-calibration-{port}.diagnostic.log")
     env = {
         **dict(os.environ),
         "XLIGHTS_DESIGNER_ENABLED": "1",
         "XLIGHTS_DESIGNER_PORT": str(port),
         "XLIGHTS_DESIGNER_STARTUP_SETTLE_MS": "30000",
+        "XLIGHTS_DESIGNER_TRUSTED_ROOTS": str(ROOT_DIR / ".tmp") + ":/private/tmp:/tmp",
+        "XLIGHTS_DESIGNER_DIAGNOSTIC_LOG": str(diagnostic_log_path),
     }
+    cmd = [str(binary), "-o"]
+    if show_dir is not None:
+        cmd.extend(["-s", str(show_dir)])
+    diagnostic_log_path.write_text("", encoding="utf-8")
     with log_path.open("wb") as log_file:
         subprocess.Popen(
-            [str(binary), "-o"],
+            cmd,
             stdout=log_file,
             stderr=log_file,
             start_new_session=True,
@@ -168,7 +184,7 @@ def ensure_workspace_session(workspace_dir: Path, launch: bool, port: int):
             f"xLightsDesigner owned API is not reachable on port {port}. Start a copied-show calibration session, "
             "or rerun with --launch-xlights."
         )
-    launch_workspace_xlights(port)
+    launch_workspace_xlights(port, show_dir=workspace_dir)
     wait_for_owned_ready(port)
 
 
@@ -208,8 +224,37 @@ def owned_post_queued(port: int, path: str, body: dict | None = None):
     return wait_for_owned_job(port, job_id)
 
 
-def open_and_render_sequence_owned(xsq_path: Path, port: int):
-    open_result = owned_post_queued(port, "/sequence/open", {"file": str(xsq_path), "force": True})
+def open_and_render_sequence_owned(xsq_path: Path, port: int, expected_show_dir: Path | None = None, diagnostics_path: Path | None = None):
+    diagnostics = {}
+    try:
+        diagnostics["healthBeforeOpen"] = owned_health(port)
+    except Exception as error:
+        diagnostics["healthBeforeOpenError"] = repr(error)
+    try:
+        diagnostics["layoutSettingsBeforeOpen"] = owned_layout_settings(port)
+    except Exception as error:
+        diagnostics["layoutSettingsBeforeOpenError"] = repr(error)
+    if expected_show_dir is not None:
+        diagnostics["expectedShowDirectory"] = str(expected_show_dir.resolve())
+    if diagnostics_path is not None:
+        write_json(diagnostics_path, diagnostics)
+
+    try:
+        open_result = owned_post_queued(port, "/sequence/open", {"file": str(xsq_path), "force": True})
+    except Exception as error:
+        if diagnostics_path is not None:
+            failure = dict(diagnostics)
+            failure["openError"] = str(error)
+            try:
+                failure["healthAfterOpenError"] = owned_health(port)
+            except Exception as health_error:
+                failure["healthAfterOpenError"] = repr(health_error)
+            try:
+                failure["layoutSettingsAfterOpenError"] = owned_layout_settings(port)
+            except Exception as settings_error:
+                failure["layoutSettingsAfterOpenError"] = repr(settings_error)
+            write_json(diagnostics_path, failure)
+        raise
     sequence = (open_result.get("data") or {}).get("sequence") or {}
     if Path(strv(sequence.get("path"))).resolve() != xsq_path.resolve():
         raise RuntimeError(f"owned sequence.open did not open expected file {xsq_path}: {open_result}")
@@ -436,9 +481,16 @@ def process_case(show_dir: Path, case: dict, out_dir: Path, launch_xlights: bool
     for variant_name, keep_ids in variant_specs:
         xsq_variant = workspace_sequence_dir / f"{variant_name}.xsq"
         isolate_xsq(workspace_xsq, target_id, keep_ids, xsq_variant)
+        diagnostics_path = case_dir / f"{variant_name}.owned-session.json"
         rendered[variant_name] = {
             "xsq": xsq_variant,
-            "fseq": open_and_render_sequence_owned(xsq_variant, owned_port),
+            "fseq": open_and_render_sequence_owned(
+                xsq_variant,
+                owned_port,
+                expected_show_dir=workspace_dir,
+                diagnostics_path=diagnostics_path,
+            ),
+            "ownedSessionDiagnostics": str(diagnostics_path),
         }
 
     fseq_summary = read_fseq_summary(rendered["composite"]["fseq"])
