@@ -108,7 +108,7 @@ def owned_ready(port: int):
     return body.get("ok") is True and strv(data.get("state")) == "ready"
 
 
-def launch_workspace_xlights(show_dir: Path, xsq_path: Path, port: int):
+def launch_workspace_xlights(port: int):
     binary = resolve_xlights_binary()
     log_path = Path(f"/tmp/xlights-layering-calibration-{port}.log")
     env = {
@@ -117,9 +117,9 @@ def launch_workspace_xlights(show_dir: Path, xsq_path: Path, port: int):
         "XLIGHTS_DESIGNER_PORT": str(port),
         "XLIGHTS_DESIGNER_STARTUP_SETTLE_MS": "30000",
     }
-    with log_path.open("ab") as log_file:
+    with log_path.open("wb") as log_file:
         subprocess.Popen(
-            [str(binary), "-o", "-s", str(show_dir), str(xsq_path)],
+            [str(binary), "-o"],
             stdout=log_file,
             stderr=log_file,
             start_new_session=True,
@@ -129,14 +129,17 @@ def launch_workspace_xlights(show_dir: Path, xsq_path: Path, port: int):
 
 def wait_for_owned_ready(port: int, timeout_seconds=180):
     deadline = time.time() + timeout_seconds
+    last_health = None
+    last_error = None
     while time.time() < deadline:
         try:
             health = owned_health(port)
+            last_health = health
             data = health.get("data") or {}
             if health.get("ok") is True and strv(data.get("state")) == "ready":
                 return health
-        except Exception:
-            pass
+        except Exception as error:
+            last_error = repr(error)
         time.sleep(2)
     log_path = Path(f"/tmp/xlights-layering-calibration-{port}.log")
     log_tail = ""
@@ -146,10 +149,18 @@ def wait_for_owned_ready(port: int, timeout_seconds=180):
             log_tail = "\n".join(lines[-40:])
         except Exception:
             log_tail = ""
-    raise RuntimeError(f"xLightsDesigner owned API did not become ready on port {port}. Log tail:\n{log_tail}")
+    diagnostics = []
+    if last_health is not None:
+        diagnostics.append(f"lastHealth={json.dumps(last_health, sort_keys=True)}")
+    if last_error is not None:
+        diagnostics.append(f"lastError={last_error}")
+    if log_tail:
+        diagnostics.append(f"Log tail:\n{log_tail}")
+    detail = "\n".join(diagnostics)
+    raise RuntimeError(f"xLightsDesigner owned API did not become ready on port {port}.{(' ' + detail) if detail else ''}")
 
 
-def ensure_workspace_session(workspace_dir: Path, workspace_xsq: Path, launch: bool, port: int):
+def ensure_workspace_session(workspace_dir: Path, launch: bool, port: int):
     if owned_ready(port):
         return
     if not launch:
@@ -157,7 +168,7 @@ def ensure_workspace_session(workspace_dir: Path, workspace_xsq: Path, launch: b
             f"xLightsDesigner owned API is not reachable on port {port}. Start a copied-show calibration session, "
             "or rerun with --launch-xlights."
         )
-    launch_workspace_xlights(workspace_dir, workspace_xsq, port)
+    launch_workspace_xlights(port)
     wait_for_owned_ready(port)
 
 
@@ -413,7 +424,7 @@ def process_case(show_dir: Path, case: dict, out_dir: Path, launch_xlights: bool
         "--out", str(geometry_path),
     ])
 
-    ensure_workspace_session(workspace_dir, workspace_xsq, launch_xlights, owned_port)
+    ensure_workspace_session(workspace_dir, launch_xlights, owned_port)
 
     variant_specs = [
         ("left", {strv(effects[0].get("effectId"))}),
