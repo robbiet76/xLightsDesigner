@@ -185,7 +185,7 @@ test("orchestrator prefers owned sequencing batch plan when command graph is com
       throw new Error("legacy transaction path should not run");
     },
     rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => ({ ok: true, data: { state: "ready" } }),
+    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
     applySequencingBatchPlan: async (_endpoint, payload) => {
       applyCalls += 1;
       assert.equal(payload.track, "XD: Song Structure");
@@ -245,7 +245,7 @@ test("orchestrator blocks when owned sequencing batch plan is unavailable", asyn
       throw new Error("legacy transaction path should not run");
     },
     rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => ({ ok: true, data: { state: "ready" } }),
+    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
     applySequencingBatchPlan: async () => {
       throw new Error("POST http://127.0.0.1:49915/xlightsdesigner/api/sequencing/apply-batch-plan failed (VALIDATION): Invalid payload.");
     },
@@ -343,7 +343,7 @@ test("orchestrator falls back to legacy transactions when owned apply fetch fail
     stageTransactionCommand: async () => ({ res: 200 }),
     commitTransaction: async () => ({ data: { newRevision: "rev-fallback-4" } }),
     rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => ({ ok: true, data: { state: "ready" } }),
+    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
     applySequencingBatchPlan: async () => {
       throw new Error("Failed to fetch");
     },
@@ -353,6 +353,104 @@ test("orchestrator falls back to legacy transactions when owned apply fetch fail
   assert.equal(res.ok, true);
   assert.equal(res.applyPath, "legacy_transactions");
   assert.equal(began, 1);
+});
+
+test("orchestrator fails closed for owned endpoints when owned health is unavailable", async () => {
+  let began = 0;
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    commands: [
+      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
+      {
+        id: "timing.marks.insert",
+        dependsOn: ["timing.track.create"],
+        cmd: "timing.insertMarks",
+        params: {
+          trackName: "XD: Song Structure",
+          marks: [
+            { startMs: 0, endMs: 1000, label: "Intro" },
+            { startMs: 1000, endMs: 2000, label: "Verse 1" }
+          ]
+        }
+      },
+      {
+        id: "effect.1",
+        dependsOn: ["timing.marks.insert"],
+        cmd: "effects.create",
+        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
+      }
+    ],
+    expectedRevision: "rev-owned-fail-1",
+    getRevision: okRevision("rev-owned-fail-1"),
+    validateCommands: async () => ({ data: { valid: true, results: [] } }),
+    beginTransaction: async () => {
+      began += 1;
+      return { data: { transactionId: "tx-owned-fail-1" } };
+    },
+    stageTransactionCommand: async () => ({ res: 200 }),
+    commitTransaction: async () => ({ data: { newRevision: "rev-owned-fail-2" } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
+    getOwnedHealth: async () => {
+      throw new Error("Failed to fetch");
+    },
+    applySequencingBatchPlan: async () => {
+      throw new Error("owned path should not execute when health is unavailable");
+    },
+    getOwnedJob: async () => ({ data: { state: "succeeded" } })
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, "runtime");
+  assert.equal(began, 0);
+  assert.match(String(res.error || ""), /owned xLights API unavailable/i);
+});
+
+test("orchestrator fails closed for owned endpoints when owned apply fetch fails", async () => {
+  let began = 0;
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    commands: [
+      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
+      {
+        id: "timing.marks.insert",
+        dependsOn: ["timing.track.create"],
+        cmd: "timing.insertMarks",
+        params: {
+          trackName: "XD: Song Structure",
+          marks: [
+            { startMs: 0, endMs: 1000, label: "Intro" },
+            { startMs: 1000, endMs: 2000, label: "Verse 1" }
+          ]
+        }
+      },
+      {
+        id: "effect.1",
+        dependsOn: ["timing.marks.insert"],
+        cmd: "effects.create",
+        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
+      }
+    ],
+    expectedRevision: "rev-owned-fail-3",
+    getRevision: okRevision("rev-owned-fail-3"),
+    validateCommands: async () => ({ data: { valid: true, results: [] } }),
+    beginTransaction: async () => {
+      began += 1;
+      return { data: { transactionId: "tx-owned-fail-2" } };
+    },
+    stageTransactionCommand: async () => ({ res: 200 }),
+    commitTransaction: async () => ({ data: { newRevision: "rev-owned-fail-4" } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
+    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
+    applySequencingBatchPlan: async () => {
+      throw new Error("Failed to fetch");
+    },
+    getOwnedJob: async () => ({ data: { state: "succeeded" } })
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, "runtime");
+  assert.equal(began, 0);
+  assert.match(String(res.error || ""), /owned sequencing\.applyBatchPlan failed/i);
 });
 
 test("orchestrator still compresses plans that include alignToTiming commands", async () => {
@@ -399,7 +497,7 @@ test("orchestrator still compresses plans that include alignToTiming commands", 
       throw new Error("legacy transaction path should not run");
     },
     rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => ({ ok: true, data: { state: "ready" } }),
+    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
     applySequencingBatchPlan: async (_endpoint, payload) => {
       applyCalls += 1;
       assert.equal(payload.track, "XD: Song Structure");

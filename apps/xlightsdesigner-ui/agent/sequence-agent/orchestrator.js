@@ -103,6 +103,20 @@ function isOwnedApiUnavailable(message = "") {
   );
 }
 
+function isOwnedEndpoint(endpoint = "") {
+  const text = norm(endpoint);
+  return text.includes("/xlightsdesigner/api") || text.includes(":49915/");
+}
+
+function isOwnedHealthReady(health = {}) {
+  const data = health?.data && typeof health.data === "object" ? health.data : {};
+  const state = norm(data.state || data.startupState || data.status);
+  const listenerReachable = data.listenerReachable === true;
+  const appReady = data.appReady == null ? true : data.appReady === true;
+  const startupSettled = data.startupSettled === true || state === "ready";
+  return health?.ok === true && listenerReachable && appReady && startupSettled;
+}
+
 export async function validateAndApplyPlan({
   endpoint,
   commands,
@@ -155,6 +169,8 @@ export async function validateAndApplyPlan({
   );
   let currentRevision = 'unknown';
   let ownedApiReady = false;
+  let ownedHealthError = "";
+  let ownedHealth = null;
 
   if (ownedPathAvailable) {
     if (typeof getOwnedHealth !== "function") {
@@ -165,16 +181,26 @@ export async function validateAndApplyPlan({
       };
     }
     try {
-      const health = await getOwnedHealth(endpoint);
-      const state = str(health?.data?.state || health?.data?.status || "");
-      ownedApiReady = health?.ok === true && (!state || state.toLowerCase() === "ready");
+      ownedHealth = await getOwnedHealth(endpoint);
+      ownedApiReady = isOwnedHealthReady(ownedHealth);
       if (typeof getOwnedRevision === 'function') {
         const rev = await getOwnedRevision(endpoint).catch(() => ({ data: { revision: 'unknown' } }));
         currentRevision = str(rev?.data?.revision || rev?.data?.revisionToken || 'unknown') || 'unknown';
       }
     } catch (err) {
       ownedApiReady = false;
+      ownedHealthError = str(err?.message || err);
     }
+  }
+
+  if (ownedPathAvailable && isOwnedEndpoint(endpoint) && !ownedApiReady) {
+    const state = str(ownedHealth?.data?.state || ownedHealth?.data?.startupState || "unknown") || "unknown";
+    const reason = ownedHealthError || `owned xLights API not ready (state=${state})`;
+    return {
+      ok: false,
+      stage: "runtime",
+      error: `owned xLights API unavailable: ${reason}`
+    };
   }
 
   if (!ownedApiReady) {
@@ -253,7 +279,7 @@ export async function validateAndApplyPlan({
       };
     } catch (err) {
       const message = str(err?.message || err);
-      if (isOwnedApiUnavailable(message)) {
+      if (isOwnedApiUnavailable(message) && !isOwnedEndpoint(endpoint)) {
         // Fall through to legacy transaction apply when the owned sidecar is down.
       } else {
       return {

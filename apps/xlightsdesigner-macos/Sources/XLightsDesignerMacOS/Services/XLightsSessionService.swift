@@ -90,7 +90,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
         return XLightsSessionSnapshotModel(
             runtimeState: runtimeState,
             supportedCommands: supportedCommands,
-            isReachable: bool(healthData["listenerReachable"]) || runtimeState == "ready",
+            isReachable: bool(healthData["listenerReachable"]),
             isSequenceOpen: bool(openData["isOpen"]),
             sequencePath: string(sequence["path"]),
             revision: string(revisionData["revision"], fallback: string(sequence["revisionToken"])),
@@ -123,6 +123,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
     }
 
     func saveCurrentSequence() async throws -> String {
+        _ = try await ensureOwnedRuntimeReady(command: "sequence.save")
         let json = try await postQueuedJSON(to: "/sequence/save", body: [:], command: "sequence.save")
         let data = dictionary(json["data"])
         let saved = bool(data["saved"]) || !data.isEmpty
@@ -134,6 +135,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
     }
 
     func closeCurrentSequence() async throws -> String {
+        _ = try await ensureOwnedRuntimeReady(command: "sequence.close")
         let json = try await postQueuedJSON(to: "/sequence/close", body: [:], command: "sequence.close")
         let data = dictionary(json["data"])
         let closed = bool(data["closed"]) || !data.isEmpty
@@ -144,6 +146,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
     }
 
     func renderCurrentSequence() async throws -> String {
+        _ = try await ensureOwnedRuntimeReady(command: "sequence.renderCurrent")
         let json = try await postQueuedJSON(to: "/sequence/render-current", body: [:], command: "sequence.renderCurrent")
         let data = dictionary(json["data"])
         let rendered = bool(data["rendered"]) || !data.isEmpty
@@ -160,11 +163,8 @@ struct LocalXLightsSessionService: XLightsSessionService {
         guard !normalizedPath.isEmpty else {
             throw XLightsSessionServiceError.invalidResponse("Sequence path is required.")
         }
-        if saveBeforeSwitch {
-            _ = try? await saveCurrentSequence()
-        } else {
-            _ = try? await closeCurrentSequence()
-        }
+        _ = try await ensureOwnedRuntimeReady(command: "sequence.open")
+        try await prepareForSequenceSwitch(saveBeforeSwitch: saveBeforeSwitch)
         _ = try await postQueuedJSON(to: "/sequence/open", body: [
             "file": normalizedPath,
             "force": true,
@@ -180,11 +180,8 @@ struct LocalXLightsSessionService: XLightsSessionService {
         }
         let fileURL = URL(fileURLWithPath: normalizedPath)
         try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if saveBeforeSwitch {
-            _ = try? await saveCurrentSequence()
-        } else {
-            _ = try? await closeCurrentSequence()
-        }
+        _ = try await ensureOwnedRuntimeReady(command: "sequence.create")
+        try await prepareForSequenceSwitch(saveBeforeSwitch: saveBeforeSwitch)
         var body: [String: Any] = ["file": normalizedPath]
         let media = string(mediaFile)
         if !media.isEmpty { body["mediaFile"] = media }
@@ -202,7 +199,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw XLightsSessionServiceError.invalidResponse("xLights returned invalid JSON.")
         }
-        return json
+        return try validateOwnedEnvelope(json, command: "GET \(path)")
     }
 
     private func readJSONAllowing404(from path: String) async throws -> [String: Any] {
@@ -216,7 +213,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw XLightsSessionServiceError.invalidResponse("xLights returned invalid JSON.")
         }
-        return json
+        return try validateOwnedEnvelope(json, command: "GET \(path)")
     }
 
     private func postJSON(to path: String, body: [String: Any]) async throws -> [String: Any] {
@@ -231,7 +228,49 @@ struct LocalXLightsSessionService: XLightsSessionService {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw XLightsSessionServiceError.invalidResponse("xLights returned invalid JSON.")
         }
+        return try validateOwnedEnvelope(json, command: "POST \(path)")
+    }
+
+    private func validateOwnedEnvelope(_ json: [String: Any], command: String) throws -> [String: Any] {
+        if bool(json["ok"]) == false {
+            let error = dictionary(json["error"])
+            let code = string(error["code"], fallback: "XLIGHTS_REQUEST_FAILED")
+            let message = string(error["message"], fallback: "\(command) failed")
+            throw XLightsSessionServiceError.invalidResponse("\(command) failed (\(code)): \(message)")
+        }
         return json
+    }
+
+    private func ensureOwnedRuntimeReady(command: String, requireSettled: Bool = true) async throws -> [String: Any] {
+        let health = try await readJSON(from: "/health")
+        let data = dictionary(health["data"])
+        let state = string(data["state"], fallback: string(data["startupState"], fallback: "unknown")).lowercased()
+        let listenerReachable = bool(data["listenerReachable"])
+        let appReady = optionalBool(data["appReady"]) ?? true
+        let startupSettled = bool(data["startupSettled"]) || state == "ready"
+        if listenerReachable && appReady && (!requireSettled || startupSettled) {
+            return health
+        }
+
+        var details: [String] = []
+        if !listenerReachable { details.append("listener unreachable") }
+        if !appReady { details.append("app not ready") }
+        if requireSettled && !startupSettled { details.append("startup not settled") }
+        let retryAfterMs = int(data["retryAfterMs"]) > 0 ? int(data["retryAfterMs"]) : int(data["settleRemainingMs"])
+        let retryText = retryAfterMs > 0 ? " retryAfterMs=\(retryAfterMs)" : ""
+        let reason = details.isEmpty ? "state=\(state)" : details.joined(separator: ", ")
+        throw XLightsSessionServiceError.invalidResponse("Owned xLights API not ready for \(command): \(reason).\(retryText)")
+    }
+
+    private func prepareForSequenceSwitch(saveBeforeSwitch: Bool) async throws {
+        let openJSON = try await readJSON(from: "/sequence/open")
+        let openData = dictionary(openJSON["data"])
+        guard bool(openData["isOpen"]) else { return }
+        if saveBeforeSwitch {
+            _ = try await saveCurrentSequence()
+        } else {
+            _ = try await closeCurrentSequence()
+        }
     }
 
     private func postQueuedJSON(to path: String, body: [String: Any], command: String) async throws -> [String: Any] {

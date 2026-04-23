@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  closeSequence,
   getDefaultEndpoint,
   getOpenSequence,
   getMediaStatus,
@@ -79,6 +80,13 @@ test("openSequence waits for owned queued job completion", async () => {
   const originalFetch = global.fetch;
   global.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), method: String(options?.method || "GET") });
+    if (String(url).endsWith("/health")) {
+      return jsonResponse({
+        ok: true,
+        statusCode: 200,
+        data: { listenerReachable: true, appReady: true, startupSettled: true, state: "ready" }
+      });
+    }
     if (String(url).endsWith("/sequence/open")) {
       return jsonResponse({
         ok: true,
@@ -117,6 +125,7 @@ test("openSequence waits for owned queued job completion", async () => {
     assert.deepEqual(
       calls.map((row) => row.url),
       [
+        "http://127.0.0.1:49915/xlightsdesigner/api/health",
         "http://127.0.0.1:49915/xlightsdesigner/api/sequence/open",
         "http://127.0.0.1:49915/xlightsdesigner/api/jobs/get?jobId=job-123"
       ]
@@ -185,6 +194,13 @@ test("getRenderedSequenceSamples uses owned route and preserves sparse sample pa
   const originalFetch = global.fetch;
   global.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), method: String(options?.method || "GET"), body: String(options?.body || "") });
+    if (String(url).endsWith("/health")) {
+      return jsonResponse({
+        ok: true,
+        statusCode: 200,
+        data: { listenerReachable: true, appReady: true, startupSettled: true, state: "ready" }
+      });
+    }
     return jsonResponse({
       ok: true,
       statusCode: 200,
@@ -213,9 +229,10 @@ test("getRenderedSequenceSamples uses owned route and preserves sparse sample pa
       maxFrames: 2,
       channelRanges: [{ startChannel: 10, channelCount: 3 }, { startChannel: 100, channelCount: 3 }]
     });
-    assert.equal(calls[0].url, "http://127.0.0.1:49915/xlightsdesigner/api/sequence/render-samples");
-    assert.equal(calls[0].method, "POST");
-    assert.match(calls[0].body, /\"channelRanges\":\[/);
+    assert.equal(calls[0].url, "http://127.0.0.1:49915/xlightsdesigner/api/health");
+    assert.equal(calls[1].url, "http://127.0.0.1:49915/xlightsdesigner/api/sequence/render-samples");
+    assert.equal(calls[1].method, "POST");
+    assert.match(calls[1].body, /\"channelRanges\":\[/);
     assert.equal(body.data.sampleEncoding, "base64_packed_channel_ranges_v1");
     assert.equal(body.data.samples.length, 2);
     assert.equal(body.data.channelRanges[1].startChannel, 100);
@@ -268,6 +285,13 @@ test("renderCurrentSequence waits for owned queued job completion", async () => 
   const originalFetch = global.fetch;
   global.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), method: String(options?.method || "GET") });
+    if (String(url).endsWith("/health")) {
+      return jsonResponse({
+        ok: true,
+        statusCode: 200,
+        data: { listenerReachable: true, appReady: true, startupSettled: true, state: "ready" }
+      });
+    }
     if (String(url).endsWith("/sequence/render-current")) {
       return jsonResponse({
         ok: true,
@@ -297,6 +321,69 @@ test("renderCurrentSequence waits for owned queued job completion", async () => 
     assert.equal(body.res, 200);
     assert.equal(body.data.rendered, true);
     assert.equal(body.data.fseqPath, "/show/Test.fseq");
+    assert.deepEqual(
+      calls.map((row) => row.url),
+      [
+        "http://127.0.0.1:49915/xlightsdesigner/api/health",
+        "http://127.0.0.1:49915/xlightsdesigner/api/sequence/render-current",
+        "http://127.0.0.1:49915/xlightsdesigner/api/jobs/get?jobId=job-render-1"
+      ]
+    );
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("closeSequence uses owned close route and waits for queued completion", async () => {
+  const calls = [];
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: String(options?.method || "GET"), body: String(options?.body || "") });
+    if (String(url).endsWith("/health")) {
+      return jsonResponse({
+        ok: true,
+        statusCode: 200,
+        data: { listenerReachable: true, appReady: true, startupSettled: true, state: "ready" }
+      });
+    }
+    if (String(url).endsWith("/sequence/close")) {
+      return jsonResponse({
+        ok: true,
+        statusCode: 202,
+        data: { accepted: true, jobId: "job-close-1", state: "queued" }
+      });
+    }
+    if (String(url).includes("/jobs/get?jobId=job-close-1")) {
+      return jsonResponse({
+        ok: true,
+        statusCode: 200,
+        data: {
+          jobId: "job-close-1",
+          state: "completed",
+          result: {
+            ok: true,
+            statusCode: 200,
+            data: { closed: true }
+          }
+        }
+      });
+    }
+    throw new Error(`Unexpected fetch ${url}`);
+  };
+  try {
+    const body = await closeSequence("http://127.0.0.1:49915/xlightsdesigner/api", true, true);
+    assert.equal(body.res, 200);
+    assert.equal(body.data.closed, true);
+    assert.deepEqual(
+      calls.map((row) => row.url),
+      [
+        "http://127.0.0.1:49915/xlightsdesigner/api/health",
+        "http://127.0.0.1:49915/xlightsdesigner/api/sequence/close",
+        "http://127.0.0.1:49915/xlightsdesigner/api/jobs/get?jobId=job-close-1"
+      ]
+    );
+    assert.match(calls[1].body, /"force":true/);
+    assert.match(calls[1].body, /"quiet":true/);
   } finally {
     global.fetch = originalFetch;
   }

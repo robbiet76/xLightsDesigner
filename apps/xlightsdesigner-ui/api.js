@@ -5,6 +5,14 @@ const DEFAULT_LEGACY_PORT = "49914";
 const OWNED_JOB_ATTEMPTS = 180;
 const OWNED_JOB_DELAY_MS = 500;
 
+function boolish(value) {
+  if (value === true || value === false) return value;
+  const text = String(value ?? "").trim().toLowerCase();
+  if (text === "true" || text === "1" || text === "yes") return true;
+  if (text === "false" || text === "0" || text === "no") return false;
+  return false;
+}
+
 function normalizeBody(raw) {
   const idx = raw.indexOf("{");
   return idx >= 0 ? raw.slice(idx) : raw;
@@ -290,6 +298,36 @@ async function readOwnedPost(endpoint, path, body = {}, { command = path, queued
   return waitForOwnedJobResult(endpoint, command, json?.data?.jobId);
 }
 
+export function isOwnedHealthReady(health, { requireSettled = true } = {}) {
+  const data = health?.data && typeof health.data === "object" ? health.data : {};
+  const state = String(data.state || data.startupState || data.status || "").trim().toLowerCase();
+  const listenerReachable = boolish(data.listenerReachable);
+  const appReady = data.appReady == null ? true : boolish(data.appReady);
+  const startupSettled = boolish(data.startupSettled) || state === "ready";
+  if (health?.ok !== true) return false;
+  if (!listenerReachable) return false;
+  if (!appReady) return false;
+  if (requireSettled && !startupSettled) return false;
+  return true;
+}
+
+async function ensureOwnedReady(endpoint, command, { requireSettled = true } = {}) {
+  const health = await getOwnedHealth(endpoint);
+  if (isOwnedHealthReady(health, { requireSettled })) {
+    return health;
+  }
+  const data = health?.data && typeof health.data === "object" ? health.data : {};
+  const retryAfterMs = Number(data.retryAfterMs ?? data.settleRemainingMs ?? 0);
+  const state = String(data.state || data.startupState || "unknown").trim() || "unknown";
+  const details = [];
+  if (!boolish(data.listenerReachable)) details.push("listener unreachable");
+  if (data.appReady === false || String(data.appReady).trim().toLowerCase() === "false") details.push("app not ready");
+  if (requireSettled && !boolish(data.startupSettled) && state.toLowerCase() !== "ready") details.push("startup not settled");
+  const reason = details.length ? details.join(", ") : `state=${state}`;
+  const retryText = Number.isFinite(retryAfterMs) && retryAfterMs > 0 ? ` retryAfterMs=${retryAfterMs}` : "";
+  throw new Error(`Owned xLights API not ready for ${command}: ${reason}.${retryText}`.trim());
+}
+
 export async function pingCapabilities(endpoint) {
   if (isOwnedEndpoint(endpoint)) {
     const health = await getOwnedHealth(endpoint);
@@ -355,6 +393,7 @@ export async function getSequenceSettings(endpoint) {
 
 export async function renderCurrentSequence(endpoint) {
   if (isOwnedEndpoint(endpoint)) {
+    await ensureOwnedReady(endpoint, "sequence.renderCurrent");
     return readOwnedPost(endpoint, "/sequence/render-current", {}, { command: "sequence.renderCurrent", queued: true });
   }
   return postCommand(endpoint, "sequence.renderCurrent", {});
@@ -399,6 +438,7 @@ export async function getRevision(endpoint) {
 
 export async function openSequence(endpoint, file, force = true, promptIssues = false) {
   if (isOwnedEndpoint(endpoint)) {
+    await ensureOwnedReady(endpoint, "sequence.open");
     return readOwnedPost(endpoint, "/sequence/open", {
       file,
       force,
@@ -414,6 +454,7 @@ export async function openSequence(endpoint, file, force = true, promptIssues = 
 
 export async function createSequence(endpoint, params = {}) {
   if (isOwnedEndpoint(endpoint)) {
+    await ensureOwnedReady(endpoint, "sequence.create");
     return readOwnedPost(endpoint, "/sequence/create", params, { command: "sequence.create", queued: true });
   }
   return postCommand(endpoint, "sequence.create", params);
@@ -425,6 +466,7 @@ export async function setSequenceSettings(endpoint, params = {}) {
 
 export async function saveSequence(endpoint, file = null) {
   if (isOwnedEndpoint(endpoint)) {
+    await ensureOwnedReady(endpoint, "sequence.save");
     return readOwnedPost(endpoint, "/sequence/save", file ? { file } : {}, { command: "sequence.save", queued: true });
   }
   const params = {};
@@ -455,6 +497,7 @@ export async function saveSequence(endpoint, file = null) {
 
 export async function getRenderedSequenceSamples(endpoint, params = {}) {
   if (isOwnedEndpoint(endpoint)) {
+    await ensureOwnedReady(endpoint, "sequence.getRenderSamples");
     return readOwnedPost(endpoint, "/sequence/render-samples", params, {
       command: "sequence.getRenderSamples",
       queued: false
@@ -465,17 +508,8 @@ export async function getRenderedSequenceSamples(endpoint, params = {}) {
 
 export async function closeSequence(endpoint, force = true, quiet = false) {
   if (isOwnedEndpoint(endpoint)) {
-    return {
-      ok: true,
-      res: 200,
-      command: "sequence.close",
-      data: {
-        closed: false,
-        unsupported: true,
-        force,
-        quiet
-      }
-    };
+    await ensureOwnedReady(endpoint, "sequence.close");
+    return readOwnedPost(endpoint, "/sequence/close", { force, quiet }, { command: "sequence.close", queued: true });
   }
   return postCommand(endpoint, "sequence.close", {
     force,
