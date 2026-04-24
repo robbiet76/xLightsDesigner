@@ -49,53 +49,59 @@ final class XLightsSessionViewModel {
     }
 
     func refresh() {
-        let projectShowFolder = workspace.activeProject?.showFolder ?? ""
         Task {
-            let previous = snapshot
-            guard let session = try? await service.loadSession(projectShowFolder: projectShowFolder) else {
-                snapshot = unreachableSnapshot(from: previous, projectShowFolder: projectShowFolder)
-                if didChangeSignificantly(from: previous, to: snapshot) {
-                    onSignificantChange?(previous, snapshot)
-                }
-                return
-            }
-            snapshot = XLightsSessionSnapshotModel(
-                runtimeState: session.runtimeState,
-                supportedCommands: session.supportedCommands,
-                isReachable: session.isReachable,
-                isSequenceOpen: session.isSequenceOpen,
-                sequencePath: session.sequencePath,
-                revision: session.revision,
-                mediaFile: session.mediaFile,
-                showDirectory: session.showDirectory,
-                projectShowMatches: session.projectShowMatches,
-                layoutSignature: session.layoutSignature,
-                hasUnsavedLayoutChanges: session.hasUnsavedLayoutChanges,
-                hasUnsavedRgbEffectsChanges: session.hasUnsavedRgbEffectsChanges,
-                hasUnsavedNetworkChanges: session.hasUnsavedNetworkChanges,
-                rgbEffectsFile: session.rgbEffectsFile,
-                rgbEffectsModifiedAt: session.rgbEffectsModifiedAt,
-                networksFile: session.networksFile,
-                networksModifiedAt: session.networksModifiedAt,
-                layoutDirtyStateReason: session.layoutDirtyStateReason,
-                sequenceType: session.sequenceType,
-                durationMs: session.durationMs,
-                frameMs: session.frameMs,
-                dirtyState: session.dirtyState,
-                dirtyStateReason: session.dirtyStateReason,
-                hasUnsavedChanges: session.hasUnsavedChanges,
-                saveSupported: session.saveSupported,
-                renderSupported: session.renderSupported,
-                openSupported: session.openSupported,
-                createSupported: session.createSupported,
-                closeSupported: session.closeSupported,
-                lastSaveSummary: snapshot.lastSaveSummary,
-                lastRenderSummary: snapshot.lastRenderSummary
-            )
+            await refreshNow()
+        }
+    }
+
+    @discardableResult
+    func refreshNow() async -> XLightsSessionSnapshotModel {
+        let projectShowFolder = workspace.activeProject?.showFolder ?? ""
+        let previous = snapshot
+        guard let session = try? await service.loadSession(projectShowFolder: projectShowFolder) else {
+            snapshot = unreachableSnapshot(from: previous, projectShowFolder: projectShowFolder)
             if didChangeSignificantly(from: previous, to: snapshot) {
                 onSignificantChange?(previous, snapshot)
             }
+            return snapshot
         }
+        snapshot = XLightsSessionSnapshotModel(
+            runtimeState: session.runtimeState,
+            supportedCommands: session.supportedCommands,
+            isReachable: session.isReachable,
+            isSequenceOpen: session.isSequenceOpen,
+            sequencePath: session.sequencePath,
+            revision: session.revision,
+            mediaFile: session.mediaFile,
+            showDirectory: session.showDirectory,
+            projectShowMatches: session.projectShowMatches,
+            layoutSignature: session.layoutSignature,
+            hasUnsavedLayoutChanges: session.hasUnsavedLayoutChanges,
+            hasUnsavedRgbEffectsChanges: session.hasUnsavedRgbEffectsChanges,
+            hasUnsavedNetworkChanges: session.hasUnsavedNetworkChanges,
+            rgbEffectsFile: session.rgbEffectsFile,
+            rgbEffectsModifiedAt: session.rgbEffectsModifiedAt,
+            networksFile: session.networksFile,
+            networksModifiedAt: session.networksModifiedAt,
+            layoutDirtyStateReason: session.layoutDirtyStateReason,
+            sequenceType: session.sequenceType,
+            durationMs: session.durationMs,
+            frameMs: session.frameMs,
+            dirtyState: session.dirtyState,
+            dirtyStateReason: session.dirtyStateReason,
+            hasUnsavedChanges: session.hasUnsavedChanges,
+            saveSupported: session.saveSupported,
+            renderSupported: session.renderSupported,
+            openSupported: session.openSupported,
+            createSupported: session.createSupported,
+            closeSupported: session.closeSupported,
+            lastSaveSummary: snapshot.lastSaveSummary,
+            lastRenderSummary: snapshot.lastRenderSummary
+        )
+        if didChangeSignificantly(from: previous, to: snapshot) {
+            onSignificantChange?(previous, snapshot)
+        }
+        return snapshot
     }
 
     func startMonitoring(intervalSeconds: TimeInterval = 3.0) {

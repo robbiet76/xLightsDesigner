@@ -139,8 +139,11 @@ final class NativeAutomationServer: @unchecked Sendable {
             refreshAll()
             return .json(200, body: ["ok": true])
         case "refreshXLightsSession":
-            model.xlightsSessionModel.refresh()
-            return .json(200, body: ["ok": true])
+            await model.xlightsSessionModel.refreshNow()
+            return .json(200, body: [
+                "ok": true,
+                "xlights": xlightsSessionSnapshot()
+            ])
         case "saveXLightsSequence":
             do {
                 try await model.xlightsSessionModel.saveCurrentSequence()

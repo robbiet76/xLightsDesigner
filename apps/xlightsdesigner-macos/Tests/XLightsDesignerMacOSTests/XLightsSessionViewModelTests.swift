@@ -58,14 +58,13 @@ private actor XLightsSessionLoadGate {
     }
     let model = XLightsSessionViewModel(workspace: workspace, service: service)
 
-    model.refresh()
-    try await Task.sleep(for: .milliseconds(80))
+    let refreshed = await model.refreshNow()
 
-    #expect(model.snapshot.isReachable == false)
-    #expect(model.snapshot.runtimeState == "unreachable")
-    #expect(model.snapshot.isSequenceOpen == false)
-    #expect(model.snapshot.saveSupported == false)
-    #expect(model.snapshot.dirtyStateReason.contains("/tmp/show"))
+    #expect(refreshed.isReachable == false)
+    #expect(refreshed.runtimeState == "unreachable")
+    #expect(refreshed.isSequenceOpen == false)
+    #expect(refreshed.saveSupported == false)
+    #expect(refreshed.dirtyStateReason.contains("/tmp/show"))
 }
 
 @MainActor
