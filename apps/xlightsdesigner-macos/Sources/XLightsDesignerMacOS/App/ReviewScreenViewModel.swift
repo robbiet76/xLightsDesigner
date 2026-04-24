@@ -82,13 +82,23 @@ final class ReviewScreenViewModel {
                 } else {
                     feedbackSummary = ""
                 }
+                let validationSummary: String
+                if let validation = result.practicalValidationSummary {
+                    if validation.overallOk {
+                        validationSummary = " Practical validation passed: \(validation.readbackPassed) readback checks, \(validation.designPassed) design checks."
+                    } else {
+                        validationSummary = " Practical validation needs review: \(validation.readbackFailed) readback failures, \(validation.designFailed) design failures."
+                    }
+                } else {
+                    validationSummary = ""
+                }
                 let renderSummary = result.renderCurrentSummary.isEmpty
                     ? try? await xlightsSessionService.renderCurrentSequence()
                     : result.renderCurrentSummary
                 let renderFailureSummary = result.renderCurrentError.isEmpty ? "" : " Render-current warning: \(result.renderCurrentError)."
                 transientBanner = WorkflowBannerModel(
                     id: "review-apply-success",
-                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (result.sequenceBackupPath.isEmpty ? "" : " Backup: \(result.sequenceBackupPath).") + feedbackSummary + renderFailureSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
+                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (result.sequenceBackupPath.isEmpty ? "" : " Backup: \(result.sequenceBackupPath).") + validationSummary + feedbackSummary + renderFailureSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
                     state: .ready
                 )
                 NotificationCenter.default.post(name: .projectArtifactsDidChange, object: project.projectFilePath)

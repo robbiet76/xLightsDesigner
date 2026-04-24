@@ -165,6 +165,19 @@ export async function buildNativeApplyVerification({
   return { verification, practicalValidation };
 }
 
+export function summarizePracticalValidation(practicalValidation = null) {
+  if (!practicalValidation || typeof practicalValidation !== 'object') return null;
+  return {
+    artifactType: str(practicalValidation.artifactType),
+    overallOk: practicalValidation.overallOk === true,
+    designSummary: str(practicalValidation.designSummary),
+    readbackPassed: Number(practicalValidation?.summary?.readbackChecks?.passed || 0),
+    readbackFailed: Number(practicalValidation?.summary?.readbackChecks?.failed || 0),
+    designPassed: Number(practicalValidation?.summary?.designChecks?.passed || 0),
+    designFailed: Number(practicalValidation?.summary?.designChecks?.failed || 0)
+  };
+}
+
 function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
   const libraryDir = path.join(appRoot, 'library', 'tracks');
   if (!fs.existsSync(libraryDir)) throw new Error(`Track library not found: ${libraryDir}`);
@@ -424,6 +437,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       renderCurrentError: renderCurrent.error,
       summary: fallback.summary,
       applyResultId: str(applyResult?.artifactId),
+      practicalValidationSummary: summarizePracticalValidation(applyResult?.practicalValidation),
       renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),
       renderFeedbackStatus: renderCurrent.error
         ? 'render_current_failed'
@@ -490,6 +504,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     renderCurrentError: renderCurrent.error,
     summary: str(commandsPlan?.summary || inputs.proposalBundle?.summary || 'Applied pending work.'),
     applyResultId: str(applyResult?.artifactId),
+    practicalValidationSummary: summarizePracticalValidation(applyResult?.practicalValidation),
     renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),
     renderFeedbackStatus: renderCurrent.error
       ? 'render_current_failed'

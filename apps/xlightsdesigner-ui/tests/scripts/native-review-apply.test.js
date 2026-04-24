@@ -7,7 +7,8 @@ import path from "node:path";
 import {
   buildNativeApplyVerification,
   createSequenceBackup,
-  renderCurrentSummary
+  renderCurrentSummary,
+  summarizePracticalValidation
 } from "../../../../scripts/sequencing/native/apply-native-review.mjs";
 
 test("createSequenceBackup copies xsq into project artifact backups", () => {
@@ -95,4 +96,13 @@ test("buildNativeApplyVerification attaches practical validation from readback",
   assert.equal(result.practicalValidation.artifactType, "practical_sequence_validation_v1");
   assert.equal(result.practicalValidation.summary.readbackChecks.passed, 1);
   assert.equal(result.practicalValidation.designSummary, "MegaTree chorus");
+  assert.deepEqual(summarizePracticalValidation(result.practicalValidation), {
+    artifactType: "practical_sequence_validation_v1",
+    overallOk: true,
+    designSummary: "MegaTree chorus",
+    readbackPassed: 1,
+    readbackFailed: 0,
+    designPassed: 0,
+    designFailed: 0
+  });
 });

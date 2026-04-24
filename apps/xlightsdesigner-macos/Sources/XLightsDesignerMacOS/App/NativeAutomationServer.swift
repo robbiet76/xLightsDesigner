@@ -815,7 +815,8 @@ final class NativeAutomationServer: @unchecked Sendable {
                     "status": string(latestApplyResult?["status"]),
                     "sequenceBackupPath": string(latestApplyResult?["sequenceBackupPath"]),
                     "renderCurrentSummary": string(latestApplyResult?["renderCurrentSummary"]),
-                    "renderCurrentError": string(latestApplyResult?["renderCurrentError"])
+                    "renderCurrentError": string(latestApplyResult?["renderCurrentError"]),
+                    "practicalValidation": summarizePracticalValidation(latestApplyResult?["practicalValidation"] as? [String: Any]) ?? NSNull()
                 ]),
                 "renderObservation": summarizeValidationArtifact(latestRenderObservation, extra: [
                     "leadModel": string((latestRenderObservation?["macro"] as? [String: Any])?["leadModel"]),
@@ -872,6 +873,22 @@ final class NativeAutomationServer: @unchecked Sendable {
         return out
     }
 
+    private func summarizePracticalValidation(_ validation: [String: Any]?) -> [String: Any]? {
+        guard let validation else { return nil }
+        let summary = validation["summary"] as? [String: Any]
+        let readbackChecks = summary?["readbackChecks"] as? [String: Any]
+        let designChecks = summary?["designChecks"] as? [String: Any]
+        return [
+            "artifactType": string(validation["artifactType"]),
+            "overallOk": bool(validation["overallOk"]),
+            "designSummary": string(validation["designSummary"]),
+            "readbackPassed": int(readbackChecks?["passed"]),
+            "readbackFailed": int(readbackChecks?["failed"]),
+            "designPassed": int(designChecks?["passed"]),
+            "designFailed": int(designChecks?["failed"])
+        ]
+    }
+
     private func readLatestArtifact(in directory: URL) -> [String: Any]? {
         guard FileManager.default.fileExists(atPath: directory.path) else { return nil }
         guard let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey], options: [.skipsHiddenFiles]) else {
@@ -894,6 +911,11 @@ final class NativeAutomationServer: @unchecked Sendable {
 
     private func string(_ value: Any?) -> String {
         String(describing: value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func int(_ value: Any?) -> Int {
+        if let number = value as? NSNumber { return number.intValue }
+        return Int(String(describing: value ?? "")) ?? 0
     }
 
     private func bool(_ value: Any?) -> Bool {

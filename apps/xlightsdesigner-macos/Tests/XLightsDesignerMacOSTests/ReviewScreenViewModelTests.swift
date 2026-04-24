@@ -169,7 +169,16 @@ private func reviewPendingWork(
                 renderCurrentError: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "owned_routes_unavailable",
-                renderFeedbackMissingRequirements: ["layout.scene", "sequence.render-samples"]
+                renderFeedbackMissingRequirements: ["layout.scene", "sequence.render-samples"],
+                practicalValidationSummary: PracticalValidationSummary(
+                    artifactType: "practical_sequence_validation_v1",
+                    overallOk: true,
+                    designSummary: "MegaTree chorus",
+                    readbackPassed: 3,
+                    readbackFailed: 0,
+                    designPassed: 2,
+                    designFailed: 0
+                )
             )
         },
         xlightsSessionService: StubXLightsSessionService()
@@ -196,6 +205,7 @@ private func reviewPendingWork(
     #expect(model.transientBanner?.state == .ready)
     #expect(model.transientBanner?.text.contains("Applied 12 commands") == true)
     #expect(model.transientBanner?.text.contains("Backup: /tmp/project/artifacts/backups/HolidayRoad-preapply-rev-1.xsq") == true)
+    #expect(model.transientBanner?.text.contains("Practical validation passed: 3 readback checks, 2 design checks") == true)
     #expect(model.transientBanner?.text.contains("Render feedback observation skipped") == true)
     #expect(model.transientBanner?.text.contains("Rendered xLights sequence") == true)
     #expect(model.transientBanner?.text.contains("Saved xLights sequence") == true)
@@ -237,7 +247,8 @@ private func reviewPendingWork(
                 renderCurrentError: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
-                renderFeedbackMissingRequirements: []
+                renderFeedbackMissingRequirements: [],
+                practicalValidationSummary: nil
             )
         }
     )
@@ -330,7 +341,8 @@ private func reviewPendingWork(
                 renderCurrentError: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
-                renderFeedbackMissingRequirements: []
+                renderFeedbackMissingRequirements: [],
+                practicalValidationSummary: nil
             )
         }
     )
@@ -364,7 +376,8 @@ private func reviewPendingWork(
                 renderCurrentError: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
-                renderFeedbackMissingRequirements: []
+                renderFeedbackMissingRequirements: [],
+                practicalValidationSummary: nil
             )
         }
     )

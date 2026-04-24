@@ -892,6 +892,19 @@ export function createAutomationRuntime(deps = {}) {
     };
   }
 
+  function summarizePracticalValidation(validation = null) {
+    if (!validation || typeof validation !== "object") return null;
+    return {
+      artifactType: String(validation.artifactType || ""),
+      overallOk: validation.overallOk === true,
+      designSummary: String(validation.designSummary || ""),
+      readbackPassed: Number(validation?.summary?.readbackChecks?.passed || 0),
+      readbackFailed: Number(validation?.summary?.readbackChecks?.failed || 0),
+      designPassed: Number(validation?.summary?.designChecks?.passed || 0),
+      designFailed: Number(validation?.summary?.designChecks?.failed || 0)
+    };
+  }
+
   function buildPlanGuidanceCoverage(planHandoff = null) {
     const commands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
     const effectCreates = commands.filter((row) => String(row?.cmd || "").trim() === "effects.create");
@@ -946,6 +959,15 @@ export function createAutomationRuntime(deps = {}) {
       latestSequenceArtisticGoal: historySnapshot?.sequenceArtisticGoal || null,
       latestSequenceRevisionObjective: historySnapshot?.sequenceRevisionObjective || null,
       latestReviewArtifacts: {
+        applyResult: summarizeValidationArtifact(historySnapshot?.applyResult, {
+          extra: {
+            status: String(historySnapshot?.applyResult?.status || ""),
+            sequenceBackupPath: String(historySnapshot?.applyResult?.sequenceBackupPath || ""),
+            renderCurrentSummary: String(historySnapshot?.applyResult?.renderCurrentSummary || ""),
+            renderCurrentError: String(historySnapshot?.applyResult?.renderCurrentError || ""),
+            practicalValidation: summarizePracticalValidation(historySnapshot?.applyResult?.practicalValidation)
+          }
+        }),
         renderObservation: summarizeValidationArtifact(historySnapshot?.renderObservation, {
           extra: {
             leadModel: String(historySnapshot?.renderObservation?.macro?.leadModel || ""),

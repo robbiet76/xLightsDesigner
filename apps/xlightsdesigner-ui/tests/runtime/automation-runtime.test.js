@@ -232,7 +232,19 @@ test("automation sequencer validation snapshot exposes review chain guidance and
         reviewHistorySnapshot: {
           applyResult: {
             artifactId: "apply-1",
-            practicalValidation: { ok: true, overallOk: true }
+            artifactType: "sequence_apply_result_v1",
+            status: "applied",
+            sequenceBackupPath: "/tmp/project/artifacts/backups/HolidayRoad.xsq",
+            renderCurrentSummary: "Rendered xLights sequence: /tmp/HolidayRoad.xsq",
+            practicalValidation: {
+              artifactType: "practical_sequence_validation_v1",
+              overallOk: true,
+              designSummary: "MegaTree chorus",
+              summary: {
+                readbackChecks: { passed: 3, failed: 0 },
+                designChecks: { passed: 2, failed: 0 }
+              }
+            }
           },
           intentHandoff: {
             artifactId: "intent-1"
@@ -288,6 +300,9 @@ test("automation sequencer validation snapshot exposes review chain guidance and
 
   assert.equal(out.ok, true);
   assert.equal(out.reviewHistorySnapshotAvailable, true);
+  assert.equal(out.latestReviewArtifacts.applyResult.artifactId, "apply-1");
+  assert.equal(out.latestReviewArtifacts.applyResult.practicalValidation.readbackPassed, 3);
+  assert.equal(out.latestReviewArtifacts.applyResult.practicalValidation.designPassed, 2);
   assert.equal(out.latestReviewArtifacts.renderObservation.artifactId, "render-1");
   assert.equal(out.latestReviewArtifacts.renderObservation.samplingMode, "drilldown");
   assert.equal(out.latestReviewArtifacts.renderCritiqueContext.leadMatchesPrimaryFocus, true);

@@ -26,6 +26,17 @@ struct ReviewApplyExecutionResult: Sendable {
     let renderFeedbackCaptured: Bool
     let renderFeedbackStatus: String
     let renderFeedbackMissingRequirements: [String]
+    let practicalValidationSummary: PracticalValidationSummary?
+}
+
+struct PracticalValidationSummary: Sendable {
+    let artifactType: String
+    let overallOk: Bool
+    let designSummary: String
+    let readbackPassed: Int
+    let readbackFailed: Int
+    let designPassed: Int
+    let designFailed: Int
 }
 
 protocol ReviewExecutionService: Sendable {
@@ -60,7 +71,8 @@ struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
             renderCurrentError: string(json["renderCurrentError"]),
             renderFeedbackCaptured: bool(json["renderFeedbackCaptured"]),
             renderFeedbackStatus: string(json["renderFeedbackStatus"]),
-            renderFeedbackMissingRequirements: stringArray(json["renderFeedbackMissingRequirements"])
+            renderFeedbackMissingRequirements: stringArray(json["renderFeedbackMissingRequirements"]),
+            practicalValidationSummary: practicalValidationSummary(json["practicalValidationSummary"])
         )
     }
 
@@ -107,5 +119,18 @@ struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
     private func stringArray(_ value: Any?) -> [String] {
         guard let rows = value as? [Any] else { return [] }
         return rows.map { String(describing: $0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    }
+
+    private func practicalValidationSummary(_ value: Any?) -> PracticalValidationSummary? {
+        guard let object = value as? [String: Any] else { return nil }
+        return PracticalValidationSummary(
+            artifactType: string(object["artifactType"]),
+            overallOk: bool(object["overallOk"]),
+            designSummary: string(object["designSummary"]),
+            readbackPassed: int(object["readbackPassed"]),
+            readbackFailed: int(object["readbackFailed"]),
+            designPassed: int(object["designPassed"]),
+            designFailed: int(object["designFailed"])
+        )
     }
 }
