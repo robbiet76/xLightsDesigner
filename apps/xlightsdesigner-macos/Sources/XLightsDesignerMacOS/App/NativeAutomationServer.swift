@@ -552,6 +552,8 @@ final class NativeAutomationServer: @unchecked Sendable {
             "metadataCount": screen.metadataRows.count,
             "proposedMetadataCount": screen.discoveryProposals.count,
             "confirmedMetadataCount": screen.metadataRows.filter { $0.status == .confirmed }.count,
+            "targetIntentMetadataCount": screen.metadataRows.filter { $0.category == "Target Intent" }.count,
+            "semanticTagMetadataCount": screen.metadataRows.filter { $0.category == "Semantic Tag" }.count,
             "readinessState": screen.readinessSummary.state.rawValue,
             "readyCount": screen.readinessSummary.readyCount,
             "unresolvedCount": screen.readinessSummary.unresolvedCount,
