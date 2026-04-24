@@ -47,7 +47,7 @@ function listXLightsProcesses() {
         command: line.slice(firstSpace + 1).trim()
       };
     })
-    .filter((entry) => entry.command === binary);
+    .filter((entry) => entry.command === binary || entry.command.startsWith(`${binary} `));
 }
 
 async function waitForNoXLightsProcesses(timeoutMs = 15000) {
