@@ -482,6 +482,8 @@ final class DisplayScreenViewModel {
         displayRows: [DisplayLayoutRowModel],
         discoverySummary: DisplayDiscoverySummaryModel
     ) -> [DisplayMetadataRowModel] {
+        let labelRows = buildLabelMetadataRows(from: displayRows)
+
         let insightRows = discoverySummary.insights.map { insight in
             DisplayMetadataRowModel(
                 id: "insight::\(insight.subject.lowercased())::\(insight.category.lowercased())",
@@ -510,7 +512,7 @@ final class DisplayScreenViewModel {
             )
         }
 
-        return (insightRows + proposalRows).sorted {
+        return (labelRows + insightRows + proposalRows).sorted {
             if $0.status != $1.status {
                 return $0.status == .proposed
             }
@@ -518,6 +520,40 @@ final class DisplayScreenViewModel {
                 return $0.subject.localizedCaseInsensitiveCompare($1.subject) == .orderedAscending
             }
             return $0.category.localizedCaseInsensitiveCompare($1.category) == .orderedAscending
+        }
+    }
+
+    private func buildLabelMetadataRows(from displayRows: [DisplayLayoutRowModel]) -> [DisplayMetadataRowModel] {
+        struct LabelBucket {
+            var definition: DisplayLabelDefinitionModel
+            var targetNames: Set<String>
+        }
+
+        var buckets: [String: LabelBucket] = [:]
+        for row in displayRows {
+            for label in row.labelDefinitions {
+                if var bucket = buckets[label.id] {
+                    bucket.targetNames.insert(row.targetName)
+                    buckets[label.id] = bucket
+                } else {
+                    buckets[label.id] = LabelBucket(definition: label, targetNames: [row.targetName])
+                }
+            }
+        }
+
+        return buckets.values.map { bucket in
+            let targets = bucket.targetNames.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+            return DisplayMetadataRowModel(
+                id: "label::\(bucket.definition.id)",
+                subject: bucket.definition.name,
+                subjectType: "Tag",
+                category: "Semantic Tag",
+                value: bucket.definition.description.isEmpty ? "Project display label." : bucket.definition.description,
+                status: .confirmed,
+                source: .userAndAgent,
+                rationale: "Confirmed in the project display metadata store.",
+                linkedTargets: targets
+            )
         }
     }
 
