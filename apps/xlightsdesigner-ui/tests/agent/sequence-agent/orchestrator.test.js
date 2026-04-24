@@ -2,10 +2,51 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { evaluatePlanSafety } from '../../../agent/safety-policy.js';
-import { validateAndApplyPlan } from '../../../agent/sequence-agent/orchestrator.js';
+import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from '../../../agent/sequence-agent/orchestrator.js';
 
-function okRevision(revision = 'rev-1') {
-  return async () => ({ data: { revision } });
+function compressibleCommands(overrides = {}) {
+  const trackName = overrides.trackName || 'XD: Song Structure';
+  return [
+    { id: 'timing.track.create', cmd: 'timing.createTrack', params: { trackName, replaceIfExists: true } },
+    {
+      id: 'timing.marks.insert',
+      dependsOn: ['timing.track.create'],
+      cmd: overrides.markCommand || 'timing.insertMarks',
+      params: {
+        trackName,
+        marks: overrides.marks || [
+          { startMs: 0, endMs: 1000, label: 'Intro' },
+          { startMs: 1000, endMs: 2000, label: 'Verse 1' }
+        ]
+      }
+    },
+    {
+      id: 'effect.1',
+      dependsOn: ['timing.marks.insert'],
+      cmd: 'effects.create',
+      params: {
+        modelName: overrides.modelName || 'Snowman',
+        layerIndex: overrides.layerIndex ?? 0,
+        effectName: overrides.effectName || 'Color Wash',
+        startMs: overrides.startMs ?? 1000,
+        endMs: overrides.endMs ?? 2000,
+        settings: overrides.settings ?? '',
+        palette: overrides.palette ?? '',
+        ...(overrides.effectParams || {})
+      }
+    },
+    ...(overrides.extraCommands || [])
+  ];
+}
+
+function ownedDeps(overrides = {}) {
+  return {
+    getOwnedHealth: async () => ({ ok: true, data: { state: 'ready', listenerReachable: true, appReady: true, startupSettled: true } }),
+    getOwnedRevision: async () => ({ data: { revision: overrides.revision || 'rev-1' } }),
+    applySequencingBatchPlan: async () => ({ data: { jobId: overrides.jobId || 'owned-job-1' } }),
+    getOwnedJob: async () => ({ data: { state: 'succeeded' } }),
+    ...overrides
+  };
 }
 
 test('evaluatePlanSafety blocks forbidden commands', () => {
@@ -15,676 +56,194 @@ test('evaluatePlanSafety blocks forbidden commands', () => {
   ]);
 
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes('Blocked command')));
+  assert.ok(result.errors.some((error) => error.includes('Blocked command')));
 });
 
-test("evaluatePlanSafety blocks conflicting timing write groups", () => {
+test('evaluatePlanSafety blocks conflicting timing write groups', () => {
   const result = evaluatePlanSafety([
-    { cmd: "timing.insertMarks", params: { trackName: "XD: Beats", marks: [] } },
-    { cmd: "timing.replaceMarks", params: { trackName: "XD: Beats", marks: [] } }
+    { cmd: 'timing.insertMarks', params: { trackName: 'XD: Beats', marks: [] } },
+    { cmd: 'timing.replaceMarks', params: { trackName: 'XD: Beats', marks: [] } }
   ]);
+
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => /Conflicting timing write group/i.test(e)));
+  assert.ok(result.errors.some((error) => /Conflicting timing write group/i.test(error)));
 });
 
-test('orchestrator blocks on revision mismatch', async () => {
+test('orchestrator blocks on invalid command graph before owned apply', async () => {
   const res = await validateAndApplyPlan({
-    endpoint: 'http://127.0.0.1:49914/xlDoAutomation',
-    commands: [{ cmd: 'timing.createTrack', params: { trackName: 'X' } }],
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: [
+      { cmd: 'timing.createTrack', params: { trackName: 'XD: Test' } },
+      { cmd: 'timing.createTrack', params: { trackName: 'XD: Test' } }
+    ],
+    ...ownedDeps()
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, 'graph');
+  assert.match(String(res.error || ''), /Duplicate write command/i);
+});
+
+test('orchestrator rejects command graphs that cannot be expressed as owned batch plans', async () => {
+  const res = await validateAndApplyPlan({
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: [{ cmd: 'effects.create', params: { modelName: 'MegaTree', layerIndex: 0, effectName: 'Bars', startMs: 0, endMs: 1000 } }],
+    ...ownedDeps()
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, 'unsupported');
+  assert.match(String(res.error || ''), /owned xLights batch plan/i);
+});
+
+test('orchestrator blocks on owned revision mismatch', async () => {
+  const res = await validateAndApplyPlan({
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: compressibleCommands(),
     expectedRevision: 'rev-expected',
-    getRevision: okRevision('rev-current'),
-    validateCommands: async () => ({ data: { valid: true } }),
-    beginTransaction: async () => ({ data: { transactionId: 'tx-1' } }),
-    stageTransactionCommand: async () => ({ res: 200 }),
-    commitTransaction: async () => ({ data: { newRevision: 'rev-next' } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } })
+    ...ownedDeps({ revision: 'rev-current' })
   });
 
   assert.equal(res.ok, false);
   assert.equal(res.stage, 'revision');
 });
 
-test('orchestrator blocks on command validation failure', async () => {
+test('orchestrator applies compressible plans through owned batch apply', async () => {
+  let applyCalls = 0;
+  let ownedJobCalls = 0;
   const res = await validateAndApplyPlan({
-    endpoint: 'http://127.0.0.1:49914/xlDoAutomation',
-    commands: [{ cmd: 'timing.createTrack', params: { trackName: '' } }],
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: compressibleCommands(),
     expectedRevision: 'rev-1',
-    getRevision: okRevision('rev-1'),
-    validateCommands: async () => ({
-      data: {
-        valid: false,
-        results: [{ index: 0, valid: false, error: { code: 'VALIDATION_ERROR', message: 'trackName required' } }]
+    ...ownedDeps({
+      applySequencingBatchPlan: async (_endpoint, payload) => {
+        applyCalls += 1;
+        assert.equal(payload.track, 'XD: Song Structure');
+        assert.equal(payload.replaceExistingMarks, true);
+        assert.equal(payload.marks.length, 2);
+        assert.equal(payload.effects.length, 1);
+        return { data: { jobId: 'owned-job-1' } };
+      },
+      getOwnedJob: async () => {
+        ownedJobCalls += 1;
+        return { data: { state: 'succeeded' } };
       }
-    }),
-    beginTransaction: async () => ({ data: { transactionId: 'tx-1' } }),
-    stageTransactionCommand: async () => ({ res: 200 }),
-    commitTransaction: async () => ({ data: { newRevision: 'rev-next' } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } })
-  });
-
-  assert.equal(res.ok, false);
-  assert.equal(res.stage, 'validate');
-  assert.match(String(res.error || ''), /trackName required/i);
-});
-
-test("orchestrator blocks on invalid command graph", async () => {
-  const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [
-      { cmd: "timing.createTrack", params: { trackName: "XD: Test" } },
-      { cmd: "timing.createTrack", params: { trackName: "XD: Test" } }
-    ],
-    expectedRevision: "rev-1",
-    getRevision: okRevision("rev-1"),
-    validateCommands: async () => ({ data: { valid: true, results: [] } }),
-    beginTransaction: async () => ({ data: { transactionId: 'tx-1' } }),
-    stageTransactionCommand: async () => ({ res: 200 }),
-    commitTransaction: async () => ({ data: { newRevision: 'rev-next' } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } })
-  });
-
-  assert.equal(res.ok, false);
-  assert.equal(res.stage, "graph");
-  assert.match(String(res.error || ""), /Duplicate write command/i);
-});
-
-test('orchestrator executes when safety/revision/validation pass', async () => {
-  const staged = [];
-  const res = await validateAndApplyPlan({
-    endpoint: 'http://127.0.0.1:49914/xlDoAutomation',
-    commands: [{ cmd: 'timing.createTrack', params: { trackName: 'XD:Test' } }],
-    expectedRevision: 'rev-2',
-    getRevision: okRevision('rev-2'),
-    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }] } }),
-    beginTransaction: async () => ({ data: { transactionId: 'tx-1' } }),
-    stageTransactionCommand: async (_endpoint, txId, command) => {
-      staged.push({ txId, command });
-      return { res: 200 };
-    },
-    commitTransaction: async (_endpoint, txId, expectedRevision) => ({ data: { transactionId: txId, newRevision: `${expectedRevision}-next` } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } })
+    })
   });
 
   assert.equal(res.ok, true);
   assert.equal(res.stage, 'done');
-  assert.equal(res.executedCount, 1);
-  assert.equal(res.jobId, null);
-  assert.equal(staged.length, 1);
-  assert.equal(res.nextRevision, 'rev-2-next');
-});
-
-test("orchestrator happy path supports handoff-style command graph", async () => {
-  const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [
-      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Sequencer Plan", replaceIfExists: true } },
-      {
-        id: "timing.marks.insert",
-        dependsOn: ["timing.track.create"],
-        cmd: "timing.insertMarks",
-        params: { trackName: "XD: Sequencer Plan", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] }
-      },
-      {
-        id: "effect.1",
-        dependsOn: ["timing.marks.insert"],
-        cmd: "effects.create",
-        params: { modelName: "MegaTree", layerIndex: 0, effectName: "Bars", startMs: 0, endMs: 1000 }
-      }
-    ],
-    expectedRevision: "rev-10",
-    getRevision: okRevision("rev-10"),
-    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }, { index: 1, valid: true }, { index: 2, valid: true }] } }),
-    beginTransaction: async () => ({ data: { transactionId: "tx-graph" } }),
-    stageTransactionCommand: async () => ({ res: 200 }),
-    commitTransaction: async () => ({ data: { newRevision: "rev-11" } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } })
-  });
-
-  assert.equal(res.ok, true);
-  assert.equal(res.stage, "done");
+  assert.equal(res.applyPath, 'owned_batch_plan');
   assert.equal(res.executedCount, 3);
-  assert.equal(res.nextRevision, "rev-11");
-});
-
-test("orchestrator prefers owned sequencing batch plan when command graph is compressible", async () => {
-  let applyCalls = 0;
-  let ownedJobCalls = 0;
-  const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [
-      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
-      {
-        id: "timing.marks.insert",
-        dependsOn: ["timing.track.create"],
-        cmd: "timing.insertMarks",
-        params: {
-          trackName: "XD: Song Structure",
-          marks: [
-            { startMs: 0, endMs: 1000, label: "Intro" },
-            { startMs: 1000, endMs: 2000, label: "Verse 1" }
-          ]
-        }
-      },
-      {
-        id: "effect.1",
-        dependsOn: ["timing.marks.insert"],
-        cmd: "effects.create",
-        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
-      }
-    ],
-    expectedRevision: "rev-owned-1",
-    getRevision: okRevision("rev-owned-1"),
-    validateCommands: async () => ({ data: { valid: true, results: [] } }),
-    beginTransaction: async () => {
-      throw new Error("legacy transaction path should not run");
-    },
-    stageTransactionCommand: async () => {
-      throw new Error("legacy transaction path should not run");
-    },
-    commitTransaction: async () => {
-      throw new Error("legacy transaction path should not run");
-    },
-    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
-    applySequencingBatchPlan: async (_endpoint, payload) => {
-      applyCalls += 1;
-      assert.equal(payload.track, "XD: Song Structure");
-      assert.equal(payload.replaceExistingMarks, true);
-      assert.equal(payload.marks.length, 2);
-      assert.equal(payload.effects.length, 1);
-      return { data: { jobId: "owned-job-1" } };
-    },
-    getOwnedJob: async () => {
-      ownedJobCalls += 1;
-      return { data: { state: "succeeded" } };
-    }
-  });
-
-  assert.equal(res.ok, true);
-  assert.equal(res.applyPath, "owned_batch_plan");
+  assert.equal(res.jobId, 'owned-job-1');
   assert.equal(applyCalls, 1);
   assert.equal(ownedJobCalls, 1);
 });
 
-test("orchestrator blocks when owned sequencing batch plan is unavailable", async () => {
+test('orchestrator fails closed when owned health is unavailable', async () => {
   const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [
-      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
-      {
-        id: "timing.marks.insert",
-        dependsOn: ["timing.track.create"],
-        cmd: "timing.insertMarks",
-        params: {
-          trackName: "XD: Song Structure",
-          marks: [
-            { startMs: 0, endMs: 1000, label: "Intro" },
-            { startMs: 1000, endMs: 2000, label: "Verse 1" }
-          ]
-        }
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: compressibleCommands(),
+    ...ownedDeps({
+      getOwnedHealth: async () => {
+        throw new Error('Failed to fetch');
       },
-      {
-        id: "effect.1",
-        dependsOn: ["timing.marks.insert"],
-        cmd: "effects.create",
-        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
+      applySequencingBatchPlan: async () => {
+        throw new Error('owned path should not execute when health is unavailable');
       }
-    ],
-    expectedRevision: "rev-fallback-1",
-    getRevision: okRevision("rev-fallback-1"),
-    validateCommands: async () => {
-      throw new Error("legacy validation path should not run");
-    },
-    beginTransaction: async () => {
-      throw new Error("legacy transaction path should not run");
-    },
-    stageTransactionCommand: async () => {
-      throw new Error("legacy transaction path should not run");
-    },
-    commitTransaction: async () => {
-      throw new Error("legacy transaction path should not run");
-    },
-    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
-    applySequencingBatchPlan: async () => {
-      throw new Error("POST http://127.0.0.1:49915/xlightsdesigner/api/sequencing/apply-batch-plan failed (VALIDATION): Invalid payload.");
-    },
-    getOwnedJob: async () => {
-      throw new Error("owned job poll should not run");
-    }
+    })
   });
 
   assert.equal(res.ok, false);
-  assert.equal(res.stage, "runtime");
-  assert.match(String(res.error || ""), /owned sequencing\.applyBatchPlan failed/i);
+  assert.equal(res.stage, 'runtime');
+  assert.match(String(res.error || ''), /owned xLights API unavailable/i);
 });
 
-test("orchestrator fails closed when owned health is unavailable for a compressible plan", async () => {
-  let began = 0;
+test('orchestrator fails closed when owned batch apply fails', async () => {
   const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [
-      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
-      {
-        id: "timing.marks.insert",
-        dependsOn: ["timing.track.create"],
-        cmd: "timing.insertMarks",
-        params: {
-          trackName: "XD: Song Structure",
-          marks: [
-            { startMs: 0, endMs: 1000, label: "Intro" },
-            { startMs: 1000, endMs: 2000, label: "Verse 1" }
-          ]
-        }
-      },
-      {
-        id: "effect.1",
-        dependsOn: ["timing.marks.insert"],
-        cmd: "effects.create",
-        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: compressibleCommands(),
+    ...ownedDeps({
+      applySequencingBatchPlan: async () => {
+        throw new Error('Failed to fetch');
       }
-    ],
-    expectedRevision: "rev-fallback-1",
-    getRevision: okRevision("rev-fallback-1"),
-    validateCommands: async () => ({ data: { valid: true, results: [] } }),
-    beginTransaction: async () => {
-      began += 1;
-      return { data: { transactionId: "tx-fallback-1" } };
-    },
-    stageTransactionCommand: async () => ({ res: 200 }),
-    commitTransaction: async () => ({ data: { newRevision: "rev-fallback-2" } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => {
-      throw new Error("Failed to fetch");
-    },
-    applySequencingBatchPlan: async () => {
-      throw new Error("owned path should not execute when health is unavailable");
-    },
-    getOwnedJob: async () => ({ data: { state: "succeeded" } })
+    })
   });
 
   assert.equal(res.ok, false);
-  assert.equal(res.stage, "runtime");
-  assert.equal(began, 0);
-  assert.match(String(res.error || ""), /owned xLights API unavailable/i);
+  assert.equal(res.stage, 'runtime');
+  assert.match(String(res.error || ''), /owned sequencing\.applyBatchPlan failed/i);
 });
 
-test("orchestrator fails closed when owned apply fetch fails for a compressible plan", async () => {
-  let began = 0;
+test('orchestrator fails closed when owned job fails', async () => {
   const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [
-      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
-      {
-        id: "timing.marks.insert",
-        dependsOn: ["timing.track.create"],
-        cmd: "timing.insertMarks",
-        params: {
-          trackName: "XD: Song Structure",
-          marks: [
-            { startMs: 0, endMs: 1000, label: "Intro" },
-            { startMs: 1000, endMs: 2000, label: "Verse 1" }
-          ]
-        }
-      },
-      {
-        id: "effect.1",
-        dependsOn: ["timing.marks.insert"],
-        cmd: "effects.create",
-        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
-      }
-    ],
-    expectedRevision: "rev-fallback-3",
-    getRevision: okRevision("rev-fallback-3"),
-    validateCommands: async () => ({ data: { valid: true, results: [] } }),
-    beginTransaction: async () => {
-      began += 1;
-      return { data: { transactionId: "tx-fallback-2" } };
-    },
-    stageTransactionCommand: async () => ({ res: 200 }),
-    commitTransaction: async () => ({ data: { newRevision: "rev-fallback-4" } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
-    applySequencingBatchPlan: async () => {
-      throw new Error("Failed to fetch");
-    },
-    getOwnedJob: async () => ({ data: { state: "succeeded" } })
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: compressibleCommands(),
+    ...ownedDeps({
+      getOwnedJob: async () => ({ data: { state: 'failed', result: { error: { message: 'effect rejected' } } } })
+    })
   });
 
   assert.equal(res.ok, false);
-  assert.equal(res.stage, "runtime");
-  assert.equal(began, 0);
-  assert.match(String(res.error || ""), /owned sequencing\.applyBatchPlan failed/i);
+  assert.equal(res.stage, 'runtime');
+  assert.match(String(res.error || ''), /effect rejected/i);
 });
 
-test("orchestrator fails closed for owned endpoints when owned health is unavailable", async () => {
-  let began = 0;
-  const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
-    commands: [
-      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
-      {
-        id: "timing.marks.insert",
-        dependsOn: ["timing.track.create"],
-        cmd: "timing.insertMarks",
-        params: {
-          trackName: "XD: Song Structure",
-          marks: [
-            { startMs: 0, endMs: 1000, label: "Intro" },
-            { startMs: 1000, endMs: 2000, label: "Verse 1" }
-          ]
-        }
-      },
-      {
-        id: "effect.1",
-        dependsOn: ["timing.marks.insert"],
-        cmd: "effects.create",
-        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
-      }
-    ],
-    expectedRevision: "rev-owned-fail-1",
-    getRevision: okRevision("rev-owned-fail-1"),
-    validateCommands: async () => ({ data: { valid: true, results: [] } }),
-    beginTransaction: async () => {
-      began += 1;
-      return { data: { transactionId: "tx-owned-fail-1" } };
-    },
-    stageTransactionCommand: async () => ({ res: 200 }),
-    commitTransaction: async () => ({ data: { newRevision: "rev-owned-fail-2" } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => {
-      throw new Error("Failed to fetch");
-    },
-    applySequencingBatchPlan: async () => {
-      throw new Error("owned path should not execute when health is unavailable");
-    },
-    getOwnedJob: async () => ({ data: { state: "succeeded" } })
-  });
-
-  assert.equal(res.ok, false);
-  assert.equal(res.stage, "runtime");
-  assert.equal(began, 0);
-  assert.match(String(res.error || ""), /owned xLights API unavailable/i);
-});
-
-test("orchestrator fails closed for owned endpoints when owned apply fetch fails", async () => {
-  let began = 0;
-  const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
-    commands: [
-      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
-      {
-        id: "timing.marks.insert",
-        dependsOn: ["timing.track.create"],
-        cmd: "timing.insertMarks",
-        params: {
-          trackName: "XD: Song Structure",
-          marks: [
-            { startMs: 0, endMs: 1000, label: "Intro" },
-            { startMs: 1000, endMs: 2000, label: "Verse 1" }
-          ]
-        }
-      },
-      {
-        id: "effect.1",
-        dependsOn: ["timing.marks.insert"],
-        cmd: "effects.create",
-        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
-      }
-    ],
-    expectedRevision: "rev-owned-fail-3",
-    getRevision: okRevision("rev-owned-fail-3"),
-    validateCommands: async () => ({ data: { valid: true, results: [] } }),
-    beginTransaction: async () => {
-      began += 1;
-      return { data: { transactionId: "tx-owned-fail-2" } };
-    },
-    stageTransactionCommand: async () => ({ res: 200 }),
-    commitTransaction: async () => ({ data: { newRevision: "rev-owned-fail-4" } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
-    applySequencingBatchPlan: async () => {
-      throw new Error("Failed to fetch");
-    },
-    getOwnedJob: async () => ({ data: { state: "succeeded" } })
-  });
-
-  assert.equal(res.ok, false);
-  assert.equal(res.stage, "runtime");
-  assert.equal(began, 0);
-  assert.match(String(res.error || ""), /owned sequencing\.applyBatchPlan failed/i);
-});
-
-test("orchestrator still compresses plans that include alignToTiming commands", async () => {
+test('orchestrator accepts alignToTiming commands that match the owned batch track', async () => {
   let applyCalls = 0;
   const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [
-      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
-      {
-        id: "timing.marks.insert",
-        dependsOn: ["timing.track.create"],
-        cmd: "timing.insertMarks",
-        params: {
-          trackName: "XD: Song Structure",
-          marks: [
-            { startMs: 0, endMs: 1000, label: "Intro" },
-            { startMs: 1000, endMs: 2000, label: "Verse 1" }
-          ]
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: compressibleCommands({
+      extraCommands: [
+        {
+          id: 'effect.align.1',
+          dependsOn: ['effect.1'],
+          cmd: 'effects.alignToTiming',
+          params: { modelName: 'Snowman', layerIndex: 0, startMs: 1000, endMs: 2000, timingTrackName: 'XD: Song Structure', mode: 'nearest' }
         }
-      },
-      {
-        id: "effect.1",
-        dependsOn: ["timing.marks.insert"],
-        cmd: "effects.create",
-        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
-      },
-      {
-        id: "effect.align.1",
-        dependsOn: ["effect.1"],
-        cmd: "effects.alignToTiming",
-        params: { modelName: "Snowman", layerIndex: 0, startMs: 1000, endMs: 2000, timingTrackName: "XD: Song Structure", mode: "nearest" }
+      ]
+    }),
+    ...ownedDeps({
+      applySequencingBatchPlan: async (_endpoint, payload) => {
+        applyCalls += 1;
+        assert.equal(payload.track, 'XD: Song Structure');
+        assert.equal(payload.effects.length, 1);
+        return { data: { jobId: 'owned-job-align-1' } };
       }
-    ],
-    expectedRevision: "rev-align-1",
-    getRevision: okRevision("rev-align-1"),
-    validateCommands: async () => ({ data: { valid: true, results: [] } }),
-    beginTransaction: async () => {
-      throw new Error("legacy transaction path should not run");
-    },
-    stageTransactionCommand: async () => {
-      throw new Error("legacy transaction path should not run");
-    },
-    commitTransaction: async () => {
-      throw new Error("legacy transaction path should not run");
-    },
-    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => ({ ok: true, data: { state: "ready", listenerReachable: true, appReady: true, startupSettled: true } }),
-    applySequencingBatchPlan: async (_endpoint, payload) => {
-      applyCalls += 1;
-      assert.equal(payload.track, "XD: Song Structure");
-      assert.equal(payload.effects.length, 1);
-      return { data: { jobId: "owned-job-align-1" } };
-    },
-    getOwnedJob: async () => ({ data: { state: "succeeded" } })
+    })
   });
 
   assert.equal(res.ok, true);
-  assert.equal(res.applyPath, "owned_batch_plan");
+  assert.equal(res.applyPath, 'owned_batch_plan');
   assert.equal(applyCalls, 1);
 });
 
-test("orchestrator stages corpus-backed effect settings without reinterpretation", async () => {
-  const staged = [];
-  const command = {
-    id: "effect.1",
-    cmd: "effects.create",
-    params: {
-      modelName: "MegaTree",
-      layerIndex: 1,
-      effectName: "Bars",
-      startMs: 0,
-      endMs: 1000,
-      settings: {
-        T_CHOICE_LayerMethod: "Layered",
-        T_CHOICE_In_Transition_Type: "Wipe",
-        T_CHOICE_Out_Transition_Type: "Circle Explode",
-        B_CHOICE_BufferStyle: "Per Preview",
-        B_CHOICE_BufferTransform: "Flip Horizontal",
-        B_CHOICE_PerPreviewCamera: "2D",
-        C_SLIDER_Brightness: 100
-      }
-    }
+test('owned batch builder preserves corpus-backed settings and metadata payloads', () => {
+  const settings = {
+    T_CHOICE_LayerMethod: 'Layered',
+    T_CHOICE_In_Transition_Type: 'Wipe',
+    T_CHOICE_Out_Transition_Type: 'Circle Explode',
+    B_CHOICE_BufferStyle: 'Per Preview',
+    E_TEXTCTRL_Pictures_Filename: '/Users/robterry/Documents/Lights/assets/snowflake.png'
   };
-
-  const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [command],
-    expectedRevision: "rev-20",
-    getRevision: okRevision("rev-20"),
-    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }] } }),
-    beginTransaction: async () => ({ data: { transactionId: "tx-settings" } }),
-    stageTransactionCommand: async (_endpoint, txId, stagedCommand) => {
-      staged.push({ txId, stagedCommand });
-      return { res: 200 };
-    },
-    commitTransaction: async () => ({ data: { newRevision: "rev-21" } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } })
-  });
-
-  assert.equal(res.ok, true);
-  assert.equal(staged.length, 1);
-  assert.deepEqual(staged[0].stagedCommand.params.settings, command.params.settings);
-});
-
-test("orchestrator stages forced group-expansion metadata without reinterpretation", async () => {
-  const staged = [];
-  const command = {
-    id: "effect.1",
-    cmd: "effects.create",
-    params: {
-      modelName: "WindowLeft",
-      layerIndex: 0,
-      effectName: "Bars",
-      startMs: 0,
-      endMs: 1000,
-      sourceGroupId: "NestedFrontline",
-      sourceGroupRenderPolicy: "overlay",
-      sourceGroupBufferStyle: "Overlay - Centered",
-      settings: {
-        T_CHOICE_LayerMethod: "Layered"
-      }
-    }
-  };
-
-  const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [command],
-    expectedRevision: "rev-22",
-    getRevision: okRevision("rev-22"),
-    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }] } }),
-    beginTransaction: async () => ({ data: { transactionId: "tx-group-meta" } }),
-    stageTransactionCommand: async (_endpoint, txId, stagedCommand) => {
-      staged.push({ txId, stagedCommand });
-      return { res: 200 };
-    },
-    commitTransaction: async () => ({ data: { newRevision: "rev-23" } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } })
-  });
-
-  assert.equal(res.ok, true);
-  assert.equal(staged.length, 1);
-  assert.deepEqual(
-    {
-      sourceGroupId: staged[0].stagedCommand.params.sourceGroupId,
-      sourceGroupRenderPolicy: staged[0].stagedCommand.params.sourceGroupRenderPolicy,
-      sourceGroupBufferStyle: staged[0].stagedCommand.params.sourceGroupBufferStyle
-    },
-    {
-      sourceGroupId: "NestedFrontline",
-      sourceGroupRenderPolicy: "overlay",
-      sourceGroupBufferStyle: "Overlay - Centered"
-    }
-  );
-});
-
-test("orchestrator stages picture and video file paths without reinterpretation", async () => {
-  const staged = [];
-  const commands = [
-    {
-      id: "effect.picture.1",
-      cmd: "effects.create",
-      params: {
-        modelName: "MegaTree",
-        layerIndex: 0,
-        effectName: "Pictures",
-        startMs: 0,
-        endMs: 1000,
-        settings: {
-          E_TEXTCTRL_Pictures_Filename: "/Users/robterry/Documents/Lights/assets/snowflake.png"
-        }
-      }
-    },
-    {
-      id: "effect.video.1",
-      cmd: "effects.create",
-      params: {
-        modelName: "Matrix",
-        layerIndex: 1,
-        effectName: "Video",
-        startMs: 1000,
-        endMs: 2500,
-        settings: {
-          E_FILEPICKERCTRL_Video_Filename: "/Users/robterry/Documents/Lights/assets/intro.mp4"
-        }
-      }
-    }
-  ];
-
-  const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands,
-    expectedRevision: "rev-media-1",
-    getRevision: okRevision("rev-media-1"),
-    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }, { index: 1, valid: true }] } }),
-    beginTransaction: async () => ({ data: { transactionId: "tx-media-paths" } }),
-    stageTransactionCommand: async (_endpoint, txId, stagedCommand) => {
-      staged.push({ txId, stagedCommand });
-      return { res: 200 };
-    },
-    commitTransaction: async () => ({ data: { newRevision: "rev-media-2" } }),
-    rollbackTransaction: async () => ({ data: { rolledBack: true } })
-  });
-
-  assert.equal(res.ok, true);
-  assert.equal(staged.length, 2);
-  assert.equal(staged[0].stagedCommand.params.settings.E_TEXTCTRL_Pictures_Filename, "/Users/robterry/Documents/Lights/assets/snowflake.png");
-  assert.equal(staged[1].stagedCommand.params.settings.E_FILEPICKERCTRL_Video_Filename, "/Users/robterry/Documents/Lights/assets/intro.mp4");
-});
-
-test("orchestrator rolls back staged transaction on runtime failure", async () => {
-  const staged = [];
-  let rolledBack = false;
-  const res = await validateAndApplyPlan({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
-    commands: [{ cmd: "effects.create", params: { modelName: "MegaTree", layerIndex: 0, effectName: "Bars", startMs: 0, endMs: 1000 } }],
-    expectedRevision: "rev-2",
-    getRevision: okRevision("rev-2"),
-    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }] } }),
-    beginTransaction: async () => ({ data: { transactionId: "tx-1" } }),
-    stageTransactionCommand: async (_endpoint, txId, command) => {
-      staged.push({ txId, command });
-      throw new Error("stage failed");
-    },
-    commitTransaction: async (_endpoint, txId, expectedRevision) => ({ data: { transactionId: txId, newRevision: `${expectedRevision}-next` } }),
-    rollbackTransaction: async () => {
-      rolledBack = true;
-      return { data: { rolledBack: true } };
+  const palette = { C_BUTTON_Palette1: '#ffffff' };
+  const commands = compressibleCommands({
+    modelName: 'MegaTree',
+    effectName: 'Pictures',
+    settings,
+    palette,
+    effectParams: {
+      sourceGroupId: 'NestedFrontline',
+      sourceGroupRenderPolicy: 'overlay',
+      sourceGroupBufferStyle: 'Overlay - Centered'
     }
   });
 
-  assert.equal(res.ok, false);
-  assert.equal(res.stage, "runtime");
-  assert.equal(staged.length, 1);
-  assert.equal(rolledBack, true);
+  const batchPlan = buildOwnedSequencingBatchPlan(commands);
+
+  assert.equal(batchPlan.track, 'XD: Song Structure');
+  assert.equal(batchPlan.effects.length, 1);
+  assert.deepEqual(batchPlan.effects[0].settings, settings);
+  assert.deepEqual(batchPlan.effects[0].palette, palette);
+  assert.equal(batchPlan.effects[0].element, 'MegaTree');
 });

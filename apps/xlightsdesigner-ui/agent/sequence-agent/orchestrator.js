@@ -91,11 +91,6 @@ async function waitForOwnedJob(endpoint, jobId, getOwnedJob, attempts = 40, dela
   throw new Error(`Timed out waiting for owned xLights job ${jobId}.`);
 }
 
-function isOwnedEndpoint(endpoint = "") {
-  const text = norm(endpoint);
-  return text.includes("/xlightsdesigner/api") || text.includes(":49915/");
-}
-
 function isOwnedHealthReady(health = {}) {
   const data = health?.data && typeof health.data === "object" ? health.data : {};
   const state = norm(data.state || data.startupState || data.status);
@@ -109,12 +104,6 @@ export async function validateAndApplyPlan({
   endpoint,
   commands,
   expectedRevision = 'unknown',
-  getRevision,
-  validateCommands,
-  beginTransaction,
-  commitTransaction,
-  rollbackTransaction,
-  stageTransactionCommand,
   applySequencingBatchPlan = null,
   getOwnedJob = null,
   getOwnedHealth = null,
@@ -122,8 +111,6 @@ export async function validateAndApplyPlan({
   safetyOptions = {}
 } = {}) {
   if (!endpoint) throw new Error('endpoint is required');
-  if (typeof getRevision !== 'function') throw new Error('getRevision function is required');
-  if (typeof validateCommands !== 'function') throw new Error('validateCommands function is required');
 
   const safety = evaluatePlanSafety(commands, safetyOptions);
   if (!safety.ok) {
@@ -146,38 +133,53 @@ export async function validateAndApplyPlan({
   }
 
   const ownedBatchPlan = buildOwnedSequencingBatchPlan(commands);
-  const ownedPathAvailable = Boolean(
-    ownedBatchPlan &&
-    typeof applySequencingBatchPlan === "function" &&
-    typeof getOwnedJob === "function"
-  );
+  if (!ownedBatchPlan) {
+    return {
+      ok: false,
+      stage: "unsupported",
+      error: "Command graph cannot be expressed as an owned xLights batch plan.",
+      details: { commandCount: Array.isArray(commands) ? commands.length : 0 }
+    };
+  }
+  if (typeof applySequencingBatchPlan !== "function") {
+    return {
+      ok: false,
+      stage: "runtime",
+      error: "owned sequencing.applyBatchPlan function is required"
+    };
+  }
+  if (typeof getOwnedJob !== "function") {
+    return {
+      ok: false,
+      stage: "runtime",
+      error: "owned job polling function is required"
+    };
+  }
   let currentRevision = 'unknown';
   let ownedApiReady = false;
   let ownedHealthError = "";
   let ownedHealth = null;
 
-  if (ownedPathAvailable) {
-    if (typeof getOwnedHealth !== "function") {
-      return {
-        ok: false,
-        stage: "runtime",
-        error: "owned xLights API health probe is required for compressible apply plans"
-      };
+  if (typeof getOwnedHealth !== "function") {
+    return {
+      ok: false,
+      stage: "runtime",
+      error: "owned xLights API health probe is required"
+    };
+  }
+  try {
+    ownedHealth = await getOwnedHealth(endpoint);
+    ownedApiReady = isOwnedHealthReady(ownedHealth);
+    if (typeof getOwnedRevision === 'function') {
+      const rev = await getOwnedRevision(endpoint).catch(() => ({ data: { revision: 'unknown' } }));
+      currentRevision = str(rev?.data?.revision || rev?.data?.revisionToken || 'unknown') || 'unknown';
     }
-    try {
-      ownedHealth = await getOwnedHealth(endpoint);
-      ownedApiReady = isOwnedHealthReady(ownedHealth);
-      if (typeof getOwnedRevision === 'function') {
-        const rev = await getOwnedRevision(endpoint).catch(() => ({ data: { revision: 'unknown' } }));
-        currentRevision = str(rev?.data?.revision || rev?.data?.revisionToken || 'unknown') || 'unknown';
-      }
-    } catch (err) {
-      ownedApiReady = false;
-      ownedHealthError = str(err?.message || err);
-    }
+  } catch (err) {
+    ownedApiReady = false;
+    ownedHealthError = str(err?.message || err);
   }
 
-  if (ownedPathAvailable && !ownedApiReady) {
+  if (!ownedApiReady) {
     const state = str(ownedHealth?.data?.state || ownedHealth?.data?.startupState || "unknown") || "unknown";
     const reason = ownedHealthError || `owned xLights API not ready (state=${state})`;
     return {
@@ -187,12 +189,7 @@ export async function validateAndApplyPlan({
     };
   }
 
-  if (!ownedApiReady) {
-    const rev = await getRevision(endpoint);
-    currentRevision = rev?.data?.revision ?? 'unknown';
-  } else {
-    // already populated from owned revision path above
-  }
+  // currentRevision is populated from the owned revision path above when available.
 
   if (
     expectedRevision &&
@@ -208,134 +205,47 @@ export async function validateAndApplyPlan({
     };
   }
 
-  const shouldUseOwnedPath = ownedPathAvailable && ownedApiReady;
-
-  if (shouldUseOwnedPath) {
-    try {
-      const accepted = await applySequencingBatchPlan(endpoint, ownedBatchPlan);
-      const jobId = str(accepted?.data?.jobId);
-      if (!jobId) {
-        return {
-          ok: false,
-          stage: "runtime",
-          error: "owned sequencing.applyBatchPlan returned no jobId",
-          details: accepted
-        };
-      }
-      const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob);
-      const state = str(settled?.data?.state).toLowerCase();
-      if (state === "failed") {
-        return {
-          ok: false,
-          stage: "runtime",
-          error: str(settled?.data?.result?.error?.message || "owned sequencing.applyBatchPlan failed"),
-          details: settled
-        };
-      }
-      const postRev = typeof getOwnedRevision === 'function'
-        ? await getOwnedRevision(endpoint).catch(() => ({ data: { revision: currentRevision } }))
-        : { data: { revision: currentRevision } };
-      const nextRevision = str(postRev?.data?.revision || postRev?.data?.revisionToken || currentRevision) || currentRevision;
-      return {
-        ok: true,
-        stage: "done",
-        executedCount: Array.isArray(commands) ? commands.length : 0,
-        jobId,
-        currentRevision,
-        nextRevision,
-        warnings: safety.warnings,
-        applyPath: "owned_batch_plan"
-      };
-    } catch (err) {
-      const message = str(err?.message || err);
-      return {
-        ok: false,
-        stage: "runtime",
-        error: `owned sequencing.applyBatchPlan failed: ${message}`
-      };
-    }
-  }
-
-  if (typeof beginTransaction !== 'function') throw new Error('beginTransaction function is required for legacy transaction apply');
-  if (typeof commitTransaction !== 'function') throw new Error('commitTransaction function is required for legacy transaction apply');
-  if (typeof rollbackTransaction !== 'function') throw new Error('rollbackTransaction function is required for legacy transaction apply');
-  if (typeof stageTransactionCommand !== 'function') throw new Error('stageTransactionCommand function is required for legacy transaction apply');
-
-  const validation = await validateCommands(
-    endpoint,
-    (Array.isArray(commands) ? commands : []).map((step) => ({ cmd: step.cmd, params: step.params }))
-  );
-  if (validation?.data?.valid === false) {
-    const invalidResults = (validation?.data?.results || []).filter((r) => r.valid === false);
-    const detailText = invalidResults
-      .map((r) => {
-        const code = r?.error?.code || 'VALIDATION_ERROR';
-        const msg = r?.error?.message || 'Invalid command';
-        return `step ${r.index}: ${code} - ${msg}`;
-      })
-      .join('\n');
-
-    return {
-      ok: false,
-      stage: 'validate',
-      error: detailText || 'Validation failed with no detailed payload.',
-      details: { invalidResults }
-    };
-  }
-
-  let executedCount = 0;
-  let jobId = null;
-  let commitRevision = "";
-  let transactionId = "";
   try {
-    const begun = await beginTransaction(endpoint);
-    transactionId = String(begun?.data?.transactionId || "").trim();
-    if (!transactionId) {
+    const accepted = await applySequencingBatchPlan(endpoint, ownedBatchPlan);
+    const jobId = str(accepted?.data?.jobId);
+    if (!jobId) {
       return {
         ok: false,
         stage: "runtime",
-        error: "transactions.begin returned no transactionId",
-        details: begun
+        error: "owned sequencing.applyBatchPlan returned no jobId",
+        details: accepted
       };
     }
-
-    for (const step of Array.isArray(commands) ? commands : []) {
-      await stageTransactionCommand(endpoint, transactionId, step);
-      executedCount += 1;
+    const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob);
+    const state = str(settled?.data?.state).toLowerCase();
+    if (state === "failed") {
+      return {
+        ok: false,
+        stage: "runtime",
+        error: str(settled?.data?.result?.error?.message || "owned sequencing.applyBatchPlan failed"),
+        details: settled
+      };
     }
-
-    const commit = await commitTransaction(
-      endpoint,
-      transactionId,
-      expectedRevision && expectedRevision !== "unknown" ? expectedRevision : null
-    );
-    commitRevision = String(commit?.data?.newRevision || "").trim();
+    const postRev = typeof getOwnedRevision === 'function'
+      ? await getOwnedRevision(endpoint).catch(() => ({ data: { revision: currentRevision } }))
+      : { data: { revision: currentRevision } };
+    const nextRevision = str(postRev?.data?.revision || postRev?.data?.revisionToken || currentRevision) || currentRevision;
+    return {
+      ok: true,
+      stage: "done",
+      executedCount: Array.isArray(commands) ? commands.length : 0,
+      jobId,
+      currentRevision,
+      nextRevision,
+      warnings: safety.warnings,
+      applyPath: "owned_batch_plan"
+    };
   } catch (err) {
-    if (transactionId) {
-      try {
-        await rollbackTransaction(endpoint, transactionId);
-      } catch {
-        // Best-effort rollback only.
-      }
-    }
+    const message = str(err?.message || err);
     return {
       ok: false,
       stage: "runtime",
-      error: String(err?.message || err || "transaction apply failed")
+      error: `owned sequencing.applyBatchPlan failed: ${message}`
     };
   }
-
-  const postRev = await getRevision(endpoint).catch(() => ({ data: { revision: currentRevision } }));
-  const nextRevision = commitRevision || (postRev?.data?.revision ?? currentRevision);
-
-  return {
-    ok: true,
-    stage: 'done',
-    executedCount,
-    jobId,
-    currentRevision,
-    nextRevision,
-    warnings: safety.warnings,
-    applyPath: "legacy_transactions"
-  };
 }

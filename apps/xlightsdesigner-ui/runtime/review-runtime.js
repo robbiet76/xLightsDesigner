@@ -265,12 +265,6 @@ export async function executeApplyCore({
       endpoint: state.endpoint,
       commands: rawPlan,
       expectedRevision: state.draftBaseRevision,
-      getRevision: deps.getRevision,
-      validateCommands: deps.validateCommands,
-      beginTransaction: deps.beginTransaction,
-      commitTransaction: deps.commitTransaction,
-      rollbackTransaction: deps.rollbackTransaction,
-      stageTransactionCommand: deps.stageTransactionCommand,
       applySequencingBatchPlan: deps.applySequencingBatchPlan,
       getOwnedJob: deps.getOwnedJob,
       getOwnedHealth: deps.getOwnedHealth,
@@ -463,12 +457,8 @@ export async function executeApplyCore({
     const applyPath = String(orchestrated?.applyPath || "").trim();
     const applyPathLabel = applyPath === "owned_batch_plan"
       ? "owned batch plan"
-      : "transaction commit";
+      : "owned apply";
     state.revision = orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision;
-    if (jobId && applyPath === "legacy_transactions") {
-      upsertJob({ id: jobId, source: "transactions.commit", status: "running", progress: 0, updatedAt: new Date().toISOString() });
-      setStatusWithDiagnostics("info", `Plan accepted as async job ${jobId}.`);
-    }
     state.draftBaseRevision = state.revision;
     const timingTrackPolicies = getSequenceTimingTrackPoliciesState();
     const timingGeneratedSignatures = getSequenceTimingGeneratedSignaturesState();
