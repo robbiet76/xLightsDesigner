@@ -3098,7 +3098,8 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [], group
 
 async function refreshEffectCatalogFromXLights() {
   const commands = Array.isArray(state.health?.capabilityCommands) ? state.health.capabilityCommands : [];
-  if (!commands.includes("effects.listDefinitions")) {
+  const ownedEndpoint = String(state.endpoint || "").includes("/xlightsdesigner/api") || /:49915(?:\/|$)/.test(String(state.endpoint || ""));
+  if (!ownedEndpoint && !commands.includes("effects.listDefinitions")) {
     state.effectCatalog = emptyEffectDefinitionCatalog("effects.listDefinitions unavailable");
     state.health.effectDefinitionCount = 0;
     state.health.effectCatalogReady = false;

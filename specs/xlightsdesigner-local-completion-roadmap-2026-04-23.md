@@ -47,6 +47,7 @@ Phase 2 native design authoring started:
 - Native direct proposal generation falls back to the repo-managed trained effect bundle when live effect definitions are unavailable
 - Native review apply uses the same live-or-trained effect catalog when building the final sequence-agent plan
 - Shared owned API wrappers expose trained effect definitions until xLights provides a live owned definitions route
+- Browser effect-catalog refresh now allows owned endpoints to use the trained definition fallback
 - Review blocks apply until a canonical generated proposal with sequence commands exists
 
 ## Purpose
