@@ -190,6 +190,15 @@ final class SequenceScreenViewModel {
     func generateProposalFromDesignIntent() {
         guard !isGeneratingProposal, let activeProject = workspace.activeProject else { return }
         let pendingWork = latestPendingWork
+        let prerequisiteBlockers = Self.proposalPrerequisiteBlockers(project: activeProject, pendingWork: pendingWork)
+        guard prerequisiteBlockers.isEmpty else {
+            transientBanner = WorkflowBannerModel(
+                id: "sequence-proposal-blocked",
+                text: prerequisiteBlockers.joined(separator: " "),
+                state: .blocked
+            )
+            return
+        }
         let prompt = Self.buildNativeDesignPrompt(project: activeProject, pendingWork: pendingWork)
         guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             transientBanner = WorkflowBannerModel(
@@ -237,6 +246,20 @@ final class SequenceScreenViewModel {
             return "Choose or analyze audio before generating a sequencing proposal."
         }
         return message.isEmpty ? "Proposal generation failed." : message
+    }
+
+    private static func proposalPrerequisiteBlockers(project: ActiveProjectModel, pendingWork: PendingWorkReadModel?) -> [String] {
+        let snapshot = project.snapshot.mapValues(\.value)
+        let audioPath = string(snapshot["audioPathInput"], fallback: pendingWork?.audioPath ?? "")
+        let sequencePath = string(snapshot["sequencePathInput"], fallback: pendingWork?.activeSequencePath ?? "")
+        var blockers: [String] = []
+        if audioPath.isEmpty || audioPath == "No audio path selected" {
+            blockers.append("Choose or analyze audio before generating a sequencing proposal.")
+        }
+        if sequencePath.isEmpty || sequencePath == "No active sequence path" {
+            blockers.append("Create or select the project sequence before generating a sequencing proposal.")
+        }
+        return blockers
     }
 
     private static func placeholderScreenModel(project: ActiveProjectModel?) -> SequenceScreenModel {

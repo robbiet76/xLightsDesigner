@@ -10,8 +10,10 @@ private struct SequenceTestProjectSessionStore: ProjectSessionStore {
 private final class StubSequenceProposalService: SequenceProposalService, @unchecked Sendable {
     private(set) var prompt = ""
     private(set) var projectFilePath = ""
+    private(set) var callCount = 0
 
     func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String) async throws -> SequenceProposalGenerationResult {
+        callCount += 1
         self.projectFilePath = projectFilePath
         self.prompt = prompt
         return SequenceProposalGenerationResult(
@@ -38,6 +40,8 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
         )
     )
     var projectWithIntent = project
+    projectWithIntent.snapshot["audioPathInput"] = AnyCodable("/tmp/show/song.mp3")
+    projectWithIntent.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/Native Test Project.xsq")
     projectWithIntent.snapshot["nativeDesignIntent"] = AnyCodable([
         "goal": "Make the chorus feel like a clean red and white canopy.",
         "mood": "Warm, crisp, elegant.",
@@ -64,4 +68,41 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
     #expect(proposalService.prompt.contains("Target scope: Mega tree, roofline, and window frames."))
     #expect(model.isGeneratingProposal == false)
     #expect(model.transientBanner?.state == .ready)
+}
+
+@MainActor
+@Test func sequenceBlocksProposalGenerationUntilAudioAndSequenceAreSelected() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-sequence-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let projectService = LocalProjectService(projectsRootPath: root.path)
+    let project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Missing Prerequisites \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    var projectWithIntent = project
+    projectWithIntent.snapshot["nativeDesignIntent"] = AnyCodable([
+        "goal": "Make the chorus feel like a clean red and white canopy."
+    ])
+    let workspace = ProjectWorkspace(sessionStore: SequenceTestProjectSessionStore())
+    workspace.setProject(projectWithIntent)
+    let proposalService = StubSequenceProposalService()
+    let model = SequenceScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: projectService,
+        proposalService: proposalService
+    )
+
+    model.generateProposalFromDesignIntent()
+    try await Task.sleep(for: .milliseconds(40))
+
+    #expect(proposalService.callCount == 0)
+    #expect(model.transientBanner?.state == .blocked)
+    #expect(model.transientBanner?.text.contains("Choose or analyze audio") == true)
+    #expect(model.transientBanner?.text.contains("Create or select the project sequence") == true)
 }
