@@ -42,6 +42,17 @@ final class ReviewScreenViewModel {
 
     func applyPendingWork() {
         guard !isApplying, let project = workspace.activeProject else { return }
+        let pendingWork = try? pendingWorkService.loadPendingWork(for: project)
+        let blockers = Self.reviewBlockers(project: project, pendingWork: pendingWork)
+        guard blockers.isEmpty else {
+            transientBanner = WorkflowBannerModel(
+                id: "review-apply-blocked",
+                text: blockers.joined(separator: " "),
+                state: .blocked
+            )
+            refresh()
+            return
+        }
         isApplying = true
         transientBanner = WorkflowBannerModel(
             id: "review-apply-running",
@@ -117,7 +128,8 @@ final class ReviewScreenViewModel {
         let hasProject = project != nil
         let state: PendingWorkState = hasProject ? .partial : .blocked
         let activeSequenceName = pendingWork?.activeSequenceName ?? "No active sequence"
-        let canApply = hasProject && activeSequenceName != "No active sequence" && activeSequenceName != "No sequence selected yet"
+        let blockers = reviewBlockers(project: project, pendingWork: pendingWork)
+        let canApply = blockers.isEmpty
         let pendingSummary = pendingWork?.proposalSummary ?? "There is no pending implementation context yet."
         let targetSequenceSummary = hasProject ? activeSequenceName : "No target sequence."
         let readinessSummary = hasProject
@@ -170,7 +182,7 @@ final class ReviewScreenViewModel {
             ),
             readiness: ReviewReadinessModel(
                 state: state,
-                blockers: hasProject ? (canApply ? [] : ["No active sequence loaded."]) : ["Project context missing."],
+                blockers: blockers,
                 warnings: hasProject
                     ? {
                         var warnings = ["Apply uses the owned xLights API and should be reviewed before it changes the active sequence."]
@@ -205,5 +217,21 @@ final class ReviewScreenViewModel {
                 return banners
             }()
         )
+    }
+
+    private static func reviewBlockers(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> [String] {
+        guard project != nil else { return ["Project context missing."] }
+        guard let pendingWork else { return ["Generate a sequencing proposal before apply."] }
+        let activeSequenceName = pendingWork.activeSequenceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if activeSequenceName.isEmpty || activeSequenceName == "No active sequence" || activeSequenceName == "No sequence selected yet" {
+            return ["No active sequence loaded."]
+        }
+        if pendingWork.translationSource != "Canonical Plan" {
+            return ["Generate a sequencing proposal before apply."]
+        }
+        if pendingWork.proposalCommandCount <= 0 {
+            return ["Generated proposal has no sequence commands to apply."]
+        }
+        return []
     }
 }

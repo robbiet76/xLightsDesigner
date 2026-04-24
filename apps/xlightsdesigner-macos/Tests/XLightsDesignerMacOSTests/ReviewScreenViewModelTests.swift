@@ -58,6 +58,67 @@ private struct StubXLightsSessionService: XLightsSessionService, Sendable {
     }
 }
 
+private struct StubReviewPendingWorkService: PendingWorkService, Sendable {
+    let pendingWork: PendingWorkReadModel?
+
+    func loadPendingWork(for project: ActiveProjectModel?) throws -> PendingWorkReadModel? {
+        pendingWork
+    }
+}
+
+private func reviewPendingWork(
+    translationSource: String = "Canonical Plan",
+    proposalCommandCount: Int = 3,
+    activeSequenceName: String = "HolidayRoad.xsq"
+) -> PendingWorkReadModel {
+    PendingWorkReadModel(
+        projectName: "Christmas 2026",
+        activeSequenceName: activeSequenceName,
+        activeSequencePath: "/tmp/HolidayRoad.xsq",
+        recentSequenceCount: 1,
+        audioPath: "/tmp/song.mp3",
+        briefSummary: "Bright clean canopy.",
+        briefGoalsSummary: "Make the chorus lift.",
+        briefInspirationSummary: "Warm neighborhood mission.",
+        briefSections: ["Chorus 1"],
+        moodEnergyArc: "Warm, crisp, elegant.",
+        narrativeCues: "Lift on chorus.",
+        visualCues: "Red and white canopy.",
+        proposalSummary: "Apply canopy effects to selected targets.",
+        proposalLines: ["Chorus 1 / Mega Tree / apply Color Wash."],
+        guidedQuestions: [],
+        riskNotes: [],
+        proposalLifecycleStatus: "ready",
+        estimatedImpact: 3,
+        executionModeSummary: "owned batch plan, selected scope, 2 targets, 1 sections",
+        constraintsSummary: "Preserve singing faces.",
+        intentGoal: "Make the chorus lift.",
+        intentTargetIDs: ["Mega Tree", "Roofline"],
+        intentSectionCount: 1,
+        nativeDesignGoal: "Make the chorus lift.",
+        nativeDesignMood: "Warm, crisp, elegant.",
+        nativeDesignConstraints: "Preserve singing faces.",
+        nativeDesignTargetScope: "Mega tree and roofline.",
+        nativeDesignReferences: "Neighborhood mission.",
+        nativeDesignApprovalNotes: "Ready to apply.",
+        nativeDesignUpdatedAt: "2026-04-23T00:00:00Z",
+        directorPreferenceSummary: "Focus bias toward Mega Tree, Roofline",
+        directorSummary: "No director profile available.",
+        designSceneSummary: "2 models, 0 groups, 0 submodels, 2D scene",
+        layoutModelCount: 2,
+        layoutGroupCount: 0,
+        musicSectionLabels: ["Chorus 1"],
+        musicHoldMoments: [],
+        artifactTimestampSummary: "2026-04-23T00:00:00Z",
+        translationSource: translationSource,
+        proposalSectionCount: 1,
+        proposalTargetCount: 2,
+        proposalCommandCount: proposalCommandCount,
+        proposalShouldUseFullSongStructureTrack: true,
+        proposalEffectPlacements: []
+    )
+}
+
 @MainActor
 @Test func reviewApplyPublishesSuccessBanner() async throws {
     let workspace = ProjectWorkspace()
@@ -76,7 +137,7 @@ private struct StubXLightsSessionService: XLightsSessionService, Sendable {
     )
     let model = ReviewScreenViewModel(
         workspace: workspace,
-        pendingWorkService: LocalPendingWorkService(),
+        pendingWorkService: StubReviewPendingWorkService(pendingWork: reviewPendingWork()),
         reviewExecutionService: StubReviewExecutionService { projectFilePath, appRootPath, endpoint in
             #expect(projectFilePath == "/tmp/Christmas 2026.xdproj")
             #expect(appRootPath == AppEnvironment.canonicalAppRoot)
@@ -104,6 +165,52 @@ private struct StubXLightsSessionService: XLightsSessionService, Sendable {
     #expect(model.transientBanner?.text.contains("Render feedback observation skipped") == true)
     #expect(model.transientBanner?.text.contains("Rendered xLights sequence") == true)
     #expect(model.transientBanner?.text.contains("Saved xLights sequence") == true)
+}
+
+@MainActor
+@Test func reviewApplyBlocksUntilCanonicalProposalExists() {
+    let workspace = ProjectWorkspace()
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: "/tmp/Christmas 2026.xdproj",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [:]
+        )
+    )
+    let model = ReviewScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: StubReviewPendingWorkService(
+            pendingWork: reviewPendingWork(translationSource: "Native Design Intent", proposalCommandCount: 0)
+        ),
+        reviewExecutionService: StubReviewExecutionService { _, _, _ in
+            Issue.record("applyPendingWork should not be called without a canonical proposal")
+            return ReviewApplyExecutionResult(
+                summary: "",
+                commandCount: 0,
+                nextRevision: "",
+                applyPath: "",
+                sequencePath: "",
+                renderFeedbackCaptured: false,
+                renderFeedbackStatus: "",
+                renderFeedbackMissingRequirements: []
+            )
+        }
+    )
+
+    model.refresh()
+    #expect(model.screenModel.actions.canApply == false)
+    #expect(model.screenModel.readiness.blockers.contains("Generate a sequencing proposal before apply."))
+
+    model.applyPendingWork()
+
+    #expect(model.transientBanner?.state == .blocked)
+    #expect(model.transientBanner?.text.contains("Generate a sequencing proposal before apply.") == true)
 }
 
 @MainActor
