@@ -8,6 +8,7 @@ import {
   getSequenceSettings,
   getDisplayElements,
   getModels,
+  getEffectDefinitions,
   getRenderedSequenceSamples,
   getRevision,
   getOwnedHealth,
@@ -17,6 +18,8 @@ import {
   openSequence
 } from '../../../apps/xlightsdesigner-ui/api.js';
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
+import { buildEffectDefinitionCatalog } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/effect-definition-catalog.js';
+import { STAGE1_TRAINED_EFFECT_BUNDLE } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/generated/stage1-trained-effect-bundle.js';
 import { buildSequenceAgentPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent.js';
 import { buildSequenceAgentApplyResult } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent-runtime.js';
 import { buildDesignSceneContext } from '../../../apps/xlightsdesigner-ui/agent/designer-dialog/design-scene-context.js';
@@ -188,6 +191,25 @@ function normalizeDisplayElements(res = {}) {
   }).filter((row) => row.id || row.name);
 }
 
+function trainedEffectDefinitions() {
+  const effectsByName = STAGE1_TRAINED_EFFECT_BUNDLE?.effectsByName && typeof STAGE1_TRAINED_EFFECT_BUNDLE.effectsByName === 'object'
+    ? STAGE1_TRAINED_EFFECT_BUNDLE.effectsByName
+    : {};
+  return Object.values(effectsByName)
+    .map((row) => ({ effectName: str(row?.effectName), params: [] }))
+    .filter((row) => row.effectName);
+}
+
+async function loadEffectCatalog(endpoint = '') {
+  const effectsRes = await getEffectDefinitions(endpoint).catch(() => ({ ok: false, data: { effects: [] } }));
+  const effectDefinitions = Array.isArray(effectsRes?.data?.effects) ? effectsRes.data.effects : [];
+  const definitions = effectDefinitions.length ? effectDefinitions : trainedEffectDefinitions();
+  return buildEffectDefinitionCatalog(definitions, {
+    source: effectDefinitions.length ? 'xlights_effect_definitions' : 'stage1_trained_effect_bundle',
+    loadedAt: new Date().toISOString()
+  });
+}
+
 async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {}) {
   currentStage = 'load_inputs';
   const inputs = loadReviewInputs({ projectFile, appRoot });
@@ -202,10 +224,11 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
   currentStage = 'ensure_open_sequence';
   await ensureExpectedSequenceOpen(endpoint, inputs.sequencePath);
   currentStage = 'load_sequence_context';
-  const [sequenceSettingsRes, displayElementsRes, revisionRes] = await Promise.all([
+  const [sequenceSettingsRes, displayElementsRes, revisionRes, effectCatalog] = await Promise.all([
     getSequenceSettings(endpoint),
     getDisplayElements(endpoint),
-    getRevision(endpoint)
+    getRevision(endpoint),
+    loadEffectCatalog(endpoint)
   ]);
 
   currentStage = 'build_sequence_plan';
@@ -215,7 +238,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     sourceLines: Array.isArray(inputs.proposalBundle?.proposalLines) ? inputs.proposalBundle.proposalLines : [],
     baseRevision: str(revisionRes?.data?.revision || 'unknown'),
     capabilityCommands: [],
-    effectCatalog: null,
+    effectCatalog,
     sequenceSettings: sequenceSettingsRes?.data || {},
     layoutMode: '2d',
     displayElements: normalizeDisplayElements(displayElementsRes),
