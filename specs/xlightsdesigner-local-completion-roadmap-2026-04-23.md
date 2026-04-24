@@ -20,6 +20,13 @@ Automation launch requirements discovered during Phase 1:
 - use `-o` for automation launches so the pre-frame information dialog does not block API startup
 - set `XLIGHTS_DESIGNER_TRUSTED_ROOTS` to include the active show folder for create/save validation
 
+Owned-path cleanup completed after the green proof:
+- native Review copy no longer describes apply execution as future work
+- native apply no longer imports or passes legacy transaction helpers
+- sequence orchestration no longer falls back from owned batch apply to legacy transactions
+- shared JS API wrappers for `transactions.begin`, `transactions.commit`, and `transactions.rollback` were removed from active app imports
+- active `scripts/xlights-control/run-all.sh` no longer runs legacy regression or transaction suites by default
+
 ## Purpose
 
 Define the phased path from the current native macOS + owned xLights API implementation to a complete app for the first local operator workflow.
