@@ -85,7 +85,7 @@ final class ReviewScreenViewModel {
                 }
                 transientBanner = WorkflowBannerModel(
                     id: "review-apply-success",
-                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + feedbackSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
+                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (result.sequenceBackupPath.isEmpty ? "" : " Backup: \(result.sequenceBackupPath).") + feedbackSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
                     state: .ready
                 )
                 NotificationCenter.default.post(name: .projectArtifactsDidChange, object: project.projectFilePath)
@@ -198,7 +198,7 @@ final class ReviewScreenViewModel {
                     ? "Estimated proposal impact: \(pendingWork?.estimatedImpact ?? 0). Lifecycle: \(pendingWork?.proposalLifecycleStatus ?? "unknown"). Execution: \(pendingWork?.executionModeSummary ?? "No execution plan available.")."
                     : "No implementation impact available.",
                 backupSummary: hasProject
-                    ? "Current constraints: \(pendingWork?.constraintsSummary ?? "No sequencing constraints recorded."). Validate backup expectations before applying to user-selected sequences."
+                    ? buildBackupSummary(pendingWork: pendingWork)
                     : "No backup context available."
             ),
             actions: ReviewActionStateModel(
@@ -219,6 +219,18 @@ final class ReviewScreenViewModel {
                 return banners
             }()
         )
+    }
+
+    private static func buildBackupSummary(pendingWork: PendingWorkReadModel?) -> String {
+        let constraints = pendingWork?.constraintsSummary ?? "No sequencing constraints recorded."
+        guard let pendingWork else {
+            return "No generated proposal is ready. Current constraints: \(constraints)"
+        }
+        let sequencePath = pendingWork.activeSequencePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if sequencePath.isEmpty || sequencePath == "No active sequence path" {
+            return "Apply is blocked until a target sequence path is selected. Current constraints: \(constraints)"
+        }
+        return "Before apply, the current sequence file will be copied to this project's artifacts/backups folder. Target: \(sequencePath). Current constraints: \(constraints)"
     }
 
     private static func buildApplyPreviewLines(pendingWork: PendingWorkReadModel?) -> [String] {

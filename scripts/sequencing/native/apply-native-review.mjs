@@ -78,6 +78,24 @@ function basenameLower(filePath = '') {
   return path.basename(str(filePath)).toLowerCase();
 }
 
+function safeTimestamp(value = new Date()) {
+  return value.toISOString().replace(/[:.]/g, '-');
+}
+
+function createSequenceBackup({ projectFile = '', sequencePath = '', revision = '' } = {}) {
+  const sourcePath = normalizePath(sequencePath);
+  if (!sourcePath) throw new Error('Cannot create apply backup without a sequence path.');
+  if (!fs.existsSync(sourcePath)) throw new Error(`Cannot create apply backup because sequence file was not found: ${sourcePath}`);
+  const projectDir = path.dirname(normalizePath(projectFile));
+  const backupDir = path.join(projectDir, 'artifacts', 'backups');
+  fs.mkdirSync(backupDir, { recursive: true });
+  const parsed = path.parse(sourcePath);
+  const revisionPart = str(revision).replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 80) || 'unknown-revision';
+  const backupPath = path.join(backupDir, `${parsed.name}-preapply-${safeTimestamp()}-${revisionPart}${parsed.ext || '.xsq'}`);
+  fs.copyFileSync(sourcePath, backupPath);
+  return backupPath;
+}
+
 function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
   const libraryDir = path.join(appRoot, 'library', 'tracks');
   if (!fs.existsSync(libraryDir)) throw new Error(`Track library not found: ${libraryDir}`);
@@ -256,6 +274,13 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     throw new Error('Sequence agent generated no commands for apply.');
   }
 
+  currentStage = 'create_apply_backup';
+  const sequenceBackupPath = createSequenceBackup({
+    projectFile,
+    sequencePath: inputs.sequencePath,
+    revision: str(revisionRes?.data?.revision || 'unknown')
+  });
+
   currentStage = 'validate_and_apply_plan';
   const applyRes = await validateAndApplyPlan({
     endpoint,
@@ -283,6 +308,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       currentRevision: str(revisionRes?.data?.revision || 'unknown'),
       nextRevision: str(fallback.nextRevision)
     });
+    applyResult.sequenceBackupPath = sequenceBackupPath;
     const renderArtifacts = await buildNativeRenderFeedbackArtifacts({
       endpoint,
       showDir: str(inputs.projectDoc?.showFolder || ''),
@@ -311,6 +337,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       contentFingerprint: str(inputs.trackRecord?.track?.identity?.contentFingerprint),
       commandCount: fallback.commandCount,
       nextRevision: fallback.nextRevision,
+      sequenceBackupPath,
       applyPath: fallback.applyPath,
       summary: fallback.summary,
       applyResultId: str(applyResult?.artifactId),
@@ -331,6 +358,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     currentRevision: str(revisionRes?.data?.revision || 'unknown'),
     nextRevision: str(applyRes?.nextRevision || '')
   });
+  applyResult.sequenceBackupPath = sequenceBackupPath;
   const renderArtifacts = await buildNativeRenderFeedbackArtifacts({
     endpoint,
     showDir: str(inputs.projectDoc?.showFolder || ''),
@@ -359,6 +387,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     contentFingerprint: str(inputs.trackRecord?.track?.identity?.contentFingerprint),
     commandCount: commands.length,
     nextRevision: str(applyRes?.nextRevision || ''),
+    sequenceBackupPath,
     applyPath: str(applyRes?.applyPath || ''),
     summary: str(commandsPlan?.summary || inputs.proposalBundle?.summary || 'Applied pending work.'),
     applyResultId: str(applyResult?.artifactId),

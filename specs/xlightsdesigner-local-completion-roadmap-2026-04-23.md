@@ -53,6 +53,7 @@ Phase 2 native design authoring started:
 - successful native proposal generation now publishes an artifact-change signal so Design, Sequence, Review, History, and xLights session state refresh without navigation
 - successful Review apply now publishes the same artifact-change signal so applied revisions and history become visible across the native app immediately
 - native Review now includes an explicit apply preview built from generated effect placements or proposal lines
+- native Review apply now copies the target `.xsq` into the project `artifacts/backups` folder before mutation and surfaces the backup path after apply
 
 ## Purpose
 

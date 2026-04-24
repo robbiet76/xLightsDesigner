@@ -20,6 +20,7 @@ struct ReviewApplyExecutionResult: Sendable {
     let nextRevision: String
     let applyPath: String
     let sequencePath: String
+    let sequenceBackupPath: String
     let renderFeedbackCaptured: Bool
     let renderFeedbackStatus: String
     let renderFeedbackMissingRequirements: [String]
@@ -52,6 +53,7 @@ struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
             nextRevision: string(json["nextRevision"]),
             applyPath: string(json["applyPath"]),
             sequencePath: string(json["sequencePath"]),
+            sequenceBackupPath: string(json["sequenceBackupPath"]),
             renderFeedbackCaptured: bool(json["renderFeedbackCaptured"]),
             renderFeedbackStatus: string(json["renderFeedbackStatus"]),
             renderFeedbackMissingRequirements: stringArray(json["renderFeedbackMissingRequirements"])

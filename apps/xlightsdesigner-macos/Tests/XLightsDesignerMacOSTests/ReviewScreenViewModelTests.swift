@@ -164,6 +164,7 @@ private func reviewPendingWork(
                 nextRevision: "rev-2",
                 applyPath: "owned_batch_plan",
                 sequencePath: "/tmp/HolidayRoad.xsq",
+                sequenceBackupPath: "/tmp/project/artifacts/backups/HolidayRoad-preapply-rev-1.xsq",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "owned_routes_unavailable",
                 renderFeedbackMissingRequirements: ["layout.scene", "sequence.render-samples"]
@@ -192,6 +193,7 @@ private func reviewPendingWork(
     #expect(model.isApplying == false)
     #expect(model.transientBanner?.state == .ready)
     #expect(model.transientBanner?.text.contains("Applied 12 commands") == true)
+    #expect(model.transientBanner?.text.contains("Backup: /tmp/project/artifacts/backups/HolidayRoad-preapply-rev-1.xsq") == true)
     #expect(model.transientBanner?.text.contains("Render feedback observation skipped") == true)
     #expect(model.transientBanner?.text.contains("Rendered xLights sequence") == true)
     #expect(model.transientBanner?.text.contains("Saved xLights sequence") == true)
@@ -228,6 +230,7 @@ private func reviewPendingWork(
                 nextRevision: "",
                 applyPath: "",
                 sequencePath: "",
+                sequenceBackupPath: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
                 renderFeedbackMissingRequirements: []
@@ -318,6 +321,7 @@ private func reviewPendingWork(
                 nextRevision: "",
                 applyPath: "",
                 sequencePath: "",
+                sequenceBackupPath: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
                 renderFeedbackMissingRequirements: []
@@ -330,6 +334,8 @@ private func reviewPendingWork(
     #expect(model.screenModel.actions.canApply == true)
     #expect(model.screenModel.readiness.blockers.isEmpty)
     #expect(model.screenModel.readiness.impactSummary.contains("Estimated proposal impact: 1"))
+    #expect(model.screenModel.readiness.backupSummary.contains("artifacts/backups"))
+    #expect(model.screenModel.readiness.backupSummary.contains("/tmp/show/HolidayRoad.xsq"))
     #expect(model.screenModel.readiness.applyPreviewLines.contains("Chorus 1 / MegaTree / apply On effect"))
 }
 
@@ -347,6 +353,7 @@ private func reviewPendingWork(
                 nextRevision: "",
                 applyPath: "",
                 sequencePath: "",
+                sequenceBackupPath: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
                 renderFeedbackMissingRequirements: []
