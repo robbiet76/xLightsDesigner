@@ -7,11 +7,15 @@ struct DesignScreenView: View {
         VStack(alignment: .leading, spacing: 20) {
             header
             if let banner = model.screenModel.banners.first { bannerView(banner) }
+            if let banner = model.transientBanner { bannerView(banner) }
             summaryBand
             AdaptiveSplitView(breakpoint: 1100, spacing: 20) {
-                proposalPane
+                authoringPane
             } secondary: {
-                rationalePane
+                VStack(alignment: .leading, spacing: 20) {
+                    proposalPane
+                    rationalePane
+                }
             }
         }
         .padding(24)
@@ -60,6 +64,35 @@ struct DesignScreenView: View {
         }
     }
 
+    private var authoringPane: some View {
+        GroupBox(model.screenModel.authoring.title) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(model.screenModel.authoring.summary)
+                    .foregroundStyle(.secondary)
+                designEditor(label: "Goal", text: $model.intentDraft.goal, minHeight: 74)
+                designEditor(label: "Mood / Style", text: $model.intentDraft.mood, minHeight: 74)
+                designEditor(label: "Target Scope", text: $model.intentDraft.targetScope, minHeight: 74)
+                designEditor(label: "Constraints", text: $model.intentDraft.constraints, minHeight: 90)
+                designEditor(label: "References", text: $model.intentDraft.references, minHeight: 90)
+                designEditor(label: "Approval Notes", text: $model.intentDraft.approvalNotes, minHeight: 74)
+                HStack(spacing: 10) {
+                    Button("Save Design Intent") {
+                        model.saveDesignIntent()
+                    }
+                    .disabled(!model.screenModel.authoring.canSave)
+                    Button("Revert Edits") {
+                        model.resetDesignIntentEdits()
+                    }
+                    .disabled(model.intentDraft == model.savedIntentDraft)
+                    Text(model.screenModel.authoring.lastSavedSummary)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 4)
+        }
+    }
+
     private var rationalePane: some View {
         GroupBox("Rationale") {
             VStack(alignment: .leading, spacing: 14) {
@@ -71,11 +104,26 @@ struct DesignScreenView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(.vertical, 4)
         }
-        .frame(maxWidth: 420, alignment: .topLeading)
+        .frame(maxWidth: 460, alignment: .topLeading)
     }
 
     private func chip(_ text: String) -> some View { Text(text).padding(.horizontal, 10).padding(.vertical, 4).background(Color(nsColor: .controlBackgroundColor)).clipShape(Capsule()) }
     private func detailRow(label: String, value: String) -> some View { VStack(alignment: .leading, spacing: 4) { Text(label).font(.headline); Text(value).foregroundStyle(.secondary) } }
     private func bulletSection(title: String, items: [String]) -> some View { VStack(alignment: .leading, spacing: 6) { Text(title).font(.headline); ForEach(Array(items.enumerated()), id: \.offset) { _, item in Text("• \(item)").foregroundStyle(.secondary) } } }
     private func bannerView(_ banner: WorkflowBannerModel) -> some View { Text(banner.text).frame(maxWidth: .infinity, alignment: .leading).padding(12).background(Color(nsColor: .controlBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 10)) }
+    private func designEditor(label: String, text: Binding<String>, minHeight: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label).font(.headline)
+            TextEditor(text: text)
+                .font(.body)
+                .frame(minHeight: minHeight)
+                .padding(6)
+                .background(Color(nsColor: .textBackgroundColor))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(nsColor: .separatorColor)))
+                .onChange(of: text.wrappedValue) { _, _ in
+                    model.updateAuthoringState()
+                }
+        }
+    }
 }

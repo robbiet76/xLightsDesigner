@@ -552,6 +552,16 @@ final class NativeAutomationServer: @unchecked Sendable {
             "subtitle": screen.subtitle,
             "briefSummary": screen.summary.briefSummary,
             "proposalSummary": screen.summary.proposalSummary,
+            "nativeDesignIntent": [
+                "goal": model.designScreenModel.intentDraft.goal,
+                "mood": model.designScreenModel.intentDraft.mood,
+                "constraints": model.designScreenModel.intentDraft.constraints,
+                "targetScope": model.designScreenModel.intentDraft.targetScope,
+                "references": model.designScreenModel.intentDraft.references,
+                "approvalNotes": model.designScreenModel.intentDraft.approvalNotes,
+                "updatedAt": model.designScreenModel.intentDraft.updatedAt,
+                "isDirty": model.designScreenModel.intentDraft != model.designScreenModel.savedIntentDraft
+            ],
             "banners": screen.banners.map { ["text": $0.text, "state": $0.state.rawValue] }
         ]
     }

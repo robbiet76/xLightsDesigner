@@ -6,7 +6,7 @@ Owner: xLightsDesigner Team
 
 ## Current Phase
 
-Phase 1 is in progress and has a green owned-API proof as of 2026-04-24.
+Phase 2 has started after a green owned-API proof and Phase 1 owned-path cleanup.
 
 Validated against:
 - xLights repo: `/Users/robterry/xLights-2026.06`
@@ -30,6 +30,11 @@ Owned-path cleanup completed after the green proof:
 - the active UI health/readme copy now advertises owned `sequencing.applyBatchPlan` plus `jobs.get` instead of legacy `system.executePlan`/`system.validateCommands`
 - the sequencer execution training-package contract now requires the owned batch apply model instead of transactions
 - the old `scripts/xlights-control/run-all.sh` entry point now fails closed and redirects to owned validation instead of running legacy suites
+
+Phase 2 native design authoring started:
+- native Design now exposes editable design intent fields for goal, mood/style, target scope, constraints, references, and approval notes
+- design intent persists as `nativeDesignIntent` in the active project snapshot
+- native automation snapshots include the current design intent and dirty state
 
 ## Purpose
 

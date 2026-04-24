@@ -6,20 +6,100 @@ import Observation
 final class DesignScreenViewModel {
     private let workspace: ProjectWorkspace
     private let pendingWorkService: PendingWorkService
+    private let projectService: ProjectService
     var screenModel: DesignScreenModel
+    var intentDraft: DesignIntentDraftModel
+    var savedIntentDraft: DesignIntentDraftModel
+    var transientBanner: WorkflowBannerModel?
 
-    init(workspace: ProjectWorkspace, pendingWorkService: PendingWorkService = LocalPendingWorkService()) {
+    init(
+        workspace: ProjectWorkspace,
+        pendingWorkService: PendingWorkService = LocalPendingWorkService(),
+        projectService: ProjectService = LocalProjectService()
+    ) {
         self.workspace = workspace
         self.pendingWorkService = pendingWorkService
-        self.screenModel = Self.buildScreenModel(project: workspace.activeProject, pendingWork: try? pendingWorkService.loadPendingWork(for: workspace.activeProject))
+        self.projectService = projectService
+        let loadedDraft = Self.intentDraft(from: workspace.activeProject)
+        self.intentDraft = loadedDraft
+        self.savedIntentDraft = loadedDraft
+        self.screenModel = Self.buildScreenModel(
+            project: workspace.activeProject,
+            pendingWork: try? pendingWorkService.loadPendingWork(for: workspace.activeProject),
+            intentDraft: loadedDraft,
+            isDirty: false
+        )
     }
 
     func refresh() {
         let pendingWork = try? pendingWorkService.loadPendingWork(for: workspace.activeProject)
-        screenModel = Self.buildScreenModel(project: workspace.activeProject, pendingWork: pendingWork)
+        let loadedDraft = Self.intentDraft(from: workspace.activeProject)
+        intentDraft = loadedDraft
+        savedIntentDraft = loadedDraft
+        screenModel = Self.buildScreenModel(
+            project: workspace.activeProject,
+            pendingWork: pendingWork,
+            intentDraft: loadedDraft,
+            isDirty: false
+        )
     }
 
-    private static func buildScreenModel(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> DesignScreenModel {
+    func updateAuthoringState() {
+        screenModel = Self.buildScreenModel(
+            project: workspace.activeProject,
+            pendingWork: try? pendingWorkService.loadPendingWork(for: workspace.activeProject),
+            intentDraft: intentDraft,
+            isDirty: intentDraft != savedIntentDraft
+        )
+    }
+
+    func saveDesignIntent() {
+        guard var activeProject = workspace.activeProject else { return }
+        var draft = intentDraft
+        draft.updatedAt = Self.isoNow()
+        activeProject.snapshot["nativeDesignIntent"] = AnyCodable(Self.snapshotPayload(from: draft))
+        do {
+            let saved = try projectService.saveProject(activeProject)
+            workspace.setProject(saved)
+            intentDraft = draft
+            savedIntentDraft = draft
+            transientBanner = WorkflowBannerModel(
+                id: "design-intent-saved",
+                text: "Design intent saved.",
+                state: .ready
+            )
+            screenModel = Self.buildScreenModel(
+                project: saved,
+                pendingWork: try? pendingWorkService.loadPendingWork(for: saved),
+                intentDraft: draft,
+                isDirty: false
+            )
+        } catch {
+            transientBanner = WorkflowBannerModel(
+                id: "design-intent-save-failed",
+                text: error.localizedDescription,
+                state: .blocked
+            )
+            updateAuthoringState()
+        }
+    }
+
+    func resetDesignIntentEdits() {
+        intentDraft = savedIntentDraft
+        transientBanner = WorkflowBannerModel(
+            id: "design-intent-reset",
+            text: "Design intent edits reverted.",
+            state: .partial
+        )
+        updateAuthoringState()
+    }
+
+    private static func buildScreenModel(
+        project: ActiveProjectModel?,
+        pendingWork: PendingWorkReadModel?,
+        intentDraft: DesignIntentDraftModel,
+        isDirty: Bool
+    ) -> DesignScreenModel {
         let projectName = project?.projectName ?? "No active project"
         let hasProject = project != nil
         let briefSummary = pendingWork?.briefSummary ?? "No creative brief is active yet."
@@ -37,9 +117,9 @@ final class DesignScreenViewModel {
 
         let banners = hasProject ? [
             WorkflowBannerModel(
-                id: "design-early-slice",
-                text: "Design is on the first native slice. Summary and rationale are available before full authoring tools.",
-                state: .partial
+                id: "design-authoring-active",
+                text: isDirty ? "Design intent has unsaved edits." : "Design intent is editable and stored with the active project.",
+                state: isDirty ? .partial : .ready
             )
         ] : [
             WorkflowBannerModel(
@@ -66,6 +146,16 @@ final class DesignScreenViewModel {
                 referenceDirection: hasProject ? "\(pendingWork?.visualCues ?? "No visual cues available.")\n\nScene: \(sceneSummary)" : "No reference direction.",
                 directorInfluence: hasProject ? "\(directorSummary)\n\n\(pendingWork?.directorPreferenceSummary ?? "No director preference summary available.")" : "No director profile loaded."
             ),
+            authoring: DesignAuthoringPaneModel(
+                title: "Design Intent",
+                summary: hasProject
+                    ? (intentDraft.isEmpty
+                        ? "Capture native design direction before sequencing."
+                        : "Native design direction is stored with this project and can feed sequencing handoff.")
+                    : "Open or create a project before authoring design intent.",
+                canSave: hasProject && isDirty,
+                lastSavedSummary: intentDraft.updatedAt.isEmpty ? "Not saved yet." : "Last saved \(intentDraft.updatedAt)."
+            ),
             rationale: DesignRationalePaneModel(
                 rationaleNotes: hasProject ? [
                     pendingWork?.moodEnergyArc ?? "No mood/energy arc available.",
@@ -90,5 +180,38 @@ final class DesignScreenViewModel {
             ),
             banners: banners
         )
+    }
+
+    private static func intentDraft(from project: ActiveProjectModel?) -> DesignIntentDraftModel {
+        let payload = project?.snapshot["nativeDesignIntent"]?.value as? [String: Any] ?? [:]
+        return DesignIntentDraftModel(
+            goal: string(payload["goal"]),
+            mood: string(payload["mood"]),
+            constraints: string(payload["constraints"]),
+            targetScope: string(payload["targetScope"]),
+            references: string(payload["references"]),
+            approvalNotes: string(payload["approvalNotes"]),
+            updatedAt: string(payload["updatedAt"])
+        )
+    }
+
+    private static func snapshotPayload(from draft: DesignIntentDraftModel) -> [String: Any] {
+        [
+            "goal": draft.goal.trimmingCharacters(in: .whitespacesAndNewlines),
+            "mood": draft.mood.trimmingCharacters(in: .whitespacesAndNewlines),
+            "constraints": draft.constraints.trimmingCharacters(in: .whitespacesAndNewlines),
+            "targetScope": draft.targetScope.trimmingCharacters(in: .whitespacesAndNewlines),
+            "references": draft.references.trimmingCharacters(in: .whitespacesAndNewlines),
+            "approvalNotes": draft.approvalNotes.trimmingCharacters(in: .whitespacesAndNewlines),
+            "updatedAt": draft.updatedAt
+        ]
+    }
+
+    private static func string(_ value: Any?) -> String {
+        (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    private static func isoNow() -> String {
+        ISO8601DateFormatter().string(from: Date())
     }
 }

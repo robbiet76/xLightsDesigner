@@ -43,11 +43,34 @@ struct DesignRationalePaneModel: Sendable {
     let warnings: [String]
 }
 
+struct DesignIntentDraftModel: Equatable, Sendable {
+    var goal: String
+    var mood: String
+    var constraints: String
+    var targetScope: String
+    var references: String
+    var approvalNotes: String
+    var updatedAt: String
+
+    var isEmpty: Bool {
+        [goal, mood, constraints, targetScope, references, approvalNotes]
+            .allSatisfy { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+}
+
+struct DesignAuthoringPaneModel: Sendable {
+    let title: String
+    let summary: String
+    let canSave: Bool
+    let lastSavedSummary: String
+}
+
 struct DesignScreenModel: Sendable {
     let title: String
     let subtitle: String
     let summary: DesignSummaryBandModel
     let proposal: DesignProposalPaneModel
+    let authoring: DesignAuthoringPaneModel
     let rationale: DesignRationalePaneModel
     let banners: [WorkflowBannerModel]
 }
