@@ -83,9 +83,9 @@ Local app completion progress:
 
 ## Purpose
 
-Define the phased path from the current native macOS + owned xLights API implementation to a complete app for the first local operator workflow.
+Define the current route from the native macOS + owned xLights API implementation to a complete app for the first local operator workflow.
 
-For this phase, "complete" means the app works for the primary local user. Distribution, shared cloud agent hosting, and multi-user release hardening come after the local workflow is reliable.
+For the current local completion target, "complete" means the app works for the primary local user. Distribution, shared cloud agent hosting, and multi-user release hardening come after the local workflow is reliable.
 
 ## Product Direction
 

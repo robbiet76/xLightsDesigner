@@ -75,7 +75,7 @@ struct RootContentView: View {
         let phase = model.currentWorkflowPhase()
         return HStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Current Phase")
+                Text("Current Workflow")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 Text("\(phase.phaseID.title) • \(phaseOwnerTitle(for: phase.ownerRole))")

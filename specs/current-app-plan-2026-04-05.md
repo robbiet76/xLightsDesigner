@@ -96,9 +96,9 @@ Primary sources:
 - `audio-analyst/timing-track-taxonomy-and-sequencing-uses-2026-04-05.md`
 - `sequence-agent/sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md`
 
-## Immediate Next Development Phase
+## Current Development Workstream
 
-The current major development phase is:
+The current major development workstream is:
 - local native macOS app completion on the owned xLights 2026.06 API
 
 This changes the application-shell direction:
@@ -110,7 +110,7 @@ Primary source:
 - `xlightsdesigner-local-completion-roadmap-2026-04-23.md`
 - `app-ui/native-cutover-audit-2026-04-10.md`
 
-The current implementation-heavy product phase builds on:
+The current implementation-heavy product workstream builds on:
 - audio analysis
 - shared track metadata
 - reviewed timing
@@ -127,7 +127,7 @@ Working rule:
 1. keep the native macOS app as the only active shell
 2. keep the owned xLights API as the only active xLights control path
 3. use existing show sequences for validation only unless the user explicitly selects one for editing
-4. write Phase 1 validation artifacts only into a new isolated folder inside the show folder
+4. write validation artifacts only into a new isolated folder inside the show folder
 5. remove obsolete fallback paths once the owned path is proven
 
 This is now the active planning priority because the local app must become a reliable translation layer between trained agents and the user's xLights show folder before distribution work begins.
@@ -194,4 +194,4 @@ When a spec conflict exists:
 3. current active detailed checklist/contract for that area
 4. older foundational contract/reference docs
 
-If older docs disagree with current implementation direction, update indexes and current-phase docs before adding feature work.
+If older docs disagree with current implementation direction, update indexes and current workstream docs before adding feature work.

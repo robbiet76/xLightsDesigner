@@ -89,7 +89,7 @@ struct AppSidebar: View {
                 Label(workflow.rawValue, systemImage: iconName(for: workflow))
                 Spacer(minLength: 8)
                 if isRecommended && !isSelected {
-                    Text("Current Phase")
+                    Text("Recommended")
                         .font(.caption2)
                         .fontWeight(.semibold)
                         .padding(.horizontal, 8)
