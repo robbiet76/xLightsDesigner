@@ -16,10 +16,12 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
         comparison: {
           leadMatchesPrimaryFocus: false,
           renderCoverageTooSparse: true,
+          drilldownTargetIds: ["MegaTree", "Roofline"],
           adjacentWindowComparisons: [
             { windowsReadSimilarly: true, sameLeadModel: true }
           ]
-        }
+        },
+        source: { samplingDetail: "section" }
       },
       sequenceRevisionObjective: {
         ladderLevel: "section",
@@ -68,6 +70,10 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
   assert.deepEqual(out.effectOutcomeMemory.failedEffects, ["Twinkle"]);
   assert.deepEqual(out.effectOutcomeMemory.successfulRevisionRoles, ["strengthen_lead"]);
   assert.deepEqual(out.effectOutcomeMemory.failedRevisionRoles, ["increase_section_contrast"]);
+  assert.equal(out.drilldownMemory.heldAtSectionLevel, true);
+  assert.equal(out.drilldownMemory.eligible, false);
+  assert.deepEqual(out.drilldownMemory.targetIds, []);
+  assert.deepEqual(out.drilldownMemory.withheldTargetIds, ["MegaTree", "Roofline"]);
 });
 
 test("buildPriorPassMemory prefers revision delta current values when available", () => {
@@ -155,4 +161,35 @@ test("buildPriorPassMemory flags low-change retry when unresolved signals remain
   });
 
   assert.deepEqual(out.retryPressureSignals, ["low_change_retry"]);
+});
+
+test("buildPriorPassMemory carries eligible drilldown targets only after drilldown sampling", () => {
+  const out = buildPriorPassMemory({
+    historySnapshot: {
+      renderCritiqueContext: {
+        source: { samplingDetail: "drilldown" },
+        observed: {
+          leadModel: "MegaTree",
+          temporalRead: "flat"
+        },
+        comparison: {
+          adjacentWindowComparisons: [
+            { windowsReadSimilarly: true, sameLeadModel: true }
+          ],
+          drilldownTargetIds: ["MegaTree", "Roofline"]
+        }
+      },
+      sequenceRevisionObjective: {
+        ladderLevel: "section",
+        scope: {
+          nextOwner: "shared"
+        }
+      }
+    }
+  });
+
+  assert.equal(out.drilldownMemory.heldAtSectionLevel, false);
+  assert.equal(out.drilldownMemory.eligible, true);
+  assert.deepEqual(out.drilldownMemory.targetIds, ["MegaTree", "Roofline"]);
+  assert.deepEqual(out.drilldownMemory.sectionInstabilitySignals, ["flat_development", "weak_section_contrast"]);
 });

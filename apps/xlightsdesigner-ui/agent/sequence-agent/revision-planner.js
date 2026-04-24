@@ -31,11 +31,14 @@ function targetHintsForPriorSignals({ priorPassMemory = null, artisticIntent = {
   const previousLeadModel = str(priorPassMemory?.previousLeadModel);
   const previousTargetIds = uniqueStrings(priorPassMemory?.previousTargetIds);
   const supportTargets = uniqueStrings(artisticIntent?.supportTargets);
+  const drilldownMemory = isPlainObject(priorPassMemory?.drilldownMemory) ? priorPassMemory.drilldownMemory : null;
+  const eligibleDrilldownTargets = drilldownMemory?.eligible ? uniqueStrings(drilldownMemory.targetIds) : [];
   const observedLeadTargets = uniqueStrings([...previousRevisionTargets, previousLeadModel]);
   const priorTargets = uniqueStrings([...previousRevisionTargets, ...previousTargetIds]);
   return {
     focusTargets: signals.has("lead_mismatch") ? observedLeadTargets : [],
     revisionTargets: uniqueStrings([
+      ...eligibleDrilldownTargets,
       ...(signals.has("weak_section_contrast") || signals.has("flat_development") || signals.has("over_coverage") ? priorTargets : []),
       ...(signals.has("under_coverage") ? (supportTargets.length ? supportTargets : priorTargets) : [])
     ])
@@ -146,6 +149,7 @@ export function buildSequencerRevisionBrief({
     motionCharacter: str(artisticIntent.motionCharacter),
     densityCharacter: str(artisticIntent.densityCharacter),
     targetScope,
+    groupModelRevisionHints: isPlainObject(priorPassMemory?.drilldownMemory) ? priorPassMemory.drilldownMemory : null,
     effectOutcomeMemory: isPlainObject(priorPassMemory?.effectOutcomeMemory) ? priorPassMemory.effectOutcomeMemory : null,
     revisionRoles: uniqueStrings([
       ...arr(feedbackDirection?.revisionRoles),

@@ -212,3 +212,66 @@ test("buildSequencerRevisionBrief maps prior proof signals to safe revision targ
   assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline", "WindowFrames"]);
   assert.deepEqual(out.targetScope, ["MegaTree", "Roofline", "WindowFrames"]);
 });
+
+test("buildSequencerRevisionBrief keeps section instability broad until drilldown evidence is eligible", () => {
+  const out = buildSequencerRevisionBrief({
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      artisticIntent: {
+        supportTargets: ["Roofline"]
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared" },
+      designerDirection: { artisticCorrection: "Use prior pass evidence." },
+      sequencerDirection: { executionObjective: "Retain section-level correction first." }
+    },
+    priorPassMemory: {
+      artifactType: "sequencer_prior_pass_memory_v1",
+      unresolvedSignals: ["weak_section_contrast"],
+      previousRevisionTargets: ["Verse", "Chorus"],
+      previousTargetIds: ["Verse", "Chorus"],
+      drilldownMemory: {
+        heldAtSectionLevel: true,
+        eligible: false,
+        targetIds: [],
+        withheldTargetIds: ["MegaTree", "Roofline"]
+      }
+    }
+  });
+
+  assert.deepEqual(out.revisionTargets, ["Verse", "Chorus"]);
+  assert.deepEqual(out.targetScope, ["Verse", "Chorus"]);
+  assert.equal(out.groupModelRevisionHints.heldAtSectionLevel, true);
+  assert.deepEqual(out.groupModelRevisionHints.withheldTargetIds, ["MegaTree", "Roofline"]);
+});
+
+test("buildSequencerRevisionBrief emits bounded group model hints from eligible drilldown memory", () => {
+  const out = buildSequencerRevisionBrief({
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared" },
+      designerDirection: { artisticCorrection: "Use drilldown evidence." },
+      sequencerDirection: { executionObjective: "Narrow the implicated correction." }
+    },
+    priorPassMemory: {
+      artifactType: "sequencer_prior_pass_memory_v1",
+      unresolvedSignals: ["weak_section_contrast"],
+      previousRevisionTargets: ["Verse", "Chorus"],
+      previousTargetIds: ["Verse", "Chorus"],
+      drilldownMemory: {
+        heldAtSectionLevel: false,
+        eligible: true,
+        targetIds: ["MegaTree", "Roofline"],
+        withheldTargetIds: []
+      }
+    }
+  });
+
+  assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline", "Verse", "Chorus"]);
+  assert.deepEqual(out.targetScope, ["MegaTree", "Roofline", "Verse", "Chorus"]);
+  assert.equal(out.groupModelRevisionHints.eligible, true);
+});

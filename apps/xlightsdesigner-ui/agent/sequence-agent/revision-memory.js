@@ -35,6 +35,25 @@ function buildEffectOutcomeMemory(effectOutcomeRecords = []) {
   };
 }
 
+function buildDrilldownMemory({ renderCritiqueContext = null, unresolvedSignals = [] } = {}) {
+  const source = isPlainObject(renderCritiqueContext?.source) ? renderCritiqueContext.source : {};
+  const comparison = isPlainObject(renderCritiqueContext?.comparison) ? renderCritiqueContext.comparison : {};
+  const samplingDetail = str(source.samplingDetail).toLowerCase();
+  const drilldownTargetIds = uniqueStrings(comparison.drilldownTargetIds);
+  const instabilitySignals = uniqueStrings(unresolvedSignals).filter((row) => (
+    row === "weak_section_contrast" || row === "flat_development"
+  ));
+  const eligible = drilldownTargetIds.length > 0 && ["drilldown", "mixed"].includes(samplingDetail);
+  return {
+    samplingDetail,
+    sectionInstabilitySignals: instabilitySignals,
+    heldAtSectionLevel: instabilitySignals.length > 0 && !eligible,
+    eligible,
+    targetIds: eligible ? drilldownTargetIds : [],
+    withheldTargetIds: eligible ? [] : drilldownTargetIds
+  };
+}
+
 export function buildPriorPassMemory({ historySnapshot = null } = {}) {
   const snapshot = isPlainObject(historySnapshot) ? historySnapshot : null;
   const renderCritiqueContext = isPlainObject(snapshot?.renderCritiqueContext) ? snapshot.renderCritiqueContext : null;
@@ -83,6 +102,7 @@ export function buildPriorPassMemory({ historySnapshot = null } = {}) {
   const retryPressureSignals = uniqueStrings([
     lowChangeRetry ? "low_change_retry" : ""
   ]);
+  const drilldownMemory = buildDrilldownMemory({ renderCritiqueContext, unresolvedSignals });
 
   return {
     artifactType: "sequencer_prior_pass_memory_v1",
@@ -99,6 +119,7 @@ export function buildPriorPassMemory({ historySnapshot = null } = {}) {
     previousTargetIds,
     unresolvedSignals,
     retryPressureSignals,
+    drilldownMemory,
     effectOutcomeMemory,
     revisionDeltaSummary: revisionDelta
       ? {
