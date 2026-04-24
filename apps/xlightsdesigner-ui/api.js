@@ -1,7 +1,5 @@
 const DEFAULT_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
 const DEFAULT_OWNED_ENDPOINT_BASE = "http://127.0.0.1:49915/xlightsdesigner/api";
-const DEFAULT_LEGACY_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
-const DEFAULT_LEGACY_PORT = "49914";
 const OWNED_JOB_ATTEMPTS = 180;
 const OWNED_JOB_DELAY_MS = 500;
 
@@ -39,47 +37,8 @@ function isOwnedEndpoint(endpoint) {
   return raw.includes("/xlightsdesigner/api") || /:49915(?:\/|$)/.test(raw);
 }
 
-function buildCommandEndpointCandidates(endpoint) {
-  const raw = sanitizeEndpoint(endpoint);
-  const candidates = [];
-  if (raw) candidates.push(raw);
-  try {
-    const url = new URL(raw);
-    const isDevProxy =
-      (url.hostname === "127.0.0.1" || url.hostname === "localhost") &&
-      url.port === "8080" &&
-      url.pathname === "/xlDoAutomation";
-    if (isDevProxy) {
-      candidates.push("http://127.0.0.1:49914/xlDoAutomation");
-      candidates.push("http://127.0.0.1:49913/xlDoAutomation");
-    }
-  } catch {
-    // ignore malformed endpoint; caller will fail on the original target
-  }
-  return [...new Set(candidates.filter(Boolean))];
-}
-
 function sanitizeOwnedBase(endpoint) {
   return String(endpoint || "").trim().replace(/\/+$/, "");
-}
-
-function deriveLegacyEndpointBase(endpoint) {
-  const raw = sanitizeEndpoint(endpoint);
-  if (!raw) return `http://127.0.0.1:${DEFAULT_LEGACY_PORT}`;
-  if (isOwnedEndpoint(raw)) {
-    try {
-      const url = new URL(raw);
-      return `${url.protocol}//${url.hostname}:${DEFAULT_LEGACY_PORT}`;
-    } catch {
-      return `http://127.0.0.1:${DEFAULT_LEGACY_PORT}`;
-    }
-  }
-  try {
-    const url = new URL(raw);
-    return `${url.protocol}//${url.hostname}:${url.port || DEFAULT_LEGACY_PORT}`;
-  } catch {
-    return `http://127.0.0.1:${DEFAULT_LEGACY_PORT}`;
-  }
 }
 
 function readTextWithXHR(targetEndpoint, bodyText) {
@@ -135,21 +94,6 @@ async function readOwnedJson(targetEndpoint, { method = "GET", body = null } = {
   return json;
 }
 
-async function legacyGet(endpoint, command, params = {}) {
-  const base = deriveLegacyEndpointBase(endpoint);
-  const url = new URL(`${base}/${command}`);
-  for (const [key, value] of Object.entries(params || {})) {
-    if (value == null || value === "") continue;
-    url.searchParams.set(key, String(value));
-  }
-  const response = await fetch(url.toString(), { method: "GET" });
-  const text = String(await response.text());
-  if (!response.ok) {
-    throw new Error(`${command} failed (${response.status}): ${text || "Command failed"}`);
-  }
-  return text;
-}
-
 export function getDefaultEndpoint() {
   return detectDevOwnedProxyBase() || DEFAULT_ENDPOINT;
 }
@@ -184,38 +128,33 @@ export function deriveOwnedEndpointBase(endpoint) {
 }
 
 export async function postCommand(endpoint, cmd, params = {}, options = {}) {
+  const targetEndpoint = sanitizeEndpoint(endpoint);
+  if (!targetEndpoint) {
+    throw new Error(`${cmd} failed: endpoint is required`);
+  }
   const payload = {
     apiVersion: 2,
     cmd,
     params,
     options
   };
-  const endpointCandidates = buildCommandEndpointCandidates(endpoint);
-  const errors = [];
 
-  for (const targetEndpoint of endpointCandidates) {
-    try {
-      const text = await readResponseText(targetEndpoint, JSON.stringify(payload));
-      const normalized = normalizeBody(text);
-      let json;
-      try {
-        json = JSON.parse(normalized);
-      } catch (err) {
-        throw new Error(`Invalid JSON from xLights endpoint ${targetEndpoint} (${err.message})`);
-      }
-
-      if (json.res !== 200) {
-        const code = json?.error?.code || "UNKNOWN";
-        const message = json?.error?.message || "Command failed";
-        throw new Error(`${cmd} failed (${code}): ${message}`);
-      }
-
-      return json;
-    } catch (err) {
-      errors.push(String(err?.message || err || "unknown command error"));
-    }
+  const text = await readResponseText(targetEndpoint, JSON.stringify(payload));
+  const normalized = normalizeBody(text);
+  let json;
+  try {
+    json = JSON.parse(normalized);
+  } catch (err) {
+    throw new Error(`Invalid JSON from xLights endpoint ${targetEndpoint} (${err.message})`);
   }
-  throw new Error(errors[errors.length - 1] || `${cmd} failed`);
+
+  if (json.res !== 200) {
+    const code = json?.error?.code || "UNKNOWN";
+    const message = json?.error?.message || "Command failed";
+    throw new Error(`${cmd} failed (${code}): ${message}`);
+  }
+
+  return json;
 }
 
 function sleep(ms) {
@@ -471,28 +410,7 @@ export async function saveSequence(endpoint, file = null) {
   }
   const params = {};
   if (file) params.file = file;
-  try {
-    return await postCommand(endpoint, "sequence.save", params);
-  } catch (err) {
-    const message = String(err?.message || "");
-    const shouldFallback =
-      message.includes("sequence.save failed") ||
-      message.includes("Invalid JSON from xLights endpoint") ||
-      message.includes("Could not process xLights Automation");
-    if (!shouldFallback) {
-      throw err;
-    }
-    const legacyText = await legacyGet(endpoint, "saveSequence", file ? { seq: file } : {});
-    return {
-      res: 200,
-      msg: legacyText,
-      data: {
-        saved: true,
-        file: file || null,
-        fallback: "legacySaveSequence"
-      }
-    };
-  }
+  return postCommand(endpoint, "sequence.save", params);
 }
 
 export async function getRenderedSequenceSamples(endpoint, params = {}) {
