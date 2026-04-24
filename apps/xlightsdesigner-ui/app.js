@@ -29,7 +29,6 @@ import {
   replaceTimingMarks,
   insertTimingMarks,
   openSequence,
-  validateCommands,
   pingCapabilities
 } from "./api.js";
 import {
@@ -438,7 +437,7 @@ const defaultState = {
   health: {
     lastCheckedAt: "",
     capabilitiesCount: 0,
-    hasValidateCommands: false,
+    hasSequencingApplyBatchPlan: false,
     hasJobsGet: false,
     capabilityCommands: [],
     effectDefinitionCount: 0,
@@ -2529,7 +2528,7 @@ function applyCapabilitiesHealth(caps, sequenceOpen = state.health.sequenceOpen)
     lastCheckedAt: new Date().toISOString(),
     capabilitiesCount: commands.length,
     capabilityCommands: commands,
-    hasValidateCommands: commands.includes("system.validateCommands"),
+    hasSequencingApplyBatchPlan: commands.includes("sequencing.applyBatchPlan"),
     hasJobsGet: commands.includes("jobs.get"),
     sequenceOpen: Boolean(sequenceOpen),
     runtimeReady: bridgeHealth.runtimeReady,
@@ -8037,7 +8036,6 @@ applyReviewRuntime = createApplyReviewRuntime({
   collectPostApplyRenderObservation,
   buildEffectiveMetadataAssignments: (...args) => metadataRuntime.buildEffectiveMetadataAssignments(...args),
   getRevision,
-  validateCommands,
   pushSequenceAgentContractDiagnostic,
   markOrchestrationStage: (...args) => agentRuntimeState.markOrchestrationStage(...args),
   endOrchestrationRun: (...args) => agentRuntimeState.endOrchestrationRun(...args),

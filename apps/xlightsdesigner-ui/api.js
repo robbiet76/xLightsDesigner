@@ -293,7 +293,8 @@ export async function pingCapabilities(endpoint) {
           "elements.getSummary",
           "effects.getWindow",
           "effects.applyBatch",
-          "sequencing.applyBatchPlan"
+          "sequencing.applyBatchPlan",
+          "jobs.get"
         ],
         runtimeState: health?.data?.state || ""
       }
@@ -608,12 +609,6 @@ export async function listEffects(endpoint, params = {}) {
     };
   }
   return postCommand(endpoint, "effects.list", params);
-}
-
-export async function validateCommands(endpoint, commands) {
-  return postCommand(endpoint, "system.validateCommands", {
-    commands
-  });
 }
 
 export async function getJob(endpoint, jobId) {

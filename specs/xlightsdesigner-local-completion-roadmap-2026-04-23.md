@@ -26,6 +26,8 @@ Owned-path cleanup completed after the green proof:
 - sequence orchestration no longer falls back from owned batch apply to legacy transactions
 - shared JS API wrappers for `transactions.begin`, `transactions.commit`, and `transactions.rollback` were removed from active app imports
 - active `scripts/xlights-control/run-all.sh` no longer runs legacy regression or transaction suites by default
+- the UI dev proxy no longer exposes `/xlDoAutomation` or ports `49914`/`49913`
+- the active UI health/readme copy now advertises owned `sequencing.applyBatchPlan` plus `jobs.get` instead of legacy `system.executePlan`/`system.validateCommands`
 
 ## Purpose
 

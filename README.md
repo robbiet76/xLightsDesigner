@@ -63,8 +63,8 @@ Live endpoint:
 - Project screen `Open Sequence` calls `sequence.open` using the provided sequence path and stores recent sequence entries.
 - Project screen `Save`/`Save As` call `sequence.save` (Save As uses configured save path).
 - Project screen `Close Sequence` calls `sequence.close`; `New Session` clears current draft/session state without deleting project settings.
-- Apply preflight includes `system.validateCommands` before `system.executePlan`.
-- `Apply to xLights` executes an atomic `system.executePlan` that writes a Designer timing track (`XD:ProposedPlan`) from the current proposed-change list.
+- Apply uses the owned `sequencing.applyBatchPlan` path and waits for the returned job to settle.
+- `Apply to xLights` writes reviewed sequence changes through the owned xLightsDesigner API.
 - Revision is polled in the background; if external edits are detected, the draft is marked stale and apply is blocked until refresh/regenerate.
 - Design includes an optional `Open Details` drawer with section filtering and `Split by Section` draft narrowing.
 - Proposed draft rows are directly editable/removable in Design and details views, with `Add Line` for quick manual proposal shaping.
@@ -74,12 +74,12 @@ Live endpoint:
 - History supports `Compare` against current head, `Reapply as Variant` into Design, and practical rollback draft restore flow.
 - Compact/mobile behavior includes Design tabs (`Chat`, `Intent`, `Proposed`) and a fixed bottom `Apply to xLights` action bar.
 - Diagnostics panel can be opened from header/status bar and captures warning/action-required events with optional stack/detail payloads.
-- Validation failures now surface per-step details from `system.validateCommands` in diagnostics.
+- Apply failures surface owned API job/error details in diagnostics.
 - Diagnostics panel includes filters (`All`, `Warnings`, `Action Required`) and live counts in header/footer.
 - Project settings now include apply safety controls: confirmation mode (`always`, `large-only`, `never`) and configurable large-change threshold.
 - Project/show-scoped workspace snapshots are persisted (sequence path, recents, draft context, safety settings) and can be reloaded via `Load Project Snapshot`.
 - `Reset Project Workspace` clears current project draft/session artifacts and writes a fresh default snapshot for that project key.
-- Project includes a `Project Health` card with capability checks (`executePlan`, `validateCommands`, `jobs.get`), sequence-open status, and one-click recheck.
+- Project includes a `Project Health` card with owned API capability checks (`sequencing.applyBatchPlan`, `jobs.get`), sequence-open status, and one-click recheck.
 - Metadata includes live `layout.getModels` discovery list with refresh action for current layout context.
 - Metadata model list supports filter/search and one-click `Insert Into Draft` to create targeted proposal lines.
 - Design Intent panel supports dynamic section targeting via loaded timing-track labels and quick `Add Section Line`.

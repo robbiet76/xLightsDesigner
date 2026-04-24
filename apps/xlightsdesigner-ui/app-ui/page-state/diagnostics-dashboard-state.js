@@ -88,7 +88,7 @@ export function buildDiagnosticsDashboardState({
         sceneGraphSpatialNodeCount: Number(state.health?.sceneGraphSpatialNodeCount || 0),
         sceneGraphWarnings: arr(state.health?.sceneGraphWarnings).map((row) => str(row)).filter(Boolean),
         effectCatalogError: str(state.health?.effectCatalogError),
-        hasValidateCommands: Boolean(state.health?.hasValidateCommands),
+        hasSequencingApplyBatchPlan: Boolean(state.health?.hasSequencingApplyBatchPlan),
         hasJobsGet: Boolean(state.health?.hasJobsGet),
         sequenceOpen: Boolean(state.health?.sequenceOpen),
         buildLabel: str(buildLabel)

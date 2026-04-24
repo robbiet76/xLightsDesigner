@@ -220,6 +220,7 @@ class DevHandler(SimpleHTTPRequestHandler):
                             "effects.getWindow",
                             "effects.applyBatch",
                             "sequencing.applyBatchPlan",
+                            "jobs.get",
                         ],
                         "runtimeState": runtime_state,
                     },

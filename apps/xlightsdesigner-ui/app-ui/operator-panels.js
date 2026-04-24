@@ -187,7 +187,7 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
               ? `<p class="banner warning">Effect catalog: ${escapeHtml(health.effectCatalogError)}</p>`
               : ""
           }
-          <div class="kv"><div class="k">system.validateCommands</div><div>${health.hasValidateCommands ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">sequencing.applyBatchPlan</div><div>${health.hasSequencingApplyBatchPlan ? "yes" : "no"}</div></div>
           <div class="kv"><div class="k">jobs.get</div><div>${health.hasJobsGet ? "yes" : "no"}</div></div>
           <div class="kv"><div class="k">Sequence Open</div><div>${health.sequenceOpen ? "yes" : "no"}</div></div>
           <div class="kv"><div class="k">Build</div><div>${health.buildLabel || buildLabel}</div></div>
