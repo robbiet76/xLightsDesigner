@@ -811,6 +811,12 @@ final class NativeAutomationServer: @unchecked Sendable {
             "latestSequenceArtisticGoal": latestSequenceArtisticGoal ?? NSNull(),
             "latestSequenceRevisionObjective": latestSequenceRevisionObjective ?? NSNull(),
             "latestReviewArtifacts": [
+                "applyResult": summarizeValidationArtifact(latestApplyResult, extra: [
+                    "status": string(latestApplyResult?["status"]),
+                    "sequenceBackupPath": string(latestApplyResult?["sequenceBackupPath"]),
+                    "renderCurrentSummary": string(latestApplyResult?["renderCurrentSummary"]),
+                    "renderCurrentError": string(latestApplyResult?["renderCurrentError"])
+                ]),
                 "renderObservation": summarizeValidationArtifact(latestRenderObservation, extra: [
                     "leadModel": string((latestRenderObservation?["macro"] as? [String: Any])?["leadModel"]),
                     "samplingMode": string((latestRenderObservation?["source"] as? [String: Any])?["samplingMode"])
