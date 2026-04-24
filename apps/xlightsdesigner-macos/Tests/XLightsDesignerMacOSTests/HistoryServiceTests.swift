@@ -123,6 +123,49 @@ import Testing
     #expect(detail.warnings.contains("Practical validation summary indicates this pass needs review."))
 }
 
+@Test func historyFlagsRepeatedReviewPassInstability() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-history-instability-\(UUID().uuidString)", isDirectory: true)
+    let projectDir = root.appendingPathComponent("Project", isDirectory: true)
+    let historyDir = projectDir.appendingPathComponent("history", isDirectory: true)
+    try FileManager.default.createDirectory(at: historyDir, withIntermediateDirectories: true)
+    let projectFile = projectDir.appendingPathComponent("Christmas 2026.xdproj")
+    try Data("{}".utf8).write(to: projectFile)
+    for index in 1...2 {
+        try writeHistoryJSON([
+            "artifactType": "history_entry_v1",
+            "historyEntryId": "history_entry_v1-\(index)",
+            "createdAt": "2026-04-24T12:0\(index):00Z",
+            "status": "applied",
+            "summary": "Applied revision \(index).",
+            "snapshotSummary": [
+                "applySummary": ["commandCount": 3],
+                "practicalValidationSummary": [
+                    "overallOk": false,
+                    "readbackFailed": index,
+                    "designFailed": 0
+                ]
+            ]
+        ] as [String: Any], to: historyDir.appendingPathComponent("history_entry_v1-\(index).json"))
+    }
+    let project = ActiveProjectModel(
+        id: "project-1",
+        projectName: "Christmas 2026",
+        projectFilePath: projectFile.path,
+        showFolder: "/tmp/show",
+        mediaPath: "",
+        appRootPath: AppEnvironment.canonicalAppRoot,
+        createdAt: "2026-04-24T00:00:00Z",
+        updatedAt: "2026-04-24T00:00:00Z",
+        snapshot: [:]
+    )
+
+    let result = try LocalHistoryService().loadHistory(for: project)
+
+    #expect(result.banners.first?.id == "history-repeated-proof-instability")
+    #expect(result.banners.first?.text.contains("2 recent review passes") == true)
+    #expect(result.rows.filter { $0.eventType == "Review Pass" && $0.resultSummary == "Warning" }.count == 2)
+}
+
 private func writeHistoryJSON(_ object: [String: Any], to url: URL) throws {
     let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
     try data.write(to: url)

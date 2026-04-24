@@ -75,9 +75,7 @@ struct LocalHistoryService: HistoryService {
             .sorted()
 
         let latest = events.first
-        let banners: [WorkflowBannerModel] = events.isEmpty
-            ? [WorkflowBannerModel(id: "history-empty", text: "This project has not accumulated retrospective history yet.", state: .none)]
-            : [WorkflowBannerModel(id: "history-retrospective", text: "History is retrospective only. Pending decisions remain in Review.", state: .ready)]
+        let banners = buildHistoryBanners(events: events)
 
         return HistoryServiceResult(
             summary: HistorySummaryModel(
@@ -171,13 +169,14 @@ struct LocalHistoryService: HistoryService {
             let snapshotSummary = object["snapshotSummary"] as? [String: Any]
             let applySummary = snapshotSummary?["applySummary"] as? [String: Any]
             let commandCount = int(object["commandCount"]) > 0 ? int(object["commandCount"]) : int(applySummary?["commandCount"])
+            let needsValidationReview = historyEntryNeedsValidationReview(object)
             return HistoryEventRecord(
                 id: "history::\(string(object["historyEntryId"], fallback: fileURL.path))",
                 date: date,
                 eventType: "Review Pass",
                 summary: string(object["summary"], fallback: "Review pass recorded"),
                 sequenceSummary: string(object["sequencePath"], fallback: string(project.snapshot["activeSequence"]?.value, fallback: "No active sequence")),
-                resultState: status == "applied" ? .ready : .recorded,
+                resultState: needsValidationReview ? .warning : (status == "applied" ? .ready : .recorded),
                 resultSummary: "Review pass \(status). \(revisionSummary).",
                 changeSummary: commandCount > 0 ? "Applied proof-loop pass with \(commandCount) commands." : "Recorded proof-loop pass.",
                 proofChain: historyEntryProofChain(object),
@@ -425,10 +424,15 @@ struct LocalHistoryService: HistoryService {
     }
 
     private func historyEntryWarnings(_ object: [String: Any]) -> [String] {
+        guard historyEntryNeedsValidationReview(object) else { return [] }
+        return ["Practical validation summary indicates this pass needs review."]
+    }
+
+    private func historyEntryNeedsValidationReview(_ object: [String: Any]) -> Bool {
         let snapshotSummary = object["snapshotSummary"] as? [String: Any]
         let practicalValidation = snapshotSummary?["practicalValidationSummary"] as? [String: Any]
-        guard let practicalValidation, !bool(practicalValidation["overallOk"]) else { return [] }
-        return ["Practical validation summary indicates this pass needs review."]
+        guard let practicalValidation else { return false }
+        return !bool(practicalValidation["overallOk"])
     }
 
     private func buildFollowUpSummary(for folder: String) -> String {
@@ -444,6 +448,24 @@ struct LocalHistoryService: HistoryService {
         default:
             return "This event is retained for retrospective inspection only."
         }
+    }
+
+    private func buildHistoryBanners(events: [HistoryEventRecord]) -> [WorkflowBannerModel] {
+        guard !events.isEmpty else {
+            return [WorkflowBannerModel(id: "history-empty", text: "This project has not accumulated retrospective history yet.", state: .none)]
+        }
+        let reviewPasses = events.filter { $0.eventType == "Review Pass" }
+        let consecutiveReviewWarnings = reviewPasses.prefix { !$0.warnings.isEmpty }.count
+        if consecutiveReviewWarnings >= 2 {
+            return [
+                WorkflowBannerModel(
+                    id: "history-repeated-proof-instability",
+                    text: "\(consecutiveReviewWarnings) recent review passes need validation review. Compare their proof chains before applying another revision.",
+                    state: .partial
+                )
+            ]
+        }
+        return [WorkflowBannerModel(id: "history-retrospective", text: "History is retrospective only. Pending decisions remain in Review.", state: .ready)]
     }
 
     private func string(_ value: Any?, fallback: String = "") -> String {

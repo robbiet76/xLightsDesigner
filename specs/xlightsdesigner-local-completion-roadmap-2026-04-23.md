@@ -65,6 +65,7 @@ Phase 3 proof-loop bridge started:
 - stale first-pass API compatibility and render-feedback probe docs were marked with current owned-branch status so they no longer read as open route work
 - native History inspection now shows compact proof-chain lines for plan, apply-result, render-observation, and render-critique artifacts
 - native History now loads `history_entry_v1` review-pass rollups from the project `history/` folder and surfaces request scope, pass outcome, validation status, and artifact refs
+- native History now flags consecutive review-pass validation instability so repeated proof-loop failures are visible before another apply
 
 ## Purpose
 
