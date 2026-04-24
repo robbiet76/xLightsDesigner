@@ -22,12 +22,43 @@ if (!candidates.length) {
 
 const target = candidates[0].app;
 const binary = path.join(target, 'Contents/MacOS/xLights');
-const args = process.argv.slice(2);
+function parseArgs(argv) {
+  const passthroughArgs = [];
+  let showDir = '';
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === '--show-dir') {
+      index += 1;
+      if (index >= argv.length) {
+        throw new Error('Missing value for --show-dir');
+      }
+      showDir = path.resolve(argv[index]);
+    } else {
+      passthroughArgs.push(arg);
+    }
+  }
+  if (showDir) {
+    passthroughArgs.push('-s', showDir);
+  }
+  return { passthroughArgs, showDir };
+}
+
+const { passthroughArgs: args, showDir } = parseArgs(process.argv.slice(2));
+const trustedRoots = [
+  ...String(process.env.XLIGHTS_DESIGNER_TRUSTED_ROOTS || '')
+    .split(path.delimiter)
+    .map((entry) => entry.trim())
+    .filter(Boolean),
+  showDir
+].filter(Boolean);
 const env = {
   ...process.env,
   XLIGHTS_DESIGNER_ENABLED: '1',
   XLIGHTS_DESIGNER_STARTUP_SETTLE_MS: process.env.XLIGHTS_DESIGNER_STARTUP_SETTLE_MS || '30000'
 };
+if (trustedRoots.length) {
+  env.XLIGHTS_DESIGNER_TRUSTED_ROOTS = Array.from(new Set(trustedRoots)).join(path.delimiter);
+}
 const logPath = '/tmp/xld-owned-xlights.log';
 
 function sleep(ms) {
@@ -86,7 +117,8 @@ console.log(JSON.stringify({
   logPath,
   env: {
     XLIGHTS_DESIGNER_ENABLED: env.XLIGHTS_DESIGNER_ENABLED,
-    XLIGHTS_DESIGNER_STARTUP_SETTLE_MS: env.XLIGHTS_DESIGNER_STARTUP_SETTLE_MS
+    XLIGHTS_DESIGNER_STARTUP_SETTLE_MS: env.XLIGHTS_DESIGNER_STARTUP_SETTLE_MS,
+    XLIGHTS_DESIGNER_TRUSTED_ROOTS: env.XLIGHTS_DESIGNER_TRUSTED_ROOTS
   }
 }, null, 2));
 

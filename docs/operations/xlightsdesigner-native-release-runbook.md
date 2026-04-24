@@ -34,12 +34,15 @@ Required result:
 
 2. Owned show-folder validation
 
-Launch the API-enabled xLights 2026.06 build with the active show folder trusted:
+Launch the API-enabled xLights 2026.06 build opened to the active show folder:
 
 ```bash
-XLIGHTS_DESIGNER_TRUSTED_ROOTS="/Users/robterry/Documents/Lights/Current/Christmas/Show" \
-node scripts/xlights/launch-owned-xlights.mjs -o
+node scripts/xlights/launch-owned-xlights.mjs \
+  --show-dir "/Users/robterry/Documents/Lights/Current/Christmas/Show" \
+  -o
 ```
+
+`--show-dir` passes the folder to xLights with `-s` and includes it in `XLIGHTS_DESIGNER_TRUSTED_ROOTS` for validation writes.
 
 Run isolated owned API validation:
 

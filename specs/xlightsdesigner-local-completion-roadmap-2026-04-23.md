@@ -20,7 +20,8 @@ The proof created an isolated `.xsq`, applied a simple batch plan, rendered the 
 Automation launch requirements discovered during owned API validation:
 - launch the API-enabled xLights 2026.06 build, not `/Applications/xLights.app`
 - use `-o` for automation launches so the pre-frame information dialog does not block API startup
-- set `XLIGHTS_DESIGNER_TRUSTED_ROOTS` to include the active show folder for create/save validation
+- launch with `scripts/xlights/launch-owned-xlights.mjs --show-dir <project-show-folder> -o` so xLights opens to the same folder the app is validating
+- include the active show folder in `XLIGHTS_DESIGNER_TRUSTED_ROOTS` for create/save validation; the launch helper does this automatically when `--show-dir` is used
 - require `/media/current` to report the same show folder as the validation `--show-dir`; trusted roots only authorize file access and do not prove xLights is open to the project folder
 
 Owned-path cleanup completed after the green proof:
