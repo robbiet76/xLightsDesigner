@@ -10,12 +10,14 @@ private struct SequenceTestProjectSessionStore: ProjectSessionStore {
 private final class StubSequenceProposalService: SequenceProposalService, @unchecked Sendable {
     private(set) var prompt = ""
     private(set) var projectFilePath = ""
+    private(set) var selectedTagNames: [String] = []
     private(set) var callCount = 0
 
-    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String) async throws -> SequenceProposalGenerationResult {
+    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String]) async throws -> SequenceProposalGenerationResult {
         callCount += 1
         self.projectFilePath = projectFilePath
         self.prompt = prompt
+        self.selectedTagNames = selectedTagNames
         return SequenceProposalGenerationResult(
             summary: "Generated proposal.",
             proposalArtifactID: "proposal-1",
@@ -23,6 +25,44 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
             warningCount: 0
         )
     }
+}
+
+@MainActor
+@Test func sequencePassesSelectedMetadataTagsToProposalGeneration() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-sequence-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let projectService = LocalProjectService(projectsRootPath: root.path)
+    let project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Metadata Tag Proposal \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    var projectWithIntent = project
+    projectWithIntent.snapshot["audioPathInput"] = AnyCodable("/tmp/show/song.mp3")
+    projectWithIntent.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/Metadata Tag Proposal.xsq")
+    projectWithIntent.snapshot["nativeDesignIntent"] = AnyCodable([
+        "goal": "Make the chorus read through the lead display element."
+    ])
+    let workspace = ProjectWorkspace(sessionStore: SequenceTestProjectSessionStore())
+    workspace.setProject(projectWithIntent)
+    let proposalService = StubSequenceProposalService()
+    let model = SequenceScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: projectService,
+        proposalService: proposalService
+    )
+
+    model.generateProposalFromDesignIntent(selectedTagNames: ["lead", "centerpiece"])
+    try await Task.sleep(for: .milliseconds(120))
+
+    #expect(proposalService.selectedTagNames == ["lead", "centerpiece"])
+    #expect(model.isGeneratingProposal == false)
+    #expect(model.transientBanner?.state == .ready)
 }
 
 @MainActor

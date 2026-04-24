@@ -225,6 +225,11 @@ export function createProposalGenerationRuntime(deps = {}) {
         : revisionTarget?.targetIds?.length
         ? revisionTarget.targetIds
         : (state.ui.metadataSelectionIds || []);
+      const directSelectedTagNames = hasExplicitSelectedTagNames
+        ? explicitSelectedTagNames
+        : explicitSelectedTagNames.length
+        ? explicitSelectedTagNames
+        : (state.ui.metadataSelectedTags || []);
       let designerCloudResponse = null;
       if (!directSequenceMode && !disableDesignerCloud && bridge && typeof bridge.runDesignerConversation === "function") {
         const cloud = await bridge.runDesignerConversation({
@@ -250,7 +255,7 @@ export function createProposalGenerationRuntime(deps = {}) {
             sequenceRevision: str(state.draftBaseRevision || state.revision || "unknown"),
             promptText: intentText,
             selectedSections: selected,
-            selectedTagNames: state.ui.metadataSelectedTags || [],
+            selectedTagNames: directSelectedTagNames,
             selectedTargetIds: directSelectedTargetIds,
             analysisHandoff,
             models: state.models || [],
@@ -433,8 +438,10 @@ export function createProposalGenerationRuntime(deps = {}) {
         }),
         planningScope: {
           sections: selected,
-          targetIds: revisionTarget?.targetIds?.length ? revisionTarget.targetIds : normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
-          tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
+          targetIds: normalizeMetadataSelectionIds(directSequenceMode
+            ? directSelectedTargetIds
+            : (revisionTarget?.targetIds?.length ? revisionTarget.targetIds : designerSelectedTargetIds)),
+          tagNames: normalizeMetadataSelectedTags(directSequenceMode ? directSelectedTagNames : designerSelectedTags)
         },
         timingOwnership: getSequenceTimingOwnershipRows(),
         manualXdLocks: getManualLockedXdTracks(),

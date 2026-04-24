@@ -236,7 +236,10 @@ final class NativeAutomationServer: @unchecked Sendable {
             model.reviewScreenModel.applyPendingWork()
             return .json(200, body: ["ok": true, "isApplying": model.reviewScreenModel.isApplying])
         case "generateSequenceProposal":
-            model.sequenceScreenModel.generateProposalFromDesignIntent()
+            let selectedTagNames = splitPayloadList(
+                String(payload["selectedTagNames"] as? String ?? payload["selectedTags"] as? String ?? payload["tags"] as? String ?? "")
+            )
+            model.sequenceScreenModel.generateProposalFromDesignIntent(selectedTagNames: selectedTagNames)
             return .json(200, body: [
                 "ok": true,
                 "isGeneratingProposal": model.sequenceScreenModel.isGeneratingProposal,

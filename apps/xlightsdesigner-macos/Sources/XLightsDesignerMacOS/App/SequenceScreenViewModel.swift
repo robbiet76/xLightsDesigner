@@ -187,7 +187,7 @@ final class SequenceScreenViewModel {
         refresh()
     }
 
-    func generateProposalFromDesignIntent() {
+    func generateProposalFromDesignIntent(selectedTagNames: [String] = []) {
         guard !isGeneratingProposal, let activeProject = workspace.activeProject else { return }
         let pendingWork = latestPendingWork
         let prerequisiteBlockers = Self.proposalPrerequisiteBlockers(project: activeProject, pendingWork: pendingWork)
@@ -220,7 +220,8 @@ final class SequenceScreenViewModel {
                     projectFilePath: activeProject.projectFilePath,
                     appRootPath: activeProject.appRootPath,
                     endpoint: AppEnvironment.xlightsOwnedAPIBaseURL,
-                    prompt: prompt
+                    prompt: prompt,
+                    selectedTagNames: selectedTagNames
                 )
                 transientBanner = WorkflowBannerModel(
                     id: "sequence-proposal-success",

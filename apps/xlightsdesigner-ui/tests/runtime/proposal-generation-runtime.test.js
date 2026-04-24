@@ -98,3 +98,141 @@ test("sequence-agent proposal generation blocks on unresolved timing review", as
   assert.equal(rendered, 1);
   assert.equal(state.ui.agentThinking, false);
 });
+
+test("sequence-agent automation proposal honors explicit selected metadata tags", async () => {
+  const state = buildState();
+  state.flags.planOnlyMode = true;
+  state.health.capabilityCommands = [];
+  state.sequenceSettings = {};
+  state.displayElements = [{ id: "MegaTree", name: "MegaTree", type: "model" }];
+  state.models = [{ id: "MegaTree", name: "MegaTree", type: "Model" }];
+  state.submodels = [];
+  state.sceneGraph = { groupsById: {}, submodelsById: {} };
+  state.ui.metadataSelectedTags = [];
+  let directInput = null;
+  let sequenceInput = null;
+  let persisted = false;
+  let rendered = false;
+
+  const runtime = createProposalGenerationRuntime({
+    state,
+    buildSequenceSession: () => ({
+      canGenerateSequence: true,
+      planOnlyMode: true,
+      xlightsConnected: false
+    }),
+    beginOrchestrationRun: () => ({ id: "orch-test" }),
+    executeDirectSequenceRequestOrchestration: (input) => {
+      directInput = input;
+      return {
+        ok: true,
+        proposalLines: ["Chorus 1 / MegaTree / preserve this tagged focal element as the clearest lead read"],
+        guidedQuestions: [],
+        proposalBundle: {
+          bundleType: "proposal_bundle_v1",
+          scope: {
+            sections: ["Chorus 1"],
+            targetIds: ["MegaTree"],
+            tagNames: ["lead"]
+          },
+          executionPlan: {
+            sectionPlans: [
+              {
+                section: "Chorus 1",
+                targetIds: ["MegaTree"],
+                effectHints: []
+              }
+            ]
+          },
+          lifecycle: { status: "draft" }
+        },
+        intentHandoff: {
+          artifactType: "intent_handoff_v1",
+          goal: "Make the chorus read through the lead display element.",
+          mode: "revise",
+          scope: {
+            sections: ["Chorus 1"],
+            targetIds: ["MegaTree"],
+            tagNames: ["lead"]
+          },
+          executionStrategy: {
+            sectionPlans: [
+              {
+                section: "Chorus 1",
+                targetIds: ["MegaTree"],
+                effectHints: []
+              }
+            ]
+          }
+        }
+      };
+    },
+    buildEffectiveMetadataAssignments: () => [
+      {
+        targetId: "MegaTree",
+        tags: ["lead", "centerpiece"],
+        semanticHints: ["centerpiece"],
+        effectAvoidances: ["Bars"],
+        rolePreference: "lead"
+      }
+    ],
+    applyDesignerDraftSuccessState: (targetState, payload) => {
+      targetState.creative.proposalBundle = payload.proposalBundle;
+    },
+    hydrateIntentHandoffExecutionStrategy: (intent) => intent,
+    setAgentHandoff: () => ({ ok: true, errors: [] }),
+    buildSequenceAgentInput: (input) => {
+      sequenceInput = input;
+      return { ok: true };
+    },
+    validateSequenceAgentContractGate: () => ({ ok: true, report: {} }),
+    buildSequenceAgentPlan: () => ({
+      agentRole: "sequence_agent",
+      contractVersion: "1.0",
+      planId: "plan-1",
+      summary: "Sequence plan",
+      estimatedImpact: 1,
+      warnings: [],
+      commands: [],
+      baseRevision: "rev-1",
+      validationReady: true,
+      executionLines: ["Chorus 1 / MegaTree / apply Color Wash effect"],
+      metadata: {
+        scope: {
+          sections: ["Chorus 1"],
+          targetIds: ["MegaTree"],
+          tagNames: ["lead"]
+        },
+        metadataAssignments: [
+          {
+            targetId: "MegaTree",
+            tags: ["lead", "centerpiece"],
+            semanticHints: ["centerpiece"],
+            effectAvoidances: ["Bars"],
+            rolePreference: "lead"
+          }
+        ]
+      }
+    }),
+    buildArtifactId: (type) => `${type}-test`,
+    validateCommandGraph: () => ({ ok: true, nodeCount: 0, errors: [] }),
+    normalizeMetadataSelectedTags: (values) => values,
+    normalizeMetadataSelectionIds: (values) => values,
+    persist: () => { persisted = true; },
+    render: () => { rendered = true; }
+  });
+
+  await runtime.generateProposal("Make the chorus read through the lead display element.", {
+    requestedRole: "sequence_agent",
+    selectedSections: ["Chorus 1"],
+    selectedTagNames: ["lead"]
+  });
+
+  assert.deepEqual(directInput.selectedTagNames, ["lead"]);
+  assert.deepEqual(directInput.metadataAssignments[0].tags, ["lead", "centerpiece"]);
+  assert.deepEqual(sequenceInput.planningScope.tagNames, ["lead"]);
+  assert.deepEqual(state.agentPlan.handoff.metadata.scope.tagNames, ["lead"]);
+  assert.deepEqual(state.agentPlan.handoff.metadata.metadataAssignments[0].targetId, "MegaTree");
+  assert.equal(persisted, true);
+  assert.equal(rendered, true);
+});

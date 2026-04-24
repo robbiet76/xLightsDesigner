@@ -8,18 +8,23 @@ struct SequenceProposalGenerationResult: Sendable {
 }
 
 protocol SequenceProposalService: Sendable {
-    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String) async throws -> SequenceProposalGenerationResult
+    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String]) async throws -> SequenceProposalGenerationResult
 }
 
 struct LocalSequenceProposalService: SequenceProposalService, Sendable {
-    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String) async throws -> SequenceProposalGenerationResult {
-        let output = try await runNode(arguments: [
+    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String] = []) async throws -> SequenceProposalGenerationResult {
+        var arguments = [
             AppEnvironment.nativeDirectProposalScriptPath,
             "--project-file", projectFilePath,
             "--app-root", appRootPath,
             "--endpoint", endpoint,
             "--prompt", prompt
-        ])
+        ]
+        for tagName in selectedTagNames.map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) }).filter({ !$0.isEmpty }) {
+            arguments.append("--selected-tag")
+            arguments.append(tagName)
+        }
+        let output = try await runNode(arguments: arguments)
 
         guard
             let json = try JSONSerialization.jsonObject(with: output) as? [String: Any],
