@@ -186,6 +186,7 @@ private func reviewPendingWork(
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "owned_routes_unavailable",
                 renderFeedbackMissingRequirements: ["layout.scene", "sequence.render-samples"],
+                metadataAssignmentCount: 16,
                 practicalValidationSummary: PracticalValidationSummary(
                     artifactType: "practical_sequence_validation_v1",
                     overallOk: true,
@@ -222,6 +223,7 @@ private func reviewPendingWork(
     #expect(model.transientBanner?.text.contains("Applied 12 commands") == true)
     #expect(model.transientBanner?.text.contains("Backup: /tmp/project/artifacts/backups/HolidayRoad-preapply-rev-1.xsq") == true)
     #expect(model.transientBanner?.text.contains("Practical validation passed: 3 readback checks, 2 design checks") == true)
+    #expect(model.transientBanner?.text.contains("Display metadata used: 16 assignments.") == true)
     #expect(model.transientBanner?.text.contains("Render feedback observation skipped") == true)
     #expect(model.transientBanner?.text.contains("Rendered xLights sequence") == true)
     #expect(model.transientBanner?.text.contains("Saved xLights sequence") == true)
@@ -265,6 +267,7 @@ private func reviewPendingWork(
                     renderFeedbackCaptured: false,
                     renderFeedbackStatus: "",
                     renderFeedbackMissingRequirements: [],
+                    metadataAssignmentCount: 0,
                     practicalValidationSummary: nil
                 )
             },
@@ -326,6 +329,7 @@ private func reviewPendingWork(
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
                 renderFeedbackMissingRequirements: [],
+                metadataAssignmentCount: 0,
                 practicalValidationSummary: nil
             )
         }
@@ -420,6 +424,7 @@ private func reviewPendingWork(
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
                 renderFeedbackMissingRequirements: [],
+                metadataAssignmentCount: 0,
                 practicalValidationSummary: nil
             )
         }
@@ -455,6 +460,7 @@ private func reviewPendingWork(
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
                 renderFeedbackMissingRequirements: [],
+                metadataAssignmentCount: 0,
                 practicalValidationSummary: nil
             )
         }

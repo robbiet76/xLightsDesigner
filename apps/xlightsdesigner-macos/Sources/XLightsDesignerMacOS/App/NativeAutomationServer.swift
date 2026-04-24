@@ -852,6 +852,7 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "applyResult": summarizeValidationArtifact(latestApplyResult, extra: [
                     "status": string(latestApplyResult?["status"]),
                     "sequenceBackupPath": string(latestApplyResult?["sequenceBackupPath"]),
+                    "metadataAssignmentCount": int(latestApplyResult?["metadataAssignmentCount"]),
                     "renderCurrentSummary": string(latestApplyResult?["renderCurrentSummary"]),
                     "renderCurrentError": string(latestApplyResult?["renderCurrentError"]),
                     "practicalValidation": summarizePracticalValidation(latestApplyResult?["practicalValidation"] as? [String: Any]) ?? NSNull()

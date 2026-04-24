@@ -26,6 +26,7 @@ struct ReviewApplyExecutionResult: Sendable {
     let renderFeedbackCaptured: Bool
     let renderFeedbackStatus: String
     let renderFeedbackMissingRequirements: [String]
+    let metadataAssignmentCount: Int
     let practicalValidationSummary: PracticalValidationSummary?
 }
 
@@ -73,6 +74,7 @@ struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
             renderFeedbackCaptured: bool(json["renderFeedbackCaptured"]),
             renderFeedbackStatus: string(json["renderFeedbackStatus"]),
             renderFeedbackMissingRequirements: stringArray(json["renderFeedbackMissingRequirements"]),
+            metadataAssignmentCount: int(json["metadataAssignmentCount"]),
             practicalValidationSummary: practicalValidationSummary(json["practicalValidationSummary"])
         )
     }

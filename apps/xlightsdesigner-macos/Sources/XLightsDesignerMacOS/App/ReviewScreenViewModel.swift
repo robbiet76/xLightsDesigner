@@ -101,6 +101,9 @@ final class ReviewScreenViewModel {
                 } else {
                     validationSummary = ""
                 }
+                let metadataSummary = result.metadataAssignmentCount > 0
+                    ? " Display metadata used: \(result.metadataAssignmentCount) assignment\(result.metadataAssignmentCount == 1 ? "" : "s")."
+                    : ""
                 let renderSummary = result.renderCurrentSummary.isEmpty
                     ? try? await xlightsSessionService.renderCurrentSequence()
                     : result.renderCurrentSummary
@@ -109,7 +112,7 @@ final class ReviewScreenViewModel {
                 lastSequenceBackupPath = result.sequenceBackupPath
                 transientBanner = WorkflowBannerModel(
                     id: "review-apply-success",
-                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (result.sequenceBackupPath.isEmpty ? "" : " Backup: \(result.sequenceBackupPath).") + validationSummary + feedbackSummary + renderFailureSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
+                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (result.sequenceBackupPath.isEmpty ? "" : " Backup: \(result.sequenceBackupPath).") + validationSummary + metadataSummary + feedbackSummary + renderFailureSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
                     state: .ready
                 )
                 NotificationCenter.default.post(name: .projectArtifactsDidChange, object: project.projectFilePath)
