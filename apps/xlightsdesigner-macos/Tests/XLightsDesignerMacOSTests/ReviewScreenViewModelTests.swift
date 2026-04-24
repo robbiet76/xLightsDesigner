@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import XLightsDesignerMacOS
 
 private struct StubReviewExecutionService: ReviewExecutionService, Sendable {
@@ -214,6 +215,93 @@ private func reviewPendingWork(
 }
 
 @MainActor
+@Test func reviewEnablesApplyForSectionPlanProposalArtifacts() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-review-tests-\(UUID().uuidString)", isDirectory: true)
+    let projectDir = root.appendingPathComponent("Project", isDirectory: true)
+    let proposalDir = projectDir.appendingPathComponent("artifacts/proposals", isDirectory: true)
+    let intentDir = projectDir.appendingPathComponent("artifacts/intent-handoffs", isDirectory: true)
+    try FileManager.default.createDirectory(at: proposalDir, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: intentDir, withIntermediateDirectories: true)
+    try writeReviewJSON([
+        "artifactType": "proposal_bundle_v1",
+        "artifactId": "proposal_bundle_v1-test",
+        "createdAt": "2026-04-23T13:00:00Z",
+        "summary": "Apply On effect to MegaTree during Chorus 1.",
+        "proposalLines": ["Chorus 1 / MegaTree / apply On effect"],
+        "impact": [
+            "estimatedImpact": 1
+        ],
+        "scope": [
+            "sections": ["Chorus 1"],
+            "targetIds": ["MegaTree"]
+        ],
+        "executionPlan": [
+            "sectionCount": 1,
+            "targetCount": 1,
+            "shouldUseFullSongStructureTrack": true,
+            "sectionPlans": [
+                [
+                    "section": "Chorus 1",
+                    "targetIds": ["MegaTree"],
+                    "effectHints": ["On"]
+                ]
+            ],
+            "effectPlacements": []
+        ]
+    ] as [String: Any], to: proposalDir.appendingPathComponent("proposal_bundle_v1-test.json"))
+    try writeReviewJSON([
+        "artifactType": "intent_handoff_v1",
+        "artifactId": "intent_handoff_v1-test",
+        "createdAt": "2026-04-23T13:00:00Z",
+        "goal": "Apply On effect to MegaTree during Chorus 1.",
+        "scope": [
+            "sections": ["Chorus 1"],
+            "targetIds": ["MegaTree"]
+        ]
+    ] as [String: Any], to: intentDir.appendingPathComponent("intent_handoff_v1-test.json"))
+    let workspace = ProjectWorkspace()
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: projectDir.appendingPathComponent("Christmas 2026.xdproj").path,
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [
+                "activeSequence": AnyCodable("HolidayRoad"),
+                "sequencePathInput": AnyCodable("/tmp/show/HolidayRoad.xsq")
+            ]
+        )
+    )
+    let model = ReviewScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        reviewExecutionService: StubReviewExecutionService { _, _, _ in
+            Issue.record("This test only verifies Review readiness.")
+            return ReviewApplyExecutionResult(
+                summary: "",
+                commandCount: 0,
+                nextRevision: "",
+                applyPath: "",
+                sequencePath: "",
+                renderFeedbackCaptured: false,
+                renderFeedbackStatus: "",
+                renderFeedbackMissingRequirements: []
+            )
+        }
+    )
+
+    model.refresh()
+
+    #expect(model.screenModel.actions.canApply == true)
+    #expect(model.screenModel.readiness.blockers.isEmpty)
+    #expect(model.screenModel.readiness.impactSummary.contains("Estimated proposal impact: 1"))
+}
+
+@MainActor
 @Test func reviewDeferPublishesNonDestructiveBanner() {
     let workspace = ProjectWorkspace()
     let model = ReviewScreenViewModel(
@@ -238,4 +326,9 @@ private func reviewPendingWork(
 
     #expect(model.transientBanner?.state == .partial)
     #expect(model.transientBanner?.text == "Pending work deferred. No sequence changes were applied.")
+}
+
+private func writeReviewJSON(_ object: [String: Any], to url: URL) throws {
+    let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
+    try data.write(to: url)
 }
