@@ -73,6 +73,21 @@ test("native direct proposal writes intent and proposal artifacts from project c
       }
     }
   });
+  writeJson(path.join(projectDir, "layout", "layout-metadata.json"), {
+    version: 1,
+    tags: [
+      {
+        id: "tag-focal",
+        name: "Focal Tree",
+        description: "Primary visual anchor for chorus moments."
+      }
+    ],
+    targetTags: {
+      MegaTree: ["tag-focal"]
+    }
+  });
+
+  let capturedMetadataAssignments = [];
 
   const result = await runNativeDirectProposal(
     {
@@ -90,7 +105,10 @@ test("native direct proposal writes intent and proposal artifacts from project c
       getEffectDefinitions: async () => ({ data: { effects: [] } }),
       buildAnalysisHandoffFromArtifact,
       buildEffectDefinitionCatalog,
-      executeDirectSequenceRequestOrchestration,
+      executeDirectSequenceRequestOrchestration: (input) => {
+        capturedMetadataAssignments = input.metadataAssignments;
+        return executeDirectSequenceRequestOrchestration(input);
+      },
       writeProjectArtifacts
     }
   );
@@ -98,6 +116,15 @@ test("native direct proposal writes intent and proposal artifacts from project c
   assert.equal(result.ok, true);
   assert.match(result.proposalArtifactId, /^proposal_bundle_v1-/);
   assert.match(result.intentArtifactId, /^intent_handoff_v1-/);
+  assert.equal(result.metadataAssignmentCount, 1);
+  assert.deepEqual(capturedMetadataAssignments, [
+    {
+      targetId: "MegaTree",
+      tags: ["Focal Tree"],
+      semanticHints: ["Primary visual anchor for chorus moments."],
+      source: "xlightsdesigner_project_display_metadata"
+    }
+  ]);
   assert.equal(result.rows.length, 2);
 
   const proposalPath = path.join(projectDir, "artifacts", "proposals", `${result.proposalArtifactId}.json`);
