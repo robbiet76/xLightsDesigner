@@ -3,7 +3,7 @@ import Testing
 @testable import XLightsDesignerMacOS
 
 @MainActor
-@Test func assistantActionCanSeedDisplayMetadataFromLayout() throws {
+@Test func assistantActionCanSeedDisplayMetadataFromLayout() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-assistant-action-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     let projectService = LocalProjectService(projectsRootPath: root.path)
@@ -47,7 +47,7 @@ import Testing
         discoveryProposals: []
     )
 
-    model.applyAssistantActionRequest(AssistantActionRequestResult(
+    await model.applyAssistantActionRequest(AssistantActionRequestResult(
         actionType: "propose_display_metadata_from_layout",
         payload: [:],
         reason: "User asked to seed display metadata from the layout."
@@ -75,7 +75,7 @@ import Testing
     let model = AppModel()
     model.workspace.setProject(project)
 
-    model.applyAssistantActionRequest(AssistantActionRequestResult(
+    await model.applyAssistantActionRequest(AssistantActionRequestResult(
         actionType: "update_display_target_intent",
         payload: [
             "targetIds": "MegaTree, Roofline",
@@ -85,7 +85,6 @@ import Testing
         ],
         reason: "User approved target intent."
     ))
-    try await Task.sleep(for: .milliseconds(120))
 
     let document = try LocalDisplayMetadataStore().load(for: project)
     #expect(document.preferencesByTargetId["MegaTree"]?.rolePreference == "lead")

@@ -419,7 +419,7 @@ final class AppModel {
         )
     }
 
-    func applyAssistantActionRequest(_ request: AssistantActionRequestResult) {
+    func applyAssistantActionRequest(_ request: AssistantActionRequestResult) async {
         switch request.actionType {
         case "open_settings":
             showSettings = true
@@ -436,12 +436,10 @@ final class AppModel {
         case "propose_display_metadata_from_layout":
             displayScreenModel.proposeMetadataFromLayout()
         case "apply_display_metadata_proposals":
-            Task {
-                do {
-                    try await displayScreenModel.promoteDiscoveryProposals()
-                } catch {
-                    displayScreenModel.errorMessage = error.localizedDescription
-                }
+            do {
+                try await displayScreenModel.promoteDiscoveryProposals()
+            } catch {
+                displayScreenModel.errorMessage = error.localizedDescription
             }
         case "update_display_target_intent":
             let targetIDs = splitAssistantPayloadList(request.payload["targetIds"] ?? request.payload["targetIDs"] ?? request.payload["targets"] ?? "")
@@ -449,12 +447,16 @@ final class AppModel {
                 displayScreenModel.errorMessage = "Target intent update requires exact xLights target IDs."
                 return
             }
-            displayScreenModel.saveTargetIntentFromUI(
-                targetIDs: targetIDs,
-                rolePreference: request.payload["rolePreference"],
-                semanticHints: splitAssistantPayloadList(request.payload["semanticHints"] ?? ""),
-                effectAvoidances: splitAssistantPayloadList(request.payload["effectAvoidances"] ?? "")
-            )
+            do {
+                try await displayScreenModel.saveTargetIntent(
+                    targetIDs: targetIDs,
+                    rolePreference: request.payload["rolePreference"],
+                    semanticHints: splitAssistantPayloadList(request.payload["semanticHints"] ?? ""),
+                    effectAvoidances: splitAssistantPayloadList(request.payload["effectAvoidances"] ?? "")
+                )
+            } catch {
+                displayScreenModel.errorMessage = error.localizedDescription
+            }
         case "select_workflow":
             break
         default:

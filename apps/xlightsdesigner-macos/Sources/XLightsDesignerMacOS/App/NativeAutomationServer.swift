@@ -217,7 +217,9 @@ final class NativeAutomationServer: @unchecked Sendable {
                         self.model.transitionToPhase(transition.phaseID, reason: transition.reason)
                     },
                     onActionRequest: { actionRequest in
-                        self.model.applyAssistantActionRequest(actionRequest)
+                        Task { @MainActor in
+                            await self.model.applyAssistantActionRequest(actionRequest)
+                        }
                     },
                     onPhaseStarted: {
                         self.model.markActivePhaseStarted()
@@ -281,6 +283,23 @@ final class NativeAutomationServer: @unchecked Sendable {
             } catch {
                 return .error(statusCode: 500, message: error.localizedDescription)
             }
+        case "applyAssistantActionRequest":
+            let actionType = String(payload["actionType"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !actionType.isEmpty else {
+                return .error(statusCode: 400, message: "Assistant action request requires actionType.")
+            }
+            let actionPayload = normalizeAssistantActionPayload(payload["payload"])
+            let reason = String(payload["reason"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            await model.applyAssistantActionRequest(AssistantActionRequestResult(
+                actionType: actionType,
+                payload: actionPayload,
+                reason: reason
+            ))
+            return .json(200, body: [
+                "ok": true,
+                "assistant": assistantSnapshot(),
+                "display": displaySnapshot()
+            ])
         case "deferReview":
             model.reviewScreenModel.deferPendingWork()
             return .json(200, body: ["ok": true])
@@ -351,6 +370,21 @@ final class NativeAutomationServer: @unchecked Sendable {
             result.append(trimmed)
         }
         return result
+    }
+
+    private func normalizeAssistantActionPayload(_ value: Any?) -> [String: String] {
+        guard let object = value as? [String: Any] else { return [:] }
+        var payload: [String: String] = [:]
+        for (key, rawValue) in object {
+            let trimmedKey = key.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedKey.isEmpty else { continue }
+            if let strings = rawValue as? [String] {
+                payload[trimmedKey] = strings.joined(separator: ",")
+            } else {
+                payload[trimmedKey] = String(describing: rawValue).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        return payload
     }
 
     @MainActor
