@@ -5,7 +5,7 @@ import { runDirectSequenceValidation } from "../../runtime/clean-sequence-runtim
 
 test("runDirectSequenceValidation combines page-states and xlights states", async () => {
   const result = await runDirectSequenceValidation({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     state: {
       activeSequence: "Validation-Clean-Phase1.xsq",
       sequencePathInput: "/show/Validation-Clean-Phase1.xsq",

@@ -73,7 +73,7 @@ test("classifyOrchestrationFailureReason maps known stages", () => {
   assert.equal(classifyOrchestrationFailureReason("validate_apply"), "validate");
   assert.equal(classifyOrchestrationFailureReason("xd_lock_gate"), "lock");
   assert.equal(classifyOrchestrationFailureReason("capability_gate"), "capability");
-  assert.equal(classifyOrchestrationFailureReason("runtime", "transactions.begin returned no transactionId"), "runtime");
+  assert.equal(classifyOrchestrationFailureReason("runtime", "owned sequencing.applyBatchPlan returned no jobId"), "runtime");
   assert.equal(classifyOrchestrationFailureReason("some-other-stage"), "unknown");
 });
 
@@ -118,7 +118,7 @@ test("sequence agent input gate validates context.layoutMode when provided", () 
       requestId: "req-1",
       context: {
         sequenceRevision: "rev-1",
-        endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+        endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
         sequenceSettings: {},
         layoutMode: "invalid",
         displayElements: [],
@@ -148,7 +148,7 @@ test("sequence agent input gate requires context.sequenceSettings", () => {
       requestId: "req-sequence-settings",
       context: {
         sequenceRevision: "rev-1",
-        endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+        endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
         layoutMode: "2d",
         displayElements: [],
         groupIds: [],
@@ -171,7 +171,7 @@ test("sequence agent input gate requires context.sequenceSettings", () => {
 test("sequence agent input derives xlightsLayout group memberships from scene graph", () => {
   const input = buildSequenceAgentInput({
     requestId: "req-layout",
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     sequenceRevision: "rev-1",
     sequenceSettings: {},
     layoutMode: "2d",
@@ -215,7 +215,7 @@ test("sequence agent input derives xlightsLayout group memberships from scene gr
 test("sequence agent input preserves artistic goal and revision objective artifacts", () => {
   const input = buildSequenceAgentInput({
     requestId: "req-artistic",
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     sequenceRevision: "rev-1",
     sequenceSettings: {},
     displayElements: [],
@@ -245,7 +245,7 @@ test("sequence agent input preserves artistic goal and revision objective artifa
 test("sequence agent input preserves render validation evidence", () => {
   const input = buildSequenceAgentInput({
     requestId: "req-validation",
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     sequenceRevision: "rev-1",
     sequenceSettings: {},
     displayElements: [],
@@ -271,7 +271,7 @@ test("sequence agent input preserves render validation evidence", () => {
 test("sequence agent input preserves revision retry pressure artifact", () => {
   const input = buildSequenceAgentInput({
     requestId: "req-retry-pressure",
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     sequenceRevision: "rev-1",
     sequenceSettings: {},
     layoutMode: "2d",
@@ -298,7 +298,7 @@ test("sequence agent input preserves revision retry pressure artifact", () => {
 test("sequence agent input preserves revision feedback artifact", () => {
   const input = buildSequenceAgentInput({
     requestId: "req-revision-feedback",
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     sequenceRevision: "rev-1",
     sequenceSettings: {},
     layoutMode: "2d",
@@ -325,7 +325,7 @@ test("sequence agent input preserves revision feedback artifact", () => {
 test("sequence agent input preserves candidate selection context", () => {
   const input = buildSequenceAgentInput({
     requestId: "req-selection",
-    endpoint: "http://127.0.0.1:49914",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     sequenceRevision: "rev-selection",
     sequenceSettings: { durationMs: 30000 },
     intentHandoff: { artifactType: "intent_handoff_v1" },

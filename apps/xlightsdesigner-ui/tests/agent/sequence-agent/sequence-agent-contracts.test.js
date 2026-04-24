@@ -16,7 +16,7 @@ function sampleInput(overrides = {}) {
     requestId: "req-1",
     context: {
       sequenceRevision: "rev-1",
-      endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+      endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
       sequenceSettings: {
         supportsModelBlending: true
       },

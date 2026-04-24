@@ -23,7 +23,7 @@ test("xlights timing state summarizes tracks and xd tracks", () => {
 
 test("xlights sequence state reports open sequence summary", () => {
   const state = buildXLightsSequenceState({
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     openSequence: { file: "/show/Validation-Clean-Phase1.xsq" },
     revision: "rev-42",
     sequenceSettings: { mediaFile: "/media/song.mp3", frameRate: 20, lengthMs: 180000 },
@@ -55,7 +55,7 @@ test("xlights sequence state reports blocked when no sequence is open", () => {
 });
 
 test("read xlights sequence state can expand timing marks", async () => {
-  const state = await readXLightsSequenceState("http://127.0.0.1:49914/xlDoAutomation", {
+  const state = await readXLightsSequenceState("http://127.0.0.1:49915/xlightsdesigner/api", {
     getOpenSequence: async () => ({ data: { isOpen: true, sequence: { file: "/show/Test.xsq" } } }),
     getRevision: async () => ({ data: { revision: "rev-9" } }),
     getSequenceSettings: async () => ({ data: { mediaFile: "/media/test.mp3", frameRate: 20, lengthMs: 120000 } }),

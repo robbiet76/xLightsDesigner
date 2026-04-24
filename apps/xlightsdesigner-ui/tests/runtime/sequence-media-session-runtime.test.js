@@ -5,7 +5,7 @@ import { createSequenceMediaSessionRuntime } from "../../runtime/sequence-media-
 
 function buildState() {
   return {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     audioPathInput: "",
     mediaPath: "",
     sequenceMediaFile: "",

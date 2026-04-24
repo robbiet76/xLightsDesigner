@@ -6,7 +6,7 @@ import { executeApplyCore } from "../../runtime/review-runtime.js";
 
 test("executeApplyCore blocks invalid sequence-agent input contract", async () => {
   const state = {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     draftBaseRevision: "rev-1",
     revision: "rev-1",
     sequenceSettings: {},
@@ -78,7 +78,7 @@ test("executeApplyCore blocks invalid sequence-agent input contract", async () =
 test("executeApplyCore preserves XD song structure timing writes during live apply", async () => {
   let appliedCommands = null;
   const state = {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     draftBaseRevision: "rev-1",
     revision: "rev-1",
     sequenceSettings: {},
@@ -185,7 +185,7 @@ test("executeApplyCore preserves XD song structure timing writes during live app
 
 test("executeApplyCore refreshes artistic goal and revision objective from practical validation", async () => {
   const state = {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     draftBaseRevision: "rev-1",
     revision: "rev-1",
     sequenceSettings: { durationMs: 60000 },
@@ -476,7 +476,7 @@ test("executeApplyCore prefers collected post-apply render observation when avai
 
 test("executeApplyCore prefers render critique refresh when render observation is available", async () => {
   const state = {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     draftBaseRevision: "rev-1",
     revision: "rev-1",
     sequenceSettings: { durationMs: 60000 },

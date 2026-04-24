@@ -165,8 +165,6 @@ export function classifyOrchestrationFailureReason(stage = "", detail = "", veri
   if (
     combined.includes("runtime") ||
     combined.includes("exception") ||
-    combined.includes("transaction") ||
-    combined.includes("rollback") ||
     combined.includes("apply blocked") ||
     combined.includes("apply failed")
   ) {

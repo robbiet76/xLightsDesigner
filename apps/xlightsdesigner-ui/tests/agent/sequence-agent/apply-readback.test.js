@@ -78,7 +78,7 @@ test("apply readback verifies timing, display order, and distributed effects", a
   ];
 
   const verification = await verifyAppliedPlanReadback(plan, {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     getTimingMarks: async () => ({
       data: {
         marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }]
@@ -122,7 +122,7 @@ test("apply readback carries design and training context with alignment checks",
   ];
 
   const verification = await verifyAppliedPlanReadback(plan, {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     planMetadata: {
       sequencingDesignHandoffSummary: "Big tree chorus",
       sequencingSectionDirectiveCount: 1,
@@ -191,7 +191,7 @@ test("apply readback flags mismatched distributed effect windows", async () => {
   ];
 
   const verification = await verifyAppliedPlanReadback(plan, {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     listEffects: async (_endpoint, { modelName }) => ({
       data: {
         effects: modelName === "MegaTree"
@@ -226,7 +226,7 @@ test("apply readback verifies submodel-targeted effect did not broaden to parent
   ];
 
   const verification = await verifyAppliedPlanReadback(plan, {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     submodelsById: sampleSubmodels(),
     listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
       data: {
@@ -263,7 +263,7 @@ test("apply readback flags submodel-targeted effect that broadened to parent", a
   ];
 
   const verification = await verifyAppliedPlanReadback(plan, {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     submodelsById: sampleSubmodels(),
     listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
       data: {
@@ -308,7 +308,7 @@ test("apply readback does not flag explicit parent-plus-submodel writes as broad
   ];
 
   const verification = await verifyAppliedPlanReadback(plan, {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     submodelsById: sampleSubmodels(),
     listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
       data: {
@@ -342,7 +342,7 @@ test("apply readback flags submodel-targeted effect that broadened to overlappin
   ];
 
   const verification = await verifyAppliedPlanReadback(plan, {
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     submodelsById: sampleSubmodels(),
     listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
       data: {

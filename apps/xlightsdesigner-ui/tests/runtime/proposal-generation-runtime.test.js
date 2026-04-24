@@ -5,7 +5,7 @@ import { createProposalGenerationRuntime } from "../../runtime/proposal-generati
 
 function buildState() {
   return {
-    endpoint: "http://127.0.0.1:49913",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     revision: "rev-1",
     draftBaseRevision: "rev-1",
     proposed: [],

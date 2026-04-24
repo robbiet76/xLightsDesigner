@@ -23,7 +23,7 @@ test("effect occupancy state summarizes matched queries", () => {
 });
 
 test("effect occupancy reader queries xlights listEffects", async () => {
-  const state = await readXLightsEffectOccupancyState("http://127.0.0.1:49914/xlDoAutomation", [
+  const state = await readXLightsEffectOccupancyState("http://127.0.0.1:49915/xlightsdesigner/api", [
     { modelName: "Snowman", layerIndex: 0, startMs: 1000, endMs: 2000, effectName: "Color Wash" }
   ], {
     listEffects: async () => ({

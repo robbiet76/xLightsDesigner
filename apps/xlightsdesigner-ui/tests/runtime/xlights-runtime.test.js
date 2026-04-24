@@ -9,7 +9,7 @@ import {
 } from "../../runtime/xlights-runtime.js";
 
 test("collectXLightsRuntimeSnapshot aggregates live sequence state and capabilities", async () => {
-  const snapshot = await collectXLightsRuntimeSnapshot("http://127.0.0.1:49914/xlDoAutomation", {
+  const snapshot = await collectXLightsRuntimeSnapshot("http://127.0.0.1:49915/xlightsdesigner/api", {
     readSequenceState: async () => ({
       contract: "xlights_sequence_state_v1",
       summary: "Open sequence Test.xsq at revision rev-3.",
@@ -41,7 +41,7 @@ test("syncXLightsRevisionState marks stale drafts and handoff invalidation", () 
 });
 
 test("fetchXLightsRevisionState normalizes revision from xlights api", async () => {
-  const revision = await fetchXLightsRevisionState("http://127.0.0.1:49914/xlDoAutomation", {
+  const revision = await fetchXLightsRevisionState("http://127.0.0.1:49915/xlightsdesigner/api", {
     getRevision: async () => ({ data: { revisionToken: "rev-44" } })
   });
   assert.equal(revision, "rev-44");
@@ -53,7 +53,7 @@ test("executeXLightsRefreshCycle delegates open-sequence refresh flow", async ()
   let applied = "";
   const result = await executeXLightsRefreshCycle({
     state,
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     deps: {
       getOpen: async () => ({ data: { isOpen: true, sequence: { file: "/show/Test.xsq" } } }),
       syncRevision: async () => ({ staleDetected: false }),
@@ -92,7 +92,7 @@ test("executeXLightsRefreshCycle notifies when sequence path changes", async () 
   let currentPath = "/show/Prev.xsq";
   await executeXLightsRefreshCycle({
     state,
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     deps: {
       getOpen: async () => ({ data: { isOpen: true, sequence: { file: "/show/Next.xsq" } } }),
       syncRevision: async () => ({ staleDetected: false }),
@@ -131,7 +131,7 @@ test("executeXLightsRefreshCycle notifies when open sequence is cleared", async 
   let cleared = null;
   await executeXLightsRefreshCycle({
     state,
-    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     deps: {
       getOpen: async () => ({ data: { isOpen: false, sequence: null } }),
       syncRevision: async () => ({ staleDetected: false }),

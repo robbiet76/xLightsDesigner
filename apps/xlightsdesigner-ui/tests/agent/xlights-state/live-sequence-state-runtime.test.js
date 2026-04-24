@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readCurrentXLightsSequenceState } from "../../../agent/xlights-state/live-sequence-state-runtime.js";
 
 test("runtime wrapper delegates to live-sequence collector", async () => {
-  const state = await readCurrentXLightsSequenceState("http://127.0.0.1:49914/xlDoAutomation", { includeTimingMarks: true }, {
+  const state = await readCurrentXLightsSequenceState("http://127.0.0.1:49915/xlightsdesigner/api", { includeTimingMarks: true }, {
     getOpenSequence: async () => ({ data: { isOpen: true, sequence: { file: "/show/Test.xsq" } } }),
     getRevision: async () => ({ data: { revision: "rev-12" } }),
     getSequenceSettings: async () => ({ data: { mediaFile: "/media/test.mp3" } }),
