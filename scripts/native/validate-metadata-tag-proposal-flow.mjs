@@ -17,7 +17,7 @@ function splitList(value = '') {
 }
 
 function usage() {
-  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
+  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
   process.exit(2);
 }
 
@@ -35,6 +35,7 @@ function parseArgs(argv = []) {
     forceValidationSequence: false,
     applyReview: false,
     renderAfterApply: false,
+    tagOnly: false,
     timeoutMs: 30000
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -51,6 +52,7 @@ function parseArgs(argv = []) {
     else if (token === '--force-validation-sequence') out.forceValidationSequence = true;
     else if (token === '--apply-review') out.applyReview = true;
     else if (token === '--render-after-apply') out.renderAfterApply = true;
+    else if (token === '--tag-only') out.tagOnly = true;
     else if (token === '--timeout-ms') out.timeoutMs = Number(argv[++i]);
     else usage();
   }
@@ -191,12 +193,12 @@ function matchingSequencingArtifacts(snapshot = {}, targetIds = [], selectedTags
   });
 }
 
-function reviewReadyMatches(snapshot = {}, targetIds = [], selectedTags = []) {
+function reviewReadyMatches(snapshot = {}, targetIds = [], selectedTags = [], { tagOnly = false } = {}) {
   const review = snapshot?.pageStates?.review && typeof snapshot.pageStates.review === 'object'
     ? snapshot.pageStates.review
     : {};
   const pendingSummary = str(review.pendingSummary).toLowerCase();
-  const includesTargets = targetIds.every((targetId) => pendingSummary.includes(str(targetId).toLowerCase()));
+  const includesTargets = tagOnly || targetIds.every((targetId) => pendingSummary.includes(str(targetId).toLowerCase()));
   const includesTags = selectedTags.every((tag) => pendingSummary.includes(str(tag).toLowerCase()));
   return review.canApply === true && review.isApplying !== true && includesTargets && includesTags;
 }
@@ -215,12 +217,12 @@ async function waitForProposal({ targetIds = [], selectedTags = [], previousArti
   throw new Error(`Timed out waiting for generated plan with targets=${targetIds.join(',')} tags=${selectedTags.join(',')}. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
 }
 
-async function waitForReviewReady({ targetIds = [], selectedTags = [], timeoutMs = 30000 } = {}) {
+async function waitForReviewReady({ targetIds = [], selectedTags = [], tagOnly = false, timeoutMs = 30000 } = {}) {
   const start = Date.now();
   let lastSnapshot = null;
   while (Date.now() - start < timeoutMs) {
     lastSnapshot = await request('GET', '/sequencer-validation-snapshot');
-    if (reviewReadyMatches(lastSnapshot, targetIds, selectedTags)) {
+    if (reviewReadyMatches(lastSnapshot, targetIds, selectedTags, { tagOnly })) {
       return lastSnapshot;
     }
     await new Promise((resolve) => setTimeout(resolve, 750));
@@ -252,10 +254,10 @@ async function waitForApplyResult({ previousArtifactId = '', timeoutMs = 120000 
   throw new Error(`Timed out waiting for review apply result. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
 }
 
-async function applyReviewWithRetry({ previousArtifactId = '', targetIds = [], selectedTags = [], timeoutMs = 120000 } = {}) {
+async function applyReviewWithRetry({ previousArtifactId = '', targetIds = [], selectedTags = [], tagOnly = false, timeoutMs = 120000 } = {}) {
   let lastAccepted = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    await waitForReviewReady({ targetIds, selectedTags, timeoutMs: Math.min(timeoutMs, 30000) });
+    await waitForReviewReady({ targetIds, selectedTags, tagOnly, timeoutMs: Math.min(timeoutMs, 30000) });
     lastAccepted = await request('POST', '/action', { action: 'applyReview' });
     try {
       return {
@@ -300,9 +302,11 @@ await request('POST', '/action', {
   actionType: 'save_design_intent',
   reason: 'metadata tag proposal validation',
   payload: {
-    goal: `Validate metadata-selected sequencing for ${targetIds.join(', ')}.`,
+    goal: args.tagOnly
+      ? `Validate metadata-selected sequencing for selected display metadata tags.`
+      : `Validate metadata-selected sequencing for ${targetIds.join(', ')}.`,
     mood: 'focused validation',
-    targetScope: targetIds.join(', '),
+    targetScope: args.tagOnly ? '' : targetIds.join(', '),
     constraints: `Use selected display metadata tags: ${selectedTags.join(', ')}.`,
     references: '',
     approvalNotes: 'Automation validation'
@@ -335,6 +339,7 @@ const matchedArtifacts = proposalValidation.matches;
 const reviewReadySnapshot = await waitForReviewReady({
   targetIds,
   selectedTags,
+  tagOnly: args.tagOnly,
   timeoutMs: args.timeoutMs
 });
 let applyValidation = null;
@@ -345,6 +350,7 @@ if (args.applyReview) {
     previousArtifactId: previousApplyId,
     targetIds,
     selectedTags,
+    tagOnly: args.tagOnly,
     timeoutMs: Math.max(args.timeoutMs, 120000)
   });
   if (args.renderAfterApply) {
@@ -357,6 +363,7 @@ process.stdout.write(`${JSON.stringify({
   baseUrl: BASE_URL,
   updateAccepted: updateResult?.ok === true,
   generationAccepted: generationResult?.ok === true,
+  tagOnly: args.tagOnly,
   targetIds,
   selectedTags,
   sequenceContext,

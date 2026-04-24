@@ -13,7 +13,8 @@ const NATIVE_LOG_PATH = '/tmp/xld-native-app.log';
 const DEFAULT_MATRIX_SCENARIOS = [
   { name: 'model-star-lead', targetIds: 'Star', selectedTags: 'lead' },
   { name: 'group-snowflakes-lead', targetIds: 'Snowflakes', selectedTags: 'lead' },
-  { name: 'group-floods-lead', targetIds: 'Floods', selectedTags: 'lead' }
+  { name: 'group-floods-lead', targetIds: 'Floods', selectedTags: 'lead' },
+  { name: 'tag-only-lead', targetIds: 'Star', selectedTags: 'lead', tagOnly: true }
 ];
 
 function str(value = '') {
@@ -28,6 +29,7 @@ function usage() {
     '  --show-dir <path>              Linked xLights show folder. Defaults to /Users/robterry/Desktop/Show.',
     '  --target-ids <ids>             Exact xLights target ids. Defaults to Star.',
     '  --selected-tags <tags>         Selected metadata tags. Defaults to lead.',
+    '  --tag-only                    Seed expected target metadata, then generate from tags without target text.',
     '  --matrix                       Run the default metadata handoff scenario matrix.',
     '  --duration-ms <n>              Validation sequence duration. Defaults to 30000.',
     '  --frame-ms <n>                 Validation sequence frame interval. Defaults to 50.',
@@ -56,6 +58,7 @@ function parseArgs(argv = []) {
     launchXlights: true,
     applyReview: true,
     renderAfterApply: true,
+    tagOnly: false,
     matrix: false
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -73,6 +76,7 @@ function parseArgs(argv = []) {
     } else if (token === '--show-dir') args.showDir = next();
     else if (token === '--target-ids') args.targetIds = next();
     else if (token === '--selected-tags') args.selectedTags = next();
+    else if (token === '--tag-only') args.tagOnly = true;
     else if (token === '--matrix') args.matrix = true;
     else if (token === '--duration-ms') args.durationMs = Number(next());
     else if (token === '--frame-ms') args.frameMs = Number(next());
@@ -222,6 +226,7 @@ function buildValidationArgs(args, showDir, scenario) {
     '--timeout-ms',
     String(args.timeoutMs)
   ];
+  if (scenario.tagOnly || args.tagOnly) validationArgs.push('--tag-only');
   if (args.applyReview) validationArgs.push('--apply-review');
   if (args.applyReview && args.renderAfterApply) validationArgs.push('--render-after-apply');
   return validationArgs;
@@ -245,7 +250,7 @@ async function main() {
 
   const scenarios = args.matrix
     ? DEFAULT_MATRIX_SCENARIOS
-    : [{ name: 'single', targetIds: args.targetIds, selectedTags: args.selectedTags }];
+    : [{ name: args.tagOnly ? 'single-tag-only' : 'single', targetIds: args.targetIds, selectedTags: args.selectedTags, tagOnly: args.tagOnly }];
   const validations = [];
   for (const scenario of scenarios) {
     validations.push(await runValidationScenario(args, showDir, scenario));

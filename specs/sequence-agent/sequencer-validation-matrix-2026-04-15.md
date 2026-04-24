@@ -191,6 +191,8 @@ Broader current-layout coverage:
 node scripts/native/run-full-handoff-validation.mjs --matrix
 ```
 
+The default matrix covers explicit model target, explicit group target, and tag-only metadata selection. Tag-only validation seeds app metadata for an expected target, then generates from selected tags without putting that target name in the saved design intent.
+
 Acceptance rule:
 
 - native automation must be reachable on `49916`
@@ -198,6 +200,7 @@ Acceptance rule:
 - validation must create or open an isolated sequence under the linked show folder
 - app metadata target intent must be visible in the native validation snapshot
 - generated proposal scope must include the requested target ids and metadata tags
+- tag-only scenarios must prove the generated scope came from selected app metadata tags rather than explicit target text
 - when apply is enabled, review apply must emit a fresh successful apply artifact
 - when render is enabled, xLights render automation must complete
 

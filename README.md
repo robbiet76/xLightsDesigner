@@ -48,7 +48,7 @@ Run the native-to-xLights handoff validation through the wrapper below. It start
 node scripts/native/run-full-handoff-validation.mjs
 ```
 
-For broader coverage of known development layout targets:
+For broader coverage of known development layout targets and tag-only metadata selection:
 
 ```bash
 node scripts/native/run-full-handoff-validation.mjs --matrix
