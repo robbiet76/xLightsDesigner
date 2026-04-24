@@ -8,6 +8,7 @@ import { getModels, getDisplayElements, getEffectDefinitions, getRevision } from
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
 import { buildEffectDefinitionCatalog } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/effect-definition-catalog.js';
 import { executeDirectSequenceRequestOrchestration } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/direct-sequence-orchestrator.js';
+import { STAGE1_TRAINED_EFFECT_BUNDLE } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/generated/stage1-trained-effect-bundle.js';
 import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
 
 const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
@@ -64,6 +65,25 @@ function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
   }
   if (basenameMatch) return basenameMatch;
   throw new Error(`No shared track metadata found for audio file: ${targetPath}`);
+}
+
+function trainedEffectDefinitions() {
+  const effectsByName = STAGE1_TRAINED_EFFECT_BUNDLE?.effectsByName && typeof STAGE1_TRAINED_EFFECT_BUNDLE.effectsByName === 'object'
+    ? STAGE1_TRAINED_EFFECT_BUNDLE.effectsByName
+    : {};
+  return Object.values(effectsByName)
+    .map((row) => ({ effectName: str(row?.effectName), params: [] }))
+    .filter((row) => row.effectName);
+}
+
+function buildNativeEffectCatalog(effectDefinitions = [], deps = DEFAULT_DEPS) {
+  const definitions = Array.isArray(effectDefinitions) && effectDefinitions.length
+    ? effectDefinitions
+    : trainedEffectDefinitions();
+  return deps.buildEffectDefinitionCatalog(definitions, {
+    source: effectDefinitions.length ? 'xlights_effect_definitions' : 'stage1_trained_effect_bundle',
+    loadedAt: new Date().toISOString()
+  });
 }
 
 function parseArgs(argv = []) {
@@ -125,10 +145,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
   const models = Array.isArray(modelsRes?.data?.models) ? modelsRes.data.models : [];
   const displayElements = Array.isArray(displayRes?.data?.elements) ? displayRes.data.elements : [];
   const effectDefinitions = Array.isArray(effectsRes?.data?.effects) ? effectsRes.data.effects : [];
-  const effectCatalog = deps.buildEffectDefinitionCatalog(effectDefinitions, {
-    source: 'native_direct_proposal',
-    loadedAt: new Date().toISOString()
-  });
+  const effectCatalog = buildNativeEffectCatalog(effectDefinitions, deps);
 
   const orchestration = deps.executeDirectSequenceRequestOrchestration({
     requestId: `native-benchmark-${Date.now()}`,

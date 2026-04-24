@@ -87,7 +87,7 @@ test("native direct proposal writes intent and proposal artifacts from project c
       getRevision: async () => ({ data: { revision: "rev-test-1" } }),
       getModels: async () => ({ data: { models: [{ id: "MegaTree", name: "MegaTree", type: "Model" }] } }),
       getDisplayElements: async () => ({ data: { elements: [{ id: "MegaTree", name: "MegaTree", type: "model" }] } }),
-      getEffectDefinitions: async () => ({ data: { effects: [{ effectName: "On", params: [] }] } }),
+      getEffectDefinitions: async () => ({ data: { effects: [] } }),
       buildAnalysisHandoffFromArtifact,
       buildEffectDefinitionCatalog,
       executeDirectSequenceRequestOrchestration,
