@@ -124,6 +124,11 @@ final class ReviewScreenViewModel {
             ? "Pending work is visible and can be evaluated before owned API apply execution."
             : "Project context is required before review becomes actionable."
 
+        let nativeDesignHighlights = [
+            pendingWork?.nativeDesignMood,
+            pendingWork?.nativeDesignTargetScope,
+            pendingWork?.nativeDesignConstraints
+        ].compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         let designHighlights = (pendingWork?.proposalLines.prefix(3).map { String($0) } ?? [])
         let sequenceHighlights: [String] = hasProject
             ? [
@@ -152,7 +157,9 @@ final class ReviewScreenViewModel {
                 summary: hasProject ? (pendingWork?.briefSummary ?? "No design summary available.") : "No design summary available.",
                 highlights: hasProject
                     ? (designHighlights.isEmpty
-                        ? [pendingWork?.moodEnergyArc ?? "Meaning-first direction", pendingWork?.narrativeCues ?? "Proposal remains reviewable", pendingWork?.visualCues ?? "Warnings stay concise"]
+                        ? (nativeDesignHighlights.isEmpty
+                            ? [pendingWork?.moodEnergyArc ?? "Meaning-first direction", pendingWork?.narrativeCues ?? "Proposal remains reviewable", pendingWork?.visualCues ?? "Warnings stay concise"]
+                            : nativeDesignHighlights)
                         : Array(designHighlights))
                     : ["Project required"]
             ),

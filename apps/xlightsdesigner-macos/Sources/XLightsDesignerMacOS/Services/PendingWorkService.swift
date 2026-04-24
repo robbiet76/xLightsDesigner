@@ -37,6 +37,13 @@ struct PendingWorkReadModel: Sendable {
     let intentGoal: String
     let intentTargetIDs: [String]
     let intentSectionCount: Int
+    let nativeDesignGoal: String
+    let nativeDesignMood: String
+    let nativeDesignConstraints: String
+    let nativeDesignTargetScope: String
+    let nativeDesignReferences: String
+    let nativeDesignApprovalNotes: String
+    let nativeDesignUpdatedAt: String
     let directorPreferenceSummary: String
     let directorSummary: String
     let designSceneSummary: String
@@ -64,8 +71,6 @@ struct LocalPendingWorkService: PendingWorkService {
         let artifactsDir = projectDir.appendingPathComponent("artifacts", isDirectory: true)
         let snapshot = project.snapshot.mapValues(\.value)
 
-        guard FileManager.default.fileExists(atPath: artifactsDir.path) else { return nil }
-
         let artifactBrief = try readLatestArtifact(in: artifactsDir.appendingPathComponent("briefs", isDirectory: true))
         let artifactProposal = try readLatestArtifact(in: artifactsDir.appendingPathComponent("proposals", isDirectory: true))
         let artifactIntent = try readLatestArtifact(in: artifactsDir.appendingPathComponent("intent-handoffs", isDirectory: true))
@@ -91,6 +96,14 @@ struct LocalPendingWorkService: PendingWorkService {
         let activeSequencePath = !liveSequencePath.isEmpty
             ? liveSequencePath
             : (preferredSequencePath.isEmpty ? (recentSequences.first ?? "") : preferredSequencePath)
+        let nativeDesignIntent = snapshot["nativeDesignIntent"] as? [String: Any] ?? [:]
+        let nativeDesignGoal = string(nativeDesignIntent["goal"])
+        let nativeDesignMood = string(nativeDesignIntent["mood"])
+        let nativeDesignConstraints = string(nativeDesignIntent["constraints"])
+        let nativeDesignTargetScope = string(nativeDesignIntent["targetScope"])
+        let nativeDesignReferences = string(nativeDesignIntent["references"])
+        let nativeDesignApprovalNotes = string(nativeDesignIntent["approvalNotes"])
+        let nativeDesignUpdatedAt = string(nativeDesignIntent["updatedAt"])
 
         let briefSections = arrayOfStrings(latestBrief?["sections"])
         let proposalLines = arrayOfStrings(latestProposal?["proposalLines"])
@@ -134,24 +147,31 @@ struct LocalPendingWorkService: PendingWorkService {
             activeSequencePath: activeSequencePath.isEmpty ? "No active sequence path" : activeSequencePath,
             recentSequenceCount: recentSequences.count,
             audioPath: audioPath.isEmpty ? "No audio path selected" : audioPath,
-            briefSummary: string(latestBrief?["summary"], fallback: "No creative brief available."),
-            briefGoalsSummary: string(latestBrief?["goalsSummary"], fallback: "No explicit goals captured."),
-            briefInspirationSummary: string(latestBrief?["inspirationSummary"], fallback: "No explicit inspiration captured."),
+            briefSummary: string(latestBrief?["summary"], fallback: nativeDesignGoal.isEmpty ? "No creative brief available." : nativeDesignGoal),
+            briefGoalsSummary: string(latestBrief?["goalsSummary"], fallback: nativeDesignGoal.isEmpty ? "No explicit goals captured." : nativeDesignGoal),
+            briefInspirationSummary: string(latestBrief?["inspirationSummary"], fallback: nativeDesignReferences.isEmpty ? "No explicit inspiration captured." : nativeDesignReferences),
             briefSections: briefSections,
-            moodEnergyArc: string(latestBrief?["moodEnergyArc"], fallback: "No mood/energy arc available."),
-            narrativeCues: string(latestBrief?["narrativeCues"], fallback: "No narrative cues available."),
-            visualCues: string(latestBrief?["visualCues"], fallback: "No visual cues available."),
-            proposalSummary: string(latestProposal?["summary"], fallback: "No proposal bundle available."),
+            moodEnergyArc: string(latestBrief?["moodEnergyArc"], fallback: nativeDesignMood.isEmpty ? "No mood/energy arc available." : nativeDesignMood),
+            narrativeCues: string(latestBrief?["narrativeCues"], fallback: nativeDesignApprovalNotes.isEmpty ? "No narrative cues available." : nativeDesignApprovalNotes),
+            visualCues: string(latestBrief?["visualCues"], fallback: nativeDesignReferences.isEmpty ? "No visual cues available." : nativeDesignReferences),
+            proposalSummary: string(latestProposal?["summary"], fallback: nativeDesignGoal.isEmpty ? "No proposal bundle available." : nativeDesignGoal),
             proposalLines: proposalLines,
             guidedQuestions: arrayOfStrings(latestProposal?["guidedQuestions"]),
             riskNotes: arrayOfStrings(latestProposal?["riskNotes"]),
             proposalLifecycleStatus: string(lifecycle?["status"], fallback: "unknown"),
             estimatedImpact: int(impact?["estimatedImpact"]),
             executionModeSummary: buildExecutionModeSummary(executionPlan: effectiveExecutionPlan),
-            constraintsSummary: buildConstraintsSummary(constraints: constraints),
-            intentGoal: string(latestIntent?["goal"], fallback: "No intent handoff available."),
+            constraintsSummary: buildConstraintsSummary(constraints: constraints, nativeFallback: nativeDesignConstraints),
+            intentGoal: string(latestIntent?["goal"], fallback: nativeDesignGoal.isEmpty ? "No intent handoff available." : nativeDesignGoal),
             intentTargetIDs: intentTargets,
             intentSectionCount: (latestIntent?["scope"] as? [String: Any]).map { arrayOfStrings($0["sections"]).count } ?? 0,
+            nativeDesignGoal: nativeDesignGoal,
+            nativeDesignMood: nativeDesignMood,
+            nativeDesignConstraints: nativeDesignConstraints,
+            nativeDesignTargetScope: nativeDesignTargetScope,
+            nativeDesignReferences: nativeDesignReferences,
+            nativeDesignApprovalNotes: nativeDesignApprovalNotes,
+            nativeDesignUpdatedAt: nativeDesignUpdatedAt,
             directorPreferenceSummary: buildDirectorPreferenceSummary(intentPreferences: directorPreferences, learnedPreferences: latestDirector?["preferences"] as? [String: Any]),
             directorSummary: string(latestDirector?["summary"], fallback: "No director profile available."),
             designSceneSummary: buildSceneSummary(metadata: metadata),
@@ -159,8 +179,8 @@ struct LocalPendingWorkService: PendingWorkService {
             layoutGroupCount: layoutGroupCount,
             musicSectionLabels: sectionArc,
             musicHoldMoments: holdMoments,
-            artifactTimestampSummary: timestamps.last ?? project.updatedAt,
-            translationSource: latestProposal == nil ? "Pending" : "Canonical Plan",
+            artifactTimestampSummary: timestamps.last ?? (nativeDesignUpdatedAt.isEmpty ? project.updatedAt : nativeDesignUpdatedAt),
+            translationSource: latestProposal == nil ? (nativeDesignGoal.isEmpty ? "Pending" : "Native Design Intent") : "Canonical Plan",
             proposalSectionCount: effectiveSectionCount,
             proposalTargetCount: effectiveTargetCount,
             proposalCommandCount: effectiveCommandCount,
@@ -200,8 +220,11 @@ struct LocalPendingWorkService: PendingWorkService {
         return "\(mode), \(passScope), \(targetCount) targets, \(sectionCount) sections"
     }
 
-    private func buildConstraintsSummary(constraints: [String: Any]?) -> String {
-        guard let constraints else { return "No sequencing constraints recorded." }
+    private func buildConstraintsSummary(constraints: [String: Any]?, nativeFallback: String = "") -> String {
+        guard let constraints else {
+            let fallback = nativeFallback.trimmingCharacters(in: .whitespacesAndNewlines)
+            return fallback.isEmpty ? "No sequencing constraints recorded." : fallback
+        }
         let tolerance = string(constraints["changeTolerance"], fallback: "unspecified")
         let preserveTiming = bool(constraints["preserveTimingTracks"]) ? "preserve timing tracks" : "timing tracks may change"
         let globalRewrite = bool(constraints["allowGlobalRewrite"]) ? "global rewrite allowed" : "global rewrite constrained"

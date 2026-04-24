@@ -35,6 +35,7 @@ Phase 2 native design authoring started:
 - native Design now exposes editable design intent fields for goal, mood/style, target scope, constraints, references, and approval notes
 - design intent persists as `nativeDesignIntent` in the active project snapshot
 - native automation snapshots include the current design intent and dirty state
+- Sequence and Review now read `nativeDesignIntent` as pending work even before generated proposal artifacts exist
 
 ## Purpose
 

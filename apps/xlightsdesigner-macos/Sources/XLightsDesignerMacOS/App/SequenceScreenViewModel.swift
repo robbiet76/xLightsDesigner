@@ -265,6 +265,8 @@ final class SequenceScreenViewModel {
             timingSummary = "No timing substrate available."
         }
         let sceneFootprint = pendingWork.map { "\($0.layoutModelCount) models, \($0.layoutGroupCount) groups." } ?? "No scene footprint available."
+        let nativeTargetScope = pendingWork?.nativeDesignTargetScope.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let nativeTargetScopeSummary = nativeTargetScope.isEmpty ? "No native target scope saved." : nativeTargetScope
         let warnings = session.validationIssues.filter { $0.severity != .blocked }.map(\.message)
         let blockers = session.validationIssues.filter { $0.severity == .blocked }.map(\.message)
 
@@ -304,12 +306,12 @@ final class SequenceScreenViewModel {
                 readinessSummary: session.readinessSummary,
                 blockers: hasProject ? blockers : ["Active project required."],
                 warnings: hasProject ? warnings : ["Sequence workflow remains informational without project context."],
-                handoffSummary: pendingWork?.intentGoal ?? "Sequence handoff is unavailable."
+                handoffSummary: pendingWork?.intentGoal ?? pendingWork?.nativeDesignGoal ?? "Sequence handoff is unavailable."
             ),
             detail: SequenceDetailPaneModel(
                 revisionSummary: hasProject ? "Project snapshot currently anchors \(pendingWork?.artifactTimestampSummary ?? project?.updatedAt ?? "unknown revision time")." : "No revision available.",
                 settingsSummary: hasProject ? "Source: \(pendingWork?.translationSource ?? "Pending"). Commands: \(pendingWork?.proposalCommandCount ?? 0). \(projectSequenceSummary)" : "No settings summary.",
-                bindingSummary: hasProject ? "\(targetSummary)\n\nConstraints: \(pendingWork?.constraintsSummary ?? "No sequencing constraints recorded.")" : "No binding available.",
+                bindingSummary: hasProject ? "\(targetSummary)\n\nNative design scope: \(nativeTargetScopeSummary)\n\nConstraints: \(pendingWork?.constraintsSummary ?? "No sequencing constraints recorded.")" : "No binding available.",
                 materializationSummary: hasProject ? "Timing dependency: \(session.timingDependencySummary)\n\nExecution: \(pendingWork?.executionModeSummary ?? "No execution plan available.")" : "No materialization summary.",
                 technicalWarnings: hasProject
                     ? (["Scene footprint: \(sceneFootprint)"] + session.technicalWarnings)
