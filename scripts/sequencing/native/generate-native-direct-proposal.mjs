@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { getModels, getDisplayElements, getRevision } from '../../../apps/xlightsdesigner-ui/api.js';
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
@@ -10,6 +11,14 @@ import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/
 
 const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
+const DEFAULT_DEPS = {
+  getRevision,
+  getModels,
+  getDisplayElements,
+  buildAnalysisHandoffFromArtifact,
+  executeDirectSequenceRequestOrchestration,
+  writeProjectArtifacts
+};
 
 function str(value = '') {
   return String(value || '').trim();
@@ -80,8 +89,20 @@ function parseArgs(argv = []) {
   return out;
 }
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
+export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS) {
+  const projectFile = str(options.projectFile);
+  const prompt = str(options.prompt);
+  const args = {
+    projectFile: projectFile ? path.resolve(projectFile) : '',
+    prompt,
+    appRoot: path.resolve(str(options.appRoot || DEFAULT_APP_ROOT)),
+    endpoint: str(options.endpoint || DEFAULT_ENDPOINT),
+    selectedSections: Array.isArray(options.selectedSections) ? options.selectedSections.map((row) => str(row)).filter(Boolean) : [],
+    selectedTargetIds: Array.isArray(options.selectedTargetIds) ? options.selectedTargetIds.map((row) => str(row)).filter(Boolean) : []
+  };
+  if (!args.projectFile) throw new Error('--project-file is required');
+  if (!args.prompt) throw new Error('--prompt is required');
+
   const projectDoc = readJson(args.projectFile);
   const snapshot = projectDoc?.snapshot && typeof projectDoc.snapshot === 'object' ? projectDoc.snapshot : {};
   const audioPath = str(snapshot.audioPathInput);
@@ -93,14 +114,14 @@ async function main() {
     throw new Error('Shared track record has no persisted analysis artifact.');
   }
 
-  const analysisHandoff = buildAnalysisHandoffFromArtifact(persistedArtifact, null);
-  const revision = await getRevision(args.endpoint);
-  const modelsRes = await getModels(args.endpoint).catch(() => ({ ok: false, data: { models: [] } }));
-  const displayRes = await getDisplayElements(args.endpoint).catch(() => ({ ok: false, data: { elements: [] } }));
+  const analysisHandoff = deps.buildAnalysisHandoffFromArtifact(persistedArtifact, null);
+  const revision = await deps.getRevision(args.endpoint);
+  const modelsRes = await deps.getModels(args.endpoint).catch(() => ({ ok: false, data: { models: [] } }));
+  const displayRes = await deps.getDisplayElements(args.endpoint).catch(() => ({ ok: false, data: { elements: [] } }));
   const models = Array.isArray(modelsRes?.data?.models) ? modelsRes.data.models : [];
   const displayElements = Array.isArray(displayRes?.data?.elements) ? displayRes.data.elements : [];
 
-  const orchestration = executeDirectSequenceRequestOrchestration({
+  const orchestration = deps.executeDirectSequenceRequestOrchestration({
     requestId: `native-benchmark-${Date.now()}`,
     sequenceRevision: str(revision?.data?.revision || snapshot.sequencePathInput || 'unknown'),
     promptText: args.prompt,
@@ -119,7 +140,7 @@ async function main() {
     throw new Error(orchestration?.warnings?.join('\n') || orchestration?.summary || 'Direct sequencing orchestration failed.');
   }
 
-  const writeResult = writeProjectArtifacts({
+  const writeResult = deps.writeProjectArtifacts({
     projectFilePath: args.projectFile,
     artifacts: [orchestration.intentHandoff, orchestration.proposalBundle]
   });
@@ -127,7 +148,7 @@ async function main() {
     throw new Error(writeResult?.error || 'Failed to write project artifacts.');
   }
 
-  process.stdout.write(`${JSON.stringify({
+  return {
     ok: true,
     projectFile: args.projectFile,
     summary: orchestration.summary,
@@ -135,7 +156,19 @@ async function main() {
     proposalArtifactId: orchestration.proposalBundle.artifactId,
     intentArtifactId: orchestration.intentHandoff.artifactId,
     rows: writeResult.rows || []
-  }, null, 2)}\n`);
+  };
 }
 
-await main();
+export async function main(argv = process.argv.slice(2), deps = DEFAULT_DEPS) {
+  return runNativeDirectProposal(parseArgs(argv), deps);
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  try {
+    const result = await main();
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  } catch (error) {
+    process.stderr.write(String(error?.stack || error?.message || error));
+    process.exit(1);
+  }
+}
