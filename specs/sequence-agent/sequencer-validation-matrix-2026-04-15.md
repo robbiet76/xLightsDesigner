@@ -191,6 +191,10 @@ Broader current-layout coverage:
 node scripts/native/run-full-handoff-validation.mjs --matrix
 ```
 
+Default scenario file:
+
+- [full-handoff-validation-scenarios.json](/Users/robterry/Projects/xLightsDesigner/scripts/native/full-handoff-validation-scenarios.json)
+
 The default matrix covers explicit model target, explicit group target, and tag-only metadata selection. Tag-only validation seeds app metadata for an expected target, then generates from selected tags without putting that target name in the saved design intent.
 
 Acceptance rule:

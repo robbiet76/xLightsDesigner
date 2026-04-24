@@ -1,0 +1,26 @@
+{
+  "artifactType": "xlightsdesigner_native_handoff_validation_scenarios_v1",
+  "scenarios": [
+    {
+      "name": "model-star-lead",
+      "targetIds": "Star",
+      "selectedTags": "lead"
+    },
+    {
+      "name": "group-snowflakes-lead",
+      "targetIds": "Snowflakes",
+      "selectedTags": "lead"
+    },
+    {
+      "name": "group-floods-lead",
+      "targetIds": "Floods",
+      "selectedTags": "lead"
+    },
+    {
+      "name": "tag-only-lead",
+      "targetIds": "Star",
+      "selectedTags": "lead",
+      "tagOnly": true
+    }
+  ]
+}

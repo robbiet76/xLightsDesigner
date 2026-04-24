@@ -54,6 +54,8 @@ For broader coverage of known development layout targets and tag-only metadata s
 node scripts/native/run-full-handoff-validation.mjs --matrix
 ```
 
+The default matrix is `scripts/native/full-handoff-validation-scenarios.json`. Use `--matrix-file <path>` to run another scenario set.
+
 ## Initial UI Prototype
 `apps/xlightsdesigner-ui/` contains the initial standalone UI scaffold for xLightsDesigner development.
 

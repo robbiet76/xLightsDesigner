@@ -336,6 +336,8 @@ const proposalValidation = await waitForProposal({
 });
 const validationSnapshot = proposalValidation.snapshot;
 const matchedArtifacts = proposalValidation.matches;
+const matchedProposalArtifactId = str(matchedArtifacts.find((artifact) => str(artifact?.artifactType || artifact?.bundleType) === 'proposal_bundle_v1')?.artifactId);
+const matchedPlanArtifactId = str(matchedArtifacts.find((artifact) => str(artifact?.artifactType) === 'plan_handoff_v1')?.artifactId);
 const reviewReadySnapshot = await waitForReviewReady({
   targetIds,
   selectedTags,
@@ -367,8 +369,8 @@ process.stdout.write(`${JSON.stringify({
   targetIds,
   selectedTags,
   sequenceContext,
-  latestProposalArtifactId: str(matchedArtifacts.find((artifact) => str(artifact?.artifactType || artifact?.bundleType) === 'proposal_bundle_v1')?.artifactId || validationSnapshot?.latestProposalBundle?.artifactId),
-  latestPlanArtifactId: str(matchedArtifacts.find((artifact) => str(artifact?.artifactType) === 'plan_handoff_v1')?.artifactId || validationSnapshot?.latestPlanHandoff?.artifactId),
+  latestProposalArtifactId: matchedProposalArtifactId,
+  latestPlanArtifactId: str(applyValidation?.applyResult?.planId || matchedPlanArtifactId),
   latestIntentArtifactId: str(validationSnapshot?.latestIntentHandoff?.artifactId),
   latestApplyArtifactId: str(applyValidation?.applyResult?.artifactId),
   latestApplyStatus: str(applyValidation?.applyResult?.status),

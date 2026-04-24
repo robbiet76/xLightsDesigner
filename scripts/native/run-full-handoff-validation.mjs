@@ -10,12 +10,7 @@ const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
 const DEFAULT_TARGET_IDS = 'Star';
 const DEFAULT_SELECTED_TAGS = 'lead';
 const NATIVE_LOG_PATH = '/tmp/xld-native-app.log';
-const DEFAULT_MATRIX_SCENARIOS = [
-  { name: 'model-star-lead', targetIds: 'Star', selectedTags: 'lead' },
-  { name: 'group-snowflakes-lead', targetIds: 'Snowflakes', selectedTags: 'lead' },
-  { name: 'group-floods-lead', targetIds: 'Floods', selectedTags: 'lead' },
-  { name: 'tag-only-lead', targetIds: 'Star', selectedTags: 'lead', tagOnly: true }
-];
+const DEFAULT_MATRIX_FILE = path.join(ROOT, 'scripts/native/full-handoff-validation-scenarios.json');
 
 function str(value = '') {
   return String(value || '').trim();
@@ -31,6 +26,7 @@ function usage() {
     '  --selected-tags <tags>         Selected metadata tags. Defaults to lead.',
     '  --tag-only                    Seed expected target metadata, then generate from tags without target text.',
     '  --matrix                       Run the default metadata handoff scenario matrix.',
+    '  --matrix-file <path>           Run scenarios from a JSON matrix file.',
     '  --duration-ms <n>              Validation sequence duration. Defaults to 30000.',
     '  --frame-ms <n>                 Validation sequence frame interval. Defaults to 50.',
     '  --timeout-ms <n>               End-to-end validation timeout. Defaults to 180000.',
@@ -59,7 +55,8 @@ function parseArgs(argv = []) {
     applyReview: true,
     renderAfterApply: true,
     tagOnly: false,
-    matrix: false
+    matrix: false,
+    matrixFile: ''
   };
   for (let index = 0; index < argv.length; index += 1) {
     const token = str(argv[index]);
@@ -78,6 +75,10 @@ function parseArgs(argv = []) {
     else if (token === '--selected-tags') args.selectedTags = next();
     else if (token === '--tag-only') args.tagOnly = true;
     else if (token === '--matrix') args.matrix = true;
+    else if (token === '--matrix-file') {
+      args.matrix = true;
+      args.matrixFile = next();
+    }
     else if (token === '--duration-ms') args.durationMs = Number(next());
     else if (token === '--frame-ms') args.frameMs = Number(next());
     else if (token === '--timeout-ms') args.timeoutMs = Number(next());
@@ -95,6 +96,40 @@ function parseArgs(argv = []) {
   if (!Number.isFinite(args.nativeTimeoutMs) || args.nativeTimeoutMs <= 0) args.nativeTimeoutMs = 60000;
   if (!Number.isFinite(args.xlightsTimeoutMs) || args.xlightsTimeoutMs <= 0) args.xlightsTimeoutMs = 120000;
   return args;
+}
+
+function readJson(filePath = '') {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function normalizeScenario(row = {}, index = 0) {
+  const targetIds = str(row?.targetIds);
+  const selectedTags = str(row?.selectedTags);
+  if (!targetIds) {
+    throw new Error(`Scenario ${index + 1} is missing targetIds.`);
+  }
+  if (!selectedTags) {
+    throw new Error(`Scenario ${index + 1} is missing selectedTags.`);
+  }
+  return {
+    name: str(row?.name) || `scenario-${index + 1}`,
+    targetIds,
+    selectedTags,
+    tagOnly: row?.tagOnly === true
+  };
+}
+
+function loadMatrixScenarios(matrixFile = '') {
+  const filePath = path.resolve(matrixFile || DEFAULT_MATRIX_FILE);
+  const document = readJson(filePath);
+  const scenarios = Array.isArray(document?.scenarios) ? document.scenarios : [];
+  if (!scenarios.length) {
+    throw new Error(`Matrix file has no scenarios: ${filePath}`);
+  }
+  return {
+    filePath,
+    scenarios: scenarios.map(normalizeScenario)
+  };
 }
 
 function run(command, args = [], options = {}) {
@@ -248,8 +283,9 @@ async function main() {
   const xlights = await ensureXlights({ ...args, showDir });
   await run('node', ['scripts/native/automation.mjs', 'refresh-xlights-session']);
 
-  const scenarios = args.matrix
-    ? DEFAULT_MATRIX_SCENARIOS
+  const matrix = args.matrix ? loadMatrixScenarios(args.matrixFile) : null;
+  const scenarios = matrix
+    ? matrix.scenarios
     : [{ name: args.tagOnly ? 'single-tag-only' : 'single', targetIds: args.targetIds, selectedTags: args.selectedTags, tagOnly: args.tagOnly }];
   const validations = [];
   for (const scenario of scenarios) {
@@ -268,6 +304,7 @@ async function main() {
       state: xlights.health?.data?.state || '',
       listenerReachable: xlights.health?.data?.listenerReachable === true
     },
+    ...(matrix ? { matrixFile: matrix.filePath } : {}),
     ...(args.matrix ? { validations } : { validation: validations[0] })
   }, null, 2));
 }
