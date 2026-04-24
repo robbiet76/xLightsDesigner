@@ -1,0 +1,67 @@
+import Foundation
+import Testing
+@testable import XLightsDesignerMacOS
+
+private struct SequenceTestProjectSessionStore: ProjectSessionStore {
+    func loadLastProjectPath() -> String? { nil }
+    func saveLastProjectPath(_ path: String?) {}
+}
+
+private final class StubSequenceProposalService: SequenceProposalService, @unchecked Sendable {
+    private(set) var prompt = ""
+    private(set) var projectFilePath = ""
+
+    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String) async throws -> SequenceProposalGenerationResult {
+        self.projectFilePath = projectFilePath
+        self.prompt = prompt
+        return SequenceProposalGenerationResult(
+            summary: "Generated proposal.",
+            proposalArtifactID: "proposal-1",
+            intentArtifactID: "intent-1",
+            warningCount: 0
+        )
+    }
+}
+
+@MainActor
+@Test func sequenceGeneratesProposalFromNativeDesignIntent() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-sequence-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let projectService = LocalProjectService(projectsRootPath: root.path)
+    let project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Native Test Project \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    var projectWithIntent = project
+    projectWithIntent.snapshot["nativeDesignIntent"] = AnyCodable([
+        "goal": "Make the chorus feel like a clean red and white canopy.",
+        "mood": "Warm, crisp, elegant.",
+        "constraints": "Keep dense sparkle off the singing faces.",
+        "targetScope": "Mega tree, roofline, and window frames.",
+        "references": "Use the warm neighborhood mission as the anchor.",
+        "approvalNotes": "Ready to hand off after one more target pass."
+    ])
+    let workspace = ProjectWorkspace(sessionStore: SequenceTestProjectSessionStore())
+    workspace.setProject(projectWithIntent)
+    let proposalService = StubSequenceProposalService()
+    let model = SequenceScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: projectService,
+        proposalService: proposalService
+    )
+
+    model.generateProposalFromDesignIntent()
+    try await Task.sleep(for: .milliseconds(120))
+
+    #expect(proposalService.projectFilePath == project.projectFilePath)
+    #expect(proposalService.prompt.contains("Goal: Make the chorus feel like a clean red and white canopy."))
+    #expect(proposalService.prompt.contains("Target scope: Mega tree, roofline, and window frames."))
+    #expect(model.isGeneratingProposal == false)
+    #expect(model.transientBanner?.state == .ready)
+}

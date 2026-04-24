@@ -7,6 +7,7 @@ final class SequenceScreenViewModel {
     private let workspace: ProjectWorkspace
     private let pendingWorkService: PendingWorkService
     private let projectService: ProjectService
+    private let proposalService: SequenceProposalService
     private var liveRefreshTask: Task<Void, Never>?
     private var latestPendingWork: PendingWorkReadModel?
 
@@ -14,15 +15,19 @@ final class SequenceScreenViewModel {
     var selectedRowID: SequenceInventoryRowModel.ID?
     var selectedTimingReviewRowID: SequenceTimingReviewRowModel.ID?
     var isRefreshing = false
+    var isGeneratingProposal = false
+    var transientBanner: WorkflowBannerModel?
 
     init(
         workspace: ProjectWorkspace,
         pendingWorkService: PendingWorkService = LocalPendingWorkService(),
-        projectService: ProjectService = LocalProjectService()
+        projectService: ProjectService = LocalProjectService(),
+        proposalService: SequenceProposalService = LocalSequenceProposalService()
     ) {
         self.workspace = workspace
         self.pendingWorkService = pendingWorkService
         self.projectService = projectService
+        self.proposalService = proposalService
         self.screenModel = Self.placeholderScreenModel(project: workspace.activeProject)
         self.selectedRowID = nil
         self.selectedTimingReviewRowID = nil
@@ -182,6 +187,58 @@ final class SequenceScreenViewModel {
         refresh()
     }
 
+    func generateProposalFromDesignIntent() {
+        guard !isGeneratingProposal, let activeProject = workspace.activeProject else { return }
+        let pendingWork = latestPendingWork
+        let prompt = Self.buildNativeDesignPrompt(project: activeProject, pendingWork: pendingWork)
+        guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            transientBanner = WorkflowBannerModel(
+                id: "sequence-proposal-no-intent",
+                text: "Save design intent before generating a sequencing proposal.",
+                state: .blocked
+            )
+            return
+        }
+        isGeneratingProposal = true
+        transientBanner = WorkflowBannerModel(
+            id: "sequence-proposal-running",
+            text: "Generating sequencing proposal from native design intent.",
+            state: .partial
+        )
+        Task {
+            do {
+                let result = try await proposalService.generateProposal(
+                    projectFilePath: activeProject.projectFilePath,
+                    appRootPath: activeProject.appRootPath,
+                    endpoint: AppEnvironment.xlightsOwnedAPIBaseURL,
+                    prompt: prompt
+                )
+                transientBanner = WorkflowBannerModel(
+                    id: "sequence-proposal-success",
+                    text: "Generated proposal \(result.proposalArtifactID.isEmpty ? "" : result.proposalArtifactID). \(result.warningCount) warnings.",
+                    state: .ready
+                )
+                isGeneratingProposal = false
+                refresh()
+            } catch {
+                transientBanner = WorkflowBannerModel(
+                    id: "sequence-proposal-failed",
+                    text: friendlyError(error),
+                    state: .blocked
+                )
+                isGeneratingProposal = false
+            }
+        }
+    }
+
+    private func friendlyError(_ error: Error) -> String {
+        let message = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+        if message.contains("Project snapshot is missing audioPathInput") {
+            return "Choose or analyze audio before generating a sequencing proposal."
+        }
+        return message.isEmpty ? "Proposal generation failed." : message
+    }
+
     private static func placeholderScreenModel(project: ActiveProjectModel?) -> SequenceScreenModel {
         SequenceScreenModel(
             title: "Sequence",
@@ -231,6 +288,25 @@ final class SequenceScreenViewModel {
             inventoryRows: [],
             banners: []
         )
+    }
+
+    private static func buildNativeDesignPrompt(project: ActiveProjectModel, pendingWork: PendingWorkReadModel?) -> String {
+        let intent = project.snapshot["nativeDesignIntent"]?.value as? [String: Any] ?? [:]
+        let goal = string(intent["goal"], fallback: pendingWork?.nativeDesignGoal ?? "")
+        let mood = string(intent["mood"], fallback: pendingWork?.nativeDesignMood ?? "")
+        let targetScope = string(intent["targetScope"], fallback: pendingWork?.nativeDesignTargetScope ?? "")
+        let constraints = string(intent["constraints"], fallback: pendingWork?.nativeDesignConstraints ?? "")
+        let references = string(intent["references"], fallback: pendingWork?.nativeDesignReferences ?? "")
+        let approvalNotes = string(intent["approvalNotes"], fallback: pendingWork?.nativeDesignApprovalNotes ?? "")
+        let lines = [
+            goal.isEmpty ? "" : "Goal: \(goal)",
+            mood.isEmpty ? "" : "Mood and style: \(mood)",
+            targetScope.isEmpty ? "" : "Target scope: \(targetScope)",
+            constraints.isEmpty ? "" : "Constraints: \(constraints)",
+            references.isEmpty ? "" : "References: \(references)",
+            approvalNotes.isEmpty ? "" : "Approval notes: \(approvalNotes)"
+        ].filter { !$0.isEmpty }
+        return lines.joined(separator: "\n")
     }
 
     private static func buildScreenModel(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?, session: SequenceSessionSnapshot) -> SequenceScreenModel {

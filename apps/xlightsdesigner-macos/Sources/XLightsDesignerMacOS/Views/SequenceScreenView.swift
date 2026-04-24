@@ -79,6 +79,9 @@ struct SequenceScreenView: View {
                 ForEach(model.screenModel.banners) { banner in
                     bannerView(banner)
                 }
+                if let banner = model.transientBanner {
+                    bannerView(banner)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 4)
@@ -130,6 +133,11 @@ struct SequenceScreenView: View {
                         Task { await performProjectSequenceAction() }
                     }
                     .disabled(projectSequenceActionDisabled)
+
+                    Button(model.isGeneratingProposal ? "Generating Proposal..." : "Generate Proposal") {
+                        model.generateProposalFromDesignIntent()
+                    }
+                    .disabled(model.isGeneratingProposal || model.screenModel.overview.translationSource == "Canonical Plan")
                 }
                 if !xlightsSessionModel.snapshot.lastSaveSummary.isEmpty {
                     Text(xlightsSessionModel.snapshot.lastSaveSummary)
