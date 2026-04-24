@@ -39,6 +39,7 @@ Phase 2 native design authoring started:
 - assistant context payloads include `designIntent` so the team chat and agent bridge can reason from native authoring state
 - assistant action requests can update `nativeDesignIntent` through the same persistence path as the native editor
 - Sequence can generate proposal artifacts from saved native design intent through the native direct proposal script
+- Sequence blocks native proposal generation until audio and a target project sequence are selected
 - Review blocks apply until a canonical generated proposal with sequence commands exists
 
 ## Purpose
