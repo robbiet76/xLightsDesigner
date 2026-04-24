@@ -65,8 +65,8 @@ final class ReviewScreenViewModel {
                 } else if result.renderFeedbackStatus == "owned_routes_unavailable" {
                     let missing = result.renderFeedbackMissingRequirements.joined(separator: ", ")
                     feedbackSummary = missing.isEmpty
-                        ? " Render feedback unavailable: owned API parity is incomplete."
-                        : " Render feedback unavailable: missing owned routes \(missing)."
+                        ? " Render feedback observation skipped: owned render-feedback routes are unavailable."
+                        : " Render feedback observation skipped: missing owned routes \(missing)."
                 } else if !result.renderFeedbackStatus.isEmpty {
                     feedbackSummary = " Render feedback status: \(result.renderFeedbackStatus)."
                 } else {
@@ -121,7 +121,7 @@ final class ReviewScreenViewModel {
         let pendingSummary = pendingWork?.proposalSummary ?? "There is no pending implementation context yet."
         let targetSequenceSummary = hasProject ? activeSequenceName : "No target sequence."
         let readinessSummary = hasProject
-            ? "Pending work is visible and can be evaluated before native apply execution is added."
+            ? "Pending work is visible and can be evaluated before owned API apply execution."
             : "Project context is required before review becomes actionable."
 
         let designHighlights = (pendingWork?.proposalLines.prefix(3).map { String($0) } ?? [])
@@ -166,7 +166,7 @@ final class ReviewScreenViewModel {
                 blockers: hasProject ? (canApply ? [] : ["No active sequence loaded."]) : ["Project context missing."],
                 warnings: hasProject
                     ? {
-                        var warnings = ["This initial slice establishes the review gate before apply execution is wired."]
+                        var warnings = ["Apply uses the owned xLights API and should be reviewed before it changes the active sequence."]
                         if let pendingWork, pendingWork.riskNotes.isEmpty == false {
                             warnings.append(contentsOf: pendingWork.riskNotes.prefix(3))
                         }
@@ -177,7 +177,7 @@ final class ReviewScreenViewModel {
                     ? "Estimated proposal impact: \(pendingWork?.estimatedImpact ?? 0). Lifecycle: \(pendingWork?.proposalLifecycleStatus ?? "unknown"). Execution: \(pendingWork?.executionModeSummary ?? "No execution plan available.")."
                     : "No implementation impact available.",
                 backupSummary: hasProject
-                    ? "Backup and restore details will surface when native apply actions become active. Current constraints: \(pendingWork?.constraintsSummary ?? "No sequencing constraints recorded.")."
+                    ? "Current constraints: \(pendingWork?.constraintsSummary ?? "No sequencing constraints recorded."). Validate backup expectations before applying to user-selected sequences."
                     : "No backup context available."
             ),
             actions: ReviewActionStateModel(
