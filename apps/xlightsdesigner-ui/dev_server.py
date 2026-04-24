@@ -216,6 +216,7 @@ class DevHandler(SimpleHTTPRequestHandler):
                             "timing.addMarks",
                             "media.getCurrent",
                             "layout.getModels",
+                            "layout.getScene",
                             "elements.getSummary",
                             "effects.getWindow",
                             "effects.applyBatch",

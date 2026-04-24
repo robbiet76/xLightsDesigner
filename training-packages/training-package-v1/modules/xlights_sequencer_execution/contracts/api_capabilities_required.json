@@ -1,22 +1,25 @@
 {
   "requiredCapabilities": [
-    "system.validateCommands",
+    "health",
     "sequence.getRevision",
-    "sequence.setSettings",
-    "transactions.begin",
-    "transactions.commit",
-    "transactions.rollback",
+    "sequence.open",
+    "sequence.save",
+    "sequence.renderCurrent",
+    "sequencing.applyBatchPlan",
+    "jobs.get",
+    "layout.getModels",
+    "layout.getScene",
     "timing.getTracks",
     "timing.getMarks",
-    "effects.list"
+    "effects.getWindow"
   ],
-  "requiredApiVersion": 2,
-  "applyModel": "transactions-only",
-  "sourceSpec": "specs/sequence-agent/xlights-sequencer-control-api-surface-contract.md",
+  "requiredApiVersion": "xlightsdesigner-owned-api",
+  "applyModel": "owned-batch-plan-only",
+  "sourceSpec": "specs/xlightsdesigner-local-completion-roadmap-2026-04-23.md",
   "notes": [
-    "Apply execution must use transactions.begin/stage/commit with expectedRevision.",
-    "system.executePlan is deprecated for sequence_agent runtime flow.",
-    "Post-apply verification reads back timing marks and effects.list results.",
-    "sequence.setSettings is required for sequence-level rendering controls such as supportsModelBlending when broad group coverage is refined by more specific targets."
+    "Apply execution must use /xlightsdesigner/api/sequencing/apply-batch-plan with the expected revision token.",
+    "Unsupported command graphs must fail closed instead of falling back to transaction or legacy automation endpoints.",
+    "Post-apply verification reads back revision state, timing marks, effects windows, and render evidence when available.",
+    "Sequence-level rendering controls are planner context only until the owned API exposes explicit sequence settings mutation."
   ]
 }

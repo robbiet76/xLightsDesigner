@@ -290,6 +290,7 @@ export async function pingCapabilities(endpoint) {
           "timing.addMarks",
           "media.getCurrent",
           "layout.getModels",
+          "layout.getScene",
           "elements.getSummary",
           "effects.getWindow",
           "effects.applyBatch",

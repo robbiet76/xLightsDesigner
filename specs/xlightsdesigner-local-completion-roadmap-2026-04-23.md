@@ -28,6 +28,7 @@ Owned-path cleanup completed after the green proof:
 - active `scripts/xlights-control/run-all.sh` no longer runs legacy regression or transaction suites by default
 - the UI dev proxy no longer exposes `/xlDoAutomation` or ports `49914`/`49913`
 - the active UI health/readme copy now advertises owned `sequencing.applyBatchPlan` plus `jobs.get` instead of legacy `system.executePlan`/`system.validateCommands`
+- the sequencer execution training-package contract now requires the owned batch apply model instead of transactions
 
 ## Purpose
 
