@@ -38,7 +38,21 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
             ]
           }
         }
-      }
+      },
+      effectOutcomeRecords: [
+        {
+          effectName: "Bars",
+          revisionRoles: ["strengthen_lead"],
+          memoryKeys: ["section::section::strengthen_lead::lead_mismatch::Bars"],
+          outcome: { status: "improved", improved: true }
+        },
+        {
+          effectName: "Twinkle",
+          revisionRoles: ["increase_section_contrast"],
+          memoryKeys: ["section::section::increase_section_contrast::weak_section_contrast::Twinkle"],
+          outcome: { status: "unchanged", improved: false }
+        }
+      ]
     }
   });
 
@@ -50,6 +64,10 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
   assert.deepEqual(out.unresolvedSignals, ["lead_mismatch", "flat_development", "weak_section_contrast", "under_coverage"]);
   assert.deepEqual(out.previousEffectNames, ["Shimmer", "Twinkle"]);
   assert.deepEqual(out.previousTargetIds, ["MegaTree", "Roofline"]);
+  assert.deepEqual(out.effectOutcomeMemory.successfulEffects, ["Bars"]);
+  assert.deepEqual(out.effectOutcomeMemory.failedEffects, ["Twinkle"]);
+  assert.deepEqual(out.effectOutcomeMemory.successfulRevisionRoles, ["strengthen_lead"]);
+  assert.deepEqual(out.effectOutcomeMemory.failedRevisionRoles, ["increase_section_contrast"]);
 });
 
 test("buildPriorPassMemory prefers revision delta current values when available", () => {

@@ -559,6 +559,41 @@ test("sequence_agent uses sequencer revision brief to seed execution lines when 
   assert.match(out.executionLines[0], /apply .* effect/i);
 });
 
+test("sequence_agent biases revision effect choice from successful outcome memory", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      goal: "Increase chorus energy on focal props",
+      scope: {
+        targetIds: ["MegaTree", "Roofline"],
+        sections: ["Chorus 1"]
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared" },
+      designerDirection: { artisticCorrection: "Use the prior successful outcome." },
+      sequencerDirection: { executionObjective: "Keep the successful effect family bias." }
+    },
+    priorPassMemory: {
+      artifactType: "sequencer_prior_pass_memory_v1",
+      effectOutcomeMemory: {
+        successfulEffects: ["On"],
+        successfulRevisionRoles: ["strengthen_lead"]
+      }
+    },
+    sourceLines: [],
+    baseRevision: "rev-57",
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.equal(out.metadata.sequencerRevisionBrief.effectOutcomeMemory.successfulEffects[0], "On");
+  assert.match(out.executionLines[0], /apply On effect/i);
+});
+
 test("sequence_agent uses render-driven revision targets to bias effect-strategy seed lines", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

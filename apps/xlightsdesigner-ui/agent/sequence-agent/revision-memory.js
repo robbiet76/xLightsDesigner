@@ -21,11 +21,26 @@ function valuesChanged(current = [], previous = []) {
   return a.some((value, index) => value !== b[index]);
 }
 
+function buildEffectOutcomeMemory(effectOutcomeRecords = []) {
+  const records = arr(effectOutcomeRecords).filter(isPlainObject);
+  const successful = records.filter((row) => row?.outcome?.improved === true || str(row?.outcome?.status) === "improved");
+  const failed = records.filter((row) => row?.outcome?.improved !== true && str(row?.outcome?.status) !== "improved");
+  return {
+    successfulMemoryKeys: uniqueStrings(successful.flatMap((row) => arr(row?.memoryKeys))),
+    failedMemoryKeys: uniqueStrings(failed.flatMap((row) => arr(row?.memoryKeys))),
+    successfulRevisionRoles: uniqueStrings(successful.flatMap((row) => arr(row?.revisionRoles))),
+    failedRevisionRoles: uniqueStrings(failed.flatMap((row) => arr(row?.revisionRoles))),
+    successfulEffects: uniqueStrings(successful.map((row) => row?.effectName)),
+    failedEffects: uniqueStrings(failed.map((row) => row?.effectName))
+  };
+}
+
 export function buildPriorPassMemory({ historySnapshot = null } = {}) {
   const snapshot = isPlainObject(historySnapshot) ? historySnapshot : null;
   const renderCritiqueContext = isPlainObject(snapshot?.renderCritiqueContext) ? snapshot.renderCritiqueContext : null;
   const sequenceRevisionObjective = isPlainObject(snapshot?.sequenceRevisionObjective) ? snapshot.sequenceRevisionObjective : null;
   const priorPlanMetadata = isPlainObject(snapshot?.planHandoff?.metadata) ? snapshot.planHandoff.metadata : null;
+  const effectOutcomeMemory = buildEffectOutcomeMemory(snapshot?.effectOutcomeRecords);
   if (!renderCritiqueContext && !sequenceRevisionObjective) return null;
 
   const revisionDelta = isPlainObject(priorPlanMetadata?.revisionDelta) ? priorPlanMetadata.revisionDelta : null;
@@ -84,6 +99,7 @@ export function buildPriorPassMemory({ historySnapshot = null } = {}) {
     previousTargetIds,
     unresolvedSignals,
     retryPressureSignals,
+    effectOutcomeMemory,
     revisionDeltaSummary: revisionDelta
       ? {
           currentEffectNames: currentDeltaEffects,

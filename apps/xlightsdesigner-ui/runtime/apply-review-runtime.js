@@ -210,9 +210,11 @@ export function createApplyReviewRuntime(deps = {}) {
         state.ui.applyApprovalChecked = false;
       }
       if (applyAuditEntry) {
-        await persistCurrentArtifactsForHistory({ planHandoff, applyResult, historyEntry: applyAuditEntry });
-        pushApplyHistory(applyAuditEntry, { planHandoff, applyResult });
-        await appendDesktopApplyLog(applyAuditEntry);
+        const persistedHistory = await persistCurrentArtifactsForHistory({ planHandoff, applyResult, historyEntry: applyAuditEntry });
+        const storedApplyAuditEntry = persistedHistory?.historyEntry || applyAuditEntry;
+        const effectOutcomeRecords = Array.isArray(persistedHistory?.effectOutcomeRecords) ? persistedHistory.effectOutcomeRecords : [];
+        pushApplyHistory(storedApplyAuditEntry, { planHandoff, applyResult, effectOutcomeRecords });
+        await appendDesktopApplyLog(storedApplyAuditEntry);
         await refreshApplyHistoryFromDesktop(40);
       }
       state.flags.applyInProgress = false;

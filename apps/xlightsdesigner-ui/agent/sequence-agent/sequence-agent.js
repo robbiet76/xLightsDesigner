@@ -500,6 +500,8 @@ function collectDefinedVisualHintBehaviorTextForTargets(targetIds = [], metadata
 }
 
 function inferRevisionBriefPreferredEffects(brief = {}) {
+  const successfulEffects = normArray(brief?.effectOutcomeMemory?.successfulEffects);
+  if (successfulEffects.length) return successfulEffects;
   const summary = `${normText(brief?.artisticGoalSummary)} ${normText(brief?.executionObjective)}`.toLowerCase();
   const motionCharacter = normText(brief?.motionCharacter).toLowerCase();
   const densityCharacter = normText(brief?.densityCharacter).toLowerCase();
@@ -732,6 +734,8 @@ function buildRevisionBriefBehaviorSummary(brief = {}) {
 }
 
 function inferRevisionBriefEffectName(brief = {}) {
+  const successfulEffect = firstAvailableEffect(normArray(brief?.effectOutcomeMemory?.successfulEffects));
+  if (successfulEffect) return successfulEffect;
   const summary = buildRevisionBriefBehaviorSummary(brief);
   const motionCharacter = normText(brief?.motionCharacter).toLowerCase();
   const densityCharacter = normText(brief?.densityCharacter).toLowerCase();

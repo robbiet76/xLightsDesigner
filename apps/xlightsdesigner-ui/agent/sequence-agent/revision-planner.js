@@ -146,6 +146,7 @@ export function buildSequencerRevisionBrief({
     motionCharacter: str(artisticIntent.motionCharacter),
     densityCharacter: str(artisticIntent.densityCharacter),
     targetScope,
+    effectOutcomeMemory: isPlainObject(priorPassMemory?.effectOutcomeMemory) ? priorPassMemory.effectOutcomeMemory : null,
     revisionRoles: uniqueStrings([
       ...arr(feedbackDirection?.revisionRoles),
       ...arr(scope?.revisionRoles),

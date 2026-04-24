@@ -29,6 +29,23 @@ export function createProjectHistoryRuntime(deps = {}) {
       pushDiagnostic("warning", "Project artifact persistence unavailable.", !bridge ? "desktop bridge missing" : "project file path missing");
       return { ok: false, reason: "unavailable" };
     }
+    const context = currentApplyContext();
+    const outcomeRecords = arrify(buildEffectFamilyOutcomeRecords({
+      planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
+      applyResult,
+      renderObservation: state.sequenceAgentRuntime?.renderObservation || null,
+      renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null,
+      sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null,
+      historyEntry,
+      projectKey: context.projectKey,
+      sequencePath: context.sequencePath
+    })).filter((artifact) => artifact && typeof artifact === "object" && typeof artifact.artifactId === "string");
+    const enrichedHistoryEntry = historyEntry && typeof historyEntry === "object"
+      ? {
+          ...historyEntry,
+          effectOutcomeRecordIds: outcomeRecords.map((row) => str(row.artifactId)).filter(Boolean)
+        }
+      : null;
     const artifacts = [
       state.audioAnalysis?.artifact || null,
       buildCurrentDesignSceneContext(),
@@ -43,19 +60,8 @@ export function createProjectHistoryRuntime(deps = {}) {
       state.sequenceAgentRuntime?.renderCritiqueContext || null,
       state.creative?.sequenceArtisticGoal || null,
       state.creative?.sequenceRevisionObjective || null,
-      historyEntry
+      enrichedHistoryEntry
     ].filter((artifact) => artifact && typeof artifact === "object" && typeof artifact.artifactId === "string");
-    const context = currentApplyContext();
-    const outcomeRecords = arrify(buildEffectFamilyOutcomeRecords({
-      planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
-      applyResult,
-      renderObservation: state.sequenceAgentRuntime?.renderObservation || null,
-      renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null,
-      sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null,
-      historyEntry,
-      projectKey: context.projectKey,
-      sequencePath: context.sequencePath
-    })).filter((artifact) => artifact && typeof artifact === "object" && typeof artifact.artifactId === "string");
     artifacts.push(...outcomeRecords);
     if (!artifacts.length) {
       pushDiagnostic("warning", "Project artifact persistence skipped.", "no artifacts were available to write");
@@ -73,7 +79,11 @@ export function createProjectHistoryRuntime(deps = {}) {
           `reason=${str(res?.reason || res?.error || "unknown")} artifacts=${artifacts.length} outcomes=${outcomeRecords.length}`
         );
       }
-      return res;
+      return {
+        ...res,
+        historyEntry: enrichedHistoryEntry || historyEntry || null,
+        effectOutcomeRecords: outcomeRecords
+      };
     } catch (err) {
       pushDiagnostic("warning", "Project artifact persistence failed.", String(err?.message || err));
       return { ok: false, reason: "write_failed" };
@@ -224,6 +234,7 @@ export function createProjectHistoryRuntime(deps = {}) {
   function pushApplyHistory(entry, options = {}) {
     const applyResult = options?.applyResult && typeof options.applyResult === "object" ? options.applyResult : null;
     const planHandoff = options?.planHandoff && typeof options.planHandoff === "object" ? options.planHandoff : null;
+    const effectOutcomeRecords = Array.isArray(options?.effectOutcomeRecords) ? options.effectOutcomeRecords : [];
     state.applyHistory = [entry, ...(state.applyHistory || [])].slice(0, 80);
     state.ui.selectedHistoryEntry = str(entry?.historyEntryId);
     state.ui.reviewHistorySnapshot = {
@@ -240,7 +251,8 @@ export function createProjectHistoryRuntime(deps = {}) {
       renderObservation: state.sequenceAgentRuntime?.renderObservation || null,
       renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null,
       sequenceArtisticGoal: state.creative?.sequenceArtisticGoal || null,
-      sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null
+      sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null,
+      effectOutcomeRecords
     };
     state.ui.selectedHistorySnapshot = state.ui.reviewHistorySnapshot;
   }

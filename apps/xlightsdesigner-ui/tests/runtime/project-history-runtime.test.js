@@ -57,6 +57,8 @@ test("project history runtime persists available artifacts for history", async (
   });
 
   assert.equal(res.ok, true);
+  assert.deepEqual(res.effectOutcomeRecords.map((row) => row.artifactId), ["outcome-1"]);
+  assert.deepEqual(res.historyEntry.effectOutcomeRecordIds, ["outcome-1"]);
   assert.equal(writes.length, 1);
   assert.equal(writes[0].projectFilePath, "/show/project.xdproj");
   assert.deepEqual(
@@ -138,6 +140,32 @@ test("project history runtime loads and selects history snapshots", async () => 
   assert.equal(state.ui.reviewHistorySnapshot.renderCritiqueContext.artifactId, "critique-1");
   assert.equal(state.ui.reviewHistorySnapshot.sequenceArtisticGoal.artifactId, "goal-1");
   assert.equal(state.ui.reviewHistorySnapshot.sequenceRevisionObjective.artifactId, "objective-1");
+});
+
+test("project history runtime keeps immediate outcome records in review snapshots", () => {
+  const state = buildState();
+  state.sequenceAgentRuntime = {
+    renderObservation: { artifactId: "render-1" },
+    renderCritiqueContext: { artifactId: "critique-1" }
+  };
+  const runtime = createProjectHistoryRuntime({
+    state,
+    buildCurrentDesignSceneContext: () => null,
+    buildCurrentMusicDesignContext: () => null,
+    getValidHandoff: () => null
+  });
+
+  runtime.pushApplyHistory(
+    { historyEntryId: "h2" },
+    {
+      planHandoff: { artifactId: "plan-2" },
+      applyResult: { artifactId: "apply-2" },
+      effectOutcomeRecords: [{ artifactId: "outcome-2", artifactType: "effect_family_outcome_record_v1" }]
+    }
+  );
+
+  assert.equal(state.ui.reviewHistorySnapshot.historyEntryId, "h2");
+  assert.equal(state.ui.reviewHistorySnapshot.effectOutcomeRecords[0].artifactId, "outcome-2");
 });
 
 test("project history runtime carries request scope into compact snapshot summaries", () => {

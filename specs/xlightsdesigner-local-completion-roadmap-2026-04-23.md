@@ -70,6 +70,7 @@ Phase 3 proof-loop bridge started:
 - sequencer revision briefs now map prior-pass proof signals into safe focus/revision target hints before realization
 - revision-role planning no longer feeds role-derived hints into parameter-prior guidance; parameter tuning remains deferred
 - durable effect-family outcome records now include revision-attempt summaries, critique-change deltas, and memory keys by scope, critique signal, revision role, and effect
+- immediate review history snapshots now carry effect outcome records into prior-pass memory, and successful outcome effects bias the next revision plan
 
 ## Purpose
 
