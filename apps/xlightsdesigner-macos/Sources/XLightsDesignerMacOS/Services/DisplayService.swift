@@ -4,6 +4,7 @@ protocol DisplayService: Sendable {
     func loadDisplay(for project: ActiveProjectModel?) async throws -> DisplayServiceResult
     func addTag(for project: ActiveProjectModel?, targetIDs: [String], tagName: String, description: String) async throws
     func removeTag(for project: ActiveProjectModel?, targetIDs: [String], tagID: String) async throws
+    func saveTargetPreference(for project: ActiveProjectModel?, targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) async throws
     func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: DisplayLabelColor) async throws
     func deleteTagDefinition(for project: ActiveProjectModel?, tagID: String) async throws
 }
@@ -14,6 +15,8 @@ struct DisplayServiceResult: Sendable {
     let sourceSummary: String
     let banners: [DisplayBannerModel]
     let labelDefinitions: [DisplayLabelDefinitionModel]
+    let targetPreferences: [String: PersistedDisplayTargetPreference]
+    let visualHintDefinitions: [PersistedVisualHintDefinition]
 }
 
 enum DisplayServiceError: LocalizedError {
@@ -144,7 +147,9 @@ struct XLightsDisplayService: DisplayService {
             rows: rows,
             sourceSummary: health?.listenerReachable == true ? "xLights owned API" : "No live xLights source",
             banners: banners,
-            labelDefinitions: labelDefinitions.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            labelDefinitions: labelDefinitions.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending },
+            targetPreferences: metadataDocument.preferencesByTargetId,
+            visualHintDefinitions: metadataDocument.visualHintDefinitions
         )
     }
 
@@ -169,6 +174,17 @@ struct XLightsDisplayService: DisplayService {
     func removeTag(for project: ActiveProjectModel?, targetIDs: [String], tagID: String) async throws {
         guard let project else { throw DisplayServiceError.noActiveProject }
         try metadataStore.removeTag(project: project, targetIDs: targetIDs, tagID: tagID)
+    }
+
+    func saveTargetPreference(for project: ActiveProjectModel?, targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) async throws {
+        guard let project else { throw DisplayServiceError.noActiveProject }
+        try metadataStore.updateTargetPreference(
+            project: project,
+            targetIDs: targetIDs,
+            rolePreference: rolePreference,
+            semanticHints: semanticHints,
+            effectAvoidances: effectAvoidances
+        )
     }
 
     func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: DisplayLabelColor) async throws {

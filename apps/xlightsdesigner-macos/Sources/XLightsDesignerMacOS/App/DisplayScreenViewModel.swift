@@ -4,6 +4,7 @@ import SwiftUI
 
 private let displayMetadataSubjectTypes = ["Model", "Group", "Family"]
 private let displayMetadataCategories = [
+    "Target Intent",
     "Focal Hierarchy",
     "Character Prop Role",
     "Supporting Layer",
@@ -33,6 +34,9 @@ final class DisplayScreenViewModel {
         var category: String = displayMetadataCategories[0]
         var value: String = ""
         var rationale: String = ""
+        var rolePreference: String = ""
+        var semanticHintsText: String = ""
+        var effectAvoidancesText: String = ""
         var targetNames: Set<String> = []
         var targetSearchText: String = ""
 
@@ -83,6 +87,7 @@ final class DisplayScreenViewModel {
     var showMetadataEditorSheet = false
     var metadataEditor = MetadataEditorModel()
     var pendingDeleteRow: DisplayMetadataRowModel?
+    private var latestTargetPreferences: [String: PersistedDisplayTargetPreference] = [:]
 
     var allowedMetadataSubjectTypes: [String] { displayMetadataSubjectTypes }
     var allowedMetadataCategories: [String] { displayMetadataCategories }
@@ -253,7 +258,12 @@ final class DisplayScreenViewModel {
         do {
             let result = try await displayService.loadDisplay(for: activeProject)
             let discoverySummary = displayDiscoveryStore.summary(for: activeProject)
-            let metadataRows = buildMetadataRows(displayRows: result.rows, discoverySummary: discoverySummary)
+            latestTargetPreferences = result.targetPreferences
+            let metadataRows = buildMetadataRows(
+                displayRows: result.rows,
+                discoverySummary: discoverySummary,
+                targetPreferences: result.targetPreferences
+            )
             let validSelection = selectedRowIDs.intersection(Set(metadataRows.map(\.id)))
             if validSelection.isEmpty, let first = metadataRows.first {
                 selectedRowIDs = [first.id]
@@ -279,6 +289,7 @@ final class DisplayScreenViewModel {
             )
             syncSelectedMetadata()
         } catch {
+            latestTargetPreferences = [:]
             screenModel = DisplayScreenModel(
                 header: DisplayHeaderModel(
                     title: "Display",
@@ -379,6 +390,9 @@ final class DisplayScreenViewModel {
             category: row.category,
             value: row.value,
             rationale: row.rationale,
+            rolePreference: targetPreferenceSummary(for: row.linkedTargets, field: \.rolePreference),
+            semanticHintsText: targetPreferenceListSummary(for: row.linkedTargets, field: \.semanticHints),
+            effectAvoidancesText: targetPreferenceListSummary(for: row.linkedTargets, field: \.effectAvoidances),
             targetNames: Set(row.linkedTargets)
         )
         showMetadataEditorSheet = true
@@ -444,6 +458,29 @@ final class DisplayScreenViewModel {
                 targetNames: selectedTargets
             )
             try displayDiscoveryStore.upsertInsight(insight, for: workspace.activeProject)
+            let rolePreference = metadataEditor.rolePreference.trimmingCharacters(in: .whitespacesAndNewlines)
+            let semanticHints = splitList(metadataEditor.semanticHintsText)
+            let effectAvoidances = splitList(metadataEditor.effectAvoidancesText)
+            let editsTargetIntent = metadataEditor.originalID?.hasPrefix("target-preference::") == true
+                || !rolePreference.isEmpty
+                || !semanticHints.isEmpty
+                || !effectAvoidances.isEmpty
+            if editsTargetIntent {
+                Task {
+                    do {
+                        try await displayService.saveTargetPreference(
+                            for: workspace.activeProject,
+                            targetIDs: selectedTargets,
+                            rolePreference: rolePreference.isEmpty ? nil : rolePreference,
+                            semanticHints: semanticHints,
+                            effectAvoidances: effectAvoidances
+                        )
+                        loadDisplay()
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
+                }
+            }
             showMetadataEditorSheet = false
             metadataEditor = MetadataEditorModel()
             loadDisplay()
@@ -488,9 +525,11 @@ final class DisplayScreenViewModel {
 
     private func buildMetadataRows(
         displayRows: [DisplayLayoutRowModel],
-        discoverySummary: DisplayDiscoverySummaryModel
+        discoverySummary: DisplayDiscoverySummaryModel,
+        targetPreferences: [String: PersistedDisplayTargetPreference]
     ) -> [DisplayMetadataRowModel] {
         let labelRows = buildLabelMetadataRows(from: displayRows)
+        let preferenceRows = buildPreferenceMetadataRows(from: targetPreferences, displayRows: displayRows)
 
         let insightRows = discoverySummary.insights.map { insight in
             DisplayMetadataRowModel(
@@ -520,7 +559,7 @@ final class DisplayScreenViewModel {
             )
         }
 
-        return (labelRows + insightRows + proposalRows).sorted {
+        return (labelRows + preferenceRows + insightRows + proposalRows).sorted {
             if $0.status != $1.status {
                 return $0.status == .proposed
             }
@@ -528,6 +567,36 @@ final class DisplayScreenViewModel {
                 return $0.subject.localizedCaseInsensitiveCompare($1.subject) == .orderedAscending
             }
             return $0.category.localizedCaseInsensitiveCompare($1.category) == .orderedAscending
+        }
+    }
+
+    private func buildPreferenceMetadataRows(
+        from targetPreferences: [String: PersistedDisplayTargetPreference],
+        displayRows: [DisplayLayoutRowModel]
+    ) -> [DisplayMetadataRowModel] {
+        let knownTargets = Set(displayRows.map(\.targetName))
+        return targetPreferences.compactMap { targetID, preference in
+            guard knownTargets.contains(targetID) else { return nil }
+            let role = preference.rolePreference?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let semanticHints = (preference.semanticHints ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            let effectAvoidances = (preference.effectAvoidances ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            let valueParts = [
+                role.isEmpty ? "" : "Role: \(role)",
+                semanticHints.isEmpty ? "" : "Hints: \(semanticHints.joined(separator: ", "))",
+                effectAvoidances.isEmpty ? "" : "Avoid: \(effectAvoidances.joined(separator: ", "))"
+            ].filter { !$0.isEmpty }
+            guard !valueParts.isEmpty else { return nil }
+            return DisplayMetadataRowModel(
+                id: "target-preference::\(targetID)",
+                subject: targetID,
+                subjectType: "Model",
+                category: "Target Intent",
+                value: valueParts.joined(separator: ". "),
+                status: .confirmed,
+                source: .userAndAgent,
+                rationale: "App-owned model-level intent extension for sequencer target resolution.",
+                linkedTargets: [targetID]
+            )
         }
     }
 
@@ -881,6 +950,31 @@ final class DisplayScreenViewModel {
             .lowercased()
             .replacingOccurrences(of: "[^a-z0-9]+", with: "_", options: .regularExpression)
             .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+    }
+
+    private func splitList(_ value: String) -> [String] {
+        value
+            .components(separatedBy: CharacterSet(charactersIn: ",\n"))
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .removingDuplicates()
+    }
+
+    private func targetPreferenceSummary(for targetNames: [String], field: KeyPath<PersistedDisplayTargetPreference, String?>) -> String {
+        targetNames
+            .compactMap { latestTargetPreferences[$0]?[keyPath: field]?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .removingDuplicates()
+            .joined(separator: ", ")
+    }
+
+    private func targetPreferenceListSummary(for targetNames: [String], field: KeyPath<PersistedDisplayTargetPreference, [String]?>) -> String {
+        targetNames
+            .flatMap { latestTargetPreferences[$0]?[keyPath: field] ?? [] }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .removingDuplicates()
+            .joined(separator: ", ")
     }
 
     private func normalizedFamilyBaseName(for value: String) -> String {

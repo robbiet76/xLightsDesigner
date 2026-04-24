@@ -333,6 +333,20 @@ struct DisplayScreenView: View {
                     TextField("Optional supporting note", text: $model.metadataEditor.rationale, axis: .vertical)
                         .lineLimit(2...4)
                 }
+                GridRow {
+                    Text("Role")
+                    TextField("lead, support, frame, background", text: $model.metadataEditor.rolePreference)
+                }
+                GridRow {
+                    Text("Hints")
+                    TextField("character, outline, sparkle", text: $model.metadataEditor.semanticHintsText, axis: .vertical)
+                        .lineLimit(2...3)
+                }
+                GridRow {
+                    Text("Avoid")
+                    TextField("effects or looks to avoid", text: $model.metadataEditor.effectAvoidancesText, axis: .vertical)
+                        .lineLimit(2...3)
+                }
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -378,7 +392,7 @@ struct DisplayScreenView: View {
             }
         }
         .padding(24)
-        .frame(minWidth: 620, minHeight: 320)
+        .frame(minWidth: 620, minHeight: 520)
     }
 
     private var discoveryProposalSheet: some View {
