@@ -406,6 +406,16 @@ final class AppModel {
             designScreenModel.applyDesignIntentPayload(request.payload)
         case "generate_sequence_proposal":
             sequenceScreenModel.generateProposalFromDesignIntent()
+        case "propose_display_metadata_from_layout":
+            displayScreenModel.proposeMetadataFromLayout()
+        case "apply_display_metadata_proposals":
+            Task {
+                do {
+                    try await displayScreenModel.promoteDiscoveryProposals()
+                } catch {
+                    displayScreenModel.errorMessage = error.localizedDescription
+                }
+            }
         case "select_workflow":
             break
         default:

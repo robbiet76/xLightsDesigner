@@ -1,0 +1,80 @@
+import Foundation
+import Testing
+@testable import XLightsDesignerMacOS
+
+@MainActor
+@Test func assistantActionCanSeedDisplayMetadataFromLayout() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-assistant-action-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let projectService = LocalProjectService(projectsRootPath: root.path)
+    let project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Assistant Display \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    let model = AppModel()
+    model.workspace.setProject(project)
+    model.displayScreenModel.screenModel = DisplayScreenModel(
+        header: DisplayHeaderModel(
+            title: "Display",
+            subtitle: "",
+            activeProjectName: project.projectName,
+            sourceSummary: "test"
+        ),
+        readinessSummary: DisplayReadinessSummaryModel(
+            state: .needsReview,
+            totalTargets: 2,
+            readyCount: 0,
+            unresolvedCount: 2,
+            orphanCount: 0,
+            explanationText: "",
+            nextStepText: ""
+        ),
+        rows: [
+            assistantActionDisplayRow(name: "Snowflakes", type: "ModelGroup", members: ["Snowflake-01", "Snowflake-02"]),
+            assistantActionDisplayRow(name: "Snowflake-01", type: "Custom", members: []),
+            assistantActionDisplayRow(name: "Snowflake-02", type: "Custom", members: [])
+        ],
+        metadataRows: [],
+        overviewCards: [],
+        selectedMetadata: .none(""),
+        banners: [],
+        labelDefinitions: [],
+        discoveryProposals: []
+    )
+
+    model.applyAssistantActionRequest(AssistantActionRequestResult(
+        actionType: "propose_display_metadata_from_layout",
+        payload: [:],
+        reason: "User asked to seed display metadata from the layout."
+    ))
+
+    let summary = LocalDisplayDiscoveryStateStore().summary(for: project)
+    #expect(summary.proposedTags.map(\.tagName) == ["Snowflakes"])
+    #expect(summary.proposedTags.first?.targetNames == ["Snowflake-01", "Snowflake-02"])
+}
+
+private func assistantActionDisplayRow(name: String, type: String, members: [String]) -> DisplayLayoutRowModel {
+    DisplayLayoutRowModel(
+        id: name,
+        targetName: name,
+        targetType: type,
+        nodeCount: 100,
+        positionX: 0,
+        positionY: 0,
+        positionZ: 0,
+        width: 1,
+        height: 1,
+        depth: 0,
+        labelDefinitions: [],
+        submodelCount: 0,
+        directGroupMembers: members,
+        activeGroupMembers: members,
+        flattenedGroupMembers: members,
+        flattenedAllGroupMembers: members
+    )
+}

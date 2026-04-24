@@ -27,7 +27,10 @@ const ACTION_REQUEST_TYPES = new Set([
   "refresh_current_workflow",
   "refresh_all",
   "refresh_xlights_session",
-  "open_settings"
+  "open_settings",
+  "generate_sequence_proposal",
+  "propose_display_metadata_from_layout",
+  "apply_display_metadata_proposals"
 ]);
 
 function str(value = "") {
@@ -94,7 +97,7 @@ export function validateAppAssistantResult(payload = {}) {
   if (obj.artifactCard != null && !isPlainObject(obj.artifactCard)) errors.push("artifactCard must be an object when provided");
   if (isPlainObject(obj.actionRequest)) {
     const actionType = str(obj.actionRequest.actionType);
-    if (!ACTION_REQUEST_TYPES.has(actionType)) errors.push("actionRequest.actionType must be select_workflow|refresh_current_workflow|refresh_all|refresh_xlights_session|open_settings");
+    if (!ACTION_REQUEST_TYPES.has(actionType)) errors.push("actionRequest.actionType must be select_workflow|refresh_current_workflow|refresh_all|refresh_xlights_session|open_settings|generate_sequence_proposal|propose_display_metadata_from_layout|apply_display_metadata_proposals");
     if (obj.actionRequest.payload != null && !isPlainObject(obj.actionRequest.payload)) errors.push("actionRequest.payload must be an object when provided");
   }
   return errors;
