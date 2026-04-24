@@ -653,6 +653,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             "ownedRenderFeedbackCapabilities": feedbackCapabilities,
             "recentPersistenceDiagnostics": snapshot["recentPersistenceDiagnostics"] ?? [],
             "pageStates": [
+                "design": designSnapshot(),
                 "sequence": sequenceSnapshot(),
                 "review": reviewSnapshot(),
                 "history": historySnapshot()

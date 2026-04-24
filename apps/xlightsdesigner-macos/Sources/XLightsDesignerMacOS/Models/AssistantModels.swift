@@ -147,6 +147,14 @@ struct AssistantContextModel {
     let workflowPhaseOutputSummary: String
     let focusedSummary: String
     let projectMissionDocument: String
+    let designIntentGoal: String
+    let designIntentMood: String
+    let designIntentConstraints: String
+    let designIntentTargetScope: String
+    let designIntentReferences: String
+    let designIntentApprovalNotes: String
+    let designIntentUpdatedAt: String
+    let designIntentDirty: Bool
     let rollingConversationSummary: String
     let activeSequenceLoaded: Bool
     let planOnlyMode: Bool
@@ -198,6 +206,14 @@ struct AssistantContextModel {
         workflowPhaseOutputSummary: String = "",
         focusedSummary: String,
         projectMissionDocument: String = "",
+        designIntentGoal: String = "",
+        designIntentMood: String = "",
+        designIntentConstraints: String = "",
+        designIntentTargetScope: String = "",
+        designIntentReferences: String = "",
+        designIntentApprovalNotes: String = "",
+        designIntentUpdatedAt: String = "",
+        designIntentDirty: Bool = false,
         rollingConversationSummary: String = "",
         activeSequenceLoaded: Bool,
         planOnlyMode: Bool,
@@ -248,6 +264,14 @@ struct AssistantContextModel {
         self.workflowPhaseOutputSummary = workflowPhaseOutputSummary
         self.focusedSummary = focusedSummary
         self.projectMissionDocument = projectMissionDocument
+        self.designIntentGoal = designIntentGoal
+        self.designIntentMood = designIntentMood
+        self.designIntentConstraints = designIntentConstraints
+        self.designIntentTargetScope = designIntentTargetScope
+        self.designIntentReferences = designIntentReferences
+        self.designIntentApprovalNotes = designIntentApprovalNotes
+        self.designIntentUpdatedAt = designIntentUpdatedAt
+        self.designIntentDirty = designIntentDirty
         self.rollingConversationSummary = rollingConversationSummary
         self.activeSequenceLoaded = activeSequenceLoaded
         self.planOnlyMode = planOnlyMode
@@ -304,6 +328,16 @@ struct AssistantContextModel {
             "focusedSummary": focusedSummary,
             "projectMission": [
                 "document": projectMissionDocument
+            ],
+            "designIntent": [
+                "goal": designIntentGoal,
+                "mood": designIntentMood,
+                "constraints": designIntentConstraints,
+                "targetScope": designIntentTargetScope,
+                "references": designIntentReferences,
+                "approvalNotes": designIntentApprovalNotes,
+                "updatedAt": designIntentUpdatedAt,
+                "isDirty": designIntentDirty
             ],
             "rollingConversationSummary": rollingConversationSummary,
             "activeSequenceLoaded": activeSequenceLoaded,

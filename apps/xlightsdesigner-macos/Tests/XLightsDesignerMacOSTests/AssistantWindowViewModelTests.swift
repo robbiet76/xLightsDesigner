@@ -24,6 +24,8 @@ struct AssistantWindowViewModelTests {
             workflowName: "Audio",
             route: "audio",
             focusedSummary: "Candy Cane Lane",
+            designIntentGoal: "Make the chorus feel like a clean red and white canopy.",
+            designIntentMood: "Warm, crisp, elegant.",
             activeSequenceLoaded: false,
             planOnlyMode: false
         )
@@ -40,6 +42,10 @@ struct AssistantWindowViewModelTests {
         #expect(model.previousResponseID == "resp-1")
         #expect(execution.lastUserMessage == "Help me")
         #expect(execution.lastContext?.route == "audio")
+        let payload = execution.lastContext?.asPayload()
+        let designIntent = payload?["designIntent"] as? [String: Any]
+        #expect(designIntent?["goal"] as? String == "Make the chorus feel like a clean red and white canopy.")
+        #expect(designIntent?["mood"] as? String == "Warm, crisp, elegant.")
     }
 
     @Test func skipsFollowUpIntroWhenUserDirectlyAddressesSpecialist() async {

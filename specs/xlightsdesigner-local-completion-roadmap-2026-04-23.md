@@ -36,6 +36,7 @@ Phase 2 native design authoring started:
 - design intent persists as `nativeDesignIntent` in the active project snapshot
 - native automation snapshots include the current design intent and dirty state
 - Sequence and Review now read `nativeDesignIntent` as pending work even before generated proposal artifacts exist
+- assistant context payloads include `designIntent` so the team chat and agent bridge can reason from native authoring state
 
 ## Purpose
 

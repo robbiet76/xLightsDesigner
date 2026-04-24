@@ -149,6 +149,7 @@ final class AppModel {
         }
         let xlights = xlightsSessionModel.snapshot
         let sequence = sequenceScreenModel.screenModel
+        let designIntent = designScreenModel.intentDraft
         let phase = currentWorkflowPhase()
         return AssistantContextModel(
             activeProjectName: workspace.activeProject?.projectName ?? "No Project",
@@ -163,6 +164,14 @@ final class AppModel {
             workflowPhaseOutputSummary: currentPhaseOutputSummary(for: phase),
             focusedSummary: focusedSummary(),
             projectMissionDocument: projectBrief?.document ?? "",
+            designIntentGoal: designIntent.goal,
+            designIntentMood: designIntent.mood,
+            designIntentConstraints: designIntent.constraints,
+            designIntentTargetScope: designIntent.targetScope,
+            designIntentReferences: designIntent.references,
+            designIntentApprovalNotes: designIntent.approvalNotes,
+            designIntentUpdatedAt: designIntent.updatedAt,
+            designIntentDirty: designScreenModel.intentDraft != designScreenModel.savedIntentDraft,
             rollingConversationSummary: assistantModel.rollingConversationSummary,
             activeSequenceLoaded: sequenceScreenModel.screenModel.hasLiveSequence,
             planOnlyMode: sequenceScreenModel.screenModel.planOnlyMode,
@@ -227,6 +236,8 @@ final class AppModel {
             let summary = displayDiscoveryStore.summary(for: workspace.activeProject)
             return "\(summary.insights.count) insights, \(summary.unresolvedBranches.count) unresolved branches."
         case .design:
+            let nativeGoal = designScreenModel.intentDraft.goal.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !nativeGoal.isEmpty { return nativeGoal }
             let summary = designScreenModel.screenModel.proposal.proposalSummary.trimmingCharacters(in: .whitespacesAndNewlines)
             return summary.isEmpty ? "No design handoff summary yet." : summary
         case .sequencing:
