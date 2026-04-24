@@ -27,7 +27,16 @@ struct AssistantWindowViewModelTests {
             designIntentGoal: "Make the chorus feel like a clean red and white canopy.",
             designIntentMood: "Warm, crisp, elegant.",
             activeSequenceLoaded: false,
-            planOnlyMode: false
+            planOnlyMode: false,
+            displayMetadataRows: [[
+                "subject": "Snowflakes",
+                "subjectType": "Tag",
+                "category": "Semantic Tag",
+                "value": "Repeated prop family useful for accents.",
+                "status": "Confirmed",
+                "linkedTargetCount": "10",
+                "linkedTargetSample": "Snowflake-01, Snowflake-02"
+            ]]
         )
         model.loadConversationIfNeeded(context: context, project: nil as ActiveProjectModel?)
         model.draft = "Help me"
@@ -46,6 +55,10 @@ struct AssistantWindowViewModelTests {
         let designIntent = payload?["designIntent"] as? [String: Any]
         #expect(designIntent?["goal"] as? String == "Make the chorus feel like a clean red and white canopy.")
         #expect(designIntent?["mood"] as? String == "Warm, crisp, elegant.")
+        let display = payload?["display"] as? [String: Any]
+        let metadataRows = display?["metadataRows"] as? [[String: String]]
+        #expect(metadataRows?.first?["subject"] == "Snowflakes")
+        #expect(metadataRows?.first?["linkedTargetCount"] == "10")
     }
 
     @Test func skipsFollowUpIntroWhenUserDirectlyAddressesSpecialist() async {

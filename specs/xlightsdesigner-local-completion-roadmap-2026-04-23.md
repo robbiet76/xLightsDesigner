@@ -75,6 +75,7 @@ Sequencing proof-loop progress:
 - native Display now surfaces persisted project display labels as confirmed metadata rows so applied layout proposals remain visible after promotion into the active metadata store
 - native automation can seed layout-derived Display metadata proposals, promote them into confirmed project metadata, and snapshot confirmed/proposed Display row counts for validation
 - assistant action requests can now seed and promote Display metadata through the same native paths, with explicit approval required before promotion
+- assistant context now carries confirmed Display metadata rows, including meanings and linked target coverage, so agents can reason from promoted app-owned metadata instead of only raw layout names
 - sequencer revision planning now maps unresolved prior-pass proof signals into bounded revision roles so the next pass can bias realization from the proof loop
 - sequencer revision briefs now map prior-pass proof signals into safe focus/revision target hints before realization
 - revision-role planning no longer feeds role-derived hints into parameter-prior guidance; parameter tuning remains deferred

@@ -120,6 +120,17 @@ final class AppModel {
         let xlightsDerivedMetadata = xlightsDerivedMetadataService.derive(from: layoutRows)
         let labeledTargetCount = layoutRows.filter { !$0.labelDefinitions.isEmpty }.count
         let allLabelNames = Set(displayScreenModel.screenModel.labelDefinitions.map(\.name))
+        let displayMetadataRows = displayScreenModel.screenModel.metadataRows.prefix(24).map { row in
+            [
+                "subject": row.subject,
+                "subjectType": row.subjectType,
+                "category": row.category,
+                "value": row.value,
+                "status": row.status.rawValue,
+                "linkedTargetCount": "\(row.linkedTargetCount)",
+                "linkedTargetSample": row.linkedTargets.prefix(8).joined(separator: ", ")
+            ]
+        }
         let discoverySummary = displayDiscoveryStore.summary(for: workspace.activeProject)
         let discoveryCandidates = buildDisplayDiscoveryCandidates(from: layoutRows, discoverySummary: discoverySummary)
         let discoveryFamilies = xlightsDerivedMetadata.families.map(\.payload)
@@ -179,6 +190,7 @@ final class AppModel {
             displayTargetCount: layoutRows.count,
             displayLabeledTargetCount: labeledTargetCount,
             displayLabelNames: allLabelNames.sorted(),
+            displayMetadataRows: displayMetadataRows,
             selectedDisplaySubject: selectedDisplaySubject,
             selectedDisplayLabels: selectedDisplayLabels.sorted(),
             displayDiscoveryCandidates: discoveryCandidates,

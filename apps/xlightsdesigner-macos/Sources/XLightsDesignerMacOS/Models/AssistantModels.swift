@@ -162,6 +162,7 @@ struct AssistantContextModel {
     let displayTargetCount: Int
     let displayLabeledTargetCount: Int
     let displayLabelNames: [String]
+    let displayMetadataRows: [[String: String]]
     let selectedDisplaySubject: String
     let selectedDisplayLabels: [String]
     let displayDiscoveryCandidates: [[String: String]]
@@ -221,6 +222,7 @@ struct AssistantContextModel {
         displayTargetCount: Int = 0,
         displayLabeledTargetCount: Int = 0,
         displayLabelNames: [String] = [],
+        displayMetadataRows: [[String: String]] = [],
         selectedDisplaySubject: String = "",
         selectedDisplayLabels: [String] = [],
         displayDiscoveryCandidates: [[String: String]] = [],
@@ -279,6 +281,7 @@ struct AssistantContextModel {
         self.displayTargetCount = displayTargetCount
         self.displayLabeledTargetCount = displayLabeledTargetCount
         self.displayLabelNames = displayLabelNames
+        self.displayMetadataRows = displayMetadataRows
         self.selectedDisplaySubject = selectedDisplaySubject
         self.selectedDisplayLabels = selectedDisplayLabels
         self.displayDiscoveryCandidates = displayDiscoveryCandidates
@@ -347,6 +350,7 @@ struct AssistantContextModel {
                 "targetCount": displayTargetCount,
                 "labeledTargetCount": displayLabeledTargetCount,
                 "labelNames": displayLabelNames,
+                "metadataRows": displayMetadataRows,
                 "selectedSubject": selectedDisplaySubject,
                 "selectedLabels": selectedDisplayLabels,
                 "displayDiscoveryCandidates": displayDiscoveryCandidates,

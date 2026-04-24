@@ -199,6 +199,9 @@ function compactContext(context = {}) {
       targetCount: Number(display.targetCount || 0),
       labeledTargetCount: Number(display.labeledTargetCount || 0),
       labelNames: limitStrings(display.labelNames, 8),
+      metadataRows: limitObjects(display.metadataRows, 16, [
+        'subject', 'subjectType', 'category', 'value', 'status', 'linkedTargetCount', 'linkedTargetSample'
+      ]),
       selectedSubject: String(display.selectedSubject || '').trim(),
       selectedLabels: limitStrings(display.selectedLabels, 6)
     },
@@ -601,6 +604,9 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
   const existingDisplayUnderstanding = Array.isArray(c?.displayDiscovery?.insights) && c.displayDiscovery.insights.length
     ? `Current display understanding:\n${c.displayDiscovery.insights.map((row) => `- ${String(row.subject || "").trim()} [${String(row.category || "").trim()}]: ${String(row.value || "").trim()}`).join('\n')}`
     : "";
+  const confirmedDisplayMetadata = Array.isArray(c?.display?.metadataRows) && c.display.metadataRows.length
+    ? `Confirmed display metadata:\n${c.display.metadataRows.slice(0, 16).map((row) => `- ${String(row.subject || "").trim()} [${String(row.category || "").trim()}, ${String(row.status || "").trim()}]: ${String(row.value || "").trim()} (${String(row.linkedTargetCount || "0").trim()} targets)`).join('\n')}`
+    : "";
   const unresolvedDisplayBranches = Array.isArray(c?.displayDiscovery?.unresolvedBranches) && c.displayDiscovery.unresolvedBranches.length
     ? `Current unresolved display branches:\n${c.displayDiscovery.unresolvedBranches.map((row) => `- ${String(row || "").trim()}`).join('\n')}`
     : "";
@@ -751,6 +757,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     unresolvedDisplayBranches,
     resolvedDisplayBranches,
     projectMissionSummary ? `Current project mission:\n${projectMissionSummary}` : 'Current project mission: not captured yet.',
+    confirmedDisplayMetadata,
     discoveryGuidance,
     `Context: ${JSON.stringify(promptContext)}`
   ].filter(Boolean).join('\n');
