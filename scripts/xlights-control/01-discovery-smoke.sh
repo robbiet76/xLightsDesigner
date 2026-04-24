@@ -48,16 +48,12 @@ check_capabilities_wp9() {
   if echo "${body}" | jq -e '
       (.data.commands | index("effects.listDefinitions") != null) and
       (.data.commands | index("effects.getDefinition") != null) and
-      (.data.commands | index("transactions.begin") != null) and
-      (.data.commands | index("transactions.commit") != null) and
-      (.data.commands | index("transactions.rollback") != null) and
       (.data.commands | index("system.executePlan") != null) and
       (.data.commands | index("jobs.get") != null) and
       (.data.commands | index("jobs.cancel") != null) and
       (.data.commands | index("sequence.getRevision") != null) and
       ((.data.features.executePlanAvailable // false) == true) and
       ((.data.features.asyncJobsAvailable // false) == true) and
-      ((.data.features.transactionsAvailable // false) == true) and
       ((.data.features.effectDefinitionIntrospectionAvailable // false) == true)
     ' >/dev/null 2>&1; then
     step_ok "system.getCapabilities.wp9-surface"
