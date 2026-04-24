@@ -34,6 +34,7 @@ import { buildArtifactRefs, buildHistoryEntry, buildHistorySnapshotSummary } fro
 import { buildRenderObservationFromSamples, buildRenderSamplingPlan } from '../../../apps/xlightsdesigner-ui/runtime/render-observation-runtime.js';
 import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/orchestrator.js';
 import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
+import { loadProjectDisplayMetadataAssignments } from './project-display-metadata.mjs';
 
 const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
@@ -332,6 +333,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
   ]);
 
   currentStage = 'build_sequence_plan';
+  const metadataAssignments = loadProjectDisplayMetadataAssignments(projectFile);
   const commandsPlan = buildSequenceAgentPlan({
     analysisHandoff,
     intentHandoff: inputs.reviewIntentHandoff,
@@ -345,7 +347,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     groupIds: [],
     groupsById: {},
     submodelsById: {},
-    metadataAssignments: [],
+    metadataAssignments,
     timingOwnership: [],
     allowTimingWrites: true
   });
@@ -437,6 +439,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       renderCurrentError: renderCurrent.error,
       summary: fallback.summary,
       applyResultId: str(applyResult?.artifactId),
+      metadataAssignmentCount: metadataAssignments.length,
       practicalValidationSummary: summarizePracticalValidation(applyResult?.practicalValidation),
       renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),
       renderFeedbackStatus: renderCurrent.error
@@ -504,6 +507,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     renderCurrentError: renderCurrent.error,
     summary: str(commandsPlan?.summary || inputs.proposalBundle?.summary || 'Applied pending work.'),
     applyResultId: str(applyResult?.artifactId),
+    metadataAssignmentCount: metadataAssignments.length,
     practicalValidationSummary: summarizePracticalValidation(applyResult?.practicalValidation),
     renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),
     renderFeedbackStatus: renderCurrent.error

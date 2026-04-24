@@ -10,6 +10,7 @@ import { buildEffectDefinitionCatalog } from '../../../apps/xlightsdesigner-ui/a
 import { executeDirectSequenceRequestOrchestration } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/direct-sequence-orchestrator.js';
 import { STAGE1_TRAINED_EFFECT_BUNDLE } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/generated/stage1-trained-effect-bundle.js';
 import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
+import { loadProjectDisplayMetadataAssignments } from './project-display-metadata.mjs';
 
 const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
@@ -65,35 +66,6 @@ function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
   }
   if (basenameMatch) return basenameMatch;
   throw new Error(`No shared track metadata found for audio file: ${targetPath}`);
-}
-
-function loadProjectDisplayMetadataAssignments(projectFile = '') {
-  const projectDir = path.dirname(str(projectFile));
-  const metadataPath = path.join(projectDir, 'layout', 'layout-metadata.json');
-  if (!fs.existsSync(metadataPath)) return [];
-  const document = readJson(metadataPath);
-  const tags = Array.isArray(document?.tags) ? document.tags : [];
-  const tagById = new Map(tags.map((tag) => [str(tag?.id), tag]).filter(([id]) => id));
-  const targetTags = document?.targetTags && typeof document.targetTags === 'object' ? document.targetTags : {};
-  return Object.entries(targetTags)
-    .map(([targetId, tagIds]) => {
-      const resolvedTags = Array.isArray(tagIds)
-        ? tagIds.map((tagId) => tagById.get(str(tagId))).filter(Boolean)
-        : [];
-      const tagNames = resolvedTags.map((tag) => str(tag?.name)).filter(Boolean);
-      if (!str(targetId) || !tagNames.length) return null;
-      const semanticHints = resolvedTags
-        .map((tag) => str(tag?.description))
-        .filter(Boolean);
-      return {
-        targetId: str(targetId),
-        tags: tagNames,
-        semanticHints,
-        source: 'xlightsdesigner_project_display_metadata'
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => a.targetId.localeCompare(b.targetId));
 }
 
 function trainedEffectDefinitions() {
