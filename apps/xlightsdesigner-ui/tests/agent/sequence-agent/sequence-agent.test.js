@@ -656,6 +656,7 @@ test("sequence_agent uses revision roles to bias inferred effect families", () =
   assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionRoles, ["reduce_competing_support"]);
   assert.match(out.executionLines[0], /apply .* effect/i);
   assert.doesNotMatch(out.executionLines[0], /apply Bars effect/i);
+  assert.deepEqual(out.metadata.effectStrategy.seedRecommendations[0].parameterPriorGuidance.desiredBehaviorHints, []);
 });
 
 test("sequence_agent does not let revision roles override explicit brief motion cues", () => {

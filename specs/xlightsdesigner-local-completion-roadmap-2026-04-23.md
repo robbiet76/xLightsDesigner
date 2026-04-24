@@ -68,6 +68,7 @@ Phase 3 proof-loop bridge started:
 - native History now flags consecutive review-pass validation instability so repeated proof-loop failures are visible before another apply
 - sequencer revision planning now maps unresolved prior-pass proof signals into bounded revision roles so the next pass can bias realization from the proof loop
 - sequencer revision briefs now map prior-pass proof signals into safe focus/revision target hints before realization
+- revision-role planning no longer feeds role-derived hints into parameter-prior guidance; parameter tuning remains deferred
 
 ## Purpose
 

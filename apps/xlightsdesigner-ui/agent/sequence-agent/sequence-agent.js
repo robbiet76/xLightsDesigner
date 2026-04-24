@@ -522,7 +522,6 @@ function inferDesiredParameterBehaviorHints({ effectName = "", summary = "", seq
   const hints = new Set();
   const normalizedEffectName = normText(effectName);
   const normalizedSummary = normText(summary).toLowerCase();
-  const revisionRoles = new Set(normArray(sequencerRevisionBrief?.revisionRoles).map((row) => normText(row)));
   const motionCharacter = normText(sequencerRevisionBrief?.motionCharacter).toLowerCase();
 
   if (normalizedSummary.includes("forward")) hints.add("forward_motion");
@@ -531,10 +530,6 @@ function inferDesiredParameterBehaviorHints({ effectName = "", summary = "", seq
   if (normalizedSummary.includes("spiral") || normalizedEffectName === "Spirals") hints.add("spiral_pattern_fit");
   if (normalizedSummary.includes("grouped arch") || normalizedSummary.includes("arch")) hints.add("grouped_arch_read");
 
-  if (revisionRoles.has("strengthen_lead")) hints.add("readable_lead");
-  if (revisionRoles.has("increase_section_contrast")) hints.add("high_contrast");
-  if (revisionRoles.has("add_section_development")) hints.add("moderate_motion");
-  if (revisionRoles.has("reduce_competing_support")) hints.add("static_or_near_static");
   if (motionCharacter.includes("restrained") || motionCharacter.includes("still")) hints.add("static_or_near_static");
   if (motionCharacter.includes("expand")) hints.add("moderate_motion");
 

@@ -32,7 +32,7 @@ Execution checklist for the next sequencing phase after the feedback loop and re
   - add section development
 - [x] map roles to safe prop targeting rules
 - [x] map roles to safe effect-family biases
-- [ ] keep parameter tuning out of this layer
+- [x] keep parameter tuning out of this layer
 - [x] map unresolved prior-pass proof signals into the bounded revision-role set
 
 ## 4. Repeated-Pass Memory
