@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { buildAnalysisHandoffFromArtifact } from "../../agent/audio-analyst/audio-analyst-runtime.js";
+import { buildEffectDefinitionCatalog } from "../../agent/sequence-agent/effect-definition-catalog.js";
 import { executeDirectSequenceRequestOrchestration } from "../../agent/sequence-agent/direct-sequence-orchestrator.js";
 import { writeProjectArtifacts } from "../../storage/project-artifact-store.mjs";
 import { runNativeDirectProposal } from "../../../../scripts/sequencing/native/generate-native-direct-proposal.mjs";
@@ -78,7 +79,7 @@ test("native direct proposal writes intent and proposal artifacts from project c
       projectFile,
       appRoot,
       endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
-      prompt: "Make MegaTree glow during Chorus 1.",
+      prompt: "Put an On effect on MegaTree during Chorus 1.",
       selectedSections: ["Chorus 1"],
       selectedTargetIds: ["MegaTree"]
     },
@@ -86,7 +87,9 @@ test("native direct proposal writes intent and proposal artifacts from project c
       getRevision: async () => ({ data: { revision: "rev-test-1" } }),
       getModels: async () => ({ data: { models: [{ id: "MegaTree", name: "MegaTree", type: "Model" }] } }),
       getDisplayElements: async () => ({ data: { elements: [{ id: "MegaTree", name: "MegaTree", type: "model" }] } }),
+      getEffectDefinitions: async () => ({ data: { effects: [{ effectName: "On", params: [] }] } }),
       buildAnalysisHandoffFromArtifact,
+      buildEffectDefinitionCatalog,
       executeDirectSequenceRequestOrchestration,
       writeProjectArtifacts
     }
@@ -108,4 +111,6 @@ test("native direct proposal writes intent and proposal artifacts from project c
   assert.equal(intent.artifactType, "intent_handoff_v1");
   assert.deepEqual(proposal.scope.sections, ["Chorus 1"]);
   assert.deepEqual(intent.scope.targetIds, ["MegaTree"]);
+  assert.equal(proposal.guidedQuestions.length, 0);
+  assert.match(proposal.proposalLines.join("\n"), /On effect/i);
 });

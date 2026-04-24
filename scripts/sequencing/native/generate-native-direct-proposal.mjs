@@ -4,8 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getModels, getDisplayElements, getRevision } from '../../../apps/xlightsdesigner-ui/api.js';
+import { getModels, getDisplayElements, getEffectDefinitions, getRevision } from '../../../apps/xlightsdesigner-ui/api.js';
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
+import { buildEffectDefinitionCatalog } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/effect-definition-catalog.js';
 import { executeDirectSequenceRequestOrchestration } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/direct-sequence-orchestrator.js';
 import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
 
@@ -15,7 +16,9 @@ const DEFAULT_DEPS = {
   getRevision,
   getModels,
   getDisplayElements,
+  getEffectDefinitions,
   buildAnalysisHandoffFromArtifact,
+  buildEffectDefinitionCatalog,
   executeDirectSequenceRequestOrchestration,
   writeProjectArtifacts
 };
@@ -118,8 +121,14 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
   const revision = await deps.getRevision(args.endpoint);
   const modelsRes = await deps.getModels(args.endpoint).catch(() => ({ ok: false, data: { models: [] } }));
   const displayRes = await deps.getDisplayElements(args.endpoint).catch(() => ({ ok: false, data: { elements: [] } }));
+  const effectsRes = await deps.getEffectDefinitions(args.endpoint).catch(() => ({ ok: false, data: { effects: [] } }));
   const models = Array.isArray(modelsRes?.data?.models) ? modelsRes.data.models : [];
   const displayElements = Array.isArray(displayRes?.data?.elements) ? displayRes.data.elements : [];
+  const effectDefinitions = Array.isArray(effectsRes?.data?.effects) ? effectsRes.data.effects : [];
+  const effectCatalog = deps.buildEffectDefinitionCatalog(effectDefinitions, {
+    source: 'native_direct_proposal',
+    loadedAt: new Date().toISOString()
+  });
 
   const orchestration = deps.executeDirectSequenceRequestOrchestration({
     requestId: `native-benchmark-${Date.now()}`,
@@ -131,7 +140,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
     models,
     submodels: [],
     displayElements,
-    effectCatalog: null,
+    effectCatalog,
     metadataAssignments: [],
     existingDesignIds: []
   });

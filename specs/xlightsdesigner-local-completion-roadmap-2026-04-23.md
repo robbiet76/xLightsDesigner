@@ -43,6 +43,7 @@ Phase 2 native design authoring started:
 - Native automation can trigger proposal generation through the same Sequence path and reports generation state in snapshots
 - Assistant action requests can trigger proposal generation after explicit user approval, using the same Sequence path
 - Native direct proposal generation has an isolated artifact-writing regression test with mocked xLights responses
+- Native direct proposal generation passes available xLights effect definitions into direct sequence orchestration
 - Review blocks apply until a canonical generated proposal with sequence commands exists
 
 ## Purpose
