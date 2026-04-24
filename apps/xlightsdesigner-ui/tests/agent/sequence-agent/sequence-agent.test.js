@@ -288,6 +288,7 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.ok(out.metadata.candidateSelection.selectedBand.candidateIds.length >= 1);
   assert.equal(out.metadata.sequencerRevisionBrief.leadTarget, "MegaTree");
   assert.deepEqual(out.metadata.sequencerRevisionBrief.supportTargets, ["Roofline"]);
+  assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionRoles, ["strengthen_lead"]);
   assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionTargets, []);
   assert.deepEqual(out.metadata.priorPassMemory.unresolvedSignals, ["lead_mismatch"]);
   assert.deepEqual(out.metadata.sequencerRevisionBrief.priorPassMemory.unresolvedSignals, ["lead_mismatch"]);
@@ -311,7 +312,7 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.deepEqual(out.metadata.revisionRetryPressure.signals || [], []);
   assert.ok(Array.isArray(out.metadata.revisionDelta.current.effectNames));
   assert.ok(Array.isArray(out.metadata.revisionDelta.current.targetIds));
-  assert.equal(out.metadata.realizationCandidates.candidates[0].revisionSignals.overallAlignment, "medium");
+  assert.equal(out.metadata.realizationCandidates.candidates[0].revisionSignals.overallAlignment, "high");
   assert.equal(typeof out.metadata.candidateSelection.scoredCandidates[0].revisionScore, "number");
   assert.equal(typeof out.metadata.candidateSelection.primaryCandidateId, "string");
 });

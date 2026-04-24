@@ -24,15 +24,16 @@ Execution checklist for the next sequencing phase after the feedback loop and re
 
 ## 3. Revision Role Planning
 
-- [ ] define a small bounded role set:
+- [x] define a small bounded role set:
   - strengthen lead
   - reduce competing support
   - widen support
   - increase section contrast
   - add section development
 - [ ] map roles to safe prop targeting rules
-- [ ] map roles to safe effect-family biases
+- [x] map roles to safe effect-family biases
 - [ ] keep parameter tuning out of this layer
+- [x] map unresolved prior-pass proof signals into the bounded revision-role set
 
 ## 4. Repeated-Pass Memory
 

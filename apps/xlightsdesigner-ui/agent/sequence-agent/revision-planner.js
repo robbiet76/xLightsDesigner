@@ -14,6 +14,17 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
+function revisionRolesForPriorSignals(priorPassMemory = null) {
+  const signals = new Set(uniqueStrings(priorPassMemory?.unresolvedSignals));
+  return uniqueStrings([
+    signals.has("lead_mismatch") ? "strengthen_lead" : "",
+    signals.has("over_coverage") ? "reduce_competing_support" : "",
+    signals.has("under_coverage") ? "widen_support" : "",
+    signals.has("weak_section_contrast") ? "increase_section_contrast" : "",
+    signals.has("flat_development") ? "add_section_development" : ""
+  ]);
+}
+
 function inferRequestedScope(designHandoff = null) {
   const sections = uniqueStrings(designHandoff?.scope?.sections);
   const targetIds = uniqueStrings(designHandoff?.scope?.targetIds);
@@ -117,7 +128,8 @@ export function buildSequencerRevisionBrief({
     targetScope,
     revisionRoles: uniqueStrings([
       ...arr(feedbackDirection?.revisionRoles),
-      ...arr(scope?.revisionRoles)
+      ...arr(scope?.revisionRoles),
+      ...revisionRolesForPriorSignals(priorPassMemory)
     ]),
     revisionTargets: uniqueStrings([
       ...arr(feedbackDirection?.targetIds),

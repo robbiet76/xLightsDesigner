@@ -60,7 +60,7 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
   assert.equal(out.leadTarget, "ArchSingle");
   assert.deepEqual(out.supportTargets, ["MatrixLowDensity"]);
   assert.deepEqual(out.targetScope, ["MatrixLowDensity", "MegaTree", "Roofline", "ArchSingle"]);
-  assert.deepEqual(out.revisionRoles, ["strengthen_lead"]);
+  assert.deepEqual(out.revisionRoles, ["strengthen_lead", "add_section_development"]);
   assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline"]);
   assert.deepEqual(out.focusTargets, ["MatrixLowDensity"]);
   assert.deepEqual(out.sectionScope, ["Chorus 1"]);
@@ -152,4 +152,34 @@ test("buildSequencerRevisionBrief prefers revision feedback direction when prese
   assert.equal(out.changeBias.composition.targetShape, "narrow_focus");
   assert.equal(out.changeBias.layering.separation, "increase");
   assert.match(out.summary, /Rendered lead does not match the intended primary focus/i);
+});
+
+test("buildSequencerRevisionBrief maps unresolved prior-pass signals to bounded revision roles", () => {
+  const out = buildSequencerRevisionBrief({
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared" },
+      designerDirection: { artisticCorrection: "Fix the unresolved proof-loop failures." },
+      sequencerDirection: { executionObjective: "Use the prior pass evidence to choose a different revision role." }
+    },
+    priorPassMemory: {
+      artifactType: "sequencer_prior_pass_memory_v1",
+      unresolvedSignals: [
+        "lead_mismatch",
+        "over_coverage",
+        "under_coverage",
+        "weak_section_contrast",
+        "flat_development"
+      ]
+    }
+  });
+
+  assert.deepEqual(out.revisionRoles, [
+    "strengthen_lead",
+    "reduce_competing_support",
+    "widen_support",
+    "increase_section_contrast",
+    "add_section_development"
+  ]);
 });
