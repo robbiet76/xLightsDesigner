@@ -68,7 +68,10 @@ function arr(value) {
 }
 
 function findMetadataRow(snapshot = {}, targetId = '', selectedTags = []) {
-  const rows = arr(snapshot?.pages?.display?.metadataRows);
+  const rows = [
+    ...arr(snapshot?.pages?.display?.metadataRows),
+    ...arr(snapshot?.pages?.display?.targetIntentMetadataRows)
+  ];
   const normalizedTarget = str(targetId).toLowerCase();
   const normalizedTags = selectedTags.map((row) => str(row).toLowerCase()).filter(Boolean);
   return rows.find((row) => {
@@ -81,13 +84,20 @@ function findMetadataRow(snapshot = {}, targetId = '', selectedTags = []) {
   }) || null;
 }
 
-function latestPlanMatches(snapshot = {}, targetIds = [], selectedTags = []) {
-  const plan = snapshot?.latestPlanHandoff && typeof snapshot.latestPlanHandoff === 'object'
-    ? snapshot.latestPlanHandoff
+function latestSequencingArtifactMatches(snapshot = {}, targetIds = [], selectedTags = []) {
+  const artifact = snapshot?.latestProposalBundle && typeof snapshot.latestProposalBundle === 'object'
+    ? snapshot.latestProposalBundle
+    : snapshot?.latestPlanHandoff && typeof snapshot.latestPlanHandoff === 'object'
+      ? snapshot.latestPlanHandoff
+      : null;
+  if (!artifact) return false;
+  const metadata = artifact.metadata && typeof artifact.metadata === 'object' ? artifact.metadata : {};
+  const scope = artifact.scope && typeof artifact.scope === 'object'
+    ? artifact.scope
+    : metadata.scope && typeof metadata.scope === 'object'
+      ? metadata.scope
     : null;
-  if (!plan) return false;
-  const metadata = plan.metadata && typeof plan.metadata === 'object' ? plan.metadata : {};
-  const scope = metadata.scope && typeof metadata.scope === 'object' ? metadata.scope : {};
+  if (!scope) return false;
   const planTargets = new Set(arr(scope.targetIds).map((row) => str(row)));
   const planTags = new Set(arr(scope.tagNames).map((row) => str(row)));
   const hasTargets = targetIds.every((targetId) => planTargets.has(targetId));
@@ -100,7 +110,7 @@ async function waitForProposal({ targetIds = [], selectedTags = [], timeoutMs = 
   let lastSnapshot = null;
   while (Date.now() - start < timeoutMs) {
     lastSnapshot = await request('GET', '/sequencer-validation-snapshot');
-    if (latestPlanMatches(lastSnapshot, targetIds, selectedTags)) {
+    if (latestSequencingArtifactMatches(lastSnapshot, targetIds, selectedTags)) {
       return lastSnapshot;
     }
     await new Promise((resolve) => setTimeout(resolve, 750));
@@ -131,10 +141,28 @@ if (missingRows.length) {
   throw new Error(`Target intent metadata row missing for: ${missingRows.join(', ')}`);
 }
 
+await request('POST', '/action', {
+  action: 'applyAssistantActionRequest',
+  actionType: 'save_design_intent',
+  reason: 'metadata tag proposal validation',
+  payload: {
+    goal: `Validate metadata-selected sequencing for ${targetIds.join(', ')}.`,
+    mood: 'focused validation',
+    targetScope: targetIds.join(', '),
+    constraints: `Use selected display metadata tags: ${selectedTags.join(', ')}.`,
+    references: '',
+    approvalNotes: 'Automation validation'
+  }
+});
+
 const generationResult = await request('POST', '/action', {
   action: 'generateSequenceProposal',
   selectedTagNames: args.selectedTags
 });
+const generationBanner = generationResult?.banner && typeof generationResult.banner === 'object' ? generationResult.banner : null;
+if (generationBanner && str(generationBanner.state).toLowerCase() === 'blocked') {
+  throw new Error(`Generation blocked: ${str(generationBanner.text)}`);
+}
 
 const validationSnapshot = await waitForProposal({
   targetIds,
@@ -149,6 +177,7 @@ process.stdout.write(`${JSON.stringify({
   generationAccepted: generationResult?.ok === true,
   targetIds,
   selectedTags,
+  latestProposalArtifactId: str(validationSnapshot?.latestProposalBundle?.artifactId),
   latestPlanArtifactId: str(validationSnapshot?.latestPlanHandoff?.artifactId),
   latestIntentArtifactId: str(validationSnapshot?.latestIntentHandoff?.artifactId),
   metadataAssignmentCount: Number(validationSnapshot?.latestApplyResult?.metadataAssignmentCount || 0)

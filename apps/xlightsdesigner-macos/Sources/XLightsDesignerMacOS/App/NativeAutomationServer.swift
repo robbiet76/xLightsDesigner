@@ -639,6 +639,16 @@ final class NativeAutomationServer: @unchecked Sendable {
                     "linkedTargetCount": $0.linkedTargetCount
                 ]
             },
+            "targetIntentMetadataRows": screen.metadataRows.filter { $0.category == "Target Intent" }.map {
+                [
+                    "subject": $0.subject,
+                    "subjectType": $0.subjectType,
+                    "category": $0.category,
+                    "value": $0.value,
+                    "status": $0.status.rawValue,
+                    "linkedTargetCount": $0.linkedTargetCount
+                ]
+            },
             "discoveryProposals": screen.discoveryProposals.prefix(12).map {
                 [
                     "tagName": $0.tagName,
@@ -759,6 +769,7 @@ final class NativeAutomationServer: @unchecked Sendable {
         let project = model.workspace.activeProject
         let snapshot = latestProjectValidationSnapshot(for: project)
         let latestPlanHandoff = snapshot["latestPlanHandoff"] as? [String: Any]
+        let latestProposalBundle = snapshot["latestProposalBundle"] as? [String: Any]
         let feedbackCapabilities = await ownedRenderFeedbackCapabilities()
         return [
             "ok": true,
@@ -773,6 +784,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             "latestApply": snapshot["latestApply"] ?? NSNull(),
             "latestPracticalValidation": snapshot["latestPracticalValidation"] ?? NSNull(),
             "latestApplyResult": snapshot["latestApplyResult"] ?? NSNull(),
+            "latestProposalBundle": latestProposalBundle ?? NSNull(),
             "latestPlanHandoff": latestPlanHandoff ?? NSNull(),
             "latestIntentHandoff": snapshot["latestIntentHandoff"] ?? NSNull(),
             "latestRenderObservation": snapshot["latestRenderObservation"] ?? NSNull(),
@@ -900,6 +912,7 @@ final class NativeAutomationServer: @unchecked Sendable {
         let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
         let historyEntry = readLatestArtifact(in: projectDir.appendingPathComponent("history", isDirectory: true))
         let latestApplyResult = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/apply-results", isDirectory: true))
+        let latestProposalBundle = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/proposals", isDirectory: true))
         let latestPlanHandoff = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/plans", isDirectory: true))
         let latestIntentHandoff = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/intent-handoffs", isDirectory: true))
         let latestRenderObservation = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/render-observations", isDirectory: true))
@@ -915,6 +928,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             ] : NSNull(),
             "latestPracticalValidation": latestApplyResult?["practicalValidation"] ?? NSNull(),
             "latestApplyResult": latestApplyResult ?? NSNull(),
+            "latestProposalBundle": latestProposalBundle ?? NSNull(),
             "latestPlanHandoff": latestPlanHandoff ?? NSNull(),
             "latestIntentHandoff": latestIntentHandoff ?? NSNull(),
             "latestRenderObservation": latestRenderObservation ?? NSNull(),
