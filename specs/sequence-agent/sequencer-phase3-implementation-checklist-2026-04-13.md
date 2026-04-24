@@ -11,9 +11,11 @@ Execution checklist for the next sequencing phase after the feedback loop and re
 
 ## 1. Regression Harness Discipline
 
-- [ ] keep the retained proof suites green during live-loop work
-- [ ] treat retained expectation changes as intentional contract changes, not incidental drift
-- [ ] avoid adding new retained artifact families unless they directly support live sequencing behavior
+- [x] keep the retained proof suites green during live-loop work
+- [x] treat retained expectation changes as intentional contract changes, not incidental drift
+- [x] avoid adding new retained artifact families unless they directly support live sequencing behavior
+
+Current evidence: Gate A retained sequence-agent validation passed on 2026-04-24 with `111/111` tests green.
 
 ## 2. Live Review Visibility
 
@@ -65,4 +67,4 @@ Execution checklist for the next sequencing phase after the feedback loop and re
 
 - [x] second-pass sequencing decisions are visibly more informed by the prior pass
 - [x] review/history inspection makes the pass-to-pass reasoning chain easy to follow
-- [ ] retained regressions stay green while live behavior improves
+- [x] retained regressions stay green while live behavior improves
