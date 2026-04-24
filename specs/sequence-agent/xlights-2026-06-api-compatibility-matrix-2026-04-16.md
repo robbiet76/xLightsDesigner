@@ -3,7 +3,7 @@
 Status: Active
 Date: 2026-04-16
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-04-16
+Last Reviewed: 2026-04-24
 
 ## Purpose
 
@@ -18,6 +18,12 @@ This matrix compares:
 ## First-Pass Conclusion
 
 `2026.06` does not currently expose the owned route contract we depend on.
+
+2026-04-24 update:
+- this document remains the first-pass upstream compatibility audit, not the current status of the working API-enabled branch
+- the working branch `/Users/robterry/xLights-2026.06` on `xld-2026.06-migration` now includes the owned `src-ui-wx/xLightsDesigner/` route surface used by the native app
+- current validated owned routes include `/health`, `/jobs/get`, `/layout/models`, `/layout/scene`, `/sequence/create`, `/sequence/open`, `/sequence/close`, `/sequence/render-current`, `/sequence/render-samples`, `/sequence/save`, `/timing/marks`, `/effects/window`, and `/sequencing/apply-batch-plan`
+- rows below should be read as original upstream-route evidence and migration rationale, not as an open implementation checklist for the owned working branch
 
 What exists upstream today is still centered on:
 - path-style automation commands in [xLightsAutomations.cpp](/Users/robterry/xLights-2026.06/src-ui-wx/automation/xLightsAutomations.cpp)
@@ -162,4 +168,3 @@ The next migration slice should produce a second-pass matrix with:
   7. `/layout/scene`
   8. `/sequence/render-samples`
   9. `/sequencing/apply-batch-plan`
-

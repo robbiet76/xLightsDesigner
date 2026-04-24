@@ -140,7 +140,7 @@ Meaning:
 
 - the first post-cleanup batch failures were resolved by removing negative-clause leakage from translation-intent behavior inference
 - this was a translation-layer correction, not an automation workaround
-- the current remaining discrepancy is the stale render-sample capability probe on the running native app process, which still needs a process restart to reflect the updated probe body
+- the stale render-sample capability probe discrepancy was code-level resolved; any remaining false negative indicates a long-running native app or xLights process that still needs restart against the current probe body
 
 ## Current Checklist
 
@@ -150,7 +150,7 @@ Meaning:
   - `render_observation_v1`
   - `sequence_render_critique_context_v1`
 - [x] confirm validation snapshots surface those artifacts end to end
-- [ ] fix the capability probe false negative for `sequence.render-samples`
+- [x] fix the capability probe false negative for `sequence.render-samples`
 - [ ] reduce remaining family-first realization bias in `trained-effect-knowledge.js`
 - [ ] remove remaining residual hardcoded family fallback in revision realization
 - [ ] run the next full batch after the realization changes and compare drift against the baseline
