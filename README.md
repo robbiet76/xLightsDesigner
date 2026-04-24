@@ -56,8 +56,8 @@ Run locally:
 3. Open `http://localhost:8080`
 
 Live endpoint:
-- Default endpoint is `/xlDoAutomation` via local dev proxy (in `run-dev.sh`).
-- You can still set a direct endpoint on the `Project` screen (for example `http://127.0.0.1:49914/xlDoAutomation`).
+- Default endpoint is `/xlightsdesigner/api` via local dev proxy (in `run-dev.sh`).
+- You can set the direct owned API endpoint on the `Project` screen (`http://127.0.0.1:49915/xlightsdesigner/api`).
 - Click `Test Connection` to call `system.getCapabilities`.
 - `Refresh` calls `sequence.getOpen` and `sequence.getRevision`.
 - Project screen `Open Sequence` calls `sequence.open` using the provided sequence path and stores recent sequence entries.

@@ -6,11 +6,6 @@ import subprocess
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 
-LEGACY_UPSTREAMS = [
-    ("127.0.0.1", 49914),
-    ("127.0.0.1", 49913),
-]
-
 OWNED_UPSTREAMS = [
     ("127.0.0.1", 49915),
 ]
@@ -181,7 +176,7 @@ class DevHandler(SimpleHTTPRequestHandler):
             return result.get("data") or {}
         raise RuntimeError(f"Timed out waiting for owned job {job_id}")
 
-    def _handle_owned_legacy_root_post(self):
+    def _handle_owned_command_post(self):
         payload = self._read_json_payload()
         cmd = str(payload.get("cmd", "")).strip()
         params = payload.get("params") or {}
@@ -360,16 +355,8 @@ class DevHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_POST(self):
-        if self.path == "/xlDoAutomation":
-            self._proxy_request(
-                "POST",
-                LEGACY_UPSTREAMS,
-                "/xlDoAutomation",
-                '{"res":503,"error":{"code":"ENDPOINT_UNAVAILABLE","message":"No local xLights endpoint responding on 49914/49913"}}',
-            )
-            return
         if self.path == OWNED_PREFIX:
-            self._handle_owned_legacy_root_post()
+            self._handle_owned_command_post()
             return
         if self.path.startswith(OWNED_PREFIX):
             self._proxy_request(
@@ -389,7 +376,6 @@ def main():
 
     server = ThreadingHTTPServer(("0.0.0.0", args.port), DevHandler)
     print(f"[dev-server] serving on http://localhost:{args.port}")
-    print("[dev-server] proxying POST /xlDoAutomation -> 127.0.0.1:49914,49913")
     print("[dev-server] proxying GET/POST /xlightsdesigner/api* -> 127.0.0.1:49915")
     server.serve_forever()
 
