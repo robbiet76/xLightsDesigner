@@ -61,7 +61,14 @@ Current evidence: Gate A retained sequence-agent validation passed on 2026-04-24
 ## 7. Parameter-Level Learning Later
 
 - [x] do not start parameter-level search until revision roles and effect-family learning are stable
-- [ ] define a narrow first parameter-learning target only after the earlier items are working in live sequencing
+- [x] define a narrow first parameter-learning target only after the earlier items are working in live sequencing
+
+First parameter-learning target, when this rung starts:
+- scope: `increase_section_contrast` revisions only
+- effect family: `Bars`
+- learned surface: coarse direction/orientation and layer-mix tendency only
+- evidence gate: require retained section/drilldown render evidence plus successful effect-family outcome memory
+- exclusion: no broad per-effect parameter search, no color/palette search, and no target expansion from parameter results
 
 ## Exit Check
 
