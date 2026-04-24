@@ -84,6 +84,23 @@ final class DesignScreenViewModel {
         }
     }
 
+    func applyDesignIntentPayload(_ payload: [String: String]) {
+        let fields: [(String, WritableKeyPath<DesignIntentDraftModel, String>)] = [
+            ("goal", \.goal),
+            ("mood", \.mood),
+            ("constraints", \.constraints),
+            ("targetScope", \.targetScope),
+            ("references", \.references),
+            ("approvalNotes", \.approvalNotes)
+        ]
+        for (key, path) in fields {
+            if let value = payload[key]?.trimmingCharacters(in: .whitespacesAndNewlines) {
+                intentDraft[keyPath: path] = value
+            }
+        }
+        saveDesignIntent()
+    }
+
     func resetDesignIntentEdits() {
         intentDraft = savedIntentDraft
         transientBanner = WorkflowBannerModel(

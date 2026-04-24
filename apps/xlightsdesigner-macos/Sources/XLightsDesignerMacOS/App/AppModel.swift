@@ -402,6 +402,8 @@ final class AppModel {
             xlightsSessionModel.refresh()
         case "refresh_all":
             refreshAll()
+        case "save_design_intent", "update_design_intent":
+            designScreenModel.applyDesignIntentPayload(request.payload)
         case "select_workflow":
             break
         default:

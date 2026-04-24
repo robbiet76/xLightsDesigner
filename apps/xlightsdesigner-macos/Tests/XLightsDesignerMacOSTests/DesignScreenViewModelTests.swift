@@ -49,3 +49,41 @@ private struct InMemoryProjectSessionStore: ProjectSessionStore {
     #expect(model.screenModel.authoring.canSave == false)
     #expect(model.transientBanner?.state == .ready)
 }
+
+@MainActor
+@Test func designIntentPayloadUpdatesSameNativeFields() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-action-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let service = LocalProjectService(projectsRootPath: root.path)
+    let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
+    let project = try service.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Native Test Project \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    workspace.setProject(project)
+    let model = DesignScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: service
+    )
+
+    model.applyDesignIntentPayload([
+        "goal": "Build a quiet verse and a wide chorus lift.",
+        "mood": "Quiet, patient, then bright.",
+        "constraints": "No global sparkle blanket.",
+        "targetScope": "House outline and mega tree.",
+        "references": "Lean into the saved project mission.",
+        "approvalNotes": "Approved for sequencing draft."
+    ])
+
+    let reopened = try service.openProject(filePath: project.projectFilePath)
+    let payload = reopened.snapshot["nativeDesignIntent"]?.value as? [String: Any]
+    #expect(payload?["goal"] as? String == "Build a quiet verse and a wide chorus lift.")
+    #expect(payload?["approvalNotes"] as? String == "Approved for sequencing draft.")
+    #expect(model.intentDraft.targetScope == "House outline and mega tree.")
+}
