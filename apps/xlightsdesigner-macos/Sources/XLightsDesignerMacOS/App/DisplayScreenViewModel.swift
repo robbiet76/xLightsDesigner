@@ -489,6 +489,23 @@ final class DisplayScreenViewModel {
         }
     }
 
+    func saveTargetIntent(targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) {
+        Task {
+            do {
+                try await displayService.saveTargetPreference(
+                    for: workspace.activeProject,
+                    targetIDs: targetIDs,
+                    rolePreference: rolePreference,
+                    semanticHints: semanticHints,
+                    effectAvoidances: effectAvoidances
+                )
+                await reloadDisplay()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
     func applyDiscoveryProposals() {
         Task {
             do {

@@ -82,6 +82,7 @@ Sequencing proof-loop progress:
 - native Display can now author app-owned target intent preferences for linked xLights models, including role, semantic hints, and effect avoidances
 - native automation Display snapshots now distinguish target-intent metadata counts from semantic tag metadata counts for validation
 - assistant context now carries app-owned target intent rows separately from general Display metadata so agents can reason from model-level intent extensions
+- assistant action requests can now update app-owned Display target intent for explicitly approved xLights target IDs
 - native Review success state and automation artifact summaries now expose the Display metadata assignment count used during apply
 - native History proof chains now retain the Display metadata assignment count from apply results and review-pass summaries
 - sequencer revision planning now maps unresolved prior-pass proof signals into bounded revision roles so the next pass can bias realization from the proof loop

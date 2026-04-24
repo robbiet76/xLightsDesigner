@@ -58,6 +58,42 @@ import Testing
     #expect(summary.proposedTags.first?.targetNames == ["Snowflake-01", "Snowflake-02"])
 }
 
+@MainActor
+@Test func assistantActionCanUpdateDisplayTargetIntent() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-assistant-target-intent-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let projectService = LocalProjectService(projectsRootPath: root.path)
+    let project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Assistant Target Intent \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    let model = AppModel()
+    model.workspace.setProject(project)
+
+    model.applyAssistantActionRequest(AssistantActionRequestResult(
+        actionType: "update_display_target_intent",
+        payload: [
+            "targetIds": "MegaTree, Roofline",
+            "rolePreference": "lead",
+            "semanticHints": "centerpiece, sparkle",
+            "effectAvoidances": "Bars"
+        ],
+        reason: "User approved target intent."
+    ))
+    try await Task.sleep(for: .milliseconds(120))
+
+    let document = try LocalDisplayMetadataStore().load(for: project)
+    #expect(document.preferencesByTargetId["MegaTree"]?.rolePreference == "lead")
+    #expect(document.preferencesByTargetId["MegaTree"]?.semanticHints == ["centerpiece", "sparkle"])
+    #expect(document.preferencesByTargetId["MegaTree"]?.effectAvoidances == ["Bars"])
+    #expect(document.preferencesByTargetId["Roofline"]?.rolePreference == "lead")
+}
+
 private func assistantActionDisplayRow(name: String, type: String, members: [String]) -> DisplayLayoutRowModel {
     DisplayLayoutRowModel(
         id: name,

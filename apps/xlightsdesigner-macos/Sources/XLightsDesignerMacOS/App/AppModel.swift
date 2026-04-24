@@ -443,11 +443,36 @@ final class AppModel {
                     displayScreenModel.errorMessage = error.localizedDescription
                 }
             }
+        case "update_display_target_intent":
+            let targetIDs = splitAssistantPayloadList(request.payload["targetIds"] ?? request.payload["targetIDs"] ?? request.payload["targets"] ?? "")
+            guard !targetIDs.isEmpty else {
+                displayScreenModel.errorMessage = "Target intent update requires exact xLights target IDs."
+                return
+            }
+            displayScreenModel.saveTargetIntent(
+                targetIDs: targetIDs,
+                rolePreference: request.payload["rolePreference"],
+                semanticHints: splitAssistantPayloadList(request.payload["semanticHints"] ?? ""),
+                effectAvoidances: splitAssistantPayloadList(request.payload["effectAvoidances"] ?? "")
+            )
         case "select_workflow":
             break
         default:
             break
         }
+    }
+
+    private func splitAssistantPayloadList(_ value: String) -> [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        for item in value.components(separatedBy: CharacterSet(charactersIn: ",\n")) {
+            let trimmed = item.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            let key = trimmed.lowercased()
+            guard seen.insert(key).inserted else { continue }
+            result.append(trimmed)
+        }
+        return result
     }
 
     func clearProjectMission() {
