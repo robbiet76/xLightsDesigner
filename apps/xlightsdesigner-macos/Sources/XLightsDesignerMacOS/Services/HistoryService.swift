@@ -30,9 +30,11 @@ struct LocalHistoryService: HistoryService {
         let projectFileURL = URL(fileURLWithPath: project.projectFilePath)
         let projectDir = projectFileURL.deletingLastPathComponent()
         let artifactsDir = projectDir.appendingPathComponent("artifacts", isDirectory: true)
+        let historyDir = projectDir.appendingPathComponent("history", isDirectory: true)
 
         var events = [HistoryEventRecord]()
         events.append(try buildProjectFileEvent(project: project, projectFileURL: projectFileURL))
+        events.append(contentsOf: try buildHistoryEntryEvents(project: project, historyDir: historyDir))
         events.append(contentsOf: try buildArtifactEvents(project: project, artifactsDir: artifactsDir))
         events.sort { $0.date > $1.date }
 
@@ -147,6 +149,42 @@ struct LocalHistoryService: HistoryService {
                 artifactReferences: references,
                 warnings: warnings,
                 followUpSummary: followUpSummary
+            )
+        }
+    }
+
+    private func buildHistoryEntryEvents(project: ActiveProjectModel, historyDir: URL) throws -> [HistoryEventRecord] {
+        guard FileManager.default.fileExists(atPath: historyDir.path) else { return [] }
+        let files = try FileManager.default.contentsOfDirectory(at: historyDir, includingPropertiesForKeys: [.contentModificationDateKey], options: [.skipsHiddenFiles])
+            .filter { $0.pathExtension == "json" }
+        return try files.compactMap { fileURL in
+            let object = try readJSONObject(at: fileURL)
+            guard string(object["artifactType"]) == "history_entry_v1" else { return nil }
+            let values = try fileURL.resourceValues(forKeys: [.contentModificationDateKey])
+            let date = parseDate(object["createdAt"]) ?? values.contentModificationDate ?? .distantPast
+            let status = string(object["status"], fallback: "unknown")
+            let before = string(object["xlightsRevisionBefore"])
+            let after = string(object["xlightsRevisionAfter"])
+            let revisionSummary = before.isEmpty && after.isEmpty
+                ? "Revision: unknown"
+                : "Revision: \(before.isEmpty ? "unknown" : before) -> \(after.isEmpty ? "unknown" : after)"
+            let snapshotSummary = object["snapshotSummary"] as? [String: Any]
+            let applySummary = snapshotSummary?["applySummary"] as? [String: Any]
+            let commandCount = int(object["commandCount"]) > 0 ? int(object["commandCount"]) : int(applySummary?["commandCount"])
+            return HistoryEventRecord(
+                id: "history::\(string(object["historyEntryId"], fallback: fileURL.path))",
+                date: date,
+                eventType: "Review Pass",
+                summary: string(object["summary"], fallback: "Review pass recorded"),
+                sequenceSummary: string(object["sequencePath"], fallback: string(project.snapshot["activeSequence"]?.value, fallback: "No active sequence")),
+                resultState: status == "applied" ? .ready : .recorded,
+                resultSummary: "Review pass \(status). \(revisionSummary).",
+                changeSummary: commandCount > 0 ? "Applied proof-loop pass with \(commandCount) commands." : "Recorded proof-loop pass.",
+                proofChain: historyEntryProofChain(object),
+                artifactPath: fileURL.path,
+                artifactReferences: historyEntryReferences(object, fileURL: fileURL),
+                warnings: historyEntryWarnings(object),
+                followUpSummary: "Use this review-pass rollup to compare request scope, apply proof, and render feedback across passes."
             )
         }
     }
@@ -363,6 +401,36 @@ struct LocalHistoryService: HistoryService {
         ].filter { !$0.isEmpty }
     }
 
+    private func historyEntryProofChain(_ object: [String: Any]) -> [String] {
+        let snapshotSummary = object["snapshotSummary"] as? [String: Any]
+        let sequenceSummary = snapshotSummary?["sequenceSummary"] as? [String: Any]
+        let requestScope = sequenceSummary?["requestScope"] as? [String: Any]
+        let passOutcome = sequenceSummary?["passOutcome"] as? [String: Any]
+        let applySummary = snapshotSummary?["applySummary"] as? [String: Any]
+        let practicalValidation = snapshotSummary?["practicalValidationSummary"] as? [String: Any]
+        return [
+            string(requestScope?["mode"]).isEmpty ? "" : "Request scope: \(string(requestScope?["mode"]))",
+            string(requestScope?["reviewStartLevel"]).isEmpty ? "" : "Review start: \(string(requestScope?["reviewStartLevel"]))",
+            string(passOutcome?["status"]).isEmpty ? "" : "Pass outcome: \(string(passOutcome?["status"]))",
+            "Commands: \(int(applySummary?["commandCount"]))",
+            practicalValidation == nil ? "" : "Practical validation: \(bool(practicalValidation?["overallOk"]) ? "passed" : "needs review")",
+            practicalValidation == nil ? "" : "Validation failures: \(int(practicalValidation?["readbackFailed"])) readback, \(int(practicalValidation?["designFailed"])) design"
+        ].filter { !$0.isEmpty }
+    }
+
+    private func historyEntryReferences(_ object: [String: Any], fileURL: URL) -> [String] {
+        let refs = object["artifactRefs"] as? [String: Any]
+        let values = refs?.values.map { string($0) }.filter { !$0.isEmpty } ?? []
+        return Array(values.prefix(8)) + [fileURL.lastPathComponent]
+    }
+
+    private func historyEntryWarnings(_ object: [String: Any]) -> [String] {
+        let snapshotSummary = object["snapshotSummary"] as? [String: Any]
+        let practicalValidation = snapshotSummary?["practicalValidationSummary"] as? [String: Any]
+        guard let practicalValidation, !bool(practicalValidation["overallOk"]) else { return [] }
+        return ["Practical validation summary indicates this pass needs review."]
+    }
+
     private func buildFollowUpSummary(for folder: String) -> String {
         switch folder {
         case "analysis":
@@ -392,6 +460,12 @@ struct LocalHistoryService: HistoryService {
         if let bool = value as? Bool { return bool }
         if let n = value as? NSNumber { return n.boolValue }
         return false
+    }
+
+    private func parseDate(_ value: Any?) -> Date? {
+        let text = string(value)
+        guard !text.isEmpty else { return nil }
+        return ISO8601DateFormatter().date(from: text)
     }
 
     private func arrayOfStrings(_ value: Any?) -> [String] {
