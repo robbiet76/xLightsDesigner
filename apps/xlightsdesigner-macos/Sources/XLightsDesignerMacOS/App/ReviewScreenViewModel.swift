@@ -193,6 +193,7 @@ final class ReviewScreenViewModel {
                         return warnings
                     }()
                     : ["Review cannot proceed without project context."],
+                applyPreviewLines: buildApplyPreviewLines(pendingWork: pendingWork),
                 impactSummary: hasProject
                     ? "Estimated proposal impact: \(pendingWork?.estimatedImpact ?? 0). Lifecycle: \(pendingWork?.proposalLifecycleStatus ?? "unknown"). Execution: \(pendingWork?.executionModeSummary ?? "No execution plan available.")."
                     : "No implementation impact available.",
@@ -218,6 +219,27 @@ final class ReviewScreenViewModel {
                 return banners
             }()
         )
+    }
+
+    private static func buildApplyPreviewLines(pendingWork: PendingWorkReadModel?) -> [String] {
+        guard let pendingWork else { return ["No generated proposal is ready for apply."] }
+        if !pendingWork.proposalEffectPlacements.isEmpty {
+            return pendingWork.proposalEffectPlacements.prefix(6).map { placement in
+                let timing = "\(placement.startMs)-\(placement.endMs)ms"
+                let section = placement.sectionLabel.isEmpty ? "unspecified section" : placement.sectionLabel
+                let target = placement.targetId.isEmpty ? "unspecified target" : placement.targetId
+                let track = placement.trackName.isEmpty ? "default track" : placement.trackName
+                return "\(section): \(placement.effectName) on \(target) in \(track) at \(timing)"
+            }
+        }
+        if !pendingWork.proposalLines.isEmpty {
+            return Array(pendingWork.proposalLines.prefix(6))
+        }
+        let targetSummary = pendingWork.intentTargetIDs.prefix(4).joined(separator: ", ")
+        let targetText = targetSummary.isEmpty ? "\(pendingWork.proposalTargetCount) targets" : targetSummary
+        return [
+            "\(pendingWork.proposalCommandCount) proposed commands across \(pendingWork.proposalSectionCount) sections for \(targetText)."
+        ]
     }
 
     private static func reviewBlockers(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> [String] {

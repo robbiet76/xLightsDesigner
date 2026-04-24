@@ -59,6 +59,7 @@ struct ReviewScreenView: View {
                 chip(model.screenModel.readiness.state.rawValue)
                 bulletSection(title: "Blockers", items: model.screenModel.readiness.blockers)
                 bulletSection(title: "Warnings", items: model.screenModel.readiness.warnings)
+                bulletSection(title: "Apply Preview", items: model.screenModel.readiness.applyPreviewLines)
                 detailRow(label: "Impact", value: model.screenModel.readiness.impactSummary)
                 detailRow(label: "Backup / Restore", value: model.screenModel.readiness.backupSummary)
                 HStack {

@@ -181,6 +181,7 @@ struct ReviewReadinessModel: Sendable {
     let state: PendingWorkState
     let blockers: [String]
     let warnings: [String]
+    let applyPreviewLines: [String]
     let impactSummary: String
     let backupSummary: String
 }

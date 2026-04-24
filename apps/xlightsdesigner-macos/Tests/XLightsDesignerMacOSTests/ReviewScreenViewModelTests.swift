@@ -196,6 +196,7 @@ private func reviewPendingWork(
     #expect(model.transientBanner?.text.contains("Rendered xLights sequence") == true)
     #expect(model.transientBanner?.text.contains("Saved xLights sequence") == true)
     #expect(recorder.count == 1)
+    #expect(model.screenModel.readiness.applyPreviewLines.contains("Chorus 1 / Mega Tree / apply Color Wash."))
 }
 
 @MainActor
@@ -329,6 +330,7 @@ private func reviewPendingWork(
     #expect(model.screenModel.actions.canApply == true)
     #expect(model.screenModel.readiness.blockers.isEmpty)
     #expect(model.screenModel.readiness.impactSummary.contains("Estimated proposal impact: 1"))
+    #expect(model.screenModel.readiness.applyPreviewLines.contains("Chorus 1 / MegaTree / apply On effect"))
 }
 
 @MainActor
