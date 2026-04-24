@@ -230,6 +230,16 @@ final class NativeAutomationServer: @unchecked Sendable {
         case "applyReview":
             model.reviewScreenModel.applyPendingWork()
             return .json(200, body: ["ok": true, "isApplying": model.reviewScreenModel.isApplying])
+        case "generateSequenceProposal":
+            model.sequenceScreenModel.generateProposalFromDesignIntent()
+            return .json(200, body: [
+                "ok": true,
+                "isGeneratingProposal": model.sequenceScreenModel.isGeneratingProposal,
+                "banner": model.sequenceScreenModel.transientBanner.map { [
+                    "text": $0.text,
+                    "state": $0.state.rawValue
+                ] } ?? NSNull()
+            ])
         case "deferReview":
             model.reviewScreenModel.deferPendingWork()
             return .json(200, body: ["ok": true])
@@ -581,10 +591,20 @@ final class NativeAutomationServer: @unchecked Sendable {
             "warningCount": screen.overview.warningCount,
             "validationIssueCount": screen.overview.validationIssueCount,
             "selectedRowSummary": model.sequenceScreenModel.selectedRow?.summary ?? "",
+            "isGeneratingProposal": model.sequenceScreenModel.isGeneratingProposal,
             "timingReviewNeedsReview": screen.timingReview.needsReview,
             "timingReviewCount": screen.timingReview.rows.count,
-            "banners": screen.banners.map { ["text": $0.text, "state": $0.state.rawValue] }
+            "banners": sequenceBanners(screen: screen).map { ["text": $0.text, "state": $0.state.rawValue] }
         ]
+    }
+
+    @MainActor
+    private func sequenceBanners(screen: SequenceScreenModel) -> [WorkflowBannerModel] {
+        var banners = screen.banners
+        if let transientBanner = model.sequenceScreenModel.transientBanner {
+            banners.append(transientBanner)
+        }
+        return banners
     }
 
     @MainActor
