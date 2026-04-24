@@ -134,10 +134,10 @@ struct SequenceScreenView: View {
                     }
                     .disabled(projectSequenceActionDisabled)
 
-                    Button(model.isGeneratingProposal ? "Generating Proposal..." : "Generate Proposal") {
+                    Button(model.isGeneratingProposal ? "Generating Proposal..." : sequenceProposalActionLabel) {
                         model.generateProposalFromDesignIntent()
                     }
-                    .disabled(model.isGeneratingProposal || model.screenModel.overview.translationSource == "Canonical Plan")
+                    .disabled(model.isGeneratingProposal)
                 }
                 if !xlightsSessionModel.snapshot.lastSaveSummary.isEmpty {
                     Text(xlightsSessionModel.snapshot.lastSaveSummary)
@@ -203,6 +203,10 @@ struct SequenceScreenView: View {
             return true
         }
         return preferredSequenceExists ? !xlightsSessionModel.snapshot.openSupported : !xlightsSessionModel.snapshot.createSupported
+    }
+
+    private var sequenceProposalActionLabel: String {
+        model.screenModel.overview.translationSource == "Canonical Plan" ? "Regenerate Proposal" : "Generate Proposal"
     }
 
     private var sequenceSwitchPolicyText: String {
