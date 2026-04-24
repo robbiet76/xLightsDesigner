@@ -578,7 +578,7 @@ test("sequence dashboard state surfaces missing timing dependency", () => {
   assert.match(dashboard.validationIssues[0].code, /missing_required_timing_track/);
 });
 
-test("sequence dashboard state treats planned structure timing track as ready for draft validation", () => {
+test("sequence dashboard state treats planned section timing track as ready for draft validation", () => {
   const dashboard = buildSequenceDashboardState({
     state: {
       proposed: [
@@ -597,10 +597,10 @@ test("sequence dashboard state treats planned structure timing track as ready fo
         targetIds: ["Snowman"]
       }
     },
-    planHandoff: {
+      planHandoff: {
       commands: [
-        { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
-        { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 1, endMs: 2, label: "Chorus 1" }] } }
+        { cmd: "timing.createTrack", params: { trackName: "User Timing: Chorus Cues" } },
+        { cmd: "timing.insertMarks", params: { trackName: "User Timing: Chorus Cues", marks: [{ startMs: 1, endMs: 2, label: "Chorus 1" }] } }
       ]
     }
   });
@@ -609,6 +609,40 @@ test("sequence dashboard state treats planned structure timing track as ready fo
   assert.equal(dashboard.readiness.ok, true);
   assert.equal(dashboard.data.timingDependency.ready, true);
   assert.equal(dashboard.data.timingDependency.planned, true);
+});
+
+test("sequence dashboard state accepts available arbitrary timing track with matching section label", () => {
+  const dashboard = buildSequenceDashboardState({
+    state: {
+      proposed: [
+        "Drop 2 / Snowman / apply Color Wash effect"
+      ],
+      agentPlan: {
+        summary: "Draft uses a user timing track.",
+        warnings: []
+      },
+      creative: {},
+      timingTracks: [
+        {
+          name: "User Timing: Drops",
+          marks: [{ startMs: 1000, endMs: 2000, label: "Drop 2" }]
+        }
+      ]
+    },
+    intentHandoff: {
+      scope: {
+        sections: ["Drop 2"],
+        targetIds: ["Snowman"]
+      }
+    },
+    planHandoff: {
+      commands: []
+    }
+  });
+
+  assert.equal(dashboard.status, "ready");
+  assert.equal(dashboard.data.timingDependency.ready, true);
+  assert.deepEqual(dashboard.data.timingDependency.availableTrackNames, ["User Timing: Drops"]);
 });
 
 test("sequence dashboard rows come from structured effect commands for broad whole-sequence plans", () => {

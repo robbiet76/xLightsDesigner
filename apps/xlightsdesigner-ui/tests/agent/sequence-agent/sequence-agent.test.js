@@ -1914,6 +1914,47 @@ test("sequence_agent remains timing-name agnostic when existing track names vary
   assert.equal(out.warnings.some((w) => /lyrics track name/i.test(String(w))), false);
 });
 
+test("sequence_agent honors explicit section timing track names", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Drop 2", startMs: 10000, endMs: 20000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Use the selected drop timing for this prop.",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree"],
+        tagNames: [],
+        sections: ["Drop 2"]
+      },
+      executionStrategy: {
+        passScope: "single_section",
+        timingTrackName: "User Timing: Drops",
+        sectionPlans: [
+          { section: "Drop 2", targetIds: ["MegaTree"], intentSummary: "hit the drop" }
+        ]
+      }
+    },
+    sourceLines: ["Drop 2 / MegaTree / shimmer fade"],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.alignToTiming"]
+  });
+
+  const trackCreate = out.commands.find((row) => row.cmd === "timing.createTrack");
+  const markInsert = out.commands.find((row) => row.cmd === "timing.insertMarks");
+  const effect = out.commands.find((row) => row.cmd === "effects.create");
+
+  assert.equal(trackCreate.params.trackName, "User Timing: Drops");
+  assert.equal(markInsert.params.trackName, "User Timing: Drops");
+  assert.deepEqual(markInsert.params.marks, [{ startMs: 10000, endMs: 19999, label: "Drop 2" }]);
+  assert.equal(effect.anchor.trackName, "User Timing: Drops");
+});
+
 test("sequence_agent supports dense submodel-heavy targeting", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

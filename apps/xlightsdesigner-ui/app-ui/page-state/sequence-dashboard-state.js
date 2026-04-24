@@ -79,7 +79,7 @@ function summarizeSequenceGridRow(line = "") {
   const lowerTarget = target.toLowerCase();
   const timing =
     /chorus|verse|intro|bridge|pre-chorus|post-chorus|outro|hook/.test(section.toLowerCase())
-      ? "XD: Song Structure"
+      ? "Section timing"
       : "XD: Sequencer Plan";
   const level =
     lowerTarget === "allmodels" || lowerTarget === "global"
@@ -304,12 +304,29 @@ function isXdTimingTrack(name) {
   return /^xd:/i.test(str(name));
 }
 
-function hasPlannedStructureTrack(commands = []) {
+function timingCommandMatchesSections(command = {}, sections = []) {
+  const sectionSet = new Set((Array.isArray(sections) ? sections : []).map((row) => norm(row)).filter(Boolean));
+  if (!sectionSet.size) return true;
+  const marks = Array.isArray(command?.params?.marks) ? command.params.marks : [];
+  return marks.some((mark) => sectionSet.has(norm(mark?.label)));
+}
+
+function trackMatchesSections(track = {}, sections = []) {
+  const sectionSet = new Set((Array.isArray(sections) ? sections : []).map((row) => norm(row)).filter(Boolean));
+  if (!sectionSet.size) return true;
+  const marks = [
+    ...(Array.isArray(track?.marks) ? track.marks : []),
+    ...(Array.isArray(track?.segments) ? track.segments : [])
+  ];
+  return marks.some((mark) => sectionSet.has(norm(mark?.label)));
+}
+
+function hasPlannedSectionTimingTrack(commands = [], sections = []) {
   return (Array.isArray(commands) ? commands : []).some((command) => {
     const cmd = str(command?.cmd);
     const trackName = str(command?.params?.trackName);
     if (cmd !== "timing.createTrack" && cmd !== "timing.insertMarks" && cmd !== "timing.replaceMarks") return false;
-    return /^xd:/i.test(trackName) && /song structure|section|structure/i.test(trackName);
+    return Boolean(trackName) && timingCommandMatchesSections(command, sections);
   });
 }
 
@@ -318,18 +335,19 @@ function inferTimingDependency({ sections = [], timingTracks = [], planCommands 
   const xdNames = names.filter((name) => isXdTimingTrack(name));
   const sectionScoped = (Array.isArray(sections) ? sections : []).filter(Boolean);
   const needsTiming = sectionScoped.length > 0;
-  const hasXdStructureTrack = xdNames.some((name) => /song sections|section|structure/i.test(name));
-  const plannedStructureTrack = hasPlannedStructureTrack(planCommands);
-  const ready = !needsTiming || hasXdStructureTrack || plannedStructureTrack;
+  const detailedTracks = Array.isArray(timingTracks) ? timingTracks : [];
+  const hasMatchingTimingTrack = detailedTracks.some((track) => str(track?.name) && trackMatchesSections(track, sectionScoped));
+  const plannedSectionTrack = hasPlannedSectionTimingTrack(planCommands, sectionScoped);
+  const ready = !needsTiming || hasMatchingTimingTrack || plannedSectionTrack;
   return {
     needsTiming,
     ready,
-    planned: plannedStructureTrack,
+    planned: plannedSectionTrack,
     availableTrackNames: names,
     xdTrackNames: xdNames,
     summary: ready
       ? (needsTiming
-          ? (hasXdStructureTrack
+          ? (hasMatchingTimingTrack
               ? "Required timing context is available for the current section scope."
               : "Required timing context is planned for the current section scope.")
           : "No timing dependency is required for the current draft.")

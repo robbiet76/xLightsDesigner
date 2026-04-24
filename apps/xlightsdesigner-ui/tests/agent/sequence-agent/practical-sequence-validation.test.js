@@ -312,5 +312,6 @@ test("practical sequence validation fails effects that cross reviewed structure 
 
   assert.equal(artifact.overallOk, false);
   assert.equal(artifact.summary.timingFidelity.crossingStructureCount, 1);
-  assert.match(artifact.failures.timing.map((row) => row.kind).join(","), /crosses_structure_boundary/);
+  assert.equal(artifact.summary.timingFidelity.crossingSectionTimingCount, 1);
+  assert.match(artifact.failures.timing.map((row) => row.kind).join(","), /crosses_section_timing_boundary/);
 });

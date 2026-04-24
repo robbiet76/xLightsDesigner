@@ -197,6 +197,8 @@ Default scenario file:
 
 The default matrix covers explicit model target, explicit group target, and tag-only metadata selection. Tag-only validation seeds app metadata for an expected target, then generates from selected tags without putting that target name in the saved design intent.
 
+Section-scoped validation must follow the timing-track agnostic contract in [timing-track-section-scope-audit-2026-04-24.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/timing-track-section-scope-audit-2026-04-24.md). Do not assume `XD: Song Structure` is the only valid section source.
+
 Acceptance rule:
 
 - native automation must be reachable on `49916`

@@ -98,6 +98,8 @@ function deriveExecutionStrategy(intentHandoff = {}) {
     designRevision: Number.isInteger(Number(strategy.designRevision)) ? Number(strategy.designRevision) : 0,
     designAuthor: normText(strategy.designAuthor),
     shouldUseFullSongStructureTrack: Boolean(strategy.shouldUseFullSongStructureTrack),
+    timingTrackName: normText(strategy.timingTrackName),
+    sectionTimingTrackName: normText(strategy.sectionTimingTrackName),
     sectionCount: Number(strategy.sectionCount || 0),
     targetCount: Number(strategy.targetCount || 0),
     primarySections: normArray(strategy.primarySections).map((s) => normText(s)).filter(Boolean),
@@ -149,6 +151,8 @@ function deriveExecutionStrategy(intentHandoff = {}) {
         energy: normText(row?.energy),
         density: normText(row?.density),
         intentSummary: normText(row?.intentSummary),
+        timingTrackName: normText(row?.timingTrackName),
+        sectionTimingTrackName: normText(row?.sectionTimingTrackName),
         targetIds: normArray(row?.targetIds).map((s) => normText(s)).filter(Boolean),
         effectHints: normArray(row?.effectHints).map((s) => normText(s)).filter(Boolean)
       }))
@@ -378,12 +382,22 @@ function stageTimingAssetDecision({ hasAnalysis = false, scope = {} } = {}) {
   const hasScopedSections = Array.isArray(scope.sectionNames) && scope.sectionNames.length > 0;
   const passScope = normText(scope?.executionStrategy?.passScope);
   const useFullSongStructureTrack = Boolean(scope?.executionStrategy?.shouldUseFullSongStructureTrack) || passScope === "whole_sequence" || passScope === "multi_section";
+  const sectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
+  const requestedSectionTrackName = normText(
+    scope?.executionStrategy?.sectionTimingTrackName
+    || scope?.executionStrategy?.timingTrackName
+    || sectionPlans.find((row) => normText(row?.sectionTimingTrackName || row?.timingTrackName))?.sectionTimingTrackName
+    || sectionPlans.find((row) => normText(row?.sectionTimingTrackName || row?.timingTrackName))?.timingTrackName
+    || ""
+  );
+  const sectionTrackName = requestedSectionTrackName || "XD: Song Structure";
   const strategy = hasAnalysis ? "analysis_tracks" : (hasScopedSections ? "scope_only" : "minimal_fallback");
   return {
     strategy,
     degradedMode: !hasAnalysis,
     useSections: hasScopedSections,
-    trackName: (hasScopedSections || useFullSongStructureTrack) ? "XD: Song Structure" : "XD: Sequencer Plan",
+    trackName: (hasScopedSections || useFullSongStructureTrack) ? sectionTrackName : "XD: Sequencer Plan",
+    includeAllKnownSections: useFullSongStructureTrack || (!requestedSectionTrackName && hasScopedSections),
     detail: `strategy=${strategy}${!hasAnalysis ? " reduced-confidence" : ""} passScope=${passScope || "default"}`
   };
 }
@@ -970,7 +984,7 @@ function buildPlacementMarksByTrack({
 
   if (sectionWindowsByName instanceof Map) {
     for (const [label, window] of sectionWindowsByName.entries()) {
-      addMark("XD: Song Structure", {
+      addMark(defaultTrackName || "XD: Song Structure", {
         label,
         startMs: window?.startMs,
         endMs: window?.endMs
@@ -1573,7 +1587,7 @@ export function buildSequenceAgentPlan({
           sectionWindowsByName: deriveSectionWindowsByName({
             analysisHandoff: safeAnalysis,
             sectionNames: scope.sectionNames,
-            includeAll: timing.trackName === "XD: Song Structure"
+            includeAll: timing.includeAllKnownSections === true
           }),
           trackName: timing.trackName,
           allowTimingWrites

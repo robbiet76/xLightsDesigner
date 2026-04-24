@@ -272,9 +272,12 @@ function summarizeTimingFidelity(planHandoff = null) {
   const structureMarks = timingTracks.get("XD: Song Structure") || [];
   const phraseMarks = timingTracks.get("XD: Phrase Cues") || [];
   const alignCommandsByEffectKey = new Map();
+  const sectionTimingTrackNames = new Set();
   for (const command of commands) {
     if (str(command?.cmd) !== "effects.alignToTiming") continue;
     const params = command?.params || {};
+    const timingTrackName = str(params?.timingTrackName);
+    if (timingTrackName) sectionTimingTrackNames.add(timingTrackName);
     const effectKey = effectPlanKey(
       params?.modelName,
       params?.layerIndex,
@@ -284,15 +287,27 @@ function summarizeTimingFidelity(planHandoff = null) {
     );
     if (!alignCommandsByEffectKey.has(effectKey)) alignCommandsByEffectKey.set(effectKey, []);
     alignCommandsByEffectKey.get(effectKey).push({
-      timingTrackName: str(params?.timingTrackName),
+      timingTrackName,
       mode: str(params?.mode)
     });
   }
+  for (const command of commands) {
+    if (str(command?.cmd) !== "effects.create") continue;
+    const anchorTrackName = str(command?.anchor?.trackName);
+    if (anchorTrackName) sectionTimingTrackNames.add(anchorTrackName);
+  }
+  if (!sectionTimingTrackNames.size && structureMarks.length) sectionTimingTrackNames.add("XD: Song Structure");
+  const sectionTimingMarks = Array.from(sectionTimingTrackNames)
+    .flatMap((trackName) => timingTracks.get(trackName) || []);
   const effectCommands = commands.filter((command) => str(command?.cmd) === "effects.create");
   let withinStructureCount = 0;
   let crossingStructureCount = 0;
   let anchoredToStructureCount = 0;
   let alignedToStructureCount = 0;
+  let withinSectionTimingCount = 0;
+  let crossingSectionTimingCount = 0;
+  let anchoredToSectionTimingCount = 0;
+  let alignedToSectionTimingCount = 0;
   let phraseAwareEffectCount = 0;
   let alignedToPhraseCount = 0;
   let timingAwareEffectCount = 0;
@@ -312,6 +327,7 @@ function summarizeTimingFidelity(planHandoff = null) {
       ""
     )) || [];
     const overlaps = countOverlappingMarks(structureMarks, startMs, endMs);
+    const sectionOverlaps = countOverlappingMarks(sectionTimingMarks, startMs, endMs);
     if (structureMarks.length) {
       if (overlaps.length <= 1) {
         withinStructureCount += 1;
@@ -325,26 +341,42 @@ function summarizeTimingFidelity(planHandoff = null) {
         });
       }
     }
+    if (sectionTimingMarks.length) {
+      if (sectionOverlaps.length <= 1) {
+        withinSectionTimingCount += 1;
+      } else {
+        crossingSectionTimingCount += 1;
+      }
+    }
     const anchoredToStructure = anchorTrackName === "XD: Song Structure";
     const alignedToStructure = aligns.some((row) => row.timingTrackName === "XD: Song Structure");
+    const anchoredToSectionTiming = sectionTimingTrackNames.has(anchorTrackName);
+    const alignedToSectionTiming = aligns.some((row) => sectionTimingTrackNames.has(row.timingTrackName));
     const anchoredToPhrase = anchorTrackName === "XD: Phrase Cues";
     const alignedToPhrase = aligns.some((row) => row.timingTrackName === "XD: Phrase Cues");
     const phraseOverlapCount = countOverlappingMarks(phraseMarks, startMs, endMs, { labeledOnly: true }).length;
     if (anchoredToStructure) anchoredToStructureCount += 1;
     if (alignedToStructure) alignedToStructureCount += 1;
+    if (anchoredToSectionTiming) anchoredToSectionTimingCount += 1;
+    if (alignedToSectionTiming) alignedToSectionTimingCount += 1;
     if (alignedToPhrase) alignedToPhraseCount += 1;
     if (anchoredToPhrase || alignedToPhrase || phraseOverlapCount > 0) phraseAwareEffectCount += 1;
-    if (anchoredToStructure || alignedToStructure || anchoredToPhrase || alignedToPhrase) timingAwareEffectCount += 1;
+    if (anchoredToSectionTiming || alignedToSectionTiming || anchoredToPhrase || alignedToPhrase) timingAwareEffectCount += 1;
   }
 
   return {
     effectCount: effectCommands.length,
     structureTrackPresent: structureMarks.length > 0,
+    sectionTimingTrackPresent: sectionTimingMarks.length > 0,
     phraseTrackPresent: phraseMarks.length > 0,
     withinStructureCount,
     crossingStructureCount,
     anchoredToStructureCount,
     alignedToStructureCount,
+    withinSectionTimingCount,
+    crossingSectionTimingCount,
+    anchoredToSectionTimingCount,
+    alignedToSectionTimingCount,
     alignedToPhraseCount,
     phraseAwareEffectCount,
     timingAwareEffectCount,
@@ -377,22 +409,22 @@ export function buildPracticalSequenceValidation({
   const passScope = str(planHandoff?.metadata?.executionStrategy?.passScope);
   const isSectionScoped = passScope === "single_section";
   const isWholeSongScale = durationMs >= 120000 || sectionCount >= 8;
-  if (timingFidelity.structureTrackPresent && timingFidelity.crossingStructureCount > 0) {
+  if (timingFidelity.sectionTimingTrackPresent && timingFidelity.crossingSectionTimingCount > 0) {
     timingFailures.push({
-      kind: "crosses_structure_boundary",
+      kind: "crosses_section_timing_boundary",
       target: "sequence",
-      detail: `${timingFidelity.crossingStructureCount} effect commands cross reviewed structure boundaries.`
+      detail: `${timingFidelity.crossingSectionTimingCount} effect commands cross reviewed timing-section boundaries.`
     });
   }
   if (
-    timingFidelity.structureTrackPresent &&
+    timingFidelity.sectionTimingTrackPresent &&
     timingFidelity.effectCount > 0 &&
     timingFidelity.timingAwareEffectCount === 0
   ) {
     timingFailures.push({
       kind: "timing_ignored",
       target: "sequence",
-      detail: "Effect commands did not anchor or align to the reviewed structure track."
+      detail: "Effect commands did not anchor or align to the reviewed timing context."
     });
   }
   if (!isSectionScoped && planQuality.timelineCoverageRatio < 0.55) {
