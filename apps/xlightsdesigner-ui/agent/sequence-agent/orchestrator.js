@@ -91,18 +91,6 @@ async function waitForOwnedJob(endpoint, jobId, getOwnedJob, attempts = 40, dela
   throw new Error(`Timed out waiting for owned xLights job ${jobId}.`);
 }
 
-function isOwnedApiUnavailable(message = "") {
-  const text = norm(message);
-  return (
-    text.includes("failed to fetch") ||
-    text.includes("networkerror") ||
-    text.includes("load failed") ||
-    text.includes("couldn't connect") ||
-    text.includes("not found") ||
-    text.includes("econnrefused")
-  );
-}
-
 function isOwnedEndpoint(endpoint = "") {
   const text = norm(endpoint);
   return text.includes("/xlightsdesigner/api") || text.includes(":49915/");
@@ -189,7 +177,7 @@ export async function validateAndApplyPlan({
     }
   }
 
-  if (ownedPathAvailable && isOwnedEndpoint(endpoint) && !ownedApiReady) {
+  if (ownedPathAvailable && !ownedApiReady) {
     const state = str(ownedHealth?.data?.state || ownedHealth?.data?.startupState || "unknown") || "unknown";
     const reason = ownedHealthError || `owned xLights API not ready (state=${state})`;
     return {
@@ -223,21 +211,6 @@ export async function validateAndApplyPlan({
   const shouldUseOwnedPath = ownedPathAvailable && ownedApiReady;
 
   if (shouldUseOwnedPath) {
-    if (typeof getOwnedHealth !== "function") {
-      return {
-        ok: false,
-        stage: "runtime",
-        error: "owned xLights API health probe is required for compressible apply plans"
-      };
-    }
-    try {
-    } catch (err) {
-      return {
-        ok: false,
-        stage: "runtime",
-        error: `owned xLights API unavailable: ${str(err?.message || err)}`
-      };
-    }
     try {
       const accepted = await applySequencingBatchPlan(endpoint, ownedBatchPlan);
       const jobId = str(accepted?.data?.jobId);
@@ -275,15 +248,11 @@ export async function validateAndApplyPlan({
       };
     } catch (err) {
       const message = str(err?.message || err);
-      if (isOwnedApiUnavailable(message) && !isOwnedEndpoint(endpoint)) {
-        // Fall through to legacy transaction apply when the owned sidecar is down.
-      } else {
       return {
         ok: false,
         stage: "runtime",
         error: `owned sequencing.applyBatchPlan failed: ${message}`
       };
-      }
     }
   }
 

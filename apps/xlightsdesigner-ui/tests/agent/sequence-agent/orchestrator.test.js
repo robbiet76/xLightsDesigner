@@ -259,7 +259,7 @@ test("orchestrator blocks when owned sequencing batch plan is unavailable", asyn
   assert.match(String(res.error || ""), /owned sequencing\.applyBatchPlan failed/i);
 });
 
-test("orchestrator falls back to legacy transactions when owned health is unavailable", async () => {
+test("orchestrator fails closed when owned health is unavailable for a compressible plan", async () => {
   let began = 0;
   const res = await validateAndApplyPlan({
     endpoint: "http://127.0.0.1:49914/xlDoAutomation",
@@ -303,12 +303,13 @@ test("orchestrator falls back to legacy transactions when owned health is unavai
     getOwnedJob: async () => ({ data: { state: "succeeded" } })
   });
 
-  assert.equal(res.ok, true);
-  assert.equal(res.applyPath, "legacy_transactions");
-  assert.equal(began, 1);
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, "runtime");
+  assert.equal(began, 0);
+  assert.match(String(res.error || ""), /owned xLights API unavailable/i);
 });
 
-test("orchestrator falls back to legacy transactions when owned apply fetch fails", async () => {
+test("orchestrator fails closed when owned apply fetch fails for a compressible plan", async () => {
   let began = 0;
   const res = await validateAndApplyPlan({
     endpoint: "http://127.0.0.1:49914/xlDoAutomation",
@@ -350,9 +351,10 @@ test("orchestrator falls back to legacy transactions when owned apply fetch fail
     getOwnedJob: async () => ({ data: { state: "succeeded" } })
   });
 
-  assert.equal(res.ok, true);
-  assert.equal(res.applyPath, "legacy_transactions");
-  assert.equal(began, 1);
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, "runtime");
+  assert.equal(began, 0);
+  assert.match(String(res.error || ""), /owned sequencing\.applyBatchPlan failed/i);
 });
 
 test("orchestrator fails closed for owned endpoints when owned health is unavailable", async () => {
