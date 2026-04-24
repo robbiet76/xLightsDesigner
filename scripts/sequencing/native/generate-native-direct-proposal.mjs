@@ -94,6 +94,7 @@ function parseArgs(argv = []) {
     appRoot: DEFAULT_APP_ROOT,
     endpoint: DEFAULT_ENDPOINT,
     selectedSections: [],
+    selectedTagNames: [],
     selectedTargetIds: []
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -103,12 +104,14 @@ function parseArgs(argv = []) {
     else if (token === '--app-root') out.appRoot = path.resolve(str(argv[++i] || out.appRoot));
     else if (token === '--endpoint') out.endpoint = str(argv[++i] || out.endpoint);
     else if (token === '--selected-section') out.selectedSections.push(str(argv[++i] || ''));
+    else if (token === '--selected-tag') out.selectedTagNames.push(str(argv[++i] || ''));
     else if (token === '--selected-target') out.selectedTargetIds.push(str(argv[++i] || ''));
     else throw new Error(`Unknown argument: ${token}`);
   }
   if (!out.projectFile) throw new Error('--project-file is required');
   if (!out.prompt) throw new Error('--prompt is required');
   out.selectedSections = out.selectedSections.filter(Boolean);
+  out.selectedTagNames = out.selectedTagNames.filter(Boolean);
   out.selectedTargetIds = out.selectedTargetIds.filter(Boolean);
   return out;
 }
@@ -122,6 +125,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
     appRoot: path.resolve(str(options.appRoot || DEFAULT_APP_ROOT)),
     endpoint: str(options.endpoint || DEFAULT_ENDPOINT),
     selectedSections: Array.isArray(options.selectedSections) ? options.selectedSections.map((row) => str(row)).filter(Boolean) : [],
+    selectedTagNames: Array.isArray(options.selectedTagNames) ? options.selectedTagNames.map((row) => str(row)).filter(Boolean) : [],
     selectedTargetIds: Array.isArray(options.selectedTargetIds) ? options.selectedTargetIds.map((row) => str(row)).filter(Boolean) : []
   };
   if (!args.projectFile) throw new Error('--project-file is required');
@@ -154,6 +158,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
     sequenceRevision: str(revision?.data?.revision || snapshot.sequencePathInput || 'unknown'),
     promptText: args.prompt,
     selectedSections: args.selectedSections,
+    selectedTagNames: args.selectedTagNames,
     selectedTargetIds: args.selectedTargetIds,
     analysisHandoff,
     models,

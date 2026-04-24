@@ -504,6 +504,14 @@ export function executeDirectSequenceRequestOrchestration({
             : "Refresh the xLights effect library before using direct effect names in sequencer requests."
         ]
       : [];
+  const resolvedTargetIds = arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean);
+  const selectedTargetScopeIds = arr(selectedTargetIds).map((row) => str(row)).filter(Boolean);
+  const shouldPromoteResolvedScope = ["explicit", "tag", "goal_match"].includes(str(plan.resolutionSource));
+  const proposalScopeTargetIds = selectedTargetScopeIds.length
+    ? selectedTargetScopeIds
+    : shouldPromoteResolvedScope
+      ? resolvedTargetIds
+      : [];
 
   const proposalBundle = buildProposalBundle({
     proposalId: `proposal-${Date.now()}`,
@@ -511,11 +519,11 @@ export function executeDirectSequenceRequestOrchestration({
     baseRevision: str(sequenceRevision || "unknown"),
     scope: {
       sections: effectiveSections,
-      targetIds: arr(selectedTargetIds),
+      targetIds: proposalScopeTargetIds,
       tagNames: arr(selectedTagNames),
       summary: summarizeScope({
         sections: effectiveSections,
-        targetIds: selectedTargetIds,
+        targetIds: proposalScopeTargetIds,
         tagNames: selectedTagNames
       })
     },
@@ -550,7 +558,7 @@ export function executeDirectSequenceRequestOrchestration({
       designId,
       designRevision,
       sections: effectiveSections,
-      targetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean),
+      targetIds: resolvedTargetIds,
       intentSummary: str(promptText),
       effectHints: executionEffectHints,
       translationIntent
@@ -562,7 +570,7 @@ export function executeDirectSequenceRequestOrchestration({
     intentText: promptText,
     creativeBrief: null,
     elevatedRiskConfirmed,
-    resolvedTargetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean),
+    resolvedTargetIds,
     executionStrategy: proposalBundle.executionPlan
   });
 

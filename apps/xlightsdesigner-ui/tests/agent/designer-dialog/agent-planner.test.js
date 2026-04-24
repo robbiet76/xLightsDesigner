@@ -243,9 +243,38 @@ test('planner includes submodel metadata hints in planning guidance', () => {
   });
 
   const combined = result.proposalLines.join('\n').toLowerCase();
-  assert.ok(combined.includes('visual hints'));
+  assert.ok(combined.includes('visual treatments'));
   assert.ok(combined.includes('crown'));
   assert.ok(combined.includes('keep this target precise and localized'));
+});
+
+test('planner resolves app-owned role metadata into target-specific proposal guidance', () => {
+  const scopedMetadata = [
+    {
+      targetId: 'MegaTree',
+      tags: ['lead'],
+      rolePreference: 'lead',
+      semanticHints: ['centerpiece'],
+      effectAvoidances: ['Bars']
+    }
+  ];
+
+  const result = buildProposalFromIntent({
+    promptText: 'Make the chorus read through the lead display element',
+    selectedSections: ['Chorus'],
+    selectedTagNames: ['lead'],
+    models,
+    submodels,
+    metadataAssignments: scopedMetadata,
+    displayElements
+  });
+
+  assert.equal(result.resolutionSource, 'tag');
+  assert.deepEqual(result.targets.map((row) => row.id), ['MegaTree']);
+  const combined = result.proposalLines.join('\n').toLowerCase();
+  assert.ok(combined.includes('clearest lead read'));
+  assert.ok(combined.includes('centerpiece'));
+  assert.ok(combined.includes('bars'));
 });
 
 test('planner output is deterministic for same input', () => {

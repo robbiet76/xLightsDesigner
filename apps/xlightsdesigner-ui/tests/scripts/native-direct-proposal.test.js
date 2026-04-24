@@ -199,3 +199,79 @@ test("native project display metadata loader includes preference-only target int
     }
   ]);
 });
+
+test("native direct proposal resolves app metadata tags into proposal target scope", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-proposal-metadata-"));
+  const appRoot = path.join(root, "app-root");
+  const projectDir = path.join(root, "project");
+  const projectFile = path.join(projectDir, "Native Metadata Scope Test.xdproj");
+  const audioPath = path.join(root, "show", "song.mp3");
+  const sequencePath = path.join(root, "show", "Native Metadata Scope Test.xsq");
+
+  writeJson(projectFile, {
+    projectName: "Native Metadata Scope Test",
+    showFolder: path.dirname(sequencePath),
+    snapshot: {
+      audioPathInput: audioPath,
+      sequencePathInput: sequencePath
+    }
+  });
+  writeJson(path.join(appRoot, "library", "tracks", "song.json"), {
+    track: {
+      sourceMedia: { path: audioPath }
+    },
+    analyses: {
+      profiles: {
+        deep: sampleAnalysisArtifact(audioPath)
+      }
+    }
+  });
+  writeJson(path.join(projectDir, "layout", "layout-metadata.json"), {
+    version: 1,
+    preferencesByTargetId: {
+      MegaTree: {
+        rolePreference: "lead",
+        semanticHints: ["centerpiece"],
+        effectAvoidances: ["Bars"]
+      }
+    }
+  });
+
+  const result = await runNativeDirectProposal(
+    {
+      projectFile,
+      appRoot,
+      endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+      prompt: "Make the chorus read through the lead display element.",
+      selectedSections: ["Chorus 1"],
+      selectedTagNames: ["lead"]
+    },
+    {
+      getRevision: async () => ({ data: { revision: "rev-test-1" } }),
+      getModels: async () => ({ data: { models: [{ id: "MegaTree", name: "MegaTree", type: "Model" }] } }),
+      getDisplayElements: async () => ({ data: { elements: [{ id: "MegaTree", name: "MegaTree", type: "model" }] } }),
+      getEffectDefinitions: async () => ({ data: { effects: [] } }),
+      buildAnalysisHandoffFromArtifact,
+      buildEffectDefinitionCatalog,
+      executeDirectSequenceRequestOrchestration,
+      writeProjectArtifacts
+    }
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.metadataAssignmentCount, 1);
+
+  const proposalPath = path.join(projectDir, "artifacts", "proposals", `${result.proposalArtifactId}.json`);
+  const intentPath = path.join(projectDir, "artifacts", "intent-handoffs", `${result.intentArtifactId}.json`);
+  const proposal = JSON.parse(fs.readFileSync(proposalPath, "utf8"));
+  const intent = JSON.parse(fs.readFileSync(intentPath, "utf8"));
+
+  assert.deepEqual(proposal.scope.targetIds, ["MegaTree"]);
+  assert.deepEqual(proposal.scope.tagNames, ["lead"]);
+  assert.deepEqual(proposal.executionPlan.sectionPlans[0].targetIds, ["MegaTree"]);
+  assert.equal(proposal.executionPlan.targetCount, 1);
+  assert.deepEqual(intent.scope.targetIds, ["MegaTree"]);
+  assert.match(proposal.proposalLines.join("\n"), /lead read/i);
+  assert.match(proposal.proposalLines.join("\n"), /centerpiece/i);
+  assert.match(proposal.proposalLines.join("\n"), /Bars/i);
+});

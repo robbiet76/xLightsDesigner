@@ -77,6 +77,7 @@ Sequencing proof-loop progress:
 - assistant action requests can now seed and promote Display metadata through the same native paths, with explicit approval required before promotion
 - assistant context now carries confirmed Display metadata rows, including meanings and linked target coverage, so agents can reason from promoted app-owned metadata instead of only raw layout names
 - native direct sequence proposal generation passes confirmed project Display metadata assignments into the sequence orchestrator, so promoted layout understanding can influence target resolution and sequencing strategy
+- native direct sequence proposal generation now accepts selected Display metadata tags, promotes metadata-resolved targets into proposal scope, and has regression coverage proving app-owned target intent can drive proposal target selection and guidance
 - native Review apply uses the same confirmed project Display metadata assignments when rebuilding the final sequence-agent plan, keeping proposal and apply semantics aligned
 - native project Display metadata now preserves richer target preferences and visual-hint definitions, and the native sequencer handoff passes those app-owned model-level intent extensions alongside xLights layout metadata
 - native Display can now author app-owned target intent preferences for linked xLights models, including role, semantic hints, and effect avoidances
