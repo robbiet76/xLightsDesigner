@@ -68,6 +68,8 @@ struct ReviewScreenView: View {
                         .disabled(!model.screenModel.actions.canApply)
                     Button(model.screenModel.actions.deferButtonTitle) { model.deferPendingWork() }
                         .disabled(!model.screenModel.actions.canDefer)
+                    Button(model.screenModel.actions.restoreBackupButtonTitle) { model.restoreLastBackup() }
+                        .disabled(!model.screenModel.actions.canRestoreBackup)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

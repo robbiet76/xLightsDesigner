@@ -4,9 +4,14 @@ import Foundation
 
 private struct StubReviewExecutionService: ReviewExecutionService, Sendable {
     let onApply: @Sendable (String, String, String) async throws -> ReviewApplyExecutionResult
+    var onRestore: @Sendable (String, String) async throws -> String = { _, _ in "Backup restored" }
 
     func applyPendingWork(projectFilePath: String, appRootPath: String, endpoint: String) async throws -> ReviewApplyExecutionResult {
         try await onApply(projectFilePath, appRootPath, endpoint)
+    }
+
+    func restoreSequenceBackup(sequencePath: String, backupPath: String) async throws -> String {
+        try await onRestore(sequencePath, backupPath)
     }
 }
 
@@ -79,6 +84,17 @@ private final class ReviewArtifactNotificationRecorder {
     func record(projectFilePath candidate: String?) {
         guard candidate == projectFilePath else { return }
         count += 1
+    }
+}
+
+@MainActor
+private final class BackupRestoreRecorder {
+    private(set) var sequencePath = ""
+    private(set) var backupPath = ""
+
+    func record(sequencePath: String, backupPath: String) {
+        self.sequencePath = sequencePath
+        self.backupPath = backupPath
     }
 }
 
@@ -211,6 +227,68 @@ private func reviewPendingWork(
     #expect(model.transientBanner?.text.contains("Saved xLights sequence") == true)
     #expect(recorder.count == 1)
     #expect(model.screenModel.readiness.applyPreviewLines.contains("Chorus 1 / Mega Tree / apply Color Wash."))
+    #expect(model.screenModel.actions.canRestoreBackup == true)
+    #expect(model.screenModel.readiness.backupSummary.contains("Restore point available"))
+}
+
+@MainActor
+@Test func reviewCanRestoreLastApplyBackup() async throws {
+    let workspace = ProjectWorkspace()
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: "/tmp/Christmas Restore.xdproj",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [:]
+        )
+    )
+    let recorder = BackupRestoreRecorder()
+    let model = ReviewScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: StubReviewPendingWorkService(pendingWork: reviewPendingWork()),
+        reviewExecutionService: StubReviewExecutionService(
+            onApply: { _, _, _ in
+                ReviewApplyExecutionResult(
+                    summary: "Applied pending work.",
+                    commandCount: 1,
+                    nextRevision: "rev-2",
+                    applyPath: "owned_batch_plan",
+                    sequencePath: "/tmp/HolidayRoad.xsq",
+                    sequenceBackupPath: "/tmp/project/artifacts/backups/HolidayRoad-preapply-rev-1.xsq",
+                    renderCurrentSummary: "",
+                    renderCurrentError: "",
+                    renderFeedbackCaptured: false,
+                    renderFeedbackStatus: "",
+                    renderFeedbackMissingRequirements: [],
+                    practicalValidationSummary: nil
+                )
+            },
+            onRestore: { sequencePath, backupPath in
+                await recorder.record(sequencePath: sequencePath, backupPath: backupPath)
+                return "Backup restored to \(sequencePath)"
+            }
+        ),
+        xlightsSessionService: StubXLightsSessionService()
+    )
+
+    #expect(model.screenModel.actions.canRestoreBackup == false)
+    model.applyPendingWork()
+    try await Task.sleep(for: .milliseconds(120))
+    #expect(model.screenModel.actions.canRestoreBackup == true)
+
+    model.restoreLastBackup()
+    try await Task.sleep(for: .milliseconds(120))
+
+    #expect(recorder.sequencePath == "/tmp/HolidayRoad.xsq")
+    #expect(recorder.backupPath == "/tmp/project/artifacts/backups/HolidayRoad-preapply-rev-1.xsq")
+    #expect(model.isRestoringBackup == false)
+    #expect(model.transientBanner?.state == .ready)
+    #expect(model.transientBanner?.text.contains("Backup restored to /tmp/HolidayRoad.xsq") == true)
 }
 
 @MainActor

@@ -11,6 +11,9 @@ final class ReviewScreenViewModel {
     var screenModel: ReviewScreenModel
     var transientBanner: WorkflowBannerModel?
     var isApplying = false
+    var isRestoringBackup = false
+    private var lastAppliedSequencePath = ""
+    private var lastSequenceBackupPath = ""
 
     init(
         workspace: ProjectWorkspace,
@@ -26,7 +29,10 @@ final class ReviewScreenViewModel {
             project: workspace.activeProject,
             pendingWork: try? pendingWorkService.loadPendingWork(for: workspace.activeProject),
             transientBanner: nil,
-            isApplying: false
+            isApplying: false,
+            isRestoringBackup: false,
+            lastAppliedSequencePath: "",
+            lastSequenceBackupPath: ""
         )
     }
 
@@ -36,7 +42,10 @@ final class ReviewScreenViewModel {
             project: workspace.activeProject,
             pendingWork: pendingWork,
             transientBanner: transientBanner,
-            isApplying: isApplying
+            isApplying: isApplying,
+            isRestoringBackup: isRestoringBackup,
+            lastAppliedSequencePath: lastAppliedSequencePath,
+            lastSequenceBackupPath: lastSequenceBackupPath
         )
     }
 
@@ -96,6 +105,8 @@ final class ReviewScreenViewModel {
                     ? try? await xlightsSessionService.renderCurrentSequence()
                     : result.renderCurrentSummary
                 let renderFailureSummary = result.renderCurrentError.isEmpty ? "" : " Render-current warning: \(result.renderCurrentError)."
+                lastAppliedSequencePath = result.sequencePath
+                lastSequenceBackupPath = result.sequenceBackupPath
                 transientBanner = WorkflowBannerModel(
                     id: "review-apply-success",
                     text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (result.sequenceBackupPath.isEmpty ? "" : " Backup: \(result.sequenceBackupPath).") + validationSummary + feedbackSummary + renderFailureSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
@@ -108,6 +119,51 @@ final class ReviewScreenViewModel {
                 transientBanner = WorkflowBannerModel(
                     id: "review-apply-failed",
                     text: friendlyFailureText(error),
+                    state: .blocked
+                )
+                refresh()
+            }
+        }
+    }
+
+    func restoreLastBackup() {
+        guard !isRestoringBackup else { return }
+        let sequencePath = lastAppliedSequencePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        let backupPath = lastSequenceBackupPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sequencePath.isEmpty, !backupPath.isEmpty else {
+            transientBanner = WorkflowBannerModel(
+                id: "review-restore-blocked",
+                text: "No Review backup is available to restore yet.",
+                state: .blocked
+            )
+            refresh()
+            return
+        }
+        isRestoringBackup = true
+        transientBanner = WorkflowBannerModel(
+            id: "review-restore-running",
+            text: "Restoring last Review backup...",
+            state: .partial
+        )
+        refresh()
+        Task {
+            do {
+                let summary = try await reviewExecutionService.restoreSequenceBackup(
+                    sequencePath: sequencePath,
+                    backupPath: backupPath
+                )
+                isRestoringBackup = false
+                transientBanner = WorkflowBannerModel(
+                    id: "review-restore-success",
+                    text: "\(summary). Reopen or refresh xLights if the active editor still shows the pre-restore state.",
+                    state: .ready
+                )
+                refresh()
+            } catch {
+                isRestoringBackup = false
+                transientBanner = WorkflowBannerModel(
+                    id: "review-restore-failed",
+                    text: String(error.localizedDescription),
                     state: .blocked
                 )
                 refresh()
@@ -136,7 +192,10 @@ final class ReviewScreenViewModel {
         project: ActiveProjectModel?,
         pendingWork: PendingWorkReadModel?,
         transientBanner: WorkflowBannerModel?,
-        isApplying: Bool
+        isApplying: Bool,
+        isRestoringBackup: Bool,
+        lastAppliedSequencePath: String,
+        lastSequenceBackupPath: String
     ) -> ReviewScreenModel {
         let projectName = project?.projectName ?? "No active project"
         let hasProject = project != nil
@@ -149,6 +208,8 @@ final class ReviewScreenViewModel {
         let readinessSummary = hasProject
             ? "Pending work is visible and can be evaluated before owned API apply execution."
             : "Project context is required before review becomes actionable."
+        let hasRestorePoint = !lastAppliedSequencePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !lastSequenceBackupPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
         let nativeDesignHighlights = [
             pendingWork?.nativeDesignMood,
@@ -211,14 +272,20 @@ final class ReviewScreenViewModel {
                     ? "Estimated proposal impact: \(pendingWork?.estimatedImpact ?? 0). Lifecycle: \(pendingWork?.proposalLifecycleStatus ?? "unknown"). Execution: \(pendingWork?.executionModeSummary ?? "No execution plan available.")."
                     : "No implementation impact available.",
                 backupSummary: hasProject
-                    ? buildBackupSummary(pendingWork: pendingWork)
+                    ? buildBackupSummary(
+                        pendingWork: pendingWork,
+                        lastAppliedSequencePath: lastAppliedSequencePath,
+                        lastSequenceBackupPath: lastSequenceBackupPath
+                    )
                     : "No backup context available."
             ),
             actions: ReviewActionStateModel(
-                canApply: canApply && !isApplying,
-                canDefer: hasProject && !isApplying,
+                canApply: canApply && !isApplying && !isRestoringBackup,
+                canDefer: hasProject && !isApplying && !isRestoringBackup,
+                canRestoreBackup: hasProject && hasRestorePoint && !isApplying && !isRestoringBackup,
                 applyButtonTitle: isApplying ? "Applying..." : "Apply",
-                deferButtonTitle: "Defer"
+                deferButtonTitle: "Defer",
+                restoreBackupButtonTitle: isRestoringBackup ? "Restoring..." : "Restore Last Backup"
             ),
             banners: {
                 var banners: [WorkflowBannerModel] = [
@@ -234,8 +301,17 @@ final class ReviewScreenViewModel {
         )
     }
 
-    private static func buildBackupSummary(pendingWork: PendingWorkReadModel?) -> String {
+    private static func buildBackupSummary(
+        pendingWork: PendingWorkReadModel?,
+        lastAppliedSequencePath: String,
+        lastSequenceBackupPath: String
+    ) -> String {
         let constraints = pendingWork?.constraintsSummary ?? "No sequencing constraints recorded."
+        let restorePoint = lastSequenceBackupPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        let appliedSequence = lastAppliedSequencePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !restorePoint.isEmpty && !appliedSequence.isEmpty {
+            return "Restore point available: \(restorePoint). Restores over target: \(appliedSequence). Current constraints: \(constraints)"
+        }
         guard let pendingWork else {
             return "No generated proposal is ready. Current constraints: \(constraints)"
         }

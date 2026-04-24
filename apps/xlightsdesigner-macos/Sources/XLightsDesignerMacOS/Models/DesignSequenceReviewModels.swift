@@ -189,8 +189,10 @@ struct ReviewReadinessModel: Sendable {
 struct ReviewActionStateModel: Sendable {
     let canApply: Bool
     let canDefer: Bool
+    let canRestoreBackup: Bool
     let applyButtonTitle: String
     let deferButtonTitle: String
+    let restoreBackupButtonTitle: String
 }
 
 struct ReviewScreenModel: Sendable {

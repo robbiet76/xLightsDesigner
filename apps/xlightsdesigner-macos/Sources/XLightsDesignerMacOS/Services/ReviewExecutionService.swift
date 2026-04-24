@@ -41,6 +41,7 @@ struct PracticalValidationSummary: Sendable {
 
 protocol ReviewExecutionService: Sendable {
     func applyPendingWork(projectFilePath: String, appRootPath: String, endpoint: String) async throws -> ReviewApplyExecutionResult
+    func restoreSequenceBackup(sequencePath: String, backupPath: String) async throws -> String
 }
 
 struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
@@ -74,6 +75,22 @@ struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
             renderFeedbackMissingRequirements: stringArray(json["renderFeedbackMissingRequirements"]),
             practicalValidationSummary: practicalValidationSummary(json["practicalValidationSummary"])
         )
+    }
+
+    func restoreSequenceBackup(sequencePath: String, backupPath: String) async throws -> String {
+        try await Task.detached(priority: .userInitiated) {
+            let sequenceURL = URL(fileURLWithPath: sequencePath)
+            let backupURL = URL(fileURLWithPath: backupPath)
+            guard FileManager.default.fileExists(atPath: backupURL.path) else {
+                throw ReviewExecutionError.processFailed("Backup file does not exist: \(backupPath)")
+            }
+            try FileManager.default.createDirectory(at: sequenceURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            if FileManager.default.fileExists(atPath: sequenceURL.path) {
+                try FileManager.default.removeItem(at: sequenceURL)
+            }
+            try FileManager.default.copyItem(at: backupURL, to: sequenceURL)
+            return "Backup restored to \(sequencePath)"
+        }.value
     }
 
     private func runNode(arguments: [String]) async throws -> Data {

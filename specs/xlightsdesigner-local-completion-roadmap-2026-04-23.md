@@ -6,7 +6,7 @@ Owner: xLightsDesigner Team
 
 ## Current Phase
 
-Phase 2 has started after a green owned-API proof and Phase 1 owned-path cleanup.
+Phase 4 has started after Phase 3 proof-loop memory, drilldown evidence, effect-family tendency learning, and retained Gate A validation were completed.
 
 Validated against:
 - xLights repo: `/Users/robterry/xLights-2026.06`
@@ -76,6 +76,9 @@ Phase 3 proof-loop bridge started:
 - effect outcome memory now summarizes role-specific tendencies for focus, support balance, section contrast, and section development before choosing the next revision effect
 - retained Gate A sequence-agent validation passed on 2026-04-24 with `111/111` tests green after proof-loop memory and drilldown changes
 - the first future parameter-learning target is defined narrowly as Bars direction/orientation plus layer-mix tendencies for `increase_section_contrast` revisions only; no parameter search has started
+
+Phase 4 local app completion started:
+- native Review now exposes a Restore Last Backup action after a successful apply records both the target sequence path and pre-apply backup path
 
 ## Purpose
 
