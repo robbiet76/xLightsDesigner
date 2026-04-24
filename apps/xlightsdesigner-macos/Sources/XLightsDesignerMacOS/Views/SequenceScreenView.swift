@@ -111,7 +111,6 @@ struct SequenceScreenView: View {
                         xlightsSessionModel.refresh()
                         model.refresh()
                     }
-                    .disabled(xlightsSessionModel.snapshot.isReachable == false)
 
                     Button("Save Sequence") {
                         Task {

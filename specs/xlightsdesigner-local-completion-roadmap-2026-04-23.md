@@ -79,6 +79,7 @@ Sequencing proof-loop progress:
 
 Local app completion progress:
 - native Review now exposes a Restore Last Backup action after a successful apply records both the target sequence path and pre-apply backup path
+- native xLights session refresh now remains available when xLights is unreachable and failed refreshes mark the session snapshot as unreachable instead of preserving stale connected state
 
 ## Purpose
 

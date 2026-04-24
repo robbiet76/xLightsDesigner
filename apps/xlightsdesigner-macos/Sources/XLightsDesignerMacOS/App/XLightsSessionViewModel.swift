@@ -51,8 +51,14 @@ final class XLightsSessionViewModel {
     func refresh() {
         let projectShowFolder = workspace.activeProject?.showFolder ?? ""
         Task {
-            guard let session = try? await service.loadSession(projectShowFolder: projectShowFolder) else { return }
             let previous = snapshot
+            guard let session = try? await service.loadSession(projectShowFolder: projectShowFolder) else {
+                snapshot = unreachableSnapshot(from: previous, projectShowFolder: projectShowFolder)
+                if didChangeSignificantly(from: previous, to: snapshot) {
+                    onSignificantChange?(previous, snapshot)
+                }
+                return
+            }
             snapshot = XLightsSessionSnapshotModel(
                 runtimeState: session.runtimeState,
                 supportedCommands: session.supportedCommands,
@@ -247,5 +253,43 @@ final class XLightsSessionViewModel {
         }
 
         return false
+    }
+
+    private func unreachableSnapshot(from previous: XLightsSessionSnapshotModel, projectShowFolder: String) -> XLightsSessionSnapshotModel {
+        XLightsSessionSnapshotModel(
+            runtimeState: "unreachable",
+            supportedCommands: [],
+            isReachable: false,
+            isSequenceOpen: false,
+            sequencePath: "",
+            revision: "",
+            mediaFile: "",
+            showDirectory: previous.showDirectory,
+            projectShowMatches: false,
+            layoutSignature: previous.layoutSignature,
+            hasUnsavedLayoutChanges: nil,
+            hasUnsavedRgbEffectsChanges: nil,
+            hasUnsavedNetworkChanges: nil,
+            rgbEffectsFile: previous.rgbEffectsFile,
+            rgbEffectsModifiedAt: previous.rgbEffectsModifiedAt,
+            networksFile: previous.networksFile,
+            networksModifiedAt: previous.networksModifiedAt,
+            layoutDirtyStateReason: "xLights owned API is not reachable. Start the API-enabled xLights build, then refresh.",
+            sequenceType: "unknown",
+            durationMs: 0,
+            frameMs: 0,
+            dirtyState: "unreachable",
+            dirtyStateReason: projectShowFolder.isEmpty
+                ? "xLights owned API is not reachable."
+                : "xLights owned API is not reachable for project show folder: \(projectShowFolder)",
+            hasUnsavedChanges: nil,
+            saveSupported: false,
+            renderSupported: false,
+            openSupported: false,
+            createSupported: false,
+            closeSupported: false,
+            lastSaveSummary: previous.lastSaveSummary,
+            lastRenderSummary: previous.lastRenderSummary
+        )
     }
 }
