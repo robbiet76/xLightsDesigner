@@ -36,6 +36,15 @@ struct AssistantWindowViewModelTests {
                 "status": "Confirmed",
                 "linkedTargetCount": "10",
                 "linkedTargetSample": "Snowflake-01, Snowflake-02"
+            ]],
+            displayTargetIntentRows: [[
+                "subject": "MegaTree",
+                "subjectType": "Model",
+                "category": "Target Intent",
+                "value": "Role: lead. Hints: centerpiece, sparkle. Avoid: Bars",
+                "status": "Confirmed",
+                "linkedTargetCount": "1",
+                "linkedTargetSample": "MegaTree"
             ]]
         )
         model.loadConversationIfNeeded(context: context, project: nil as ActiveProjectModel?)
@@ -59,6 +68,9 @@ struct AssistantWindowViewModelTests {
         let metadataRows = display?["metadataRows"] as? [[String: String]]
         #expect(metadataRows?.first?["subject"] == "Snowflakes")
         #expect(metadataRows?.first?["linkedTargetCount"] == "10")
+        let targetIntentRows = display?["targetIntentRows"] as? [[String: String]]
+        #expect(targetIntentRows?.first?["subject"] == "MegaTree")
+        #expect(targetIntentRows?.first?["value"]?.contains("Role: lead") == true)
     }
 
     @Test func skipsFollowUpIntroWhenUserDirectlyAddressesSpecialist() async {
