@@ -93,6 +93,7 @@ The agent backend eventually becomes shared cloud infrastructure:
 - Existing sequence subfolders in the active show folder are read-only validation fixtures unless the user explicitly selects one for editing.
 - Phase 1 test writes may use a new isolated folder inside the show folder.
 - Existing sequences in the show folder may be inspected for functionality validation, but are not training data.
+- When touching specs or API docs, scan nearby related docs for stale route names, future-tense migration plans, removed fallback paths, and inactive transaction/legacy contracts; clean those claims in the same slice when the scope is clear.
 
 ## Phase 1: Local Owned API Reliability
 
