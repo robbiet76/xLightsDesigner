@@ -243,62 +243,66 @@ final class DisplayScreenViewModel {
     }
 
     func loadDisplay() {
-        let activeProject = workspace.activeProject
         Task {
-            do {
-                let result = try await displayService.loadDisplay(for: activeProject)
-                let discoverySummary = displayDiscoveryStore.summary(for: activeProject)
-                let metadataRows = buildMetadataRows(displayRows: result.rows, discoverySummary: discoverySummary)
-                let validSelection = selectedRowIDs.intersection(Set(metadataRows.map(\.id)))
-                if validSelection.isEmpty, let first = metadataRows.first {
-                    selectedRowIDs = [first.id]
-                } else {
-                    selectedRowIDs = validSelection
-                }
+            await reloadDisplay()
+        }
+    }
 
-                screenModel = DisplayScreenModel(
-                    header: DisplayHeaderModel(
-                        title: "Display",
-                        subtitle: "Review and manage the display metadata the agents are learning from your layout.",
-                        activeProjectName: workspace.activeProject?.projectName ?? "No Project",
-                        sourceSummary: result.sourceSummary
-                    ),
-                    readinessSummary: result.readiness,
-                    rows: result.rows,
-                    metadataRows: metadataRows,
-                    overviewCards: buildOverviewCards(from: metadataRows),
-                    selectedMetadata: .none("Select one metadata entry to inspect."),
-                    banners: result.banners,
-                    labelDefinitions: result.labelDefinitions,
-                    discoveryProposals: discoverySummary.proposedTags
-                )
-                syncSelectedMetadata()
-            } catch {
-                screenModel = DisplayScreenModel(
-                    header: DisplayHeaderModel(
-                        title: "Display",
-                        subtitle: "Review and manage the display metadata the agents are learning from your layout.",
-                        activeProjectName: workspace.activeProject?.projectName ?? "No Project",
-                        sourceSummary: "xLights owned API"
-                    ),
-                    readinessSummary: DisplayReadinessSummaryModel(
-                        state: .blocked,
-                        totalTargets: 0,
-                        readyCount: 0,
-                        unresolvedCount: 0,
-                        orphanCount: 0,
-                        explanationText: "Display could not be loaded.",
-                        nextStepText: "Check that xLights is running and reachable."
-                    ),
-                    rows: [],
-                    metadataRows: [],
-                    overviewCards: [],
-                    selectedMetadata: .none(error.localizedDescription),
-                    banners: [DisplayBannerModel(id: "load-failed", state: .blocked, text: error.localizedDescription)],
-                    labelDefinitions: [],
-                    discoveryProposals: []
-                )
+    func reloadDisplay() async {
+        let activeProject = workspace.activeProject
+        do {
+            let result = try await displayService.loadDisplay(for: activeProject)
+            let discoverySummary = displayDiscoveryStore.summary(for: activeProject)
+            let metadataRows = buildMetadataRows(displayRows: result.rows, discoverySummary: discoverySummary)
+            let validSelection = selectedRowIDs.intersection(Set(metadataRows.map(\.id)))
+            if validSelection.isEmpty, let first = metadataRows.first {
+                selectedRowIDs = [first.id]
+            } else {
+                selectedRowIDs = validSelection
             }
+
+            screenModel = DisplayScreenModel(
+                header: DisplayHeaderModel(
+                    title: "Display",
+                    subtitle: "Review and manage the display metadata the agents are learning from your layout.",
+                    activeProjectName: workspace.activeProject?.projectName ?? "No Project",
+                    sourceSummary: result.sourceSummary
+                ),
+                readinessSummary: result.readiness,
+                rows: result.rows,
+                metadataRows: metadataRows,
+                overviewCards: buildOverviewCards(from: metadataRows),
+                selectedMetadata: .none("Select one metadata entry to inspect."),
+                banners: result.banners,
+                labelDefinitions: result.labelDefinitions,
+                discoveryProposals: discoverySummary.proposedTags
+            )
+            syncSelectedMetadata()
+        } catch {
+            screenModel = DisplayScreenModel(
+                header: DisplayHeaderModel(
+                    title: "Display",
+                    subtitle: "Review and manage the display metadata the agents are learning from your layout.",
+                    activeProjectName: workspace.activeProject?.projectName ?? "No Project",
+                    sourceSummary: "xLights owned API"
+                ),
+                readinessSummary: DisplayReadinessSummaryModel(
+                    state: .blocked,
+                    totalTargets: 0,
+                    readyCount: 0,
+                    unresolvedCount: 0,
+                    orphanCount: 0,
+                    explanationText: "Display could not be loaded.",
+                    nextStepText: "Check that xLights is running and reachable."
+                ),
+                rows: [],
+                metadataRows: [],
+                overviewCards: [],
+                selectedMetadata: .none(error.localizedDescription),
+                banners: [DisplayBannerModel(id: "load-failed", state: .blocked, text: error.localizedDescription)],
+                labelDefinitions: [],
+                discoveryProposals: []
+            )
         }
     }
 
@@ -449,33 +453,37 @@ final class DisplayScreenViewModel {
     }
 
     func applyDiscoveryProposals() {
-        let proposals = screenModel.discoveryProposals
-        guard !proposals.isEmpty else { return }
-
         Task {
             do {
-                for proposal in proposals {
-                    try await displayService.saveTagDefinition(
-                        for: workspace.activeProject,
-                        tagID: nil,
-                        name: proposal.tagName,
-                        description: proposal.tagDescription,
-                        color: .none
-                    )
-                    try await displayService.addTag(
-                        for: workspace.activeProject,
-                        targetIDs: proposal.targetNames,
-                        tagName: proposal.tagName,
-                        description: proposal.tagDescription
-                    )
-                }
-                try displayDiscoveryStore.clearTagProposals(for: workspace.activeProject)
-                showDiscoveryProposalSheet = false
-                loadDisplay()
+                try await promoteDiscoveryProposals()
             } catch {
                 errorMessage = error.localizedDescription
             }
         }
+    }
+
+    func promoteDiscoveryProposals() async throws {
+        let proposals = screenModel.discoveryProposals
+        guard !proposals.isEmpty else { return }
+
+        for proposal in proposals {
+            try await displayService.saveTagDefinition(
+                for: workspace.activeProject,
+                tagID: nil,
+                name: proposal.tagName,
+                description: proposal.tagDescription,
+                color: .none
+            )
+            try await displayService.addTag(
+                for: workspace.activeProject,
+                targetIDs: proposal.targetNames,
+                tagName: proposal.tagName,
+                description: proposal.tagDescription
+            )
+        }
+        try displayDiscoveryStore.clearTagProposals(for: workspace.activeProject)
+        showDiscoveryProposalSheet = false
+        await reloadDisplay()
     }
 
     private func buildMetadataRows(

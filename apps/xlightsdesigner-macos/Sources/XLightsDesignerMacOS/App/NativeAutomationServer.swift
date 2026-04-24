@@ -243,6 +243,23 @@ final class NativeAutomationServer: @unchecked Sendable {
                     "state": $0.state.rawValue
                 ] } ?? NSNull()
             ])
+        case "proposeDisplayMetadataFromLayout":
+            model.displayScreenModel.proposeMetadataFromLayout()
+            await model.displayScreenModel.reloadDisplay()
+            return .json(200, body: [
+                "ok": true,
+                "display": displaySnapshot()
+            ])
+        case "applyDisplayMetadataProposals":
+            do {
+                try await model.displayScreenModel.promoteDiscoveryProposals()
+                return .json(200, body: [
+                    "ok": true,
+                    "display": displaySnapshot()
+                ])
+            } catch {
+                return .error(statusCode: 500, message: error.localizedDescription)
+            }
         case "deferReview":
             model.reviewScreenModel.deferPendingWork()
             return .json(200, body: ["ok": true])
@@ -534,10 +551,28 @@ final class NativeAutomationServer: @unchecked Sendable {
             "targetCount": screen.rows.count,
             "metadataCount": screen.metadataRows.count,
             "proposedMetadataCount": screen.discoveryProposals.count,
+            "confirmedMetadataCount": screen.metadataRows.filter { $0.status == .confirmed }.count,
             "readinessState": screen.readinessSummary.state.rawValue,
             "readyCount": screen.readinessSummary.readyCount,
             "unresolvedCount": screen.readinessSummary.unresolvedCount,
             "orphanCount": screen.readinessSummary.orphanCount,
+            "metadataRows": screen.metadataRows.prefix(12).map {
+                [
+                    "subject": $0.subject,
+                    "subjectType": $0.subjectType,
+                    "category": $0.category,
+                    "value": $0.value,
+                    "status": $0.status.rawValue,
+                    "linkedTargetCount": $0.linkedTargetCount
+                ]
+            },
+            "discoveryProposals": screen.discoveryProposals.prefix(12).map {
+                [
+                    "tagName": $0.tagName,
+                    "tagDescription": $0.tagDescription,
+                    "targetCount": $0.targetNames.count
+                ]
+            },
             "selectedMetadata": selected
         ]
     }

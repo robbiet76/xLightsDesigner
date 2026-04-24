@@ -73,6 +73,7 @@ Sequencing proof-loop progress:
 - native History now loads `history_entry_v1` review-pass rollups from the project `history/` folder and surfaces request scope, pass outcome, validation status, and artifact refs
 - native History now flags consecutive review-pass validation instability so repeated proof-loop failures are visible before another apply
 - native Display now surfaces persisted project display labels as confirmed metadata rows so applied layout proposals remain visible after promotion into the active metadata store
+- native automation can seed layout-derived Display metadata proposals, promote them into confirmed project metadata, and snapshot confirmed/proposed Display row counts for validation
 - sequencer revision planning now maps unresolved prior-pass proof signals into bounded revision roles so the next pass can bias realization from the proof loop
 - sequencer revision briefs now map prior-pass proof signals into safe focus/revision target hints before realization
 - revision-role planning no longer feeds role-derived hints into parameter-prior guidance; parameter tuning remains deferred

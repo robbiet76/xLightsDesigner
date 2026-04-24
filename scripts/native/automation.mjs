@@ -3,7 +3,7 @@
 const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || 'http://127.0.0.1:49916';
 
 function usage() {
-  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | open-project <projectFilePath> | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | reset-assistant-memory | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant');
+  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | open-project <projectFilePath> | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | propose-display-metadata-from-layout | apply-display-metadata-proposals | reset-assistant-memory | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant');
   process.exit(2);
 }
 
@@ -74,6 +74,12 @@ switch (command) {
     await request('POST', '/action', body);
     break;
   }
+  case 'propose-display-metadata-from-layout':
+    await request('POST', '/action', { action: 'proposeDisplayMetadataFromLayout' });
+    break;
+  case 'apply-display-metadata-proposals':
+    await request('POST', '/action', { action: 'applyDisplayMetadataProposals' });
+    break;
   case 'reset-assistant-memory':
     await request('POST', '/action', { action: 'resetAssistantMemory' });
     break;
