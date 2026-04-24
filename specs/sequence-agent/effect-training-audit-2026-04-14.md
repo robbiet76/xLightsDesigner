@@ -18,7 +18,7 @@ Use it as historical context only, alongside the reset documents:
 
 ## Purpose
 
-Audit the current effect-training system so Phase 3 work can start from the actual trained baseline instead of assumptions.
+Audit the current effect-training system so proof-loop effect-family learning can start from the actual trained baseline instead of assumptions.
 
 This audit answers:
 - what effect training already exists
@@ -187,7 +187,7 @@ This file is useful, but it is still the main place where effect-routing policy 
 
 Assessment:
 - this is currently the largest non-trained effect-policy surface
-- it is the main place where Phase 3 effect-family learning can drift away from the trained baseline
+- it is the main place where effect-family learning can drift away from the trained baseline
 
 ### 2. `trained-effect-knowledge.js` still carries hand-authored keyword and visual-family maps
 
@@ -220,7 +220,7 @@ But effect-family bias is still ultimately resolved through:
 - summary interpretation
 
 Assessment:
-- this is correct for the current phase
+- this is correct for the current proof-loop work
 - but it means the next learning layer should target effect-family outcome memory, not parameter tuning
 
 ## What Is Not Missing
@@ -259,7 +259,7 @@ That bundle is already:
 - wired into runtime
 
 Conclusion:
-- Phase 3 effect-family learning should start from the Stage 1 bundle as the baseline source of trained evidence
+- effect-family learning should start from the Stage 1 bundle as the baseline source of trained evidence
 
 ### Finding 2
 
@@ -279,7 +279,7 @@ The system is ready for effect-family learning, but not parameter-level learning
 
 Why:
 - Stage 1 supports family-level recommendation
-- Phase 3 now supports:
+- proof-loop sequencing now supports:
   - critique
   - revision roles
   - prior-pass memory
@@ -413,7 +413,7 @@ The next effect-training slice should be:
 That is the correct bridge from:
 - Stage 1 trained selection
 to
-- Phase 3 live effect-family learning
+- live effect-family learning
 
 ## Concrete Starting Files
 
@@ -433,7 +433,7 @@ Primary related specs:
 - [effect-knowledge-architecture-audit-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-knowledge-architecture-audit-2026-03-22.md)
 - [sequence-agent-semantics-architecture-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-agent-semantics-architecture-2026-03-22.md)
 - [sequencer-phase3-roadmap-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-phase3-roadmap-2026-04-13.md)
-- [sequencer-phase3-implementation-checklist-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-phase3-implementation-checklist-2026-04-13.md)
+- [sequencer-proof-loop-checklist-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-proof-loop-checklist-2026-04-13.md)
 
 ## Bottom Line
 

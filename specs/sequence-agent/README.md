@@ -84,7 +84,7 @@ These remain active, but they are supporting material rather than the first entr
 - [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
 - [model-metadata-ownership-and-tagging-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-ownership-and-tagging-2026-03-22.md)
 - [model-metadata-record-contract-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-record-contract-2026-03-22.md)
-- [sequencer-phase3-implementation-checklist-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-phase3-implementation-checklist-2026-04-13.md)
+- [sequencer-proof-loop-checklist-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-proof-loop-checklist-2026-04-13.md)
 
 ## Foundational Control Contracts
 

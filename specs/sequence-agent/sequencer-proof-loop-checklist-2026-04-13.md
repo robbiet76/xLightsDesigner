@@ -1,4 +1,4 @@
-# Sequencer Phase 3 Implementation Checklist
+# Sequencer Proof Loop Checklist
 
 Status: Active
 Date: 2026-04-13
@@ -7,9 +7,9 @@ Last Reviewed: 2026-04-24
 
 ## Purpose
 
-Execution checklist for the next sequencing phase after the feedback loop and retained regression harness were locked.
+Execution checklist for the current sequencer proof-loop work after the feedback loop and retained regression harness were locked.
 
-## 1. Regression Harness Discipline
+## Regression Harness Discipline
 
 - [x] keep the retained proof suites green during live-loop work
 - [x] treat retained expectation changes as intentional contract changes, not incidental drift
@@ -17,14 +17,14 @@ Execution checklist for the next sequencing phase after the feedback loop and re
 
 Current evidence: Gate A retained sequence-agent validation passed on 2026-04-24 with `111/111` tests green.
 
-## 2. Live Review Visibility
+## Live Review Visibility
 
 - [x] preserve request scope, render observation, render critique, artistic goal, revision objective, and gate in history snapshots
 - [x] show the full pass chain in the Review screen
 - [x] show the same chain in History screen inspection
 - [x] make repeated instability obvious across consecutive passes
 
-## 3. Revision Role Planning
+## Revision Role Planning
 
 - [x] define a small bounded role set:
   - strengthen lead
@@ -37,28 +37,28 @@ Current evidence: Gate A retained sequence-agent validation passed on 2026-04-24
 - [x] keep parameter tuning out of this layer
 - [x] map unresolved prior-pass proof signals into the bounded revision-role set
 
-## 4. Repeated-Pass Memory
+## Repeated-Pass Memory
 
 - [x] capture revision attempt summaries
 - [x] capture resulting critique changes
 - [x] store success/failure memory by scope, critique type, and chosen revision role
 - [x] bias future planning from this memory
 
-## 5. Group / Model Drilldown
+## Group / Model Drilldown
 
 - [x] keep section instability at section level until repeated failures justify drilldown
 - [x] identify implicated props/groups from drilldown windows
 - [x] emit bounded group/model revision hints
 - [x] avoid effect-parameter tuning at this rung
 
-## 6. Effect-Family Learning
+## Effect-Family Learning
 
 - [x] record effect-family choice in revision memory
 - [x] record outcome deltas after each revision pass
 - [x] identify effect-family tendencies for focus, support balance, section contrast, and section development
 - [x] use successful outcome effects to bias future sequencing plans
 
-## 7. Parameter-Level Learning Later
+## Parameter-Level Learning Later
 
 - [x] do not start parameter-level search until revision roles and effect-family learning are stable
 - [x] define a narrow first parameter-learning target only after the earlier items are working in live sequencing

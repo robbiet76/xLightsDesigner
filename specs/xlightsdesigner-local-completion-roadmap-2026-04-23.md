@@ -4,9 +4,9 @@ Status: Active
 Date: 2026-04-23
 Owner: xLightsDesigner Team
 
-## Current Phase
+## Current Work
 
-Phase 4 has started after Phase 3 proof-loop memory, drilldown evidence, effect-family tendency learning, and retained Gate A validation were completed.
+This roadmap tracks the current route toward a locally useful xLightsDesigner app. Numbered phase labels are intentionally avoided here because this project has had many temporary planning cycles; durable docs should describe capabilities, evidence, and remaining gaps rather than preserve short-lived phase names.
 
 Validated against:
 - xLights repo: `/Users/robterry/xLights-2026.06`
@@ -15,7 +15,7 @@ Validated against:
 
 The proof created an isolated `.xsq`, applied a simple batch plan, rendered the current sequence, saved through the owned API, and produced the `.fseq` next to the isolated `.xsq`. It also confirmed the create flow no longer writes `owned-api-validation.fseq` into the global/root FSEQ folder.
 
-Automation launch requirements discovered during Phase 1:
+Automation launch requirements discovered during owned API validation:
 - launch the API-enabled xLights 2026.06 build, not `/Applications/xLights.app`
 - use `-o` for automation launches so the pre-frame information dialog does not block API startup
 - set `XLIGHTS_DESIGNER_TRUSTED_ROOTS` to include the active show folder for create/save validation
@@ -31,7 +31,7 @@ Owned-path cleanup completed after the green proof:
 - the sequencer execution training-package contract now requires the owned batch apply model instead of transactions
 - the old `scripts/xlights-control/run-all.sh` entry point now fails closed and redirects to owned validation instead of running legacy suites
 
-Phase 2 native design authoring started:
+Native design authoring progress:
 - native Design now exposes editable design intent fields for goal, mood/style, target scope, constraints, references, and approval notes
 - design intent persists as `nativeDesignIntent` in the active project snapshot
 - native automation snapshots include the current design intent and dirty state
@@ -56,7 +56,7 @@ Phase 2 native design authoring started:
 - native Review apply now copies the target `.xsq` into the project `artifacts/backups` folder before mutation and surfaces the backup path after apply
 - native Review apply now renders through the owned API before render-sample capture so persisted render feedback can observe the applied revision
 
-Phase 3 proof-loop bridge started:
+Sequencing proof-loop progress:
 - xLights 2026.06 branch `xld-2026.06-migration` documents `layout/scene`, `sequence/render-current`, and `sequence/render-samples` as owned render-feedback routes
 - xLights 2026.06 smoke coverage now dispatches `layout/scene` and `sequence/render-samples` through the owned endpoint harness
 - native automation review-artifact summaries now include apply-result backup and render-current fields for proof-loop validation
@@ -77,7 +77,7 @@ Phase 3 proof-loop bridge started:
 - retained Gate A sequence-agent validation passed on 2026-04-24 with `111/111` tests green after proof-loop memory and drilldown changes
 - the first future parameter-learning target is defined narrowly as Bars direction/orientation plus layer-mix tendencies for `increase_section_contrast` revisions only; no parameter search has started
 
-Phase 4 local app completion started:
+Local app completion progress:
 - native Review now exposes a Restore Last Backup action after a successful apply records both the target sequence path and pre-apply backup path
 
 ## Purpose
@@ -110,11 +110,11 @@ The agent backend eventually becomes shared cloud infrastructure:
 - Electron-era paths are reference only until deleted.
 - No compatibility layer should be preserved unless it is actively carrying current functionality during replacement.
 - Existing sequence subfolders in the active show folder are read-only validation fixtures unless the user explicitly selects one for editing.
-- Phase 1 test writes may use a new isolated folder inside the show folder.
+- validation writes may use a new isolated folder inside the show folder.
 - Existing sequences in the show folder may be inspected for functionality validation, but are not training data.
 - When touching specs or API docs, scan nearby related docs for stale route names, future-tense migration plans, removed fallback paths, and inactive transaction/legacy contracts; clean those claims in the same slice when the scope is clear.
 
-## Phase 1: Local Owned API Reliability
+## Local Owned API Reliability
 
 Goal: prove the native app and scripts can safely create, apply, render, and save through the owned xLights 2026.06 API against the user's real show environment.
 
@@ -134,7 +134,7 @@ Exit criteria:
 - validation evidence is written to a run artifact
 - native/app tests remain green after removing stale fallback assumptions
 
-## Phase 2: Full Native Design Authoring
+## Full Native Design Authoring
 
 Goal: make the Design workflow first-class, not summary-only.
 
@@ -150,7 +150,7 @@ Exit criteria:
 - sequencing can proceed from native design authoring state
 - Review clearly shows what will be applied and why
 
-## Phase 3: Sequencing Proof Loop
+## Sequencing Proof Loop
 
 Goal: prove the local translation layer can turn reviewed design intent into xLights sequence changes with render feedback.
 
@@ -164,7 +164,7 @@ Exit criteria:
 - mature sequence validation reports are generated from current runner output
 - sequence-agent quality gates are evidence-backed, not manually inferred
 
-## Phase 4: Local App Completion
+## Local App Completion
 
 Goal: complete the app for the first local operator workflow.
 
@@ -180,7 +180,7 @@ Exit criteria:
 - failures are understandable and recoverable
 - local evidence exists for each release-quality gate
 
-## Phase 5: Distribution And Shared Cloud Backend
+## Distribution And Shared Cloud Backend
 
 Goal: turn the local tool into a distributable app with a shared AI backend.
 
