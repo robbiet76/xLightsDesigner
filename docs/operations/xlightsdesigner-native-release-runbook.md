@@ -20,6 +20,8 @@ This runbook replaces the retired Electron release path for current validation. 
 
 ## Required Evidence
 
+The paths in this section are development validation examples for the current workspace. The active production show folder is being used to prove behavior against a real show, but the app's product model remains one user-selected show folder per project.
+
 1. Native package tests
 
 ```bash

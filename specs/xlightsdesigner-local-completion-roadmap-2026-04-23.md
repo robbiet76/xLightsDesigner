@@ -13,6 +13,8 @@ Validated against:
 - show folder: `/Users/robterry/Documents/Lights/Current/Christmas/Show`
 - evidence: `/Users/robterry/Documents/Lights/Current/Christmas/Show/_xlightsdesigner_api_validation/2026-04-24T01-13-58-788Z/owned-api-validation-result.json`
 
+The show folder above is the current development validation target because it is the user's active production show. It is not a product assumption and should not be treated as a second project-level folder. In the product model, each project has exactly one show folder; xLights must be opened to that same folder for live validation and apply.
+
 The proof created an isolated `.xsq`, applied a simple batch plan, rendered the current sequence, saved through the owned API, and produced the `.fseq` next to the isolated `.xsq`. It also confirmed the create flow no longer writes `owned-api-validation.fseq` into the global/root FSEQ folder.
 
 Automation launch requirements discovered during owned API validation:
@@ -115,6 +117,7 @@ The agent backend eventually becomes shared cloud infrastructure:
 - Existing sequence subfolders in the active show folder are read-only validation fixtures unless the user explicitly selects one for editing.
 - validation writes may use a new isolated folder inside the show folder.
 - Existing sequences in the show folder may be inspected for functionality validation, but are not training data.
+- The active production show folder is used for development validation only; shipped/distributed use still means one user-selected show folder per project.
 - When touching specs or API docs, scan nearby related docs for stale route names, future-tense migration plans, removed fallback paths, and inactive transaction/legacy contracts; clean those claims in the same slice when the scope is clear.
 
 ## Local Owned API Reliability
