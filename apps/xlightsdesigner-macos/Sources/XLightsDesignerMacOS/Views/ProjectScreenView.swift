@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProjectScreenView: View {
     @Bindable var model: ProjectScreenViewModel
+    @Bindable var xlightsSessionModel: XLightsSessionViewModel
 
     var body: some View {
         GeometryReader { proxy in
@@ -67,9 +68,15 @@ struct ProjectScreenView: View {
                         .font(.title2)
                         .fontWeight(.semibold)
                     detailRow(label: "Project Folder", value: projectFolderPath(from: summary.projectFilePath))
-                    detailRow(label: "xLights Show Folder", value: summary.showFolderSummary)
+                    detailRow(label: "Project Show Folder", value: summary.showFolderSummary)
+                    if let mismatchText = xlightsShowFolderMismatchText(projectShowFolder: summary.showFolderSummary) {
+                        Text(mismatchText)
+                            .foregroundStyle(.orange)
+                            .textSelection(.enabled)
+                    }
                     HStack(spacing: 10) {
                         Button("Change Show Folder…") { model.chooseShowFolderForActiveProject() }
+                        Button("Refresh xLights") { xlightsSessionModel.refresh() }
                         Spacer()
                     }
                     detailRow(label: "Readiness", value: summary.readinessExplanation)
@@ -176,7 +183,7 @@ struct ProjectScreenView: View {
                 }
                 .padding(.vertical, 4)
             }
-            GroupBox("xLights Show Folder") {
+            GroupBox("Project Show Folder") {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         TextField("Show folder", text: $model.projectDraft.showFolder)
@@ -189,7 +196,7 @@ struct ProjectScreenView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Toggle("Migrate metadata from an existing project", isOn: $model.projectDraft.migrateMetadata)
                     if model.projectDraft.migrateMetadata {
-                        Text("Use an existing project as the starting point, then reconcile the migrated metadata against the new xLights show in Display.")
+                        Text("Use an existing project as the starting point, then reconcile the migrated metadata against the new project show folder in Display.")
                             .foregroundStyle(.secondary)
                         Picker("Source Project", selection: $model.projectDraft.migrationSourceProjectPath) {
                             ForEach(model.availableProjects) { project in
@@ -299,5 +306,18 @@ struct ProjectScreenView: View {
 
     private func projectFolderPath(from projectFilePath: String) -> String {
         URL(fileURLWithPath: projectFilePath).deletingLastPathComponent().path
+    }
+
+    private func xlightsShowFolderMismatchText(projectShowFolder: String) -> String? {
+        let project = normalizedPath(projectShowFolder)
+        let current = normalizedPath(xlightsSessionModel.snapshot.showDirectory)
+        guard !project.isEmpty, !current.isEmpty, project != current else { return nil }
+        return "xLights is currently open to a different folder: \(xlightsSessionModel.snapshot.showDirectory)"
+    }
+
+    private func normalizedPath(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        return URL(fileURLWithPath: trimmed).standardizedFileURL.path
     }
 }

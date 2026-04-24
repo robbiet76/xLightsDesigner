@@ -40,7 +40,7 @@ final class ProjectScreenViewModel {
         return ProjectScreenModel(
             header: ProjectHeaderModel(
                 title: "Project",
-                subtitle: "Establish the active project and confirm the referenced show paths.",
+                subtitle: "Establish the active project and confirm its single show folder.",
                 statusBadge: active == nil ? "No Project" : readiness.rawValue
             ),
             summary: active.map { project in
@@ -126,7 +126,7 @@ final class ProjectScreenViewModel {
     }
 
     func chooseDraftShowFolder() {
-        if let path = fileSelectionService.chooseFolder(prompt: "Choose Show Folder") {
+        if let path = fileSelectionService.chooseFolder(prompt: "Choose Project Show Folder") {
             projectDraft.showFolder = path
         }
     }
@@ -159,7 +159,7 @@ final class ProjectScreenViewModel {
 
     func chooseShowFolderForActiveProject() {
         guard var active = workspace.activeProject else { return }
-        guard let path = fileSelectionService.chooseFolder(prompt: "Choose Show Folder") else { return }
+        guard let path = fileSelectionService.chooseFolder(prompt: "Choose Project Show Folder") else { return }
         let trimmedPath = path.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedPath.isEmpty else { return }
         active.showFolder = trimmedPath
@@ -276,7 +276,7 @@ final class ProjectScreenViewModel {
     private func readinessItems(for project: ActiveProjectModel) -> [ProjectReadinessItem] {
         [
             ProjectReadinessItem(id: "file", label: "Project File", value: project.projectFilePath, status: .ready),
-            ProjectReadinessItem(id: "show", label: "xLights Show", value: project.showFolderSummary, status: readinessLevel(for: project))
+            ProjectReadinessItem(id: "show", label: "Project Show Folder", value: project.showFolderSummary, status: readinessLevel(for: project))
         ]
     }
 
