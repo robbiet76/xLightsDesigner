@@ -96,6 +96,7 @@ Local app completion progress:
 - native xLights session refresh now remains available when xLights is unreachable and failed refreshes mark the session snapshot as unreachable instead of preserving stale connected state
 - native automation release evidence now has an active native runbook/log and the xLights launch helper recognizes `-o` automation launches
 - native Sequence flags when xLights is not open to the active project's single show folder
+- native Review blocks apply when the target sequence path is outside the active project's single linked show folder
 
 ## Purpose
 

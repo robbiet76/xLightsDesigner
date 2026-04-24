@@ -101,12 +101,13 @@ private final class BackupRestoreRecorder {
 private func reviewPendingWork(
     translationSource: String = "Canonical Plan",
     proposalCommandCount: Int = 3,
-    activeSequenceName: String = "HolidayRoad.xsq"
+    activeSequenceName: String = "HolidayRoad.xsq",
+    activeSequencePath: String = "/tmp/show/HolidayRoad/HolidayRoad.xsq"
 ) -> PendingWorkReadModel {
     PendingWorkReadModel(
         projectName: "Christmas 2026",
         activeSequenceName: activeSequenceName,
-        activeSequencePath: "/tmp/HolidayRoad.xsq",
+        activeSequencePath: activeSequencePath,
         recentSequenceCount: 1,
         audioPath: "/tmp/song.mp3",
         briefSummary: "Bright clean canopy.",
@@ -343,6 +344,57 @@ private func reviewPendingWork(
 
     #expect(model.transientBanner?.state == .blocked)
     #expect(model.transientBanner?.text.contains("Generate a sequencing proposal before apply.") == true)
+}
+
+@MainActor
+@Test func reviewApplyBlocksTargetSequenceOutsideProjectShowFolder() {
+    let workspace = ProjectWorkspace()
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: "/tmp/Christmas 2026.xdproj",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [:]
+        )
+    )
+    let model = ReviewScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: StubReviewPendingWorkService(
+            pendingWork: reviewPendingWork(activeSequencePath: "/tmp/other-show/HolidayRoad.xsq")
+        ),
+        reviewExecutionService: StubReviewExecutionService { _, _, _ in
+            Issue.record("applyPendingWork should not be called for a sequence outside the project show folder")
+            return ReviewApplyExecutionResult(
+                summary: "",
+                commandCount: 0,
+                nextRevision: "",
+                applyPath: "",
+                sequencePath: "",
+                sequenceBackupPath: "",
+                renderCurrentSummary: "",
+                renderCurrentError: "",
+                renderFeedbackCaptured: false,
+                renderFeedbackStatus: "",
+                renderFeedbackMissingRequirements: [],
+                metadataAssignmentCount: 0,
+                practicalValidationSummary: nil
+            )
+        }
+    )
+
+    model.refresh()
+    #expect(model.screenModel.actions.canApply == false)
+    #expect(model.screenModel.readiness.blockers.contains("Target sequence is outside the active project show folder."))
+
+    model.applyPendingWork()
+
+    #expect(model.transientBanner?.state == .blocked)
+    #expect(model.transientBanner?.text.contains("Target sequence is outside the active project show folder.") == true)
 }
 
 @MainActor

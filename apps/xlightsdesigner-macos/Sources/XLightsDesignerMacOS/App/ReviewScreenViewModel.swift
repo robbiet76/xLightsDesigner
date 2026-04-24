@@ -347,11 +347,22 @@ final class ReviewScreenViewModel {
     }
 
     private static func reviewBlockers(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> [String] {
-        guard project != nil else { return ["Project context missing."] }
+        guard let project else { return ["Project context missing."] }
         guard let pendingWork else { return ["Generate a sequencing proposal before apply."] }
         let activeSequenceName = pendingWork.activeSequenceName.trimmingCharacters(in: .whitespacesAndNewlines)
         if activeSequenceName.isEmpty || activeSequenceName == "No active sequence" || activeSequenceName == "No sequence selected yet" {
             return ["No active sequence loaded."]
+        }
+        let showFolder = project.showFolder.trimmingCharacters(in: .whitespacesAndNewlines)
+        if showFolder.isEmpty {
+            return ["Project show folder missing."]
+        }
+        let activeSequencePath = pendingWork.activeSequencePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if activeSequencePath.isEmpty || activeSequencePath == "No active sequence path" {
+            return ["No active sequence path selected."]
+        }
+        if !isPathWithinShowFolder(activeSequencePath, showFolder) {
+            return ["Target sequence is outside the active project show folder."]
         }
         if pendingWork.translationSource != "Canonical Plan" {
             return ["Generate a sequencing proposal before apply."]
@@ -360,5 +371,18 @@ final class ReviewScreenViewModel {
             return ["Generated proposal has no sequence commands to apply."]
         }
         return []
+    }
+
+    nonisolated private static func isPathWithinShowFolder(_ candidatePath: String, _ showFolderPath: String) -> Bool {
+        let candidate = normalizePath(candidatePath)
+        let root = normalizePath(showFolderPath)
+        guard !candidate.isEmpty, !root.isEmpty else { return false }
+        return candidate == root || candidate.hasPrefix(root + "/")
+    }
+
+    nonisolated private static func normalizePath(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        return URL(fileURLWithPath: trimmed).standardizedFileURL.path
     }
 }
