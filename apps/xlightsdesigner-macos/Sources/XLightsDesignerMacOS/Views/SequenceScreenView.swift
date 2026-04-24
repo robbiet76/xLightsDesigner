@@ -97,6 +97,7 @@ struct SequenceScreenView: View {
                 detailRow(label: "Active Sequence In xLights", value: model.screenModel.activeSequence.activeSequenceName)
                 detailRow(label: "Project Sequence Summary", value: model.screenModel.activeSequence.boundTrackSummary)
                 detailRow(label: "Project Show Folder", value: model.projectShowFolder.isEmpty ? "(not set)" : model.projectShowFolder)
+                detailRow(label: "xLights Show Folder", value: xlightsShowFolderText)
                 detailRow(label: "Timing Dependency", value: timingDependencyText)
                 detailRow(label: "Ready To Proceed", value: readyToProceedText)
                 Divider()
@@ -410,6 +411,21 @@ struct SequenceScreenView: View {
         return "\(type), \(frame), \(duration)"
     }
 
+    private var xlightsShowFolderText: String {
+        xlightsSessionModel.snapshot.showDirectory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "(not reported)"
+            : xlightsSessionModel.snapshot.showDirectory
+    }
+
+    private var showFolderMismatchText: String? {
+        let projectShowFolder = normalizedPath(model.projectShowFolder)
+        let xlightsShowFolder = normalizedPath(xlightsSessionModel.snapshot.showDirectory)
+        guard !projectShowFolder.isEmpty, !xlightsShowFolder.isEmpty, projectShowFolder != xlightsShowFolder else {
+            return nil
+        }
+        return "xLights is open to a different show folder than the active project. xLights: \(xlightsSessionModel.snapshot.showDirectory). Project: \(model.projectShowFolder)."
+    }
+
     private var readyToProceedText: String {
         switch model.screenModel.overview.state {
         case .ready:
@@ -428,6 +444,9 @@ struct SequenceScreenView: View {
         items.append(contentsOf: model.screenModel.translationSummary.blockers)
         items.append(contentsOf: model.screenModel.translationSummary.warnings)
         items.append(contentsOf: model.screenModel.validationIssues.map(\.message))
+        if let showFolderMismatchText {
+            items.append(showFolderMismatchText)
+        }
 
         var seen = Set<String>()
         return items.filter { item in
