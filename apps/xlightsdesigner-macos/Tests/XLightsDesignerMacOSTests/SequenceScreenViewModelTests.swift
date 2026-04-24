@@ -26,6 +26,21 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
 }
 
 @MainActor
+private final class ProjectArtifactNotificationRecorder {
+    private let projectFilePath: String
+    private(set) var count = 0
+
+    init(projectFilePath: String) {
+        self.projectFilePath = projectFilePath
+    }
+
+    func record(projectFilePath candidate: String?) {
+        guard candidate == projectFilePath else { return }
+        count += 1
+    }
+}
+
+@MainActor
 @Test func sequenceGeneratesProposalFromNativeDesignIntent() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-sequence-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -68,6 +83,57 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
     #expect(proposalService.prompt.contains("Target scope: Mega tree, roofline, and window frames."))
     #expect(model.isGeneratingProposal == false)
     #expect(model.transientBanner?.state == .ready)
+}
+
+@MainActor
+@Test func sequencePostsProjectArtifactsDidChangeAfterProposalGeneration() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-sequence-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let projectService = LocalProjectService(projectsRootPath: root.path)
+    let project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Artifact Notification \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    var projectWithIntent = project
+    projectWithIntent.snapshot["audioPathInput"] = AnyCodable("/tmp/show/song.mp3")
+    projectWithIntent.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/Artifact Notification.xsq")
+    projectWithIntent.snapshot["nativeDesignIntent"] = AnyCodable([
+        "goal": "Create a clean red and white chorus."
+    ])
+    let workspace = ProjectWorkspace(sessionStore: SequenceTestProjectSessionStore())
+    workspace.setProject(projectWithIntent)
+    let proposalService = StubSequenceProposalService()
+    let model = SequenceScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: projectService,
+        proposalService: proposalService
+    )
+    let recorder = ProjectArtifactNotificationRecorder(projectFilePath: project.projectFilePath)
+    let observer = NotificationCenter.default.addObserver(
+        forName: .projectArtifactsDidChange,
+        object: nil,
+        queue: nil
+    ) { notification in
+        let projectFilePath = notification.object as? String
+        Task { @MainActor in
+            recorder.record(projectFilePath: projectFilePath)
+        }
+    }
+    defer {
+        NotificationCenter.default.removeObserver(observer)
+    }
+
+    model.generateProposalFromDesignIntent()
+    try await Task.sleep(for: .milliseconds(120))
+
+    #expect(recorder.count == 1)
+    #expect(model.isGeneratingProposal == false)
 }
 
 @MainActor

@@ -62,6 +62,13 @@ struct RootContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .projectWorkspaceDidChange)) { _ in
             model.xlightsSessionModel.refresh()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .projectArtifactsDidChange)) { _ in
+            model.designScreenModel.refresh()
+            model.sequenceScreenModel.refresh()
+            model.reviewScreenModel.refresh()
+            model.historyScreenModel.loadHistory()
+            model.xlightsSessionModel.refresh()
+        }
     }
 
     private var workflowPhaseHeader: some View {

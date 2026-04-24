@@ -228,6 +228,7 @@ final class SequenceScreenViewModel {
                     state: .ready
                 )
                 isGeneratingProposal = false
+                NotificationCenter.default.post(name: .projectArtifactsDidChange, object: activeProject.projectFilePath)
                 refresh()
             } catch {
                 transientBanner = WorkflowBannerModel(
