@@ -12,6 +12,7 @@ Do not use:
 Use the native macOS app instead:
 - `apps/xlightsdesigner-macos`
 - native automation server on `http://127.0.0.1:49916`
+- `docs/operations/xlightsdesigner-native-release-runbook.md`
 
 ## 1) Scope
 This runbook defined pre-release validation and release execution for the old standalone Electron desktop build.

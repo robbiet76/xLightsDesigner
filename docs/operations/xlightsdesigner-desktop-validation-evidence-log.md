@@ -6,6 +6,7 @@ Status:
 - historical only
 - do not add new rows for `/Applications/xLightsDesigner.app`
 - active native validation now runs through the macOS app and native automation server
+- use `docs/operations/xlightsdesigner-native-validation-evidence-log.md` for current evidence
 
 ## Evidence Rows
 | Date | Build SHA | Channel | Machine | macOS | xLights | Install/Launch | Core Flow | Evidence | Notes |

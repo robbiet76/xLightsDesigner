@@ -17,6 +17,7 @@ Map core requirements to implementation surfaces and verification tests.
 | UI-001 | `app-ui/native-cutover-audit-2026-04-10.md` | native application shell, workflow UX, team chat presentation | `swift test --package-path apps/xlightsdesigner-macos` |
 | XSC-002 | `designer-dialog/designer-interaction-contract.md` | creative design conversation, proposal shaping, intent handoff | designer runtime and handoff tests |
 | APP-002 | `xlightsdesigner-local-completion-roadmap-2026-04-23.md` | native Design -> Sequence -> Review -> History flow with backup/restore and session recovery | `ReviewScreenViewModelTests.swift`, `XLightsSessionViewModelTests.swift`, native package tests |
+| REL-001 | `agent-release-quality-gates.md` | native release-gate checklist and current evidence log | `docs/operations/xlightsdesigner-native-release-runbook.md`, `docs/operations/xlightsdesigner-native-validation-evidence-log.md` |
 
 ## Next Step
 Expand this matrix around the current app plan, especially:

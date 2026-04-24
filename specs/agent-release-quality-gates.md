@@ -52,7 +52,8 @@ Define go/no-go gates for shipping agent-enabled behavior.
 - `apps/xlightsdesigner-macos/Tests/XLightsDesignerMacOSTests/XLightsSessionViewModelTests.swift`
 - `scripts/sequencer-render-training/runners/run-stage1-coverage-chunked.sh`
 - `/Users/robterry/Documents/Lights/Current/Christmas/Show/_xlightsdesigner_api_validation/2026-04-24T01-13-58-788Z/owned-api-validation-result.json`
-- `docs/operations/xlightsdesigner-desktop-release-runbook.md`
+- `docs/operations/xlightsdesigner-native-release-runbook.md`
+- `docs/operations/xlightsdesigner-native-validation-evidence-log.md`
 - `docs/operations/xlightsdesigner-desktop-validation-evidence-log.md` (historical Electron path only)
 
 ## Current Interpretation
