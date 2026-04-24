@@ -237,7 +237,15 @@ test("buildSequencerRevisionBrief keeps section instability broad until drilldow
         heldAtSectionLevel: true,
         eligible: false,
         targetIds: [],
-        withheldTargetIds: ["MegaTree", "Roofline"]
+        withheldTargetIds: ["MegaTree", "Roofline"],
+        withheldTargetEvidence: [
+          {
+            targetId: "MegaTree",
+            targetKind: "model_or_group",
+            reasons: ["adjacent_windows_read_similarly"],
+            windowLabels: ["Verse", "Chorus"]
+          }
+        ]
       }
     }
   });
@@ -246,6 +254,7 @@ test("buildSequencerRevisionBrief keeps section instability broad until drilldow
   assert.deepEqual(out.targetScope, ["Verse", "Chorus"]);
   assert.equal(out.groupModelRevisionHints.heldAtSectionLevel, true);
   assert.deepEqual(out.groupModelRevisionHints.withheldTargetIds, ["MegaTree", "Roofline"]);
+  assert.deepEqual(out.groupModelRevisionHints.withheldTargetEvidence[0].targetId, "MegaTree");
 });
 
 test("buildSequencerRevisionBrief emits bounded group model hints from eligible drilldown memory", () => {
@@ -266,6 +275,14 @@ test("buildSequencerRevisionBrief emits bounded group model hints from eligible 
         heldAtSectionLevel: false,
         eligible: true,
         targetIds: ["MegaTree", "Roofline"],
+        targetEvidence: [
+          {
+            targetId: "MegaTree",
+            targetKind: "model_or_group",
+            reasons: ["adjacent_windows_read_similarly"],
+            windowLabels: ["Verse", "Chorus"]
+          }
+        ],
         withheldTargetIds: []
       }
     }
@@ -274,4 +291,5 @@ test("buildSequencerRevisionBrief emits bounded group model hints from eligible 
   assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline", "Verse", "Chorus"]);
   assert.deepEqual(out.targetScope, ["MegaTree", "Roofline", "Verse", "Chorus"]);
   assert.equal(out.groupModelRevisionHints.eligible, true);
+  assert.deepEqual(out.groupModelRevisionHints.targetEvidence[0].targetId, "MegaTree");
 });

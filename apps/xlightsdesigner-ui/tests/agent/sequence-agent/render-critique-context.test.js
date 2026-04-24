@@ -219,6 +219,18 @@ test("buildRenderCritiqueContext compares adjacent sampled windows", () => {
   assert.equal(out.comparison.adjacentWindowComparisons[0].toLabel, "Chorus");
   assert.equal(out.comparison.adjacentWindowComparisons[0].windowsReadSimilarly, true);
   assert.deepEqual(out.comparison.drilldownTargetIds, ["MegaTree", "Roofline"]);
+  assert.deepEqual(out.comparison.drilldownTargetEvidence[0], {
+    targetId: "MegaTree",
+    targetKind: "model_or_group",
+    reasons: ["adjacent_windows_read_similarly", "flat_drilldown_window"],
+    windowLabels: ["Verse", "Chorus"]
+  });
+  assert.deepEqual(out.comparison.drilldownTargetEvidence[1], {
+    targetId: "Roofline",
+    targetKind: "model_or_group",
+    reasons: ["adjacent_windows_read_similarly", "flat_drilldown_window"],
+    windowLabels: ["Verse", "Chorus"]
+  });
 });
 
 test("buildRenderCritiqueContext keeps gaps observational for narrow localized scope", () => {

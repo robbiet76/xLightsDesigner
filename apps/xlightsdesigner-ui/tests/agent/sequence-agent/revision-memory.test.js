@@ -19,6 +19,14 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
           drilldownTargetIds: ["MegaTree", "Roofline"],
           adjacentWindowComparisons: [
             { windowsReadSimilarly: true, sameLeadModel: true }
+          ],
+          drilldownTargetEvidence: [
+            {
+              targetId: "MegaTree",
+              targetKind: "model_or_group",
+              reasons: ["adjacent_windows_read_similarly"],
+              windowLabels: ["Verse", "Chorus"]
+            }
           ]
         },
         source: { samplingDetail: "section" }
@@ -74,6 +82,7 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
   assert.equal(out.drilldownMemory.eligible, false);
   assert.deepEqual(out.drilldownMemory.targetIds, []);
   assert.deepEqual(out.drilldownMemory.withheldTargetIds, ["MegaTree", "Roofline"]);
+  assert.deepEqual(out.drilldownMemory.withheldTargetEvidence[0].targetId, "MegaTree");
 });
 
 test("buildPriorPassMemory prefers revision delta current values when available", () => {
@@ -176,7 +185,15 @@ test("buildPriorPassMemory carries eligible drilldown targets only after drilldo
           adjacentWindowComparisons: [
             { windowsReadSimilarly: true, sameLeadModel: true }
           ],
-          drilldownTargetIds: ["MegaTree", "Roofline"]
+          drilldownTargetIds: ["MegaTree", "Roofline"],
+          drilldownTargetEvidence: [
+            {
+              targetId: "MegaTree",
+              targetKind: "model_or_group",
+              reasons: ["adjacent_windows_read_similarly", "flat_drilldown_window"],
+              windowLabels: ["Verse", "Chorus"]
+            }
+          ]
         }
       },
       sequenceRevisionObjective: {
@@ -191,5 +208,6 @@ test("buildPriorPassMemory carries eligible drilldown targets only after drilldo
   assert.equal(out.drilldownMemory.heldAtSectionLevel, false);
   assert.equal(out.drilldownMemory.eligible, true);
   assert.deepEqual(out.drilldownMemory.targetIds, ["MegaTree", "Roofline"]);
+  assert.deepEqual(out.drilldownMemory.targetEvidence[0].targetId, "MegaTree");
   assert.deepEqual(out.drilldownMemory.sectionInstabilitySignals, ["flat_development", "weak_section_contrast"]);
 });

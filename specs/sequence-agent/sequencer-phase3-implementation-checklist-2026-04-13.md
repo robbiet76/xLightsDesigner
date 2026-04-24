@@ -45,9 +45,9 @@ Execution checklist for the next sequencing phase after the feedback loop and re
 ## 5. Group / Model Drilldown
 
 - [x] keep section instability at section level until repeated failures justify drilldown
-- [ ] identify implicated props/groups from drilldown windows
-- [ ] emit bounded group/model revision hints
-- [ ] avoid effect-parameter tuning at this rung
+- [x] identify implicated props/groups from drilldown windows
+- [x] emit bounded group/model revision hints
+- [x] avoid effect-parameter tuning at this rung
 
 ## 6. Effect-Family Learning
 

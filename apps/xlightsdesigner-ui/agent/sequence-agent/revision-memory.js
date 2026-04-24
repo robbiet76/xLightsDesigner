@@ -40,6 +40,7 @@ function buildDrilldownMemory({ renderCritiqueContext = null, unresolvedSignals 
   const comparison = isPlainObject(renderCritiqueContext?.comparison) ? renderCritiqueContext.comparison : {};
   const samplingDetail = str(source.samplingDetail).toLowerCase();
   const drilldownTargetIds = uniqueStrings(comparison.drilldownTargetIds);
+  const drilldownTargetEvidence = arr(comparison.drilldownTargetEvidence).filter(isPlainObject);
   const instabilitySignals = uniqueStrings(unresolvedSignals).filter((row) => (
     row === "weak_section_contrast" || row === "flat_development"
   ));
@@ -50,7 +51,9 @@ function buildDrilldownMemory({ renderCritiqueContext = null, unresolvedSignals 
     heldAtSectionLevel: instabilitySignals.length > 0 && !eligible,
     eligible,
     targetIds: eligible ? drilldownTargetIds : [],
-    withheldTargetIds: eligible ? [] : drilldownTargetIds
+    targetEvidence: eligible ? drilldownTargetEvidence : [],
+    withheldTargetIds: eligible ? [] : drilldownTargetIds,
+    withheldTargetEvidence: eligible ? [] : drilldownTargetEvidence
   };
 }
 

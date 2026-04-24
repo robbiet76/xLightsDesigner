@@ -99,6 +99,24 @@ function buildWindowComparisons(windows = []) {
 }
 
 function deriveDrilldownTargetIds(windows = [], comparisons = []) {
+  return uniqueStrings(deriveDrilldownTargetEvidence(windows, comparisons).map((row) => row.targetId));
+}
+
+function addDrilldownEvidence(index, { targetId = "", reason = "", windowLabels = [] } = {}) {
+  const id = str(targetId);
+  if (!id) return;
+  const existing = index.get(id) || {
+    targetId: id,
+    targetKind: "model_or_group",
+    reasons: [],
+    windowLabels: []
+  };
+  existing.reasons = uniqueStrings([...existing.reasons, reason]);
+  existing.windowLabels = uniqueStrings([...existing.windowLabels, ...arr(windowLabels)]);
+  index.set(id, existing);
+}
+
+function deriveDrilldownTargetEvidence(windows = [], comparisons = []) {
   const windowMap = new Map(
     arr(windows)
       .map((row) => (isPlainObject(row) ? row : null))
@@ -106,7 +124,7 @@ function deriveDrilldownTargetIds(windows = [], comparisons = []) {
       .map((row) => [str(row.label), row])
       .filter(([label]) => label)
   );
-  const targetIds = [];
+  const evidence = new Map();
 
   for (const comparison of arr(comparisons)) {
     if (!comparison?.windowsReadSimilarly && !comparison?.sameLeadModel) continue;
@@ -116,25 +134,41 @@ function deriveDrilldownTargetIds(windows = [], comparisons = []) {
     const toModels = new Set(uniqueStrings(toWindow?.activeModelNames));
     const sharedModels = [...fromModels].filter((id) => toModels.has(id));
     if (sharedModels.length) {
-      targetIds.push(...sharedModels);
+      for (const targetId of sharedModels) {
+        addDrilldownEvidence(evidence, {
+          targetId,
+          reason: comparison?.windowsReadSimilarly ? "adjacent_windows_read_similarly" : "same_lead_model",
+          windowLabels: [comparison?.fromLabel, comparison?.toLabel]
+        });
+      }
       continue;
     }
-    targetIds.push(
-      str(fromWindow?.leadModel),
-      str(toWindow?.leadModel)
-    );
+    for (const targetId of [str(fromWindow?.leadModel), str(toWindow?.leadModel)]) {
+      addDrilldownEvidence(evidence, {
+        targetId,
+        reason: "same_lead_model",
+        windowLabels: [comparison?.fromLabel, comparison?.toLabel]
+      });
+    }
   }
 
   for (const window of arr(windows)) {
     if (str(window?.sampleDetail).toLowerCase() !== "drilldown") continue;
     if (str(window?.temporalRead).toLowerCase() !== "flat") continue;
-    targetIds.push(
-      str(window?.leadModel),
-      ...uniqueStrings(window?.activeModelNames).slice(0, 4)
-    );
+    for (const targetId of [str(window?.leadModel), ...uniqueStrings(window?.activeModelNames).slice(0, 4)]) {
+      addDrilldownEvidence(evidence, {
+        targetId,
+        reason: "flat_drilldown_window",
+        windowLabels: [window?.label]
+      });
+    }
   }
 
-  return uniqueStrings(targetIds);
+  return [...evidence.values()].map((row) => ({
+    ...row,
+    reasons: uniqueStrings(row.reasons),
+    windowLabels: uniqueStrings(row.windowLabels)
+  }));
 }
 
 function buildMusicSectionIndex(musicDesignContext = null) {
@@ -237,7 +271,8 @@ export function buildRenderCritiqueContext({
   const detailCoverageDomains = uniqueStrings(scene?.coverageDomains?.detail);
   const spreadRatio = Number(macro.meanSceneSpreadRatio || 0);
   const windowComparisons = buildWindowComparisons(observation?.windows);
-  const drilldownTargetIds = deriveDrilldownTargetIds(observation?.windows, windowComparisons);
+  const drilldownTargetEvidence = deriveDrilldownTargetEvidence(observation?.windows, windowComparisons);
+  const drilldownTargetIds = uniqueStrings(drilldownTargetEvidence.map((row) => row.targetId));
   const densityTargets = uniqueStrings(
     arr(handoff?.sectionDirectives).map((row) => str(row?.densityTarget))
   ).map((row) => row.toLowerCase());
@@ -334,7 +369,8 @@ export function buildRenderCritiqueContext({
       renderIsLeftRightImbalanced: Number(macro.leftRightBalanceRatio || 0) >= 0.35,
       renderIsTopBottomImbalanced: Number(macro.topBottomBalanceRatio || 0) >= 0.35,
       adjacentWindowComparisons: windowComparisons,
-      drilldownTargetIds
+      drilldownTargetIds,
+      drilldownTargetEvidence
     }
   });
 }
