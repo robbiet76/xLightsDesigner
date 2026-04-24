@@ -29,6 +29,7 @@ Owned-path cleanup completed after the green proof:
 - the UI dev proxy no longer exposes `/xlDoAutomation` or ports `49914`/`49913`
 - the active UI health/readme copy now advertises owned `sequencing.applyBatchPlan` plus `jobs.get` instead of legacy `system.executePlan`/`system.validateCommands`
 - the sequencer execution training-package contract now requires the owned batch apply model instead of transactions
+- the old `scripts/xlights-control/run-all.sh` entry point now fails closed and redirects to owned validation instead of running legacy suites
 
 ## Purpose
 
