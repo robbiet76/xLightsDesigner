@@ -96,6 +96,44 @@ struct ProjectDisplayMetadataStoreTests {
         #expect(updated.visualHintDefinitions.first?.behavioralIntent == "Use readable sparkle texture.")
     }
 
+    @Test func storeLoadsMetadataDocumentsMissingIntentExtensions() throws {
+        let project = try makeProject(name: "DisplayMetadataStoreMigration")
+        let metadataURL = URL(fileURLWithPath: project.projectFilePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("layout/layout-metadata.json")
+        try FileManager.default.createDirectory(at: metadataURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try """
+        {
+          "version": 1,
+          "tags": [
+            {
+              "id": "tag-focal",
+              "name": "Focal",
+              "description": "Primary visual anchor"
+            }
+          ],
+          "targetTags": {
+            "Tree": ["tag-focal"]
+          }
+        }
+        """.data(using: .utf8)!.write(to: metadataURL)
+        let store = LocalDisplayMetadataStore()
+
+        try store.updateTargetPreference(
+            project: project,
+            targetIDs: ["Tree"],
+            rolePreference: "lead",
+            semanticHints: ["centerpiece"],
+            effectAvoidances: ["Bars"]
+        )
+        let updated = try store.load(for: project)
+
+        #expect(updated.tags.first?.name == "Focal")
+        #expect(updated.targetTags["Tree"] == ["tag-focal"])
+        #expect(updated.preferencesByTargetId["Tree"]?.rolePreference == "lead")
+        #expect(updated.visualHintDefinitions.isEmpty)
+    }
+
     @Test func storeUpdatesTargetPreferences() throws {
         let project = try makeProject(name: "DisplayMetadataStoreE")
         let store = LocalDisplayMetadataStore()

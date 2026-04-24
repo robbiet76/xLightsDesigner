@@ -15,6 +15,25 @@ struct PersistedDisplayMetadataDocument: Codable, Sendable {
     var targetTags: [String: [String]] = [:]
     var preferencesByTargetId: [String: PersistedDisplayTargetPreference] = [:]
     var visualHintDefinitions: [PersistedVisualHintDefinition] = []
+
+    enum CodingKeys: String, CodingKey {
+        case version
+        case tags
+        case targetTags
+        case preferencesByTargetId
+        case visualHintDefinitions
+    }
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        version = try container.decodeIfPresent(Int.self, forKey: .version) ?? 1
+        tags = try container.decodeIfPresent([PersistedDisplayTagDefinition].self, forKey: .tags) ?? []
+        targetTags = try container.decodeIfPresent([String: [String]].self, forKey: .targetTags) ?? [:]
+        preferencesByTargetId = try container.decodeIfPresent([String: PersistedDisplayTargetPreference].self, forKey: .preferencesByTargetId) ?? [:]
+        visualHintDefinitions = try container.decodeIfPresent([PersistedVisualHintDefinition].self, forKey: .visualHintDefinitions) ?? []
+    }
 }
 
 struct PersistedDisplayTagDefinition: Codable, Sendable {

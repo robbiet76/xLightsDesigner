@@ -260,6 +260,27 @@ final class NativeAutomationServer: @unchecked Sendable {
             } catch {
                 return .error(statusCode: 500, message: error.localizedDescription)
             }
+        case "updateDisplayTargetIntent":
+            let targetIDs = splitPayloadList(
+                String(payload["targetIds"] as? String ?? payload["targetIDs"] as? String ?? payload["targets"] as? String ?? "")
+            )
+            guard !targetIDs.isEmpty else {
+                return .error(statusCode: 400, message: "Target intent update requires exact xLights target IDs.")
+            }
+            do {
+                try await model.displayScreenModel.saveTargetIntent(
+                    targetIDs: targetIDs,
+                    rolePreference: (payload["rolePreference"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+                    semanticHints: splitPayloadList(String(payload["semanticHints"] as? String ?? "")),
+                    effectAvoidances: splitPayloadList(String(payload["effectAvoidances"] as? String ?? ""))
+                )
+                return .json(200, body: [
+                    "ok": true,
+                    "display": displaySnapshot()
+                ])
+            } catch {
+                return .error(statusCode: 500, message: error.localizedDescription)
+            }
         case "deferReview":
             model.reviewScreenModel.deferPendingWork()
             return .json(200, body: ["ok": true])
@@ -317,6 +338,19 @@ final class NativeAutomationServer: @unchecked Sendable {
         } catch {
             print("Native automation failed to persist active sequence path: \(error)")
         }
+    }
+
+    private func splitPayloadList(_ value: String) -> [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        for item in value.components(separatedBy: CharacterSet(charactersIn: ",\n")) {
+            let trimmed = item.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            let key = trimmed.lowercased()
+            guard seen.insert(key).inserted else { continue }
+            result.append(trimmed)
+        }
+        return result
     }
 
     @MainActor

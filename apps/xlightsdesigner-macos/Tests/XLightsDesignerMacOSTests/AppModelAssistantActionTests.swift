@@ -94,6 +94,36 @@ import Testing
     #expect(document.preferencesByTargetId["Roofline"]?.rolePreference == "lead")
 }
 
+@MainActor
+@Test func automationStyleActionCanUpdateDisplayTargetIntentThroughDisplayModel() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-automation-target-intent-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let projectService = LocalProjectService(projectsRootPath: root.path)
+    let project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Automation Target Intent \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    let model = AppModel()
+    model.workspace.setProject(project)
+
+    try await model.displayScreenModel.saveTargetIntent(
+        targetIDs: ["MegaTree"],
+        rolePreference: "lead",
+        semanticHints: ["centerpiece"],
+        effectAvoidances: ["Bars"]
+    )
+
+    let document = try LocalDisplayMetadataStore().load(for: project)
+    #expect(document.preferencesByTargetId["MegaTree"]?.rolePreference == "lead")
+    #expect(document.preferencesByTargetId["MegaTree"]?.semanticHints == ["centerpiece"])
+    #expect(document.preferencesByTargetId["MegaTree"]?.effectAvoidances == ["Bars"])
+}
+
 private func assistantActionDisplayRow(name: String, type: String, members: [String]) -> DisplayLayoutRowModel {
     DisplayLayoutRowModel(
         id: name,

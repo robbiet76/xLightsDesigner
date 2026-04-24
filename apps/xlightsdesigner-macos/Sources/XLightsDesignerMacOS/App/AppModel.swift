@@ -449,7 +449,7 @@ final class AppModel {
                 displayScreenModel.errorMessage = "Target intent update requires exact xLights target IDs."
                 return
             }
-            displayScreenModel.saveTargetIntent(
+            displayScreenModel.saveTargetIntentFromUI(
                 targetIDs: targetIDs,
                 rolePreference: request.payload["rolePreference"],
                 semanticHints: splitAssistantPayloadList(request.payload["semanticHints"] ?? ""),
