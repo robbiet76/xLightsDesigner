@@ -79,6 +79,7 @@ Sequencing proof-loop progress:
 - native direct sequence proposal generation passes confirmed project Display metadata assignments into the sequence orchestrator, so promoted layout understanding can influence target resolution and sequencing strategy
 - native Review apply uses the same confirmed project Display metadata assignments when rebuilding the final sequence-agent plan, keeping proposal and apply semantics aligned
 - native Review success state and automation artifact summaries now expose the Display metadata assignment count used during apply
+- native History proof chains now retain the Display metadata assignment count from apply results and review-pass summaries
 - sequencer revision planning now maps unresolved prior-pass proof signals into bounded revision roles so the next pass can bias realization from the proof loop
 - sequencer revision briefs now map prior-pass proof signals into safe focus/revision target hints before realization
 - revision-role planning no longer feeds role-derived hints into parameter-prior guidance; parameter tuning remains deferred

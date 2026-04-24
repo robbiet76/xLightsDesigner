@@ -367,9 +367,11 @@ struct LocalHistoryService: HistoryService {
         let readbackChecks = validationSummary?["readbackChecks"] as? [String: Any]
         let designChecks = validationSummary?["designChecks"] as? [String: Any]
         let renderCurrentSummary = string(object["renderCurrentSummary"])
+        let metadataAssignmentCount = int(object["metadataAssignmentCount"])
         return [
             "Revision advanced: \(bool(verification?["revisionAdvanced"]) ? "yes" : "no")",
             "Expected mutations present: \(bool(verification?["expectedMutationsPresent"]) ? "yes" : "no")",
+            metadataAssignmentCount > 0 ? "Display metadata used: \(metadataAssignmentCount) assignment\(metadataAssignmentCount == 1 ? "" : "s")" : "",
             "Practical validation: \(bool(practicalValidation?["overallOk"]) ? "passed" : "needs review")",
             "Readback checks: \(int(readbackChecks?["passed"])) passed, \(int(readbackChecks?["failed"])) failed",
             "Design checks: \(int(designChecks?["passed"])) passed, \(int(designChecks?["failed"])) failed",
@@ -407,11 +409,13 @@ struct LocalHistoryService: HistoryService {
         let passOutcome = sequenceSummary?["passOutcome"] as? [String: Any]
         let applySummary = snapshotSummary?["applySummary"] as? [String: Any]
         let practicalValidation = snapshotSummary?["practicalValidationSummary"] as? [String: Any]
+        let metadataAssignmentCount = int(applySummary?["metadataAssignmentCount"])
         return [
             string(requestScope?["mode"]).isEmpty ? "" : "Request scope: \(string(requestScope?["mode"]))",
             string(requestScope?["reviewStartLevel"]).isEmpty ? "" : "Review start: \(string(requestScope?["reviewStartLevel"]))",
             string(passOutcome?["status"]).isEmpty ? "" : "Pass outcome: \(string(passOutcome?["status"]))",
             "Commands: \(int(applySummary?["commandCount"]))",
+            metadataAssignmentCount > 0 ? "Display metadata used: \(metadataAssignmentCount) assignment\(metadataAssignmentCount == 1 ? "" : "s")" : "",
             practicalValidation == nil ? "" : "Practical validation: \(bool(practicalValidation?["overallOk"]) ? "passed" : "needs review")",
             practicalValidation == nil ? "" : "Validation failures: \(int(practicalValidation?["readbackFailed"])) readback, \(int(practicalValidation?["designFailed"])) design"
         ].filter { !$0.isEmpty }

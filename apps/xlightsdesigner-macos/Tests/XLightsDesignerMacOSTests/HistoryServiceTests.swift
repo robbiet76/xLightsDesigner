@@ -15,6 +15,7 @@ import Testing
         "status": "applied",
         "currentRevision": "rev-1",
         "nextRevision": "rev-2",
+        "metadataAssignmentCount": 16,
         "renderCurrentSummary": "Rendered xLights sequence: /tmp/HolidayRoad.xsq",
         "verification": [
             "revisionAdvanced": true,
@@ -48,6 +49,7 @@ import Testing
     #expect(row.summary.contains("revision rev-2"))
     #expect(detail.proofChain.contains("Revision advanced: yes"))
     #expect(detail.proofChain.contains("Expected mutations present: yes"))
+    #expect(detail.proofChain.contains("Display metadata used: 16 assignments"))
     #expect(detail.proofChain.contains("Practical validation: passed"))
     #expect(detail.proofChain.contains("Readback checks: 3 passed, 0 failed"))
     #expect(detail.proofChain.contains("Design checks: 2 passed, 0 failed"))
@@ -87,7 +89,8 @@ import Testing
                 ]
             ],
             "applySummary": [
-                "commandCount": 5
+                "commandCount": 5,
+                "metadataAssignmentCount": 16
             ],
             "practicalValidationSummary": [
                 "overallOk": false,
@@ -118,6 +121,7 @@ import Testing
     #expect(detail.proofChain.contains("Review start: section"))
     #expect(detail.proofChain.contains("Pass outcome: stable"))
     #expect(detail.proofChain.contains("Commands: 5"))
+    #expect(detail.proofChain.contains("Display metadata used: 16 assignments"))
     #expect(detail.proofChain.contains("Practical validation: needs review"))
     #expect(detail.proofChain.contains("Validation failures: 1 readback, 2 design"))
     #expect(detail.warnings.contains("Practical validation summary indicates this pass needs review."))

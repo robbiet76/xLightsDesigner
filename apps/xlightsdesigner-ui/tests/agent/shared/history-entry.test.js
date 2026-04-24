@@ -104,6 +104,7 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
     },
     applyResult: {
       status: "success",
+      metadataAssignmentCount: 7,
       verification: {
         ok: true,
         checked: ["effects_present"],
@@ -127,6 +128,7 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
   assert.deepEqual(summary.sequenceSummary.revisionDelta.currentEffects, ["Color Wash"]);
   assert.deepEqual(summary.sequenceSummary.revisionDelta.introducedTargets, ["Snowman"]);
   assert.equal(summary.applySummary.commandCount, 5);
+  assert.equal(summary.applySummary.metadataAssignmentCount, 7);
   assert.equal(summary.verificationSummary.ok, true);
 });
 

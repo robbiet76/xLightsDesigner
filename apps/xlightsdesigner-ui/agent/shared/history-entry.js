@@ -131,6 +131,9 @@ export function buildHistorySnapshotSummary({
     applySummary: {
       status: ensureString(applyResult?.status, "pending"),
       failureReason: ensureString(applyResult?.failureReason, null),
+      metadataAssignmentCount: Number.isFinite(applyResult?.metadataAssignmentCount)
+        ? applyResult.metadataAssignmentCount
+        : 0,
       commandCount: Number.isFinite(planHandoff?.graph?.nodeCount)
         ? planHandoff.graph.nodeCount
         : ensureArray(planHandoff?.commands).length,
