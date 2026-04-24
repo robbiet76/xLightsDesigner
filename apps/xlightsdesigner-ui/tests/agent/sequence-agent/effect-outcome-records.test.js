@@ -99,6 +99,23 @@ test("buildEffectFamilyOutcomeRecords emits general-training records per chosen 
   assert.equal(records[0].storageClass, "general_training");
   assert.equal(records[0].requestScope.mode, "section_target_refinement");
   assert.deepEqual(records[0].revisionRoles, ["strengthen_lead", "increase_section_contrast"]);
+  assert.deepEqual(records[0].revisionAttempt, {
+    summary: "",
+    roleKey: "strengthen_lead+increase_section_contrast",
+    targetCount: 2,
+    commandCount: 2
+  });
+  assert.deepEqual(records[0].critiqueChange, {
+    priorSignals: ["lead_mismatch", "weak_section_contrast"],
+    postSignals: [],
+    resolvedSignals: ["lead_mismatch", "weak_section_contrast"],
+    persistedSignals: [],
+    newSignals: []
+  });
+  assert.deepEqual(records[0].memoryKeys, [
+    "section_target_refinement::section::strengthen_lead+increase_section_contrast::lead_mismatch::Bars",
+    "section_target_refinement::section::strengthen_lead+increase_section_contrast::weak_section_contrast::Bars"
+  ]);
   assert.deepEqual(records[0].appliedParameterGuidance, [
     {
       parameterName: "speed",

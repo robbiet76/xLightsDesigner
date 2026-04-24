@@ -54,6 +54,16 @@ function deriveOutcomeSummary({ priorSignals = [], currentSignals = [] } = {}) {
   };
 }
 
+function buildMemoryKey({ requestScope = {}, revisionRoles = [], signal = "", effectName = "" } = {}) {
+  return [
+    str(requestScope?.mode) || "unknown_scope",
+    str(requestScope?.reviewStartLevel) || "unknown_level",
+    uniqueStrings(revisionRoles).join("+") || "no_role",
+    str(signal) || "no_signal",
+    str(effectName) || "unknown_effect"
+  ].join("::");
+}
+
 function collectPlannedEffectNames(planHandoff = null) {
   return uniqueStrings(
     arr(planHandoff?.commands)
@@ -174,6 +184,12 @@ export function buildEffectFamilyOutcomeRecords({
     ...arr(requestedScope?.revisionTargets),
     ...arr(requestedScope?.focusTargets)
   ]);
+  const requestScope = {
+    mode: str(requestedScope?.requestScopeMode || planHandoff?.metadata?.requestScopeMode),
+    reviewStartLevel: str(requestedScope?.reviewStartLevel || planHandoff?.metadata?.reviewStartLevel),
+    sectionScopeKind: str(requestedScope?.sectionScopeKind || planHandoff?.metadata?.sectionScopeKind)
+  };
+  const critiqueSignals = uniqueStrings([...priorSignals, ...currentSignals]);
 
   return effectNames.map((effectName) => finalizeArtifact({
     artifactType: "effect_family_outcome_record_v1",
@@ -183,14 +199,29 @@ export function buildEffectFamilyOutcomeRecords({
     sequencePath: str(sequencePath),
     historyEntryId: str(historyEntry?.historyEntryId),
     effectName: str(effectName),
-    requestScope: {
-      mode: str(requestedScope?.requestScopeMode || planHandoff?.metadata?.requestScopeMode),
-      reviewStartLevel: str(requestedScope?.reviewStartLevel || planHandoff?.metadata?.reviewStartLevel),
-      sectionScopeKind: str(requestedScope?.sectionScopeKind || planHandoff?.metadata?.sectionScopeKind)
-    },
+    requestScope,
     revisionLevel: str(sequenceRevisionObjective?.ladderLevel),
     revisionRoles,
     targetIds,
+    revisionAttempt: {
+      summary: str(requestedScope?.summary || requestedScope?.executionObjective),
+      roleKey: revisionRoles.join("+"),
+      targetCount: targetIds.length,
+      commandCount: collectEffectCommands(planHandoff, effectName).length
+    },
+    critiqueChange: {
+      priorSignals,
+      postSignals: currentSignals,
+      resolvedSignals: outcome.resolvedSignals,
+      persistedSignals: outcome.persistedSignals,
+      newSignals: outcome.newSignals
+    },
+    memoryKeys: critiqueSignals.map((signal) => buildMemoryKey({
+      requestScope,
+      revisionRoles,
+      signal,
+      effectName
+    })),
     appliedParameterGuidance: buildAppliedParameterGuidance(planHandoff, effectName),
     appliedSharedSettingGuidance: buildAppliedSharedSettingGuidance(planHandoff, effectName),
     priorSignals,

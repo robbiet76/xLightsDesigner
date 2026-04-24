@@ -37,9 +37,9 @@ Execution checklist for the next sequencing phase after the feedback loop and re
 
 ## 4. Repeated-Pass Memory
 
-- [ ] capture revision attempt summaries
-- [ ] capture resulting critique changes
-- [ ] store success/failure memory by scope, critique type, and chosen revision role
+- [x] capture revision attempt summaries
+- [x] capture resulting critique changes
+- [x] store success/failure memory by scope, critique type, and chosen revision role
 - [ ] bias future planning from this memory
 
 ## 5. Group / Model Drilldown
