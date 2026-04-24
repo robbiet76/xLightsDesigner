@@ -18,6 +18,7 @@ protocol DisplayDiscoveryStateStore: Sendable {
         userMessage: AssistantMessageModel,
         assistantMessage: AssistantMessageModel
     ) throws
+    func upsertTagProposals(_ proposals: [DisplayDiscoveryTagProposalModel], for project: ActiveProjectModel?) throws
     func clearTagProposals(for project: ActiveProjectModel?) throws
 }
 
@@ -128,6 +129,19 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
         }
         appendIfNeeded(entry: userMessage, into: &document.transcript)
         appendIfNeeded(entry: assistantMessage, into: &document.transcript)
+        try save(document, for: project)
+    }
+
+    func upsertTagProposals(_ proposals: [DisplayDiscoveryTagProposalModel], for project: ActiveProjectModel?) throws {
+        guard let project, !proposals.isEmpty else { return }
+        var document = (try? load(for: project)) ?? DisplayDiscoveryDocument()
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        if document.startedAt == nil {
+            document.startedAt = timestamp
+        }
+        document.status = .readyForProposal
+        document.updatedAt = timestamp
+        document.proposedTags = mergeTagProposals(existing: document.proposedTags, incoming: proposals)
         try save(document, for: project)
     }
 

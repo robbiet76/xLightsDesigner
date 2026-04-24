@@ -12,6 +12,17 @@ private let displayMetadataCategories = [
     "Spatial Framing"
 ]
 
+private extension Sequence where Element: Hashable {
+    func removingDuplicates() -> [Element] {
+        var seen = Set<Element>()
+        var result: [Element] = []
+        for element in self where seen.insert(element).inserted {
+            result.append(element)
+        }
+        return result
+    }
+}
+
 @MainActor
 @Observable
 final class DisplayScreenViewModel {
@@ -336,6 +347,20 @@ final class DisplayScreenViewModel {
         showDiscoveryProposalSheet = true
     }
 
+    func proposeMetadataFromLayout() {
+        let proposals = buildBaselineTagProposals(from: screenModel.rows)
+        guard !proposals.isEmpty else {
+            errorMessage = "No obvious xLights groups were found to seed display metadata proposals."
+            return
+        }
+        do {
+            try displayDiscoveryStore.upsertTagProposals(proposals, for: workspace.activeProject)
+            loadDisplay()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func startAddMetadata() {
         metadataEditor = MetadataEditorModel()
         showMetadataEditorSheet = true
@@ -577,6 +602,73 @@ final class DisplayScreenViewModel {
         }
 
         return cards
+    }
+
+    private func buildBaselineTagProposals(from rows: [DisplayLayoutRowModel]) -> [DisplayDiscoveryTagProposalModel] {
+        let knownTargets = Set(rows.map(\.targetName))
+        let candidates = rows
+            .filter { row in
+                let name = row.targetName.lowercased()
+                let type = row.targetType.lowercased()
+                let hasMembers = !row.activeGroupMembers.isEmpty || !row.directGroupMembers.isEmpty || !row.flattenedGroupMembers.isEmpty
+                return hasMembers &&
+                    (type.contains("group") || row.activeGroupMembers.count >= 2 || row.directGroupMembers.count >= 2) &&
+                    !name.hasPrefix("allmodels")
+            }
+            .compactMap { row -> (proposal: DisplayDiscoveryTagProposalModel, score: Int)? in
+                let targetNames = memberTargets(for: row, knownTargets: knownTargets)
+                guard !targetNames.isEmpty else { return nil }
+                let profile = baselineProfile(for: row)
+                guard profile.score > 0 else { return nil }
+                let proposal = DisplayDiscoveryTagProposalModel(
+                    tagName: row.targetName,
+                    tagDescription: profile.description,
+                    rationale: "Seeded from xLights group membership: \(targetNames.prefix(8).joined(separator: ", "))\(targetNames.count > 8 ? "..." : "")",
+                    targetNames: targetNames
+                )
+                return (proposal, profile.score + min(6, targetNames.count))
+            }
+            .sorted {
+                if $0.score != $1.score { return $0.score > $1.score }
+                return $0.proposal.tagName.localizedCaseInsensitiveCompare($1.proposal.tagName) == .orderedAscending
+            }
+            .prefix(16)
+
+        return candidates.map(\.proposal)
+    }
+
+    private func memberTargets(for row: DisplayLayoutRowModel, knownTargets: Set<String>) -> [String] {
+        let rawMembers = !row.activeGroupMembers.isEmpty
+            ? row.activeGroupMembers
+            : (!row.directGroupMembers.isEmpty ? row.directGroupMembers : row.flattenedGroupMembers)
+        return rawMembers
+            .filter { knownTargets.contains($0) }
+            .removingDuplicates()
+            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    private func baselineProfile(for row: DisplayLayoutRowModel) -> (description: String, score: Int) {
+        let name = row.targetName.lowercased()
+        let type = row.targetType.lowercased()
+        if name.contains("snowman") || name.contains("train") || name.contains("present") || name.contains("northpole") {
+            return ("Feature or character prop group for story moments and visual callouts.", 8)
+        }
+        if name.contains("snowflake") || name.contains("candy") || name.contains("wreath") || name.contains("spiral") || name.contains("mini") {
+            return ("Repeated prop family useful for accents, chases, and phrase development.", 7)
+        }
+        if name.contains("flood") {
+            return ("Color wash and atmosphere layer for section mood and broad transitions.", 7)
+        }
+        if name.contains("gutter") || name.contains("border") || name.contains("outline") || name.contains("eave") || name.contains("garland") {
+            return ("Architectural framing layer for structure, outlines, and beat support.", 6)
+        }
+        if name.contains("front") || name.contains("upper") || name.contains("lower") || name.contains("house") {
+            return ("Spatial grouping that helps agents reason about layout placement and coverage.", 5)
+        }
+        if type.contains("group"), row.activeGroupMembers.count >= 4 || row.directGroupMembers.count >= 4 {
+            return ("xLights model group available for coordinated sequencing decisions.", 3)
+        }
+        return ("", 0)
     }
 
     private func isBranchCovered(_ branch: String) -> Bool {

@@ -82,4 +82,41 @@ struct DisplayDiscoveryStateStoreTests {
         #expect(summary.resolvedBranches.isEmpty)
         #expect(summary.proposedTags.count == 1)
     }
+
+    @Test func upsertsLayoutSeedTagProposals() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let projectDir = root.appendingPathComponent("Test Project", isDirectory: true)
+        try FileManager.default.createDirectory(at: projectDir, withIntermediateDirectories: true)
+        let projectFile = projectDir.appendingPathComponent("Test Project.xdproj", isDirectory: false)
+        try Data("{}".utf8).write(to: projectFile)
+
+        let project = ActiveProjectModel(
+            id: UUID().uuidString,
+            projectName: "Test Project",
+            projectFilePath: projectFile.path,
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            appRootPath: root.path,
+            createdAt: "2026-04-08T00:00:00Z",
+            updatedAt: "2026-04-08T00:00:00Z",
+            snapshot: [:]
+        )
+        let store = LocalDisplayDiscoveryStateStore()
+        try store.upsertTagProposals([
+            DisplayDiscoveryTagProposalModel(
+                tagName: "Snowflakes",
+                tagDescription: "Repeated prop family useful for accents.",
+                rationale: "Seeded from xLights group membership.",
+                targetNames: ["Snowflake-01", "Snowflake-02"]
+            )
+        ], for: project)
+
+        let summary = store.summary(for: project)
+        #expect(summary.status == .readyForProposal)
+        #expect(summary.proposedTags.count == 1)
+        #expect(summary.proposedTags.first?.tagName == "Snowflakes")
+        #expect(summary.startedAt.isEmpty == false)
+        #expect(summary.updatedAt.isEmpty == false)
+    }
 }
