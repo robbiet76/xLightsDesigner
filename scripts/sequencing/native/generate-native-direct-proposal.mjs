@@ -93,10 +93,7 @@ async function main() {
     throw new Error('Shared track record has no persisted analysis artifact.');
   }
 
-  const analysisHandoff = buildAnalysisHandoffFromArtifact({
-    artifact: persistedArtifact,
-    sourceMediaPath: audioPath
-  });
+  const analysisHandoff = buildAnalysisHandoffFromArtifact(persistedArtifact, null);
   const revision = await getRevision(args.endpoint);
   const modelsRes = await getModels(args.endpoint).catch(() => ({ ok: false, data: { models: [] } }));
   const displayRes = await getDisplayElements(args.endpoint).catch(() => ({ ok: false, data: { elements: [] } }));
