@@ -56,6 +56,10 @@ Phase 2 native design authoring started:
 - native Review apply now copies the target `.xsq` into the project `artifacts/backups` folder before mutation and surfaces the backup path after apply
 - native Review apply now renders through the owned API before render-sample capture so persisted render feedback can observe the applied revision
 
+Phase 3 proof-loop bridge started:
+- xLights 2026.06 branch `xld-2026.06-migration` documents `layout/scene`, `sequence/render-current`, and `sequence/render-samples` as owned render-feedback routes
+- xLights 2026.06 smoke coverage now dispatches `layout/scene` and `sequence/render-samples` through the owned endpoint harness
+
 ## Purpose
 
 Define the phased path from the current native macOS + owned xLights API implementation to a complete app for the first local operator workflow.
