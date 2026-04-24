@@ -67,6 +67,7 @@ Phase 3 proof-loop bridge started:
 - native History now loads `history_entry_v1` review-pass rollups from the project `history/` folder and surfaces request scope, pass outcome, validation status, and artifact refs
 - native History now flags consecutive review-pass validation instability so repeated proof-loop failures are visible before another apply
 - sequencer revision planning now maps unresolved prior-pass proof signals into bounded revision roles so the next pass can bias realization from the proof loop
+- sequencer revision briefs now map prior-pass proof signals into safe focus/revision target hints before realization
 
 ## Purpose
 

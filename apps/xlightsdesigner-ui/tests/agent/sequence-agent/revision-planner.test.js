@@ -183,3 +183,32 @@ test("buildSequencerRevisionBrief maps unresolved prior-pass signals to bounded 
     "add_section_development"
   ]);
 });
+
+test("buildSequencerRevisionBrief maps prior proof signals to safe revision targets", () => {
+  const out = buildSequencerRevisionBrief({
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      artisticIntent: {
+        supportTargets: ["Roofline", "WindowFrames"]
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared" },
+      designerDirection: { artisticCorrection: "Use prior pass evidence." },
+      sequencerDirection: { executionObjective: "Retarget the next revision safely." }
+    },
+    priorPassMemory: {
+      artifactType: "sequencer_prior_pass_memory_v1",
+      unresolvedSignals: ["lead_mismatch", "under_coverage", "weak_section_contrast"],
+      previousLeadModel: "MegaTree",
+      previousRevisionTargets: ["MegaTree"],
+      previousTargetIds: ["MegaTree", "Roofline"]
+    }
+  });
+
+  assert.deepEqual(out.focusTargets, ["MegaTree"]);
+  assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline", "WindowFrames"]);
+  assert.deepEqual(out.targetScope, ["MegaTree", "Roofline", "WindowFrames"]);
+});

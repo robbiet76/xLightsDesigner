@@ -25,6 +25,23 @@ function revisionRolesForPriorSignals(priorPassMemory = null) {
   ]);
 }
 
+function targetHintsForPriorSignals({ priorPassMemory = null, artisticIntent = {} } = {}) {
+  const signals = new Set(uniqueStrings(priorPassMemory?.unresolvedSignals));
+  const previousRevisionTargets = uniqueStrings(priorPassMemory?.previousRevisionTargets);
+  const previousLeadModel = str(priorPassMemory?.previousLeadModel);
+  const previousTargetIds = uniqueStrings(priorPassMemory?.previousTargetIds);
+  const supportTargets = uniqueStrings(artisticIntent?.supportTargets);
+  const observedLeadTargets = uniqueStrings([...previousRevisionTargets, previousLeadModel]);
+  const priorTargets = uniqueStrings([...previousRevisionTargets, ...previousTargetIds]);
+  return {
+    focusTargets: signals.has("lead_mismatch") ? observedLeadTargets : [],
+    revisionTargets: uniqueStrings([
+      ...(signals.has("weak_section_contrast") || signals.has("flat_development") || signals.has("over_coverage") ? priorTargets : []),
+      ...(signals.has("under_coverage") ? (supportTargets.length ? supportTargets : priorTargets) : [])
+    ])
+  };
+}
+
 function inferRequestedScope(designHandoff = null) {
   const sections = uniqueStrings(designHandoff?.scope?.sections);
   const targetIds = uniqueStrings(designHandoff?.scope?.targetIds);
@@ -79,11 +96,14 @@ export function buildSequencerRevisionBrief({
   const feedbackDirection = isPlainObject(feedback?.nextDirection) ? feedback.nextDirection : {};
   const changeBias = isPlainObject(feedbackDirection?.changeBias) ? feedbackDirection.changeBias : null;
   const requestedScope = isPlainObject(scope?.requestedScope) ? scope.requestedScope : inferRequestedScope(designHandoff);
+  const priorTargetHints = targetHintsForPriorSignals({ priorPassMemory, artisticIntent });
 
   const targetScope = [...new Set([
     ...arr(feedbackDirection?.targetIds),
     ...arr(sequencerDirection?.focusTargets),
     ...arr(scope?.revisionTargets),
+    ...arr(priorTargetHints?.focusTargets),
+    ...arr(priorTargetHints?.revisionTargets),
     ...arr(designHandoff?.scope?.targetIds)
   ].map((row) => str(row)).filter(Boolean))];
   const sectionScope = arr(designHandoff?.scope?.sections);
@@ -133,11 +153,13 @@ export function buildSequencerRevisionBrief({
     ]),
     revisionTargets: uniqueStrings([
       ...arr(feedbackDirection?.targetIds),
-      ...arr(scope?.revisionTargets)
+      ...arr(scope?.revisionTargets),
+      ...arr(priorTargetHints?.revisionTargets)
     ]),
     focusTargets: uniqueStrings([
       ...arr(feedbackDirection?.targetIds),
-      ...arr(sequencerDirection?.focusTargets)
+      ...arr(sequencerDirection?.focusTargets),
+      ...arr(priorTargetHints?.focusTargets)
     ]),
     sectionScope,
     blockedMoves: arr(sequencerDirection.blockedMoves),
