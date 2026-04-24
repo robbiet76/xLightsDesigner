@@ -238,7 +238,7 @@ function loadReviewInputs({ projectFile = '', appRoot = '' } = {}) {
   };
 }
 
-function buildReviewIntentHandoff(latestIntent = {}, proposalBundle = {}) {
+export function buildReviewIntentHandoff(latestIntent = {}, proposalBundle = {}) {
   const proposalScope = proposalBundle?.scope && typeof proposalBundle.scope === 'object' ? proposalBundle.scope : {};
   const proposalExecution = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === 'object' ? proposalBundle.executionPlan : {};
   const latestConstraints = latestIntent?.constraints && typeof latestIntent.constraints === 'object' ? latestIntent.constraints : {};

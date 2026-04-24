@@ -6,10 +6,13 @@ import path from "node:path";
 
 import {
   buildNativeApplyVerification,
+  buildReviewIntentHandoff,
   createSequenceBackup,
   renderCurrentSummary,
   summarizePracticalValidation
 } from "../../../../scripts/sequencing/native/apply-native-review.mjs";
+import { buildSequenceAgentPlan } from "../../agent/sequence-agent/sequence-agent.js";
+import { buildEffectDefinitionCatalog } from "../../agent/sequence-agent/effect-definition-catalog.js";
 
 test("createSequenceBackup copies xsq into project artifact backups", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-review-"));
@@ -105,4 +108,123 @@ test("buildNativeApplyVerification attaches practical validation from readback",
     designPassed: 0,
     designFailed: 0
   });
+});
+
+test("review apply handoff preserves metadata-resolved proposal targets for sequence planning", () => {
+  const latestIntent = {
+    artifactType: "intent_handoff_v1",
+    goal: "Make the chorus read through the lead display element.",
+    mode: "revise",
+    scope: {
+      targetIds: ["MegaTree"],
+      tagNames: ["lead"],
+      sections: ["Chorus 1"],
+      timeRangeMs: null
+    },
+    constraints: {
+      changeTolerance: "moderate",
+      preserveTimingTracks: true,
+      allowGlobalRewrite: false
+    },
+    directorPreferences: {
+      styleDirection: "",
+      energyArc: "hold",
+      focusElements: ["MegaTree"],
+      colorDirection: ""
+    }
+  };
+  const proposalBundle = {
+    bundleType: "proposal_bundle_v1",
+    summary: "Make the chorus read through the lead display element.",
+    createdAt: "2026-04-24T00:00:00.000Z",
+    scope: {
+      targetIds: ["MegaTree"],
+      tagNames: ["lead"],
+      sections: ["Chorus 1"]
+    },
+    constraints: {
+      changeTolerance: "moderate",
+      preserveTimingTracks: true,
+      preserveDisplayOrder: true,
+      allowGlobalRewrite: false
+    },
+    proposalLines: [
+      "Chorus 1 / MegaTree / preserve this tagged focal element as the clearest lead read",
+      "Chorus 1 / MegaTree / this target can support these visual treatments when they fit the section intent: centerpiece",
+      "Chorus 1 / MegaTree / avoid these effect families or effects here unless explicitly requested: Bars"
+    ],
+    executionPlan: {
+      passScope: "single_section",
+      implementationMode: "single_section_pass",
+      routePreference: "designer_to_sequence_agent",
+      shouldUseFullSongStructureTrack: true,
+      sectionCount: 1,
+      targetCount: 1,
+      primarySections: ["Chorus 1"],
+      sectionPlans: [
+        {
+          designId: "DES-001",
+          designRevision: 0,
+          designAuthor: "user",
+          section: "Chorus 1",
+          energy: "",
+          density: "",
+          intentSummary: "Make the chorus read through the lead display element.",
+          targetIds: ["MegaTree"],
+          effectHints: []
+        }
+      ],
+      effectPlacements: []
+    }
+  };
+  const metadataAssignments = [
+    {
+      targetId: "MegaTree",
+      tags: ["lead", "centerpiece"],
+      semanticHints: ["centerpiece"],
+      visualHintDefinitions: [],
+      effectAvoidances: ["Bars"],
+      rolePreference: "lead",
+      source: "xlightsdesigner_project_display_metadata"
+    }
+  ];
+
+  const reviewIntentHandoff = buildReviewIntentHandoff(latestIntent, proposalBundle);
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 0, endMs: 1000, energy: "high", density: "medium" }
+        ]
+      }
+    },
+    intentHandoff: reviewIntentHandoff,
+    sourceLines: proposalBundle.proposalLines,
+    baseRevision: "rev-1",
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Bars", params: [] },
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Shimmer", params: [] },
+      { effectName: "On", params: [] }
+    ]),
+    metadataAssignments
+  });
+
+  assert.deepEqual(reviewIntentHandoff.scope.targetIds, ["MegaTree"]);
+  assert.deepEqual(reviewIntentHandoff.scope.tagNames, ["lead"]);
+  assert.deepEqual(out.metadata.scope.targetIds, ["MegaTree"]);
+  assert.deepEqual(out.metadata.scope.tagNames, ["lead"]);
+  assert.deepEqual(out.metadata.executionStrategy.sectionPlans[0].targetIds, ["MegaTree"]);
+  assert.deepEqual(out.metadata.metadataAssignments, [
+    {
+      targetId: "MegaTree",
+      tags: ["lead", "centerpiece"],
+      semanticHints: ["centerpiece"],
+      effectAvoidances: ["Bars"],
+      rolePreference: "lead",
+      visualHintDefinitions: []
+    }
+  ]);
+  assert.match(out.executionLines.join("\n"), /MegaTree/i);
 });
