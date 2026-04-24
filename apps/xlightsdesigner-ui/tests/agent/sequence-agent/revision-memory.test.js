@@ -78,6 +78,8 @@ test("buildPriorPassMemory summarizes unresolved signals from the previous appli
   assert.deepEqual(out.effectOutcomeMemory.failedEffects, ["Twinkle"]);
   assert.deepEqual(out.effectOutcomeMemory.successfulRevisionRoles, ["strengthen_lead"]);
   assert.deepEqual(out.effectOutcomeMemory.failedRevisionRoles, ["increase_section_contrast"]);
+  assert.deepEqual(out.effectOutcomeMemory.tendencies.focus.successfulEffects, ["Bars"]);
+  assert.deepEqual(out.effectOutcomeMemory.tendencies.section_contrast.failedEffects, ["Twinkle"]);
   assert.equal(out.drilldownMemory.heldAtSectionLevel, true);
   assert.equal(out.drilldownMemory.eligible, false);
   assert.deepEqual(out.drilldownMemory.targetIds, []);

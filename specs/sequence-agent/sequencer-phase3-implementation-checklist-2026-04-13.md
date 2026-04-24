@@ -53,7 +53,7 @@ Execution checklist for the next sequencing phase after the feedback loop and re
 
 - [x] record effect-family choice in revision memory
 - [x] record outcome deltas after each revision pass
-- [ ] identify effect-family tendencies for focus, support balance, section contrast, and section development
+- [x] identify effect-family tendencies for focus, support balance, section contrast, and section development
 - [x] use successful outcome effects to bias future sequencing plans
 
 ## 7. Parameter-Level Learning Later

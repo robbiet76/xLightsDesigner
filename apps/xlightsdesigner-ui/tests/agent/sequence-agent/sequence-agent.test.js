@@ -594,6 +594,44 @@ test("sequence_agent biases revision effect choice from successful outcome memor
   assert.match(out.executionLines[0], /apply On effect/i);
 });
 
+test("sequence_agent prefers role-specific effect outcome tendencies", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      goal: "Increase chorus contrast on focal props",
+      scope: {
+        targetIds: ["MegaTree", "Roofline"],
+        sections: ["Chorus 1"]
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared", revisionRoles: ["increase_section_contrast"] },
+      designerDirection: { artisticCorrection: "Use the prior contrast outcome." },
+      sequencerDirection: { executionObjective: "Keep the successful contrast effect family bias." }
+    },
+    priorPassMemory: {
+      artifactType: "sequencer_prior_pass_memory_v1",
+      effectOutcomeMemory: {
+        successfulEffects: ["On"],
+        tendencies: {
+          focus: { successfulEffects: ["On"], failedEffects: [] },
+          section_contrast: { successfulEffects: ["Bars"], failedEffects: [] }
+        }
+      }
+    },
+    sourceLines: [],
+    baseRevision: "rev-57",
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.equal(out.metadata.sequencerRevisionBrief.revisionRoles[0], "increase_section_contrast");
+  assert.match(out.executionLines[0], /apply Bars effect/i);
+});
+
 test("sequence_agent uses render-driven revision targets to bias effect-strategy seed lines", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

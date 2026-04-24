@@ -500,6 +500,8 @@ function collectDefinedVisualHintBehaviorTextForTargets(targetIds = [], metadata
 }
 
 function inferRevisionBriefPreferredEffects(brief = {}) {
+  const tendencyEffects = inferRevisionBriefTendencyEffects(brief);
+  if (tendencyEffects.length) return tendencyEffects;
   const successfulEffects = normArray(brief?.effectOutcomeMemory?.successfulEffects);
   if (successfulEffects.length) return successfulEffects;
   const summary = `${normText(brief?.artisticGoalSummary)} ${normText(brief?.executionObjective)}`.toLowerCase();
@@ -518,6 +520,25 @@ function inferRevisionBriefPreferredEffects(brief = {}) {
   if (motionCharacter.includes("expand")) return ["Bars", "Shimmer", "Color Wash"];
   if (densityCharacter === "sparse") return ["On", "Color Wash", "Shimmer"];
   return [];
+}
+
+function inferRevisionBriefTendencyEffects(brief = {}) {
+  const tendencies = brief?.effectOutcomeMemory?.tendencies;
+  if (!tendencies || typeof tendencies !== "object" || Array.isArray(tendencies)) return [];
+  const roleBuckets = {
+    strengthen_lead: "focus",
+    reduce_competing_support: "support_balance",
+    widen_support: "support_balance",
+    increase_section_contrast: "section_contrast",
+    add_section_development: "section_development"
+  };
+  const out = [];
+  for (const role of normArray(brief?.revisionRoles).map((row) => normText(row))) {
+    const bucket = roleBuckets[role];
+    if (!bucket) continue;
+    out.push(...normArray(tendencies?.[bucket]?.successfulEffects));
+  }
+  return [...new Set(out.map((row) => normText(row)).filter(Boolean))];
 }
 
 function inferDesiredParameterBehaviorHints({ effectName = "", summary = "", sequencerRevisionBrief = null } = {}) {
@@ -734,6 +755,8 @@ function buildRevisionBriefBehaviorSummary(brief = {}) {
 }
 
 function inferRevisionBriefEffectName(brief = {}) {
+  const successfulTendencyEffect = firstAvailableEffect(inferRevisionBriefTendencyEffects(brief));
+  if (successfulTendencyEffect) return successfulTendencyEffect;
   const successfulEffect = firstAvailableEffect(normArray(brief?.effectOutcomeMemory?.successfulEffects));
   if (successfulEffect) return successfulEffect;
   const summary = buildRevisionBriefBehaviorSummary(brief);

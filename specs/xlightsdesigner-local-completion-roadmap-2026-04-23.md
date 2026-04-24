@@ -73,6 +73,7 @@ Phase 3 proof-loop bridge started:
 - immediate review history snapshots now carry effect outcome records into prior-pass memory, and successful outcome effects bias the next revision plan
 - prior-pass memory now separates held section-level instability from eligible drilldown evidence so model/group narrowing waits for drilldown sampling
 - drilldown critique now records compact implicated target evidence and passes bounded model/group hints forward without parameter tuning
+- effect outcome memory now summarizes role-specific tendencies for focus, support balance, section contrast, and section development before choosing the next revision effect
 
 ## Purpose
 

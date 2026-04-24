@@ -25,14 +25,55 @@ function buildEffectOutcomeMemory(effectOutcomeRecords = []) {
   const records = arr(effectOutcomeRecords).filter(isPlainObject);
   const successful = records.filter((row) => row?.outcome?.improved === true || str(row?.outcome?.status) === "improved");
   const failed = records.filter((row) => row?.outcome?.improved !== true && str(row?.outcome?.status) !== "improved");
+  const tendencies = buildEffectOutcomeTendencies(records);
   return {
     successfulMemoryKeys: uniqueStrings(successful.flatMap((row) => arr(row?.memoryKeys))),
     failedMemoryKeys: uniqueStrings(failed.flatMap((row) => arr(row?.memoryKeys))),
     successfulRevisionRoles: uniqueStrings(successful.flatMap((row) => arr(row?.revisionRoles))),
     failedRevisionRoles: uniqueStrings(failed.flatMap((row) => arr(row?.revisionRoles))),
     successfulEffects: uniqueStrings(successful.map((row) => row?.effectName)),
-    failedEffects: uniqueStrings(failed.map((row) => row?.effectName))
+    failedEffects: uniqueStrings(failed.map((row) => row?.effectName)),
+    tendencies
   };
+}
+
+function tendencyKeysForOutcomeRecord(row = {}) {
+  const text = [
+    ...arr(row?.revisionRoles),
+    ...arr(row?.memoryKeys)
+  ].map((value) => str(value).toLowerCase()).join(" ");
+  return uniqueStrings([
+    /(strengthen_lead|lead_mismatch)/.test(text) ? "focus" : "",
+    /(reduce_competing_support|widen_support|over_coverage|under_coverage)/.test(text) ? "support_balance" : "",
+    /(increase_section_contrast|weak_section_contrast)/.test(text) ? "section_contrast" : "",
+    /(add_section_development|flat_development)/.test(text) ? "section_development" : ""
+  ]);
+}
+
+function buildEffectOutcomeTendencies(records = []) {
+  const buckets = {
+    focus: { successfulEffects: [], failedEffects: [] },
+    support_balance: { successfulEffects: [], failedEffects: [] },
+    section_contrast: { successfulEffects: [], failedEffects: [] },
+    section_development: { successfulEffects: [], failedEffects: [] }
+  };
+  for (const row of arr(records).filter(isPlainObject)) {
+    const effectName = str(row?.effectName);
+    if (!effectName) continue;
+    const effectList = (row?.outcome?.improved === true || str(row?.outcome?.status) === "improved")
+      ? "successfulEffects"
+      : "failedEffects";
+    for (const key of tendencyKeysForOutcomeRecord(row)) {
+      buckets[key][effectList].push(effectName);
+    }
+  }
+  return Object.fromEntries(Object.entries(buckets).map(([key, value]) => [
+    key,
+    {
+      successfulEffects: uniqueStrings(value.successfulEffects),
+      failedEffects: uniqueStrings(value.failedEffects)
+    }
+  ]));
 }
 
 function buildDrilldownMemory({ renderCritiqueContext = null, unresolvedSignals = [] } = {}) {
