@@ -98,8 +98,8 @@ Primary sources:
 
 ## Immediate Next Development Phase
 
-The next major development phase is:
-- native macOS product design and migration planning
+The current major development phase is:
+- local native macOS app completion on the owned xLights 2026.06 API
 
 This changes the application-shell direction:
 - Electron is now reference-only and maintenance-only
@@ -107,30 +107,33 @@ This changes the application-shell direction:
 - backend/domain contracts remain shared and should not be forked by shell
 
 Primary source:
-- `app-ui/macos-native-migration-phase-plan-2026-04-06.md`
+- `xlightsdesigner-local-completion-roadmap-2026-04-23.md`
+- `app-ui/native-cutover-audit-2026-04-10.md`
 
-The next implementation-heavy product phase after design is still expected to build on:
+The current implementation-heavy product phase builds on:
 - audio analysis
 - shared track metadata
 - reviewed timing
-- sequencing against stable backend contracts
+- sequencing against the owned xLights API
+- full native design authoring
 
-The sequencing-quality roadmap remains valid, but application-shell work should now follow the native migration plan rather than broadening the Electron shell.
+The first completion target is the primary local user workflow. Distribution and shared cloud backend work follow after the local native app reliably creates, applies, renders, and saves sequence work through xLights.
 
-## Native Migration Rule
+## Native App Completion Rule
 
-Do not begin native screen implementation until the design phase is complete.
+Native screen implementation is already active. Future work should complete the canonical native implementation in place.
 
 Working rule:
-1. define native information architecture
-2. define screen-by-screen workflow contracts
-3. define shared backend/state boundaries
-4. only then implement the macOS shell
+1. keep the native macOS app as the only active shell
+2. keep the owned xLights API as the only active xLights control path
+3. use existing show sequences for validation only unless the user explicitly selects one for editing
+4. write Phase 1 validation artifacts only into a new isolated folder inside the show folder
+5. remove obsolete fallback paths once the owned path is proven
 
-This is now the active planning priority because the current Electron shell is imposing too much UX fragility and iteration cost.
+This is now the active planning priority because the local app must become a reliable translation layer between trained agents and the user's xLights show folder before distribution work begins.
 
 Primary source:
-- `app-ui/macos-native-migration-phase-plan-2026-04-06.md`
+- `xlightsdesigner-local-completion-roadmap-2026-04-23.md`
 
 ## Planned Timing-Track Expansion
 
