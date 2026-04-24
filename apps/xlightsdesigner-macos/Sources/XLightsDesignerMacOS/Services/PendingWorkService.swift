@@ -128,8 +128,18 @@ struct LocalPendingWorkService: PendingWorkService {
         let effectiveEffectPlacements = effectPlacements.isEmpty ? buildEffectPlacements(effectiveExecutionPlan?["effectPlacements"]) : effectPlacements
         let effectiveSectionCount = proposalScopeSections.isEmpty ? int(effectiveExecutionPlan?["sectionCount"]) : proposalScopeSections.count
         let effectiveTargetCount = proposalScopeTargets.isEmpty ? int(effectiveExecutionPlan?["targetCount"]) : proposalScopeTargets.count
+        let effectiveSectionPlans = (effectiveExecutionPlan?["sectionPlans"] as? [[String: Any]]) ?? []
+        let sectionPlanCommandEstimate = effectiveSectionPlans.reduce(0) { total, row in
+            let targets = arrayOfStrings(row["targetIds"])
+            return total + max(1, targets.count)
+        }
         let proposedRows = snapshot["proposed"] as? [Any]
-        let effectiveCommandCount = !effectiveEffectPlacements.isEmpty ? effectiveEffectPlacements.count : (proposedRows?.count ?? 0)
+        let effectiveCommandCount = max(
+            effectiveEffectPlacements.count,
+            sectionPlanCommandEstimate,
+            proposalLines.count,
+            proposedRows?.count ?? 0
+        )
 
         let timestamps = [
             string(latestBrief?["createdAt"]),
