@@ -180,6 +180,28 @@ async function pathExists(filePath) {
   }
 }
 
+function normalizeLocalPath(filePath) {
+  return path.resolve(String(filePath || '')).replace(/\/+$/, '');
+}
+
+async function assertOpenShowFolder(endpoint, expectedShowDir) {
+  const mediaCurrent = await request(endpoint, '/media/current');
+  const reportedShowDir = String(mediaCurrent?.data?.showDirectory || '').trim();
+  if (!reportedShowDir) {
+    throw new Error('/media/current did not report an open xLights show folder.');
+  }
+  const actualShowDir = normalizeLocalPath(reportedShowDir);
+  const normalizedExpected = normalizeLocalPath(expectedShowDir);
+  if (actualShowDir !== normalizedExpected) {
+    throw new Error(
+      `xLights is open to a different show folder. ` +
+      `Open xLights to ${normalizedExpected} and rerun validation. ` +
+      `Current xLights show folder: ${actualShowDir}`
+    );
+  }
+  return mediaCurrent;
+}
+
 async function chooseTargetModel(endpoint, requestedName) {
   const modelsPayload = await request(endpoint, '/layout/models');
   const models = Array.isArray(modelsPayload?.data?.models) ? modelsPayload.data.models : [];
@@ -243,6 +265,7 @@ async function main() {
   const evidencePath = path.join(validationDir, 'owned-api-validation-result.json');
 
   const health = await waitForReady(args.endpoint, args.readyTimeoutMs);
+  const mediaCurrent = await assertOpenShowFolder(args.endpoint, showDir);
   const layoutScene = await request(args.endpoint, '/layout/scene');
   const { model, modelsPayload } = await chooseTargetModel(args.endpoint, args.targetModel);
   const targetModel = String(model.name);
@@ -275,6 +298,7 @@ async function main() {
     targetModel,
     effectName: args.effectName,
     health,
+    mediaCurrent,
     layoutModelCount: Array.isArray(modelsPayload?.data?.models) ? modelsPayload.data.models.length : 0,
     layoutSceneModelCount: Array.isArray(layoutScene?.data?.models) ? layoutScene.data.models.length : 0
   };

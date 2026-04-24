@@ -50,7 +50,8 @@ node scripts/xlights/validate-owned-show-folder-flow.mjs \
 
 Required result:
 - validation writes only under `_xlightsdesigner_api_validation/<run-id>/`
-- `/health`, `/layout/models`, `/layout/scene`, `/sequence/create`, `/sequencing/apply-batch-plan`, `/sequence/render-current`, `/sequence/save`, and `/jobs/get` succeed
+- `/health`, `/media/current`, `/layout/models`, `/layout/scene`, `/sequence/create`, `/sequencing/apply-batch-plan`, `/sequence/render-current`, `/sequence/save`, and `/jobs/get` succeed
+- `/media/current` reports the same show folder as `--show-dir`; trusted roots alone are not enough
 - the expected `.fseq` exists next to the isolated validation `.xsq`
 - the JSON evidence file is recorded in the native evidence log
 

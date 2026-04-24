@@ -21,6 +21,7 @@ Automation launch requirements discovered during owned API validation:
 - launch the API-enabled xLights 2026.06 build, not `/Applications/xLights.app`
 - use `-o` for automation launches so the pre-frame information dialog does not block API startup
 - set `XLIGHTS_DESIGNER_TRUSTED_ROOTS` to include the active show folder for create/save validation
+- require `/media/current` to report the same show folder as the validation `--show-dir`; trusted roots only authorize file access and do not prove xLights is open to the project folder
 
 Owned-path cleanup completed after the green proof:
 - native Review copy no longer describes apply execution as future work
@@ -126,7 +127,8 @@ Goal: prove the native app and scripts can safely create, apply, render, and sav
 
 Scope:
 - use the API-enabled 2026.06 xLights build
-- validate `/health`, `/layout/models`, `/layout/scene`, `/sequence/create`, `/sequencing/apply-batch-plan`, `/sequence/render-current`, `/sequence/save`, and `/jobs/get`
+- validate `/health`, `/media/current`, `/layout/models`, `/layout/scene`, `/sequence/create`, `/sequencing/apply-batch-plan`, `/sequence/render-current`, `/sequence/save`, and `/jobs/get`
+- fail validation before writes when xLights is not open to the same show folder as the project/validation target
 - create only new validation artifacts under an isolated show-folder path such as `_xlightsdesigner_api_validation/<run-id>/`
 - do not modify existing sequence subfolders
 - remove or disable obsolete fallback paths after owned API validation is green
