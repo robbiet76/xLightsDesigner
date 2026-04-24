@@ -160,15 +160,6 @@ final class ProjectScreenViewModel {
     func chooseShowFolderForActiveProject() {
         guard var active = workspace.activeProject else { return }
         guard let path = fileSelectionService.chooseFolder(prompt: "Choose Show Folder") else { return }
-        setShowFolder(path, for: &active)
-    }
-
-    func setShowFolderForActiveProject(_ path: String) {
-        guard var active = workspace.activeProject else { return }
-        setShowFolder(path, for: &active)
-    }
-
-    private func setShowFolder(_ path: String, for active: inout ActiveProjectModel) {
         let trimmedPath = path.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedPath.isEmpty else { return }
         active.showFolder = trimmedPath

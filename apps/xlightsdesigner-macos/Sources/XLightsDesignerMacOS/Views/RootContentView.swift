@@ -15,10 +15,7 @@ struct RootContentView: View {
                     ZStack(alignment: .topTrailing) {
                         switch model.selectedWorkflow {
                         case .project:
-                            ProjectScreenView(
-                                model: model.projectScreenModel,
-                                xlightsSessionModel: model.xlightsSessionModel
-                            )
+                            ProjectScreenView(model: model.projectScreenModel)
                         case .display:
                             DisplayScreenView(model: model.displayScreenModel)
                         case .audio:

@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ProjectScreenView: View {
     @Bindable var model: ProjectScreenViewModel
-    @Bindable var xlightsSessionModel: XLightsSessionViewModel
 
     var body: some View {
         GeometryReader { proxy in
@@ -69,13 +68,8 @@ struct ProjectScreenView: View {
                         .fontWeight(.semibold)
                     detailRow(label: "Project Folder", value: projectFolderPath(from: summary.projectFilePath))
                     detailRow(label: "xLights Show Folder", value: summary.showFolderSummary)
-                    detailRow(label: "Current xLights Show Folder", value: currentXLightsShowFolderText)
                     HStack(spacing: 10) {
                         Button("Change Show Folder…") { model.chooseShowFolderForActiveProject() }
-                        Button("Use Current xLights Show Folder") {
-                            model.setShowFolderForActiveProject(currentXLightsShowFolder)
-                        }
-                        .disabled(!canUseCurrentXLightsShowFolder)
                         Spacer()
                     }
                     detailRow(label: "Readiness", value: summary.readinessExplanation)
@@ -250,26 +244,6 @@ struct ProjectScreenView: View {
         let showMissing = model.projectDraft.showFolder.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let migrationMissing = model.projectDraft.migrateMetadata && model.projectDraft.migrationSourceProjectPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return nameMissing || showMissing || migrationMissing
-    }
-
-    private var currentXLightsShowFolder: String {
-        xlightsSessionModel.snapshot.showDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private var currentXLightsShowFolderText: String {
-        currentXLightsShowFolder.isEmpty ? "(not reported)" : currentXLightsShowFolder
-    }
-
-    private var canUseCurrentXLightsShowFolder: Bool {
-        guard !currentXLightsShowFolder.isEmpty else { return false }
-        let activeShowFolder = model.screenModel.summary?.showFolderSummary ?? ""
-        return normalizedPath(activeShowFolder) != normalizedPath(currentXLightsShowFolder)
-    }
-
-    private func normalizedPath(_ value: String) -> String {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed != "(not set)" else { return "" }
-        return URL(fileURLWithPath: trimmed).standardizedFileURL.path
     }
 
     private func detailRow(label: String, value: String) -> some View {

@@ -81,8 +81,7 @@ Local app completion progress:
 - native Review now exposes a Restore Last Backup action after a successful apply records both the target sequence path and pre-apply backup path
 - native xLights session refresh now remains available when xLights is unreachable and failed refreshes mark the session snapshot as unreachable instead of preserving stale connected state
 - native automation release evidence now has an active native runbook/log and the xLights launch helper recognizes `-o` automation launches
-- native Sequence status now shows the xLights show folder beside the project show folder and flags mismatches in Needs Attention
-- native Project can explicitly adopt the current xLights show folder, making show-folder mismatch recovery a one-step user action
+- native Sequence flags when xLights is not open to the active project's single show folder
 
 ## Purpose
 
