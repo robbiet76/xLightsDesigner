@@ -15,7 +15,8 @@ import {
   getOwnedJob,
   getOwnedSequenceRevision,
   applySequencingBatchPlan,
-  openSequence
+  openSequence,
+  renderCurrentSequence
 } from '../../../apps/xlightsdesigner-ui/api.js';
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
 import { buildEffectDefinitionCatalog } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/effect-definition-catalog.js';
@@ -94,6 +95,24 @@ function createSequenceBackup({ projectFile = '', sequencePath = '', revision = 
   const backupPath = path.join(backupDir, `${parsed.name}-preapply-${safeTimestamp()}-${revisionPart}${parsed.ext || '.xsq'}`);
   fs.copyFileSync(sourcePath, backupPath);
   return backupPath;
+}
+
+function renderCurrentSummary(renderResponse = null) {
+  const data = renderResponse?.data && typeof renderResponse.data === 'object' ? renderResponse.data : {};
+  const sequence = data.sequence && typeof data.sequence === 'object' ? data.sequence : {};
+  const sequencePath = str(sequence.path || data.sequencePath);
+  if (sequencePath) return `Rendered xLights sequence: ${sequencePath}`;
+  return data.rendered ? 'Rendered current xLights sequence.' : '';
+}
+
+async function renderCurrentForFeedback(endpoint = '') {
+  try {
+    currentStage = 'render_current_sequence';
+    const response = await renderCurrentSequence(endpoint);
+    return { summary: renderCurrentSummary(response), error: '' };
+  } catch (error) {
+    return { summary: '', error: str(error?.message || error) };
+  }
 }
 
 function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
@@ -309,6 +328,9 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       nextRevision: str(fallback.nextRevision)
     });
     applyResult.sequenceBackupPath = sequenceBackupPath;
+    const renderCurrent = await renderCurrentForFeedback(endpoint);
+    applyResult.renderCurrentSummary = renderCurrent.summary;
+    applyResult.renderCurrentError = renderCurrent.error;
     const renderArtifacts = await buildNativeRenderFeedbackArtifacts({
       endpoint,
       showDir: str(inputs.projectDoc?.showFolder || ''),
@@ -339,10 +361,14 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       nextRevision: fallback.nextRevision,
       sequenceBackupPath,
       applyPath: fallback.applyPath,
+      renderCurrentSummary: renderCurrent.summary,
+      renderCurrentError: renderCurrent.error,
       summary: fallback.summary,
       applyResultId: str(applyResult?.artifactId),
       renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),
-      renderFeedbackStatus: renderFeedbackCapabilities.fullFeedbackReady
+      renderFeedbackStatus: renderCurrent.error
+        ? 'render_current_failed'
+        : renderFeedbackCapabilities.fullFeedbackReady
         ? (renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext ? 'captured' : 'apply_completed_without_artifacts')
         : 'owned_routes_unavailable',
       renderFeedbackMissingRequirements: Array.isArray(renderFeedbackCapabilities.missingRequirements)
@@ -359,6 +385,9 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     nextRevision: str(applyRes?.nextRevision || '')
   });
   applyResult.sequenceBackupPath = sequenceBackupPath;
+  const renderCurrent = await renderCurrentForFeedback(endpoint);
+  applyResult.renderCurrentSummary = renderCurrent.summary;
+  applyResult.renderCurrentError = renderCurrent.error;
   const renderArtifacts = await buildNativeRenderFeedbackArtifacts({
     endpoint,
     showDir: str(inputs.projectDoc?.showFolder || ''),
@@ -389,10 +418,14 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     nextRevision: str(applyRes?.nextRevision || ''),
     sequenceBackupPath,
     applyPath: str(applyRes?.applyPath || ''),
+    renderCurrentSummary: renderCurrent.summary,
+    renderCurrentError: renderCurrent.error,
     summary: str(commandsPlan?.summary || inputs.proposalBundle?.summary || 'Applied pending work.'),
     applyResultId: str(applyResult?.artifactId),
     renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),
-    renderFeedbackStatus: renderFeedbackCapabilities.fullFeedbackReady
+    renderFeedbackStatus: renderCurrent.error
+      ? 'render_current_failed'
+      : renderFeedbackCapabilities.fullFeedbackReady
       ? (renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext ? 'captured' : 'apply_completed_without_artifacts')
       : 'owned_routes_unavailable',
     renderFeedbackMissingRequirements: Array.isArray(renderFeedbackCapabilities.missingRequirements)

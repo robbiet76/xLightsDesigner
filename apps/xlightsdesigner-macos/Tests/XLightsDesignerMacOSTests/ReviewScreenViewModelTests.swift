@@ -165,6 +165,8 @@ private func reviewPendingWork(
                 applyPath: "owned_batch_plan",
                 sequencePath: "/tmp/HolidayRoad.xsq",
                 sequenceBackupPath: "/tmp/project/artifacts/backups/HolidayRoad-preapply-rev-1.xsq",
+                renderCurrentSummary: "Rendered xLights sequence: /tmp/HolidayRoad.xsq",
+                renderCurrentError: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "owned_routes_unavailable",
                 renderFeedbackMissingRequirements: ["layout.scene", "sequence.render-samples"]
@@ -231,6 +233,8 @@ private func reviewPendingWork(
                 applyPath: "",
                 sequencePath: "",
                 sequenceBackupPath: "",
+                renderCurrentSummary: "",
+                renderCurrentError: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
                 renderFeedbackMissingRequirements: []
@@ -322,6 +326,8 @@ private func reviewPendingWork(
                 applyPath: "",
                 sequencePath: "",
                 sequenceBackupPath: "",
+                renderCurrentSummary: "",
+                renderCurrentError: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
                 renderFeedbackMissingRequirements: []
@@ -354,6 +360,8 @@ private func reviewPendingWork(
                 applyPath: "",
                 sequencePath: "",
                 sequenceBackupPath: "",
+                renderCurrentSummary: "",
+                renderCurrentError: "",
                 renderFeedbackCaptured: false,
                 renderFeedbackStatus: "",
                 renderFeedbackMissingRequirements: []

@@ -67,7 +67,6 @@ final class ReviewScreenViewModel {
                     appRootPath: AppEnvironment.canonicalAppRoot,
                     endpoint: AppEnvironment.xlightsOwnedAPIBaseURL
                 )
-                let renderSummary = try? await xlightsSessionService.renderCurrentSequence()
                 let saveSummary = try? await xlightsSessionService.saveCurrentSequence()
                 isApplying = false
                 let feedbackSummary: String
@@ -83,9 +82,13 @@ final class ReviewScreenViewModel {
                 } else {
                     feedbackSummary = ""
                 }
+                let renderSummary = result.renderCurrentSummary.isEmpty
+                    ? try? await xlightsSessionService.renderCurrentSequence()
+                    : result.renderCurrentSummary
+                let renderFailureSummary = result.renderCurrentError.isEmpty ? "" : " Render-current warning: \(result.renderCurrentError)."
                 transientBanner = WorkflowBannerModel(
                     id: "review-apply-success",
-                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (result.sequenceBackupPath.isEmpty ? "" : " Backup: \(result.sequenceBackupPath).") + feedbackSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
+                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (result.sequenceBackupPath.isEmpty ? "" : " Backup: \(result.sequenceBackupPath).") + feedbackSummary + renderFailureSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
                     state: .ready
                 )
                 NotificationCenter.default.post(name: .projectArtifactsDidChange, object: project.projectFilePath)

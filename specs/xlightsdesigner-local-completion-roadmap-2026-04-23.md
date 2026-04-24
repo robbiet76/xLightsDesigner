@@ -54,6 +54,7 @@ Phase 2 native design authoring started:
 - successful Review apply now publishes the same artifact-change signal so applied revisions and history become visible across the native app immediately
 - native Review now includes an explicit apply preview built from generated effect placements or proposal lines
 - native Review apply now copies the target `.xsq` into the project `artifacts/backups` folder before mutation and surfaces the backup path after apply
+- native Review apply now renders through the owned API before render-sample capture so persisted render feedback can observe the applied revision
 
 ## Purpose
 
