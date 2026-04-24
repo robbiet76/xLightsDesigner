@@ -17,10 +17,10 @@ Execution checklist for the next sequencing phase after the feedback loop and re
 
 ## 2. Live Review Visibility
 
-- [ ] preserve request scope, render observation, render critique, artistic goal, revision objective, and gate in history snapshots
-- [ ] show the full pass chain in the Review screen
-- [ ] show the same chain in History screen inspection
-- [ ] make repeated instability obvious across consecutive passes
+- [x] preserve request scope, render observation, render critique, artistic goal, revision objective, and gate in history snapshots
+- [x] show the full pass chain in the Review screen
+- [x] show the same chain in History screen inspection
+- [x] make repeated instability obvious across consecutive passes
 
 ## 3. Revision Role Planning
 
@@ -58,11 +58,11 @@ Execution checklist for the next sequencing phase after the feedback loop and re
 
 ## 7. Parameter-Level Learning Later
 
-- [ ] do not start parameter-level search until revision roles and effect-family learning are stable
+- [x] do not start parameter-level search until revision roles and effect-family learning are stable
 - [ ] define a narrow first parameter-learning target only after the earlier items are working in live sequencing
 
 ## Exit Check
 
-- [ ] second-pass sequencing decisions are visibly more informed by the prior pass
-- [ ] review/history inspection makes the pass-to-pass reasoning chain easy to follow
+- [x] second-pass sequencing decisions are visibly more informed by the prior pass
+- [x] review/history inspection makes the pass-to-pass reasoning chain easy to follow
 - [ ] retained regressions stay green while live behavior improves
