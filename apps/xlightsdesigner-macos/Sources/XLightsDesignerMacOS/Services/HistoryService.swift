@@ -59,6 +59,7 @@ struct LocalHistoryService: HistoryService {
                     relatedSequenceSummary: event.sequenceSummary,
                     changeSummary: event.changeSummary,
                     resultSummary: event.resultSummary,
+                    proofChain: event.proofChain,
                     artifactPath: event.artifactPath,
                     artifactReferences: event.artifactReferences,
                     warnings: event.warnings,
@@ -102,6 +103,7 @@ struct LocalHistoryService: HistoryService {
             resultState: .recorded,
             resultSummary: "Saved project snapshot at \(project.fileName).",
             changeSummary: "Project settings, sequence references, and durable project state were updated.",
+            proofChain: [],
             artifactPath: projectFileURL.path,
             artifactReferences: [projectFileURL.lastPathComponent],
             warnings: [],
@@ -128,6 +130,7 @@ struct LocalHistoryService: HistoryService {
             let changeSummary = buildChangeSummary(for: folder, object: object)
             let warnings = buildWarnings(for: folder, object: object)
             let references = buildReferences(for: folder, object: object, fileURL: fileURL)
+            let proofChain = buildProofChain(for: folder, object: object)
             let followUpSummary = buildFollowUpSummary(for: folder)
 
             return HistoryEventRecord(
@@ -139,6 +142,7 @@ struct LocalHistoryService: HistoryService {
                 resultState: resultState,
                 resultSummary: resultSummary,
                 changeSummary: changeSummary,
+                proofChain: proofChain,
                 artifactPath: fileURL.path,
                 artifactReferences: references,
                 warnings: warnings,
@@ -174,6 +178,20 @@ struct LocalHistoryService: HistoryService {
             return string(object["summary"], fallback: "Stored \(eventTypeLabel(for: folder).lowercased()) artifact")
         case "intent-handoffs":
             return string(object["goal"], fallback: "Stored intent handoff")
+        case "plans":
+            let commands = (object["commands"] as? [Any])?.count ?? 0
+            let summary = string(object["summary"])
+            return summary.isEmpty ? "Stored sequencing plan with \(commands) commands" : summary
+        case "apply-results":
+            let status = string(object["status"], fallback: "unknown")
+            let nextRevision = string(object["nextRevision"])
+            return nextRevision.isEmpty ? "Stored apply result: \(status)" : "Stored apply result: \(status), revision \(nextRevision)"
+        case "render-observations":
+            let leadModel = string((object["macro"] as? [String: Any])?["leadModel"])
+            return leadModel.isEmpty ? "Stored render observation" : "Stored render observation for \(leadModel)"
+        case "render-critique-contexts":
+            let breadthRead = string((object["observed"] as? [String: Any])?["breadthRead"])
+            return breadthRead.isEmpty ? "Stored render critique context" : "Stored render critique context: \(breadthRead)"
         case "music-context":
             let sections = ((object["sectionArc"] as? [[String: Any]]) ?? []).compactMap { string($0["label"]) }
             return sections.isEmpty ? "Stored music context" : "Stored music context with \(sections.count) labeled sections"
@@ -186,6 +204,18 @@ struct LocalHistoryService: HistoryService {
         if folder == "proposals", let lifecycle = object["lifecycle"] as? [String: Any] {
             let status = string(lifecycle["status"], fallback: "unknown")
             return "Proposal lifecycle: \(status)"
+        }
+        if folder == "apply-results" {
+            let status = string(object["status"], fallback: "unknown")
+            let currentRevision = string(object["currentRevision"])
+            let nextRevision = string(object["nextRevision"])
+            if !currentRevision.isEmpty || !nextRevision.isEmpty {
+                return "Apply \(status): \(currentRevision.isEmpty ? "unknown" : currentRevision) -> \(nextRevision.isEmpty ? "unknown" : nextRevision)"
+            }
+            return "Apply \(status)."
+        }
+        if folder == "render-observations" || folder == "render-critique-contexts" {
+            return "Render feedback artifact captured for proof-loop inspection."
         }
         return "Artifact captured and available for inspection."
     }
@@ -212,6 +242,22 @@ struct LocalHistoryService: HistoryService {
         case "music-context":
             let holds = ((object["designCues"] as? [String: Any]).flatMap { arrayOfStrings($0["holdMoments"]) }) ?? []
             return holds.isEmpty ? "Music context updated." : "Music context captured \(holds.count) hold moments."
+        case "plans":
+            let commands = (object["commands"] as? [Any])?.count ?? 0
+            return "Sequencing plan captured with \(commands) commands."
+        case "apply-results":
+            let practicalValidation = object["practicalValidation"] as? [String: Any]
+            let overallOk = bool(practicalValidation?["overallOk"])
+            return overallOk ? "Apply proof passed practical validation." : "Apply proof captured validation details for review."
+        case "render-observations":
+            let source = object["source"] as? [String: Any]
+            let samplingMode = string(source?["samplingMode"])
+            return samplingMode.isEmpty ? "Render samples were observed." : "Render samples observed with \(samplingMode) sampling."
+        case "render-critique-contexts":
+            let observed = object["observed"] as? [String: Any]
+            let lead = string(observed?["leadModel"])
+            let breadth = string(observed?["breadthRead"])
+            return [lead.isEmpty ? "" : "Lead: \(lead)", breadth.isEmpty ? "" : "Breadth: \(breadth)"].filter { !$0.isEmpty }.joined(separator: ". ")
         default:
             return "Artifact updated."
         }
@@ -228,6 +274,9 @@ struct LocalHistoryService: HistoryService {
             let lifecycle = object["lifecycle"] as? [String: Any]
             let status = string(lifecycle?["status"])
             return status == "approved" || status.isEmpty ? [] : ["Proposal is not approved in this artifact snapshot."]
+        case "apply-results":
+            let practicalValidation = object["practicalValidation"] as? [String: Any]
+            return bool(practicalValidation?["overallOk"]) ? [] : ["Practical validation did not pass cleanly."]
         default:
             return []
         }
@@ -247,6 +296,73 @@ struct LocalHistoryService: HistoryService {
         }
     }
 
+    private func buildProofChain(for folder: String, object: [String: Any]) -> [String] {
+        switch folder {
+        case "apply-results":
+            return applyResultProofChain(object)
+        case "render-observations":
+            return renderObservationProofChain(object)
+        case "render-critique-contexts":
+            return renderCritiqueProofChain(object)
+        case "plans":
+            return planProofChain(object)
+        default:
+            return []
+        }
+    }
+
+    private func planProofChain(_ object: [String: Any]) -> [String] {
+        let metadata = object["metadata"] as? [String: Any]
+        let requestScopeMode = string(metadata?["requestScopeMode"])
+        let sections = arrayOfStrings(object["selectedSections"])
+        let targets = arrayOfStrings(object["targetIds"])
+        return [
+            requestScopeMode.isEmpty ? "" : "Request scope: \(requestScopeMode)",
+            sections.isEmpty ? "" : "Sections: \(sections.prefix(4).joined(separator: ", "))",
+            targets.isEmpty ? "" : "Targets: \(targets.prefix(6).joined(separator: ", "))"
+        ].filter { !$0.isEmpty }
+    }
+
+    private func applyResultProofChain(_ object: [String: Any]) -> [String] {
+        let verification = object["verification"] as? [String: Any]
+        let practicalValidation = object["practicalValidation"] as? [String: Any]
+        let validationSummary = practicalValidation?["summary"] as? [String: Any]
+        let readbackChecks = validationSummary?["readbackChecks"] as? [String: Any]
+        let designChecks = validationSummary?["designChecks"] as? [String: Any]
+        let renderCurrentSummary = string(object["renderCurrentSummary"])
+        return [
+            "Revision advanced: \(bool(verification?["revisionAdvanced"]) ? "yes" : "no")",
+            "Expected mutations present: \(bool(verification?["expectedMutationsPresent"]) ? "yes" : "no")",
+            "Practical validation: \(bool(practicalValidation?["overallOk"]) ? "passed" : "needs review")",
+            "Readback checks: \(int(readbackChecks?["passed"])) passed, \(int(readbackChecks?["failed"])) failed",
+            "Design checks: \(int(designChecks?["passed"])) passed, \(int(designChecks?["failed"])) failed",
+            renderCurrentSummary.isEmpty ? "" : renderCurrentSummary
+        ].filter { !$0.isEmpty }
+    }
+
+    private func renderObservationProofChain(_ object: [String: Any]) -> [String] {
+        let macro = object["macro"] as? [String: Any]
+        let source = object["source"] as? [String: Any]
+        let observed = object["observed"] as? [String: Any]
+        return [
+            string(source?["samplingMode"]).isEmpty ? "" : "Sampling mode: \(string(source?["samplingMode"]))",
+            string(source?["samplingDetail"]).isEmpty ? "" : "Sampling detail: \(string(source?["samplingDetail"]))",
+            string(macro?["leadModel"]).isEmpty ? "" : "Lead model: \(string(macro?["leadModel"]))",
+            string(observed?["breadthRead"]).isEmpty ? "" : "Breadth read: \(string(observed?["breadthRead"]))"
+        ].filter { !$0.isEmpty }
+    }
+
+    private func renderCritiqueProofChain(_ object: [String: Any]) -> [String] {
+        let observed = object["observed"] as? [String: Any]
+        let comparison = object["comparison"] as? [String: Any]
+        return [
+            string(observed?["leadModel"]).isEmpty ? "" : "Observed lead: \(string(observed?["leadModel"]))",
+            string(observed?["breadthRead"]).isEmpty ? "" : "Breadth read: \(string(observed?["breadthRead"]))",
+            "Lead matches primary focus: \(bool(comparison?["leadMatchesPrimaryFocus"]) ? "yes" : "no")",
+            "Localized focus expected: \(bool(comparison?["localizedFocusExpected"]) ? "yes" : "no")"
+        ].filter { !$0.isEmpty }
+    }
+
     private func buildFollowUpSummary(for folder: String) -> String {
         switch folder {
         case "analysis":
@@ -255,6 +371,8 @@ struct LocalHistoryService: HistoryService {
             return "Use Design to continue current creative work."
         case "intent-handoffs":
             return "Use Sequence or Review to inspect current implementation readiness."
+        case "plans", "apply-results", "render-observations", "render-critique-contexts":
+            return "Use Review and History together to compare this proof-loop pass with the next pass."
         default:
             return "This event is retained for retrospective inspection only."
         }
@@ -268,6 +386,12 @@ struct LocalHistoryService: HistoryService {
     private func int(_ value: Any?) -> Int {
         if let n = value as? NSNumber { return n.intValue }
         return Int(String(describing: value ?? "")) ?? 0
+    }
+
+    private func bool(_ value: Any?) -> Bool {
+        if let bool = value as? Bool { return bool }
+        if let n = value as? NSNumber { return n.boolValue }
+        return false
     }
 
     private func arrayOfStrings(_ value: Any?) -> [String] {
@@ -302,6 +426,7 @@ private struct HistoryEventRecord {
     let resultState: HistoryEventResultState
     let resultSummary: String
     let changeSummary: String
+    let proofChain: [String]
     let artifactPath: String?
     let artifactReferences: [String]
     let warnings: [String]

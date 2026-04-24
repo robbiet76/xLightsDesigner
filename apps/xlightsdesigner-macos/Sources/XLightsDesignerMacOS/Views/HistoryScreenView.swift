@@ -94,6 +94,9 @@ struct HistoryScreenView: View {
                         detailRow(label: "Sequence", value: detail.relatedSequenceSummary)
                         detailRow(label: "Change", value: detail.changeSummary)
                         detailRow(label: "Result", value: detail.resultSummary)
+                        if !detail.proofChain.isEmpty {
+                            bulletSection(title: "Proof Chain", items: detail.proofChain)
+                        }
                         detailRow(label: "References", value: detail.artifactReferences.joined(separator: " • "))
                         if !detail.warnings.isEmpty {
                             bulletSection(title: "Warnings", items: detail.warnings)

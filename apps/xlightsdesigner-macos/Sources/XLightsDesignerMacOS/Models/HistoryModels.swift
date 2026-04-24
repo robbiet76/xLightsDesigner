@@ -37,6 +37,7 @@ struct HistorySelectedEventModel: Sendable {
     let relatedSequenceSummary: String
     let changeSummary: String
     let resultSummary: String
+    let proofChain: [String]
     let artifactPath: String?
     let artifactReferences: [String]
     let warnings: [String]
