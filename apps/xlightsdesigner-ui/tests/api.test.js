@@ -6,6 +6,7 @@ import {
   getDefaultEndpoint,
   getOpenSequence,
   getMediaStatus,
+  getEffectDefinitions,
   renderCurrentSequence,
   getRenderedSequenceSamples,
   openSequence,
@@ -187,6 +188,15 @@ test("listEffects maps owned effects window rows to legacy effect list shape", a
   } finally {
     global.fetch = originalFetch;
   }
+});
+
+test("getEffectDefinitions returns trained definitions for owned endpoints", async () => {
+  const body = await getEffectDefinitions("http://127.0.0.1:49915/xlightsdesigner/api");
+  assert.equal(body.ok, true);
+  assert.equal(body.command, "effects.listDefinitions");
+  assert.equal(body.data.source, "stage1_trained_effect_bundle");
+  assert.ok(body.data.effects.some((row) => row.effectName === "On"));
+  assert.ok(body.data.effects.some((row) => row.effectName === "Color Wash"));
 });
 
 test("getRenderedSequenceSamples uses owned route and preserves sparse sample payload", async () => {

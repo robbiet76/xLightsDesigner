@@ -1,3 +1,5 @@
+import { STAGE1_TRAINED_EFFECT_BUNDLE } from "./agent/sequence-agent/generated/stage1-trained-effect-bundle.js";
+
 const DEFAULT_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
 const DEFAULT_OWNED_ENDPOINT_BASE = "http://127.0.0.1:49915/xlightsdesigner/api";
 const OWNED_JOB_ATTEMPTS = 180;
@@ -35,6 +37,15 @@ function detectDevOwnedProxyBase() {
 function isOwnedEndpoint(endpoint) {
   const raw = sanitizeEndpoint(endpoint);
   return raw.includes("/xlightsdesigner/api") || /:49915(?:\/|$)/.test(raw);
+}
+
+function trainedEffectDefinitions() {
+  const effectsByName = STAGE1_TRAINED_EFFECT_BUNDLE?.effectsByName && typeof STAGE1_TRAINED_EFFECT_BUNDLE.effectsByName === "object"
+    ? STAGE1_TRAINED_EFFECT_BUNDLE.effectsByName
+    : {};
+  return Object.values(effectsByName)
+    .map((row) => ({ effectName: String(row?.effectName || "").trim(), params: [] }))
+    .filter((row) => row.effectName);
 }
 
 function sanitizeOwnedBase(endpoint) {
@@ -573,7 +584,10 @@ export async function getEffectDefinitions(endpoint) {
       ok: true,
       res: 200,
       command: "effects.listDefinitions",
-      data: { effects: [] }
+      data: {
+        effects: trainedEffectDefinitions(),
+        source: "stage1_trained_effect_bundle"
+      }
     };
   }
   return postCommand(endpoint, "effects.listDefinitions", {});
