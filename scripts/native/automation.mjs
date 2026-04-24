@@ -3,7 +3,7 @@
 const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || 'http://127.0.0.1:49916';
 
 function usage() {
-  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | open-project <projectFilePath> | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | propose-display-metadata-from-layout | apply-display-metadata-proposals | update-display-target-intent <targetIds> [rolePreference] [semanticHints] [effectAvoidances] | apply-assistant-action-request <actionType> [payloadJson] [reason] | reset-assistant-memory | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant');
+  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | get-sequencer-validation-snapshot | open-project <projectFilePath> | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | generate-sequence-proposal [selectedTags] | propose-display-metadata-from-layout | apply-display-metadata-proposals | update-display-target-intent <targetIds> [rolePreference] [semanticHints] [effectAvoidances] | apply-assistant-action-request <actionType> [payloadJson] [reason] | reset-assistant-memory | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant');
   process.exit(2);
 }
 
@@ -40,6 +40,9 @@ switch (command) {
     break;
   case 'get-xlights-session':
     await request('GET', '/xlights-session');
+    break;
+  case 'get-sequencer-validation-snapshot':
+    await request('GET', '/sequencer-validation-snapshot');
     break;
   case 'open-project':
     await request('POST', '/action', { action: 'openProject', filePath: String(rest[0] || '').trim() });
@@ -79,6 +82,12 @@ switch (command) {
     break;
   case 'apply-display-metadata-proposals':
     await request('POST', '/action', { action: 'applyDisplayMetadataProposals' });
+    break;
+  case 'generate-sequence-proposal':
+    await request('POST', '/action', {
+      action: 'generateSequenceProposal',
+      selectedTagNames: rest.join(' ').trim()
+    });
     break;
   case 'update-display-target-intent': {
     const [targetIds = '', rolePreference = '', semanticHints = '', effectAvoidances = ''] = rest;

@@ -32,7 +32,7 @@ function str(value = "") {
 }
 
 function usage() {
-  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | open-project <path> | select-workflow <Project|Display|Audio|Design|Sequence|Review|History> | open-sequence <path> | save-xlights-sequence | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | get-render-feedback-snapshot | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights | reset-assistant-memory");
+  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | open-project <path> | select-workflow <Project|Display|Audio|Design|Sequence|Review|History> | open-sequence <path> | save-xlights-sequence | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | get-render-feedback-snapshot | update-display-target-intent <targetIds> [rolePreference] [semanticHints] [effectAvoidances] | generate-sequence-proposal [selectedTags] | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights | reset-assistant-memory");
   process.exit(2);
 }
 
@@ -240,6 +240,28 @@ if (command === "ping" || command === "get-automation-health-snapshot") {
     method: "POST",
     path: "/action",
     body: { action: "applyReview" }
+  };
+} else if (command === "update-display-target-intent") {
+  const [targetIds = "", rolePreference = "", semanticHints = "", effectAvoidances = ""] = rest;
+  nativeCall = {
+    method: "POST",
+    path: "/action",
+    body: {
+      action: "updateDisplayTargetIntent",
+      targetIds: str(targetIds),
+      rolePreference: str(rolePreference),
+      semanticHints: str(semanticHints),
+      effectAvoidances: str(effectAvoidances)
+    }
+  };
+} else if (command === "generate-sequence-proposal") {
+  nativeCall = {
+    method: "POST",
+    path: "/action",
+    body: {
+      action: "generateSequenceProposal",
+      selectedTagNames: rest.join(" ").trim()
+    }
   };
 } else if (command === "refresh-from-xlights") {
   nativeCall = {
