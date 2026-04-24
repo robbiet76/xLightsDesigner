@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   getOpenSequence,
@@ -83,7 +84,7 @@ function safeTimestamp(value = new Date()) {
   return value.toISOString().replace(/[:.]/g, '-');
 }
 
-function createSequenceBackup({ projectFile = '', sequencePath = '', revision = '' } = {}) {
+export function createSequenceBackup({ projectFile = '', sequencePath = '', revision = '' } = {}) {
   const sourcePath = normalizePath(sequencePath);
   if (!sourcePath) throw new Error('Cannot create apply backup without a sequence path.');
   if (!fs.existsSync(sourcePath)) throw new Error(`Cannot create apply backup because sequence file was not found: ${sourcePath}`);
@@ -97,7 +98,7 @@ function createSequenceBackup({ projectFile = '', sequencePath = '', revision = 
   return backupPath;
 }
 
-function renderCurrentSummary(renderResponse = null) {
+export function renderCurrentSummary(renderResponse = null) {
   const data = renderResponse?.data && typeof renderResponse.data === 'object' ? renderResponse.data : {};
   const sequence = data.sequence && typeof data.sequence === 'object' ? data.sequence : {};
   const sequencePath = str(sequence.path || data.sequencePath);
@@ -874,11 +875,14 @@ function withTimeout(promise, timeoutMs = APPLY_TIMEOUT_MS) {
   ]);
 }
 
-try {
-  const options = parseArgs(process.argv.slice(2));
-  const result = await withTimeout(applyReview(options));
-  process.stdout.write(JSON.stringify(result));
-} catch (error) {
-  process.stderr.write(String(error?.stack || error?.message || error));
-  process.exit(1);
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  try {
+    const options = parseArgs(process.argv.slice(2));
+    const result = await withTimeout(applyReview(options));
+    process.stdout.write(JSON.stringify(result));
+  } catch (error) {
+    process.stderr.write(String(error?.stack || error?.message || error));
+    process.exit(1);
+  }
 }
