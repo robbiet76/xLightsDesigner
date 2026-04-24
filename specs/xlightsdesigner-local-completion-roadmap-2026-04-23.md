@@ -51,6 +51,7 @@ Phase 2 native design authoring started:
 - Pending work treats generated section-plan proposals as actionable even when placements are synthesized during Review apply
 - Review blocks apply until a canonical generated proposal with sequence commands exists
 - successful native proposal generation now publishes an artifact-change signal so Design, Sequence, Review, History, and xLights session state refresh without navigation
+- successful Review apply now publishes the same artifact-change signal so applied revisions and history become visible across the native app immediately
 
 ## Purpose
 

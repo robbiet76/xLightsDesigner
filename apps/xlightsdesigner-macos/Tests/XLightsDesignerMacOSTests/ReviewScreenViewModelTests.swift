@@ -67,6 +67,21 @@ private struct StubReviewPendingWorkService: PendingWorkService, Sendable {
     }
 }
 
+@MainActor
+private final class ReviewArtifactNotificationRecorder {
+    private let projectFilePath: String
+    private(set) var count = 0
+
+    init(projectFilePath: String) {
+        self.projectFilePath = projectFilePath
+    }
+
+    func record(projectFilePath candidate: String?) {
+        guard candidate == projectFilePath else { return }
+        count += 1
+    }
+}
+
 private func reviewPendingWork(
     translationSource: String = "Canonical Plan",
     proposalCommandCount: Int = 3,
@@ -156,6 +171,20 @@ private func reviewPendingWork(
         },
         xlightsSessionService: StubXLightsSessionService()
     )
+    let recorder = ReviewArtifactNotificationRecorder(projectFilePath: "/tmp/Christmas 2026.xdproj")
+    let observer = NotificationCenter.default.addObserver(
+        forName: .projectArtifactsDidChange,
+        object: nil,
+        queue: nil
+    ) { notification in
+        let projectFilePath = notification.object as? String
+        Task { @MainActor in
+            recorder.record(projectFilePath: projectFilePath)
+        }
+    }
+    defer {
+        NotificationCenter.default.removeObserver(observer)
+    }
 
     model.applyPendingWork()
     try await Task.sleep(for: .milliseconds(120))
@@ -166,6 +195,7 @@ private func reviewPendingWork(
     #expect(model.transientBanner?.text.contains("Render feedback observation skipped") == true)
     #expect(model.transientBanner?.text.contains("Rendered xLights sequence") == true)
     #expect(model.transientBanner?.text.contains("Saved xLights sequence") == true)
+    #expect(recorder.count == 1)
 }
 
 @MainActor

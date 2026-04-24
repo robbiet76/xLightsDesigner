@@ -88,6 +88,7 @@ final class ReviewScreenViewModel {
                     text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + feedbackSummary + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
                     state: .ready
                 )
+                NotificationCenter.default.post(name: .projectArtifactsDidChange, object: project.projectFilePath)
                 refresh()
             } catch {
                 isApplying = false
