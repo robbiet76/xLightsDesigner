@@ -168,7 +168,7 @@ struct ProjectScreenView: View {
             Text("Create Project")
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text("Create a new project, set the xLights show folder, and optionally migrate reusable metadata from an existing project.")
+            Text("Create a new project, set the project show folder, and optionally migrate reusable metadata from an existing project.")
                 .foregroundStyle(.secondary)
             GroupBox("Project Identity") {
                 VStack(alignment: .leading, spacing: 8) {

@@ -88,11 +88,11 @@ struct XLightsDisplayService: DisplayService {
                 unresolvedCount = 0
                 state = .blocked
                 explanation = "xLights is currently open to a different show folder than the active project."
-                nextStep = "Switch xLights to the project's show folder or change the project show folder."
+                nextStep = "Open xLights to the project's show folder, or correct the project show folder in Project if the project points at the wrong folder."
                 banners.append(DisplayBannerModel(
                     id: "show-mismatch",
                     state: .blocked,
-                    text: "xLights show folder: \(currentMedia.showDirectory.isEmpty ? "(not set)" : currentMedia.showDirectory)\nProject show folder: \(project?.showFolder.isEmpty == false ? project!.showFolder : "(not set)")"
+                    text: "Current xLights folder: \(currentMedia.showDirectory.isEmpty ? "(not set)" : currentMedia.showDirectory)\nProject show folder: \(project?.showFolder.isEmpty == false ? project!.showFolder : "(not set)")"
                 ))
             } else {
                 async let modelsTask = fetchModels()
@@ -123,8 +123,8 @@ struct XLightsDisplayService: DisplayService {
             unresolvedCount = 0
             state = .blocked
             explanation = "Project context is incomplete or invalid."
-            nextStep = "Correct the xLights show folder in Project, then return to Display."
-            banners.append(DisplayBannerModel(id: "project-context", state: .blocked, text: "xLights show folder must be corrected in Project."))
+            nextStep = "Correct the project show folder in Project, then return to Display."
+            banners.append(DisplayBannerModel(id: "project-context", state: .blocked, text: "Project show folder must be corrected in Project."))
         }
 
         if health?.listenerReachable == false {
