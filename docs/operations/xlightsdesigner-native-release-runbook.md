@@ -20,7 +20,7 @@ This runbook replaces the retired Electron release path for current validation. 
 
 ## Required Evidence
 
-The paths in this section are development validation examples for the current workspace. The active production show folder is being used to prove behavior against a real show, but the app's product model remains one user-selected show folder per project.
+The paths in this section are development validation examples for the current workspace. App-owned project metadata lives under `/Users/robterry/Documents/Lights/xLightsDesigner`; the linked development xLights show folder is `/Users/robterry/Desktop/Show`. `/Users/robterry/Documents/Lights/Current` is a read-only reference source for inspecting completed user sequences during development and is not a project show folder for validation writes.
 
 1. Native package tests
 
@@ -34,11 +34,11 @@ Required result:
 
 2. Owned show-folder validation
 
-Launch the API-enabled xLights 2026.06 build opened to the active show folder:
+Launch the API-enabled xLights 2026.06 build opened to the linked development show folder:
 
 ```bash
 node scripts/xlights/launch-owned-xlights.mjs \
-  --show-dir "/Users/robterry/Documents/Lights/Current/Christmas/Show" \
+  --show-dir "/Users/robterry/Desktop/Show" \
   -o
 ```
 
@@ -48,11 +48,12 @@ Run isolated owned API validation:
 
 ```bash
 node scripts/xlights/validate-owned-show-folder-flow.mjs \
-  --show-dir "/Users/robterry/Documents/Lights/Current/Christmas/Show"
+  --show-dir "/Users/robterry/Desktop/Show"
 ```
 
 Required result:
 - validation writes only under `_xlightsdesigner_api_validation/<run-id>/`
+- no app metadata is written into the xLights show folder; app metadata stays in the project folder under `/Users/robterry/Documents/Lights/xLightsDesigner`
 - `/health`, `/media/current`, `/layout/models`, `/layout/scene`, `/sequence/create`, `/sequencing/apply-batch-plan`, `/sequence/render-current`, `/sequence/save`, and `/jobs/get` succeed
 - `/media/current` reports the same show folder as `--show-dir`; trusted roots alone are not enough
 - the expected `.fseq` exists next to the isolated validation `.xsq`

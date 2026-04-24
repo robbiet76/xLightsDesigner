@@ -10,19 +10,21 @@ This roadmap tracks the current route toward a locally useful xLightsDesigner ap
 
 Validated against:
 - xLights repo: `/Users/robterry/xLights-2026.06`
-- show folder: `/Users/robterry/Documents/Lights/Current/Christmas/Show`
-- evidence: `/Users/robterry/Documents/Lights/Current/Christmas/Show/_xlightsdesigner_api_validation/2026-04-24T01-13-58-788Z/owned-api-validation-result.json`
+- app folder: `/Users/robterry/Documents/Lights/xLightsDesigner`
+- linked development show folder: `/Users/robterry/Desktop/Show`
+- read-only completed-sequence reference root: `/Users/robterry/Documents/Lights/Current`
+- evidence: `/Users/robterry/Desktop/Show/_xlightsdesigner_api_validation/<run-id>/owned-api-validation-result.json`
 
-The show folder above is the current development validation target because it is the user's active production show. It is not a product assumption and should not be treated as a second project-level folder. In the product model, each project has exactly one show folder; xLights must be opened to that same folder for live validation and apply.
+The linked development show folder is the xLights show folder used for validation writes and live apply. The completed-sequence reference root is read-only development material only; it must not be coded as a normal project show-folder option or used for validation writes. In the product model, each project has exactly one linked xLights show folder, while all app-owned metadata stays under the xLightsDesigner app/project folder.
 
 The proof created an isolated `.xsq`, applied a simple batch plan, rendered the current sequence, saved through the owned API, and produced the `.fseq` next to the isolated `.xsq`. It also confirmed the create flow no longer writes `owned-api-validation.fseq` into the global/root FSEQ folder.
 
 Automation launch requirements discovered during owned API validation:
 - launch the API-enabled xLights 2026.06 build, not `/Applications/xLights.app`
 - use `-o` for automation launches so the pre-frame information dialog does not block API startup
-- launch with `scripts/xlights/launch-owned-xlights.mjs --show-dir <project-show-folder> -o` so xLights opens to the same folder the app is validating
-- include the active show folder in `XLIGHTS_DESIGNER_TRUSTED_ROOTS` for create/save validation; the launch helper does this automatically when `--show-dir` is used
-- require `/media/current` to report the same show folder as the validation `--show-dir`; trusted roots only authorize file access and do not prove xLights is open to the project folder
+- launch with `scripts/xlights/launch-owned-xlights.mjs --show-dir <linked-show-folder> -o` so xLights opens to the same folder the app is validating
+- include the linked xLights show folder in `XLIGHTS_DESIGNER_TRUSTED_ROOTS` for create/save validation; the launch helper does this automatically when `--show-dir` is used
+- require `/media/current` to report the same show folder as the validation `--show-dir`; trusted roots only authorize file access and do not prove xLights is open to the linked show folder
 
 Owned-path cleanup completed after the green proof:
 - native Review copy no longer describes apply execution as future work
@@ -116,10 +118,12 @@ The agent backend eventually becomes shared cloud infrastructure:
 - `/Applications/xLights.app` is not valid for owned API work unless it is replaced by an API-enabled build.
 - Electron-era paths are reference only until deleted.
 - No compatibility layer should be preserved unless it is actively carrying current functionality during replacement.
-- Existing sequence subfolders in the active show folder are read-only validation fixtures unless the user explicitly selects one for editing.
-- validation writes may use a new isolated folder inside the show folder.
-- Existing sequences in the show folder may be inspected for functionality validation, but are not training data.
-- The active production show folder is used for development validation only; shipped/distributed use still means one user-selected show folder per project.
+- xLightsDesigner project metadata is stored under the app/project folder, not beside sequences in the linked xLights show folder.
+- `/Users/robterry/Desktop/Show` is the linked development show folder for the active project and may receive isolated validation writes.
+- `/Users/robterry/Documents/Lights/Current` is a read-only reference root for inspecting completed sequences during development only.
+- Existing sequence subfolders in the linked development show folder are read-only validation fixtures unless the user explicitly selects one for editing.
+- validation writes may use a new isolated folder inside the linked development show folder.
+- Existing sequences in the linked development show folder may be inspected for functionality validation, but are not training data.
 - When touching specs or API docs, scan nearby related docs for stale route names, future-tense migration plans, removed fallback paths, and inactive transaction/legacy contracts; clean those claims in the same slice when the scope is clear.
 
 ## Local Owned API Reliability
@@ -136,7 +140,7 @@ Scope:
 - update stale native UI copy that still describes implemented apply behavior as "not wired"
 
 Exit criteria:
-- an isolated validation sequence can be created in the active show folder
+- an isolated validation sequence can be created in the linked development show folder
 - a simple owned batch plan applies to a real layout model
 - render-current produces a usable `.fseq`
 - save completes through the owned API
