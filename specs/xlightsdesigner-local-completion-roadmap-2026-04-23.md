@@ -41,6 +41,7 @@ Phase 2 native design authoring started:
 - Sequence can generate proposal artifacts from saved native design intent through the native direct proposal script
 - Sequence blocks native proposal generation until audio and a target project sequence are selected
 - Native automation can trigger proposal generation through the same Sequence path and reports generation state in snapshots
+- Assistant action requests can trigger proposal generation after explicit user approval, using the same Sequence path
 - Review blocks apply until a canonical generated proposal with sequence commands exists
 
 ## Purpose
