@@ -161,12 +161,7 @@ function findMetadataRow(snapshot = {}, targetId = '', selectedTags = []) {
   }) || null;
 }
 
-function latestSequencingArtifactMatches(snapshot = {}, targetIds = [], selectedTags = []) {
-  const artifact = snapshot?.latestProposalBundle && typeof snapshot.latestProposalBundle === 'object'
-    ? snapshot.latestProposalBundle
-    : snapshot?.latestPlanHandoff && typeof snapshot.latestPlanHandoff === 'object'
-      ? snapshot.latestPlanHandoff
-      : null;
+function artifactScopeMatches(artifact = null, targetIds = [], selectedTags = []) {
   if (!artifact) return false;
   const metadata = artifact.metadata && typeof artifact.metadata === 'object' ? artifact.metadata : {};
   const scope = artifact.scope && typeof artifact.scope === 'object'
@@ -182,17 +177,55 @@ function latestSequencingArtifactMatches(snapshot = {}, targetIds = [], selected
   return hasTargets && hasTags;
 }
 
-async function waitForProposal({ targetIds = [], selectedTags = [], timeoutMs = 30000 } = {}) {
+function matchingSequencingArtifacts(snapshot = {}, targetIds = [], selectedTags = [], previousArtifactIds = new Set()) {
+  return [
+    snapshot?.latestProposalBundle && typeof snapshot.latestProposalBundle === 'object'
+      ? snapshot.latestProposalBundle
+      : null,
+    snapshot?.latestPlanHandoff && typeof snapshot.latestPlanHandoff === 'object'
+      ? snapshot.latestPlanHandoff
+      : null
+  ].filter((artifact) => {
+    const artifactId = str(artifact?.artifactId);
+    return artifactId && !previousArtifactIds.has(artifactId) && artifactScopeMatches(artifact, targetIds, selectedTags);
+  });
+}
+
+function reviewReadyMatches(snapshot = {}, targetIds = [], selectedTags = []) {
+  const review = snapshot?.pageStates?.review && typeof snapshot.pageStates.review === 'object'
+    ? snapshot.pageStates.review
+    : {};
+  const pendingSummary = str(review.pendingSummary).toLowerCase();
+  const includesTargets = targetIds.every((targetId) => pendingSummary.includes(str(targetId).toLowerCase()));
+  const includesTags = selectedTags.every((tag) => pendingSummary.includes(str(tag).toLowerCase()));
+  return review.canApply === true && review.isApplying !== true && includesTargets && includesTags;
+}
+
+async function waitForProposal({ targetIds = [], selectedTags = [], previousArtifactIds = new Set(), timeoutMs = 30000 } = {}) {
   const start = Date.now();
   let lastSnapshot = null;
   while (Date.now() - start < timeoutMs) {
     lastSnapshot = await request('GET', '/sequencer-validation-snapshot');
-    if (latestSequencingArtifactMatches(lastSnapshot, targetIds, selectedTags)) {
-      return lastSnapshot;
+    const matches = matchingSequencingArtifacts(lastSnapshot, targetIds, selectedTags, previousArtifactIds);
+    if (matches.length) {
+      return { snapshot: lastSnapshot, matches };
     }
     await new Promise((resolve) => setTimeout(resolve, 750));
   }
   throw new Error(`Timed out waiting for generated plan with targets=${targetIds.join(',')} tags=${selectedTags.join(',')}. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
+}
+
+async function waitForReviewReady({ targetIds = [], selectedTags = [], timeoutMs = 30000 } = {}) {
+  const start = Date.now();
+  let lastSnapshot = null;
+  while (Date.now() - start < timeoutMs) {
+    lastSnapshot = await request('GET', '/sequencer-validation-snapshot');
+    if (reviewReadyMatches(lastSnapshot, targetIds, selectedTags)) {
+      return lastSnapshot;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 750));
+  }
+  throw new Error(`Timed out waiting for Review to expose matching pending work for targets=${targetIds.join(',')} tags=${selectedTags.join(',')}. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
 }
 
 async function waitForApplyResult({ previousArtifactId = '', timeoutMs = 120000 } = {}) {
@@ -217,6 +250,24 @@ async function waitForApplyResult({ previousArtifactId = '', timeoutMs = 120000 
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   throw new Error(`Timed out waiting for review apply result. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
+}
+
+async function applyReviewWithRetry({ previousArtifactId = '', targetIds = [], selectedTags = [], timeoutMs = 120000 } = {}) {
+  let lastAccepted = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await waitForReviewReady({ targetIds, selectedTags, timeoutMs: Math.min(timeoutMs, 30000) });
+    lastAccepted = await request('POST', '/action', { action: 'applyReview' });
+    try {
+      return {
+        accepted: lastAccepted,
+        ...(await waitForApplyResult({ previousArtifactId, timeoutMs }))
+      };
+    } catch (error) {
+      if (attempt === 2) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+  }
+  throw new Error(`Review apply did not produce a fresh apply result. Last accepted response: ${JSON.stringify(lastAccepted)}`);
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -258,6 +309,12 @@ await request('POST', '/action', {
   }
 });
 
+const preGenerationSnapshot = await request('GET', '/sequencer-validation-snapshot');
+const previousGenerationArtifactIds = new Set([
+  str(preGenerationSnapshot?.latestProposalBundle?.artifactId),
+  str(preGenerationSnapshot?.latestPlanHandoff?.artifactId)
+].filter(Boolean));
+
 const generationResult = await request('POST', '/action', {
   action: 'generateSequenceProposal',
   selectedTagNames: args.selectedTags
@@ -267,7 +324,15 @@ if (generationBanner && str(generationBanner.state).toLowerCase() === 'blocked')
   throw new Error(`Generation blocked: ${str(generationBanner.text)}`);
 }
 
-const validationSnapshot = await waitForProposal({
+const proposalValidation = await waitForProposal({
+  targetIds,
+  selectedTags,
+  previousArtifactIds: previousGenerationArtifactIds,
+  timeoutMs: args.timeoutMs
+});
+const validationSnapshot = proposalValidation.snapshot;
+const matchedArtifacts = proposalValidation.matches;
+const reviewReadySnapshot = await waitForReviewReady({
   targetIds,
   selectedTags,
   timeoutMs: args.timeoutMs
@@ -275,12 +340,13 @@ const validationSnapshot = await waitForProposal({
 let applyValidation = null;
 let renderValidation = null;
 if (args.applyReview) {
-  const previousApplyId = str(validationSnapshot?.latestApplyResult?.artifactId);
-  const applyAccepted = await request('POST', '/action', { action: 'applyReview' });
-  applyValidation = {
-    accepted: applyAccepted,
-    ...(await waitForApplyResult({ previousArtifactId: previousApplyId, timeoutMs: Math.max(args.timeoutMs, 120000) }))
-  };
+  const previousApplyId = str(reviewReadySnapshot?.latestApplyResult?.artifactId || validationSnapshot?.latestApplyResult?.artifactId);
+  applyValidation = await applyReviewWithRetry({
+    previousArtifactId: previousApplyId,
+    targetIds,
+    selectedTags,
+    timeoutMs: Math.max(args.timeoutMs, 120000)
+  });
   if (args.renderAfterApply) {
     renderValidation = await request('POST', '/action', { action: 'renderXLightsSequence' });
   }
@@ -294,8 +360,8 @@ process.stdout.write(`${JSON.stringify({
   targetIds,
   selectedTags,
   sequenceContext,
-  latestProposalArtifactId: str(validationSnapshot?.latestProposalBundle?.artifactId),
-  latestPlanArtifactId: str(validationSnapshot?.latestPlanHandoff?.artifactId),
+  latestProposalArtifactId: str(matchedArtifacts.find((artifact) => str(artifact?.artifactType || artifact?.bundleType) === 'proposal_bundle_v1')?.artifactId || validationSnapshot?.latestProposalBundle?.artifactId),
+  latestPlanArtifactId: str(matchedArtifacts.find((artifact) => str(artifact?.artifactType) === 'plan_handoff_v1')?.artifactId || validationSnapshot?.latestPlanHandoff?.artifactId),
   latestIntentArtifactId: str(validationSnapshot?.latestIntentHandoff?.artifactId),
   latestApplyArtifactId: str(applyValidation?.applyResult?.artifactId),
   latestApplyStatus: str(applyValidation?.applyResult?.status),

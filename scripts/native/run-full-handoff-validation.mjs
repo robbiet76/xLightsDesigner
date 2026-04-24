@@ -10,6 +10,11 @@ const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
 const DEFAULT_TARGET_IDS = 'Star';
 const DEFAULT_SELECTED_TAGS = 'lead';
 const NATIVE_LOG_PATH = '/tmp/xld-native-app.log';
+const DEFAULT_MATRIX_SCENARIOS = [
+  { name: 'model-star-lead', targetIds: 'Star', selectedTags: 'lead' },
+  { name: 'group-snowflakes-lead', targetIds: 'Snowflakes', selectedTags: 'lead' },
+  { name: 'group-floods-lead', targetIds: 'Floods', selectedTags: 'lead' }
+];
 
 function str(value = '') {
   return String(value || '').trim();
@@ -23,6 +28,7 @@ function usage() {
     '  --show-dir <path>              Linked xLights show folder. Defaults to /Users/robterry/Desktop/Show.',
     '  --target-ids <ids>             Exact xLights target ids. Defaults to Star.',
     '  --selected-tags <tags>         Selected metadata tags. Defaults to lead.',
+    '  --matrix                       Run the default metadata handoff scenario matrix.',
     '  --duration-ms <n>              Validation sequence duration. Defaults to 30000.',
     '  --frame-ms <n>                 Validation sequence frame interval. Defaults to 50.',
     '  --timeout-ms <n>               End-to-end validation timeout. Defaults to 180000.',
@@ -49,7 +55,8 @@ function parseArgs(argv = []) {
     launchNative: true,
     launchXlights: true,
     applyReview: true,
-    renderAfterApply: true
+    renderAfterApply: true,
+    matrix: false
   };
   for (let index = 0; index < argv.length; index += 1) {
     const token = str(argv[index]);
@@ -66,6 +73,7 @@ function parseArgs(argv = []) {
     } else if (token === '--show-dir') args.showDir = next();
     else if (token === '--target-ids') args.targetIds = next();
     else if (token === '--selected-tags') args.selectedTags = next();
+    else if (token === '--matrix') args.matrix = true;
     else if (token === '--duration-ms') args.durationMs = Number(next());
     else if (token === '--frame-ms') args.frameMs = Number(next());
     else if (token === '--timeout-ms') args.timeoutMs = Number(next());
@@ -197,20 +205,13 @@ async function ensureXlights(args) {
   return { launched: true, launchOutput: launched.stdout.trim(), launchErrorOutput: launched.stderr.trim(), health: ready };
 }
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const showDir = path.resolve(args.showDir);
-
-  const native = await ensureNativeApp(args);
-  const xlights = await ensureXlights({ ...args, showDir });
-  await run('node', ['scripts/native/automation.mjs', 'refresh-xlights-session']);
-
+function buildValidationArgs(args, showDir, scenario) {
   const validationArgs = [
     'scripts/native/validate-metadata-tag-proposal-flow.mjs',
     '--target-ids',
-    args.targetIds,
+    scenario.targetIds,
     '--selected-tags',
-    args.selectedTags,
+    scenario.selectedTags,
     '--show-dir',
     showDir,
     '--force-validation-sequence',
@@ -223,9 +224,32 @@ async function main() {
   ];
   if (args.applyReview) validationArgs.push('--apply-review');
   if (args.applyReview && args.renderAfterApply) validationArgs.push('--render-after-apply');
+  return validationArgs;
+}
 
-  const validation = await run('node', validationArgs, { maxBuffer: 1024 * 1024 * 50 });
-  const validationJson = JSON.parse(validation.stdout);
+async function runValidationScenario(args, showDir, scenario) {
+  const validation = await run('node', buildValidationArgs(args, showDir, scenario), { maxBuffer: 1024 * 1024 * 50 });
+  return {
+    name: scenario.name,
+    ...JSON.parse(validation.stdout)
+  };
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const showDir = path.resolve(args.showDir);
+
+  const native = await ensureNativeApp(args);
+  const xlights = await ensureXlights({ ...args, showDir });
+  await run('node', ['scripts/native/automation.mjs', 'refresh-xlights-session']);
+
+  const scenarios = args.matrix
+    ? DEFAULT_MATRIX_SCENARIOS
+    : [{ name: 'single', targetIds: args.targetIds, selectedTags: args.selectedTags }];
+  const validations = [];
+  for (const scenario of scenarios) {
+    validations.push(await runValidationScenario(args, showDir, scenario));
+  }
   console.log(JSON.stringify({
     ok: true,
     native: {
@@ -239,7 +263,7 @@ async function main() {
       state: xlights.health?.data?.state || '',
       listenerReachable: xlights.health?.data?.listenerReachable === true
     },
-    validation: validationJson
+    ...(args.matrix ? { validations } : { validation: validations[0] })
   }, null, 2));
 }
 

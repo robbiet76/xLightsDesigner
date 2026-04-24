@@ -402,6 +402,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       })
     });
     applyResult.sequenceBackupPath = sequenceBackupPath;
+    applyResult.metadataAssignmentCount = metadataAssignments.length;
     const renderCurrent = await renderCurrentForFeedback(endpoint);
     applyResult.renderCurrentSummary = renderCurrent.summary;
     applyResult.renderCurrentError = renderCurrent.error;
@@ -470,6 +471,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     })
   });
   applyResult.sequenceBackupPath = sequenceBackupPath;
+  applyResult.metadataAssignmentCount = metadataAssignments.length;
   const renderCurrent = await renderCurrentForFeedback(endpoint);
   applyResult.renderCurrentSummary = renderCurrent.summary;
   applyResult.renderCurrentError = renderCurrent.error;

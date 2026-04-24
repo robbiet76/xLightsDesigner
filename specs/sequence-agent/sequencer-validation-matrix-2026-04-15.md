@@ -165,16 +165,53 @@ Acceptance rule:
   - `layoutScene: ok`
   - `renderSamples: ok`
 
+### Gate E: Native Agent Handoff Gate
+
+Required when:
+
+- changing native design-intent authoring
+- changing app metadata that feeds sequencing
+- changing proposal bundle handoff contracts
+- changing review apply or render automation
+- changing xLights launch/modal handling used by unattended validation
+
+Canonical runner:
+
+- [run-full-handoff-validation.mjs](/Users/robterry/Projects/xLightsDesigner/scripts/native/run-full-handoff-validation.mjs)
+
+Minimum command:
+
+```bash
+node scripts/native/run-full-handoff-validation.mjs
+```
+
+Broader current-layout coverage:
+
+```bash
+node scripts/native/run-full-handoff-validation.mjs --matrix
+```
+
+Acceptance rule:
+
+- native automation must be reachable on `49916`
+- owned xLights API must be ready on `49915`
+- validation must create or open an isolated sequence under the linked show folder
+- app metadata target intent must be visible in the native validation snapshot
+- generated proposal scope must include the requested target ids and metadata tags
+- when apply is enabled, review apply must emit a fresh successful apply artifact
+- when render is enabled, xLights render automation must complete
+
 ## Change-Class Matrix
 
-| Change Class | Gate A | Gate B | Gate C | Gate D |
-| --- | --- | --- | --- | --- |
-| sequence planner/runtime logic | required | optional unless tooling touched | optional | required |
-| effect semantics / trained ranking logic | required | optional unless tooling touched | optional | required |
-| owned API wrapper / render-feedback path | required | optional | optional | required |
-| training tooling / builders | optional if runtime untouched | required | required | optional unless runtime outputs change |
-| reset-plan / regeneration-flow logic | optional | required | required | not required until runtime outputs change |
-| regenerated selector bundles | required | required | required | required |
+| Change Class | Gate A | Gate B | Gate C | Gate D | Gate E |
+| --- | --- | --- | --- | --- | --- |
+| sequence planner/runtime logic | required | optional unless tooling touched | optional | required | required when native handoff surface changes |
+| effect semantics / trained ranking logic | required | optional unless tooling touched | optional | required | optional unless handoff contracts change |
+| owned API wrapper / render-feedback path | required | optional | optional | required | required |
+| native metadata / design-intent handoff | required when runtime contracts change | optional | optional | optional unless live sequencing changes | required |
+| training tooling / builders | optional if runtime untouched | required | required | optional unless runtime outputs change | optional |
+| reset-plan / regeneration-flow logic | optional | required | required | not required until runtime outputs change | optional |
+| regenerated selector bundles | required | required | required | required | required when used by native proposal flow |
 
 ## Current Inventory Counts
 

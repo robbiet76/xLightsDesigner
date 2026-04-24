@@ -31,21 +31,28 @@ Developer/build/validation automation.
 - Structural placement and ownership rules: `specs/repo-structure-governance.md`
 - Canonical training package architecture: `specs/xlights-sequencer-control-training-package-architecture.md`
 
-## Current Project Phases
+## Active Product Scope
+The current product goal is a native xLightsDesigner app that acts as the local translation layer between AI agents and a user's linked xLights show folder.
 
-### `audio-timing-lyrics` (Phase 1)
-Goal: automate song prep workflows in xLights:
-- audio timing track generation,
-- song structure track generation (verse/chorus/etc.),
-- lyric track generation/import.
+Core workflows include:
+- project-scoped app metadata stored outside xLights show folders,
+- owned xLights API session control,
+- native design-intent authoring,
+- metadata-aware proposal generation,
+- review/apply/render validation against isolated sequence artifacts.
 
-Project assets:
-- Specs: `specs/audio-timing-lyrics-*.md`
+## Validation
+Run the native-to-xLights handoff validation through the wrapper below. It starts or reuses the native automation server and owned xLights API, creates isolated validation sequences under the linked development show folder, and validates metadata handoff through proposal/apply/render.
 
-## Notes
-This repo is intentionally organized as:
-- one top-level initiative (agent sequencer),
-- multiple scoped projects/phases underneath.
+```bash
+node scripts/native/run-full-handoff-validation.mjs
+```
+
+For broader coverage of known development layout targets:
+
+```bash
+node scripts/native/run-full-handoff-validation.mjs --matrix
+```
 
 ## Initial UI Prototype
 `apps/xlightsdesigner-ui/` contains the initial standalone UI scaffold for xLightsDesigner development.
