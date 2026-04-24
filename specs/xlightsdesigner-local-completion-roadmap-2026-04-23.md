@@ -60,6 +60,7 @@ Phase 3 proof-loop bridge started:
 - xLights 2026.06 branch `xld-2026.06-migration` documents `layout/scene`, `sequence/render-current`, and `sequence/render-samples` as owned render-feedback routes
 - xLights 2026.06 smoke coverage now dispatches `layout/scene` and `sequence/render-samples` through the owned endpoint harness
 - native automation review-artifact summaries now include apply-result backup and render-current fields for proof-loop validation
+- native Review apply now runs owned readback checks and embeds `practical_sequence_validation_v1` in the apply result
 
 ## Purpose
 

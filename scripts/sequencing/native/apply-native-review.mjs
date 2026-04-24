@@ -12,17 +12,21 @@ import {
   getEffectDefinitions,
   getRenderedSequenceSamples,
   getRevision,
+  getTimingMarks,
   getOwnedHealth,
   getOwnedJob,
   getOwnedSequenceRevision,
   applySequencingBatchPlan,
   openSequence,
-  renderCurrentSequence
+  renderCurrentSequence,
+  listEffects
 } from '../../../apps/xlightsdesigner-ui/api.js';
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
 import { buildEffectDefinitionCatalog } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/effect-definition-catalog.js';
 import { STAGE1_TRAINED_EFFECT_BUNDLE } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/generated/stage1-trained-effect-bundle.js';
 import { buildSequenceAgentPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent.js';
+import { verifyAppliedPlanReadback } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/apply-readback.js';
+import { buildPracticalSequenceValidation } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/practical-sequence-validation.js';
 import { buildSequenceAgentApplyResult } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent-runtime.js';
 import { buildDesignSceneContext } from '../../../apps/xlightsdesigner-ui/agent/designer-dialog/design-scene-context.js';
 import { buildRenderCritiqueContext } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/render-critique-context.js';
@@ -114,6 +118,51 @@ async function renderCurrentForFeedback(endpoint = '') {
   } catch (error) {
     return { summary: '', error: str(error?.message || error) };
   }
+}
+
+export async function buildNativeApplyVerification({
+  endpoint = '',
+  commands = [],
+  planHandoff = null,
+  applyResult = null,
+  verifyReadback = verifyAppliedPlanReadback,
+  readTimingMarks = getTimingMarks,
+  readEffects = listEffects
+} = {}) {
+  let verification = {};
+  try {
+    verification = typeof verifyReadback === 'function'
+      ? await verifyReadback(commands, {
+        endpoint,
+        planMetadata: planHandoff?.metadata || {},
+        getTimingMarks: readTimingMarks,
+        listEffects: readEffects
+      })
+      : {};
+  } catch (error) {
+    verification = {
+      revisionAdvanced: false,
+      expectedMutationsPresent: false,
+      lockedTracksUnchanged: true,
+      checks: [
+        {
+          kind: 'readback',
+          target: 'native_review_apply',
+          ok: false,
+          detail: `Apply readback failed: ${str(error?.message || error)}`
+        }
+      ],
+      designChecks: [],
+      designContext: {},
+      designAlignment: {}
+    };
+  }
+  verification.revisionAdvanced = str(applyResult?.nextRevision) !== str(applyResult?.currentRevision);
+  const practicalValidation = buildPracticalSequenceValidation({
+    planHandoff,
+    verification
+  });
+  return { verification, practicalValidation };
 }
 
 function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
@@ -326,7 +375,16 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       status: 'applied',
       failureReason: null,
       currentRevision: str(revisionRes?.data?.revision || 'unknown'),
-      nextRevision: str(fallback.nextRevision)
+      nextRevision: str(fallback.nextRevision),
+      ...await buildNativeApplyVerification({
+        endpoint,
+        commands,
+        planHandoff: commandsPlan,
+        applyResult: {
+          currentRevision: str(revisionRes?.data?.revision || 'unknown'),
+          nextRevision: str(fallback.nextRevision)
+        }
+      })
     });
     applyResult.sequenceBackupPath = sequenceBackupPath;
     const renderCurrent = await renderCurrentForFeedback(endpoint);
@@ -383,7 +441,16 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     status: 'applied',
     failureReason: null,
     currentRevision: str(revisionRes?.data?.revision || 'unknown'),
-    nextRevision: str(applyRes?.nextRevision || '')
+    nextRevision: str(applyRes?.nextRevision || ''),
+    ...await buildNativeApplyVerification({
+      endpoint,
+      commands,
+      planHandoff: commandsPlan,
+      applyResult: {
+        currentRevision: str(revisionRes?.data?.revision || 'unknown'),
+        nextRevision: str(applyRes?.nextRevision || '')
+      }
+    })
   });
   applyResult.sequenceBackupPath = sequenceBackupPath;
   const renderCurrent = await renderCurrentForFeedback(endpoint);

@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  buildNativeApplyVerification,
   createSequenceBackup,
   renderCurrentSummary
 } from "../../../../scripts/sequencing/native/apply-native-review.mjs";
@@ -45,4 +46,53 @@ test("renderCurrentSummary prefers rendered sequence path", () => {
     "Rendered xLights sequence: /show/HolidayRoad.xsq"
   );
   assert.equal(renderCurrentSummary({ data: { rendered: true } }), "Rendered current xLights sequence.");
+});
+
+test("buildNativeApplyVerification attaches practical validation from readback", async () => {
+  const commands = [
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 0,
+        effectName: "On",
+        startMs: 0,
+        endMs: 1000
+      }
+    }
+  ];
+  const planHandoff = {
+    artifactId: "plan-1",
+    commands,
+    metadata: {
+      executionStrategy: { passScope: "single_section" },
+      sectionPlans: [{ section: "Chorus 1" }],
+      effectPlacements: [{ sourceSectionLabel: "Chorus 1" }],
+      sequenceSettings: { durationMs: 1000 },
+      sequencingDesignHandoffSummary: "MegaTree chorus"
+    }
+  };
+
+  const result = await buildNativeApplyVerification({
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    commands,
+    planHandoff,
+    applyResult: {
+      currentRevision: "rev-1",
+      nextRevision: "rev-2"
+    },
+    verifyReadback: async () => ({
+      expectedMutationsPresent: true,
+      lockedTracksUnchanged: true,
+      checks: [{ kind: "effect", target: "MegaTree@0", ok: true, detail: "On present" }],
+      designChecks: [],
+      designContext: { designSummary: "MegaTree chorus" },
+      designAlignment: { observedTargets: ["MegaTree"], observedEffectNames: ["On"] }
+    })
+  });
+
+  assert.equal(result.verification.revisionAdvanced, true);
+  assert.equal(result.practicalValidation.artifactType, "practical_sequence_validation_v1");
+  assert.equal(result.practicalValidation.summary.readbackChecks.passed, 1);
+  assert.equal(result.practicalValidation.designSummary, "MegaTree chorus");
 });
