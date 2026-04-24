@@ -14,7 +14,6 @@ import {
   getOwnedJob,
   getOwnedSequenceRevision,
   applySequencingBatchPlan,
-  validateCommands,
   openSequence
 } from '../../../apps/xlightsdesigner-ui/api.js';
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
@@ -239,8 +238,6 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     endpoint,
     commands,
     expectedRevision: str(revisionRes?.data?.revision || 'unknown'),
-    getRevision,
-    validateCommands,
     applySequencingBatchPlan,
     getOwnedJob,
     getOwnedHealth,
