@@ -136,10 +136,6 @@ export async function validateAndApplyPlan({
   if (!endpoint) throw new Error('endpoint is required');
   if (typeof getRevision !== 'function') throw new Error('getRevision function is required');
   if (typeof validateCommands !== 'function') throw new Error('validateCommands function is required');
-  if (typeof beginTransaction !== 'function') throw new Error('beginTransaction function is required');
-  if (typeof commitTransaction !== 'function') throw new Error('commitTransaction function is required');
-  if (typeof rollbackTransaction !== 'function') throw new Error('rollbackTransaction function is required');
-  if (typeof stageTransactionCommand !== 'function') throw new Error('stageTransactionCommand function is required');
 
   const safety = evaluatePlanSafety(commands, safetyOptions);
   if (!safety.ok) {
@@ -290,6 +286,11 @@ export async function validateAndApplyPlan({
       }
     }
   }
+
+  if (typeof beginTransaction !== 'function') throw new Error('beginTransaction function is required for legacy transaction apply');
+  if (typeof commitTransaction !== 'function') throw new Error('commitTransaction function is required for legacy transaction apply');
+  if (typeof rollbackTransaction !== 'function') throw new Error('rollbackTransaction function is required for legacy transaction apply');
+  if (typeof stageTransactionCommand !== 'function') throw new Error('stageTransactionCommand function is required for legacy transaction apply');
 
   const validation = await validateCommands(
     endpoint,
