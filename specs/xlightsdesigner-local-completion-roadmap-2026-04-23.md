@@ -78,6 +78,7 @@ Sequencing proof-loop progress:
 - assistant context now carries confirmed Display metadata rows, including meanings and linked target coverage, so agents can reason from promoted app-owned metadata instead of only raw layout names
 - native direct sequence proposal generation passes confirmed project Display metadata assignments into the sequence orchestrator, so promoted layout understanding can influence target resolution and sequencing strategy
 - native Review apply uses the same confirmed project Display metadata assignments when rebuilding the final sequence-agent plan, keeping proposal and apply semantics aligned
+- native project Display metadata now preserves richer target preferences and visual-hint definitions, and the native sequencer handoff passes those app-owned model-level intent extensions alongside xLights layout metadata
 - native Review success state and automation artifact summaries now expose the Display metadata assignment count used during apply
 - native History proof chains now retain the Display metadata assignment count from apply results and review-pass summaries
 - sequencer revision planning now maps unresolved prior-pass proof signals into bounded revision roles so the next pass can bias realization from the proof loop

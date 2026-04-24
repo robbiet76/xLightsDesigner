@@ -47,6 +47,55 @@ struct ProjectDisplayMetadataStoreTests {
         #expect(updated.targetTags["Tree"] == nil)
     }
 
+    @Test func storePreservesTargetPreferencesAndVisualHintDefinitions() throws {
+        let project = try makeProject(name: "DisplayMetadataStoreD")
+        let metadataURL = URL(fileURLWithPath: project.projectFilePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("layout/layout-metadata.json")
+        try FileManager.default.createDirectory(at: metadataURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try """
+        {
+          "version": 1,
+          "tags": [
+            {
+              "id": "tag-focal",
+              "name": "Focal",
+              "description": "Primary visual anchor"
+            }
+          ],
+          "targetTags": {
+            "Tree": ["tag-focal"]
+          },
+          "preferencesByTargetId": {
+            "Tree": {
+              "rolePreference": "lead",
+              "semanticHints": ["Sparkle"],
+              "effectAvoidances": ["Bars"]
+            }
+          },
+          "visualHintDefinitions": [
+            {
+              "name": "Sparkle",
+              "status": "defined",
+              "semanticClass": "texture",
+              "behavioralIntent": "Use readable sparkle texture.",
+              "behavioralTags": ["twinkle"]
+            }
+          ]
+        }
+        """.data(using: .utf8)!.write(to: metadataURL)
+        let store = LocalDisplayMetadataStore()
+
+        try store.createOrAssignTag(project: project, targetIDs: ["Star"], tagName: "Accent", description: "Secondary read")
+        let updated = try store.load(for: project)
+
+        #expect(updated.preferencesByTargetId["Tree"]?.rolePreference == "lead")
+        #expect(updated.preferencesByTargetId["Tree"]?.semanticHints == ["Sparkle"])
+        #expect(updated.preferencesByTargetId["Tree"]?.effectAvoidances == ["Bars"])
+        #expect(updated.visualHintDefinitions.first?.name == "Sparkle")
+        #expect(updated.visualHintDefinitions.first?.behavioralIntent == "Use readable sparkle texture.")
+    }
+
     private func makeProject(name: String) throws -> ActiveProjectModel {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-layout-tag-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

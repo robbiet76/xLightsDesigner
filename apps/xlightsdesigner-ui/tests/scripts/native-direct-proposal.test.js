@@ -9,6 +9,7 @@ import { buildEffectDefinitionCatalog } from "../../agent/sequence-agent/effect-
 import { executeDirectSequenceRequestOrchestration } from "../../agent/sequence-agent/direct-sequence-orchestrator.js";
 import { writeProjectArtifacts } from "../../storage/project-artifact-store.mjs";
 import { runNativeDirectProposal } from "../../../../scripts/sequencing/native/generate-native-direct-proposal.mjs";
+import { loadProjectDisplayMetadataAssignments } from "../../../../scripts/sequencing/native/project-display-metadata.mjs";
 
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -84,7 +85,23 @@ test("native direct proposal writes intent and proposal artifacts from project c
     ],
     targetTags: {
       MegaTree: ["tag-focal"]
-    }
+    },
+    preferencesByTargetId: {
+      MegaTree: {
+        rolePreference: "lead",
+        semanticHints: ["Sparkle"],
+        effectAvoidances: ["Bars"]
+      }
+    },
+    visualHintDefinitions: [
+      {
+        name: "Sparkle",
+        status: "defined",
+        semanticClass: "texture",
+        behavioralIntent: "Use readable sparkle texture on chorus hits.",
+        behavioralTags: ["twinkle"]
+      }
+    ]
   });
 
   let capturedMetadataAssignments = [];
@@ -120,8 +137,21 @@ test("native direct proposal writes intent and proposal artifacts from project c
   assert.deepEqual(capturedMetadataAssignments, [
     {
       targetId: "MegaTree",
-      tags: ["Focal Tree"],
-      semanticHints: ["Primary visual anchor for chorus moments."],
+      tags: ["Focal Tree", "lead", "Primary visual anchor for chorus moments.", "Sparkle"],
+      semanticHints: ["Primary visual anchor for chorus moments.", "Sparkle"],
+      visualHintDefinitions: [
+        {
+          name: "Sparkle",
+          status: "defined",
+          semanticClass: "texture",
+          behavioralIntent: "Use readable sparkle texture on chorus hits.",
+          behavioralTags: ["twinkle"],
+          source: "",
+          definedBy: ""
+        }
+      ],
+      effectAvoidances: ["Bars"],
+      rolePreference: "lead",
       source: "xlightsdesigner_project_display_metadata"
     }
   ]);
@@ -140,4 +170,32 @@ test("native direct proposal writes intent and proposal artifacts from project c
   assert.deepEqual(intent.scope.targetIds, ["MegaTree"]);
   assert.equal(proposal.guidedQuestions.length, 0);
   assert.match(proposal.proposalLines.join("\n"), /On effect/i);
+});
+
+test("native project display metadata loader includes preference-only target intent", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-metadata-"));
+  const projectDir = path.join(root, "project");
+  const projectFile = path.join(projectDir, "Metadata Loader Test.xdproj");
+  writeJson(projectFile, {});
+  writeJson(path.join(projectDir, "layout", "layout-metadata.json"), {
+    version: 1,
+    preferencesByTargetId: {
+      Roofline: {
+        rolePreference: "support",
+        semanticHints: ["Outline", "Linear"]
+      }
+    }
+  });
+
+  assert.deepEqual(loadProjectDisplayMetadataAssignments(projectFile), [
+    {
+      targetId: "Roofline",
+      tags: ["support", "Outline", "Linear"],
+      semanticHints: ["Outline", "Linear"],
+      visualHintDefinitions: [],
+      effectAvoidances: [],
+      rolePreference: "support",
+      source: "xlightsdesigner_project_display_metadata"
+    }
+  ]);
 });

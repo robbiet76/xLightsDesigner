@@ -12,6 +12,8 @@ struct PersistedDisplayMetadataDocument: Codable, Sendable {
     var version: Int = 1
     var tags: [PersistedDisplayTagDefinition] = []
     var targetTags: [String: [String]] = [:]
+    var preferencesByTargetId: [String: PersistedDisplayTargetPreference] = [:]
+    var visualHintDefinitions: [PersistedVisualHintDefinition] = []
 }
 
 struct PersistedDisplayTagDefinition: Codable, Sendable {
@@ -19,6 +21,23 @@ struct PersistedDisplayTagDefinition: Codable, Sendable {
     var name: String
     var description: String
     var colorName: String?
+}
+
+struct PersistedDisplayTargetPreference: Codable, Sendable, Equatable {
+    var rolePreference: String?
+    var semanticHints: [String]?
+    var submodelHints: [String]?
+    var effectAvoidances: [String]?
+}
+
+struct PersistedVisualHintDefinition: Codable, Sendable, Equatable {
+    var name: String
+    var status: String?
+    var semanticClass: String?
+    var behavioralIntent: String?
+    var behavioralTags: [String]?
+    var source: String?
+    var definedBy: String?
 }
 
 enum DisplayMetadataStoreError: LocalizedError {
