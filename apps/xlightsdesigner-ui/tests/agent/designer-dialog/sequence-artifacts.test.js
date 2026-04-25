@@ -150,6 +150,40 @@ test("refreshSequenceRevisionObjectiveFromPracticalValidation updates sequencer 
   assert.ok(out.sequencerDirection.blockedMoves.includes("section_density_scale"));
 });
 
+test("refreshSequenceRevisionObjectiveFromPracticalValidation creates preservation-specific next pass guidance", () => {
+  const priorGoal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const priorObjective = buildSequenceRevisionObjectiveFromArtifacts({
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff()
+  });
+  const out = refreshSequenceRevisionObjectiveFromPracticalValidation({
+    priorRevisionObjective: priorObjective,
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff(),
+    practicalValidation: {
+      status: "applied",
+      overallOk: false,
+      failures: {
+        readback: [
+          {
+            kind: "effect-preservation",
+            target: "Snowman@0->1",
+            detail: "original layer 0 missing preserved effects"
+          }
+        ]
+      }
+    }
+  });
+
+  assert.match(out.sequencerDirection.executionObjective, /preserve existing effects/i);
+  assert.ok(out.sequencerDirection.blockedMoves.includes("overwrite_existing_effects_without_scope"));
+  assert.ok(out.sequencerDirection.revisionRoles.includes("preserve_existing_effects"));
+  assert.ok(out.successChecks.some((row) => /original layers unless replacement is explicitly authorized/i.test(String(row))));
+});
+
 test("refreshSequenceArtisticGoalFromRenderCritique updates artistic question from rendered outcome", () => {
   const prior = buildSequenceArtisticGoalFromDesignHandoff({
     sequencingDesignHandoff: sampleHandoff(),
@@ -617,6 +651,58 @@ test("buildSequenceRevisionFeedback chooses redistribute_scene for imbalanced sc
   assert.equal(out.nextDirection.changeBias.composition.targetShape, "redistribute_scene");
   assert.equal(out.nextDirection.changeBias.progression.temporalVariation, "preserve");
   assert.equal(out.nextDirection.changeBias.layering.density, "preserve");
+});
+
+test("buildSequenceRevisionFeedback carries preservation bias from practical validation failures", () => {
+  const goal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const objective = refreshSequenceRevisionObjectiveFromPracticalValidation({
+    priorRevisionObjective: buildSequenceRevisionObjectiveFromArtifacts({
+      sequenceArtisticGoal: goal,
+      sequencingDesignHandoff: sampleHandoff()
+    }),
+    sequenceArtisticGoal: goal,
+    sequencingDesignHandoff: sampleHandoff(),
+    practicalValidation: {
+      status: "applied",
+      overallOk: false,
+      failures: {
+        readback: [
+          {
+            kind: "effect-preservation",
+            target: "Snowman@0->1",
+            detail: "original layer 0 missing preserved effects"
+          }
+        ]
+      }
+    }
+  });
+
+  const out = buildSequenceRevisionFeedback({
+    sequenceArtisticGoal: goal,
+    sequenceRevisionObjective: objective,
+    practicalValidation: {
+      artifactId: "validation-preserve",
+      status: "applied",
+      overallOk: false,
+      failures: {
+        readback: [
+          {
+            kind: "effect-preservation",
+            target: "Snowman@0->1",
+            detail: "original layer 0 missing preserved effects"
+          }
+        ]
+      }
+    }
+  });
+
+  assert.equal(out.status, "revise_required");
+  assert.equal(out.nextDirection.changeBias.preservation.mismatch, true);
+  assert.equal(out.nextDirection.changeBias.preservation.existingEffects, "preserve_unless_explicit_replace");
+  assert.ok(out.nextDirection.revisionRoles.includes("preserve_existing_effects"));
 });
 
 test("buildSequenceArtisticGoalFromDesignHandoff marks selected sections as timing-track scoped section work", () => {

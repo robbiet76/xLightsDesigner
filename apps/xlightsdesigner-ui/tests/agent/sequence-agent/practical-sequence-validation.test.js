@@ -159,6 +159,49 @@ test("practical sequence validation reports missing and pending visual hint meta
   assert.match(artifact.failures.metadata.map((row) => row.kind).join(","), /pending_visual_hint_definition/);
 });
 
+test("practical sequence validation summarizes failed preservation readback checks", () => {
+  const artifact = buildPracticalSequenceValidation({
+    planHandoff: {
+      planId: "plan-preserve",
+      commands: [
+        {
+          cmd: "effects.create",
+          params: { modelName: "Snowman", layerIndex: 1, effectName: "Color Wash", startMs: 1000, endMs: 2000 }
+        }
+      ]
+    },
+    applyResult: {
+      artifactId: "apply-preserve",
+      status: "applied"
+    },
+    verification: {
+      revisionAdvanced: true,
+      expectedMutationsPresent: false,
+      checks: [
+        { kind: "effect", target: "Snowman@1", ok: true, detail: "Color Wash present" },
+        { kind: "effect-preservation", target: "Snowman@0->1", ok: false, detail: "original layer 0 missing preserved effects" }
+      ],
+      designChecks: []
+    }
+  });
+
+  assert.equal(artifact.overallOk, false);
+  assert.equal(artifact.summary.readbackChecks.failed, 1);
+  assert.deepEqual(artifact.summary.preservationChecks, {
+    total: 1,
+    passed: 0,
+    failed: 1,
+    failedTargets: ["Snowman@0->1"]
+  });
+  assert.deepEqual(artifact.failures.readback, [
+    {
+      kind: "effect-preservation",
+      target: "Snowman@0->1",
+      detail: "original layer 0 missing preserved effects"
+    }
+  ]);
+});
+
 test("practical sequence validation fails sparse low-diversity sequence plans", () => {
   const artifact = buildPracticalSequenceValidation({
     planHandoff: {

@@ -6,6 +6,7 @@ function normalizeChangeBias(changeBias = null) {
   const composition = changeBias && typeof changeBias?.composition === "object" ? changeBias.composition : null;
   const progression = changeBias && typeof changeBias?.progression === "object" ? changeBias.progression : null;
   const layering = changeBias && typeof changeBias?.layering === "object" ? changeBias.layering : null;
+  const preservation = changeBias && typeof changeBias?.preservation === "object" ? changeBias.preservation : null;
   const normalized = {
     composition: composition
       ? {
@@ -25,6 +26,12 @@ function normalizeChangeBias(changeBias = null) {
           separation: str(layering.separation),
           density: str(layering.density)
         }
+      : null,
+    preservation: preservation
+      ? {
+          mismatch: Boolean(preservation.mismatch),
+          existingEffects: str(preservation.existingEffects)
+        }
       : null
   };
   const hasBias = Boolean(
@@ -32,6 +39,7 @@ function normalizeChangeBias(changeBias = null) {
     || normalized.progression?.temporalVariation
     || normalized.layering?.separation
     || normalized.layering?.density
+    || normalized.preservation?.existingEffects
   );
   return hasBias ? normalized : null;
 }
@@ -67,6 +75,7 @@ export function buildCandidateSelectionContext({
   if (changeBias?.layering?.density || changeBias?.layering?.separation) {
     seedParts.push(`layer:${changeBias.layering?.density || ""}:${changeBias.layering?.separation || ""}`);
   }
+  if (changeBias?.preservation?.existingEffects) seedParts.push(`preserve:${changeBias.preservation.existingEffects}`);
   return {
     phase: phaseValue,
     seed: seedParts.join("::"),

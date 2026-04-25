@@ -202,6 +202,13 @@ function collectValidationFailures(practicalValidation = null) {
     .filter((row) => row.kind || row.target || row.detail);
 }
 
+function isPreservationFailure(row = {}) {
+  return (
+    str(row?.kind) === "effect-preservation" ||
+    /\b(original layer|preserved effects|preservation|overwrite existing)\b/i.test(str(row?.detail))
+  );
+}
+
 function collectRenderCritiqueFindings(renderCritiqueContext = null) {
   const context = isPlainObject(renderCritiqueContext) ? renderCritiqueContext : null;
   if (!context) return [];
@@ -388,6 +395,9 @@ function deriveRevisionChangeBias({
     || layeringNeedsClarification
     || reasons.some((row) => /\b(layer|mask|obscur|support targets are not contributing enough)\b/i.test(String(row)))
   );
+  const preservationMismatch = reasons.some((row) =>
+    /\b(original layer|preserved effects|preservation|overwrite existing|existing effects)\b/i.test(String(row))
+  );
 
   return {
     composition: {
@@ -408,6 +418,10 @@ function deriveRevisionChangeBias({
       mismatch: layeringMismatch,
       separation: layeringNeedsSeparationIncrease ? "increase" : layeringNeedsClarification ? "clarify" : "preserve",
       density: layeringNeedsDensityReduction ? "reduce" : "preserve"
+    },
+    preservation: {
+      mismatch: preservationMismatch,
+      existingEffects: preservationMismatch ? "preserve_unless_explicit_replace" : "preserve"
     }
   };
 }
@@ -463,8 +477,12 @@ export function refreshSequenceRevisionObjectiveFromPracticalValidation({
   const failures = collectValidationFailures(practicalValidation);
   if (!failures.length) return finalizeSequenceArtifact(base);
   const primaryFailure = failures[0];
+  const preservationFailures = failures.filter((row) => isPreservationFailure(row));
   const failureText = str(primaryFailure.detail || primaryFailure.kind || "highest-priority validation failure");
   const currentPrompt = str(sequenceArtisticGoal?.evaluationLens?.comparisonQuestions?.[0]);
+  const executionObjective = preservationFailures.length
+    ? `Revise the next pass to preserve existing effects: ${failureText}. Place new overlapping effects on open layers unless replacement is explicitly authorized.`
+    : `Revise the next pass to resolve: ${failureText}`;
 
   base.scope = {
     ...(isPlainObject(base.scope) ? base.scope : {}),
@@ -481,17 +499,25 @@ export function refreshSequenceRevisionObjectiveFromPracticalValidation({
   };
   base.sequencerDirection = {
     ...(isPlainObject(base.sequencerDirection) ? base.sequencerDirection : {}),
-    executionObjective: `Revise the next pass to resolve: ${failureText}`,
+    executionObjective,
     blockedMoves: uniqueStrings([
       ...arr(base?.sequencerDirection?.blockedMoves),
-      ...failures.map((row) => row.kind)
+      ...failures.map((row) => row.kind),
+      preservationFailures.length ? "overwrite_existing_effects_without_scope" : ""
+    ]),
+    revisionRoles: uniqueStrings([
+      ...arr(base?.sequencerDirection?.revisionRoles),
+      preservationFailures.length ? "preserve_existing_effects" : ""
     ]),
     revisionBatchShape: `${str(base?.ladderLevel || "section")}_pass`
   };
   base.successChecks = uniqueStrings([
     ...arr(base?.successChecks),
     currentPrompt || "",
-    `Validation failure addressed: ${failureText}`
+    `Validation failure addressed: ${failureText}`,
+    preservationFailures.length
+      ? "Existing sequence effects remain present on their original layers unless replacement is explicitly authorized."
+      : ""
   ]);
   return finalizeSequenceArtifact(base);
 }

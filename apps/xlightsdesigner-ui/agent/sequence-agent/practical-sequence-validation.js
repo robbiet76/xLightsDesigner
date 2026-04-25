@@ -21,6 +21,17 @@ function summarizeChecks(checks = []) {
   };
 }
 
+function summarizePreservationChecks(checks = []) {
+  const rows = arr(checks).filter((row) => str(row?.kind) === "effect-preservation");
+  const failedRows = rows.filter((row) => row?.ok === false);
+  return {
+    total: rows.length,
+    passed: rows.filter((row) => row?.ok === true).length,
+    failed: failedRows.length,
+    failedTargets: failedRows.map((row) => str(row?.target)).filter(Boolean).slice(0, 8)
+  };
+}
+
 function compactFailures(checks = [], limit = 8) {
   return arr(checks)
     .filter((row) => row?.ok === false)
@@ -461,6 +472,7 @@ export function buildPracticalSequenceValidation({
     : {};
   const metadataAssignments = arr(meta?.metadataAssignments);
   const readbackChecks = summarizeChecks(verification?.checks);
+  const preservationChecks = summarizePreservationChecks(verification?.checks);
   const designChecks = summarizeChecks(verification?.designChecks);
   const metadataCoverage = summarizeObservedTargetMetadata(designAlignment?.observedTargets, metadataAssignments);
   const planQuality = summarizePlanQuality(planHandoff);
@@ -605,6 +617,7 @@ export function buildPracticalSequenceValidation({
       revisionAdvanced: verification?.revisionAdvanced === true,
       expectedMutationsPresent: verification?.expectedMutationsPresent === true,
       readbackChecks,
+      preservationChecks,
       designChecks,
       metadataCoverage: metadataCoverage.counts,
       planQuality,

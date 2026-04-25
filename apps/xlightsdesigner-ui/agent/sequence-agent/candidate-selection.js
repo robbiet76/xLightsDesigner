@@ -218,6 +218,12 @@ export function buildCandidateSelectionV1({
                       separation: str(selectionContext.changeBias.layering.separation),
                       density: str(selectionContext.changeBias.layering.density)
                     }
+                  : null,
+                preservation: selectionContext.changeBias.preservation && typeof selectionContext.changeBias.preservation === 'object'
+                  ? {
+                      mismatch: Boolean(selectionContext.changeBias.preservation.mismatch),
+                      existingEffects: str(selectionContext.changeBias.preservation.existingEffects)
+                    }
                   : null
               }
             : null

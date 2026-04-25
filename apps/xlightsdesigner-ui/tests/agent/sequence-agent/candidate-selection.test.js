@@ -154,6 +154,10 @@ test("candidate selection prefers candidates aligned to structured mismatch bias
           mismatch: true,
           density: "reduce",
           separation: "increase"
+        },
+        preservation: {
+          mismatch: true,
+          existingEffects: "preserve_unless_explicit_replace"
         }
       }
     },
@@ -168,4 +172,5 @@ test("candidate selection prefers candidates aligned to structured mismatch bias
   assert.equal(out.selectionContext.changeBias.composition.targetShape, "narrow_focus");
   assert.equal(out.selectionContext.changeBias.progression.temporalVariation, "increase");
   assert.equal(out.selectionContext.changeBias.layering.density, "reduce");
+  assert.equal(out.selectionContext.changeBias.preservation.existingEffects, "preserve_unless_explicit_replace");
 });
