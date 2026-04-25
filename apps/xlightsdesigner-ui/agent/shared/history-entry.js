@@ -23,6 +23,9 @@ export function buildArtifactRefs({
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null
 } = {}) {
+  const compactRefs = planHandoff?.metadata?.artifactRefs && typeof planHandoff.metadata.artifactRefs === "object"
+    ? planHandoff.metadata.artifactRefs
+    : {};
   const revisionDelta = planHandoff?.metadata?.revisionDelta && typeof planHandoff.metadata.revisionDelta === "object"
     ? planHandoff.metadata.revisionDelta
     : null;
@@ -46,9 +49,9 @@ export function buildArtifactRefs({
     renderCritiqueContextId: ensureString(renderCritiqueContext?.artifactId, null),
     sequenceArtisticGoalId: ensureString(sequenceArtisticGoal?.artifactId, null),
     sequenceRevisionObjectiveId: ensureString(sequenceRevisionObjective?.artifactId, null),
-    revisionDeltaId: ensureString(revisionDelta?.artifactId, null),
-    revisionRetryPressureId: ensureString(revisionRetryPressure?.artifactId, null),
-    revisionFeedbackId: ensureString(revisionFeedback?.artifactId, null)
+    revisionDeltaId: ensureString(compactRefs?.revisionDeltaRef || revisionDelta?.artifactId, null),
+    revisionRetryPressureId: ensureString(compactRefs?.revisionRetryPressureRef || revisionRetryPressure?.artifactId, null),
+    revisionFeedbackId: ensureString(compactRefs?.revisionFeedbackRef || revisionFeedback?.artifactId, null)
   };
 }
 
@@ -70,6 +73,9 @@ export function buildHistorySnapshotSummary({
   const warnings = compactList(planHandoff?.warnings, 6);
   const targets = compactList(planHandoff?.targetIds, 8);
   const selectedSections = compactList(planHandoff?.selectedSections, 8);
+  const generativeSummary = planHandoff?.metadata?.generativeSummary && typeof planHandoff.metadata.generativeSummary === "object"
+    ? planHandoff.metadata.generativeSummary
+    : null;
   const revisionDelta = planHandoff?.metadata?.revisionDelta && typeof planHandoff.metadata.revisionDelta === "object"
     ? planHandoff.metadata.revisionDelta
     : null;
@@ -84,12 +90,36 @@ export function buildHistorySnapshotSummary({
     reviewStartLevel: ensureString(planHandoff?.metadata?.reviewStartLevel, null),
     sectionScopeKind: ensureString(planHandoff?.metadata?.sectionScopeKind, null)
   };
-  const retrySignals = revisionRetryPressure
+  const retrySignals = generativeSummary
+    ? compactList(generativeSummary?.retry?.signals || generativeSummary?.choice?.retryPressureSignals, 6)
+    : revisionRetryPressure
     ? compactList(revisionRetryPressure?.signals, 6)
     : [];
-  const feedbackStatus = ensureString(revisionFeedback?.status, null);
+  const feedbackStatus = ensureString(generativeSummary?.feedback?.status || revisionFeedback?.status, null);
   const passOutcomeStatus = feedbackStatus
     || (retrySignals.length ? "retry_pressure" : "stable");
+  const oscillatingCandidates = generativeSummary
+    ? compactList(generativeSummary?.retry?.oscillatingCandidateIds, 6)
+    : compactList(revisionRetryPressure?.oscillation?.candidateIds, 6);
+  const rejectionReasons = generativeSummary
+    ? compactList(generativeSummary?.feedback?.rejectionReasons, 6)
+    : compactList(revisionFeedback?.rejectionReasons, 6);
+  const executionObjective = ensureString(
+    generativeSummary?.feedback?.executionObjective || revisionFeedback?.nextDirection?.executionObjective,
+    null
+  );
+  const currentEffects = generativeSummary
+    ? compactList(generativeSummary?.delta?.currentEffectNames, 6)
+    : compactList(revisionDelta?.current?.effectNames, 6);
+  const currentTargets = generativeSummary
+    ? compactList(generativeSummary?.delta?.currentTargetIds, 6)
+    : compactList(revisionDelta?.current?.targetIds, 6);
+  const introducedEffects = generativeSummary
+    ? compactList(generativeSummary?.delta?.introducedEffectNames, 6)
+    : compactList(revisionDelta?.introduced?.effectNames, 6);
+  const introducedTargets = generativeSummary
+    ? compactList(generativeSummary?.delta?.introducedTargetIds, 6)
+    : compactList(revisionDelta?.introduced?.targetIds, 6);
   return {
     designSummary: {
       title: ensureString(creativeBrief?.title, "Design snapshot"),
@@ -107,24 +137,27 @@ export function buildHistorySnapshotSummary({
         hasRetryPressure: retrySignals.length > 0
       },
       retryPressure: revisionRetryPressure
+        || generativeSummary?.retry
         ? {
             signals: retrySignals,
-            oscillatingCandidates: compactList(revisionRetryPressure?.oscillation?.candidateIds, 6)
+            oscillatingCandidates
           }
         : null,
       revisionFeedback: revisionFeedback
+        || generativeSummary?.feedback
         ? {
             status: feedbackStatus,
-            rejectionReasons: compactList(revisionFeedback?.rejectionReasons, 6),
-            executionObjective: ensureString(revisionFeedback?.nextDirection?.executionObjective, null)
+            rejectionReasons,
+            executionObjective
           }
         : null,
       revisionDelta: revisionDelta
+        || generativeSummary?.delta
         ? {
-            currentEffects: compactList(revisionDelta?.current?.effectNames, 6),
-            currentTargets: compactList(revisionDelta?.current?.targetIds, 6),
-            introducedEffects: compactList(revisionDelta?.introduced?.effectNames, 6),
-            introducedTargets: compactList(revisionDelta?.introduced?.targetIds, 6)
+            currentEffects,
+            currentTargets,
+            introducedEffects,
+            introducedTargets
           }
         : null
     },
@@ -202,8 +235,7 @@ export function buildHistoryEntry({
       renderCritiqueContextId: ensureString(artifactRefs?.renderCritiqueContextId, null),
       sequenceArtisticGoalId: ensureString(artifactRefs?.sequenceArtisticGoalId, null),
       sequenceRevisionObjectiveId: ensureString(artifactRefs?.sequenceRevisionObjectiveId, null),
-      revisionDeltaId: ensureString(artifactRefs?.revisionDeltaId, null)
-      ,
+      revisionDeltaId: ensureString(artifactRefs?.revisionDeltaId, null),
       revisionRetryPressureId: ensureString(artifactRefs?.revisionRetryPressureId, null),
       revisionFeedbackId: ensureString(artifactRefs?.revisionFeedbackId, null)
     },

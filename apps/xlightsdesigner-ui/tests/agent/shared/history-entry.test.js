@@ -51,6 +51,28 @@ test("buildArtifactRefs captures artifact ids only", () => {
   });
 });
 
+test("buildArtifactRefs prefers compact plan metadata refs", () => {
+  const refs = buildArtifactRefs({
+    planHandoff: {
+      artifactId: "plan-1",
+      metadata: {
+        artifactRefs: {
+          revisionDeltaRef: "revision-delta-compact",
+          revisionRetryPressureRef: "revision-retry-compact",
+          revisionFeedbackRef: "revision-feedback-compact"
+        },
+        revisionDelta: { artifactId: "revision-delta-expanded" },
+        revisionRetryPressure: { artifactId: "revision-retry-expanded" },
+        revisionFeedback: { artifactId: "revision-feedback-expanded" }
+      }
+    }
+  });
+
+  assert.equal(refs.revisionDeltaId, "revision-delta-compact");
+  assert.equal(refs.revisionRetryPressureId, "revision-retry-compact");
+  assert.equal(refs.revisionFeedbackId, "revision-feedback-compact");
+});
+
 test("buildHistorySnapshotSummary compacts current design and sequence state", () => {
   const summary = buildHistorySnapshotSummary({
     creativeBrief: {
@@ -130,6 +152,76 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
   assert.equal(summary.applySummary.commandCount, 5);
   assert.equal(summary.applySummary.metadataAssignmentCount, 7);
   assert.equal(summary.verificationSummary.ok, true);
+});
+
+test("buildHistorySnapshotSummary prefers compact generative summary", () => {
+  const summary = buildHistorySnapshotSummary({
+    creativeBrief: {
+      title: "Compact chorus",
+      goals: ["Use compact fields"]
+    },
+    proposalBundle: {
+      proposalLines: ["Chorus / Snowman / central reveal"]
+    },
+    planHandoff: {
+      targetIds: ["Snowman"],
+      selectedSections: ["Chorus 1"],
+      metadata: {
+        requestScopeMode: "section_target_refinement",
+        reviewStartLevel: "section",
+        sectionScopeKind: "timing_track_windows",
+        generativeSummary: {
+          artifactType: "plan_generative_summary_v1",
+          retry: {
+            signals: ["compact_retry"],
+            oscillatingCandidateIds: ["candidate-compact"]
+          },
+          feedback: {
+            status: "revise_required",
+            rejectionReasons: ["compact_reason"],
+            executionObjective: "Use compact objective."
+          },
+          delta: {
+            currentEffectNames: ["Color Wash"],
+            currentTargetIds: ["Snowman"],
+            introducedEffectNames: ["Color Wash"],
+            introducedTargetIds: ["Snowman"]
+          }
+        },
+        revisionRetryPressure: {
+          signals: ["expanded_retry"],
+          oscillation: {
+            candidateIds: ["candidate-expanded"]
+          }
+        },
+        revisionFeedback: {
+          status: "expanded_status",
+          rejectionReasons: ["expanded_reason"],
+          nextDirection: {
+            executionObjective: "Expanded objective."
+          }
+        },
+        revisionDelta: {
+          current: {
+            effectNames: ["Shimmer"],
+            targetIds: ["MegaTree"]
+          },
+          introduced: {
+            effectNames: ["Shimmer"],
+            targetIds: ["MegaTree"]
+          }
+        }
+      }
+    }
+  });
+
+  assert.equal(summary.sequenceSummary.passOutcome.status, "revise_required");
+  assert.deepEqual(summary.sequenceSummary.retryPressure.signals, ["compact_retry"]);
+  assert.deepEqual(summary.sequenceSummary.retryPressure.oscillatingCandidates, ["candidate-compact"]);
+  assert.deepEqual(summary.sequenceSummary.revisionFeedback.rejectionReasons, ["compact_reason"]);
+  assert.equal(summary.sequenceSummary.revisionFeedback.executionObjective, "Use compact objective.");
+  assert.deepEqual(summary.sequenceSummary.revisionDelta.currentEffects, ["Color Wash"]);
+  assert.deepEqual(summary.sequenceSummary.revisionDelta.currentTargets, ["Snowman"]);
 });
 
 test("buildHistoryEntry produces deterministic history ids from entry content", () => {
