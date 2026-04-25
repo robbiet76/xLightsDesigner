@@ -8,6 +8,33 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+function arr(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+export function addRevisionFeedbackToProposalLines(lines = [], revisionFeedback = null) {
+  const safeLines = arr(lines).map((line) => str(line)).filter(Boolean);
+  const feedback = revisionFeedback && typeof revisionFeedback === "object" ? revisionFeedback : null;
+  const direction = feedback?.nextDirection && typeof feedback.nextDirection === "object" ? feedback.nextDirection : {};
+  const roles = new Set(arr(direction.revisionRoles).map((row) => str(row)));
+  const preservationBias = direction?.changeBias?.preservation && typeof direction.changeBias.preservation === "object"
+    ? direction.changeBias.preservation
+    : null;
+  const rejectionText = arr(feedback?.rejectionReasons).map((row) => str(row)).join(" ");
+  const needsPreservationNote = (
+    roles.has("preserve_existing_effects") ||
+    preservationBias?.mismatch === true ||
+    /original layer|preserved effects|preservation|overwrite existing|existing effects/i.test(rejectionText)
+  );
+  if (!needsPreservationNote || !safeLines.length) return safeLines;
+  const note = "preserve existing overlapping effects on their original layers and place new overlaps on open layers unless replacement is explicitly authorized";
+  return safeLines.map((line) => (
+    /preserve existing overlapping effects|open layers unless replacement/i.test(line)
+      ? line
+      : `${line}; ${note}`
+  ));
+}
+
 export function createProposalGenerationRuntime(deps = {}) {
   const {
     state,
@@ -629,7 +656,10 @@ export function createProposalGenerationRuntime(deps = {}) {
         render();
         return;
       }
-      const executionLines = Array.isArray(sequencerPlan?.executionLines) ? sequencerPlan.executionLines : proposalSeedLines;
+      const executionLines = addRevisionFeedbackToProposalLines(
+        Array.isArray(sequencerPlan?.executionLines) ? sequencerPlan.executionLines : proposalSeedLines,
+        revisionFeedback
+      );
       state.proposed = mergeCreativeBriefIntoProposal(executionLines);
       state.agentPlan = {
         createdAt: new Date().toISOString(),

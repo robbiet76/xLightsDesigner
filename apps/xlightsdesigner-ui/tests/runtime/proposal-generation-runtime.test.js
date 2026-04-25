@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createProposalGenerationRuntime } from "../../runtime/proposal-generation-runtime.js";
+import {
+  addRevisionFeedbackToProposalLines,
+  createProposalGenerationRuntime
+} from "../../runtime/proposal-generation-runtime.js";
 
 function buildState() {
   return {
@@ -253,4 +256,119 @@ test("sequence-agent automation proposal honors explicit selected metadata tags"
   assert.deepEqual(state.agentPlan.handoff.metadata.metadataAssignments[0].targetId, "MegaTree");
   assert.equal(persisted, true);
   assert.equal(rendered, true);
+});
+
+test("proposal generation annotates next proposal lines with preservation correction feedback", async () => {
+  const state = buildState();
+  state.flags.planOnlyMode = true;
+  state.health.capabilityCommands = [];
+  state.sequenceSettings = {};
+  state.displayElements = [{ id: "MegaTree", name: "MegaTree", type: "model" }];
+  state.models = [{ id: "MegaTree", name: "MegaTree", type: "Model" }];
+  state.submodels = [];
+  state.sceneGraph = { groupsById: {}, submodelsById: {} };
+  state.sequenceAgentRuntime = {
+    revisionFeedback: {
+      artifactType: "revision_feedback_v1",
+      status: "revise_required",
+      rejectionReasons: ["original layer 0 missing preserved effects"],
+      nextDirection: {
+        revisionRoles: ["preserve_existing_effects"],
+        changeBias: {
+          preservation: {
+            mismatch: true,
+            existingEffects: "preserve_unless_explicit_replace"
+          }
+        }
+      }
+    }
+  };
+
+  const runtime = createProposalGenerationRuntime({
+    state,
+    buildSequenceSession: () => ({
+      canGenerateSequence: true,
+      planOnlyMode: true,
+      xlightsConnected: false
+    }),
+    beginOrchestrationRun: () => ({ id: "orch-preserve" }),
+    executeDirectSequenceRequestOrchestration: () => ({
+      ok: true,
+      proposalLines: ["Chorus 1 / MegaTree / add Color Wash"],
+      guidedQuestions: [],
+      proposalBundle: {
+        bundleType: "proposal_bundle_v1",
+        scope: { sections: ["Chorus 1"], targetIds: ["MegaTree"], tagNames: ["lead"] },
+        lifecycle: { status: "draft" }
+      },
+      intentHandoff: {
+        artifactType: "intent_handoff_v1",
+        goal: "Correct preservation issue.",
+        mode: "revise",
+        scope: { sections: ["Chorus 1"], targetIds: ["MegaTree"], tagNames: ["lead"] }
+      }
+    }),
+    applyDesignerDraftSuccessState: (targetState, payload) => {
+      targetState.creative.proposalBundle = payload.proposalBundle;
+    },
+    hydrateIntentHandoffExecutionStrategy: (intent) => intent,
+    setAgentHandoff: () => ({ ok: true, errors: [] }),
+    buildSequenceAgentInput: (input) => ({ ...input, ok: true }),
+    buildCurrentSequenceContextFromReadback: async () => ({
+      artifactType: "current_sequence_context_v1",
+      artifactId: "current_sequence_context_v1-preserve",
+      summary: { timingTrackCount: 1, effectCount: 1 }
+    }),
+    validateSequenceAgentContractGate: () => ({ ok: true, report: {} }),
+    buildSequenceAgentPlan: () => ({
+      agentRole: "sequence_agent",
+      contractVersion: "1.0",
+      planId: "plan-preserve",
+      summary: "Sequence plan",
+      estimatedImpact: 1,
+      warnings: [],
+      commands: [],
+      baseRevision: "rev-1",
+      validationReady: true,
+      executionLines: ["Chorus 1 / MegaTree / add Color Wash"],
+      metadata: { scope: { sections: ["Chorus 1"], targetIds: ["MegaTree"], tagNames: ["lead"] } }
+    }),
+    buildArtifactId: (type) => `${type}-preserve`,
+    validateCommandGraph: () => ({ ok: true, nodeCount: 0, errors: [] }),
+    mergeCreativeBriefIntoProposal: (lines) => lines,
+    normalizeMetadataSelectedTags: (values) => values,
+    normalizeMetadataSelectionIds: (values) => values
+  });
+
+  await runtime.generateProposal("Correct preservation issue.", {
+    requestedRole: "sequence_agent",
+    selectedSections: ["Chorus 1"],
+    selectedTagNames: ["lead"]
+  });
+
+  assert.match(state.proposed[0], /preserve existing overlapping effects on their original layers/i);
+  assert.match(state.proposed[0], /open layers unless replacement is explicitly authorized/i);
+  assert.match(state.agentPlan.executionLines[0], /preserve existing overlapping effects/i);
+});
+
+test("addRevisionFeedbackToProposalLines is idempotent for preservation notes", () => {
+  const out = addRevisionFeedbackToProposalLines(
+    ["Chorus / Star / add Color Wash"],
+    {
+      rejectionReasons: ["original layer 0 missing preserved effects"],
+      nextDirection: {
+        revisionRoles: ["preserve_existing_effects"],
+        changeBias: {
+          preservation: { mismatch: true }
+        }
+      }
+    }
+  );
+  const second = addRevisionFeedbackToProposalLines(out, {
+    nextDirection: { revisionRoles: ["preserve_existing_effects"] }
+  });
+
+  assert.equal(out.length, 1);
+  assert.match(out[0], /preserve existing overlapping effects/);
+  assert.deepEqual(second, out);
 });
