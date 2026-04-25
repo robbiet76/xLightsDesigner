@@ -94,6 +94,7 @@ function parseArgs(argv = []) {
     appRoot: DEFAULT_APP_ROOT,
     endpoint: DEFAULT_ENDPOINT,
     selectedSections: [],
+    selectedTimingTrackName: '',
     selectedTagNames: [],
     selectedTargetIds: []
   };
@@ -104,6 +105,7 @@ function parseArgs(argv = []) {
     else if (token === '--app-root') out.appRoot = path.resolve(str(argv[++i] || out.appRoot));
     else if (token === '--endpoint') out.endpoint = str(argv[++i] || out.endpoint);
     else if (token === '--selected-section') out.selectedSections.push(str(argv[++i] || ''));
+    else if (token === '--timing-track-name' || token === '--section-timing-track-name') out.selectedTimingTrackName = str(argv[++i] || '');
     else if (token === '--selected-tag') out.selectedTagNames.push(str(argv[++i] || ''));
     else if (token === '--selected-target') out.selectedTargetIds.push(str(argv[++i] || ''));
     else throw new Error(`Unknown argument: ${token}`);
@@ -125,6 +127,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
     appRoot: path.resolve(str(options.appRoot || DEFAULT_APP_ROOT)),
     endpoint: str(options.endpoint || DEFAULT_ENDPOINT),
     selectedSections: Array.isArray(options.selectedSections) ? options.selectedSections.map((row) => str(row)).filter(Boolean) : [],
+    selectedTimingTrackName: str(options.selectedTimingTrackName || options.timingTrackName || options.sectionTimingTrackName),
     selectedTagNames: Array.isArray(options.selectedTagNames) ? options.selectedTagNames.map((row) => str(row)).filter(Boolean) : [],
     selectedTargetIds: Array.isArray(options.selectedTargetIds) ? options.selectedTargetIds.map((row) => str(row)).filter(Boolean) : []
   };
@@ -158,6 +161,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
     sequenceRevision: str(revision?.data?.revision || snapshot.sequencePathInput || 'unknown'),
     promptText: args.prompt,
     selectedSections: args.selectedSections,
+    selectedTimingTrackName: args.selectedTimingTrackName,
     selectedTagNames: args.selectedTagNames,
     selectedTargetIds: args.selectedTargetIds,
     analysisHandoff,

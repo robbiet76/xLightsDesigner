@@ -113,6 +113,7 @@ test("native direct proposal writes intent and proposal artifacts from project c
       endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
       prompt: "Put an On effect on MegaTree during Chorus 1.",
       selectedSections: ["Chorus 1"],
+      selectedTimingTrackName: "User Structure",
       selectedTargetIds: ["MegaTree"]
     },
     {
@@ -167,6 +168,9 @@ test("native direct proposal writes intent and proposal artifacts from project c
   assert.equal(proposal.artifactType, "proposal_bundle_v1");
   assert.equal(intent.artifactType, "intent_handoff_v1");
   assert.deepEqual(proposal.scope.sections, ["Chorus 1"]);
+  assert.equal(proposal.executionPlan.timingTrackName, "User Structure");
+  assert.equal(proposal.executionPlan.shouldUseFullSongStructureTrack, false);
+  assert.equal(proposal.executionPlan.sectionPlans[0].sectionTimingTrackName, "User Structure");
   assert.deepEqual(intent.scope.targetIds, ["MegaTree"]);
   assert.equal(proposal.guidedQuestions.length, 0);
   assert.match(proposal.proposalLines.join("\n"), /On effect/i);

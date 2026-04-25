@@ -24,6 +24,8 @@ function usage() {
     '  --show-dir <path>              Linked xLights show folder. Defaults to /Users/robterry/Desktop/Show.',
     '  --target-ids <ids>             Exact xLights target ids. Defaults to Star.',
     '  --selected-tags <tags>         Selected metadata tags. Defaults to lead.',
+    '  --section-label <label>        Optional timing-track section label to scope generation.',
+    '  --timing-track-name <name>     Optional timing track name to disambiguate section labels.',
     '  --tag-only                    Seed expected target metadata, then generate from tags without target text.',
     '  --matrix                       Run the default metadata handoff scenario matrix.',
     '  --matrix-file <path>           Run scenarios from a JSON matrix file.',
@@ -45,6 +47,8 @@ function parseArgs(argv = []) {
     showDir: DEFAULT_SHOW_DIR,
     targetIds: DEFAULT_TARGET_IDS,
     selectedTags: DEFAULT_SELECTED_TAGS,
+    sectionLabel: '',
+    timingTrackName: '',
     durationMs: 30000,
     frameMs: 50,
     timeoutMs: 180000,
@@ -73,6 +77,8 @@ function parseArgs(argv = []) {
     } else if (token === '--show-dir') args.showDir = next();
     else if (token === '--target-ids') args.targetIds = next();
     else if (token === '--selected-tags') args.selectedTags = next();
+    else if (token === '--section-label') args.sectionLabel = next();
+    else if (token === '--timing-track-name' || token === '--section-timing-track-name') args.timingTrackName = next();
     else if (token === '--tag-only') args.tagOnly = true;
     else if (token === '--matrix') args.matrix = true;
     else if (token === '--matrix-file') {
@@ -115,6 +121,8 @@ function normalizeScenario(row = {}, index = 0) {
     name: str(row?.name) || `scenario-${index + 1}`,
     targetIds,
     selectedTags,
+    sectionLabel: str(row?.sectionLabel || row?.selectedSection || row?.section),
+    timingTrackName: str(row?.timingTrackName || row?.sectionTimingTrackName),
     tagOnly: row?.tagOnly === true
   };
 }
@@ -261,6 +269,10 @@ function buildValidationArgs(args, showDir, scenario) {
     '--timeout-ms',
     String(args.timeoutMs)
   ];
+  const sectionLabel = str(scenario.sectionLabel || args.sectionLabel);
+  const timingTrackName = str(scenario.timingTrackName || args.timingTrackName);
+  if (sectionLabel) validationArgs.push('--section-label', sectionLabel);
+  if (timingTrackName) validationArgs.push('--timing-track-name', timingTrackName);
   if (scenario.tagOnly || args.tagOnly) validationArgs.push('--tag-only');
   if (args.applyReview) validationArgs.push('--apply-review');
   if (args.applyReview && args.renderAfterApply) validationArgs.push('--render-after-apply');

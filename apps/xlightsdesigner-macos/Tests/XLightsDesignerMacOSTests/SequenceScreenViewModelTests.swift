@@ -11,13 +11,17 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
     private(set) var prompt = ""
     private(set) var projectFilePath = ""
     private(set) var selectedTagNames: [String] = []
+    private(set) var selectedSections: [String] = []
+    private(set) var timingTrackName = ""
     private(set) var callCount = 0
 
-    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String]) async throws -> SequenceProposalGenerationResult {
+    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String], selectedSections: [String], timingTrackName: String) async throws -> SequenceProposalGenerationResult {
         callCount += 1
         self.projectFilePath = projectFilePath
         self.prompt = prompt
         self.selectedTagNames = selectedTagNames
+        self.selectedSections = selectedSections
+        self.timingTrackName = timingTrackName
         return SequenceProposalGenerationResult(
             summary: "Generated proposal.",
             proposalArtifactID: "proposal-1",
@@ -57,10 +61,16 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
         proposalService: proposalService
     )
 
-    model.generateProposalFromDesignIntent(selectedTagNames: ["lead", "centerpiece"])
+    model.generateProposalFromDesignIntent(
+        selectedTagNames: ["lead", "centerpiece"],
+        selectedSections: ["Chorus 1"],
+        timingTrackName: "User Timing"
+    )
     try await Task.sleep(for: .milliseconds(120))
 
     #expect(proposalService.selectedTagNames == ["lead", "centerpiece"])
+    #expect(proposalService.selectedSections == ["Chorus 1"])
+    #expect(proposalService.timingTrackName == "User Timing")
     #expect(model.isGeneratingProposal == false)
     #expect(model.transientBanner?.state == .ready)
 }

@@ -46,18 +46,22 @@ function buildUserExecutionStrategy({
   targetIds = [],
   intentSummary = "",
   effectHints = [],
-  translationIntent = null
+  translationIntent = null,
+  timingTrackName = ""
 } = {}) {
   const normalizedSections = arr(sections).map((row) => str(row)).filter(Boolean);
   const normalizedTargets = arr(targetIds).map((row) => str(row)).filter(Boolean);
   const normalizedIntentSummary = str(intentSummary) || "User-directed sequence change.";
   const normalizedEffectHints = mergeUniqueStrings(effectHints);
+  const normalizedTimingTrackName = str(timingTrackName);
   const passScope = normalizedSections.length > 1 ? "multi_section" : "single_section";
   const sectionPlans = (normalizedSections.length ? normalizedSections : ["General"]).map((section) => ({
     designId,
     designRevision: Number.isInteger(Number(designRevision)) ? Number(designRevision) : 0,
     designAuthor: "user",
     section,
+    timingTrackName: normalizedTimingTrackName,
+    sectionTimingTrackName: normalizedTimingTrackName,
     energy: "",
     density: "",
     intentSummary: normalizedIntentSummary,
@@ -68,7 +72,9 @@ function buildUserExecutionStrategy({
     passScope,
     implementationMode: passScope === "multi_section" ? "section_pass" : "single_section_pass",
     routePreference: "designer_to_sequence_agent",
-    shouldUseFullSongStructureTrack: normalizedSections.length > 0,
+    shouldUseFullSongStructureTrack: normalizedSections.length > 0 && !normalizedTimingTrackName,
+    timingTrackName: normalizedTimingTrackName,
+    sectionTimingTrackName: normalizedTimingTrackName,
     sectionCount: normalizedSections.length,
     targetCount: normalizedTargets.length,
     primarySections: normalizedSections,
@@ -292,6 +298,7 @@ export function executeDirectSequenceRequestOrchestration({
   promptText = "",
   designIdOverride = "",
   selectedSections = [],
+  selectedTimingTrackName = "",
   selectedTagNames = [],
   selectedTargetIds = [],
   analysisHandoff = null,
@@ -312,6 +319,7 @@ export function executeDirectSequenceRequestOrchestration({
         promptText: clause.promptText,
         designIdOverride,
         selectedSections: clause.selectedSections,
+        selectedTimingTrackName,
         selectedTagNames,
         selectedTargetIds,
         analysisHandoff,
@@ -331,11 +339,15 @@ export function executeDirectSequenceRequestOrchestration({
     const mergedSections = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.intentHandoff?.scope?.sections)));
     const mergedTargets = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.intentHandoff?.scope?.targetIds)));
     const mergedTags = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.intentHandoff?.scope?.tagNames)));
+    const mergedTimingTrackName = str(selectedTimingTrackName)
+      || str(clauseResults.find((row) => str(row?.proposalBundle?.executionPlan?.timingTrackName))?.proposalBundle?.executionPlan?.timingTrackName);
     const mergedExecutionPlan = {
       passScope: mergedSections.length > 1 ? "multi_section" : "single_section",
       implementationMode: "section_pass",
       routePreference: "designer_to_sequence_agent",
-      shouldUseFullSongStructureTrack: mergedSections.length > 0,
+      shouldUseFullSongStructureTrack: mergedSections.length > 0 && !mergedTimingTrackName,
+      timingTrackName: mergedTimingTrackName,
+      sectionTimingTrackName: mergedTimingTrackName,
       sectionCount: mergedSections.length,
       targetCount: mergedTargets.length,
       primarySections: mergedSections,
@@ -561,7 +573,8 @@ export function executeDirectSequenceRequestOrchestration({
       targetIds: resolvedTargetIds,
       intentSummary: str(promptText),
       effectHints: executionEffectHints,
-      translationIntent
+      translationIntent,
+      timingTrackName: selectedTimingTrackName
     })
   });
 

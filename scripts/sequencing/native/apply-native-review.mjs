@@ -850,8 +850,15 @@ async function applyExecutionStrategyFallback({ proposalBundle = {}, trackRecord
 }
 
 function buildFallbackCommandsFromProposal({ proposalBundle = {}, trackRecord = {} } = {}) {
+  const executionPlan = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === 'object'
+    ? proposalBundle.executionPlan
+    : {};
+  const fallbackTrackName = str(executionPlan.sectionTimingTrackName || executionPlan.timingTrackName || 'XD: Song Structure') || 'XD: Song Structure';
   const structureTrack = Array.isArray(trackRecord?.timingTracks)
-    ? trackRecord.timingTracks.find((row) => str(row?.name) === 'XD: Song Structure')
+    ? (
+        trackRecord.timingTracks.find((row) => str(row?.name) === fallbackTrackName)
+        || trackRecord.timingTracks.find((row) => str(row?.name) === 'XD: Song Structure')
+      )
     : null;
   const marks = Array.isArray(structureTrack?.segments)
     ? structureTrack.segments.map((row) => ({
@@ -861,21 +868,24 @@ function buildFallbackCommandsFromProposal({ proposalBundle = {}, trackRecord = 
       })).filter((row) => Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs >= row.startMs)
     : [];
   const placements = scopedProposalPlacements(proposalBundle);
+  const effectivePlacements = placements.length
+    ? placements
+    : synthesizeFallbackPlacementsFromSectionPlans({ proposalBundle, marks });
   const commands = [
     {
-      id: 'timing.track.create:xd-song-structure',
+      id: `timing.track.create:${fallbackTrackName}`,
       cmd: 'timing.createTrack',
-      params: { trackName: 'XD: Song Structure', replaceIfExists: true }
+      params: { trackName: fallbackTrackName, replaceIfExists: true }
     },
     {
-      id: 'timing.marks.insert:xd-song-structure',
-      dependsOn: ['timing.track.create:xd-song-structure'],
+      id: `timing.marks.insert:${fallbackTrackName}`,
+      dependsOn: [`timing.track.create:${fallbackTrackName}`],
       cmd: 'timing.insertMarks',
-      params: { trackName: 'XD: Song Structure', marks }
+      params: { trackName: fallbackTrackName, marks }
     }
   ];
   let placementIndex = 0;
-  for (const row of placements) {
+  for (const row of effectivePlacements) {
     const targetId = str(row?.targetId);
     const effectName = str(row?.effectName);
     const startMs = Number(row?.startMs);
@@ -887,7 +897,7 @@ function buildFallbackCommandsFromProposal({ proposalBundle = {}, trackRecord = 
     placementIndex += 1;
     commands.push({
       id: `fallback-placement-${placementIndex}`,
-      dependsOn: ['timing.marks.insert:xd-song-structure'],
+      dependsOn: [`timing.marks.insert:${fallbackTrackName}`],
       cmd: 'effects.create',
       params: {
         modelName: targetId,
@@ -901,6 +911,39 @@ function buildFallbackCommandsFromProposal({ proposalBundle = {}, trackRecord = 
     });
   }
   return commands;
+}
+
+function synthesizeFallbackPlacementsFromSectionPlans({ proposalBundle = {}, marks = [] } = {}) {
+  const executionPlan = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === 'object'
+    ? proposalBundle.executionPlan
+    : {};
+  const sectionPlans = Array.isArray(executionPlan.sectionPlans) ? executionPlan.sectionPlans : [];
+  const scopeSections = new Set(
+    (Array.isArray(proposalBundle?.scope?.sections) ? proposalBundle.scope.sections : [])
+      .map((row) => str(row).toLowerCase())
+      .filter(Boolean)
+  );
+  const normalizedMarks = Array.isArray(marks) ? marks : [];
+  const placements = [];
+  for (const plan of sectionPlans) {
+    const section = str(plan?.section || '');
+    if (scopeSections.size && !scopeSections.has(section.toLowerCase())) continue;
+    const mark = normalizedMarks.find((row) => str(row?.label).toLowerCase() === section.toLowerCase())
+      || normalizedMarks[0]
+      || null;
+    if (!mark) continue;
+    for (const targetId of (Array.isArray(plan?.targetIds) ? plan.targetIds : []).map((row) => str(row)).filter(Boolean)) {
+      placements.push({
+        targetId,
+        effectName: 'On',
+        layerIndex: 0,
+        startMs: Number(mark.startMs || 0),
+        endMs: Number(mark.endMs || 0),
+        sourceSectionLabel: section || str(mark.label)
+      });
+    }
+  }
+  return placements;
 }
 
 function validateProposalPlacementTiming({ proposalBundle = {}, trackRecord = {}, placements = [] } = {}) {

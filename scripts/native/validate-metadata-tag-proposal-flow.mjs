@@ -3,7 +3,9 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
 const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || 'http://127.0.0.1:49916';
+const XLIGHTS_API_BASE_URL = process.env.XLD_XLIGHTS_API_URL || 'http://127.0.0.1:49915/xlightsdesigner/api';
 const DEFAULT_VALIDATION_ROOT_NAME = '_xlightsdesigner_validation';
+const DEFAULT_VALIDATION_SECTION_TRACK = 'Validation Section Scope';
 
 function str(value = '') {
   return String(value || '').trim();
@@ -17,7 +19,7 @@ function splitList(value = '') {
 }
 
 function usage() {
-  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
+  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--section-label label] [--timing-track-name name] [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
   process.exit(2);
 }
 
@@ -25,6 +27,8 @@ function parseArgs(argv = []) {
   const out = {
     targetIds: '',
     selectedTags: '',
+    sectionLabel: '',
+    timingTrackName: '',
     rolePreference: 'lead',
     semanticHints: 'centerpiece',
     effectAvoidances: 'Bars',
@@ -42,6 +46,8 @@ function parseArgs(argv = []) {
     const token = str(argv[i]);
     if (token === '--target-ids') out.targetIds = str(argv[++i]);
     else if (token === '--selected-tags') out.selectedTags = str(argv[++i]);
+    else if (token === '--section-label') out.sectionLabel = str(argv[++i]);
+    else if (token === '--timing-track-name' || token === '--section-timing-track-name') out.timingTrackName = str(argv[++i]);
     else if (token === '--role') out.rolePreference = str(argv[++i]);
     else if (token === '--semantic-hints') out.semanticHints = str(argv[++i]);
     else if (token === '--effect-avoidances') out.effectAvoidances = str(argv[++i]);
@@ -82,6 +88,63 @@ async function request(method, path, body = null) {
     throw new Error(`${method} ${path} failed (${response.status}): ${JSON.stringify(parsed)}`);
   }
   return parsed;
+}
+
+async function requestXlightsApi(path, query = {}) {
+  const url = new URL(`${XLIGHTS_API_BASE_URL}${path}`);
+  for (const [key, value] of Object.entries(query || {})) {
+    if (str(value)) url.searchParams.set(key, str(value));
+  }
+  const response = await fetch(url);
+  const text = await response.text();
+  let parsed = null;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    parsed = { ok: false, error: text };
+  }
+  if (!response.ok || parsed?.ok === false) {
+    throw new Error(`GET ${url.toString()} failed (${response.status}): ${JSON.stringify(parsed)}`);
+  }
+  return parsed;
+}
+
+async function requestXlightsPost(path, body = {}) {
+  const response = await fetch(`${XLIGHTS_API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const text = await response.text();
+  let parsed = null;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    parsed = { ok: false, error: text };
+  }
+  if (!response.ok || parsed?.ok === false) {
+    throw new Error(`POST ${path} failed (${response.status}): ${JSON.stringify(parsed)}`);
+  }
+  return parsed;
+}
+
+async function waitForXlightsJob({ jobId = '', timeoutMs = 30000 } = {}) {
+  const started = Date.now();
+  let last = null;
+  while (Date.now() - started < timeoutMs) {
+    last = await requestXlightsApi('/jobs/get', { jobId });
+    const state = str(last?.data?.state).toLowerCase();
+    const result = last?.data?.result && typeof last.data.result === 'object' ? last.data.result : null;
+    if (state === 'completed' || state === 'succeeded') {
+      if (result?.ok === false) throw new Error(`xLights job ${jobId} failed: ${JSON.stringify(result)}`);
+      return result || last;
+    }
+    if (state === 'failed' || result?.ok === false) {
+      throw new Error(`xLights job ${jobId} failed: ${JSON.stringify(last)}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`Timed out waiting for xLights job ${jobId}. Last response: ${JSON.stringify(last)}`);
 }
 
 function arr(value) {
@@ -163,7 +226,85 @@ function findMetadataRow(snapshot = {}, targetId = '', selectedTags = []) {
   }) || null;
 }
 
-function artifactScopeMatches(artifact = null, targetIds = [], selectedTags = []) {
+function normalizeTrackNames(payload = {}) {
+  const tracks = arr(payload?.data?.tracks || payload?.tracks);
+  return tracks
+    .map((row) => typeof row === 'string' ? row : str(row?.name || row?.trackName || row?.label))
+    .map((row) => str(row))
+    .filter(Boolean);
+}
+
+function normalizeTimingMarks(payload = {}) {
+  return arr(payload?.data?.marks || payload?.data?.timingMarks || payload?.marks || payload?.timingMarks)
+    .map((row) => ({
+      label: str(row?.label || row?.name || row?.text),
+      startMs: Number(row?.startMs ?? row?.start ?? row?.timeMs ?? 0),
+      endMs: Number(row?.endMs ?? row?.end ?? row?.timeMs ?? 0)
+    }))
+    .filter((row) => row.label);
+}
+
+async function resolveSectionTimingScope({ sectionLabel = '', timingTrackName = '' } = {}) {
+  const label = str(sectionLabel);
+  if (!label) return null;
+  const normalizedLabel = label.toLowerCase();
+  const tracksPayload = await requestXlightsApi('/timing/tracks');
+  const trackNames = normalizeTrackNames(tracksPayload);
+  if (!trackNames.length) {
+    throw new Error(`Section label "${label}" cannot be resolved because the open sequence has no timing tracks.`);
+  }
+  const requestedTrackName = str(timingTrackName);
+  const candidateTrackNames = requestedTrackName ? [requestedTrackName] : trackNames;
+  if (requestedTrackName && !trackNames.some((name) => name.toLowerCase() === requestedTrackName.toLowerCase())) {
+    throw new Error(`Timing track "${requestedTrackName}" is not present in the open sequence. Available tracks: ${trackNames.join(', ')}`);
+  }
+
+  const matches = [];
+  for (const candidateTrackName of candidateTrackNames) {
+    const actualTrackName = trackNames.find((name) => name.toLowerCase() === candidateTrackName.toLowerCase()) || candidateTrackName;
+    const marksPayload = await requestXlightsApi('/timing/marks', { track: actualTrackName });
+    for (const mark of normalizeTimingMarks(marksPayload)) {
+      if (mark.label.toLowerCase() === normalizedLabel) {
+        matches.push({ trackName: actualTrackName, sectionLabel: mark.label, startMs: mark.startMs, endMs: mark.endMs });
+      }
+    }
+  }
+  if (!matches.length) {
+    const trackText = requestedTrackName ? `timing track "${requestedTrackName}"` : `available timing tracks: ${trackNames.join(', ')}`;
+    throw new Error(`Section label "${label}" was not found in ${trackText}.`);
+  }
+  if (matches.length > 1) {
+    const matchText = matches.map((row) => `${row.trackName}:${row.sectionLabel}@${row.startMs}-${row.endMs}`).join(', ');
+    throw new Error(`Section label "${label}" is ambiguous across timing marks. Pass --timing-track-name to disambiguate. Matches: ${matchText}`);
+  }
+  return matches[0];
+}
+
+async function seedValidationSectionTimingTrack({ sectionLabel = '', timingTrackName = '', durationMs = 30000 } = {}) {
+  const label = str(sectionLabel);
+  if (!label) return null;
+  const trackName = str(timingTrackName) || DEFAULT_VALIDATION_SECTION_TRACK;
+  const duration = Math.max(Number(durationMs) || 30000, 4000);
+  const chorusStart = Math.max(0, Math.floor(duration * 0.67));
+  const marks = [
+    { startMs: 0, endMs: Math.floor(duration * 0.2), label: 'General' },
+    { startMs: Math.floor(duration * 0.2), endMs: Math.floor(duration * 0.42), label: 'Intro' },
+    { startMs: Math.floor(duration * 0.42), endMs: chorusStart, label: 'Verse 1' },
+    { startMs: chorusStart, endMs: duration - 1, label }
+  ];
+  await requestXlightsPost('/timing/ensure-track', { track: trackName, subType: 'variable' });
+  const addMarks = await requestXlightsPost('/timing/add-marks', {
+    track: trackName,
+    subType: 'variable',
+    replaceExisting: true,
+    marks: JSON.stringify(marks)
+  });
+  const jobId = str(addMarks?.data?.jobId);
+  if (jobId) await waitForXlightsJob({ jobId });
+  return { trackName, marks };
+}
+
+function artifactScopeMatches(artifact = null, targetIds = [], selectedTags = [], selectedSections = []) {
   if (!artifact) return false;
   const metadata = artifact.metadata && typeof artifact.metadata === 'object' ? artifact.metadata : {};
   const scope = artifact.scope && typeof artifact.scope === 'object'
@@ -174,12 +315,14 @@ function artifactScopeMatches(artifact = null, targetIds = [], selectedTags = []
   if (!scope) return false;
   const planTargets = new Set(arr(scope.targetIds).map((row) => str(row)));
   const planTags = new Set(arr(scope.tagNames).map((row) => str(row)));
+  const planSections = new Set(arr(scope.sections).map((row) => str(row)));
   const hasTargets = targetIds.every((targetId) => planTargets.has(targetId));
   const hasTags = selectedTags.every((tag) => planTags.has(tag));
-  return hasTargets && hasTags;
+  const hasSections = selectedSections.every((section) => planSections.has(section));
+  return hasTargets && hasTags && hasSections;
 }
 
-function matchingSequencingArtifacts(snapshot = {}, targetIds = [], selectedTags = [], previousArtifactIds = new Set()) {
+function matchingSequencingArtifacts(snapshot = {}, targetIds = [], selectedTags = [], selectedSections = [], previousArtifactIds = new Set()) {
   return [
     snapshot?.latestProposalBundle && typeof snapshot.latestProposalBundle === 'object'
       ? snapshot.latestProposalBundle
@@ -189,48 +332,59 @@ function matchingSequencingArtifacts(snapshot = {}, targetIds = [], selectedTags
       : null
   ].filter((artifact) => {
     const artifactId = str(artifact?.artifactId);
-    return artifactId && !previousArtifactIds.has(artifactId) && artifactScopeMatches(artifact, targetIds, selectedTags);
+    return artifactId && !previousArtifactIds.has(artifactId) && artifactScopeMatches(artifact, targetIds, selectedTags, selectedSections);
   });
 }
 
-function reviewReadyMatches(snapshot = {}, targetIds = [], selectedTags = [], { tagOnly = false } = {}) {
+function reviewReadyMatches(snapshot = {}, targetIds = [], selectedTags = [], selectedSections = [], { tagOnly = false } = {}) {
   const review = snapshot?.pageStates?.review && typeof snapshot.pageStates.review === 'object'
     ? snapshot.pageStates.review
     : {};
   const pendingSummary = str(review.pendingSummary).toLowerCase();
   const includesTargets = tagOnly || targetIds.every((targetId) => pendingSummary.includes(str(targetId).toLowerCase()));
   const includesTags = selectedTags.every((tag) => pendingSummary.includes(str(tag).toLowerCase()));
-  return review.canApply === true && review.isApplying !== true && includesTargets && includesTags;
+  const includesSections = selectedSections.every((section) => pendingSummary.includes(str(section).toLowerCase()));
+  return review.canApply === true && review.isApplying !== true && includesTargets && includesTags && includesSections;
 }
 
-async function waitForProposal({ targetIds = [], selectedTags = [], previousArtifactIds = new Set(), timeoutMs = 30000 } = {}) {
+async function waitForProposal({ targetIds = [], selectedTags = [], selectedSections = [], previousArtifactIds = new Set(), timeoutMs = 30000 } = {}) {
   const start = Date.now();
   let lastSnapshot = null;
   while (Date.now() - start < timeoutMs) {
     lastSnapshot = await request('GET', '/sequencer-validation-snapshot');
-    const matches = matchingSequencingArtifacts(lastSnapshot, targetIds, selectedTags, previousArtifactIds);
+    const matches = matchingSequencingArtifacts(lastSnapshot, targetIds, selectedTags, selectedSections, previousArtifactIds);
     if (matches.length) {
       return { snapshot: lastSnapshot, matches };
     }
     await new Promise((resolve) => setTimeout(resolve, 750));
   }
-  throw new Error(`Timed out waiting for generated plan with targets=${targetIds.join(',')} tags=${selectedTags.join(',')}. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
+  throw new Error(`Timed out waiting for generated plan with targets=${targetIds.join(',')} tags=${selectedTags.join(',')} sections=${selectedSections.join(',')}. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
 }
 
-async function waitForReviewReady({ targetIds = [], selectedTags = [], tagOnly = false, timeoutMs = 30000 } = {}) {
+async function waitForReviewReady({ targetIds = [], selectedTags = [], selectedSections = [], tagOnly = false, timeoutMs = 30000 } = {}) {
   const start = Date.now();
   let lastSnapshot = null;
   while (Date.now() - start < timeoutMs) {
     lastSnapshot = await request('GET', '/sequencer-validation-snapshot');
-    if (reviewReadyMatches(lastSnapshot, targetIds, selectedTags, { tagOnly })) {
+    if (reviewReadyMatches(lastSnapshot, targetIds, selectedTags, selectedSections, { tagOnly })) {
       return lastSnapshot;
     }
     await new Promise((resolve) => setTimeout(resolve, 750));
   }
-  throw new Error(`Timed out waiting for Review to expose matching pending work for targets=${targetIds.join(',')} tags=${selectedTags.join(',')}. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
+  throw new Error(`Timed out waiting for Review to expose matching pending work for targets=${targetIds.join(',')} tags=${selectedTags.join(',')} sections=${selectedSections.join(',')}. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
 }
 
-async function waitForApplyResult({ previousArtifactId = '', timeoutMs = 120000 } = {}) {
+function blockedBannerTexts(snapshot = {}) {
+  const review = snapshot?.pageStates?.review && typeof snapshot.pageStates.review === 'object'
+    ? snapshot.pageStates.review
+    : {};
+  return arr(review.banners)
+    .filter((banner) => str(banner?.state).toLowerCase() === 'blocked')
+    .map((banner) => str(banner?.text))
+    .filter(Boolean);
+}
+
+async function waitForApplyResult({ previousArtifactId = '', expectedSequencePath = '', ignoredBlockedTexts = new Set(), timeoutMs = 120000 } = {}) {
   const start = Date.now();
   let lastSnapshot = null;
   while (Date.now() - start < timeoutMs) {
@@ -239,14 +393,20 @@ async function waitForApplyResult({ previousArtifactId = '', timeoutMs = 120000 
       ? lastSnapshot.latestApplyResult
       : null;
     const latestId = str(latestApplyResult?.artifactId);
-    const review = lastSnapshot?.pageStates?.review && typeof lastSnapshot.pageStates.review === 'object'
-      ? lastSnapshot.pageStates.review
-      : {};
-    const blockedBanner = arr(review.banners).find((banner) => str(banner?.state).toLowerCase() === 'blocked');
+    const latestRevisionText = [
+      str(latestApplyResult?.nextRevision),
+      str(latestApplyResult?.currentRevision),
+      str(latestApplyResult?.renderCurrentSummary),
+      str(latestApplyResult?.sequenceBackupPath)
+    ].join('\n');
+    const matchesExpectedSequence = !expectedSequencePath || latestRevisionText.includes(expectedSequencePath);
+    const blockedBanner = blockedBannerTexts(lastSnapshot)
+      .map((text) => ({ text }))
+      .find((banner) => !ignoredBlockedTexts.has(str(banner.text)));
     if (blockedBanner) {
       throw new Error(`Review apply blocked: ${str(blockedBanner.text)}`);
     }
-    if (latestApplyResult && latestId && latestId !== previousArtifactId) {
+    if (latestApplyResult && latestId && matchesExpectedSequence && (latestId !== previousArtifactId || str(latestApplyResult?.status).toLowerCase() === 'applied')) {
       return { snapshot: lastSnapshot, applyResult: latestApplyResult };
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -254,15 +414,16 @@ async function waitForApplyResult({ previousArtifactId = '', timeoutMs = 120000 
   throw new Error(`Timed out waiting for review apply result. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
 }
 
-async function applyReviewWithRetry({ previousArtifactId = '', targetIds = [], selectedTags = [], tagOnly = false, timeoutMs = 120000 } = {}) {
+async function applyReviewWithRetry({ previousArtifactId = '', expectedSequencePath = '', targetIds = [], selectedTags = [], selectedSections = [], tagOnly = false, timeoutMs = 120000 } = {}) {
   let lastAccepted = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    await waitForReviewReady({ targetIds, selectedTags, tagOnly, timeoutMs: Math.min(timeoutMs, 30000) });
+    const readySnapshot = await waitForReviewReady({ targetIds, selectedTags, selectedSections, tagOnly, timeoutMs: Math.min(timeoutMs, 30000) });
+    const ignoredBlockedTexts = new Set(blockedBannerTexts(readySnapshot));
     lastAccepted = await request('POST', '/action', { action: 'applyReview' });
     try {
       return {
         accepted: lastAccepted,
-        ...(await waitForApplyResult({ previousArtifactId, timeoutMs }))
+        ...(await waitForApplyResult({ previousArtifactId, expectedSequencePath, ignoredBlockedTexts, timeoutMs }))
       };
     } catch (error) {
       if (attempt === 2) throw error;
@@ -275,6 +436,7 @@ async function applyReviewWithRetry({ previousArtifactId = '', targetIds = [], s
 const args = parseArgs(process.argv.slice(2));
 const targetIds = splitList(args.targetIds);
 const selectedTags = splitList(args.selectedTags);
+const selectedSections = args.sectionLabel ? [args.sectionLabel] : [];
 
 const health = await request('GET', '/health');
 if (health?.ok === false) {
@@ -282,6 +444,17 @@ if (health?.ok === false) {
 }
 
 const sequenceContext = await ensureSequenceContext(args, targetIds, selectedTags);
+const seededSectionTimingTrack = args.forceValidationSequence
+  ? await seedValidationSectionTimingTrack({
+      sectionLabel: args.sectionLabel,
+      timingTrackName: args.timingTrackName,
+      durationMs: args.durationMs
+    })
+  : null;
+const resolvedSectionScope = await resolveSectionTimingScope({
+  sectionLabel: args.sectionLabel,
+  timingTrackName: args.timingTrackName
+});
 
 const updateResult = await request('POST', '/action', {
   action: 'updateDisplayTargetIntent',
@@ -303,12 +476,15 @@ await request('POST', '/action', {
   reason: 'metadata tag proposal validation',
   payload: {
     goal: args.tagOnly
-      ? `Validate metadata-selected sequencing for selected display metadata tags.`
-      : `Validate metadata-selected sequencing for ${targetIds.join(', ')}.`,
+      ? `Validate metadata-selected sequencing for selected display metadata tags${args.sectionLabel ? ` in section ${args.sectionLabel}` : ''}.`
+      : `Validate metadata-selected sequencing for ${targetIds.join(', ')}${args.sectionLabel ? ` in section ${args.sectionLabel}` : ''}.`,
     mood: 'focused validation',
     targetScope: args.tagOnly ? '' : targetIds.join(', '),
-    constraints: `Use selected display metadata tags: ${selectedTags.join(', ')}.`,
-    references: '',
+    constraints: [
+      `Use selected display metadata tags: ${selectedTags.join(', ')}.`,
+      args.sectionLabel ? `Limit timing scope to section label: ${args.sectionLabel}.` : ''
+    ].filter(Boolean).join(' '),
+    references: resolvedSectionScope ? `Timing track: ${resolvedSectionScope.trackName}.` : '',
     approvalNotes: 'Automation validation'
   }
 });
@@ -321,7 +497,9 @@ const previousGenerationArtifactIds = new Set([
 
 const generationResult = await request('POST', '/action', {
   action: 'generateSequenceProposal',
-  selectedTagNames: args.selectedTags
+  selectedTagNames: args.selectedTags,
+  selectedSections: selectedSections.join(','),
+  timingTrackName: str(resolvedSectionScope?.trackName || args.timingTrackName)
 });
 const generationBanner = generationResult?.banner && typeof generationResult.banner === 'object' ? generationResult.banner : null;
 if (generationBanner && str(generationBanner.state).toLowerCase() === 'blocked') {
@@ -331,6 +509,7 @@ if (generationBanner && str(generationBanner.state).toLowerCase() === 'blocked')
 const proposalValidation = await waitForProposal({
   targetIds,
   selectedTags,
+  selectedSections,
   previousArtifactIds: previousGenerationArtifactIds,
   timeoutMs: args.timeoutMs
 });
@@ -341,6 +520,7 @@ const matchedPlanArtifactId = str(matchedArtifacts.find((artifact) => str(artifa
 const reviewReadySnapshot = await waitForReviewReady({
   targetIds,
   selectedTags,
+  selectedSections,
   tagOnly: args.tagOnly,
   timeoutMs: args.timeoutMs
 });
@@ -350,8 +530,10 @@ if (args.applyReview) {
   const previousApplyId = str(reviewReadySnapshot?.latestApplyResult?.artifactId || validationSnapshot?.latestApplyResult?.artifactId);
   applyValidation = await applyReviewWithRetry({
     previousArtifactId: previousApplyId,
+    expectedSequencePath: sequenceContext.sequencePath,
     targetIds,
     selectedTags,
+    selectedSections,
     tagOnly: args.tagOnly,
     timeoutMs: Math.max(args.timeoutMs, 120000)
   });
@@ -368,6 +550,9 @@ process.stdout.write(`${JSON.stringify({
   tagOnly: args.tagOnly,
   targetIds,
   selectedTags,
+  selectedSections,
+  resolvedSectionScope,
+  seededSectionTimingTrack,
   sequenceContext,
   latestProposalArtifactId: matchedProposalArtifactId,
   latestPlanArtifactId: str(applyValidation?.applyResult?.planId || matchedPlanArtifactId),

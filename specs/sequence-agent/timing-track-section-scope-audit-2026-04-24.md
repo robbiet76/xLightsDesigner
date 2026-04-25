@@ -35,9 +35,15 @@ Updated:
   - Section timing can be driven by `executionStrategy.timingTrackName`, `executionStrategy.sectionTimingTrackName`, or matching section-plan fields.
   - Current generated default remains `XD: Song Structure` when no explicit section timing track is supplied.
 
+- Native handoff automation
+  - `generateSequenceProposal` now forwards selected section labels and optional timing track names from the macOS automation endpoint into native direct proposal generation.
+  - `run-full-handoff-validation.mjs` and `validate-metadata-tag-proposal-flow.mjs` now support section-label scenarios.
+  - Forced validation sequences seed a neutral `Validation Section Scope` timing track and resolve `Chorus 1` by label, proving the handoff does not depend on `XD: Song Structure`.
+  - Native apply fallback can synthesize owned batch-plan commands from section plans when proposals do not carry explicit effect placements.
+
 Still intentionally current-default or test-fixture specific:
 
-- Native fallback apply can still materialize `XD: Song Structure` from the current audio analysis record.
+- Native fallback apply can still use `XD: Song Structure` from the current audio analysis record when no explicit timing track is provided.
 - Audio dashboard status still reports currently generated analysis tracks such as `XD: Song Structure`.
 - Existing tests use `XD: Song Structure` fixtures where they are verifying current generated-track behavior.
 
@@ -52,3 +58,4 @@ New coverage includes:
 - arbitrary available timing track with matching section label
 - planned arbitrary section timing track
 - explicit section timing track name honored by sequence-agent command generation
+- live native handoff matrix with target, group, tag-only, and section-label scenarios

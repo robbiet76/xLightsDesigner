@@ -21,6 +21,12 @@
       "targetIds": "Star",
       "selectedTags": "lead",
       "tagOnly": true
+    },
+    {
+      "name": "section-label-chorus-star-lead",
+      "targetIds": "Star",
+      "selectedTags": "lead",
+      "sectionLabel": "Chorus 1"
     }
   ]
 }
