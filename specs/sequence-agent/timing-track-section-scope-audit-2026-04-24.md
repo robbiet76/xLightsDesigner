@@ -48,6 +48,10 @@ Updated:
 - `apps/xlightsdesigner-ui/agent/designer-dialog/music-design-context.js`
   - Music design cues now expose `XD: Bars` and `XD: Lyrics` as first-class cue timing tracks beside beat, phrase, and chord tracks.
 
+- `apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-runtime.js`
+  - Designer-generated placements now carry an explicit timing boundary side.
+  - Designer placement selection can anchor directly to beat, bar, lyric, phrase, chord, or section timing windows before the sequence agent builds commands.
+
 - Native handoff automation
   - `generateSequenceProposal` now forwards selected section labels and optional timing track names from the macOS automation endpoint into native direct proposal generation.
   - `run-full-handoff-validation.mjs` and `validate-metadata-tag-proposal-flow.mjs` now support section-label scenarios.
@@ -81,4 +85,5 @@ New coverage includes:
 - need-based direct sequencing creates complete cue timing tracks for beat, measure/bar, lyric/vocal, phrase, and chord intent when matching analysis marks exist
 - explicit effect placements are anchored to timing or adjacent-effect boundaries instead of remaining free-floating
 - practical validation fails free-floating effects
+- designer-generated placements declare their timing boundary anchor before sequence-agent handoff
 - live native handoff matrix with target, group, tag-only, and section-label scenarios

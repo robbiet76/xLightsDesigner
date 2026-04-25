@@ -21,6 +21,20 @@ const metadataAssignments = [
   { targetId: "Roofline", tags: ["support"] }
 ];
 
+function assertPlacementsAreBoundaryAnchored(placements = []) {
+  assert.ok(placements.length > 0);
+  for (const placement of placements) {
+    const timing = placement.timingContext || {};
+    assert.ok(timing.trackName, `missing timing track for ${placement.placementId}`);
+    assert.ok(timing.boundarySide === "start" || timing.boundarySide === "end", `missing boundary side for ${placement.placementId}`);
+    const touchesStart = Math.abs(Number(placement.startMs) - Number(timing.anchorStartMs)) <= 2
+      || Math.abs(Number(placement.startMs) - Number(timing.anchorEndMs)) <= 2;
+    const touchesEnd = Math.abs(Number(placement.endMs) - Number(timing.anchorStartMs)) <= 2
+      || Math.abs(Number(placement.endMs) - Number(timing.anchorEndMs)) <= 2;
+    assert.equal(touchesStart || touchesEnd, true, `free-floating placement ${placement.placementId}`);
+  }
+}
+
 test("buildCreativeBriefArtifact returns canonical brief with traceability", () => {
   const result = buildCreativeBriefArtifact({
     requestId: "req-1",
@@ -336,6 +350,7 @@ test("designer runtime emits exact effect placements when analyzed section timin
   const placements = result.proposalBundle.executionPlan.effectPlacements;
   assert.ok(Array.isArray(placements));
   assert.ok(placements.length >= 6);
+  assertPlacementsAreBoundaryAnchored(placements);
   const introPrimary = placements.find((row) => row.sourceSectionLabel === "Intro" && row.layerIndex === 0);
   const chorusOverlay = placements.find((row) => row.sourceSectionLabel === "Chorus 1" && row.layerIndex === 1);
   assert.equal(introPrimary.designId, "DES-001");
@@ -373,6 +388,12 @@ test("designer runtime aligns placements to beat, chord, and phrase cue windows 
         "Chorus 1": {
           beat: [
             { label: "Beat Pulse 1", trackName: "XD: Beat Grid", startMs: 56000, endMs: 61000 }
+          ],
+          bar: [
+            { label: "Bar 1", trackName: "XD: Bars", startMs: 54000, endMs: 63000 }
+          ],
+          lyric: [
+            { label: "Light up tonight", trackName: "XD: Lyrics", startMs: 62000, endMs: 70000 }
           ]
         },
         Bridge: {
@@ -403,8 +424,55 @@ test("designer runtime aligns placements to beat, chord, and phrase cue windows 
     musicDesignContext
   });
   const beatPlacement = beatResult.proposalBundle.executionPlan.effectPlacements[0];
+  assertPlacementsAreBoundaryAnchored(beatResult.proposalBundle.executionPlan.effectPlacements);
   assert.equal(beatPlacement.timingContext.trackName, "XD: Beat Grid");
   assert.equal(beatPlacement.timingContext.alignmentMode, "beat_window");
+
+  const barResult = executeDesignerDialogFlow({
+    requestId: "req-8bar",
+    sequenceRevision: "rev-8bar",
+    promptText: "Lock the Chorus 1 accents to the bar timing track and measures.",
+    goals: "Use bar timing in Chorus 1.",
+    selectedSections: ["Chorus 1"],
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext
+  });
+  const barPlacement = barResult.proposalBundle.executionPlan.effectPlacements[0];
+  assertPlacementsAreBoundaryAnchored(barResult.proposalBundle.executionPlan.effectPlacements);
+  assert.equal(barPlacement.timingContext.trackName, "XD: Bars");
+  assert.equal(barPlacement.timingContext.alignmentMode, "bar_window");
+
+  const lyricResult = executeDesignerDialogFlow({
+    requestId: "req-8lyric",
+    sequenceRevision: "rev-8lyric",
+    promptText: "Follow the vocal lyric line in Chorus 1.",
+    goals: "Use lyric timing for vocals in Chorus 1.",
+    selectedSections: ["Chorus 1"],
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext
+  });
+  const lyricPlacement = lyricResult.proposalBundle.executionPlan.effectPlacements[0];
+  assertPlacementsAreBoundaryAnchored(lyricResult.proposalBundle.executionPlan.effectPlacements);
+  assert.equal(lyricPlacement.timingContext.trackName, "XD: Lyrics");
+  assert.equal(lyricPlacement.timingContext.alignmentMode, "lyric_window");
 
   const chordResult = executeDesignerDialogFlow({
     requestId: "req-8b",
@@ -425,6 +493,7 @@ test("designer runtime aligns placements to beat, chord, and phrase cue windows 
     musicDesignContext
   });
   const chordPlacement = chordResult.proposalBundle.executionPlan.effectPlacements[0];
+  assertPlacementsAreBoundaryAnchored(chordResult.proposalBundle.executionPlan.effectPlacements);
   assert.equal(chordPlacement.timingContext.trackName, "XD: Chord Changes");
   assert.equal(chordPlacement.timingContext.alignmentMode, "chord_window");
 
@@ -447,6 +516,7 @@ test("designer runtime aligns placements to beat, chord, and phrase cue windows 
     musicDesignContext
   });
   const phrasePlacement = phraseResult.proposalBundle.executionPlan.effectPlacements[0];
+  assertPlacementsAreBoundaryAnchored(phraseResult.proposalBundle.executionPlan.effectPlacements);
   assert.equal(phrasePlacement.timingContext.trackName, "XD: Phrase Cues");
   assert.equal(phrasePlacement.timingContext.alignmentMode, "phrase_window");
 
@@ -491,6 +561,7 @@ test("designer runtime aligns placements to beat, chord, and phrase cue windows 
   const preChorusAlignmentModes = Array.from(new Set(preChorusLiftResult.proposalBundle.executionPlan.effectPlacements.map((row) => row.timingContext.alignmentMode)));
   const preChorusSections = Array.from(new Set(preChorusLiftResult.proposalBundle.executionPlan.effectPlacements.map((row) => row.sourceSectionLabel)));
   assert.deepEqual(preChorusTracks, ["XD: Phrase Cues"]);
+  assertPlacementsAreBoundaryAnchored(preChorusLiftResult.proposalBundle.executionPlan.effectPlacements);
   assert.deepEqual(preChorusAlignmentModes, ["phrase_window"]);
   assert.deepEqual(preChorusSections, ["Pre-Chorus"]);
 });

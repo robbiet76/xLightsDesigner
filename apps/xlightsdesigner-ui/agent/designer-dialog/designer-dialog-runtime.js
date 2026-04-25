@@ -762,6 +762,8 @@ function inferPlacementAnchorMode(goal = "", { passScope = "" } = {}) {
     return "section";
   }
   if (/\b(beat|downbeat|upbeat|pulse|beat grid)\b/.test(lowerGoal)) return "beat";
+  if (/\b(measure|measures)\b|\bbar(?:s)?[-\s]?(grid|track|timing|line|lines|cue|cues)\b|\b(on|to|with)\s+bars?\b/.test(lowerGoal)) return "bar";
+  if (/\b(lyric|lyrics|word|words|vocal|vocals|singer|singing|mouth|mouths|phoneme|phonemes)\b/.test(lowerGoal)) return "lyric";
   if (/\b(chord|harmon(?:y|ic)|changes?)\b/.test(lowerGoal)) return "chord";
   if (/\b(pre-?chorus|lift)\b/.test(lowerGoal) && /\b(tension|hold|release|open(?:s|ing)? up|before chorus)\b/.test(lowerGoal)) {
     return "phrase";
@@ -774,6 +776,8 @@ function buildCueWindowIndex(musicDesignContext = null) {
   const cues = musicDesignContext?.designCues?.cueWindowsBySection;
   const modes = {
     beat: new Map(),
+    bar: new Map(),
+    lyric: new Map(),
     chord: new Map(),
     phrase: new Map()
   };
@@ -796,6 +800,18 @@ function buildCueWindowIndex(musicDesignContext = null) {
     }
   }
   return modes;
+}
+
+function inferPlacementBoundarySide({ window = {}, anchorStartMs, anchorEndMs } = {}) {
+  const startMs = Number(window?.startMs);
+  const endMs = Number(window?.endMs);
+  const anchorStart = Number(anchorStartMs);
+  const anchorEnd = Number(anchorEndMs);
+  if (Number.isFinite(startMs) && Number.isFinite(anchorStart) && Math.abs(startMs - anchorStart) <= 2) return "start";
+  if (Number.isFinite(startMs) && Number.isFinite(anchorEnd) && Math.abs(startMs - anchorEnd) <= 2) return "start";
+  if (Number.isFinite(endMs) && Number.isFinite(anchorStart) && Math.abs(endMs - anchorStart) <= 2) return "end";
+  if (Number.isFinite(endMs) && Number.isFinite(anchorEnd) && Math.abs(endMs - anchorEnd) <= 2) return "end";
+  return "";
 }
 
 function inferTargetLimitForSection({ energy = "", density = "" } = {}) {
@@ -1310,6 +1326,8 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
             });
         for (let sliceIndex = 0; sliceIndex < sliceWindows.length; sliceIndex += 1) {
           const window = sliceWindows[sliceIndex];
+          const anchorStartMs = Number(window?.startMs || timed.startMs);
+          const anchorEndMs = Number(window?.endMs || timed.endMs);
           placements.push({
             placementId: `placement-${sectionIndex + 1}-${targetIndex + 1}-${effectIndex + 1}-${sliceIndex + 1}`,
             designId: str(plan?.designId),
@@ -1323,9 +1341,10 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
             timingContext: {
               trackName: window?.trackName || "XD: Song Structure",
               anchorLabel: window?.label || section,
-              anchorStartMs: window?.startMs || timed.startMs,
-              anchorEndMs: window?.endMs || timed.endMs,
-              alignmentMode: str(window?.alignmentMode || "section_span")
+              anchorStartMs,
+              anchorEndMs,
+              alignmentMode: str(window?.alignmentMode || "section_span"),
+              boundarySide: inferPlacementBoundarySide({ window, anchorStartMs, anchorEndMs }) || "start"
             },
             creative: {
               role: effectIndex === 0
