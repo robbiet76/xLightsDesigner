@@ -427,6 +427,42 @@ test("review dashboard state exposes current generative sequencing summary from 
           candidateSelectionContext: {
             phase: "plan",
             retryPressureSignals: ["low_change_retry"]
+          },
+          currentSequenceContext: {
+            artifactType: "current_sequence_context_v1",
+            artifactId: "current_sequence_context_v1-visible",
+            source: "xlights_readback",
+            sequence: {
+              path: "/Users/robterry/Desktop/Show/test.xsq",
+              revision: "rev-44"
+            },
+            summary: {
+              timingTrackCount: 3,
+              timingMarkCount: 27,
+              effectCount: 12,
+              targetCount: 2,
+              effectNameCount: 4,
+              timeWindow: { startMs: 1000, endMs: 9000 }
+            },
+            timing: {
+              trackNames: ["Beats", "Bars", "Lyrics"]
+            },
+            effects: {
+              effectNames: ["Color Wash", "Shimmer"],
+              targetIds: ["Snowman", "MegaTree"]
+            }
+          },
+          passExecution: {
+            existingSequencePolicy: {
+              baseRevision: "rev-44",
+              inspectionAvailable: true,
+              inspectedEffectCount: 12,
+              inspectedTimingTrackCount: 3,
+              preserveExistingUnlessScoped: true
+            }
+          },
+          artifactRefs: {
+            currentSequenceContextRef: "current_sequence_context_v1-visible"
           }
         }
       },
@@ -453,6 +489,13 @@ test("review dashboard state exposes current generative sequencing summary from 
   assert.equal(dashboard.data.currentProcessSummary.nextMove, "Increase contrast between lead and support.");
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.currentGenerativeSummary.delta.introducedTargetIds, ["Snowman"]);
+  assert.equal(dashboard.data.currentSequenceContextSummary.artifactId, "current_sequence_context_v1-visible");
+  assert.equal(dashboard.data.currentSequenceContextSummary.sequenceRevision, "rev-44");
+  assert.equal(dashboard.data.currentSequenceContextSummary.inspectionAvailable, true);
+  assert.equal(dashboard.data.currentSequenceContextSummary.effectCount, 12);
+  assert.equal(dashboard.data.currentSequenceContextSummary.timingTrackCount, 3);
+  assert.deepEqual(dashboard.data.currentSequenceContextSummary.trackNames, ["Beats", "Bars", "Lyrics"]);
+  assert.deepEqual(dashboard.data.currentSequenceContextSummary.effectNames, ["Color Wash", "Shimmer"]);
 });
 
 test("review dashboard state exposes compact current pass outcome from snapshot summary", () => {

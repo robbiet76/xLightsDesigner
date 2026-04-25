@@ -181,6 +181,44 @@ function buildSequencingProcessSummary({
   };
 }
 
+function buildCurrentSequenceContextSummary(metadata = null) {
+  if (!metadata || typeof metadata !== "object") return null;
+  const context = metadata.currentSequenceContext && typeof metadata.currentSequenceContext === "object"
+    ? metadata.currentSequenceContext
+    : null;
+  const policy = metadata.passExecution?.existingSequencePolicy && typeof metadata.passExecution.existingSequencePolicy === "object"
+    ? metadata.passExecution.existingSequencePolicy
+    : null;
+  if (!context && !policy) return null;
+  const summary = context?.summary && typeof context.summary === "object" ? context.summary : {};
+  const sequence = context?.sequence && typeof context.sequence === "object" ? context.sequence : {};
+  const timing = context?.timing && typeof context.timing === "object" ? context.timing : {};
+  const effects = context?.effects && typeof context.effects === "object" ? context.effects : {};
+  return {
+    artifactType: str(context?.artifactType || "current_sequence_context_v1"),
+    artifactId: str(context?.artifactId || metadata?.artifactRefs?.currentSequenceContextRef),
+    source: str(context?.source),
+    sequencePath: str(sequence.path),
+    sequenceRevision: str(sequence.revision || policy?.baseRevision || "unknown") || "unknown",
+    inspectionAvailable: Boolean(policy?.inspectionAvailable || context),
+    preserveExistingUnlessScoped: policy?.preserveExistingUnlessScoped !== false,
+    effectCount: Number(summary.effectCount || policy?.inspectedEffectCount || 0),
+    timingTrackCount: Number(summary.timingTrackCount || policy?.inspectedTimingTrackCount || 0),
+    timingMarkCount: Number(summary.timingMarkCount || 0),
+    targetCount: Number(summary.targetCount || 0),
+    effectNameCount: Number(summary.effectNameCount || 0),
+    timeWindow: summary.timeWindow && typeof summary.timeWindow === "object"
+      ? {
+          startMs: Number.isFinite(Number(summary.timeWindow.startMs)) ? Number(summary.timeWindow.startMs) : null,
+          endMs: Number.isFinite(Number(summary.timeWindow.endMs)) ? Number(summary.timeWindow.endMs) : null
+        }
+      : null,
+    trackNames: uniqueStrings(timing.trackNames).slice(0, 5),
+    effectNames: uniqueStrings(effects.effectNames).slice(0, 5),
+    targetIds: uniqueStrings(effects.targetIds || context?.scope?.targetIds).slice(0, 5)
+  };
+}
+
 function buildPreferenceCue(profile = null) {
   const preferences = profile?.preferences && typeof profile.preferences === "object"
     ? profile.preferences
@@ -417,7 +455,11 @@ export function buildReviewDashboardState({
     ? state.lastApplyVerification
     : null;
   const currentSnapshot = buildCurrentReviewSnapshotSummary() || {};
-  const currentGenerativeSummary = buildGenerativeSummaryFromMetadata(state.agentPlan?.metadata || null);
+  const activePlanMetadata = state.agentPlan?.handoff?.metadata && typeof state.agentPlan.handoff.metadata === "object"
+    ? state.agentPlan.handoff.metadata
+    : (state.agentPlan?.metadata && typeof state.agentPlan.metadata === "object" ? state.agentPlan.metadata : null);
+  const currentGenerativeSummary = buildGenerativeSummaryFromMetadata(activePlanMetadata);
+  const currentSequenceContextSummary = buildCurrentSequenceContextSummary(activePlanMetadata);
   const currentPassOutcome = currentSnapshot?.sequenceSummary?.passOutcome && typeof currentSnapshot.sequenceSummary.passOutcome === "object"
     ? currentSnapshot.sequenceSummary.passOutcome
     : null;
@@ -544,6 +586,7 @@ export function buildReviewDashboardState({
       },
       currentSnapshot,
       currentGenerativeSummary,
+      currentSequenceContextSummary,
       rows: reviewRows,
       lastAppliedSnapshot: lastAppliedSnapshot
         ? {
@@ -559,6 +602,7 @@ export function buildReviewDashboardState({
             sequenceArtisticGoal: lastAppliedSnapshot.sequenceArtisticGoal || null,
             sequenceRevisionObjective: lastAppliedSnapshot.sequenceRevisionObjective || null,
             generativeSummary: buildGenerativeSummaryFromMetadata(lastAppliedSnapshot.planHandoff?.metadata || null),
+            currentSequenceContextSummary: buildCurrentSequenceContextSummary(lastAppliedSnapshot.planHandoff?.metadata || null),
             processSummary: buildSequencingProcessSummary({
               generativeSummary: buildGenerativeSummaryFromMetadata(lastAppliedSnapshot.planHandoff?.metadata || null),
               passOutcome: lastAppliedSnapshot.planHandoff?.metadata?.revisionFeedback

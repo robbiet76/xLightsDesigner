@@ -423,6 +423,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     sequenceArtisticGoal = null,
     sequenceRevisionObjective = null,
     generativeSummary = null,
+    currentSequenceContextSummary = null,
     artifactRefs = null,
     emptyText = "No snapshot loaded."
   } = {}) {
@@ -539,6 +540,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       sequenceArtisticGoal ||
       sequenceRevisionObjective ||
       generativeSummary ||
+      currentSequenceContextSummary ||
       safeArtifactRefs.length;
     if (!hasContent) {
       return `
@@ -631,6 +633,22 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   ${generativeFeedbackReasons.length ? `<p class="banner warning">Reasons: ${escapeHtml(generativeFeedbackReasons.join(", "))}</p>` : ""}
                 `
                 : "<p>No generative sequencing summary captured.</p>"
+            }
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Current Sequence Context</div>
+            ${
+              currentSequenceContextSummary
+                ? `
+                  <p>Revision: ${escapeHtml(String(currentSequenceContextSummary.sequenceRevision || "unknown"))}</p>
+                  <p>Readback: ${currentSequenceContextSummary.inspectionAvailable ? "available" : "not available"} / preserve existing ${currentSequenceContextSummary.preserveExistingUnlessScoped ? "unless scoped" : "not enforced"}</p>
+                  <p>Effects: ${escapeHtml(String(currentSequenceContextSummary.effectCount || 0))} / timing tracks: ${escapeHtml(String(currentSequenceContextSummary.timingTrackCount || 0))} / marks: ${escapeHtml(String(currentSequenceContextSummary.timingMarkCount || 0))}</p>
+                  ${currentSequenceContextSummary.trackNames?.length ? `<p>Tracks: ${escapeHtml(currentSequenceContextSummary.trackNames.join(", "))}</p>` : ""}
+                  ${currentSequenceContextSummary.effectNames?.length ? `<p>Effects seen: ${escapeHtml(currentSequenceContextSummary.effectNames.join(", "))}</p>` : ""}
+                  ${currentSequenceContextSummary.targetIds?.length ? `<p>Targets seen: ${escapeHtml(currentSequenceContextSummary.targetIds.join(", "))}</p>` : ""}
+                  ${currentSequenceContextSummary.artifactId ? `<p>Artifact: ${escapeHtml(String(currentSequenceContextSummary.artifactId))}</p>` : ""}
+                `
+                : "<p>No current sequence readback summary captured.</p>"
             }
           </div>
         </div>
@@ -1513,6 +1531,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const lastApply = applyHistory.length ? applyHistory[0] : null;
     const currentSnapshot = data.currentSnapshot || {};
     const currentGenerativeSummary = data.currentGenerativeSummary || null;
+    const currentSequenceContextSummary = data.currentSequenceContextSummary || null;
     const lastAppliedSnapshot = data.lastAppliedSnapshot || null;
     const counts = data.counts || {};
     const verification = data.verification || null;
@@ -1610,6 +1629,22 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   : "<p>No generative sequencing summary captured yet.</p>"
               }
             </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Current Sequence Context</div>
+              ${
+                currentSequenceContextSummary
+                  ? `
+                    <p>Revision: ${escapeHtml(String(currentSequenceContextSummary.sequenceRevision || "unknown"))}</p>
+                    <p>Readback: ${currentSequenceContextSummary.inspectionAvailable ? "available" : "not available"} / preserve existing ${currentSequenceContextSummary.preserveExistingUnlessScoped ? "unless scoped" : "not enforced"}</p>
+                    <p>Effects: ${escapeHtml(String(currentSequenceContextSummary.effectCount || 0))} / timing tracks: ${escapeHtml(String(currentSequenceContextSummary.timingTrackCount || 0))} / marks: ${escapeHtml(String(currentSequenceContextSummary.timingMarkCount || 0))}</p>
+                    ${currentSequenceContextSummary.trackNames?.length ? `<p>Tracks: ${escapeHtml(currentSequenceContextSummary.trackNames.join(", "))}</p>` : ""}
+                    ${currentSequenceContextSummary.effectNames?.length ? `<p>Effects seen: ${escapeHtml(currentSequenceContextSummary.effectNames.join(", "))}</p>` : ""}
+                    ${currentSequenceContextSummary.targetIds?.length ? `<p>Targets seen: ${escapeHtml(currentSequenceContextSummary.targetIds.join(", "))}</p>` : ""}
+                    ${currentSequenceContextSummary.artifactId ? `<p>Artifact: ${escapeHtml(String(currentSequenceContextSummary.artifactId))}</p>` : ""}
+                  `
+                  : "<p>No current sequence readback summary captured yet.</p>"
+              }
+            </div>
           </div>
           ${data.previewError ? `<p class="banner warning">${escapeHtml(String(data.previewError))}</p>` : ""}
           <div class="field panel-window proposed-window">
@@ -1697,6 +1732,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 sequenceArtisticGoal: lastAppliedSnapshot.sequenceArtisticGoal || null,
                 sequenceRevisionObjective: lastAppliedSnapshot.sequenceRevisionObjective || null,
                 generativeSummary: lastAppliedSnapshot.generativeSummary || null,
+                currentSequenceContextSummary: lastAppliedSnapshot.currentSequenceContextSummary || null,
                 artifactRefs: lastApply?.artifactRefs || null,
                 emptyText: "No applied snapshot is available yet."
               })
