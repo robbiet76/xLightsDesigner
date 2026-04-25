@@ -111,6 +111,8 @@ test("sequence-agent automation proposal honors explicit selected metadata tags"
   state.ui.metadataSelectedTags = [];
   let directInput = null;
   let sequenceInput = null;
+  let planInput = null;
+  let readbackInput = null;
   let persisted = false;
   let rendered = false;
 
@@ -183,10 +185,20 @@ test("sequence-agent automation proposal honors explicit selected metadata tags"
     setAgentHandoff: () => ({ ok: true, errors: [] }),
     buildSequenceAgentInput: (input) => {
       sequenceInput = input;
-      return { ok: true };
+      return { ...input, ok: true };
+    },
+    buildCurrentSequenceContextFromReadback: async (input) => {
+      readbackInput = input;
+      return {
+        artifactType: "current_sequence_context_v1",
+        artifactId: "current_sequence_context_v1-runtime",
+        summary: { timingTrackCount: 1, effectCount: 2 }
+      };
     },
     validateSequenceAgentContractGate: () => ({ ok: true, report: {} }),
-    buildSequenceAgentPlan: () => ({
+    buildSequenceAgentPlan: (input) => {
+      planInput = input;
+      return {
       agentRole: "sequence_agent",
       contractVersion: "1.0",
       planId: "plan-1",
@@ -213,7 +225,8 @@ test("sequence-agent automation proposal honors explicit selected metadata tags"
           }
         ]
       }
-    }),
+      };
+    },
     buildArtifactId: (type) => `${type}-test`,
     validateCommandGraph: () => ({ ok: true, nodeCount: 0, errors: [] }),
     normalizeMetadataSelectedTags: (values) => values,
@@ -231,6 +244,11 @@ test("sequence-agent automation proposal honors explicit selected metadata tags"
   assert.deepEqual(directInput.selectedTagNames, ["lead"]);
   assert.deepEqual(directInput.metadataAssignments[0].tags, ["lead", "centerpiece"]);
   assert.deepEqual(sequenceInput.planningScope.tagNames, ["lead"]);
+  assert.equal(sequenceInput.currentSequenceContext.artifactId, "current_sequence_context_v1-runtime");
+  assert.equal(planInput.currentSequenceContext.artifactId, "current_sequence_context_v1-runtime");
+  assert.deepEqual(readbackInput.selectedSections, ["Chorus 1"]);
+  assert.deepEqual(readbackInput.selectedTargets, []);
+  assert.deepEqual(readbackInput.selectedTags, ["lead"]);
   assert.deepEqual(state.agentPlan.handoff.metadata.scope.tagNames, ["lead"]);
   assert.deepEqual(state.agentPlan.handoff.metadata.metadataAssignments[0].targetId, "MegaTree");
   assert.equal(persisted, true);

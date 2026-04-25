@@ -84,7 +84,7 @@ Runtime code that needs prior revision state may synthesize minimal `revision_re
 
 The agent may mark a pass stable against known checks, but user acceptance remains the final product-level completion signal.
 
-`current_sequence_context_v1` is the compact existing-sequence inspection artifact for revision planning. It carries bounded timing track names/counts, effect names/counts, target ids, sequence revision, and scoped summary data so the sequencer can reason about current xLights state without passing a full sequence document through every handoff. `plan_handoff_v1.metadata.currentSequenceContext` stores the sanitized version, and `metadata.artifactRefs.currentSequenceContextRef` gives compact consumers a stable pointer.
+`current_sequence_context_v1` is the compact existing-sequence inspection artifact for revision planning. It carries bounded timing track names/counts, effect names/counts, target ids, sequence revision, and scoped summary data so the sequencer can reason about current xLights state without passing a full sequence document through every handoff. Proposal generation, review apply, and native review apply build this artifact from xLights readback before planning. `plan_handoff_v1.metadata.currentSequenceContext` stores the sanitized version, and `metadata.artifactRefs.currentSequenceContextRef` gives compact consumers a stable pointer.
 
 ## Future Work
 
@@ -92,6 +92,6 @@ The agent may mark a pass stable against known checks, but user acceptance remai
 - Add warning thresholds once realistic full-sequence baselines exist.
 - Track handoff size in native validation evidence for large sequence scenarios.
 - Add section/pass chunking for full-song generation and revision.
-- Wire native readback to build `current_sequence_context_v1` automatically before planning against existing sequences.
+- Expand full-sequence effect readback coverage once the owned API supports efficient all-target effect summaries without target-by-target queries.
 - Add explicit retry/pass budgets so automatic iteration stops after bounded attempts and returns to user review.
 - Keep validation selective: verify anchors, tracks, scope, target coverage, and practical quality without loading full expanded sequence state unless needed.

@@ -70,7 +70,8 @@ export async function executeApplyCore({
     buildCurrentDesignSceneContext,
     buildCurrentMusicDesignContext,
     buildCurrentRenderObservation,
-    collectPostApplyRenderObservation = async () => null
+    collectPostApplyRenderObservation = async () => null,
+    buildCurrentSequenceContextFromReadback = async () => null
   } = deps;
   const {
     pushSequenceAgentContractDiagnostic = () => {},
@@ -126,6 +127,36 @@ export async function executeApplyCore({
       )
       || state.sequenceAgentRuntime?.revisionFeedback
       || null;
+    const planningScope = {
+      sections: getSelectedSections(),
+      targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+      tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
+    };
+    let currentSequenceContext = null;
+    try {
+      currentSequenceContext = await buildCurrentSequenceContextFromReadback({
+        endpoint: state.endpoint,
+        sequencePath,
+        sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+        analysisHandoff,
+        selectedSections: planningScope.sections,
+        selectedTargets: planningScope.targetIds,
+        selectedTags: planningScope.tagNames,
+        displayElements: state.displayElements || []
+      });
+      if (currentSequenceContext?.artifactId) {
+        markOrchestrationStage(
+          orchestrationRun,
+          "current_sequence_context",
+          "ok",
+          `effects=${Number(currentSequenceContext?.summary?.effectCount || 0)} timingTracks=${Number(currentSequenceContext?.summary?.timingTrackCount || 0)}`
+        );
+      }
+    } catch (err) {
+      const detail = String(err?.message || err || "").trim();
+      markOrchestrationStage(orchestrationRun, "current_sequence_context", "warning", detail);
+      pushDiagnostic("warning", "Current sequence readback unavailable before apply planning.", detail);
+    }
     const sequenceAgentInput = buildSequenceAgentInput({
       requestId: `${orchestrationRun.id}-apply`,
       endpoint: state.endpoint,
@@ -141,6 +172,7 @@ export async function executeApplyCore({
       sequenceArtisticGoal,
       sequenceRevisionObjective,
       analysisHandoff,
+      currentSequenceContext,
       renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null,
       revisionRetryPressure,
       revisionFeedback,
@@ -153,11 +185,7 @@ export async function executeApplyCore({
         renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null,
         revisionFeedback
       }),
-      planningScope: {
-        sections: getSelectedSections(),
-        targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
-        tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
-      },
+      planningScope,
       timingOwnership: getSequenceTimingOwnershipRows(),
       manualXdLocks: getManualLockedXdTracks(),
       allowTimingWrites: true
@@ -202,6 +230,7 @@ export async function executeApplyCore({
       revisionRetryPressure: sequenceAgentInput.revisionRetryPressure,
       revisionFeedback: sequenceAgentInput.revisionFeedback,
       candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
+      currentSequenceContext: sequenceAgentInput.currentSequenceContext,
       priorPassMemory,
       sourceLines,
       baseRevision: state.draftBaseRevision,

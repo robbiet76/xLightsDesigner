@@ -77,6 +77,8 @@ test("executeApplyCore blocks invalid sequence-agent input contract", async () =
 
 test("executeApplyCore preserves XD song structure timing writes during live apply", async () => {
   let appliedCommands = null;
+  let sequenceInput = null;
+  let planInput = null;
   const state = {
     endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     draftBaseRevision: "rev-1",
@@ -109,7 +111,15 @@ test("executeApplyCore preserves XD song structure timing writes during live app
       getValidHandoff: (kind) => kind === "analysis_handoff_v1"
         ? { structure: { sections: [{ label: "Intro", startMs: 0, endMs: 1000 }] } }
         : {},
-      buildSequenceAgentInput: () => ({ ok: true }),
+      buildSequenceAgentInput: (input) => {
+        sequenceInput = input;
+        return { ...input, ok: true };
+      },
+      buildCurrentSequenceContextFromReadback: async () => ({
+        artifactType: "current_sequence_context_v1",
+        artifactId: "current_sequence_context_v1-apply",
+        summary: { timingTrackCount: 1, effectCount: 1 }
+      }),
       currentLayoutMode: () => "sequencer",
       getSelectedSections: () => [],
       normalizeMetadataSelectionIds: (v = []) => v,
@@ -120,14 +130,17 @@ test("executeApplyCore preserves XD song structure timing writes during live app
       filteredProposed: () => ["Intro / Snowman / add Color Wash"],
       arraysEqualOrdered: () => true,
       validateCommandGraph: () => ({ ok: true, nodeCount: 0, errors: [] }),
-      buildSequenceAgentPlan: () => ({
+      buildSequenceAgentPlan: (input) => {
+        planInput = input;
+        return {
         commands: [
           { id: "song-create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
           { id: "song-insert", cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Intro" }] } },
           { id: "effect-1", cmd: "effects.create", params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 0, endMs: 1000 } }
         ],
         warnings: []
-      }),
+        };
+      },
       emitSequenceAgentStageTelemetry: () => {},
       evaluateSequencePlanCapabilities: () => ({ ok: true, skipped: false, requiredCapabilities: [] }),
       isXdTimingTrack: () => true,
@@ -178,6 +191,8 @@ test("executeApplyCore preserves XD song structure timing writes during live app
   assert.ok(Array.isArray(appliedCommands));
   assert.equal(appliedCommands.some((row) => row.cmd === "timing.createTrack" && row.params?.trackName === "XD: Song Structure"), true);
   assert.equal(appliedCommands.some((row) => row.cmd === "timing.insertMarks" && row.params?.trackName === "XD: Song Structure"), true);
+  assert.equal(sequenceInput.currentSequenceContext.artifactId, "current_sequence_context_v1-apply");
+  assert.equal(planInput.currentSequenceContext.artifactId, "current_sequence_context_v1-apply");
   assert.ok(state.sequenceAgentRuntime.timingTrackProvenance.key);
   assert.equal(state.sequenceAgentRuntime.timingTrackProvenance.key.trackName, "XD: Song Structure");
   assert.equal(state.sequenceAgentRuntime.timingTrackProvenance.key.coverageMode, "complete");

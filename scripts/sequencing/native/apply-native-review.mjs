@@ -12,6 +12,7 @@ import {
   getEffectDefinitions,
   getRenderedSequenceSamples,
   getRevision,
+  getTimingTracks,
   getTimingMarks,
   getOwnedHealth,
   getOwnedJob,
@@ -32,6 +33,7 @@ import { buildDesignSceneContext } from '../../../apps/xlightsdesigner-ui/agent/
 import { buildRenderCritiqueContext } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/render-critique-context.js';
 import { buildArtifactRefs, buildHistoryEntry, buildHistorySnapshotSummary } from '../../../apps/xlightsdesigner-ui/agent/shared/history-entry.js';
 import { buildRenderObservationFromSamples, buildRenderSamplingPlan } from '../../../apps/xlightsdesigner-ui/runtime/render-observation-runtime.js';
+import { buildCurrentSequenceContextFromReadback } from '../../../apps/xlightsdesigner-ui/runtime/current-sequence-context-runtime.js';
 import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/orchestrator.js';
 import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
 import { loadProjectDisplayMetadataAssignments } from './project-display-metadata.mjs';
@@ -393,9 +395,24 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
 
   currentStage = 'build_sequence_plan';
   const metadataAssignments = loadProjectDisplayMetadataAssignments(projectFile);
+  const currentSequenceContext = await buildCurrentSequenceContextFromReadback({
+    endpoint,
+    sequencePath: inputs.sequencePath,
+    sequenceRevision: str(revisionRes?.data?.revision || 'unknown'),
+    analysisHandoff,
+    selectedSections: inputs.reviewIntentHandoff?.scope?.sections || [],
+    selectedTargets: inputs.reviewIntentHandoff?.scope?.targetIds || [],
+    selectedTags: inputs.reviewIntentHandoff?.scope?.tagNames || [],
+    displayElements: normalizeDisplayElements(displayElementsRes)
+  }, {
+    getTimingTracks,
+    getTimingMarks,
+    listEffects
+  });
   const commandsPlan = buildSequenceAgentPlan({
     analysisHandoff,
     intentHandoff: inputs.reviewIntentHandoff,
+    currentSequenceContext,
     sourceLines: Array.isArray(inputs.proposalBundle?.proposalLines) ? inputs.proposalBundle.proposalLines : [],
     baseRevision: str(revisionRes?.data?.revision || 'unknown'),
     capabilityCommands: [],

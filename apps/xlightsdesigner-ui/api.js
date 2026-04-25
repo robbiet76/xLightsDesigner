@@ -602,11 +602,10 @@ export async function listEffects(endpoint, params = {}) {
     const element = String(params?.element || params?.modelName || "").trim();
     const startMs = Number(params?.startMs);
     const endMs = Number(params?.endMs);
-    const owned = await readOwnedGet(endpoint, "/effects/window", {
-      element,
-      startMs,
-      endMs
-    });
+    const query = { element };
+    if (Number.isFinite(startMs)) query.startMs = startMs;
+    if (Number.isFinite(endMs)) query.endMs = endMs;
+    const owned = await readOwnedGet(endpoint, "/effects/window", query);
     const effects = Array.isArray(owned?.data?.effects) ? owned.data.effects : [];
     const layerIndex = Number(params?.layerIndex);
     return {

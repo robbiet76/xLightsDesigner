@@ -157,6 +157,7 @@ import {
 import { buildPageStates } from "./app-ui/page-state/index.js";
 import { buildNormalizedTargetMetadataRecords } from "./runtime/target-metadata-runtime.js";
 import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js";
+import { buildCurrentSequenceContextFromReadback } from "./runtime/current-sequence-context-runtime.js";
 import { fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
 import {
   buildRenderObservationFromSamples,
@@ -8035,6 +8036,7 @@ applyReviewRuntime = createApplyReviewRuntime({
   buildCurrentMusicDesignContext,
   buildCurrentRenderObservation,
   collectPostApplyRenderObservation,
+  buildCurrentSequenceContextFromReadback,
   buildEffectiveMetadataAssignments: (...args) => metadataRuntime.buildEffectiveMetadataAssignments(...args),
   getRevision,
   pushSequenceAgentContractDiagnostic,
@@ -8106,6 +8108,7 @@ proposalGenerationRuntime = createProposalGenerationRuntime({
   buildDesignerExecutionSeedLines,
   shouldUseExecutionStrategySeedLines,
   buildSequenceAgentInput,
+  buildCurrentSequenceContextFromReadback,
   buildPriorPassMemory,
   currentLayoutMode,
   getSequenceTimingOwnershipRows,

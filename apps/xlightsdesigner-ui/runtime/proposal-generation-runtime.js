@@ -87,7 +87,8 @@ export function createProposalGenerationRuntime(deps = {}) {
     buildChatArtifactCard = () => ({}),
     clearDesignRevisionTarget = () => {},
     normalizeMetadataSelectionIds = (values) => values,
-    normalizeMetadataSelectedTags = (values) => values
+    normalizeMetadataSelectedTags = (values) => values,
+    buildCurrentSequenceContextFromReadback = async () => null
   } = deps;
 
   async function generateProposal(intentOverride = "", options = {}) {
@@ -418,6 +419,38 @@ export function createProposalGenerationRuntime(deps = {}) {
         || state.sequenceAgentRuntime?.revisionFeedback
         || null;
       const sequenceAgentInput = buildSequenceAgentInput({
+        currentSequenceContext: await (async () => {
+          try {
+            const selectedTargetIds = normalizeMetadataSelectionIds(directSequenceMode
+              ? directSelectedTargetIds
+              : (revisionTarget?.targetIds?.length ? revisionTarget.targetIds : designerSelectedTargetIds));
+            const selectedTagNames = normalizeMetadataSelectedTags(directSequenceMode ? directSelectedTagNames : designerSelectedTags);
+            const context = await buildCurrentSequenceContextFromReadback({
+              endpoint: state.endpoint,
+              sequencePath: currentSequencePathForSidecar(),
+              sequenceRevision: str(state.draftBaseRevision || state.revision || "unknown"),
+              analysisHandoff,
+              selectedSections: selected,
+              selectedTargets: selectedTargetIds,
+              selectedTags: selectedTagNames,
+              displayElements: state.displayElements || []
+            });
+            if (context?.artifactId) {
+              markOrchestrationStage(
+                orchestrationRun,
+                "current_sequence_context",
+                "ok",
+                `effects=${Number(context?.summary?.effectCount || 0)} timingTracks=${Number(context?.summary?.timingTrackCount || 0)}`
+              );
+            }
+            return context;
+          } catch (err) {
+            const detail = str(err?.message || err);
+            markOrchestrationStage(orchestrationRun, "current_sequence_context", "warning", detail);
+            pushDiagnostic("warning", "Current sequence readback unavailable before proposal planning.", detail);
+            return null;
+          }
+        })(),
         requestId: `${orchestrationRun.id}-generate`,
         endpoint: state.endpoint,
         sequenceRevision: str(state.draftBaseRevision || state.revision || "unknown"),
@@ -479,6 +512,7 @@ export function createProposalGenerationRuntime(deps = {}) {
           revisionRetryPressure: sequenceAgentInput.revisionRetryPressure,
           revisionFeedback: sequenceAgentInput.revisionFeedback,
           candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
+          currentSequenceContext: sequenceAgentInput.currentSequenceContext,
           priorPassMemory,
           sourceLines: proposalSeedLines,
           baseRevision: str(state.draftBaseRevision || state.revision || "unknown"),
