@@ -310,6 +310,13 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.generativeSummary.refs.realizationCandidatesRef, out.metadata.realizationCandidates.artifactId);
   assert.equal(out.metadata.generativeSummary.choice.chosenCandidateId, out.metadata.candidateChoice.chosenCandidateId);
   assert.deepEqual(out.metadata.generativeSummary.delta.previousEffectNames, ["Shimmer", "Twinkle"]);
+  assert.equal(out.metadata.passExecution.artifactType, "sequencing_pass_execution_policy_v1");
+  assert.equal(out.metadata.passExecution.iterationMode, "pass_based");
+  assert.equal(out.metadata.passExecution.batchApply.expected, true);
+  assert.equal(out.metadata.passExecution.renderPolicy.preferred, "single_render_after_batch_apply");
+  assert.equal(out.metadata.passExecution.existingSequencePolicy.revisionGateRequired, true);
+  assert.equal(out.metadata.passExecution.existingSequencePolicy.preserveExistingUnlessScoped, true);
+  assert.equal(out.metadata.passExecution.completionPolicy.userAcceptanceRequired, true);
   assert.equal(out.metadata.candidateSelection.policy.mode, "deterministic_preview");
   assert.equal(out.metadata.candidateSelection.policy.phase, "plan");
   assert.equal(out.metadata.candidateChoice.selectionMode, "deterministic_preview");

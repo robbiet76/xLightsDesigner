@@ -72,10 +72,24 @@ History entry construction should also prefer these compact fields when building
 
 Runtime code that needs prior revision state may synthesize minimal `revision_retry_pressure_v1` and `revision_feedback_v1` objects from `metadata.generativeSummary` when expanded artifacts are not embedded. Expanded artifacts remain preferred when present.
 
+`plan_handoff_v1.metadata.passExecution` records the sequencing pass policy:
+
+- iteration is pass-based, not one-effect-at-a-time
+- the sequencer should plan the full intended scope before apply
+- Review should apply the command graph as a batch
+- render should normally happen once after the batch apply
+- additional renders are for clear failure/revision cases
+- existing sequence content should be inspected and preserved unless the request scope authorizes replacement
+- a pass is not final until structural validation, practical validation, render feedback, and user acceptance are satisfied
+
+The agent may mark a pass stable against known checks, but user acceptance remains the final product-level completion signal.
+
 ## Future Work
 
 - Replace large embedded downstream objects with artifact refs plus compact summaries where practical.
 - Add warning thresholds once realistic full-sequence baselines exist.
 - Track handoff size in native validation evidence for large sequence scenarios.
 - Add section/pass chunking for full-song generation and revision.
+- Add a compact current-sequence context artifact so planning can inspect existing sequence effects/timing before generating changes for existing sequences.
+- Add explicit retry/pass budgets so automatic iteration stops after bounded attempts and returns to user review.
 - Keep validation selective: verify anchors, tracks, scope, target coverage, and practical quality without loading full expanded sequence state unless needed.

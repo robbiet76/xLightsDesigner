@@ -742,6 +742,70 @@ function buildCompactGenerativeSummary(metadata = {}) {
   };
 }
 
+function derivePassExecutionScope({ scope = {}, executionStrategy = {}, sectionCount = 0 } = {}) {
+  const passScope = normText(executionStrategy?.passScope);
+  if (passScope) return passScope;
+  const mode = normText(scope?.mode);
+  if (mode === "revise") return "revision_pass";
+  if (sectionCount > 1) return "multi_section";
+  if (sectionCount === 1) return "section_pass";
+  return "whole_sequence";
+}
+
+function buildPassExecutionPolicy({
+  scope = {},
+  executionStrategy = {},
+  commands = [],
+  baseRevision = "",
+  renderValidationEvidence = null
+} = {}) {
+  const effectCommandCount = normArray(commands).filter((command) => normText(command?.cmd) === "effects.create").length;
+  const timingCommandCount = normArray(commands).filter((command) => {
+    const cmd = normText(command?.cmd);
+    return cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
+  }).length;
+  const sectionCount = normArray(scope?.sectionNames).length;
+  const targetCount = normArray(scope?.targetIds).length;
+  return {
+    artifactType: "sequencing_pass_execution_policy_v1",
+    artifactVersion: "1.0",
+    iterationMode: "pass_based",
+    passScope: derivePassExecutionScope({ scope, executionStrategy, sectionCount }),
+    batchApply: {
+      expected: true,
+      commandCount: normArray(commands).length,
+      effectCommandCount,
+      timingCommandCount
+    },
+    renderPolicy: {
+      preferred: "single_render_after_batch_apply",
+      allowAdditionalRenderOnFailure: true
+    },
+    existingSequencePolicy: {
+      baseRevision: normText(baseRevision) || "unknown",
+      revisionGateRequired: true,
+      inspectBeforePlanning: true,
+      preserveExistingUnlessScoped: true
+    },
+    completionPolicy: {
+      userAcceptanceRequired: true,
+      stableWhen: [
+        "apply_result_applied",
+        "readback_validation_passes",
+        "practical_validation_passes",
+        "render_feedback_stable_or_user_accepts"
+      ],
+      autoIterateOnlyForClearFailures: true
+    },
+    requestedScope: {
+      sectionCount,
+      targetCount,
+      tagCount: normArray(scope?.tagNames).length
+    },
+    priorEvidenceAvailable: Boolean(renderValidationEvidence && typeof renderValidationEvidence === "object")
+  };
+}
+
 function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
   const out = [];
   const seen = new Set();
@@ -2232,6 +2296,13 @@ export function buildSequenceAgentPlan({
     metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
     renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
   };
+  metadata.passExecution = buildPassExecutionPolicy({
+    scope,
+    executionStrategy: scope.executionStrategy,
+    commands: commandsOut,
+    baseRevision,
+    renderValidationEvidence: metadata.renderValidationEvidence
+  });
   metadata.artifactRefs = buildPlanArtifactRefs(metadata);
   metadata.generativeSummary = buildCompactGenerativeSummary(metadata);
   metadata.handoffScale = buildPlanHandoffScaleTelemetry({ commands: commandsOut, metadata });

@@ -145,6 +145,9 @@ The agent backend eventually becomes shared cloud infrastructure:
 - validation writes may use a new isolated folder inside the linked development show folder.
 - Existing sequences in the linked development show folder may be inspected for functionality validation, but are not training data.
 - When touching specs or API docs, scan nearby related docs for stale route names, future-tense migration plans, removed fallback paths, and inactive transaction/legacy contracts; clean those claims in the same slice when the scope is clear.
+- Sequencing should be pass-based: plan the full requested scope, apply one coherent batch, render once after the batch, then iterate only from validation/render/user feedback.
+- Existing sequences must be inspected before modification; generated changes should preserve existing content unless the selected request scope explicitly authorizes replacement.
+- The agent can mark a pass stable against known checks, but user acceptance remains the final completion signal.
 
 ## Local Owned API Reliability
 
@@ -191,11 +194,15 @@ Scope:
 - use existing show sequences as validation fixtures only
 - stabilize layering calibration and mature sequence calibration on the current 2026.06 owned API
 - validate target resolution, batch apply, render samples, layout scene, render-current, observation, critique, and revision
+- build compact current-sequence context before planning revisions against existing sequences
+- keep revision iterations as complete scoped passes rather than effect-by-effect tweaks
+- make done/stable status explicit: structural checks pass, practical validation passes, render critique is stable or bounded failure is reported, and user accepts or directs the next pass
 
 Exit criteria:
 - production layering calibration runs without touching existing user sequences
 - mature sequence validation reports are generated from current runner output
 - sequence-agent quality gates are evidence-backed, not manually inferred
+- whole-scope revision passes can inspect existing sequence state, apply a coherent batch, render once, and produce clear stable/needs-review feedback
 
 ## Local App Completion
 
