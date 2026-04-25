@@ -101,7 +101,23 @@ test("review dashboard state reports blocked when draft exists but approval gate
       agentPlan: {
         handoff: {
           commands: [
-            { cmd: "effects.create", designId: "DES-001", params: { effectName: "Color Wash" }, intent: { designId: "DES-001", designAuthor: "designer" } }
+            {
+              cmd: "effects.create",
+              designId: "DES-001",
+              params: { modelName: "Snowman", effectName: "Color Wash", layerIndex: 1 },
+              intent: {
+                designId: "DES-001",
+                designAuthor: "designer",
+                existingSequencePolicy: {
+                  replacementAuthorized: false,
+                  preserveExistingUnlessScoped: true,
+                  overlapCount: 1,
+                  originalLayerIndex: 0,
+                  plannedLayerIndex: 1,
+                  overlappingEffectNames: ["On"]
+                }
+              }
+            }
           ]
         }
       },
@@ -124,6 +140,11 @@ test("review dashboard state reports blocked when draft exists but approval gate
   assert.equal(dashboard.data.rows[0].designAuthor, "designer");
   assert.equal(dashboard.data.rows[0].preferenceCue, "warm cinematic / smooth / hero-prop-first");
   assert.equal(dashboard.data.rows[0].effectCount, 1);
+  assert.equal(dashboard.data.rows[0].preservationSummary.movedCount, 1);
+  assert.equal(dashboard.data.rows[0].preservationSummary.overlapCount, 1);
+  assert.equal(dashboard.data.rows[0].preservationSummary.replacementAuthorized, false);
+  assert.equal(dashboard.data.rows[0].preservationSummary.summary, "Snowman Color Wash L0->L1");
+  assert.deepEqual(dashboard.data.rows[0].preservationSummary.movedEffects[0].overlappingEffectNames, ["On"]);
 });
 
 test("review dashboard state reports ready when apply gate and approval are satisfied", () => {

@@ -302,6 +302,36 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
       effectCount: Number(latest?.placementCount || 0)
     };
   }
+  function commandDesignId(command = {}) {
+    return str(command?.designId || command?.intent?.designId);
+  }
+  function buildPreservationSummary(commands = []) {
+    const rows = arr(commands).filter((command) => command?.intent?.existingSequencePolicy && typeof command.intent.existingSequencePolicy === "object");
+    const moved = rows.filter((command) => {
+      const policy = command.intent.existingSequencePolicy;
+      return Number(policy?.plannedLayerIndex) !== Number(policy?.originalLayerIndex);
+    });
+    const replacementAuthorized = rows.some((command) => command.intent.existingSequencePolicy?.replacementAuthorized === true);
+    const overlapCount = rows.reduce((sum, command) => sum + Number(command.intent.existingSequencePolicy?.overlapCount || 0), 0);
+    const movedEffects = moved.map((command) => ({
+      targetId: str(command?.params?.modelName),
+      effectName: str(command?.params?.effectName),
+      originalLayerIndex: Number(command?.intent?.existingSequencePolicy?.originalLayerIndex ?? command?.params?.layerIndex ?? 0),
+      plannedLayerIndex: Number(command?.intent?.existingSequencePolicy?.plannedLayerIndex ?? command?.params?.layerIndex ?? 0),
+      overlappingEffectNames: uniqueStrings(command?.intent?.existingSequencePolicy?.overlappingEffectNames).slice(0, 5)
+    }));
+    return {
+      commandCount: rows.length,
+      movedCount: moved.length,
+      overlapCount,
+      replacementAuthorized,
+      preserveExistingUnlessScoped: rows.some((command) => command.intent.existingSequencePolicy?.preserveExistingUnlessScoped === true),
+      movedEffects,
+      summary: movedEffects.length
+        ? movedEffects.slice(0, 3).map((row) => `${row.targetId} ${row.effectName} L${row.originalLayerIndex}->L${row.plannedLayerIndex}`).join(", ")
+        : (replacementAuthorized ? "Replacement authorized for scoped overlap." : "")
+    };
+  }
   const conceptMeta = new Map();
   for (const row of sectionPlans) {
     const designId = str(row?.designId);
@@ -328,7 +358,8 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
       const matchingIndexes = filteredRows
         .filter((entry) => meta.sections.includes(str(entry.section)))
         .map((entry) => entry.idx);
-      const linkedEffectCount = effectCommands.filter((command) => str(command?.designId || command?.intent?.designId) === designId).length;
+      const linkedEffectCommands = effectCommands.filter((command) => commandDesignId(command) === designId);
+      const linkedEffectCount = linkedEffectCommands.length;
       return {
         idx: index,
         designId,
@@ -342,6 +373,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
         targetSummary: uniqueStrings(meta.targetIds).slice(0, 3).join(", ") || "Current scope",
         preferenceCue,
         effectCount: linkedEffectCount,
+        preservationSummary: buildPreservationSummary(linkedEffectCommands),
         indexes: matchingIndexes,
         selected: matchingIndexes.length ? matchingIndexes.every((idx) => selectedIndexes.includes(idx)) : false
       };
@@ -363,7 +395,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
     if (!grouped.has(key)) {
       const meta = matchedDesignId ? conceptMeta.get(matchedDesignId) : null;
       const linkedEffectCount = matchedDesignId
-        ? effectCommands.filter((command) => str(command?.designId || command?.intent?.designId) === matchedDesignId).length
+        ? effectCommands.filter((command) => commandDesignId(command) === matchedDesignId).length
         : 0;
       grouped.set(key, {
         designId: matchedDesignId,
@@ -394,6 +426,11 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
       targetSummary: row.targetIds.length ? row.targetIds.slice(0, 3).join(", ") : "Current scope",
       preferenceCue,
       effectCount: Number(row.linkedEffectCount || 0),
+      preservationSummary: buildPreservationSummary(
+        row.designId
+          ? effectCommands.filter((command) => commandDesignId(command) === str(row.designId))
+          : []
+      ),
       indexes,
       selected: indexes.length ? indexes.every((idx) => selectedIndexes.includes(idx)) : false
     };

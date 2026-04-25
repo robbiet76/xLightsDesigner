@@ -1667,7 +1667,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   ${
                     rows.length
                       ? rows
-                          .map(({ designId, designLabel, designAuthor, preferenceCue, summary, anchor, targetSummary, effectCount, previousRevision, indexes, selected }) => {
+                          .map(({ designId, designLabel, designAuthor, preferenceCue, summary, anchor, targetSummary, effectCount, previousRevision, preservationSummary, indexes, selected }) => {
                             const indexCsv = Array.isArray(indexes) ? indexes.join(",") : "";
                             return `
                       <tr class="${selected ? "proposed-row-selected" : ""}">
@@ -1679,6 +1679,13 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <td>${escapeHtml(String(preferenceCue || "—"))}</td>
                         <td>
                           <div>${escapeHtml(String(summary || "Pending design change"))}</div>
+                          ${
+                            preservationSummary?.movedCount
+                              ? `<div class="banner impact">Preserved existing effects: ${escapeHtml(String(preservationSummary.summary || `${preservationSummary.movedCount} layer adjustment${preservationSummary.movedCount === 1 ? "" : "s"}`))}</div>`
+                              : (preservationSummary?.replacementAuthorized
+                                  ? `<div class="banner warning">Replacement authorized for existing overlap.</div>`
+                                  : "")
+                          }
                           ${
                             previousRevision
                               ? `<div class="banner">Prev ${escapeHtml(String(previousRevision.designLabel || "revision"))}: ${escapeHtml(String(previousRevision.summary || "Previous revision"))}</div>`
