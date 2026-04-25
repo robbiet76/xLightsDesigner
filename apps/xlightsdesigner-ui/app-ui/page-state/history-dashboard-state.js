@@ -1,4 +1,4 @@
-import { buildGenerativeSummaryFromMetadata } from "./review-dashboard-state.js";
+import { buildGenerativeSummaryFromMetadata, buildPracticalValidationSummary } from "./review-dashboard-state.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -131,6 +131,7 @@ export function buildHistoryDashboardState({
             musicSummary: str(selectedSnapshot?.musicDesignContext?.summary || "No applied music context summary."),
             brief: selectedSnapshot?.creativeBrief || null,
             applyResult: selectedSnapshot?.applyResult || null,
+            practicalValidationSummary: buildPracticalValidationSummary(selectedSnapshot?.applyResult?.practicalValidation),
             planHandoff: selectedSnapshot?.planHandoff || null,
             analysisArtifact: selectedSnapshot?.analysisArtifact || null,
             sceneContext: selectedSnapshot?.designSceneContext || null,

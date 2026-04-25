@@ -894,6 +894,9 @@ export function createAutomationRuntime(deps = {}) {
 
   function summarizePracticalValidation(validation = null) {
     if (!validation || typeof validation !== "object") return null;
+    const preservation = validation?.summary?.preservationChecks && typeof validation.summary.preservationChecks === "object"
+      ? validation.summary.preservationChecks
+      : {};
     return {
       artifactType: String(validation.artifactType || ""),
       overallOk: validation.overallOk === true,
@@ -901,7 +904,13 @@ export function createAutomationRuntime(deps = {}) {
       readbackPassed: Number(validation?.summary?.readbackChecks?.passed || 0),
       readbackFailed: Number(validation?.summary?.readbackChecks?.failed || 0),
       designPassed: Number(validation?.summary?.designChecks?.passed || 0),
-      designFailed: Number(validation?.summary?.designChecks?.failed || 0)
+      designFailed: Number(validation?.summary?.designChecks?.failed || 0),
+      preservationPassed: Number(preservation.passed || 0),
+      preservationFailed: Number(preservation.failed || 0),
+      preservationTotal: Number(preservation.total || 0),
+      preservationFailedTargets: Array.isArray(preservation.failedTargets)
+        ? preservation.failedTargets.map((row) => String(row || "").trim()).filter(Boolean).slice(0, 8)
+        : []
     };
   }
 

@@ -188,7 +188,9 @@ export function buildHistorySnapshotSummary({
           artifactType: ensureString(applyResult.practicalValidation.artifactType, null),
           trainingArtifactVersion: ensureString(applyResult.practicalValidation?.trainingKnowledge?.artifactVersion, null),
           readbackFailed: Number(applyResult.practicalValidation?.summary?.readbackChecks?.failed || 0),
-          designFailed: Number(applyResult.practicalValidation?.summary?.designChecks?.failed || 0)
+          designFailed: Number(applyResult.practicalValidation?.summary?.designChecks?.failed || 0),
+          preservationFailed: Number(applyResult.practicalValidation?.summary?.preservationChecks?.failed || 0),
+          preservationFailedTargets: compactList(applyResult.practicalValidation?.summary?.preservationChecks?.failedTargets, 8)
         }
       : null
   };

@@ -193,7 +193,23 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
         historyEntryId: "history-123",
         creativeBrief: { summary: "Applied design" },
         proposalBundle: { proposalLines: ["Applied line"] },
-        applyResult: { status: "completed" },
+        applyResult: {
+          status: "completed",
+          practicalValidation: {
+            artifactType: "practical_sequence_validation_v1",
+            overallOk: true,
+            summary: {
+              readbackChecks: { passed: 2, failed: 0 },
+              designChecks: { passed: 1, failed: 0 },
+              preservationChecks: {
+                passed: 1,
+                failed: 0,
+                total: 1,
+                failedTargets: []
+              }
+            }
+          }
+        },
         planHandoff: {
           metadata: {
             priorPassMemory: { unresolvedSignals: ["weak_section_contrast"] },
@@ -351,6 +367,8 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.processSummary.status, "revise_required");
   assert.equal(dashboard.data.lastAppliedSnapshot.processSummary.focus, "weighted");
   assert.equal(dashboard.data.lastAppliedSnapshot.processSummary.nextMove, "Strengthen MegaTree lead and reduce competing support.");
+  assert.equal(dashboard.data.lastAppliedSnapshot.practicalValidationSummary.preservationPassed, 1);
+  assert.equal(dashboard.data.lastAppliedSnapshot.practicalValidationSummary.preservationTotal, 1);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentEffectNames, ["Color Wash"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.currentTargetIds, ["Snowman"]);
   assert.deepEqual(dashboard.data.lastAppliedSnapshot.generativeSummary.delta.introducedEffectNames, ["Color Wash"]);

@@ -131,6 +131,18 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
         ok: true,
         checked: ["effects_present"],
         failures: []
+      },
+      practicalValidation: {
+        artifactType: "practical_sequence_validation_v1",
+        overallOk: false,
+        summary: {
+          readbackChecks: { failed: 1 },
+          designChecks: { failed: 0 },
+          preservationChecks: {
+            failed: 1,
+            failedTargets: ["Snowman@0->1"]
+          }
+        }
       }
     }
   });
@@ -152,6 +164,8 @@ test("buildHistorySnapshotSummary compacts current design and sequence state", (
   assert.equal(summary.applySummary.commandCount, 5);
   assert.equal(summary.applySummary.metadataAssignmentCount, 7);
   assert.equal(summary.verificationSummary.ok, true);
+  assert.equal(summary.practicalValidationSummary.preservationFailed, 1);
+  assert.deepEqual(summary.practicalValidationSummary.preservationFailedTargets, ["Snowman@0->1"]);
 });
 
 test("buildHistorySnapshotSummary prefers compact generative summary", () => {

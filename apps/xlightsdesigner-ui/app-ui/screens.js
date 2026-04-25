@@ -50,6 +50,25 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       : `<p class="banner">${escapeHtml(emptyText)}</p>`;
   }
 
+  function practicalValidationDisplay(validation = null) {
+    if (!validation || typeof validation !== "object") return null;
+    const summary = validation.summary && typeof validation.summary === "object" ? validation.summary : {};
+    const preservation = summary.preservationChecks && typeof summary.preservationChecks === "object"
+      ? summary.preservationChecks
+      : {};
+    return {
+      overallOk: validation.overallOk === true,
+      readbackFailed: Number(summary?.readbackChecks?.failed || 0),
+      designFailed: Number(summary?.designChecks?.failed || 0),
+      preservationPassed: Number(preservation.passed || 0),
+      preservationFailed: Number(preservation.failed || 0),
+      preservationTotal: Number(preservation.total || 0),
+      preservationFailedTargets: Array.isArray(preservation.failedTargets)
+        ? preservation.failedTargets.map((row) => String(row || "").trim()).filter(Boolean).slice(0, 4)
+        : []
+    };
+  }
+
   function renderArtifactDetailPanel() {
     const inspected = String(state.ui?.inspectedArtifact || "").trim();
     if (!inspected) return "";
@@ -433,6 +452,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const safeArtifactRefs = artifactRefs && typeof artifactRefs === "object"
       ? Object.entries(artifactRefs).filter(([, value]) => String(value || "").trim())
       : [];
+    const validationDisplay = practicalValidationDisplay(applyResult?.practicalValidation);
     const focalCandidates = Array.isArray(sceneContext?.focalCandidates)
       ? sceneContext.focalCandidates.filter(Boolean).slice(0, 4)
       : [];
@@ -579,6 +599,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <p>Commands: ${escapeHtml(String(applyResult?.commandCount || 0))}</p>
             <p>Impacts: ${escapeHtml(String(applyResult?.impactCount || 0))}</p>
             ${String(applyResult?.failureReason || "").trim() ? `<p>Failure: ${escapeHtml(String(applyResult.failureReason))}</p>` : ""}
+            ${validationDisplay ? `<p>Validation: ${validationDisplay.overallOk ? "passed" : "needs review"} / readback failures ${escapeHtml(String(validationDisplay.readbackFailed))} / design failures ${escapeHtml(String(validationDisplay.designFailed))}</p>` : ""}
+            ${validationDisplay && validationDisplay.preservationTotal ? `<p>Preservation: ${escapeHtml(String(validationDisplay.preservationPassed))}/${escapeHtml(String(validationDisplay.preservationTotal))} passed${validationDisplay.preservationFailed ? ` / failed ${escapeHtml(validationDisplay.preservationFailedTargets.join(", ") || String(validationDisplay.preservationFailed))}` : ""}</p>` : ""}
           </div>
           <div class="dashboard-panel">
             <div class="artifact-kicker">Audio + Scene</div>
@@ -1535,6 +1557,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const lastAppliedSnapshot = data.lastAppliedSnapshot || null;
     const counts = data.counts || {};
     const verification = data.verification || null;
+    const lastPracticalValidation = lastAppliedSnapshot?.practicalValidationSummary || null;
     const rows = Array.isArray(data.rows) ? data.rows : [];
     return renderWorkspaceFrame("review", `
       ${
@@ -1576,6 +1599,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <span class="artifact-chip">${escapeHtml(String(counts.commands || 0))} commands</span>
             ${data.preferenceCue ? `<span class="artifact-chip">${escapeHtml(String(data.preferenceCue))}</span>` : ""}
             <span class="artifact-chip">${verification ? (verification.expectedMutationsPresent ? "last apply verified" : "last apply needs review") : "not yet applied"}</span>
+            ${lastPracticalValidation && Number(lastPracticalValidation.preservationTotal || 0) ? `<span class="artifact-chip">preservation ${escapeHtml(String(lastPracticalValidation.preservationPassed || 0))}/${escapeHtml(String(lastPracticalValidation.preservationTotal || 0))}</span>` : ""}
+            ${lastPracticalValidation && Number(lastPracticalValidation.preservationFailed || 0) ? `<span class="artifact-chip artifact-chip-warning">preservation failed ${escapeHtml(arr(lastPracticalValidation.preservationFailedTargets).join(", ") || String(lastPracticalValidation.preservationFailed))}</span>` : ""}
           </div>
           <div class="dashboard-grid">
             <div class="dashboard-panel">

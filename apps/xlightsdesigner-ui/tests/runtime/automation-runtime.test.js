@@ -242,7 +242,8 @@ test("automation sequencer validation snapshot exposes review chain guidance and
               designSummary: "MegaTree chorus",
               summary: {
                 readbackChecks: { passed: 3, failed: 0 },
-                designChecks: { passed: 2, failed: 0 }
+                designChecks: { passed: 2, failed: 0 },
+                preservationChecks: { passed: 1, failed: 0, total: 1, failedTargets: [] }
               }
             }
           },
@@ -303,6 +304,8 @@ test("automation sequencer validation snapshot exposes review chain guidance and
   assert.equal(out.latestReviewArtifacts.applyResult.artifactId, "apply-1");
   assert.equal(out.latestReviewArtifacts.applyResult.practicalValidation.readbackPassed, 3);
   assert.equal(out.latestReviewArtifacts.applyResult.practicalValidation.designPassed, 2);
+  assert.equal(out.latestReviewArtifacts.applyResult.practicalValidation.preservationPassed, 1);
+  assert.equal(out.latestReviewArtifacts.applyResult.practicalValidation.preservationTotal, 1);
   assert.equal(out.latestReviewArtifacts.renderObservation.artifactId, "render-1");
   assert.equal(out.latestReviewArtifacts.renderObservation.samplingMode, "drilldown");
   assert.equal(out.latestReviewArtifacts.renderCritiqueContext.leadMatchesPrimaryFocus, true);

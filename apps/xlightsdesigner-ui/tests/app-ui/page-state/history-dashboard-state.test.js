@@ -47,7 +47,25 @@ test("history dashboard summarizes selected applied revision", () => {
           historyEntryId: "history-1",
           creativeBrief: { summary: "Warm focal chorus", goals: ["Keep Snowman leading"] },
           proposalBundle: { proposalLines: ["Chorus 1 / Snowman / warm focal lift"] },
-          applyResult: { status: "completed", commandCount: 4, impactCount: 2 },
+          applyResult: {
+            status: "completed",
+            commandCount: 4,
+            impactCount: 2,
+            practicalValidation: {
+              artifactType: "practical_sequence_validation_v1",
+              overallOk: false,
+              summary: {
+                readbackChecks: { passed: 2, failed: 1 },
+                designChecks: { passed: 1, failed: 0 },
+                preservationChecks: {
+                  passed: 0,
+                  failed: 1,
+                  total: 1,
+                  failedTargets: ["Snowman@0->1"]
+                }
+              }
+            }
+          },
           planHandoff: {
             metadata: {
               priorPassMemory: { unresolvedSignals: ["lead_mismatch"] },
@@ -89,6 +107,8 @@ test("history dashboard summarizes selected applied revision", () => {
   assert.equal(dashboard.data.selected.designSummary, "Warm focal chorus");
   assert.equal(dashboard.data.selected.passOutcomeStatus, "revise_required");
   assert.equal(dashboard.data.selected.hasRetryPressure, true);
+  assert.equal(dashboard.data.selected.practicalValidationSummary.preservationFailed, 1);
+  assert.deepEqual(dashboard.data.selected.practicalValidationSummary.preservationFailedTargets, ["Snowman@0->1"]);
   assert.equal(dashboard.data.selected.processSummary.status, "revise_required");
   assert.equal(dashboard.data.selected.processSummary.focus, "concentrated");
   assert.equal(dashboard.data.selected.processSummary.nextMove, "Restore Snowman as the clear focal element.");

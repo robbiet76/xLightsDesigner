@@ -10,6 +10,26 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((value) => str(value)).filter(Boolean))];
 }
 
+export function buildPracticalValidationSummary(validation = null) {
+  if (!validation || typeof validation !== "object") return null;
+  const preservation = validation?.summary?.preservationChecks && typeof validation.summary.preservationChecks === "object"
+    ? validation.summary.preservationChecks
+    : {};
+  return {
+    artifactType: str(validation.artifactType),
+    overallOk: validation.overallOk === true,
+    designSummary: str(validation.designSummary),
+    readbackPassed: Number(validation?.summary?.readbackChecks?.passed || 0),
+    readbackFailed: Number(validation?.summary?.readbackChecks?.failed || 0),
+    designPassed: Number(validation?.summary?.designChecks?.passed || 0),
+    designFailed: Number(validation?.summary?.designChecks?.failed || 0),
+    preservationPassed: Number(preservation.passed || 0),
+    preservationFailed: Number(preservation.failed || 0),
+    preservationTotal: Number(preservation.total || 0),
+    preservationFailedTargets: arr(preservation.failedTargets).map((row) => str(row)).filter(Boolean).slice(0, 8)
+  };
+}
+
 function differenceStrings(nextValues = [], previousValues = []) {
   const previous = new Set(uniqueStrings(previousValues));
   return uniqueStrings(nextValues).filter((value) => !previous.has(value));
@@ -630,6 +650,7 @@ export function buildReviewDashboardState({
             brief: lastAppliedSnapshot.creativeBrief || null,
             proposalLines: lastAppliedSnapshot.proposalBundle?.proposalLines || [],
             applyResult: lastAppliedSnapshot.applyResult || lastApply || null,
+            practicalValidationSummary: buildPracticalValidationSummary(lastAppliedSnapshot.applyResult?.practicalValidation),
             planHandoff: lastAppliedSnapshot.planHandoff || null,
             analysisArtifact: lastAppliedSnapshot.analysisArtifact || null,
             sceneContext: lastAppliedSnapshot.designSceneContext || null,
