@@ -224,6 +224,74 @@ test("sequence_agent builds validated command plan from handoffs", () => {
   assert.equal(out.commands.some((row) => row.cmd === "effects.alignToTiming"), true);
 });
 
+test("sequence_agent preserves existing overlapping effects by moving new effects to an open layer", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / add shimmer pulse"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "MegaTree",
+            effectName: "On",
+            layerIndex: 0,
+            startMs: 0,
+            endMs: 120000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommand = out.commands.find((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree");
+  assert.equal(effectCommand.params.layerIndex, 1);
+  assert.equal(effectCommand.intent.existingSequencePolicy.replacementAuthorized, false);
+  assert.equal(effectCommand.intent.existingSequencePolicy.overlapCount, 1);
+  assert.deepEqual(effectCommand.intent.existingSequencePolicy.overlappingEffectNames, ["On"]);
+  assert.equal(out.warnings.some((row) => /Preserving existing effects on MegaTree/i.test(row)), true);
+  assert.equal(out.metadata.passExecution.existingSequencePolicy.inspectionAvailable, true);
+});
+
+test("sequence_agent keeps scoped layer when replacement is explicitly requested", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / replace existing look with shimmer pulse"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "MegaTree",
+            effectName: "On",
+            layerIndex: 0,
+            startMs: 0,
+            endMs: 120000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommand = out.commands.find((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree");
+  assert.equal(effectCommand.params.layerIndex, 0);
+  assert.equal(effectCommand.intent.existingSequencePolicy.replacementAuthorized, true);
+  assert.equal(effectCommand.intent.existingSequencePolicy.overlapCount, 1);
+  assert.equal(out.warnings.some((row) => /Preserving existing effects on MegaTree/i.test(row)), false);
+});
+
 test("sequence_agent plan metadata carries artistic goal, revision objective, and sequencer brief", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

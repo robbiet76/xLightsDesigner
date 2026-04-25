@@ -196,6 +196,7 @@ Scope:
 - validate target resolution, batch apply, render samples, layout scene, render-current, observation, critique, and revision
 - build `current_sequence_context_v1` from xLights readback before planning revisions against existing sequences, then pass the sanitized summary into `plan_handoff_v1.metadata.currentSequenceContext`
 - keep revision iterations as complete scoped passes rather than effect-by-effect tweaks
+- preserve overlapping existing effects by moving new writes to open layers unless replacement is explicitly requested
 - make done/stable status explicit: structural checks pass, practical validation passes, render critique is stable or bounded failure is reported, and user accepts or directs the next pass
 
 Exit criteria:

@@ -86,6 +86,8 @@ The agent may mark a pass stable against known checks, but user acceptance remai
 
 `current_sequence_context_v1` is the compact existing-sequence inspection artifact for revision planning. It carries bounded timing track names/counts, effect names/counts, target ids, sequence revision, and scoped summary data so the sequencer can reason about current xLights state without passing a full sequence document through every handoff. Proposal generation, review apply, and native review apply build this artifact from xLights readback before planning. `plan_handoff_v1.metadata.currentSequenceContext` stores the sanitized version, and `metadata.artifactRefs.currentSequenceContextRef` gives compact consumers a stable pointer.
 
+When the expanded current-sequence context includes sampled existing effects, the sequence planner preserves overlapping same-target effects by moving new effect writes to the next open layer unless the request explicitly uses replacement language such as replace, overwrite, clear, remove, delete, redo, or rebuild. Each created effect records `intent.existingSequencePolicy` with overlap counts, replacement authorization, original layer, and planned layer so Review can audit why the command graph changed.
+
 ## Future Work
 
 - Replace large embedded downstream objects with artifact refs plus compact summaries where practical.

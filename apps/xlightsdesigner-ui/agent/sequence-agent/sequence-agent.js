@@ -813,6 +813,110 @@ function buildPassExecutionPolicy({
   };
 }
 
+function currentSequenceEffectRows(currentSequenceContext = null) {
+  const sample = currentSequenceContext?.effects?.sample;
+  return normArray(sample)
+    .map((row) => {
+      const targetId = normText(row?.targetId || row?.modelName || row?.model);
+      const layerIndex = Number(row?.layerIndex);
+      const startMs = Number(row?.startMs);
+      const endMs = Number(row?.endMs);
+      if (!targetId || !Number.isFinite(layerIndex) || layerIndex < 0) return null;
+      if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
+      return {
+        targetId,
+        layerIndex,
+        effectName: normText(row?.effectName || row?.name),
+        startMs,
+        endMs
+      };
+    })
+    .filter(Boolean);
+}
+
+function overlapsWindow(a = {}, b = {}) {
+  const aStart = Number(a?.startMs);
+  const aEnd = Number(a?.endMs);
+  const bStart = Number(b?.startMs);
+  const bEnd = Number(b?.endMs);
+  if (!Number.isFinite(aStart) || !Number.isFinite(aEnd) || !Number.isFinite(bStart) || !Number.isFinite(bEnd)) return false;
+  return Math.max(aStart, bStart) < Math.min(aEnd, bEnd);
+}
+
+function hasReplacementIntent({ sourceLines = [], executionStrategy = {}, scope = {} } = {}) {
+  const passScope = normText(executionStrategy?.passScope).toLowerCase();
+  const mode = normText(scope?.mode).toLowerCase();
+  const joined = [
+    ...normArray(sourceLines),
+    normText(scope?.goal),
+    normText(executionStrategy?.implementationMode)
+  ].join(" ").toLowerCase();
+  if (/\b(replace|overwrite|clear|remove|delete|wipe|redo|rebuild)\b/.test(joined)) return true;
+  if (mode === "replace" || mode === "overwrite") return true;
+  return passScope === "replacement_pass";
+}
+
+function applyExistingSequencePreservation({
+  commands = [],
+  currentSequenceContext = null,
+  sourceLines = [],
+  executionStrategy = {},
+  scope = {},
+  warnings = []
+} = {}) {
+  const existingEffects = currentSequenceEffectRows(currentSequenceContext);
+  const replacementAuthorized = hasReplacementIntent({ sourceLines, executionStrategy, scope });
+  if (!existingEffects.length) return commands;
+  return normArray(commands).map((command) => {
+    if (normText(command?.cmd) !== "effects.create") return command;
+    const params = command?.params && typeof command.params === "object" ? command.params : {};
+    const modelName = normText(params.modelName);
+    const startMs = Number(params.startMs);
+    const endMs = Number(params.endMs);
+    const layerIndex = Number(params.layerIndex);
+    if (!modelName || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs || !Number.isFinite(layerIndex)) {
+      return command;
+    }
+    const overlaps = existingEffects.filter((effect) => effect.targetId === modelName && overlapsWindow(effect, { startMs, endMs }));
+    if (!overlaps.length) {
+      return {
+        ...command,
+        intent: {
+          ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
+          existingSequencePolicy: {
+            replacementAuthorized,
+            preserveExistingUnlessScoped: true,
+            overlapCount: 0
+          }
+        }
+      };
+    }
+    const maxExistingLayer = Math.max(...overlaps.map((effect) => effect.layerIndex));
+    const nextLayerIndex = replacementAuthorized ? layerIndex : Math.max(layerIndex, maxExistingLayer + 1);
+    if (!replacementAuthorized && nextLayerIndex !== layerIndex) {
+      warnings.push(`Preserving existing effects on ${modelName}; moved ${normText(params.effectName) || "planned effect"} from layer ${layerIndex} to layer ${nextLayerIndex}.`);
+    }
+    return {
+      ...command,
+      params: {
+        ...params,
+        layerIndex: nextLayerIndex
+      },
+      intent: {
+        ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
+        existingSequencePolicy: {
+          replacementAuthorized,
+          preserveExistingUnlessScoped: true,
+          overlapCount: overlaps.length,
+          originalLayerIndex: layerIndex,
+          plannedLayerIndex: nextLayerIndex,
+          overlappingEffectNames: Array.from(new Set(overlaps.map((effect) => effect.effectName).filter(Boolean))).slice(0, 5)
+        }
+      }
+    };
+  });
+}
+
 function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
   const out = [];
   const seen = new Set();
@@ -1877,7 +1981,9 @@ function stageCommandGraphSynthesis({
   sectionWindowsByName = null,
   trackName = "XD: Sequencer Plan",
   useAllKnownSections = false,
-  allowTimingWrites = true
+  allowTimingWrites = true,
+  currentSequenceContext = null,
+  scope = {}
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
   const synthesized = normArray(effect.executionSeedLines).filter(Boolean);
@@ -1930,8 +2036,16 @@ function stageCommandGraphSynthesis({
     if (Array.isArray(effectCompat.warnings) && effectCompat.warnings.length) {
       warnings.push(...effectCompat.warnings);
     }
+    const preservedCommands = applyExistingSequencePreservation({
+      commands: placementGraph.commands,
+      currentSequenceContext,
+      sourceLines,
+      executionStrategy,
+      scope,
+      warnings
+    });
     return {
-      commands: decorateCommandsWithDesignMetadata(placementGraph.commands, executionStrategy),
+      commands: decorateCommandsWithDesignMetadata(preservedCommands, executionStrategy),
       executionLines: [],
       estimatedImpact: Number(placementGraph.estimatedImpact || 0),
       warnings,
@@ -2009,7 +2123,15 @@ function stageCommandGraphSynthesis({
     filteredCommands.push(command);
   }
   const commandsOut = decorateCommandsWithDesignMetadata(filteredCommands, executionStrategy);
-  const capabilityGate = evaluateSequencePlanCapabilities({ commands: commandsOut, capabilityCommands });
+  const preservedCommandsOut = applyExistingSequencePreservation({
+    commands: commandsOut,
+    currentSequenceContext,
+    sourceLines: executionLines,
+    executionStrategy,
+    scope,
+    warnings
+  });
+  const capabilityGate = evaluateSequencePlanCapabilities({ commands: preservedCommandsOut, capabilityCommands });
   if (!capabilityGate.ok) {
     const err = new Error(capabilityGate.errors.join("; ") || "capability gate failed");
     err.failureCategory = "capability";
@@ -2018,7 +2140,7 @@ function stageCommandGraphSynthesis({
   if (Array.isArray(capabilityGate.warnings) && capabilityGate.warnings.length) {
     warnings.push(...capabilityGate.warnings);
   }
-  const effectCompat = evaluateEffectCommandCompatibility({ commands: commandsOut, effectCatalog });
+  const effectCompat = evaluateEffectCommandCompatibility({ commands: preservedCommandsOut, effectCatalog });
   if (!effectCompat.ok) {
     const err = new Error(effectCompat.errors.join("; ") || "effect compatibility gate failed");
     err.failureCategory = "validate";
@@ -2028,12 +2150,12 @@ function stageCommandGraphSynthesis({
     warnings.push(...effectCompat.warnings);
   }
   return {
-    commands: commandsOut,
+    commands: preservedCommandsOut,
     executionLines,
     estimatedImpact: estimateImpactCount(executionLines),
     warnings,
-    validationReady: Array.isArray(commandsOut) && commandsOut.length > 0,
-    detail: `commands=${Array.isArray(commandsOut) ? commandsOut.length : 0} capabilities=${capabilityGate.requiredCapabilities.length}`
+    validationReady: Array.isArray(preservedCommandsOut) && preservedCommandsOut.length > 0,
+    detail: `commands=${Array.isArray(preservedCommandsOut) ? preservedCommandsOut.length : 0} capabilities=${capabilityGate.requiredCapabilities.length}`
   };
 }
 
@@ -2214,6 +2336,7 @@ export function buildSequenceAgentPlan({
           sourceLines,
           effect: effectiveEffectStrategy,
           executionStrategy: scope.executionStrategy,
+          scope,
           analysisHandoff: safeAnalysis,
           warnings,
           capabilityCommands,
@@ -2233,7 +2356,8 @@ export function buildSequenceAgentPlan({
           }),
           trackName: timing.trackName,
           useAllKnownSections: timing.includeAllKnownSections === true,
-          allowTimingWrites
+          allowTimingWrites,
+          currentSequenceContext
         }))
   });
 
