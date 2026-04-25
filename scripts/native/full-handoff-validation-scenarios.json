@@ -27,6 +27,20 @@
       "targetIds": "Star",
       "selectedTags": "lead",
       "sectionLabel": "Chorus 1"
+    },
+    {
+      "name": "cue-anchored-beat-bar-lyric-star-lead",
+      "targetIds": "Star",
+      "selectedTags": "lead",
+      "intentGoal": "Validate metadata-selected sequencing for Star with beat-by-beat pulse anchors, measure bar timing support, and vocal lyric cue timing.",
+      "expectedTimingTracks": [
+        "XD: Beat Grid",
+        "XD: Bars",
+        "XD: Lyrics"
+      ],
+      "expectedAnchorTracks": [
+        "XD: Beat Grid"
+      ]
     }
   ]
 }

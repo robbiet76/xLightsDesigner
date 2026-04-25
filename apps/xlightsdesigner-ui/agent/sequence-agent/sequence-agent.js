@@ -1233,6 +1233,89 @@ function findContainingTimingMark({ window = {}, trackName = "", marksByTrack = 
   }) || null;
 }
 
+function findNearestTimingMark({ window = {}, marks = [] } = {}) {
+  const start = Number(window?.startMs);
+  if (!Number.isFinite(start)) return null;
+  return normArray(marks)
+    .filter((mark) => Number.isFinite(Number(mark?.startMs)) && Number.isFinite(Number(mark?.endMs)) && Number(mark.endMs) > Number(mark.startMs))
+    .map((mark) => {
+      const markStart = Number(mark.startMs);
+      const markEnd = Number(mark.endMs);
+      const contains = markStart <= start && markEnd >= start;
+      const distance = contains ? 0 : Math.min(Math.abs(markStart - start), Math.abs(markEnd - start));
+      return { mark, distance };
+    })
+    .sort((a, b) => a.distance - b.distance || Number(a.mark.startMs) - Number(b.mark.startMs))[0]?.mark || null;
+}
+
+function retargetFallbackEffectsToCueTiming({
+  commands = [],
+  requestedTrackNames = [],
+  cueTrackMarksByTrack = null,
+  sequenceSettings = {}
+} = {}) {
+  const trackName = normArray(requestedTrackNames).map((row) => normText(row)).find(Boolean);
+  if (!trackName || !(cueTrackMarksByTrack instanceof Map)) return commands;
+  const marksByTrack = buildPlacementMarksByTrack({
+    effectPlacements: [],
+    cueTrackMarksByTrack,
+    sequenceSettings
+  });
+  const marks = normArray(marksByTrack.get(trackName));
+  if (!marks.length) return commands;
+  let effectIndex = -1;
+  const cueByEffectOrdinal = new Map();
+  return normArray(commands).map((command) => {
+    const cmd = normText(command?.cmd);
+    if (cmd === "effects.create") {
+      effectIndex += 1;
+      const params = command?.params && typeof command.params === "object" ? command.params : {};
+      const window = clampPlacementWindow({
+        startMs: params.startMs,
+        endMs: params.endMs,
+        sequenceSettings
+      });
+      const mark = findNearestTimingMark({ window, marks }) || marks[effectIndex % marks.length];
+      if (!mark) return command;
+      cueByEffectOrdinal.set(effectIndex, mark);
+      return {
+        ...command,
+        anchor: {
+          kind: "timing_track",
+          trackName,
+          markLabel: normText(mark?.label),
+          startMs: Number(mark.startMs),
+          endMs: Number(mark.endMs),
+          basis: "requested_cue_timing",
+          boundarySide: "start"
+        },
+        params: {
+          ...params,
+          startMs: Number(mark.startMs),
+          endMs: Number(mark.endMs)
+        }
+      };
+    }
+    if (cmd === "effects.alignToTiming") {
+      const params = command?.params && typeof command.params === "object" ? command.params : {};
+      const ordinalText = normText(command?.id).match(/effect\.align\.(\d+)/)?.[1];
+      const ordinal = ordinalText ? Math.max(0, Number(ordinalText) - 1) : effectIndex;
+      const mark = cueByEffectOrdinal.get(ordinal) || cueByEffectOrdinal.get(effectIndex) || marks[0];
+      if (!mark) return command;
+      return {
+        ...command,
+        params: {
+          ...params,
+          startMs: Number(mark.startMs),
+          endMs: Number(mark.endMs),
+          timingTrackName: trackName
+        }
+      };
+    }
+    return command;
+  });
+}
+
 function findAdjacentPlacementBoundary({ placement = {}, window = {}, placements = [] } = {}) {
   const targetId = normText(placement?.targetId);
   const layerIndex = Number(placement?.layerIndex);
@@ -1610,7 +1693,7 @@ function stageCommandGraphSynthesis({
   if (!enableEffectTimingAlignment) {
     warnings.push("effects.alignToTiming capability unavailable; effect windows will remain static timing-aligned ranges instead of explicit timing re-alignment commands.");
   }
-  const commands = buildDesignerPlanCommands(executionLines, {
+  let commands = buildDesignerPlanCommands(executionLines, {
     trackName,
     targetIds,
     effectCatalog,
@@ -1622,6 +1705,24 @@ function stageCommandGraphSynthesis({
     sectionWindowsByName,
     useAllKnownSections,
     enableEffectTimingAlignment
+  });
+  const requestedCueTrackNames = inferRequestedCueTimingTracks({
+    goal: goalText,
+    sourceLines: executionLines,
+    executionStrategy
+  });
+  const cueTrackMarksByTrack = requestedCueTrackNames.length
+    ? buildCueTrackMarksByTrack({
+        analysisHandoff,
+        sectionNames: sectionWindowsByName instanceof Map ? Array.from(sectionWindowsByName.keys()) : [],
+        includeAll: true
+      })
+    : new Map();
+  commands = retargetFallbackEffectsToCueTiming({
+    commands,
+    requestedTrackNames: requestedCueTrackNames,
+    cueTrackMarksByTrack,
+    sequenceSettings
   });
   const existingTimingWriteTracks = new Set(
     normArray(commands)
@@ -1635,11 +1736,7 @@ function stageCommandGraphSynthesis({
   const requestedCueTimingCommands = buildRequestedCueTimingCommands({
     analysisHandoff,
     sectionNames: sectionWindowsByName instanceof Map ? Array.from(sectionWindowsByName.keys()) : [],
-    requestedTrackNames: inferRequestedCueTimingTracks({
-      goal: goalText,
-      sourceLines: executionLines,
-      executionStrategy
-    }).filter((track) => !existingTimingWriteTracks.has(track)),
+    requestedTrackNames: requestedCueTrackNames.filter((track) => !existingTimingWriteTracks.has(track)),
     sequenceSettings,
     allowTimingWrites,
     warnings

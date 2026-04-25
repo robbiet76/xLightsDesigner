@@ -26,6 +26,9 @@ function usage() {
     '  --selected-tags <tags>         Selected metadata tags. Defaults to lead.',
     '  --section-label <label>        Optional timing-track section label to scope generation.',
     '  --timing-track-name <name>     Optional timing track name to disambiguate section labels.',
+    '  --intent-goal <text>           Optional validation design intent goal.',
+    '  --expected-timing-tracks <csv>  Optional timing tracks that generated plans must create with marks.',
+    '  --expected-anchor-tracks <csv>  Optional timing tracks that generated effects must anchor/align to.',
     '  --tag-only                    Seed expected target metadata, then generate from tags without target text.',
     '  --matrix                       Run the default metadata handoff scenario matrix.',
     '  --matrix-file <path>           Run scenarios from a JSON matrix file.',
@@ -49,6 +52,9 @@ function parseArgs(argv = []) {
     selectedTags: DEFAULT_SELECTED_TAGS,
     sectionLabel: '',
     timingTrackName: '',
+    intentGoal: '',
+    expectedTimingTracks: '',
+    expectedAnchorTracks: '',
     durationMs: 30000,
     frameMs: 50,
     timeoutMs: 180000,
@@ -79,6 +85,9 @@ function parseArgs(argv = []) {
     else if (token === '--selected-tags') args.selectedTags = next();
     else if (token === '--section-label') args.sectionLabel = next();
     else if (token === '--timing-track-name' || token === '--section-timing-track-name') args.timingTrackName = next();
+    else if (token === '--intent-goal' || token === '--validation-goal') args.intentGoal = next();
+    else if (token === '--expected-timing-tracks') args.expectedTimingTracks = next();
+    else if (token === '--expected-anchor-tracks' || token === '--expected-anchored-timing-tracks') args.expectedAnchorTracks = next();
     else if (token === '--tag-only') args.tagOnly = true;
     else if (token === '--matrix') args.matrix = true;
     else if (token === '--matrix-file') {
@@ -123,6 +132,13 @@ function normalizeScenario(row = {}, index = 0) {
     selectedTags,
     sectionLabel: str(row?.sectionLabel || row?.selectedSection || row?.section),
     timingTrackName: str(row?.timingTrackName || row?.sectionTimingTrackName),
+    intentGoal: str(row?.intentGoal || row?.validationGoal || row?.goal),
+    expectedTimingTracks: Array.isArray(row?.expectedTimingTracks)
+      ? row.expectedTimingTracks.map((value) => str(value)).filter(Boolean).join(',')
+      : str(row?.expectedTimingTracks),
+    expectedAnchorTracks: Array.isArray(row?.expectedAnchorTracks || row?.expectedAnchoredTimingTracks)
+      ? (row.expectedAnchorTracks || row.expectedAnchoredTimingTracks).map((value) => str(value)).filter(Boolean).join(',')
+      : str(row?.expectedAnchorTracks || row?.expectedAnchoredTimingTracks),
     tagOnly: row?.tagOnly === true
   };
 }
@@ -271,8 +287,14 @@ function buildValidationArgs(args, showDir, scenario) {
   ];
   const sectionLabel = str(scenario.sectionLabel || args.sectionLabel);
   const timingTrackName = str(scenario.timingTrackName || args.timingTrackName);
+  const intentGoal = str(scenario.intentGoal || args.intentGoal);
+  const expectedTimingTracks = str(scenario.expectedTimingTracks || args.expectedTimingTracks);
+  const expectedAnchorTracks = str(scenario.expectedAnchorTracks || args.expectedAnchorTracks);
   if (sectionLabel) validationArgs.push('--section-label', sectionLabel);
   if (timingTrackName) validationArgs.push('--timing-track-name', timingTrackName);
+  if (intentGoal) validationArgs.push('--intent-goal', intentGoal);
+  if (expectedTimingTracks) validationArgs.push('--expected-timing-tracks', expectedTimingTracks);
+  if (expectedAnchorTracks) validationArgs.push('--expected-anchor-tracks', expectedAnchorTracks);
   if (scenario.tagOnly || args.tagOnly) validationArgs.push('--tag-only');
   if (args.applyReview) validationArgs.push('--apply-review');
   if (args.applyReview && args.renderAfterApply) validationArgs.push('--render-after-apply');

@@ -772,6 +772,12 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
     timing: {
       bpm: finiteOrNull(moduleRhythm?.data?.bpm ?? timing?.bpm),
       timeSignature: str(moduleRhythm?.data?.timeSignature || timing?.timeSignature || "unknown"),
+      beats: Array.isArray(moduleRhythm?.data?.beats) && moduleRhythm.data.beats.length
+        ? rows(moduleRhythm.data.beats)
+        : rows(timing?.beats),
+      bars: Array.isArray(moduleRhythm?.data?.bars) && moduleRhythm.data.bars.length
+        ? rows(moduleRhythm.data.bars)
+        : rows(timing?.bars),
       beatsArtifact: Array.isArray(moduleRhythm?.data?.beats) && moduleRhythm.data.beats.length
         ? "beats"
         : (Array.isArray(timing?.beats) && timing.beats.length ? "beats" : ""),
@@ -797,6 +803,9 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
         matchedTitle: str(moduleLyrics?.data?.plainPhraseFallback?.matchedTitle || lyrics?.plainPhraseFallback?.matchedTitle),
         matchedArtist: str(moduleLyrics?.data?.plainPhraseFallback?.matchedArtist || lyrics?.plainPhraseFallback?.matchedArtist)
       },
+      lines: Array.isArray(moduleLyrics?.data?.lines) && moduleLyrics.data.lines.length
+        ? rows(moduleLyrics.data.lines)
+        : rows(lyrics?.lines),
       lyricsArtifact: Array.isArray(moduleLyrics?.data?.lines) && moduleLyrics.data.lines.length
         ? "lyrics"
         : (Array.isArray(lyrics?.lines) && lyrics.lines.length ? "lyrics" : ""),
@@ -808,6 +817,9 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
       hasChords: Array.isArray(moduleHarmony?.data?.chords) && moduleHarmony.data.chords.length > 0
         ? true
         : (Array.isArray(harmonic?.chords) && harmonic.chords.length > 0),
+      chords: Array.isArray(moduleHarmony?.data?.chords) && moduleHarmony.data.chords.length
+        ? rows(moduleHarmony.data.chords)
+        : rows(harmonic?.chords),
       chordsArtifact: Array.isArray(moduleHarmony?.data?.chords) && moduleHarmony.data.chords.length
         ? "chords"
         : (Array.isArray(harmonic?.chords) && harmonic.chords.length ? "chords" : ""),

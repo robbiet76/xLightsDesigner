@@ -1670,6 +1670,12 @@ test("sequence_agent adds need-based cue timing tracks before direct sequencing"
       { startMs: 6100, endMs: 7600, label: "raise it higher" }
     ]
   );
+  const effect = out.commands.find((row) => row.cmd === "effects.create");
+  const align = out.commands.find((row) => row.cmd === "effects.alignToTiming");
+  assert.equal(effect.anchor.trackName, "XD: Beat Grid");
+  assert.equal(effect.params.startMs, 5000);
+  assert.equal(effect.params.endMs, 5500);
+  assert.equal(align.params.timingTrackName, "XD: Beat Grid");
 });
 
 test("sequence_agent allows decomposed multi-line direct requests", () => {

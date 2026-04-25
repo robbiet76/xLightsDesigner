@@ -194,7 +194,7 @@ export function buildMusicDesignContext({
 
   const beats = rows(analysisArtifact?.timing?.beats || analysisHandoff?.timing?.beats);
   const bars = rows(analysisArtifact?.timing?.bars || analysisHandoff?.timing?.bars);
-  const chords = rows(analysisArtifact?.harmonic?.chords || analysisHandoff?.harmonic?.chords);
+  const chords = rows(analysisArtifact?.harmonic?.chords || analysisHandoff?.harmonic?.chords || analysisHandoff?.chords?.chords);
   const lyricLines = rows(analysisArtifact?.lyrics?.lines || analysisHandoff?.lyrics?.lines);
   const phraseLines = rows(
     analysisArtifact?.lyrics?.plainPhraseFallback?.phrases ||

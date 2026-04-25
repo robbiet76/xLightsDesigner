@@ -19,7 +19,7 @@ function splitList(value = '') {
 }
 
 function usage() {
-  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--section-label label] [--timing-track-name name] [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
+  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--section-label label] [--timing-track-name name] [--intent-goal goal] [--expected-timing-tracks csv] [--expected-anchor-tracks csv] [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
   process.exit(2);
 }
 
@@ -29,6 +29,9 @@ function parseArgs(argv = []) {
     selectedTags: '',
     sectionLabel: '',
     timingTrackName: '',
+    intentGoal: '',
+    expectedTimingTracks: '',
+    expectedAnchorTracks: '',
     rolePreference: 'lead',
     semanticHints: 'centerpiece',
     effectAvoidances: 'Bars',
@@ -48,6 +51,9 @@ function parseArgs(argv = []) {
     else if (token === '--selected-tags') out.selectedTags = str(argv[++i]);
     else if (token === '--section-label') out.sectionLabel = str(argv[++i]);
     else if (token === '--timing-track-name' || token === '--section-timing-track-name') out.timingTrackName = str(argv[++i]);
+    else if (token === '--intent-goal' || token === '--validation-goal') out.intentGoal = str(argv[++i]);
+    else if (token === '--expected-timing-tracks') out.expectedTimingTracks = str(argv[++i]);
+    else if (token === '--expected-anchor-tracks' || token === '--expected-anchored-timing-tracks') out.expectedAnchorTracks = str(argv[++i]);
     else if (token === '--role') out.rolePreference = str(argv[++i]);
     else if (token === '--semantic-hints') out.semanticHints = str(argv[++i]);
     else if (token === '--effect-avoidances') out.effectAvoidances = str(argv[++i]);
@@ -384,6 +390,58 @@ function blockedBannerTexts(snapshot = {}) {
     .filter(Boolean);
 }
 
+function collectPlanTimingValidation(plan = {}, expectedTimingTracks = [], expectedAnchorTracks = []) {
+  const commands = arr(plan?.commands);
+  const createdTracks = new Set();
+  const markedTracks = new Set();
+  const anchoredTracks = new Set();
+  for (const command of commands) {
+    const cmd = str(command?.cmd);
+    const params = command?.params && typeof command.params === 'object' ? command.params : {};
+    const trackName = str(params.trackName);
+    if (cmd === 'timing.createTrack' && trackName) createdTracks.add(trackName);
+    if ((cmd === 'timing.insertMarks' || cmd === 'timing.replaceMarks') && trackName && arr(params.marks).length) {
+      markedTracks.add(trackName);
+    }
+    const alignTrackName = str(params.timingTrackName);
+    if (cmd === 'effects.alignToTiming' && alignTrackName) anchoredTracks.add(alignTrackName);
+    const anchor = command?.anchor && typeof command.anchor === 'object' ? command.anchor : {};
+    const anchorTrackName = str(anchor.trackName);
+    if (cmd === 'effects.create' && anchorTrackName) anchoredTracks.add(anchorTrackName);
+  }
+  const timingTracks = expectedTimingTracks.map((trackName) => str(trackName)).filter(Boolean);
+  const anchorTracks = expectedAnchorTracks.map((trackName) => str(trackName)).filter(Boolean);
+  const missingCreatedTracks = timingTracks.filter((trackName) => !createdTracks.has(trackName));
+  const missingMarkedTracks = timingTracks.filter((trackName) => !markedTracks.has(trackName));
+  const missingAnchorTracks = anchorTracks.filter((trackName) => !anchoredTracks.has(trackName));
+  return {
+    expectedTimingTracks: timingTracks,
+    expectedAnchorTracks: anchorTracks,
+    createdTracks: Array.from(createdTracks).sort(),
+    markedTracks: Array.from(markedTracks).sort(),
+    anchoredTracks: Array.from(anchoredTracks).sort(),
+    missingCreatedTracks,
+    missingMarkedTracks,
+    missingAnchorTracks,
+    ok: missingCreatedTracks.length === 0 && missingMarkedTracks.length === 0 && missingAnchorTracks.length === 0
+  };
+}
+
+function assertPlanTimingValidation(snapshot = {}, expectedTimingTracks = [], expectedAnchorTracks = []) {
+  if (!expectedTimingTracks.length && !expectedAnchorTracks.length) return null;
+  const plan = snapshot?.latestPlanHandoff && typeof snapshot.latestPlanHandoff === 'object'
+    ? snapshot.latestPlanHandoff
+    : null;
+  if (!plan) {
+    throw new Error(`Expected timing-track validation requires a latest plan handoff. expectedTimingTracks=${expectedTimingTracks.join(',')} expectedAnchorTracks=${expectedAnchorTracks.join(',')}`);
+  }
+  const validation = collectPlanTimingValidation(plan, expectedTimingTracks, expectedAnchorTracks);
+  if (!validation.ok) {
+    throw new Error(`Generated plan failed timing-track validation: ${JSON.stringify(validation)}`);
+  }
+  return validation;
+}
+
 async function waitForApplyResult({ previousArtifactId = '', expectedSequencePath = '', ignoredBlockedTexts = new Set(), timeoutMs = 120000 } = {}) {
   const start = Date.now();
   let lastSnapshot = null;
@@ -437,6 +495,8 @@ const args = parseArgs(process.argv.slice(2));
 const targetIds = splitList(args.targetIds);
 const selectedTags = splitList(args.selectedTags);
 const selectedSections = args.sectionLabel ? [args.sectionLabel] : [];
+const expectedTimingTracks = splitList(args.expectedTimingTracks);
+const expectedAnchorTracks = splitList(args.expectedAnchorTracks);
 
 const health = await request('GET', '/health');
 if (health?.ok === false) {
@@ -475,9 +535,9 @@ await request('POST', '/action', {
   actionType: 'save_design_intent',
   reason: 'metadata tag proposal validation',
   payload: {
-    goal: args.tagOnly
+    goal: args.intentGoal || (args.tagOnly
       ? `Validate metadata-selected sequencing for selected display metadata tags${args.sectionLabel ? ` in section ${args.sectionLabel}` : ''}.`
-      : `Validate metadata-selected sequencing for ${targetIds.join(', ')}${args.sectionLabel ? ` in section ${args.sectionLabel}` : ''}.`,
+      : `Validate metadata-selected sequencing for ${targetIds.join(', ')}${args.sectionLabel ? ` in section ${args.sectionLabel}` : ''}.`),
     mood: 'focused validation',
     targetScope: args.tagOnly ? '' : targetIds.join(', '),
     constraints: [
@@ -526,6 +586,7 @@ const reviewReadySnapshot = await waitForReviewReady({
 });
 let applyValidation = null;
 let renderValidation = null;
+let planTimingValidation = null;
 if (args.applyReview) {
   const previousApplyId = str(reviewReadySnapshot?.latestApplyResult?.artifactId || validationSnapshot?.latestApplyResult?.artifactId);
   applyValidation = await applyReviewWithRetry({
@@ -537,9 +598,12 @@ if (args.applyReview) {
     tagOnly: args.tagOnly,
     timeoutMs: Math.max(args.timeoutMs, 120000)
   });
+  planTimingValidation = assertPlanTimingValidation(applyValidation?.snapshot, expectedTimingTracks, expectedAnchorTracks);
   if (args.renderAfterApply) {
     renderValidation = await request('POST', '/action', { action: 'renderXLightsSequence' });
   }
+} else {
+  planTimingValidation = assertPlanTimingValidation(validationSnapshot, expectedTimingTracks, expectedAnchorTracks);
 }
 
 process.stdout.write(`${JSON.stringify({
@@ -551,6 +615,9 @@ process.stdout.write(`${JSON.stringify({
   targetIds,
   selectedTags,
   selectedSections,
+  expectedTimingTracks,
+  expectedAnchorTracks,
+  planTimingValidation,
   resolvedSectionScope,
   seededSectionTimingTrack,
   sequenceContext,
