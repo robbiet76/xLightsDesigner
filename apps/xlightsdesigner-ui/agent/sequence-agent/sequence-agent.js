@@ -593,6 +593,45 @@ function sanitizeRenderValidationEvidence(evidence = null) {
   };
 }
 
+function estimateJsonByteSize(value) {
+  try {
+    const json = JSON.stringify(value ?? null);
+    if (typeof TextEncoder === "function") return new TextEncoder().encode(json).length;
+    return json.length;
+  } catch {
+    return null;
+  }
+}
+
+function buildPlanHandoffScaleTelemetry({ commands = [], metadata = {} } = {}) {
+  const safeCommands = normArray(commands);
+  const timingCommands = safeCommands.filter((command) => {
+    const cmd = normText(command?.cmd);
+    return cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
+  });
+  const timingMarkCount = timingCommands.reduce((sum, command) => (
+    sum + normArray(command?.params?.marks).length
+  ), 0);
+  const effectCommandCount = safeCommands.filter((command) => normText(command?.cmd) === "effects.create").length;
+  const metadataAssignments = normArray(metadata?.metadataAssignments);
+  return {
+    artifactType: "plan_handoff_scale_telemetry_v1",
+    artifactVersion: "1.0",
+    commandCount: safeCommands.length,
+    commandBytes: estimateJsonByteSize(safeCommands),
+    effectCommandCount,
+    timingCommandCount: timingCommands.length,
+    timingMarkCount,
+    metadataBytes: estimateJsonByteSize(metadata),
+    executionStrategyBytes: estimateJsonByteSize(metadata?.executionStrategy || null),
+    sequencingDesignHandoffBytes: estimateJsonByteSize(metadata?.sequencingDesignHandoff || null),
+    realizationCandidatesBytes: estimateJsonByteSize(metadata?.realizationCandidates || null),
+    candidateSelectionBytes: estimateJsonByteSize(metadata?.candidateSelection || null),
+    metadataAssignmentCount: metadataAssignments.length,
+    metadataAssignmentsBytes: estimateJsonByteSize(metadataAssignments)
+  };
+}
+
 function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
   const out = [];
   const seen = new Set();
@@ -2016,6 +2055,75 @@ export function buildSequenceAgentPlan({
         }))
   });
 
+  const commandsOut = Array.isArray(graph.commands) ? graph.commands : [];
+  const metadata = {
+    layoutMode: normalizedLayoutMode,
+    sequenceSettings: effectiveSequenceSettings,
+    displayElementCount: Array.isArray(displayElements) ? displayElements.length : 0,
+    groupCount: Array.isArray(groupIds) ? groupIds.length : 0,
+    groupGraphCount: groupsById && typeof groupsById === "object" ? Object.keys(groupsById).length : 0,
+    submodelGraphCount: submodelsById && typeof submodelsById === "object" ? Object.keys(submodelsById).length : 0,
+    mode: scope.mode,
+    scope: {
+      sections: scope.sectionNames,
+      targetIds: scope.targetIds,
+      tagNames: scope.tagNames
+    },
+    degradedMode: !hasAnalysis,
+    sectionNames: scope.sectionNames,
+    targetIds: scope.targetIds,
+    tagNames: scope.tagNames,
+    stageOrder: STAGE_ORDER.slice(),
+    executionStrategy: scope.executionStrategy,
+    sequencingDesignHandoff: scope.sequencingDesignHandoff,
+    sequenceArtisticGoal: sequenceArtisticGoal && typeof sequenceArtisticGoal === "object" ? sequenceArtisticGoal : null,
+    sequenceRevisionObjective: sequenceRevisionObjective && typeof sequenceRevisionObjective === "object" ? sequenceRevisionObjective : null,
+    priorPassMemory: priorPassMemory && typeof priorPassMemory === "object" ? priorPassMemory : null,
+    sequencerRevisionBrief,
+    revisionFeedback: revisionFeedback && typeof revisionFeedback === "object" ? revisionFeedback : null,
+    requestScopeMode: normText(sequencerRevisionBrief?.requestScopeMode),
+    reviewStartLevel: normText(sequencerRevisionBrief?.reviewStartLevel),
+    sectionScopeKind: normText(sequencerRevisionBrief?.sectionScopeKind),
+    designIds: Array.from(new Set(normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designId)).filter(Boolean))),
+    designAuthors: Array.from(new Set([
+      normText(scope?.executionStrategy?.designAuthor),
+      ...normArray(scope?.executionStrategy?.sectionPlans).map((row) => normText(row?.designAuthor)),
+      ...normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designAuthor))
+    ].filter(Boolean))),
+    effectPlacementCount: Array.isArray(scope?.executionStrategy?.effectPlacements)
+      ? scope.executionStrategy.effectPlacements.length
+      : 0,
+    sequencingDesignHandoffSummary: normText(scope?.sequencingDesignHandoff?.designSummary),
+    sequencingSectionDirectiveCount: Array.isArray(scope?.sequencingDesignHandoff?.sectionDirectives)
+      ? scope.sequencingDesignHandoff.sectionDirectives.length
+      : 0,
+    trainingKnowledge: buildStage1TrainingKnowledgeMetadata(),
+    parameterTrainingKnowledge: buildDerivedParameterKnowledgeMetadata(),
+    sharedSettingTrainingKnowledge: buildCrossEffectSharedSettingsKnowledgeMetadata(),
+    effectStrategy: {
+      toneHint: normText(effectiveEffectStrategy?.toneHint),
+      preferSynthesized: Boolean(effectiveEffectStrategy?.preferSynthesized),
+      strategy: normText(effectiveEffectStrategy?.strategy),
+      seedRecommendations: normArray(effectiveEffectStrategy?.seedRecommendations),
+      selectedCandidateId: normText(effectiveEffectStrategy?.selectedCandidateId),
+      selectedCandidateSummary: normText(effectiveEffectStrategy?.selectedCandidateSummary)
+    },
+    revisionDelta,
+    revisionRetryPressure: computedRevisionRetryPressure,
+    intentEnvelope,
+    realizationCandidates,
+    candidateSelection,
+    candidateChoice: {
+      chosenCandidateId: normText(candidateChoice?.chosenCandidateId),
+      selectionMode: normText(candidateChoice?.selectionMode),
+      selectedFromBand: Boolean(candidateChoice?.selectedFromBand)
+    },
+    candidateSelectionContext: resolvedCandidateSelectionContext,
+    metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
+    renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
+  };
+  metadata.handoffScale = buildPlanHandoffScaleTelemetry({ commands: commandsOut, metadata });
+
   const plan = {
     agentRole: SEQUENCE_AGENT_ROLE,
     contractVersion: SEQUENCE_AGENT_CONTRACT_VERSION,
@@ -2023,77 +2131,12 @@ export function buildSequenceAgentPlan({
     summary: buildPlanSummary({ goal: scope.goal, mode: scope.mode, sectionNames: scope.sectionNames }),
     estimatedImpact: Number(graph.estimatedImpact || 0),
     warnings: Array.isArray(graph.warnings) ? graph.warnings : warnings,
-    commands: Array.isArray(graph.commands) ? graph.commands : [],
+    commands: commandsOut,
     baseRevision: normText(baseRevision) || "unknown",
     validationReady: Boolean(graph.validationReady),
     executionLines: Array.isArray(graph.executionLines) ? graph.executionLines : [],
     stageTelemetry,
-    metadata: {
-      layoutMode: normalizedLayoutMode,
-      sequenceSettings: effectiveSequenceSettings,
-      displayElementCount: Array.isArray(displayElements) ? displayElements.length : 0,
-      groupCount: Array.isArray(groupIds) ? groupIds.length : 0,
-      groupGraphCount: groupsById && typeof groupsById === "object" ? Object.keys(groupsById).length : 0,
-      submodelGraphCount: submodelsById && typeof submodelsById === "object" ? Object.keys(submodelsById).length : 0,
-      mode: scope.mode,
-      scope: {
-        sections: scope.sectionNames,
-        targetIds: scope.targetIds,
-        tagNames: scope.tagNames
-      },
-      degradedMode: !hasAnalysis,
-      sectionNames: scope.sectionNames,
-      targetIds: scope.targetIds,
-      tagNames: scope.tagNames,
-      stageOrder: STAGE_ORDER.slice(),
-      executionStrategy: scope.executionStrategy,
-      sequencingDesignHandoff: scope.sequencingDesignHandoff,
-      sequenceArtisticGoal: sequenceArtisticGoal && typeof sequenceArtisticGoal === "object" ? sequenceArtisticGoal : null,
-      sequenceRevisionObjective: sequenceRevisionObjective && typeof sequenceRevisionObjective === "object" ? sequenceRevisionObjective : null,
-      priorPassMemory: priorPassMemory && typeof priorPassMemory === "object" ? priorPassMemory : null,
-      sequencerRevisionBrief,
-      revisionFeedback: revisionFeedback && typeof revisionFeedback === "object" ? revisionFeedback : null,
-      requestScopeMode: normText(sequencerRevisionBrief?.requestScopeMode),
-      reviewStartLevel: normText(sequencerRevisionBrief?.reviewStartLevel),
-      sectionScopeKind: normText(sequencerRevisionBrief?.sectionScopeKind),
-      designIds: Array.from(new Set(normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designId)).filter(Boolean))),
-      designAuthors: Array.from(new Set([
-        normText(scope?.executionStrategy?.designAuthor),
-        ...normArray(scope?.executionStrategy?.sectionPlans).map((row) => normText(row?.designAuthor)),
-        ...normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designAuthor))
-      ].filter(Boolean))),
-      effectPlacementCount: Array.isArray(scope?.executionStrategy?.effectPlacements)
-        ? scope.executionStrategy.effectPlacements.length
-        : 0,
-      sequencingDesignHandoffSummary: normText(scope?.sequencingDesignHandoff?.designSummary),
-      sequencingSectionDirectiveCount: Array.isArray(scope?.sequencingDesignHandoff?.sectionDirectives)
-        ? scope.sequencingDesignHandoff.sectionDirectives.length
-        : 0,
-      trainingKnowledge: buildStage1TrainingKnowledgeMetadata(),
-      parameterTrainingKnowledge: buildDerivedParameterKnowledgeMetadata(),
-      sharedSettingTrainingKnowledge: buildCrossEffectSharedSettingsKnowledgeMetadata(),
-      effectStrategy: {
-        toneHint: normText(effectiveEffectStrategy?.toneHint),
-        preferSynthesized: Boolean(effectiveEffectStrategy?.preferSynthesized),
-        strategy: normText(effectiveEffectStrategy?.strategy),
-        seedRecommendations: normArray(effectiveEffectStrategy?.seedRecommendations),
-        selectedCandidateId: normText(effectiveEffectStrategy?.selectedCandidateId),
-        selectedCandidateSummary: normText(effectiveEffectStrategy?.selectedCandidateSummary)
-      },
-      revisionDelta,
-      revisionRetryPressure: computedRevisionRetryPressure,
-      intentEnvelope,
-      realizationCandidates,
-      candidateSelection,
-      candidateChoice: {
-        chosenCandidateId: normText(candidateChoice?.chosenCandidateId),
-        selectionMode: normText(candidateChoice?.selectionMode),
-        selectedFromBand: Boolean(candidateChoice?.selectedFromBand)
-      },
-      candidateSelectionContext: resolvedCandidateSelectionContext,
-      metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
-      renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
-    }
+    metadata
   };
   plan.createdAt = new Date().toISOString();
   plan.artifactId = buildArtifactId(SEQUENCE_AGENT_PLAN_OUTPUT_CONTRACT, plan);

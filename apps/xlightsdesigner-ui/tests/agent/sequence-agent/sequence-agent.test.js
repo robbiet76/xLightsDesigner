@@ -315,6 +315,13 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.realizationCandidates.candidates[0].revisionSignals.overallAlignment, "high");
   assert.equal(typeof out.metadata.candidateSelection.scoredCandidates[0].revisionScore, "number");
   assert.equal(typeof out.metadata.candidateSelection.primaryCandidateId, "string");
+  assert.equal(out.metadata.handoffScale.artifactType, "plan_handoff_scale_telemetry_v1");
+  assert.equal(out.metadata.handoffScale.commandCount, out.commands.length);
+  assert.equal(out.metadata.handoffScale.effectCommandCount, out.commands.filter((row) => row.cmd === "effects.create").length);
+  assert.equal(typeof out.metadata.handoffScale.commandBytes, "number");
+  assert.equal(typeof out.metadata.handoffScale.metadataBytes, "number");
+  assert.equal(typeof out.metadata.handoffScale.executionStrategyBytes, "number");
+  assert.equal(typeof out.metadata.handoffScale.realizationCandidatesBytes, "number");
 });
 
 test("sequence_agent candidate selection switches to bounded exploration when runtime context provides a seed", () => {
