@@ -397,7 +397,7 @@ function stageTimingAssetDecision({ hasAnalysis = false, scope = {} } = {}) {
     degradedMode: !hasAnalysis,
     useSections: hasScopedSections,
     trackName: (hasScopedSections || useFullSongStructureTrack) ? sectionTrackName : "XD: Sequencer Plan",
-    includeAllKnownSections: useFullSongStructureTrack || (!requestedSectionTrackName && hasScopedSections),
+    includeAllKnownSections: useFullSongStructureTrack || hasScopedSections,
     detail: `strategy=${strategy}${!hasAnalysis ? " reduced-confidence" : ""} passScope=${passScope || "default"}`
   };
 }
@@ -1275,6 +1275,7 @@ function stageCommandGraphSynthesis({
   submodelsById = {},
   sectionWindowsByName = null,
   trackName = "XD: Sequencer Plan",
+  useAllKnownSections = false,
   allowTimingWrites = true
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
@@ -1354,6 +1355,7 @@ function stageCommandGraphSynthesis({
     groupsById,
     submodelsById,
     sectionWindowsByName,
+    useAllKnownSections,
     enableEffectTimingAlignment
   });
   const filteredCommands = [];
@@ -1590,6 +1592,7 @@ export function buildSequenceAgentPlan({
             includeAll: timing.includeAllKnownSections === true
           }),
           trackName: timing.trackName,
+          useAllKnownSections: timing.includeAllKnownSections === true,
           allowTimingWrites
         }))
   });

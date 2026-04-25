@@ -1920,6 +1920,7 @@ test("sequence_agent honors explicit section timing track names", () => {
       trackIdentity: { title: "Track A", artist: "Artist A" },
       structure: {
         sections: [
+          { label: "Build", startMs: 0, endMs: 10000 },
           { label: "Drop 2", startMs: 10000, endMs: 20000 }
         ]
       }
@@ -1951,7 +1952,10 @@ test("sequence_agent honors explicit section timing track names", () => {
 
   assert.equal(trackCreate.params.trackName, "User Timing: Drops");
   assert.equal(markInsert.params.trackName, "User Timing: Drops");
-  assert.deepEqual(markInsert.params.marks, [{ startMs: 10000, endMs: 19999, label: "Drop 2" }]);
+  assert.deepEqual(markInsert.params.marks, [
+    { startMs: 0, endMs: 10000, label: "Build" },
+    { startMs: 10000, endMs: 19999, label: "Drop 2" }
+  ]);
   assert.equal(effect.anchor.trackName, "User Timing: Drops");
 });
 

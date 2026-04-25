@@ -311,6 +311,59 @@ async function loadEffectCatalog(endpoint = '') {
   });
 }
 
+function selectedSectionTimingTrackName(intentHandoff = {}) {
+  const strategy = intentHandoff?.executionStrategy && typeof intentHandoff.executionStrategy === 'object'
+    ? intentHandoff.executionStrategy
+    : {};
+  const sectionPlans = Array.isArray(strategy?.sectionPlans) ? strategy.sectionPlans : [];
+  return str(
+    strategy.sectionTimingTrackName
+    || strategy.timingTrackName
+    || sectionPlans.find((row) => str(row?.sectionTimingTrackName || row?.timingTrackName))?.sectionTimingTrackName
+    || sectionPlans.find((row) => str(row?.sectionTimingTrackName || row?.timingTrackName))?.timingTrackName
+    || ''
+  );
+}
+
+function normalizeLiveSectionMarks(payload = {}) {
+  return (Array.isArray(payload?.data?.marks) ? payload.data.marks : [])
+    .map((row) => ({
+      label: str(row?.label || row?.name || ''),
+      startMs: Number(row?.startMs ?? 0),
+      endMs: Number(row?.endMs ?? 0)
+    }))
+    .filter((row) => row.label && Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs > row.startMs)
+    .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label));
+}
+
+export async function hydrateAnalysisSectionsFromSelectedTimingTrack({
+  endpoint = '',
+  analysisHandoff = {},
+  intentHandoff = {},
+  readTimingMarks = getTimingMarks
+} = {}) {
+  const trackName = selectedSectionTimingTrackName(intentHandoff);
+  if (!trackName) return analysisHandoff;
+  const response = await readTimingMarks(endpoint, trackName).catch(() => null);
+  const liveSections = normalizeLiveSectionMarks(response);
+  if (!liveSections.length) return analysisHandoff;
+  const requestedSections = new Set(
+    (Array.isArray(intentHandoff?.scope?.sections) ? intentHandoff.scope.sections : [])
+      .map((row) => str(row).toLowerCase())
+      .filter(Boolean)
+  );
+  if (requestedSections.size && !liveSections.some((row) => requestedSections.has(row.label.toLowerCase()))) {
+    return analysisHandoff;
+  }
+  return {
+    ...(analysisHandoff && typeof analysisHandoff === 'object' ? analysisHandoff : {}),
+    structure: {
+      ...(analysisHandoff?.structure && typeof analysisHandoff.structure === 'object' ? analysisHandoff.structure : {}),
+      sections: liveSections
+    }
+  };
+}
+
 async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {}) {
   currentStage = 'load_inputs';
   const inputs = loadReviewInputs({ projectFile, appRoot });
@@ -321,9 +374,15 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     placements: scopedProposalPlacements(inputs.proposalBundle)
   });
   currentStage = 'build_analysis_handoff';
-  const analysisHandoff = buildAnalysisHandoffFromArtifact(persistedArtifactWithFallback(inputs.persistedArtifact), null);
+  let analysisHandoff = buildAnalysisHandoffFromArtifact(persistedArtifactWithFallback(inputs.persistedArtifact), null);
   currentStage = 'ensure_open_sequence';
   await ensureExpectedSequenceOpen(endpoint, inputs.sequencePath);
+  currentStage = 'hydrate_selected_timing_track';
+  analysisHandoff = await hydrateAnalysisSectionsFromSelectedTimingTrack({
+    endpoint,
+    analysisHandoff,
+    intentHandoff: inputs.reviewIntentHandoff
+  });
   currentStage = 'load_sequence_context';
   const [sequenceSettingsRes, displayElementsRes, revisionRes, effectCatalog] = await Promise.all([
     getSequenceSettings(endpoint),
@@ -845,12 +904,25 @@ export async function hydrateNativeApplyTimingContext({
 } = {}) {
   const rows = Array.isArray(commands) ? commands : [];
   const cache = new Map();
+  const replaceCreatedTracks = new Set(
+    rows
+      .filter((command) => str(command?.cmd) === 'timing.createTrack' && command?.params?.replaceIfExists === true)
+      .map((command) => str(command?.params?.trackName).toLowerCase())
+      .filter(Boolean)
+  );
   const hydrated = [];
   for (const command of rows) {
     const cmd = str(command?.cmd);
     const params = command?.params && typeof command.params === 'object' ? command.params : {};
     const trackName = str(params.trackName);
     const marks = Array.isArray(params.marks) ? params.marks : [];
+    if (cmd === 'timing.insertMarks' && trackName && marks.length >= 2 && replaceCreatedTracks.has(trackName.toLowerCase())) {
+      hydrated.push({
+        ...command,
+        cmd: 'timing.replaceMarks'
+      });
+      continue;
+    }
     if ((cmd !== 'timing.insertMarks' && cmd !== 'timing.replaceMarks') || !trackName || marks.length >= 2) {
       hydrated.push(command);
       continue;

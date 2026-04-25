@@ -795,6 +795,7 @@ export function buildDesignerPlanCommands(
     groupsById = {},
     submodelsById = {},
     sectionWindowsByName = null,
+    useAllKnownSections = false,
     enableEffectTimingAlignment = true
   } = {}
 ) {
@@ -806,7 +807,7 @@ export function buildDesignerPlanCommands(
   const parsed = source.map((line) => parseProposalLine(line));
   const sectionWindows = buildSectionWindows(source, parsed, sectionWindowsByName);
   const rawMarks = buildTimingMarks(source, parsed, sectionWindows, {
-    useAllKnownSections: normText(trackName) === "XD: Song Structure"
+    useAllKnownSections: useAllKnownSections || normText(trackName) === "XD: Song Structure"
   });
   const marks = normText(trackName) === "XD: Song Structure"
     ? normalizeXdSongStructureMarks(rawMarks, sequenceSettings)

@@ -8,6 +8,7 @@ import {
   buildNativeApplyVerification,
   buildReviewIntentHandoff,
   createSequenceBackup,
+  hydrateAnalysisSectionsFromSelectedTimingTrack,
   hydrateNativeApplyTimingContext,
   renderCurrentSummary,
   summarizePracticalValidation
@@ -150,6 +151,73 @@ test("hydrateNativeApplyTimingContext expands scoped timing mark to full live tr
     { startMs: 2000, endMs: 3000, label: "Chorus 1" }
   ]);
   assert.equal(hydrated[1], commands[1]);
+});
+
+test("hydrateNativeApplyTimingContext replaces full created timing tracks instead of appending", async () => {
+  const commands = [
+    {
+      id: "timing.track.create",
+      cmd: "timing.createTrack",
+      params: { trackName: "User Timing", replaceIfExists: true }
+    },
+    {
+      id: "timing.marks.insert",
+      dependsOn: ["timing.track.create"],
+      cmd: "timing.insertMarks",
+      params: {
+        trackName: "User Timing",
+        marks: [
+          { startMs: 0, endMs: 1000, label: "Intro" },
+          { startMs: 1000, endMs: 2500, label: "Chorus 1" }
+        ]
+      }
+    }
+  ];
+
+  const hydrated = await hydrateNativeApplyTimingContext({
+    commands,
+    readTimingMarks: async () => {
+      throw new Error("full created timing tracks should not require live mark hydration");
+    }
+  });
+
+  assert.equal(hydrated[0], commands[0]);
+  assert.equal(hydrated[1].cmd, "timing.replaceMarks");
+  assert.deepEqual(hydrated[1].params.marks, commands[1].params.marks);
+});
+
+test("hydrateAnalysisSectionsFromSelectedTimingTrack uses live marks for explicit section timing", async () => {
+  const hydrated = await hydrateAnalysisSectionsFromSelectedTimingTrack({
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    analysisHandoff: {
+      structure: {
+        sections: [{ label: "Analysis Chorus", startMs: 10000, endMs: 20000 }]
+      }
+    },
+    intentHandoff: {
+      scope: { sections: ["Chorus 1"] },
+      executionStrategy: {
+        timingTrackName: "User Timing",
+        sectionPlans: [{ section: "Chorus 1", targetIds: ["MegaTree"] }]
+      }
+    },
+    readTimingMarks: async (_endpoint, trackName) => {
+      assert.equal(trackName, "User Timing");
+      return {
+        data: {
+          marks: [
+            { startMs: 0, endMs: 1000, label: "Intro" },
+            { startMs: 1000, endMs: 2500, label: "Chorus 1" }
+          ]
+        }
+      };
+    }
+  });
+
+  assert.deepEqual(hydrated.structure.sections, [
+    { label: "Intro", startMs: 0, endMs: 1000 },
+    { label: "Chorus 1", startMs: 1000, endMs: 2500 }
+  ]);
 });
 
 test("review apply handoff preserves metadata-resolved proposal targets for sequence planning", () => {
