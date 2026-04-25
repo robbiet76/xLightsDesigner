@@ -71,6 +71,18 @@
         "XD: Bars"
       ],
       "requireAnchorsInSection": true
+    },
+    {
+      "name": "preserve-existing-overlap-star-lead",
+      "targetIds": "Star",
+      "selectedTags": "lead",
+      "intentGoal": "Validate metadata-selected sequencing for Star while preserving an existing overlapping effect already present in the sequence.",
+      "seedExistingEffect": true,
+      "seedExistingModel": "Star",
+      "seedExistingEffectName": "On",
+      "seedExistingLayer": 0,
+      "seedExistingStartMs": 0,
+      "seedExistingEndMs": 30000
     }
   ]
 }

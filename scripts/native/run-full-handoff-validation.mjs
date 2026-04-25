@@ -143,6 +143,12 @@ function normalizeScenario(row = {}, index = 0) {
       ? (row.expectedAnchorTracks || row.expectedAnchoredTimingTracks).map((value) => str(value)).filter(Boolean).join(',')
       : str(row?.expectedAnchorTracks || row?.expectedAnchoredTimingTracks),
     requireAnchorsInSection: row?.requireAnchorsInSection === true || row?.requireSectionScopedAnchors === true,
+    seedExistingEffect: row?.seedExistingEffect === true,
+    seedExistingModel: str(row?.seedExistingModel || row?.seedExistingTarget || row?.seedTarget),
+    seedExistingEffectName: str(row?.seedExistingEffectName || row?.seedEffectName),
+    seedExistingLayer: Number.isFinite(Number(row?.seedExistingLayer)) ? Number(row.seedExistingLayer) : null,
+    seedExistingStartMs: Number.isFinite(Number(row?.seedExistingStartMs)) ? Number(row.seedExistingStartMs) : null,
+    seedExistingEndMs: Number.isFinite(Number(row?.seedExistingEndMs)) ? Number(row.seedExistingEndMs) : null,
     tagOnly: row?.tagOnly === true
   };
 }
@@ -300,6 +306,14 @@ function buildValidationArgs(args, showDir, scenario) {
   if (expectedTimingTracks) validationArgs.push('--expected-timing-tracks', expectedTimingTracks);
   if (expectedAnchorTracks) validationArgs.push('--expected-anchor-tracks', expectedAnchorTracks);
   if (scenario.requireAnchorsInSection || args.requireAnchorsInSection) validationArgs.push('--require-anchors-in-section');
+  if (scenario.seedExistingEffect) {
+    validationArgs.push('--seed-existing-effect');
+    if (scenario.seedExistingModel) validationArgs.push('--seed-existing-model', scenario.seedExistingModel);
+    if (scenario.seedExistingEffectName) validationArgs.push('--seed-existing-effect-name', scenario.seedExistingEffectName);
+    if (scenario.seedExistingLayer !== null) validationArgs.push('--seed-existing-layer', String(scenario.seedExistingLayer));
+    if (scenario.seedExistingStartMs !== null) validationArgs.push('--seed-existing-start-ms', String(scenario.seedExistingStartMs));
+    if (scenario.seedExistingEndMs !== null) validationArgs.push('--seed-existing-end-ms', String(scenario.seedExistingEndMs));
+  }
   if (scenario.tagOnly || args.tagOnly) validationArgs.push('--tag-only');
   if (args.applyReview) validationArgs.push('--apply-review');
   if (args.applyReview && args.renderAfterApply) validationArgs.push('--render-after-apply');

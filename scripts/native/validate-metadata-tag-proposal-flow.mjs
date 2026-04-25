@@ -19,7 +19,7 @@ function splitList(value = '') {
 }
 
 function usage() {
-  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--section-label label] [--timing-track-name name] [--intent-goal goal] [--expected-timing-tracks csv] [--expected-anchor-tracks csv] [--require-anchors-in-section] [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
+  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--section-label label] [--timing-track-name name] [--intent-goal goal] [--expected-timing-tracks csv] [--expected-anchor-tracks csv] [--require-anchors-in-section] [--seed-existing-effect] [--seed-existing-model model] [--seed-existing-effect-name name] [--seed-existing-layer n] [--seed-existing-start-ms n] [--seed-existing-end-ms n] [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
   process.exit(2);
 }
 
@@ -44,6 +44,12 @@ function parseArgs(argv = []) {
     applyReview: false,
     renderAfterApply: false,
     tagOnly: false,
+    seedExistingEffect: false,
+    seedExistingModel: '',
+    seedExistingEffectName: 'On',
+    seedExistingLayer: 0,
+    seedExistingStartMs: 0,
+    seedExistingEndMs: 0,
     timeoutMs: 30000
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -67,6 +73,12 @@ function parseArgs(argv = []) {
     else if (token === '--apply-review') out.applyReview = true;
     else if (token === '--render-after-apply') out.renderAfterApply = true;
     else if (token === '--tag-only') out.tagOnly = true;
+    else if (token === '--seed-existing-effect') out.seedExistingEffect = true;
+    else if (token === '--seed-existing-model' || token === '--seed-existing-target') out.seedExistingModel = str(argv[++i]);
+    else if (token === '--seed-existing-effect-name') out.seedExistingEffectName = str(argv[++i]);
+    else if (token === '--seed-existing-layer') out.seedExistingLayer = Number(argv[++i]);
+    else if (token === '--seed-existing-start-ms') out.seedExistingStartMs = Number(argv[++i]);
+    else if (token === '--seed-existing-end-ms') out.seedExistingEndMs = Number(argv[++i]);
     else if (token === '--timeout-ms') out.timeoutMs = Number(argv[++i]);
     else usage();
   }
@@ -74,6 +86,9 @@ function parseArgs(argv = []) {
   if (!out.selectedTags) usage();
   if (!Number.isFinite(out.durationMs) || out.durationMs <= 0) out.durationMs = 30000;
   if (!Number.isFinite(out.frameMs) || out.frameMs <= 0) out.frameMs = 50;
+  if (!Number.isFinite(out.seedExistingLayer) || out.seedExistingLayer < 0) out.seedExistingLayer = 0;
+  if (!Number.isFinite(out.seedExistingStartMs) || out.seedExistingStartMs < 0) out.seedExistingStartMs = 0;
+  if (!Number.isFinite(out.seedExistingEndMs) || out.seedExistingEndMs <= out.seedExistingStartMs) out.seedExistingEndMs = out.durationMs;
   if (!Number.isFinite(out.timeoutMs) || out.timeoutMs < 1000) out.timeoutMs = 30000;
   return out;
 }
@@ -101,7 +116,9 @@ async function request(method, path, body = null) {
 async function requestXlightsApi(path, query = {}) {
   const url = new URL(`${XLIGHTS_API_BASE_URL}${path}`);
   for (const [key, value] of Object.entries(query || {})) {
-    if (str(value)) url.searchParams.set(key, str(value));
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      url.searchParams.set(key, String(value).trim());
+    }
   }
   const response = await fetch(url);
   const text = await response.text();
@@ -250,6 +267,67 @@ function normalizeTimingMarks(payload = {}) {
       endMs: Number(row?.endMs ?? row?.end ?? row?.timeMs ?? 0)
     }))
     .filter((row) => row.label);
+}
+
+function normalizeEffects(payload = {}) {
+  return arr(payload?.data?.effects || payload?.effects)
+    .map((row) => ({
+      ...row,
+      modelName: str(row?.modelName || row?.element || row?.model),
+      effectName: str(row?.effectName || row?.name),
+      layerIndex: Number(row?.layerIndex ?? row?.layerNumber ?? row?.layer ?? 0),
+      startMs: Number(row?.startMs ?? row?.start ?? 0),
+      endMs: Number(row?.endMs ?? row?.end ?? 0)
+    }))
+    .filter((row) => row.modelName || row.effectName);
+}
+
+async function seedExistingEffectForValidation({ targetIds = [], args = {} } = {}) {
+  if (!args.seedExistingEffect) return null;
+  const element = str(args.seedExistingModel) || targetIds[0];
+  if (!element) throw new Error('Cannot seed existing effect without a target model.');
+  const seed = {
+    element,
+    layer: Number(args.seedExistingLayer),
+    effectName: str(args.seedExistingEffectName) || 'On',
+    startMs: Number(args.seedExistingStartMs),
+    endMs: Number(args.seedExistingEndMs),
+    settings: {},
+    palette: {},
+    clearExisting: false
+  };
+  const apply = await requestXlightsPost('/sequencing/apply-batch-plan', {
+    track: 'XD: Existing Effect Seed',
+    subType: 'Generic',
+    replaceExistingMarks: true,
+    marks: [
+      { label: 'Seeded Existing Intro', startMs: 0, endMs: Math.max(1, Math.floor(seed.endMs * 0.25)) },
+      { label: 'Seeded Existing Effect', startMs: Math.max(1, Math.floor(seed.endMs * 0.25)), endMs: Math.max(2, Math.floor(seed.endMs * 0.75)) },
+      { label: 'Seeded Existing Outro', startMs: Math.max(2, Math.floor(seed.endMs * 0.75)), endMs: seed.endMs }
+    ],
+    effects: [seed]
+  });
+  const jobId = str(apply?.data?.jobId);
+  if (jobId) await waitForXlightsJob({ jobId });
+  const readback = await requestXlightsApi('/effects/window', {
+    element,
+    startMs: seed.startMs,
+    endMs: seed.endMs
+  });
+  const effects = normalizeEffects(readback);
+  const present = effects.some((row) =>
+    row.layerIndex === seed.layer &&
+    row.effectName === seed.effectName &&
+    row.startMs === seed.startMs &&
+    row.endMs === seed.endMs
+  );
+  if (!present) {
+    throw new Error(`Seeded existing effect was not readable before generation: ${JSON.stringify({ seed, effects })}`);
+  }
+  return {
+    ...seed,
+    readbackCount: effects.length
+  };
 }
 
 async function resolveSectionTimingScope({ sectionLabel = '', timingTrackName = '' } = {}) {
@@ -499,6 +577,93 @@ function assertPlanTimingValidation(snapshot = {}, expectedTimingTracks = [], ex
   return validation;
 }
 
+async function assertExistingEffectPreservation({ snapshot = {}, seedExistingEffect = null } = {}) {
+  if (!seedExistingEffect) return null;
+  const plan = snapshot?.latestPlanHandoff && typeof snapshot.latestPlanHandoff === 'object'
+    ? snapshot.latestPlanHandoff
+    : null;
+  const applyResult = snapshot?.latestApplyResult && typeof snapshot.latestApplyResult === 'object'
+    ? snapshot.latestApplyResult
+    : null;
+  if (!plan) throw new Error('Expected preservation validation requires a latest plan handoff.');
+  const movedCommands = arr(plan?.commands).filter((command) => {
+    const policy = command?.intent?.existingSequencePolicy && typeof command.intent.existingSequencePolicy === 'object'
+      ? command.intent.existingSequencePolicy
+      : null;
+    return str(command?.cmd) === 'effects.create'
+      && policy
+      && Number(policy.overlapCount || 0) > 0
+      && policy.replacementAuthorized !== true
+      && Number(policy.originalLayerIndex) === Number(seedExistingEffect.layer)
+      && Number(policy.plannedLayerIndex) !== Number(policy.originalLayerIndex);
+  });
+  if (!movedCommands.length) {
+    throw new Error(`Expected generated plan to move overlapping effects above seeded layer ${seedExistingEffect.layer}.`);
+  }
+
+  const originalReadback = await requestXlightsApi('/effects/window', {
+    element: seedExistingEffect.element,
+    startMs: seedExistingEffect.startMs,
+    endMs: seedExistingEffect.endMs
+  });
+  const originalEffects = normalizeEffects(originalReadback);
+  const originalPreserved = originalEffects.some((row) =>
+    row.layerIndex === Number(seedExistingEffect.layer) &&
+    row.effectName === seedExistingEffect.effectName &&
+    row.startMs === Number(seedExistingEffect.startMs) &&
+    row.endMs === Number(seedExistingEffect.endMs)
+  );
+  if (!originalPreserved) {
+    throw new Error(`Seeded original effect was not preserved after apply: ${JSON.stringify({ seedExistingEffect, originalEffects })}`);
+  }
+
+  const movedReadbacks = [];
+  for (const command of movedCommands) {
+    const params = command?.params && typeof command.params === 'object' ? command.params : {};
+    const modelName = str(params.modelName);
+    const layerIndex = Number(params.layerIndex);
+    const startMs = Number(params.startMs);
+    const endMs = Number(params.endMs);
+    const effectName = str(params.effectName);
+    const payload = await requestXlightsApi('/effects/window', {
+      element: modelName,
+      startMs,
+      endMs
+    });
+    const effects = normalizeEffects(payload);
+    const present = effects.some((row) =>
+      row.layerIndex === layerIndex &&
+      row.effectName === effectName &&
+      row.startMs === startMs &&
+      row.endMs === endMs
+    );
+    movedReadbacks.push({
+      modelName,
+      layerIndex,
+      startMs,
+      endMs,
+      effectName,
+      present
+    });
+  }
+  const missingMoved = movedReadbacks.filter((row) => !row.present);
+  if (missingMoved.length) {
+    throw new Error(`Moved preservation effects were not readable after apply: ${JSON.stringify(missingMoved)}`);
+  }
+
+  const preservationChecks = applyResult?.practicalValidation?.summary?.preservationChecks
+    || applyResult?.applyResult?.practicalValidation?.summary?.preservationChecks
+    || null;
+  return {
+    ok: true,
+    seed: seedExistingEffect,
+    movedCommandCount: movedCommands.length,
+    movedReadbacks,
+    originalLayerPreserved: true,
+    practicalValidationPreservationChecks: preservationChecks
+  };
+}
+
 async function waitForApplyResult({ previousArtifactId = '', expectedSequencePath = '', ignoredBlockedTexts = new Set(), timeoutMs = 120000 } = {}) {
   const start = Date.now();
   let lastSnapshot = null;
@@ -568,6 +733,7 @@ const seededSectionTimingTrack = args.forceValidationSequence
       durationMs: args.durationMs
     })
   : null;
+const seededExistingEffect = await seedExistingEffectForValidation({ targetIds, args });
 const resolvedSectionScope = await resolveSectionTimingScope({
   sectionLabel: args.sectionLabel,
   timingTrackName: args.timingTrackName
@@ -644,6 +810,7 @@ const reviewReadySnapshot = await waitForReviewReady({
 let applyValidation = null;
 let renderValidation = null;
 let planTimingValidation = null;
+let preservationValidation = null;
 if (args.applyReview) {
   const previousApplyId = str(reviewReadySnapshot?.latestApplyResult?.artifactId || validationSnapshot?.latestApplyResult?.artifactId);
   applyValidation = await applyReviewWithRetry({
@@ -658,6 +825,10 @@ if (args.applyReview) {
   planTimingValidation = assertPlanTimingValidation(applyValidation?.snapshot, expectedTimingTracks, expectedAnchorTracks, {
     sectionScope: resolvedSectionScope,
     requireAnchorsInSection: args.requireAnchorsInSection
+  });
+  preservationValidation = await assertExistingEffectPreservation({
+    snapshot: applyValidation?.snapshot,
+    seedExistingEffect: seededExistingEffect
   });
   if (args.renderAfterApply) {
     renderValidation = await request('POST', '/action', { action: 'renderXLightsSequence' });
@@ -682,8 +853,10 @@ process.stdout.write(`${JSON.stringify({
   expectedAnchorTracks,
   requireAnchorsInSection: args.requireAnchorsInSection,
   planTimingValidation,
+  preservationValidation,
   resolvedSectionScope,
   seededSectionTimingTrack,
+  seededExistingEffect,
   sequenceContext,
   latestProposalArtifactId: matchedProposalArtifactId,
   latestPlanArtifactId: str(applyValidation?.applyResult?.planId || matchedPlanArtifactId),
