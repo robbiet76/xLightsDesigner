@@ -40,6 +40,7 @@ import { buildIntentEnvelopeV1 } from "./intent-envelope.js";
 import { buildRealizationCandidatesV1 } from "./realization-candidates.js";
 import { buildRevisionDeltaV1 } from "./revision-delta.js";
 import { buildRevisionRetryPressureV1 } from "./revision-retry-pressure.js";
+import { sanitizeCurrentSequenceContextForPlan } from "./current-sequence-context.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
 
@@ -648,7 +649,8 @@ function buildPlanArtifactRefs(metadata = {}) {
     revisionRetryPressureRef: normText(metadata?.revisionRetryPressure?.artifactId),
     intentEnvelopeRef: normText(metadata?.intentEnvelope?.artifactId),
     realizationCandidatesRef: normText(metadata?.realizationCandidates?.artifactId),
-    candidateSelectionRef: normText(metadata?.candidateSelection?.artifactId)
+    candidateSelectionRef: normText(metadata?.candidateSelection?.artifactId),
+    currentSequenceContextRef: normText(metadata?.currentSequenceContext?.artifactId)
   };
 }
 
@@ -757,8 +759,10 @@ function buildPassExecutionPolicy({
   executionStrategy = {},
   commands = [],
   baseRevision = "",
-  renderValidationEvidence = null
+  renderValidationEvidence = null,
+  currentSequenceContext = null
 } = {}) {
+  const hasCurrentSequenceContext = Boolean(currentSequenceContext && typeof currentSequenceContext === "object");
   const effectCommandCount = normArray(commands).filter((command) => normText(command?.cmd) === "effects.create").length;
   const timingCommandCount = normArray(commands).filter((command) => {
     const cmd = normText(command?.cmd);
@@ -785,6 +789,9 @@ function buildPassExecutionPolicy({
       baseRevision: normText(baseRevision) || "unknown",
       revisionGateRequired: true,
       inspectBeforePlanning: true,
+      inspectionAvailable: hasCurrentSequenceContext,
+      inspectedEffectCount: Number(currentSequenceContext?.summary?.effectCount || 0),
+      inspectedTimingTrackCount: Number(currentSequenceContext?.summary?.timingTrackCount || 0),
       preserveExistingUnlessScoped: true
     },
     completionPolicy: {
@@ -2085,6 +2092,7 @@ export function buildSequenceAgentPlan({
   metadataAssignments = [],
   renderValidationEvidence = null,
   candidateSelectionContext = null,
+  currentSequenceContext = null,
   stageOverrides = {}
 } = {}) {
   const warnings = [];
@@ -2293,6 +2301,7 @@ export function buildSequenceAgentPlan({
       selectedFromBand: Boolean(candidateChoice?.selectedFromBand)
     },
     candidateSelectionContext: resolvedCandidateSelectionContext,
+    currentSequenceContext: sanitizeCurrentSequenceContextForPlan(currentSequenceContext),
     metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
     renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
   };
@@ -2301,7 +2310,8 @@ export function buildSequenceAgentPlan({
     executionStrategy: scope.executionStrategy,
     commands: commandsOut,
     baseRevision,
-    renderValidationEvidence: metadata.renderValidationEvidence
+    renderValidationEvidence: metadata.renderValidationEvidence,
+    currentSequenceContext: metadata.currentSequenceContext
   });
   metadata.artifactRefs = buildPlanArtifactRefs(metadata);
   metadata.generativeSummary = buildCompactGenerativeSummary(metadata);

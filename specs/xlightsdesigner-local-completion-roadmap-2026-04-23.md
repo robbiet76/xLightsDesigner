@@ -194,7 +194,7 @@ Scope:
 - use existing show sequences as validation fixtures only
 - stabilize layering calibration and mature sequence calibration on the current 2026.06 owned API
 - validate target resolution, batch apply, render samples, layout scene, render-current, observation, critique, and revision
-- build compact current-sequence context before planning revisions against existing sequences
+- build `current_sequence_context_v1` from readback before planning revisions against existing sequences, then pass the sanitized summary into `plan_handoff_v1.metadata.currentSequenceContext`
 - keep revision iterations as complete scoped passes rather than effect-by-effect tweaks
 - make done/stable status explicit: structural checks pass, practical validation passes, render critique is stable or bounded failure is reported, and user accepts or directs the next pass
 

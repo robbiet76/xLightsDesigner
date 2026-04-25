@@ -212,6 +212,37 @@ test("sequence agent input derives xlightsLayout group memberships from scene gr
   assert.ok(input.context.xlightsLayout.allTargetNames.includes("Wreathes"));
 });
 
+test("sequence agent input preserves current sequence context artifact", () => {
+  const currentSequenceContext = {
+    artifactType: "current_sequence_context_v1",
+    artifactId: "current_sequence_context_v1-test",
+    summary: {
+      timingTrackCount: 2,
+      effectCount: 4
+    }
+  };
+  const input = buildSequenceAgentInput({
+    requestId: "req-current-context",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    sequenceRevision: "rev-1",
+    sequenceSettings: {},
+    displayElements: [],
+    groupsById: {},
+    submodelsById: {},
+    intentHandoff: { role: "designer_dialog" },
+    currentSequenceContext,
+    safety: {
+      timingOwnership: [],
+      manualXdLocks: [],
+      allowTimingWrites: true
+    }
+  });
+  const gate = validateSequenceAgentContractGate("input", input, "orch-current-context");
+
+  assert.equal(gate.ok, true);
+  assert.equal(input.currentSequenceContext, currentSequenceContext);
+});
+
 test("sequence agent input preserves artistic goal and revision objective artifacts", () => {
   const input = buildSequenceAgentInput({
     requestId: "req-artistic",

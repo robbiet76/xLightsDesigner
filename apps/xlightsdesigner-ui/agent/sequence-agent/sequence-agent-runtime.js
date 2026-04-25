@@ -25,6 +25,7 @@ export function buildSequenceAgentInput({
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null,
   analysisHandoff = null,
+  currentSequenceContext = null,
   planningScope = null,
   renderValidationEvidence = null,
   revisionRetryPressure = null,
@@ -60,6 +61,9 @@ export function buildSequenceAgentInput({
     sequenceArtisticGoal: sequenceArtisticGoal && typeof sequenceArtisticGoal === "object" ? sequenceArtisticGoal : null,
     sequenceRevisionObjective: sequenceRevisionObjective && typeof sequenceRevisionObjective === "object" ? sequenceRevisionObjective : null,
     analysisHandoff: analysisHandoff && typeof analysisHandoff === "object" ? analysisHandoff : null,
+    currentSequenceContext: currentSequenceContext && typeof currentSequenceContext === "object" && !Array.isArray(currentSequenceContext)
+      ? currentSequenceContext
+      : null,
     planningScope: planningScope && typeof planningScope === "object" ? planningScope : null,
     renderValidationEvidence: renderValidationEvidence && typeof renderValidationEvidence === "object" && !Array.isArray(renderValidationEvidence)
       ? renderValidationEvidence

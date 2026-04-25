@@ -267,6 +267,35 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
       previousEffectNames: ["Shimmer", "Twinkle"],
       previousTargetIds: ["MegaTree", "Roofline"]
     },
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      artifactId: "current_sequence_context_v1-existing",
+      source: "xlights_readback",
+      sequence: {
+        path: "/Users/robterry/Desktop/Show/test.xsq",
+        revision: "rev-56"
+      },
+      scope: {
+        sections: ["Chorus 1"],
+        targetIds: ["MegaTree", "Roofline"],
+        tagNames: ["focal"]
+      },
+      summary: {
+        timingTrackCount: 2,
+        timingMarkCount: 12,
+        effectCount: 8,
+        targetCount: 2,
+        effectNameCount: 3,
+        timeWindow: { startMs: 60000, endMs: 90000 }
+      },
+      timing: {
+        trackNames: ["Song Structure", "Beats"]
+      },
+      effects: {
+        effectNames: ["Shimmer", "Bars", "On"],
+        targetIds: ["MegaTree", "Roofline"]
+      }
+    },
     sourceLines: ["Chorus 1 / MegaTree / increase pulse contrast and faster motion"],
     baseRevision: "rev-56",
     effectCatalog: sampleCatalog()
@@ -306,15 +335,22 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.artifactRefs.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
   assert.equal(out.metadata.artifactRefs.realizationCandidatesRef, out.metadata.realizationCandidates.artifactId);
   assert.equal(out.metadata.artifactRefs.candidateSelectionRef, out.metadata.candidateSelection.artifactId);
+  assert.equal(out.metadata.artifactRefs.currentSequenceContextRef, "current_sequence_context_v1-existing");
   assert.equal(out.metadata.generativeSummary.artifactType, "plan_generative_summary_v1");
   assert.equal(out.metadata.generativeSummary.refs.realizationCandidatesRef, out.metadata.realizationCandidates.artifactId);
   assert.equal(out.metadata.generativeSummary.choice.chosenCandidateId, out.metadata.candidateChoice.chosenCandidateId);
   assert.deepEqual(out.metadata.generativeSummary.delta.previousEffectNames, ["Shimmer", "Twinkle"]);
+  assert.equal(out.metadata.currentSequenceContext.artifactType, "current_sequence_context_v1");
+  assert.equal(out.metadata.currentSequenceContext.summary.effectCount, 8);
+  assert.deepEqual(out.metadata.currentSequenceContext.timing.trackNames, ["Song Structure", "Beats"]);
   assert.equal(out.metadata.passExecution.artifactType, "sequencing_pass_execution_policy_v1");
   assert.equal(out.metadata.passExecution.iterationMode, "pass_based");
   assert.equal(out.metadata.passExecution.batchApply.expected, true);
   assert.equal(out.metadata.passExecution.renderPolicy.preferred, "single_render_after_batch_apply");
   assert.equal(out.metadata.passExecution.existingSequencePolicy.revisionGateRequired, true);
+  assert.equal(out.metadata.passExecution.existingSequencePolicy.inspectionAvailable, true);
+  assert.equal(out.metadata.passExecution.existingSequencePolicy.inspectedEffectCount, 8);
+  assert.equal(out.metadata.passExecution.existingSequencePolicy.inspectedTimingTrackCount, 2);
   assert.equal(out.metadata.passExecution.existingSequencePolicy.preserveExistingUnlessScoped, true);
   assert.equal(out.metadata.passExecution.completionPolicy.userAcceptanceRequired, true);
   assert.equal(out.metadata.candidateSelection.policy.mode, "deterministic_preview");
