@@ -39,6 +39,7 @@ Updated:
   - `generateSequenceProposal` now forwards selected section labels and optional timing track names from the macOS automation endpoint into native direct proposal generation.
   - `run-full-handoff-validation.mjs` and `validate-metadata-tag-proposal-flow.mjs` now support section-label scenarios.
   - Forced validation sequences seed a neutral `Validation Section Scope` timing track and resolve `Chorus 1` by label, proving the handoff does not depend on `XD: Song Structure`.
+  - Native apply hydrates scoped one-mark timing commands from the live timing track before applying, so owned batch plans receive full track context without forcing the section source to `XD: Song Structure`.
   - Native apply fallback can synthesize owned batch-plan commands from section plans when proposals do not carry explicit effect placements.
 
 Still intentionally current-default or test-fixture specific:

@@ -8,6 +8,7 @@ import {
   buildNativeApplyVerification,
   buildReviewIntentHandoff,
   createSequenceBackup,
+  hydrateNativeApplyTimingContext,
   renderCurrentSummary,
   summarizePracticalValidation
 } from "../../../../scripts/sequencing/native/apply-native-review.mjs";
@@ -108,6 +109,47 @@ test("buildNativeApplyVerification attaches practical validation from readback",
     designPassed: 0,
     designFailed: 0
   });
+});
+
+test("hydrateNativeApplyTimingContext expands scoped timing mark to full live track context", async () => {
+  const commands = [
+    {
+      id: "timing.marks.insert",
+      cmd: "timing.insertMarks",
+      params: {
+        trackName: "User Timing",
+        marks: [{ startMs: 2000, endMs: 3000, label: "Chorus 1" }]
+      }
+    },
+    {
+      id: "effect.1",
+      cmd: "effects.create",
+      params: { modelName: "MegaTree", layerIndex: 0, effectName: "On", startMs: 2000, endMs: 3000 }
+    }
+  ];
+
+  const hydrated = await hydrateNativeApplyTimingContext({
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    commands,
+    readTimingMarks: async (_endpoint, trackName) => {
+      assert.equal(trackName, "User Timing");
+      return {
+        data: {
+          marks: [
+            { startMs: 0, endMs: 1000, label: "Intro" },
+            { startMs: 2000, endMs: 3000, label: "Chorus 1" }
+          ]
+        }
+      };
+    }
+  });
+
+  assert.equal(hydrated[0].cmd, "timing.replaceMarks");
+  assert.deepEqual(hydrated[0].params.marks, [
+    { startMs: 0, endMs: 1000, label: "Intro" },
+    { startMs: 2000, endMs: 3000, label: "Chorus 1" }
+  ]);
+  assert.equal(hydrated[1], commands[1]);
 });
 
 test("review apply handoff preserves metadata-resolved proposal targets for sequence planning", () => {

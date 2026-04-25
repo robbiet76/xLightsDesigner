@@ -353,7 +353,11 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
   });
   commandsPlan.artifactType = 'plan_handoff_v1';
 
-  const commands = normalizeCommandsForNativeApply(commandsPlan?.commands || []);
+  const commands = await hydrateNativeApplyTimingContext({
+    endpoint,
+    commands: normalizeCommandsForNativeApply(commandsPlan?.commands || [])
+  });
+  commandsPlan.commands = commands;
   if (!commands.length) {
     throw new Error('Sequence agent generated no commands for apply.');
   }
@@ -821,6 +825,57 @@ function normalizeCommandsForNativeApply(commands = []) {
       : [];
     return dependsOn.length ? { ...row, dependsOn } : { ...row, dependsOn: undefined };
   });
+}
+
+function normalizeReadbackTimingMarks(payload = {}) {
+  return (Array.isArray(payload?.data?.marks) ? payload.data.marks : [])
+    .map((row) => ({
+      startMs: Number(row?.startMs ?? 0),
+      endMs: Number(row?.endMs ?? 0),
+      label: str(row?.label || row?.name || '')
+    }))
+    .filter((row) => row.label && Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs >= row.startMs)
+    .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label));
+}
+
+export async function hydrateNativeApplyTimingContext({
+  endpoint = '',
+  commands = [],
+  readTimingMarks = getTimingMarks
+} = {}) {
+  const rows = Array.isArray(commands) ? commands : [];
+  const cache = new Map();
+  const hydrated = [];
+  for (const command of rows) {
+    const cmd = str(command?.cmd);
+    const params = command?.params && typeof command.params === 'object' ? command.params : {};
+    const trackName = str(params.trackName);
+    const marks = Array.isArray(params.marks) ? params.marks : [];
+    if ((cmd !== 'timing.insertMarks' && cmd !== 'timing.replaceMarks') || !trackName || marks.length >= 2) {
+      hydrated.push(command);
+      continue;
+    }
+    if (!cache.has(trackName)) {
+      const response = await readTimingMarks(endpoint, trackName).catch(() => null);
+      cache.set(trackName, normalizeReadbackTimingMarks(response));
+    }
+    const liveMarks = cache.get(trackName) || [];
+    const requestedLabels = new Set(marks.map((row) => str(row?.label).toLowerCase()).filter(Boolean));
+    const hasRequestedLabels = !requestedLabels.size || liveMarks.some((row) => requestedLabels.has(row.label.toLowerCase()));
+    if (liveMarks.length >= 2 && hasRequestedLabels) {
+      hydrated.push({
+        ...command,
+        cmd: cmd === 'timing.insertMarks' ? 'timing.replaceMarks' : command.cmd,
+        params: {
+          ...params,
+          marks: liveMarks
+        }
+      });
+      continue;
+    }
+    hydrated.push(command);
+  }
+  return hydrated;
 }
 
 async function applyExecutionStrategyFallback({ proposalBundle = {}, trackRecord = {}, endpoint = '', initialError = null } = {}) {
