@@ -589,15 +589,18 @@ async function assertExistingEffectPreservation({ snapshot = {}, seedExistingEff
     : null;
   if (!plan) throw new Error('Expected preservation validation requires a latest plan handoff.');
   const movedCommands = arr(plan?.commands).filter((command) => {
+    const params = command?.params && typeof command.params === 'object' ? command.params : {};
     const policy = command?.intent?.existingSequencePolicy && typeof command.intent.existingSequencePolicy === 'object'
       ? command.intent.existingSequencePolicy
       : null;
     return str(command?.cmd) === 'effects.create'
+      && str(params.modelName) === str(seedExistingEffect.element)
       && policy
       && Number(policy.overlapCount || 0) > 0
       && policy.replacementAuthorized !== true
       && Number(policy.originalLayerIndex) === Number(seedExistingEffect.layer)
-      && Number(policy.plannedLayerIndex) !== Number(policy.originalLayerIndex);
+      && Number(policy.plannedLayerIndex) !== Number(policy.originalLayerIndex)
+      && Number(params.layerIndex) === Number(policy.plannedLayerIndex);
   });
   if (!movedCommands.length) {
     throw new Error(`Expected generated plan to move overlapping effects above seeded layer ${seedExistingEffect.layer}.`);

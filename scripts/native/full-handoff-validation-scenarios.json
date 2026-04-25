@@ -85,6 +85,31 @@
       "seedExistingEndMs": 30000
     },
     {
+      "name": "preserve-existing-overlap-multi-target-star-snowflakes-lead",
+      "targetIds": "Star,Snowflakes",
+      "selectedTags": "lead",
+      "intentGoal": "Validate multi-target metadata-selected sequencing while preserving an existing overlapping Star effect and allowing additive layering on the seeded target.",
+      "seedExistingEffect": true,
+      "seedExistingModel": "Star",
+      "seedExistingEffectName": "On",
+      "seedExistingLayer": 0,
+      "seedExistingStartMs": 0,
+      "seedExistingEndMs": 30000
+    },
+    {
+      "name": "preserve-existing-overlap-section-chorus-star-lead",
+      "targetIds": "Star",
+      "selectedTags": "lead",
+      "sectionLabel": "Chorus 1",
+      "intentGoal": "Validate section-scoped metadata-selected sequencing in Chorus 1 while preserving an existing overlapping Star effect in the scoped section.",
+      "seedExistingEffect": true,
+      "seedExistingModel": "Star",
+      "seedExistingEffectName": "On",
+      "seedExistingLayer": 0,
+      "seedExistingStartMs": 20100,
+      "seedExistingEndMs": 29999
+    },
+    {
       "name": "replace-existing-overlap-star-lead",
       "targetIds": "Star",
       "selectedTags": "lead",
