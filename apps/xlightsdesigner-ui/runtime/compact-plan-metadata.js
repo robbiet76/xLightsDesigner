@@ -20,6 +20,34 @@ function planMetadataFromSnapshot(snapshot = null) {
   return isPlainObject(snapshot?.planHandoff?.metadata) ? snapshot.planHandoff.metadata : {};
 }
 
+function validationFailuresFromSnapshot(snapshot = null) {
+  const validation = isPlainObject(snapshot?.applyResult?.practicalValidation)
+    ? snapshot.applyResult.practicalValidation
+    : null;
+  if (!validation) return [];
+  const failures = isPlainObject(validation.failures) ? validation.failures : {};
+  return [
+    ...arr(failures.quality),
+    ...arr(failures.design),
+    ...arr(failures.timing),
+    ...arr(failures.readback),
+    ...arr(failures.metadata)
+  ]
+    .map((row) => ({
+      kind: str(row?.kind),
+      target: str(row?.target),
+      detail: str(row?.detail)
+    }))
+    .filter((row) => row.kind || row.target || row.detail);
+}
+
+function isPreservationFailure(row = {}) {
+  return (
+    str(row?.kind) === "effect-preservation" ||
+    /\b(original layer|preserved effects|preservation|overwrite existing|existing effects)\b/i.test(str(row?.detail))
+  );
+}
+
 export function resolveRevisionRetryPressureFromPlanMetadata(metadata = null) {
   if (!isPlainObject(metadata)) return null;
   if (isPlainObject(metadata.revisionRetryPressure)) return metadata.revisionRetryPressure;
@@ -83,6 +111,48 @@ export function resolveRevisionFeedbackFromPlanMetadata(metadata = null) {
   });
 }
 
+export function resolveRevisionFeedbackFromPracticalValidationSnapshot(snapshot = null) {
+  const failures = validationFailuresFromSnapshot(snapshot);
+  if (!failures.length) return null;
+  const preservationFailures = failures.filter((row) => isPreservationFailure(row));
+  const rejectionReasons = uniqueStrings(failures.map((row) => row.detail || row.kind));
+  const primaryFailure = str(rejectionReasons[0] || "validation failure");
+  const preservationObjective = preservationFailures.length
+    ? `Revise the next pass to preserve existing effects: ${primaryFailure}. Place new overlapping effects on open layers unless replacement is explicitly authorized.`
+    : "";
+  return finalizeArtifact({
+    artifactType: "revision_feedback_v1",
+    artifactVersion: 1,
+    status: "revise_required",
+    source: {
+      practicalValidationRef: str(snapshot?.applyResult?.practicalValidation?.artifactId),
+      applyResultRef: str(snapshot?.applyResult?.artifactId)
+    },
+    rejectionReasons,
+    retryPressure: {
+      signals: [],
+      oscillatingCandidateIds: []
+    },
+    nextDirection: {
+      artisticCorrection: primaryFailure ? `Resolve: ${primaryFailure}` : "",
+      executionObjective: preservationObjective || `Revise the next pass to resolve: ${primaryFailure}`,
+      revisionRoles: preservationFailures.length ? ["preserve_existing_effects"] : [],
+      targetIds: uniqueStrings(failures.map((row) => row.target)),
+      successChecks: preservationFailures.length
+        ? ["Existing sequence effects remain present on their original layers unless replacement is explicitly authorized."]
+        : [],
+      changeBias: preservationFailures.length
+        ? {
+            preservation: {
+              mismatch: true,
+              existingEffects: "preserve_unless_explicit_replace"
+            }
+          }
+        : null
+    }
+  });
+}
+
 export function resolveRevisionRetryPressureFromSnapshots(...snapshots) {
   for (const snapshot of snapshots) {
     const resolved = resolveRevisionRetryPressureFromPlanMetadata(planMetadataFromSnapshot(snapshot));
@@ -93,7 +163,9 @@ export function resolveRevisionRetryPressureFromSnapshots(...snapshots) {
 
 export function resolveRevisionFeedbackFromSnapshots(...snapshots) {
   for (const snapshot of snapshots) {
-    const resolved = resolveRevisionFeedbackFromPlanMetadata(planMetadataFromSnapshot(snapshot));
+    const resolved =
+      resolveRevisionFeedbackFromPlanMetadata(planMetadataFromSnapshot(snapshot)) ||
+      resolveRevisionFeedbackFromPracticalValidationSnapshot(snapshot);
     if (resolved) return resolved;
   }
   return null;

@@ -351,6 +351,114 @@ test("proposal generation annotates next proposal lines with preservation correc
   assert.match(state.agentPlan.executionLines[0], /preserve existing overlapping effects/i);
 });
 
+test("proposal generation reconstructs preservation correction from prior practical validation snapshot", async () => {
+  const state = buildState();
+  state.flags.planOnlyMode = true;
+  state.health.capabilityCommands = [];
+  state.sequenceSettings = {};
+  state.displayElements = [{ id: "Star", name: "Star", type: "model" }];
+  state.models = [{ id: "Star", name: "Star", type: "Model" }];
+  state.submodels = [];
+  state.sceneGraph = { groupsById: {}, submodelsById: {} };
+  state.ui.reviewHistorySnapshot = {
+    applyResult: {
+      artifactId: "apply-preserve-failed",
+      practicalValidation: {
+        artifactId: "practical-preserve-failed",
+        artifactType: "practical_sequence_validation_v1",
+        overallOk: false,
+        failures: {
+          readback: [
+            {
+              kind: "effect-preservation",
+              target: "Star@0->1",
+              detail: "original layer 0 missing preserved effects"
+            }
+          ]
+        }
+      }
+    },
+    planHandoff: {
+      metadata: {}
+    }
+  };
+  let sequenceInput = null;
+  let planInput = null;
+
+  const runtime = createProposalGenerationRuntime({
+    state,
+    buildSequenceSession: () => ({
+      canGenerateSequence: true,
+      planOnlyMode: true,
+      xlightsConnected: false
+    }),
+    beginOrchestrationRun: () => ({ id: "orch-snapshot-preserve" }),
+    executeDirectSequenceRequestOrchestration: () => ({
+      ok: true,
+      proposalLines: ["General / Star / apply Color Wash"],
+      guidedQuestions: [],
+      proposalBundle: {
+        bundleType: "proposal_bundle_v1",
+        scope: { sections: [], targetIds: ["Star"], tagNames: ["lead"] },
+        lifecycle: { status: "draft" }
+      },
+      intentHandoff: {
+        artifactType: "intent_handoff_v1",
+        goal: "Try the preservation correction again.",
+        mode: "revise",
+        scope: { sections: [], targetIds: ["Star"], tagNames: ["lead"] }
+      }
+    }),
+    applyDesignerDraftSuccessState: (targetState, payload) => {
+      targetState.creative.proposalBundle = payload.proposalBundle;
+    },
+    hydrateIntentHandoffExecutionStrategy: (intent) => intent,
+    setAgentHandoff: () => ({ ok: true, errors: [] }),
+    buildSequenceAgentInput: (input) => {
+      sequenceInput = input;
+      return { ...input, ok: true };
+    },
+    buildCurrentSequenceContextFromReadback: async () => ({
+      artifactType: "current_sequence_context_v1",
+      artifactId: "current_sequence_context_v1-snapshot-preserve",
+      summary: { timingTrackCount: 1, effectCount: 1 }
+    }),
+    validateSequenceAgentContractGate: () => ({ ok: true, report: {} }),
+    buildSequenceAgentPlan: (input) => {
+      planInput = input;
+      return {
+        agentRole: "sequence_agent",
+        contractVersion: "1.0",
+        planId: "plan-snapshot-preserve",
+        summary: "Sequence plan",
+        estimatedImpact: 1,
+        warnings: [],
+        commands: [],
+        baseRevision: "rev-1",
+        validationReady: true,
+        executionLines: ["General / Star / apply Color Wash"],
+        metadata: { scope: { sections: [], targetIds: ["Star"], tagNames: ["lead"] } }
+      };
+    },
+    buildArtifactId: (type) => `${type}-snapshot-preserve`,
+    validateCommandGraph: () => ({ ok: true, nodeCount: 0, errors: [] }),
+    mergeCreativeBriefIntoProposal: (lines) => lines,
+    normalizeMetadataSelectedTags: (values) => values,
+    normalizeMetadataSelectionIds: (values) => values
+  });
+
+  await runtime.generateProposal("Try the preservation correction again.", {
+    requestedRole: "sequence_agent",
+    selectedTagNames: ["lead"]
+  });
+
+  assert.equal(sequenceInput.revisionFeedback.source.practicalValidationRef, "practical-preserve-failed");
+  assert.deepEqual(sequenceInput.revisionFeedback.nextDirection.revisionRoles, ["preserve_existing_effects"]);
+  assert.equal(planInput.revisionFeedback.nextDirection.changeBias.preservation.existingEffects, "preserve_unless_explicit_replace");
+  assert.match(state.proposed[0], /preserve existing overlapping effects on their original layers/i);
+  assert.match(state.agentPlan.executionLines[0], /open layers unless replacement is explicitly authorized/i);
+});
+
 test("addRevisionFeedbackToProposalLines is idempotent for preservation notes", () => {
   const out = addRevisionFeedbackToProposalLines(
     ["Chorus / Star / add Color Wash"],
