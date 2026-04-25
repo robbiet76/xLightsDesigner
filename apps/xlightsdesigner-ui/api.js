@@ -499,18 +499,30 @@ export async function getDisplayElements(endpoint) {
 
 export async function getDisplayElementOrder(endpoint) {
   if (isOwnedEndpoint(endpoint)) {
-    const owned = await readOwnedGet(endpoint, "/elements/summary");
+    const owned = await readOwnedGet(endpoint, "/elements/display-order");
     const elements = Array.isArray(owned?.data?.elements) ? owned.data.elements : [];
     return {
       ok: true,
       res: 200,
       command: "sequencer.getDisplayElementOrder",
       data: {
-        elements: elements.map((row) => String(row?.name || "").trim()).filter(Boolean)
+        elements: elements.map((row) => String(row?.id || row?.name || "").trim()).filter(Boolean),
+        rows: elements
       }
     };
   }
   return postCommand(endpoint, "sequencer.getDisplayElementOrder", {});
+}
+
+export async function setDisplayElementOrder(endpoint, orderedIds = []) {
+  if (isOwnedEndpoint(endpoint)) {
+    const base = deriveOwnedEndpointBase(endpoint);
+    return readOwnedJson(`${base}/elements/display-order`, {
+      method: "POST",
+      body: { orderedIds }
+    });
+  }
+  return postCommand(endpoint, "sequencer.setDisplayElementOrder", { orderedIds });
 }
 
 export async function getSubmodels(endpoint) {
@@ -623,6 +635,61 @@ export async function listEffects(endpoint, params = {}) {
     };
   }
   return postCommand(endpoint, "effects.list", params);
+}
+
+export async function updateEffect(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const base = deriveOwnedEndpointBase(endpoint);
+    return readOwnedJson(`${base}/effects/update`, {
+      method: "POST",
+      body: params
+    });
+  }
+  return postCommand(endpoint, "effects.update", params);
+}
+
+export async function deleteEffects(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const base = deriveOwnedEndpointBase(endpoint);
+    return readOwnedJson(`${base}/effects/delete`, {
+      method: "POST",
+      body: params
+    });
+  }
+  return postCommand(endpoint, "effects.delete", params);
+}
+
+export async function deleteEffectLayer(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const base = deriveOwnedEndpointBase(endpoint);
+    return readOwnedJson(`${base}/effects/delete-layer`, {
+      method: "POST",
+      body: params
+    });
+  }
+  return postCommand(endpoint, "effects.deleteLayer", params);
+}
+
+export async function reorderEffectLayer(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const base = deriveOwnedEndpointBase(endpoint);
+    return readOwnedJson(`${base}/effects/reorder-layer`, {
+      method: "POST",
+      body: params
+    });
+  }
+  return postCommand(endpoint, "effects.reorderLayer", params);
+}
+
+export async function compactEffectLayers(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const base = deriveOwnedEndpointBase(endpoint);
+    return readOwnedJson(`${base}/effects/compact-layers`, {
+      method: "POST",
+      body: params
+    });
+  }
+  return postCommand(endpoint, "effects.compactLayers", params);
 }
 
 export async function getJob(endpoint, jobId) {
