@@ -14,6 +14,7 @@ This is the xLights-native `layering` problem:
 - multiple effects on the same model
 - multiple effects on overlapping submodels of the same parent structure
 - adjacent layered treatments on the same target when the handoff itself affects legibility
+- additive effects introduced above existing same-target sequence content to create a deliberate composite look
 
 This is not the same as:
 
@@ -50,6 +51,8 @@ That is where the system needs evidence for:
 - palette fighting
 - cadence clash
 - loss of same-structure clarity
+
+Existing sequence preservation can intentionally create this condition. When the planner keeps an existing effect on one layer and adds a new effect on another layer, the result should be evaluated as layered composition, not treated as an automatic conflict. Replacement is a separate policy decision and should be visible in the plan metadata before same-layer reuse is accepted.
 
 ## Role Boundary
 

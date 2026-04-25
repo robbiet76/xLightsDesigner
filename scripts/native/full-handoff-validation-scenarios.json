@@ -83,6 +83,19 @@
       "seedExistingLayer": 0,
       "seedExistingStartMs": 0,
       "seedExistingEndMs": 30000
+    },
+    {
+      "name": "replace-existing-overlap-star-lead",
+      "targetIds": "Star",
+      "selectedTags": "lead",
+      "intentGoal": "Replace the existing overlapping Star look with a new lead color wash on the same layer.",
+      "seedExistingEffect": true,
+      "seedExistingModel": "Star",
+      "seedExistingEffectName": "On",
+      "seedExistingLayer": 0,
+      "seedExistingStartMs": 0,
+      "seedExistingEndMs": 30000,
+      "expectReplacementOverlap": true
     }
   ]
 }

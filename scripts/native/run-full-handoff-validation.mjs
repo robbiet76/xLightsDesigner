@@ -149,6 +149,7 @@ function normalizeScenario(row = {}, index = 0) {
     seedExistingLayer: Number.isFinite(Number(row?.seedExistingLayer)) ? Number(row.seedExistingLayer) : null,
     seedExistingStartMs: Number.isFinite(Number(row?.seedExistingStartMs)) ? Number(row.seedExistingStartMs) : null,
     seedExistingEndMs: Number.isFinite(Number(row?.seedExistingEndMs)) ? Number(row.seedExistingEndMs) : null,
+    expectReplacementOverlap: row?.expectReplacementOverlap === true || row?.expectReplacementAuthorized === true,
     tagOnly: row?.tagOnly === true
   };
 }
@@ -314,6 +315,7 @@ function buildValidationArgs(args, showDir, scenario) {
     if (scenario.seedExistingStartMs !== null) validationArgs.push('--seed-existing-start-ms', String(scenario.seedExistingStartMs));
     if (scenario.seedExistingEndMs !== null) validationArgs.push('--seed-existing-end-ms', String(scenario.seedExistingEndMs));
   }
+  if (scenario.expectReplacementOverlap) validationArgs.push('--expect-replacement-overlap');
   if (scenario.tagOnly || args.tagOnly) validationArgs.push('--tag-only');
   if (args.applyReview) validationArgs.push('--apply-review');
   if (args.applyReview && args.renderAfterApply) validationArgs.push('--render-after-apply');

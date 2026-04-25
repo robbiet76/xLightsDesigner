@@ -19,7 +19,7 @@ function splitList(value = '') {
 }
 
 function usage() {
-  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--section-label label] [--timing-track-name name] [--intent-goal goal] [--expected-timing-tracks csv] [--expected-anchor-tracks csv] [--require-anchors-in-section] [--seed-existing-effect] [--seed-existing-model model] [--seed-existing-effect-name name] [--seed-existing-layer n] [--seed-existing-start-ms n] [--seed-existing-end-ms n] [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
+  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--section-label label] [--timing-track-name name] [--intent-goal goal] [--expected-timing-tracks csv] [--expected-anchor-tracks csv] [--require-anchors-in-section] [--seed-existing-effect] [--seed-existing-model model] [--seed-existing-effect-name name] [--seed-existing-layer n] [--seed-existing-start-ms n] [--seed-existing-end-ms n] [--expect-replacement-overlap] [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
   process.exit(2);
 }
 
@@ -50,6 +50,7 @@ function parseArgs(argv = []) {
     seedExistingLayer: 0,
     seedExistingStartMs: 0,
     seedExistingEndMs: 0,
+    expectReplacementOverlap: false,
     timeoutMs: 30000
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -79,6 +80,7 @@ function parseArgs(argv = []) {
     else if (token === '--seed-existing-layer') out.seedExistingLayer = Number(argv[++i]);
     else if (token === '--seed-existing-start-ms') out.seedExistingStartMs = Number(argv[++i]);
     else if (token === '--seed-existing-end-ms') out.seedExistingEndMs = Number(argv[++i]);
+    else if (token === '--expect-replacement-overlap' || token === '--expect-replacement-authorized') out.expectReplacementOverlap = true;
     else if (token === '--timeout-ms') out.timeoutMs = Number(argv[++i]);
     else usage();
   }
@@ -664,6 +666,74 @@ async function assertExistingEffectPreservation({ snapshot = {}, seedExistingEff
   };
 }
 
+async function assertExistingEffectReplacement({ snapshot = {}, seedExistingEffect = null } = {}) {
+  if (!seedExistingEffect) return null;
+  const plan = snapshot?.latestPlanHandoff && typeof snapshot.latestPlanHandoff === 'object'
+    ? snapshot.latestPlanHandoff
+    : null;
+  if (!plan) throw new Error('Expected replacement validation requires a latest plan handoff.');
+  const replacementCommands = arr(plan?.commands).filter((command) => {
+    const params = command?.params && typeof command.params === 'object' ? command.params : {};
+    const policy = command?.intent?.existingSequencePolicy && typeof command.intent.existingSequencePolicy === 'object'
+      ? command.intent.existingSequencePolicy
+      : null;
+    return str(command?.cmd) === 'effects.create'
+      && str(params.modelName) === str(seedExistingEffect.element)
+      && policy
+      && Number(policy.overlapCount || 0) > 0
+      && policy.replacementAuthorized === true
+      && Number(policy.originalLayerIndex) === Number(seedExistingEffect.layer)
+      && Number(policy.plannedLayerIndex) === Number(seedExistingEffect.layer)
+      && Number(params.layerIndex) === Number(seedExistingEffect.layer);
+  });
+  if (!replacementCommands.length) {
+    throw new Error(`Expected generated plan to authorize replacement on seeded layer ${seedExistingEffect.layer}.`);
+  }
+
+  const replacementReadbacks = [];
+  for (const command of replacementCommands) {
+    const params = command?.params && typeof command.params === 'object' ? command.params : {};
+    const modelName = str(params.modelName);
+    const layerIndex = Number(params.layerIndex);
+    const startMs = Number(params.startMs);
+    const endMs = Number(params.endMs);
+    const effectName = str(params.effectName);
+    const payload = await requestXlightsApi('/effects/window', {
+      element: modelName,
+      startMs,
+      endMs
+    });
+    const effects = normalizeEffects(payload);
+    const present = effects.some((row) =>
+      row.layerIndex === layerIndex &&
+      row.effectName === effectName &&
+      row.startMs === startMs &&
+      row.endMs === endMs
+    );
+    replacementReadbacks.push({
+      modelName,
+      layerIndex,
+      startMs,
+      endMs,
+      effectName,
+      present
+    });
+  }
+  const missingReplacement = replacementReadbacks.filter((row) => !row.present);
+  if (missingReplacement.length) {
+    throw new Error(`Replacement overlap effects were not readable after apply: ${JSON.stringify(missingReplacement)}`);
+  }
+
+  return {
+    ok: true,
+    seed: seedExistingEffect,
+    replacementCommandCount: replacementCommands.length,
+    replacementReadbacks,
+    replacementAuthorized: true,
+    plannedLayerIndex: Number(seedExistingEffect.layer)
+  };
+}
+
 async function waitForApplyResult({ previousArtifactId = '', expectedSequencePath = '', ignoredBlockedTexts = new Set(), timeoutMs = 120000 } = {}) {
   const start = Date.now();
   let lastSnapshot = null;
@@ -811,6 +881,7 @@ let applyValidation = null;
 let renderValidation = null;
 let planTimingValidation = null;
 let preservationValidation = null;
+let replacementValidation = null;
 if (args.applyReview) {
   const previousApplyId = str(reviewReadySnapshot?.latestApplyResult?.artifactId || validationSnapshot?.latestApplyResult?.artifactId);
   applyValidation = await applyReviewWithRetry({
@@ -826,10 +897,17 @@ if (args.applyReview) {
     sectionScope: resolvedSectionScope,
     requireAnchorsInSection: args.requireAnchorsInSection
   });
-  preservationValidation = await assertExistingEffectPreservation({
-    snapshot: applyValidation?.snapshot,
-    seedExistingEffect: seededExistingEffect
-  });
+  if (args.expectReplacementOverlap) {
+    replacementValidation = await assertExistingEffectReplacement({
+      snapshot: applyValidation?.snapshot,
+      seedExistingEffect: seededExistingEffect
+    });
+  } else {
+    preservationValidation = await assertExistingEffectPreservation({
+      snapshot: applyValidation?.snapshot,
+      seedExistingEffect: seededExistingEffect
+    });
+  }
   if (args.renderAfterApply) {
     renderValidation = await request('POST', '/action', { action: 'renderXLightsSequence' });
   }
@@ -854,6 +932,7 @@ process.stdout.write(`${JSON.stringify({
   requireAnchorsInSection: args.requireAnchorsInSection,
   planTimingValidation,
   preservationValidation,
+  replacementValidation,
   resolvedSectionScope,
   seededSectionTimingTrack,
   seededExistingEffect,
