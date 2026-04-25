@@ -211,6 +211,96 @@ test("apply readback flags mismatched distributed effect windows", async () => {
   );
 });
 
+test("apply readback verifies preservation moved a new effect without overwriting the original layer", async () => {
+  const plan = [
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "Snowman",
+        layerIndex: 1,
+        effectName: "Color Wash",
+        startMs: 1000,
+        endMs: 2000
+      },
+      intent: {
+        existingSequencePolicy: {
+          replacementAuthorized: false,
+          preserveExistingUnlessScoped: true,
+          overlapCount: 1,
+          originalLayerIndex: 0,
+          plannedLayerIndex: 1,
+          overlappingEffectNames: ["On"]
+        }
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: layerIndex === 1
+          ? [{ modelName, layerIndex, startMs, endMs, effectName: "Color Wash" }]
+          : [{ modelName, layerIndex, startMs, endMs, effectName: "On" }]
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [
+      ["effect", "Snowman@1", true],
+      ["effect-preservation", "Snowman@0->1", true]
+    ]
+  );
+});
+
+test("apply readback flags preservation when the original layer was overwritten", async () => {
+  const plan = [
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "Snowman",
+        layerIndex: 1,
+        effectName: "Color Wash",
+        startMs: 1000,
+        endMs: 2000
+      },
+      intent: {
+        existingSequencePolicy: {
+          replacementAuthorized: false,
+          preserveExistingUnlessScoped: true,
+          overlapCount: 1,
+          originalLayerIndex: 0,
+          plannedLayerIndex: 1,
+          overlappingEffectNames: ["On"]
+        }
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: layerIndex === 1
+          ? [{ modelName, layerIndex, startMs, endMs, effectName: "Color Wash" }]
+          : []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, false);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [
+      ["effect", "Snowman@1", true],
+      ["effect-preservation", "Snowman@0->1", false]
+    ]
+  );
+});
+
 test("apply readback verifies submodel-targeted effect did not broaden to parent", async () => {
   const plan = [
     {

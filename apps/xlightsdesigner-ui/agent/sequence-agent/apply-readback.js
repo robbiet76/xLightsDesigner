@@ -34,6 +34,28 @@ function effectPlanKey(modelName = "", layerIndex = 0, startMs = 0, endMs = 0, e
   ].join("|");
 }
 
+function finiteNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function preservationPolicyForStep(step = {}) {
+  const policy = step?.intent?.existingSequencePolicy;
+  if (!policy || typeof policy !== "object" || Array.isArray(policy)) return null;
+  const overlapCount = Number(policy.overlapCount || 0);
+  const originalLayerIndex = finiteNumber(policy.originalLayerIndex);
+  const plannedLayerIndex = finiteNumber(policy.plannedLayerIndex);
+  if (!Number.isFinite(overlapCount) || overlapCount <= 0) return null;
+  if (policy.replacementAuthorized) return null;
+  if (originalLayerIndex === null || plannedLayerIndex === null) return null;
+  return {
+    overlapCount,
+    originalLayerIndex,
+    plannedLayerIndex,
+    overlappingEffectNames: arr(policy.overlappingEffectNames).map((row) => str(row)).filter(Boolean)
+  };
+}
+
 function buildReadbackDesignContext(planMetadata = {}, sequencingDesignHandoff = null) {
   const metadata = planMetadata && typeof planMetadata === "object" && !Array.isArray(planMetadata) ? planMetadata : {};
   const handoff = sequencingDesignHandoff && typeof sequencingDesignHandoff === "object" && !Array.isArray(sequencingDesignHandoff)
@@ -207,6 +229,7 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
       const startMs = Number(params.startMs);
       const endMs = Number(params.endMs);
       const effectName = String(params.effectName || "").trim();
+      const preservationPolicy = preservationPolicyForStep(step);
       readbackChecks.push((async () => {
         const resp = await listEffects(endpoint, { modelName, layerIndex, startMs, endMs });
         const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
@@ -223,6 +246,28 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
           detail: ok ? `${effectName} present` : `${effectName} missing`
         };
       })());
+      if (preservationPolicy) {
+        readbackChecks.push((async () => {
+          const resp = await listEffects(endpoint, {
+            modelName,
+            layerIndex: preservationPolicy.originalLayerIndex,
+            startMs,
+            endMs
+          });
+          const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
+          const preserved = preservationPolicy.overlappingEffectNames.length
+            ? effects.some((row) => preservationPolicy.overlappingEffectNames.includes(str(row?.effectName)))
+            : effects.length > 0;
+          return {
+            kind: "effect-preservation",
+            target: `${modelName}@${preservationPolicy.originalLayerIndex}->${preservationPolicy.plannedLayerIndex}`,
+            ok: preserved && layerIndex === preservationPolicy.plannedLayerIndex,
+            detail: preserved
+              ? `original layer ${preservationPolicy.originalLayerIndex} preserved`
+              : `original layer ${preservationPolicy.originalLayerIndex} missing preserved effects`
+          };
+        })());
+      }
       if (parentId && !plannedEffectKeys.has(effectPlanKey(parentId, layerIndex, startMs, endMs, effectName))) {
         readbackChecks.push((async () => {
           const resp = await listEffects(endpoint, {
