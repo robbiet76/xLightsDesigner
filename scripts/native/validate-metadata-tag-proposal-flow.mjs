@@ -19,7 +19,7 @@ function splitList(value = '') {
 }
 
 function usage() {
-  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--section-label label] [--timing-track-name name] [--intent-goal goal] [--expected-timing-tracks csv] [--expected-anchor-tracks csv] [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
+  console.error('usage: validate-metadata-tag-proposal-flow.mjs --target-ids <ids> --selected-tags <tags> [--section-label label] [--timing-track-name name] [--intent-goal goal] [--expected-timing-tracks csv] [--expected-anchor-tracks csv] [--require-anchors-in-section] [--tag-only] [--role lead] [--semantic-hints hints] [--effect-avoidances effects] [--sequence-path path] [--show-dir path] [--duration-ms 30000] [--frame-ms 50] [--force-validation-sequence] [--apply-review] [--render-after-apply] [--timeout-ms 30000]');
   process.exit(2);
 }
 
@@ -32,6 +32,7 @@ function parseArgs(argv = []) {
     intentGoal: '',
     expectedTimingTracks: '',
     expectedAnchorTracks: '',
+    requireAnchorsInSection: false,
     rolePreference: 'lead',
     semanticHints: 'centerpiece',
     effectAvoidances: 'Bars',
@@ -54,6 +55,7 @@ function parseArgs(argv = []) {
     else if (token === '--intent-goal' || token === '--validation-goal') out.intentGoal = str(argv[++i]);
     else if (token === '--expected-timing-tracks') out.expectedTimingTracks = str(argv[++i]);
     else if (token === '--expected-anchor-tracks' || token === '--expected-anchored-timing-tracks') out.expectedAnchorTracks = str(argv[++i]);
+    else if (token === '--require-anchors-in-section' || token === '--require-section-scoped-anchors') out.requireAnchorsInSection = true;
     else if (token === '--role') out.rolePreference = str(argv[++i]);
     else if (token === '--semantic-hints') out.semanticHints = str(argv[++i]);
     else if (token === '--effect-avoidances') out.effectAvoidances = str(argv[++i]);
@@ -390,11 +392,41 @@ function blockedBannerTexts(snapshot = {}) {
     .filter(Boolean);
 }
 
-function collectPlanTimingValidation(plan = {}, expectedTimingTracks = [], expectedAnchorTracks = []) {
+function commandStartEnd(command = {}) {
+  const params = command?.params && typeof command.params === 'object' ? command.params : {};
+  const anchor = command?.anchor && typeof command.anchor === 'object' ? command.anchor : {};
+  const startMs = Number(params.startMs ?? anchor.startMs);
+  const endMs = Number(params.endMs ?? anchor.endMs);
+  return { startMs, endMs };
+}
+
+function commandAnchorTracks(command = {}) {
+  const params = command?.params && typeof command.params === 'object' ? command.params : {};
+  const anchor = command?.anchor && typeof command.anchor === 'object' ? command.anchor : {};
+  return [
+    str(params.timingTrackName),
+    str(anchor.trackName)
+  ].filter(Boolean);
+}
+
+function isWithinWindow({ startMs, endMs } = {}, scope = null) {
+  if (!scope) return true;
+  const scopeStart = Number(scope.startMs);
+  const scopeEnd = Number(scope.endMs);
+  return Number.isFinite(startMs)
+    && Number.isFinite(endMs)
+    && Number.isFinite(scopeStart)
+    && Number.isFinite(scopeEnd)
+    && startMs >= scopeStart
+    && endMs <= scopeEnd;
+}
+
+function collectPlanTimingValidation(plan = {}, expectedTimingTracks = [], expectedAnchorTracks = [], { sectionScope = null, requireAnchorsInSection = false } = {}) {
   const commands = arr(plan?.commands);
   const createdTracks = new Set();
   const markedTracks = new Set();
   const anchoredTracks = new Set();
+  const sectionScopeViolations = [];
   for (const command of commands) {
     const cmd = str(command?.cmd);
     const params = command?.params && typeof command.params === 'object' ? command.params : {};
@@ -411,6 +443,28 @@ function collectPlanTimingValidation(plan = {}, expectedTimingTracks = [], expec
   }
   const timingTracks = expectedTimingTracks.map((trackName) => str(trackName)).filter(Boolean);
   const anchorTracks = expectedAnchorTracks.map((trackName) => str(trackName)).filter(Boolean);
+  if (requireAnchorsInSection && sectionScope && anchorTracks.length) {
+    const expectedAnchorSet = new Set(anchorTracks);
+    for (const command of commands) {
+      const cmd = str(command?.cmd);
+      if (cmd !== 'effects.create' && cmd !== 'effects.alignToTiming') continue;
+      const tracks = commandAnchorTracks(command);
+      if (!tracks.some((trackName) => expectedAnchorSet.has(trackName))) continue;
+      const window = commandStartEnd(command);
+      if (!isWithinWindow(window, sectionScope)) {
+        sectionScopeViolations.push({
+          id: str(command?.id),
+          cmd,
+          tracks,
+          startMs: window.startMs,
+          endMs: window.endMs,
+          sectionLabel: str(sectionScope.sectionLabel),
+          sectionStartMs: Number(sectionScope.startMs),
+          sectionEndMs: Number(sectionScope.endMs)
+        });
+      }
+    }
+  }
   const missingCreatedTracks = timingTracks.filter((trackName) => !createdTracks.has(trackName));
   const missingMarkedTracks = timingTracks.filter((trackName) => !markedTracks.has(trackName));
   const missingAnchorTracks = anchorTracks.filter((trackName) => !anchoredTracks.has(trackName));
@@ -423,11 +477,14 @@ function collectPlanTimingValidation(plan = {}, expectedTimingTracks = [], expec
     missingCreatedTracks,
     missingMarkedTracks,
     missingAnchorTracks,
-    ok: missingCreatedTracks.length === 0 && missingMarkedTracks.length === 0 && missingAnchorTracks.length === 0
+    sectionScope: sectionScope || null,
+    requireAnchorsInSection,
+    sectionScopeViolations,
+    ok: missingCreatedTracks.length === 0 && missingMarkedTracks.length === 0 && missingAnchorTracks.length === 0 && sectionScopeViolations.length === 0
   };
 }
 
-function assertPlanTimingValidation(snapshot = {}, expectedTimingTracks = [], expectedAnchorTracks = []) {
+function assertPlanTimingValidation(snapshot = {}, expectedTimingTracks = [], expectedAnchorTracks = [], options = {}) {
   if (!expectedTimingTracks.length && !expectedAnchorTracks.length) return null;
   const plan = snapshot?.latestPlanHandoff && typeof snapshot.latestPlanHandoff === 'object'
     ? snapshot.latestPlanHandoff
@@ -435,7 +492,7 @@ function assertPlanTimingValidation(snapshot = {}, expectedTimingTracks = [], ex
   if (!plan) {
     throw new Error(`Expected timing-track validation requires a latest plan handoff. expectedTimingTracks=${expectedTimingTracks.join(',')} expectedAnchorTracks=${expectedAnchorTracks.join(',')}`);
   }
-  const validation = collectPlanTimingValidation(plan, expectedTimingTracks, expectedAnchorTracks);
+  const validation = collectPlanTimingValidation(plan, expectedTimingTracks, expectedAnchorTracks, options);
   if (!validation.ok) {
     throw new Error(`Generated plan failed timing-track validation: ${JSON.stringify(validation)}`);
   }
@@ -598,12 +655,18 @@ if (args.applyReview) {
     tagOnly: args.tagOnly,
     timeoutMs: Math.max(args.timeoutMs, 120000)
   });
-  planTimingValidation = assertPlanTimingValidation(applyValidation?.snapshot, expectedTimingTracks, expectedAnchorTracks);
+  planTimingValidation = assertPlanTimingValidation(applyValidation?.snapshot, expectedTimingTracks, expectedAnchorTracks, {
+    sectionScope: resolvedSectionScope,
+    requireAnchorsInSection: args.requireAnchorsInSection
+  });
   if (args.renderAfterApply) {
     renderValidation = await request('POST', '/action', { action: 'renderXLightsSequence' });
   }
 } else {
-  planTimingValidation = assertPlanTimingValidation(validationSnapshot, expectedTimingTracks, expectedAnchorTracks);
+  planTimingValidation = assertPlanTimingValidation(validationSnapshot, expectedTimingTracks, expectedAnchorTracks, {
+    sectionScope: resolvedSectionScope,
+    requireAnchorsInSection: args.requireAnchorsInSection
+  });
 }
 
 process.stdout.write(`${JSON.stringify({
@@ -617,6 +680,7 @@ process.stdout.write(`${JSON.stringify({
   selectedSections,
   expectedTimingTracks,
   expectedAnchorTracks,
+  requireAnchorsInSection: args.requireAnchorsInSection,
   planTimingValidation,
   resolvedSectionScope,
   seededSectionTimingTrack,

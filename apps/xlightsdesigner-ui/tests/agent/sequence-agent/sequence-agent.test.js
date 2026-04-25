@@ -1797,6 +1797,58 @@ test("sequence_agent distributes fallback anchors across phrase and chord cue tr
   assert.deepEqual(alignedTracks, ["XD: Phrase Cues", "XD: Chord Changes"]);
 });
 
+test("sequence_agent cue retargeting prefers marks inside selected section boundaries", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 0, endMs: 10000 },
+          { label: "Chorus 1", startMs: 10000, endMs: 20000 }
+        ]
+      },
+      timing: {
+        beats: [
+          { startMs: 9500, endMs: 10000, label: "4" },
+          { startMs: 10000, endMs: 10500, label: "1" }
+        ],
+        bars: [
+          { startMs: 8000, endMs: 10000, label: "Verse Bar" },
+          { startMs: 10000, endMs: 12000, label: "Chorus Bar" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Use beat pulses and measure bars inside Chorus 1.",
+      mode: "create",
+      scope: {
+        targetIds: ["Snowman", "MegaTree"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Snowman / beat pulse",
+      "Chorus 1 / MegaTree / measure bar sweep"
+    ],
+    sequenceSettings: {
+      durationMs: 20000
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Bars", params: [] }
+    ])
+  });
+
+  const effects = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effects.map((row) => [row.anchor?.trackName, row.params.startMs, row.params.endMs]),
+    [
+      ["XD: Beat Grid", 10000, 10500],
+      ["XD: Bars", 10000, 12000]
+    ]
+  );
+});
+
 test("sequence_agent allows decomposed multi-line direct requests", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

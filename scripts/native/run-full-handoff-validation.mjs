@@ -29,6 +29,7 @@ function usage() {
     '  --intent-goal <text>           Optional validation design intent goal.',
     '  --expected-timing-tracks <csv>  Optional timing tracks that generated plans must create with marks.',
     '  --expected-anchor-tracks <csv>  Optional timing tracks that generated effects must anchor/align to.',
+    '  --require-anchors-in-section    Require expected cue-anchored effects to remain inside the selected section.',
     '  --tag-only                    Seed expected target metadata, then generate from tags without target text.',
     '  --matrix                       Run the default metadata handoff scenario matrix.',
     '  --matrix-file <path>           Run scenarios from a JSON matrix file.',
@@ -55,6 +56,7 @@ function parseArgs(argv = []) {
     intentGoal: '',
     expectedTimingTracks: '',
     expectedAnchorTracks: '',
+    requireAnchorsInSection: false,
     durationMs: 30000,
     frameMs: 50,
     timeoutMs: 180000,
@@ -88,6 +90,7 @@ function parseArgs(argv = []) {
     else if (token === '--intent-goal' || token === '--validation-goal') args.intentGoal = next();
     else if (token === '--expected-timing-tracks') args.expectedTimingTracks = next();
     else if (token === '--expected-anchor-tracks' || token === '--expected-anchored-timing-tracks') args.expectedAnchorTracks = next();
+    else if (token === '--require-anchors-in-section') args.requireAnchorsInSection = true;
     else if (token === '--tag-only') args.tagOnly = true;
     else if (token === '--matrix') args.matrix = true;
     else if (token === '--matrix-file') {
@@ -139,6 +142,7 @@ function normalizeScenario(row = {}, index = 0) {
     expectedAnchorTracks: Array.isArray(row?.expectedAnchorTracks || row?.expectedAnchoredTimingTracks)
       ? (row.expectedAnchorTracks || row.expectedAnchoredTimingTracks).map((value) => str(value)).filter(Boolean).join(',')
       : str(row?.expectedAnchorTracks || row?.expectedAnchoredTimingTracks),
+    requireAnchorsInSection: row?.requireAnchorsInSection === true || row?.requireSectionScopedAnchors === true,
     tagOnly: row?.tagOnly === true
   };
 }
@@ -295,6 +299,7 @@ function buildValidationArgs(args, showDir, scenario) {
   if (intentGoal) validationArgs.push('--intent-goal', intentGoal);
   if (expectedTimingTracks) validationArgs.push('--expected-timing-tracks', expectedTimingTracks);
   if (expectedAnchorTracks) validationArgs.push('--expected-anchor-tracks', expectedAnchorTracks);
+  if (scenario.requireAnchorsInSection || args.requireAnchorsInSection) validationArgs.push('--require-anchors-in-section');
   if (scenario.tagOnly || args.tagOnly) validationArgs.push('--tag-only');
   if (args.applyReview) validationArgs.push('--apply-review');
   if (args.applyReview && args.renderAfterApply) validationArgs.push('--render-after-apply');

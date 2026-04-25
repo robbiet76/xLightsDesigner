@@ -55,6 +55,22 @@
       "expectedAnchorTracks": [
         "XD: Phrase Cues"
       ]
+    },
+    {
+      "name": "section-cue-chorus-beat-bar-star-lead",
+      "targetIds": "Star",
+      "selectedTags": "lead",
+      "sectionLabel": "Chorus 1",
+      "intentGoal": "Validate metadata-selected sequencing for Star in Chorus 1 with beat-by-beat pulse anchors and measure bar timing support.",
+      "expectedTimingTracks": [
+        "XD: Beat Grid",
+        "XD: Bars"
+      ],
+      "expectedAnchorTracks": [
+        "XD: Beat Grid",
+        "XD: Bars"
+      ],
+      "requireAnchorsInSection": true
     }
   ]
 }

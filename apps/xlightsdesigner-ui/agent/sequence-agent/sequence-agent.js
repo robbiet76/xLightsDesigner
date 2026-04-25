@@ -1242,10 +1242,15 @@ function findNearestTimingMark({ window = {}, marks = [] } = {}) {
       const markStart = Number(mark.startMs);
       const markEnd = Number(mark.endMs);
       const contains = markStart <= start && markEnd >= start;
+      const startsAtOrAfter = markStart >= start;
       const distance = contains ? 0 : Math.min(Math.abs(markStart - start), Math.abs(markEnd - start));
-      return { mark, distance };
+      return { mark, distance, contains, startsAtOrAfter };
     })
-    .sort((a, b) => a.distance - b.distance || Number(a.mark.startMs) - Number(b.mark.startMs))[0]?.mark || null;
+    .sort((a, b) => {
+      if (a.contains !== b.contains) return a.contains ? -1 : 1;
+      if (a.startsAtOrAfter !== b.startsAtOrAfter) return a.startsAtOrAfter ? -1 : 1;
+      return a.distance - b.distance || Number(a.mark.startMs) - Number(b.mark.startMs);
+    })[0]?.mark || null;
 }
 
 function retargetFallbackEffectsToCueTiming({
