@@ -266,6 +266,50 @@ function countOverlappingMarks(marks = [], startMs = 0, endMs = 0, { labeledOnly
   });
 }
 
+function nearlyEqualMs(a, b, toleranceMs = 2) {
+  const left = Number(a);
+  const right = Number(b);
+  return Number.isFinite(left) && Number.isFinite(right) && Math.abs(left - right) <= toleranceMs;
+}
+
+function boundaryTouchesTimingMark({ command = {}, timingTracks = new Map() } = {}) {
+  const params = command?.params || {};
+  const startMs = Number(params?.startMs);
+  const endMs = Number(params?.endMs);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return false;
+  if (str(command?.anchor?.kind) === "timing_track" && str(command?.anchor?.boundarySide)) return true;
+  const anchorTrackName = str(command?.anchor?.trackName);
+  const markSets = anchorTrackName && timingTracks.has(anchorTrackName)
+    ? [timingTracks.get(anchorTrackName)]
+    : Array.from(timingTracks.values());
+  return markSets.some((marks) => arr(marks).some((mark) => (
+    nearlyEqualMs(startMs, mark?.startMs)
+    || nearlyEqualMs(startMs, mark?.endMs)
+    || nearlyEqualMs(endMs, mark?.startMs)
+    || nearlyEqualMs(endMs, mark?.endMs)
+  )));
+}
+
+function boundaryTouchesAdjacentEffect({ command = {}, effectCommands = [] } = {}) {
+  if (str(command?.anchor?.kind) === "adjacent_effect") return true;
+  const params = command?.params || {};
+  const target = str(params?.modelName);
+  const layerIndex = Number(params?.layerIndex);
+  const startMs = Number(params?.startMs);
+  const endMs = Number(params?.endMs);
+  if (!target || !Number.isFinite(layerIndex) || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return false;
+  return arr(effectCommands).some((other) => {
+    if (other === command) return false;
+    const otherParams = other?.params || {};
+    if (str(otherParams?.modelName) !== target) return false;
+    if (Number(otherParams?.layerIndex) !== layerIndex) return false;
+    const otherStart = Number(otherParams?.startMs);
+    const otherEnd = Number(otherParams?.endMs);
+    if (!Number.isFinite(otherStart) || !Number.isFinite(otherEnd) || otherEnd <= otherStart) return false;
+    return nearlyEqualMs(startMs, otherEnd) || nearlyEqualMs(endMs, otherStart);
+  });
+}
+
 function summarizeTimingFidelity(planHandoff = null) {
   const commands = arr(planHandoff?.commands);
   const timingTracks = buildTimingTrackIndex(commands);
@@ -311,7 +355,10 @@ function summarizeTimingFidelity(planHandoff = null) {
   let phraseAwareEffectCount = 0;
   let alignedToPhraseCount = 0;
   let timingAwareEffectCount = 0;
+  let timingBoundaryAnchoredCount = 0;
+  let adjacentEffectAnchoredCount = 0;
   const crossingEffects = [];
+  const freeFloatingEffects = [];
 
   for (const command of effectCommands) {
     const params = command?.params || {};
@@ -362,6 +409,18 @@ function summarizeTimingFidelity(planHandoff = null) {
     if (alignedToPhrase) alignedToPhraseCount += 1;
     if (anchoredToPhrase || alignedToPhrase || phraseOverlapCount > 0) phraseAwareEffectCount += 1;
     if (anchoredToSectionTiming || alignedToSectionTiming || anchoredToPhrase || alignedToPhrase) timingAwareEffectCount += 1;
+    const timingBoundaryAnchored = boundaryTouchesTimingMark({ command, timingTracks });
+    const adjacentEffectAnchored = boundaryTouchesAdjacentEffect({ command, effectCommands });
+    if (timingBoundaryAnchored) timingBoundaryAnchoredCount += 1;
+    if (adjacentEffectAnchored) adjacentEffectAnchoredCount += 1;
+    if (!timingBoundaryAnchored && !adjacentEffectAnchored) {
+      freeFloatingEffects.push({
+        target: str(params?.modelName),
+        effectName: str(params?.effectName),
+        startMs,
+        endMs
+      });
+    }
   }
 
   return {
@@ -380,6 +439,10 @@ function summarizeTimingFidelity(planHandoff = null) {
     alignedToPhraseCount,
     phraseAwareEffectCount,
     timingAwareEffectCount,
+    timingBoundaryAnchoredCount,
+    adjacentEffectAnchoredCount,
+    freeFloatingEffectCount: freeFloatingEffects.length,
+    freeFloatingEffects,
     crossingEffects
   };
 }
@@ -425,6 +488,13 @@ export function buildPracticalSequenceValidation({
       kind: "timing_ignored",
       target: "sequence",
       detail: "Effect commands did not anchor or align to the reviewed timing context."
+    });
+  }
+  if (timingFidelity.freeFloatingEffectCount > 0) {
+    timingFailures.push({
+      kind: "free_floating_effect",
+      target: "sequence",
+      detail: `${timingFidelity.freeFloatingEffectCount} effect commands do not touch a timing mark boundary or adjacent effect boundary.`
     });
   }
   if (!isSectionScoped && planQuality.timelineCoverageRatio < 0.55) {

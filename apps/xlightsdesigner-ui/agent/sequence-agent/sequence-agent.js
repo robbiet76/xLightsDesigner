@@ -1189,6 +1189,181 @@ function clampPlacementWindow({ startMs, endMs, sequenceSettings = {} } = {}) {
   return { startMs: start, endMs: end };
 }
 
+function nearlyEqualMs(a, b, toleranceMs = 2) {
+  const left = Number(a);
+  const right = Number(b);
+  return Number.isFinite(left) && Number.isFinite(right) && Math.abs(left - right) <= toleranceMs;
+}
+
+function markBoundarySide(window = {}, mark = {}) {
+  if (nearlyEqualMs(window.startMs, mark?.startMs)) return "start";
+  if (nearlyEqualMs(window.startMs, mark?.endMs)) return "start";
+  if (nearlyEqualMs(window.endMs, mark?.startMs)) return "end";
+  if (nearlyEqualMs(window.endMs, mark?.endMs)) return "end";
+  return "";
+}
+
+function findTimingBoundaryAnchor({ window = {}, trackName = "", marksByTrack = new Map() } = {}) {
+  const requestedMarks = normArray(marksByTrack?.get(trackName));
+  const allMarks = requestedMarks.length
+    ? requestedMarks
+    : Array.from(marksByTrack?.values?.() || []).flatMap((marks) => normArray(marks));
+  return allMarks
+    .map((mark) => {
+      const side = markBoundarySide(window, mark);
+      if (!side) return null;
+      const labeled = normText(mark?.label) ? 1 : 0;
+      const containsStart = Number(mark?.startMs) <= Number(window?.startMs) && Number(mark?.endMs) > Number(window?.startMs) ? 1 : 0;
+      const containsEnd = Number(mark?.startMs) < Number(window?.endMs) && Number(mark?.endMs) >= Number(window?.endMs) ? 1 : 0;
+      return { mark, side, score: (labeled * 10) + containsStart + containsEnd };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score || Number(a.mark?.startMs) - Number(b.mark?.startMs))[0] || null;
+}
+
+function findContainingTimingMark({ window = {}, trackName = "", marksByTrack = new Map() } = {}) {
+  const requestedMarks = normArray(marksByTrack?.get(trackName));
+  const allMarks = requestedMarks.length
+    ? requestedMarks
+    : Array.from(marksByTrack?.values?.() || []).flatMap((marks) => normArray(marks));
+  return allMarks.find((mark) => {
+    const startMs = Number(mark?.startMs);
+    const endMs = Number(mark?.endMs);
+    return Number.isFinite(startMs) && Number.isFinite(endMs) && startMs <= window.startMs && endMs >= window.endMs;
+  }) || null;
+}
+
+function findAdjacentPlacementBoundary({ placement = {}, window = {}, placements = [] } = {}) {
+  const targetId = normText(placement?.targetId);
+  const layerIndex = Number(placement?.layerIndex);
+  if (!targetId || !Number.isFinite(layerIndex)) return null;
+  for (const other of normArray(placements)) {
+    if (other === placement) continue;
+    if (normText(other?.targetId) !== targetId) continue;
+    if (Number(other?.layerIndex) !== layerIndex) continue;
+    const otherStart = Number(other?.startMs);
+    const otherEnd = Number(other?.endMs);
+    if (!Number.isFinite(otherStart) || !Number.isFinite(otherEnd) || otherEnd <= otherStart) continue;
+    if (nearlyEqualMs(window.startMs, otherEnd)) return { side: "start", other };
+    if (nearlyEqualMs(window.endMs, otherStart)) return { side: "end", other };
+  }
+  return null;
+}
+
+function resolvePlacementAnchoredWindow({
+  placement = {},
+  placements = [],
+  defaultTrackName = "",
+  marksByTrack = new Map(),
+  sequenceSettings = {}
+} = {}) {
+  const placementTrackName = normText(placement?.timingContext?.trackName || defaultTrackName) || "XD: Sequencer Plan";
+  let window = clampPlacementWindow({
+    startMs: placement.startMs,
+    endMs: placement.endMs,
+    sequenceSettings
+  });
+  const explicitAnchor = placement?.timingContext && typeof placement.timingContext === "object" && !Array.isArray(placement.timingContext)
+    ? {
+        label: normText(placement?.timingContext?.anchorLabel),
+        startMs: Number(placement?.timingContext?.anchorStartMs),
+        endMs: Number(placement?.timingContext?.anchorEndMs)
+      }
+    : null;
+  if (explicitAnchor && Number.isFinite(explicitAnchor.startMs) && Number.isFinite(explicitAnchor.endMs) && explicitAnchor.endMs > explicitAnchor.startMs) {
+    const anchorSide = markBoundarySide(window, explicitAnchor);
+    if (!anchorSide) {
+      const duration = Math.max(1, window.endMs - window.startMs);
+      window = clampPlacementWindow({
+        startMs: explicitAnchor.startMs,
+        endMs: explicitAnchor.startMs + duration,
+        sequenceSettings
+      });
+    }
+    return {
+      window,
+      placementTrackName,
+      anchor: {
+        kind: "timing_track",
+        trackName: placementTrackName,
+        markLabel: explicitAnchor.label,
+        startMs: explicitAnchor.startMs,
+        endMs: explicitAnchor.endMs,
+        basis: normText(placement?.timingContext?.alignmentMode || "timing_mark") || "timing_mark",
+        boundarySide: markBoundarySide(window, explicitAnchor) || "start"
+      }
+    };
+  }
+  const timingBoundary = findTimingBoundaryAnchor({ window, trackName: placementTrackName, marksByTrack });
+  if (timingBoundary) {
+    return {
+      window,
+      placementTrackName,
+      anchor: {
+        kind: "timing_track",
+        trackName: placementTrackName,
+        markLabel: normText(timingBoundary.mark?.label),
+        startMs: Number(timingBoundary.mark?.startMs),
+        endMs: Number(timingBoundary.mark?.endMs),
+        basis: "timing_boundary",
+        boundarySide: timingBoundary.side
+      }
+    };
+  }
+  const adjacent = findAdjacentPlacementBoundary({ placement, window, placements });
+  if (adjacent) {
+    return {
+      window,
+      placementTrackName,
+      anchor: {
+        kind: "adjacent_effect",
+        trackName: placementTrackName,
+        markLabel: "",
+        startMs: window.startMs,
+        endMs: window.endMs,
+        basis: "adjacent_effect",
+        boundarySide: adjacent.side,
+        adjacentPlacementId: normText(adjacent.other?.placementId)
+      }
+    };
+  }
+  const containingMark = findContainingTimingMark({ window, trackName: placementTrackName, marksByTrack });
+  if (containingMark) {
+    const duration = Math.max(1, window.endMs - window.startMs);
+    window = clampPlacementWindow({
+      startMs: containingMark.startMs,
+      endMs: Number(containingMark.startMs) + duration,
+      sequenceSettings
+    });
+    return {
+      window,
+      placementTrackName,
+      anchor: {
+        kind: "timing_track",
+        trackName: placementTrackName,
+        markLabel: normText(containingMark?.label),
+        startMs: Number(containingMark?.startMs),
+        endMs: Number(containingMark?.endMs),
+        basis: "snapped_to_timing_boundary",
+        boundarySide: "start"
+      }
+    };
+  }
+  return {
+    window,
+    placementTrackName,
+    anchor: {
+      kind: "unresolved",
+      trackName: placementTrackName,
+      markLabel: "",
+      startMs: window.startMs,
+      endMs: window.endMs,
+      basis: "unanchored_window",
+      boundarySide: ""
+    }
+  };
+}
+
 function buildCommandsFromEffectPlacements({
   effectPlacements = [],
   targetIds = [],
@@ -1283,12 +1458,15 @@ function buildCommandsFromEffectPlacements({
       },
       effectCatalog
     });
-    const placementTrackName = normText(placement?.timingContext?.trackName || trackName) || "XD: Sequencer Plan";
-    const window = clampPlacementWindow({
-      startMs: placement.startMs,
-      endMs: placement.endMs,
+    const anchoredPlacement = resolvePlacementAnchoredWindow({
+      placement,
+      placements,
+      defaultTrackName: trackName,
+      marksByTrack,
       sequenceSettings
     });
+    const placementTrackName = anchoredPlacement.placementTrackName;
+    const window = anchoredPlacement.window;
     return {
       id: placement.placementId || `effect.${index + 1}`,
       designId: normText(placement?.designId),
@@ -1298,14 +1476,7 @@ function buildCommandsFromEffectPlacements({
         ...(timingInsertCommandIdsByTrack.has(placementTrackName) ? [timingInsertCommandIdsByTrack.get(placementTrackName)] : []),
         ...(displayOrderCommand ? [displayOrderCommand.id] : [])
       ],
-      anchor: {
-        kind: "timing_track",
-        trackName: placementTrackName,
-        markLabel: normText(placement?.timingContext?.anchorLabel),
-        startMs: window.startMs,
-        endMs: window.endMs,
-        basis: normText(placement?.timingContext?.alignmentMode || "explicit_window") || "explicit_window"
-      },
+      anchor: anchoredPlacement.anchor,
       cmd: "effects.create",
       params: {
         modelName: normText(placement.targetId),

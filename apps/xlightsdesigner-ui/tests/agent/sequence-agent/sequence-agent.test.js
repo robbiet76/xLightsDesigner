@@ -3060,22 +3060,26 @@ test("sequence_agent honors explicit effect placements over section-level infere
       endMs: row.params.endMs
     })),
     [
-      {
-        modelName: "MegaTree",
-        layerIndex: 1,
-        effectName: "Shimmer",
-        startMs: 32000,
-        endMs: 36500
-      },
-      {
-        modelName: "Roofline",
-        layerIndex: 0,
-        effectName: "Bars",
-        startMs: 54000,
-        endMs: 61000
-      }
-    ]
-  );
+	      {
+	        modelName: "MegaTree",
+	        layerIndex: 1,
+	        effectName: "Shimmer",
+	        startMs: 30000,
+	        endMs: 34500
+	      },
+	      {
+	        modelName: "Roofline",
+	        layerIndex: 0,
+	        effectName: "Bars",
+	        startMs: 50000,
+	        endMs: 57000
+	      }
+	    ]
+	  );
+  assert.equal(effectCommands[0].anchor.basis, "within_section");
+  assert.equal(effectCommands[0].anchor.boundarySide, "start");
+  assert.equal(effectCommands[1].anchor.basis, "within_section");
+  assert.equal(effectCommands[1].anchor.boundarySide, "start");
   assert.equal(effectCommands[0].intent.settingsIntent.intensity, "high");
   assert.equal(effectCommands[0].designId, "DES-001");
   assert.equal(effectCommands[0].designRevision, 0);

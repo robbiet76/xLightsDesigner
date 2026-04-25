@@ -315,3 +315,50 @@ test("practical sequence validation fails effects that cross reviewed structure 
   assert.equal(artifact.summary.timingFidelity.crossingSectionTimingCount, 1);
   assert.match(artifact.failures.timing.map((row) => row.kind).join(","), /crosses_section_timing_boundary/);
 });
+
+test("practical sequence validation fails free-floating effects", () => {
+  const artifact = buildPracticalSequenceValidation({
+    planHandoff: {
+      planId: "plan-floating",
+      commands: [
+        {
+          cmd: "timing.insertMarks",
+          params: {
+            trackName: "XD: Song Structure",
+            marks: [
+              { label: "Verse 1", startMs: 0, endMs: 10000 }
+            ]
+          }
+        },
+        {
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", basis: "explicit_window", startMs: 2000, endMs: 3000 },
+          params: { modelName: "TreeRound", layerIndex: 0, effectName: "Wave", startMs: 2000, endMs: 3000 }
+        }
+      ],
+      metadata: {
+        sequenceSettings: { durationMs: 10000 },
+        sectionPlans: [{ section: "Verse 1" }],
+        effectPlacements: [{ sourceSectionLabel: "Verse 1" }]
+      }
+    },
+    applyResult: {
+      artifactId: "apply-floating",
+      status: "applied"
+    },
+    verification: {
+      revisionAdvanced: true,
+      expectedMutationsPresent: true,
+      checks: [],
+      designAlignment: {
+        observedTargets: ["TreeRound"],
+        observedEffectNames: ["Wave"]
+      },
+      designChecks: []
+    }
+  });
+
+  assert.equal(artifact.overallOk, false);
+  assert.equal(artifact.summary.timingFidelity.freeFloatingEffectCount, 1);
+  assert.match(artifact.failures.timing.map((row) => row.kind).join(","), /free_floating_effect/);
+});

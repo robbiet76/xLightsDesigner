@@ -57,7 +57,22 @@ test("renderCurrentSummary prefers rendered sequence path", () => {
 test("buildNativeApplyVerification attaches practical validation from readback", async () => {
   const commands = [
     {
+      cmd: "timing.insertMarks",
+      params: {
+        trackName: "XD: Song Structure",
+        marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }]
+      }
+    },
+    {
       cmd: "effects.create",
+      anchor: {
+        kind: "timing_track",
+        trackName: "XD: Song Structure",
+        markLabel: "Chorus 1",
+        startMs: 0,
+        endMs: 1000,
+        boundarySide: "start"
+      },
       params: {
         modelName: "MegaTree",
         layerIndex: 0,

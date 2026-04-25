@@ -19,6 +19,7 @@ The sequencer decides which timing track or tracks are needed before each sequen
 - A scenario or handoff may provide `timingTrackName` or `sectionTimingTrackName` when a specific track is required.
 - Timing tracks are complete authoring assets when created. Section-scoped sequencing may target one section, but any timing track command must write the full known mark set for that track, not a partial track containing only the selected section or selected effect window.
 - Timing-track creation is need-based and multi-track. If effects should tie to beats, lyrics, vocals, bars, structure, phrases, or another future timing source, the sequencer should select or create the relevant track before placing effects.
+- Effects should not be free-floating. Every generated effect should have at least one boundary anchored to a timing mark boundary or to an adjacent effect boundary on the same target/layer.
 - If no track is provided, the current generated default may still be `XD: Song Structure`, but code must not treat that as the only valid section source.
 - Validation should fail on missing or ambiguous labels rather than silently forcing Song Structure.
 
@@ -34,6 +35,7 @@ Updated:
 - `apps/xlightsdesigner-ui/agent/sequence-agent/practical-sequence-validation.js`
   - Adds generic section-timing metrics beside legacy structure metric aliases.
   - Timing failures now refer to reviewed timing-section boundaries, not only structure boundaries.
+  - Timing validation now fails free-floating effects whose start/end boundaries do not touch either a timing mark boundary or an adjacent same-target/layer effect.
 
 - `apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent.js`
   - Section timing can be driven by `executionStrategy.timingTrackName`, `executionStrategy.sectionTimingTrackName`, or matching section-plan fields.
@@ -41,6 +43,7 @@ Updated:
   - Any section-scoped timing track write now includes all known sections, including explicit custom timing track names.
   - Referenced placement cue tracks are written as full timing tracks, so the planner can emit more than one timing asset when the design needs multiple anchors.
   - Direct sequencing now infers need-based cue timing assets from intent text and creates available beat, bar, lyric, phrase, and chord tracks before effect commands.
+  - Explicit effect placements are resolved against timing marks or adjacent placements before command generation. Interior placements that would otherwise float inside a timing section snap one boundary to the timing mark while preserving duration when possible.
 
 - `apps/xlightsdesigner-ui/agent/designer-dialog/music-design-context.js`
   - Music design cues now expose `XD: Bars` and `XD: Lyrics` as first-class cue timing tracks beside beat, phrase, and chord tracks.
@@ -76,4 +79,6 @@ New coverage includes:
 - explicit section timing track name honored by sequence-agent command generation
 - full timing-track writes use complete marks and replace existing marks during native apply
 - need-based direct sequencing creates complete cue timing tracks for beat, measure/bar, lyric/vocal, phrase, and chord intent when matching analysis marks exist
+- explicit effect placements are anchored to timing or adjacent-effect boundaries instead of remaining free-floating
+- practical validation fails free-floating effects
 - live native handoff matrix with target, group, tag-only, and section-label scenarios
