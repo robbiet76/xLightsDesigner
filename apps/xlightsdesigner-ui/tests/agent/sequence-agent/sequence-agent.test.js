@@ -303,6 +303,13 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.realizationCandidates.source.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
   assert.equal(out.metadata.candidateSelection.source.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
   assert.equal(out.metadata.candidateSelection.source.realizationCandidatesRef, out.metadata.realizationCandidates.artifactId);
+  assert.equal(out.metadata.artifactRefs.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
+  assert.equal(out.metadata.artifactRefs.realizationCandidatesRef, out.metadata.realizationCandidates.artifactId);
+  assert.equal(out.metadata.artifactRefs.candidateSelectionRef, out.metadata.candidateSelection.artifactId);
+  assert.equal(out.metadata.generativeSummary.artifactType, "plan_generative_summary_v1");
+  assert.equal(out.metadata.generativeSummary.refs.realizationCandidatesRef, out.metadata.realizationCandidates.artifactId);
+  assert.equal(out.metadata.generativeSummary.choice.chosenCandidateId, out.metadata.candidateChoice.chosenCandidateId);
+  assert.deepEqual(out.metadata.generativeSummary.delta.previousEffectNames, ["Shimmer", "Twinkle"]);
   assert.equal(out.metadata.candidateSelection.policy.mode, "deterministic_preview");
   assert.equal(out.metadata.candidateSelection.policy.phase, "plan");
   assert.equal(out.metadata.candidateChoice.selectionMode, "deterministic_preview");

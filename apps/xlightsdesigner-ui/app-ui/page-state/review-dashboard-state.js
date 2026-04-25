@@ -17,6 +17,9 @@ function differenceStrings(nextValues = [], previousValues = []) {
 
 export function buildGenerativeSummaryFromMetadata(metadata = null) {
   if (!metadata || typeof metadata !== "object") return null;
+  if (metadata.generativeSummary && typeof metadata.generativeSummary === "object") {
+    return metadata.generativeSummary;
+  }
   const intentEnvelope = metadata.intentEnvelope && typeof metadata.intentEnvelope === "object"
     ? metadata.intentEnvelope
     : null;

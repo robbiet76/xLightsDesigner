@@ -66,6 +66,8 @@ The local app can store larger artifacts than the cloud model context should rec
 
 This is diagnostic telemetry, not a hard gate. It should be used to spot growth before large-sequence workflows become slow or expensive.
 
+`plan_handoff_v1.metadata.artifactRefs` and `plan_handoff_v1.metadata.generativeSummary` provide the compact path for consumers that only need ids, counts, selected candidate state, retry signals, revision deltas, and feedback summaries. Existing embedded objects remain available during migration, but new UI and validation consumers should prefer the compact summary when the full artifact is not needed.
+
 ## Future Work
 
 - Replace large embedded downstream objects with artifact refs plus compact summaries where practical.

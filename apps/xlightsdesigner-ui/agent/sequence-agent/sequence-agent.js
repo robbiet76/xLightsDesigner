@@ -632,6 +632,116 @@ function buildPlanHandoffScaleTelemetry({ commands = [], metadata = {} } = {}) {
   };
 }
 
+function uniqueNormTexts(values = []) {
+  return Array.from(new Set(normArray(values).map((row) => normText(row)).filter(Boolean)));
+}
+
+function buildPlanArtifactRefs(metadata = {}) {
+  return {
+    sequencingDesignHandoffRef: normText(metadata?.sequencingDesignHandoff?.artifactId),
+    sequenceArtisticGoalRef: normText(metadata?.sequenceArtisticGoal?.artifactId),
+    sequenceRevisionObjectiveRef: normText(metadata?.sequenceRevisionObjective?.artifactId),
+    priorPassMemoryRef: normText(metadata?.priorPassMemory?.artifactId),
+    sequencerRevisionBriefRef: normText(metadata?.sequencerRevisionBrief?.artifactId),
+    revisionFeedbackRef: normText(metadata?.revisionFeedback?.artifactId),
+    revisionDeltaRef: normText(metadata?.revisionDelta?.artifactId),
+    revisionRetryPressureRef: normText(metadata?.revisionRetryPressure?.artifactId),
+    intentEnvelopeRef: normText(metadata?.intentEnvelope?.artifactId),
+    realizationCandidatesRef: normText(metadata?.realizationCandidates?.artifactId),
+    candidateSelectionRef: normText(metadata?.candidateSelection?.artifactId)
+  };
+}
+
+function buildCompactGenerativeSummary(metadata = {}) {
+  const intentEnvelope = metadata?.intentEnvelope && typeof metadata.intentEnvelope === "object" ? metadata.intentEnvelope : {};
+  const realizationCandidates = metadata?.realizationCandidates && typeof metadata.realizationCandidates === "object" ? metadata.realizationCandidates : {};
+  const candidateSelection = metadata?.candidateSelection && typeof metadata.candidateSelection === "object" ? metadata.candidateSelection : {};
+  const candidateChoice = metadata?.candidateChoice && typeof metadata.candidateChoice === "object" ? metadata.candidateChoice : {};
+  const effectStrategy = metadata?.effectStrategy && typeof metadata.effectStrategy === "object" ? metadata.effectStrategy : {};
+  const revisionDelta = metadata?.revisionDelta && typeof metadata.revisionDelta === "object" ? metadata.revisionDelta : {};
+  const revisionRetryPressure = metadata?.revisionRetryPressure && typeof metadata.revisionRetryPressure === "object" ? metadata.revisionRetryPressure : {};
+  const revisionFeedback = metadata?.revisionFeedback && typeof metadata.revisionFeedback === "object" ? metadata.revisionFeedback : {};
+  const priorPassMemory = metadata?.priorPassMemory && typeof metadata.priorPassMemory === "object" ? metadata.priorPassMemory : {};
+  const candidates = normArray(realizationCandidates?.candidates).filter((row) => row && typeof row === "object");
+  const scoredCandidates = normArray(candidateSelection?.scoredCandidates).filter((row) => row && typeof row === "object");
+  const selectedBandIds = uniqueNormTexts(candidateSelection?.selectedBand?.candidateIds).slice(0, 4);
+  const chosenCandidateId = normText(candidateChoice?.chosenCandidateId || effectStrategy?.selectedCandidateId);
+  const chosenCandidate = chosenCandidateId
+    ? candidates.find((row) => normText(row?.candidateId) === chosenCandidateId)
+    : null;
+  const chosenSeedRecommendations = normArray(chosenCandidate?.seedRecommendations).filter((row) => row && typeof row === "object");
+  const currentEffectNames = uniqueNormTexts(
+    chosenSeedRecommendations.length
+      ? chosenSeedRecommendations.map((row) => row?.effectName)
+      : normArray(effectStrategy?.seedRecommendations).map((row) => row?.effectName)
+  );
+  const currentTargetIds = uniqueNormTexts(
+    chosenSeedRecommendations.length
+      ? chosenSeedRecommendations.flatMap((row) => normArray(row?.targetIds))
+      : normArray(effectStrategy?.seedRecommendations).flatMap((row) => normArray(row?.targetIds))
+  );
+  const retryPressureSignals = uniqueNormTexts(
+    revisionRetryPressure?.signals || metadata?.candidateSelectionContext?.retryPressureSignals || priorPassMemory?.retryPressureSignals
+  ).slice(0, 5);
+  return {
+    artifactType: "plan_generative_summary_v1",
+    artifactVersion: "1.0",
+    refs: buildPlanArtifactRefs(metadata),
+    intent: {
+      attentionProfile: normText(intentEnvelope?.attention?.profile || "unconstrained"),
+      temporalProfile: normText(intentEnvelope?.temporal?.profile || "unconstrained"),
+      footprint: normText(intentEnvelope?.spatial?.footprint || "unconstrained"),
+      texture: normText(intentEnvelope?.texture?.profile || "unconstrained")
+    },
+    candidates: {
+      count: candidates.length,
+      candidateIds: candidates.map((row) => normText(row?.candidateId)).filter(Boolean).slice(0, 4)
+    },
+    selection: {
+      mode: normText(candidateChoice?.selectionMode || candidateSelection?.policy?.mode),
+      phase: normText(candidateSelection?.policy?.phase || metadata?.candidateSelectionContext?.phase),
+      primaryCandidateId: normText(candidateSelection?.primaryCandidateId),
+      selectedBandIds,
+      selectedBandSize: Number(candidateSelection?.selectedBand?.size || selectedBandIds.length || 0)
+    },
+    choice: {
+      chosenCandidateId,
+      chosenSummary: normText(effectStrategy?.selectedCandidateSummary || chosenCandidate?.summary),
+      selectedFromBand: Boolean(candidateChoice?.selectedFromBand),
+      unresolvedSignals: uniqueNormTexts(metadata?.candidateSelectionContext?.unresolvedSignals).slice(0, 5),
+      retryPressureSignals
+    },
+    delta: {
+      artifactType: normText(revisionDelta?.artifactType || "revision_delta_v1"),
+      artifactId: normText(revisionDelta?.artifactId),
+      currentEffectNames: uniqueNormTexts(revisionDelta?.current?.effectNames || currentEffectNames).slice(0, 5),
+      currentTargetIds: uniqueNormTexts(revisionDelta?.current?.targetIds || currentTargetIds).slice(0, 5),
+      previousEffectNames: uniqueNormTexts(revisionDelta?.previous?.effectNames || priorPassMemory?.previousEffectNames).slice(0, 5),
+      previousTargetIds: uniqueNormTexts(revisionDelta?.previous?.targetIds || priorPassMemory?.previousTargetIds).slice(0, 5),
+      introducedEffectNames: uniqueNormTexts(revisionDelta?.introduced?.effectNames).slice(0, 5),
+      introducedTargetIds: uniqueNormTexts(revisionDelta?.introduced?.targetIds).slice(0, 5)
+    },
+    retry: {
+      artifactType: normText(revisionRetryPressure?.artifactType || "revision_retry_pressure_v1"),
+      artifactId: normText(revisionRetryPressure?.artifactId),
+      signals: retryPressureSignals,
+      oscillatingCandidateIds: uniqueNormTexts(
+        revisionRetryPressure?.oscillation?.candidateIds || scoredCandidates
+          .filter((row) => normText(row?.oscillationRisk) === "high")
+          .map((row) => normText(row?.candidateId))
+      ).slice(0, 4)
+    },
+    feedback: {
+      artifactType: normText(revisionFeedback?.artifactType || "revision_feedback_v1"),
+      artifactId: normText(revisionFeedback?.artifactId),
+      status: normText(revisionFeedback?.status || "unknown"),
+      rejectionReasons: uniqueNormTexts(revisionFeedback?.rejectionReasons).slice(0, 5),
+      executionObjective: normText(revisionFeedback?.nextDirection?.executionObjective),
+      artisticCorrection: normText(revisionFeedback?.nextDirection?.artisticCorrection)
+    }
+  };
+}
+
 function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
   const out = [];
   const seen = new Set();
@@ -2122,6 +2232,8 @@ export function buildSequenceAgentPlan({
     metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments),
     renderValidationEvidence: sanitizeRenderValidationEvidence(renderValidationEvidence)
   };
+  metadata.artifactRefs = buildPlanArtifactRefs(metadata);
+  metadata.generativeSummary = buildCompactGenerativeSummary(metadata);
   metadata.handoffScale = buildPlanHandoffScaleTelemetry({ commands: commandsOut, metadata });
 
   const plan = {

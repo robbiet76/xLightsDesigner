@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildReviewDashboardState } from "../../../app-ui/page-state/review-dashboard-state.js";
+import {
+  buildGenerativeSummaryFromMetadata,
+  buildReviewDashboardState
+} from "../../../app-ui/page-state/review-dashboard-state.js";
 
 function buildHelpers(overrides = {}) {
   return {
@@ -39,6 +42,34 @@ test("review dashboard state reports idle when no draft exists", () => {
   assert.equal(dashboard.status, "idle");
   assert.equal(dashboard.readiness.ok, false);
   assert.match(dashboard.validationIssues[0].code, /no_pending_review_changes/);
+});
+
+test("review dashboard state prefers compact generative summary when available", () => {
+  const summary = buildGenerativeSummaryFromMetadata({
+    generativeSummary: {
+      artifactType: "plan_generative_summary_v1",
+      intent: { attentionProfile: "weighted" },
+      candidates: { count: 2, candidateIds: ["candidate-compact"] },
+      selection: { mode: "bounded_exploration", selectedBandIds: ["candidate-compact"] },
+      choice: { chosenCandidateId: "candidate-compact" },
+      delta: { introducedEffectNames: ["Color Wash"], introducedTargetIds: ["Snowman"] },
+      retry: { signals: ["low_change_retry"] },
+      feedback: { status: "revise_required" }
+    },
+    realizationCandidates: {
+      candidates: [
+        { candidateId: "candidate-expanded" }
+      ]
+    },
+    candidateSelection: {
+      policy: { mode: "deterministic_preview" }
+    }
+  });
+
+  assert.equal(summary.artifactType, "plan_generative_summary_v1");
+  assert.deepEqual(summary.candidates.candidateIds, ["candidate-compact"]);
+  assert.equal(summary.selection.mode, "bounded_exploration");
+  assert.equal(summary.choice.chosenCandidateId, "candidate-compact");
 });
 
 test("review dashboard state reports blocked when draft exists but approval gate is not ready", () => {
