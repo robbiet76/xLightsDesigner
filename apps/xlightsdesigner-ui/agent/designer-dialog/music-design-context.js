@@ -105,6 +105,15 @@ function buildCueWindowsBySection({
       .filter(Boolean)
       .slice(0, 16);
 
+    const barWindows = rows(bars)
+      .filter((row) => overlapsWindow(row, startMs, endMs))
+      .map((row, index) => {
+        const clipped = clipWindow(row, startMs, endMs, `Bar ${index + 1}`);
+        return clipped ? { ...clipped, trackName: "XD: Bars" } : null;
+      })
+      .filter(Boolean)
+      .slice(0, 16);
+
     const chordWindows = rows(chords)
       .filter((row) => overlapsWindow(row, startMs, endMs))
       .map((row, index) => {
@@ -113,6 +122,15 @@ function buildCueWindowsBySection({
       })
       .filter(Boolean)
       .slice(0, 8);
+
+    const lyricWindows = rows(lyricLines)
+      .filter((row) => overlapsWindow(row, startMs, endMs))
+      .map((row, index) => {
+        const clipped = clipWindow(row, startMs, endMs, `Lyric ${index + 1}`);
+        return clipped ? { ...clipped, trackName: "XD: Lyrics" } : null;
+      })
+      .filter(Boolean)
+      .slice(0, 16);
 
     const phraseSourceRows = rows(phraseLines).length ? rows(phraseLines) : rows(lyricLines);
     let phraseWindows = phraseSourceRows
@@ -123,10 +141,12 @@ function buildCueWindowsBySection({
       })
       .filter(Boolean)
       .slice(0, 8);
-    if (beatWindows.length || chordWindows.length || phraseWindows.length) {
+    if (beatWindows.length || barWindows.length || chordWindows.length || lyricWindows.length || phraseWindows.length) {
       out[label] = {};
       if (beatWindows.length) out[label].beat = beatWindows;
+      if (barWindows.length) out[label].bar = barWindows;
       if (chordWindows.length) out[label].chord = chordWindows;
+      if (lyricWindows.length) out[label].lyric = lyricWindows;
       if (phraseWindows.length) out[label].phrase = phraseWindows;
     }
   }

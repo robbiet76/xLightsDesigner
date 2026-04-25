@@ -347,6 +347,99 @@ function buildCueTrackMarksByTrack({ analysisHandoff = {}, sectionNames = [], in
   return out;
 }
 
+const TIMING_NEED_RULES = [
+  {
+    trackName: "XD: Beat Grid",
+    pattern: /\b(beat|beats|beat[-\s]?sync|beat[-\s]?synced|pulse|pulses|rhythm|rhythmic|downbeat|on[-\s]?beat)\b/i
+  },
+  {
+    trackName: "XD: Bars",
+    pattern: /\b(measure|measures)\b|\bbar(?:s)?[-\s]?(grid|track|timing|line|lines|cue|cues)\b|\b(on|to|with)\s+bars?\b/i
+  },
+  {
+    trackName: "XD: Lyrics",
+    pattern: /\b(lyric|lyrics|word|words|vocal|vocals|singer|singing|mouth|mouths|phoneme|phonemes)\b/i
+  },
+  {
+    trackName: "XD: Phrase Cues",
+    pattern: /\b(phrase|phrases|line|lines|melody|melodic|hook|hooks)\b/i
+  },
+  {
+    trackName: "XD: Chord Changes",
+    pattern: /\b(chord|chords|harmony|harmonic|key change|key changes)\b/i
+  }
+];
+
+function inferRequestedCueTimingTracks({ goal = "", sourceLines = [], executionStrategy = {} } = {}) {
+  const text = [
+    goal,
+    ...normArray(sourceLines),
+    normText(executionStrategy?.implementationMode),
+    normText(executionStrategy?.routePreference),
+    ...normArray(executionStrategy?.sectionPlans).flatMap((row) => [
+      normText(row?.intentSummary),
+      ...normArray(row?.effectHints)
+    ])
+  ].join(" ");
+  const requested = [];
+  for (const rule of TIMING_NEED_RULES) {
+    if (rule.pattern.test(text)) requested.push(rule.trackName);
+  }
+  return requested;
+}
+
+function buildRequestedCueTimingCommands({
+  analysisHandoff = {},
+  sectionNames = [],
+  requestedTrackNames = [],
+  sequenceSettings = {},
+  allowTimingWrites = true,
+  warnings = []
+} = {}) {
+  if (!allowTimingWrites) return [];
+  const requested = new Set(normArray(requestedTrackNames).map((row) => normText(row)).filter(Boolean));
+  if (!requested.size) return [];
+  const cueTrackMarksByTrack = buildCueTrackMarksByTrack({
+    analysisHandoff,
+    sectionNames,
+    includeAll: true
+  });
+  if (!(cueTrackMarksByTrack instanceof Map) || !cueTrackMarksByTrack.size) return [];
+  const marksByTrack = buildPlacementMarksByTrack({
+    effectPlacements: [],
+    cueTrackMarksByTrack,
+    sequenceSettings
+  });
+  const commands = [];
+  for (const trackName of requested) {
+    const marks = marksByTrack.get(trackName) || [];
+    if (!marks.length) {
+      warnings.push(`Timing track need detected for ${trackName}, but no analysis marks are available for that track.`);
+      continue;
+    }
+    const safeTrackSlug = trackName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "track";
+    const createId = `timing.track.create:${safeTrackSlug}`;
+    commands.push({
+      id: createId,
+      cmd: "timing.createTrack",
+      params: {
+        trackName,
+        replaceIfExists: true
+      }
+    });
+    commands.push({
+      id: `timing.marks.insert:${safeTrackSlug}`,
+      dependsOn: [createId],
+      cmd: "timing.insertMarks",
+      params: {
+        trackName,
+        marks
+      }
+    });
+  }
+  return commands;
+}
+
 function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {}, sequencingDesignHandoff = null, sourceLines = [] } = {}) {
   const mode = normText(intentHandoff?.mode) || "create";
   const resolvedSequencingDesignHandoff = deriveSequencingDesignHandoff(intentHandoff, sequencingDesignHandoff);
@@ -1264,6 +1357,7 @@ function stageCommandGraphSynthesis({
   effect = {},
   executionStrategy = {},
   analysisHandoff = {},
+  goalText = "",
   warnings = [],
   capabilityCommands = [],
   effectCatalog = null,
@@ -1358,8 +1452,29 @@ function stageCommandGraphSynthesis({
     useAllKnownSections,
     enableEffectTimingAlignment
   });
+  const existingTimingWriteTracks = new Set(
+    normArray(commands)
+      .filter((command) => {
+        const cmd = normText(command?.cmd);
+        return cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
+      })
+      .map((command) => normText(command?.params?.trackName))
+      .filter(Boolean)
+  );
+  const requestedCueTimingCommands = buildRequestedCueTimingCommands({
+    analysisHandoff,
+    sectionNames: sectionWindowsByName instanceof Map ? Array.from(sectionWindowsByName.keys()) : [],
+    requestedTrackNames: inferRequestedCueTimingTracks({
+      goal: goalText,
+      sourceLines: executionLines,
+      executionStrategy
+    }).filter((track) => !existingTimingWriteTracks.has(track)),
+    sequenceSettings,
+    allowTimingWrites,
+    warnings
+  });
   const filteredCommands = [];
-  for (const command of commands) {
+  for (const command of [...requestedCueTimingCommands, ...commands]) {
     const cmd = normText(command?.cmd);
     const trackName = normText(command?.params?.trackName);
     const isTimingWrite = cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
@@ -1582,6 +1697,7 @@ export function buildSequenceAgentPlan({
           effectCatalog,
           sequenceSettings: effectiveSequenceSettings,
           targetIds: scope.targetIds,
+          goalText: scope.goal,
           displayElements,
           groupIds,
           groupsById,

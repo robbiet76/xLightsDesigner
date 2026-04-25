@@ -58,6 +58,7 @@ test("buildMusicDesignContext derives section arc and design cues", () => {
   assert.ok(context.designCues.holdMoments.includes("Intro"));
   assert.ok(context.designCues.lyricFocusMoments.includes("Chorus"));
   assert.equal(context.designCues.cueWindowsBySection.Chorus.beat[0].trackName, "XD: Beat Grid");
+  assert.equal(context.designCues.cueWindowsBySection.Chorus.lyric[0].trackName, "XD: Lyrics");
   assert.equal(context.designCues.cueWindowsBySection.Chorus.chord[0].trackName, "XD: Chord Changes");
   assert.equal(context.designCues.cueWindowsBySection.Chorus.phrase[0].trackName, "XD: Phrase Cues");
 });
@@ -165,6 +166,8 @@ test("buildMusicDesignContext falls back to analysisHandoff timing data when ana
   });
 
   assert.equal(context.designCues.cueWindowsBySection.Chorus.beat[0].trackName, "XD: Beat Grid");
+  assert.equal(context.designCues.cueWindowsBySection.Chorus.bar[0].trackName, "XD: Bars");
+  assert.equal(context.designCues.cueWindowsBySection.Chorus.lyric[0].trackName, "XD: Lyrics");
   assert.equal(context.designCues.cueWindowsBySection.Chorus.chord[0].trackName, "XD: Chord Changes");
   assert.equal(context.designCues.cueWindowsBySection.Chorus.phrase[0].trackName, "XD: Phrase Cues");
 });

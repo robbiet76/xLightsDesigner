@@ -40,6 +40,10 @@ Updated:
   - Current generated default remains `XD: Song Structure` when no explicit section timing track is supplied.
   - Any section-scoped timing track write now includes all known sections, including explicit custom timing track names.
   - Referenced placement cue tracks are written as full timing tracks, so the planner can emit more than one timing asset when the design needs multiple anchors.
+  - Direct sequencing now infers need-based cue timing assets from intent text and creates available beat, bar, lyric, phrase, and chord tracks before effect commands.
+
+- `apps/xlightsdesigner-ui/agent/designer-dialog/music-design-context.js`
+  - Music design cues now expose `XD: Bars` and `XD: Lyrics` as first-class cue timing tracks beside beat, phrase, and chord tracks.
 
 - Native handoff automation
   - `generateSequenceProposal` now forwards selected section labels and optional timing track names from the macOS automation endpoint into native direct proposal generation.
@@ -71,4 +75,5 @@ New coverage includes:
 - planned arbitrary section timing track
 - explicit section timing track name honored by sequence-agent command generation
 - full timing-track writes use complete marks and replace existing marks during native apply
+- need-based direct sequencing creates complete cue timing tracks for beat, measure/bar, lyric/vocal, phrase, and chord intent when matching analysis marks exist
 - live native handoff matrix with target, group, tag-only, and section-label scenarios

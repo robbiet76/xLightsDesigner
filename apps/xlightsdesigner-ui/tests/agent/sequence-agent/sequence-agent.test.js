@@ -1598,6 +1598,80 @@ test("sequence_agent writes complete cue tracks for scoped sections, not only re
   ]);
 });
 
+test("sequence_agent adds need-based cue timing tracks before direct sequencing", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 0, endMs: 5000 },
+          { label: "Chorus 1", startMs: 5000, endMs: 9000 }
+        ]
+      },
+      timing: {
+        beats: [
+          { startMs: 5000, endMs: 5500, label: "1" },
+          { startMs: 5500, endMs: 6000, label: "2" }
+        ],
+        bars: [
+          { startMs: 5000, endMs: 7000, label: "Bar 1" },
+          { startMs: 7000, endMs: 9000, label: "Bar 2" }
+        ]
+      },
+      lyrics: {
+        lines: [
+          { startMs: 5200, endMs: 6100, label: "light the night" },
+          { startMs: 6100, endMs: 7600, label: "raise it higher" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Use beat pulses, measures, and vocals to drive the chorus.",
+      mode: "create",
+      scope: {
+        targetIds: ["Snowman"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Snowman / sync the look to beats, measures, and vocals"],
+    sequenceSettings: {
+      durationMs: 9000
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Bars", params: [] }
+    ])
+  });
+
+  const timingWrites = out.commands.filter((row) => row.cmd === "timing.insertMarks");
+  assert.deepEqual(
+    timingWrites.map((row) => row.params.trackName).sort(),
+    ["XD: Bars", "XD: Beat Grid", "XD: Lyrics", "XD: Song Structure"]
+  );
+
+  assert.deepEqual(
+    timingWrites.find((row) => row.params.trackName === "XD: Beat Grid").params.marks,
+    [
+      { startMs: 5000, endMs: 5500, label: "1" },
+      { startMs: 5500, endMs: 6000, label: "2" }
+    ]
+  );
+  assert.deepEqual(
+    timingWrites.find((row) => row.params.trackName === "XD: Bars").params.marks,
+    [
+      { startMs: 5000, endMs: 7000, label: "Bar 1" },
+      { startMs: 7000, endMs: 8999, label: "Bar 2" }
+    ]
+  );
+  assert.deepEqual(
+    timingWrites.find((row) => row.params.trackName === "XD: Lyrics").params.marks,
+    [
+      { startMs: 5200, endMs: 6100, label: "light the night" },
+      { startMs: 6100, endMs: 7600, label: "raise it higher" }
+    ]
+  );
+});
+
 test("sequence_agent allows decomposed multi-line direct requests", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {
