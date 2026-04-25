@@ -70,6 +70,8 @@ This is diagnostic telemetry, not a hard gate. It should be used to spot growth 
 
 History entry construction should also prefer these compact fields when building snapshot summaries and artifact refs. History needs stable audit summaries, not full candidate or revision artifacts, unless the user opens a detailed artifact view.
 
+Runtime code that needs prior revision state may synthesize minimal `revision_retry_pressure_v1` and `revision_feedback_v1` objects from `metadata.generativeSummary` when expanded artifacts are not embedded. Expanded artifacts remain preferred when present.
+
 ## Future Work
 
 - Replace large embedded downstream objects with artifact refs plus compact summaries where practical.

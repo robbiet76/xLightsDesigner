@@ -11,6 +11,11 @@ import { buildRenderCritiqueContext } from "../agent/sequence-agent/render-criti
 import { buildRenderValidationEvidence } from "../agent/sequence-agent/render-validation-evidence.js";
 import { buildCandidateSelectionContext } from "../agent/sequence-agent/candidate-selection-context.js";
 import { buildRevisionRetryPressureV1 } from "../agent/sequence-agent/revision-retry-pressure.js";
+import {
+  resolveRevisionFeedbackFromSnapshots,
+  resolveRevisionRetryPressureFromPlanMetadata,
+  resolveRevisionRetryPressureFromSnapshots
+} from "./compact-plan-metadata.js";
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
@@ -109,12 +114,16 @@ export async function executeApplyCore({
       historySnapshot: state.ui?.reviewHistorySnapshot || state.ui?.selectedHistorySnapshot || null
     });
     const revisionRetryPressure =
-      state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
-      || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
+      resolveRevisionRetryPressureFromSnapshots(
+        state.ui?.reviewHistorySnapshot,
+        state.ui?.selectedHistorySnapshot
+      )
       || null;
     const revisionFeedback =
-      state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionFeedback
-      || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionFeedback
+      resolveRevisionFeedbackFromSnapshots(
+        state.ui?.reviewHistorySnapshot,
+        state.ui?.selectedHistorySnapshot
+      )
       || state.sequenceAgentRuntime?.revisionFeedback
       || null;
     const sequenceAgentInput = buildSequenceAgentInput({
@@ -405,7 +414,7 @@ export async function executeApplyCore({
           practicalValidation
         });
     const activeRevisionRetryPressure =
-      planHandoff?.metadata?.revisionRetryPressure
+      resolveRevisionRetryPressureFromPlanMetadata(planHandoff?.metadata)
       || state.sequenceAgentRuntime?.revisionRetryPressure
       || buildRevisionRetryPressureV1({
         priorPassMemory,

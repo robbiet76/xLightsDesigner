@@ -1,4 +1,8 @@
 import { buildCandidateSelectionContext } from "../agent/sequence-agent/candidate-selection-context.js";
+import {
+  resolveRevisionFeedbackFromSnapshots,
+  resolveRevisionRetryPressureFromSnapshots
+} from "./compact-plan-metadata.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -401,12 +405,16 @@ export function createProposalGenerationRuntime(deps = {}) {
         historySnapshot: state.ui?.reviewHistorySnapshot || state.ui?.selectedHistorySnapshot || null
       });
       const revisionRetryPressure =
-        state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
-        || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionRetryPressure
+        resolveRevisionRetryPressureFromSnapshots(
+          state.ui?.reviewHistorySnapshot,
+          state.ui?.selectedHistorySnapshot
+        )
         || null;
       const revisionFeedback =
-        state.ui?.reviewHistorySnapshot?.planHandoff?.metadata?.revisionFeedback
-        || state.ui?.selectedHistorySnapshot?.planHandoff?.metadata?.revisionFeedback
+        resolveRevisionFeedbackFromSnapshots(
+          state.ui?.reviewHistorySnapshot,
+          state.ui?.selectedHistorySnapshot
+        )
         || state.sequenceAgentRuntime?.revisionFeedback
         || null;
       const sequenceAgentInput = buildSequenceAgentInput({
