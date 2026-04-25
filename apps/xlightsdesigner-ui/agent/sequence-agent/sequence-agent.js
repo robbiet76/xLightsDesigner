@@ -370,7 +370,27 @@ const TIMING_NEED_RULES = [
   }
 ];
 
-function inferRequestedCueTimingTracks({ goal = "", sourceLines = [], executionStrategy = {} } = {}) {
+function collectCueTimingSignalText(value, out = []) {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    const text = normText(value);
+    if (text) out.push(text);
+    return out;
+  }
+  if (Array.isArray(value)) {
+    for (const row of value) collectCueTimingSignalText(row, out);
+    return out;
+  }
+  if (!value || typeof value !== "object") return out;
+  for (const row of Object.values(value)) collectCueTimingSignalText(row, out);
+  return out;
+}
+
+function inferRequestedCueTimingTracks({
+  goal = "",
+  sourceLines = [],
+  executionStrategy = {},
+  sequencingDesignHandoff = null
+} = {}) {
   const text = [
     goal,
     ...normArray(sourceLines),
@@ -379,7 +399,9 @@ function inferRequestedCueTimingTracks({ goal = "", sourceLines = [], executionS
     ...normArray(executionStrategy?.sectionPlans).flatMap((row) => [
       normText(row?.intentSummary),
       ...normArray(row?.effectHints)
-    ])
+    ]),
+    ...collectCueTimingSignalText(executionStrategy?.translationIntent),
+    ...collectCueTimingSignalText(sequencingDesignHandoff)
   ].join(" ");
   const requested = [];
   for (const rule of TIMING_NEED_RULES) {
@@ -1620,6 +1642,7 @@ function stageCommandGraphSynthesis({
   sourceLines = [],
   effect = {},
   executionStrategy = {},
+  sequencingDesignHandoff = null,
   analysisHandoff = {},
   goalText = "",
   warnings = [],
@@ -1719,7 +1742,8 @@ function stageCommandGraphSynthesis({
   const requestedCueTrackNames = inferRequestedCueTimingTracks({
     goal: goalText,
     sourceLines: executionLines,
-    executionStrategy
+    executionStrategy,
+    sequencingDesignHandoff
   });
   const cueTrackMarksByTrack = requestedCueTrackNames.length
     ? buildCueTrackMarksByTrack({
@@ -1974,6 +1998,7 @@ export function buildSequenceAgentPlan({
           capabilityCommands,
           effectCatalog,
           sequenceSettings: effectiveSequenceSettings,
+          sequencingDesignHandoff: scope.sequencingDesignHandoff,
           targetIds: scope.targetIds,
           goalText: scope.goal,
           displayElements,

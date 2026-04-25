@@ -1678,6 +1678,89 @@ test("sequence_agent adds need-based cue timing tracks before direct sequencing"
   assert.equal(align.params.timingTrackName, "XD: Beat Grid");
 });
 
+test("sequence_agent uses app intent metadata to choose cue timing tracks", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 5000, endMs: 9000 }
+        ]
+      },
+      timing: {
+        beats: [
+          { startMs: 5000, endMs: 5500, label: "1" },
+          { startMs: 5500, endMs: 6000, label: "2" }
+        ]
+      },
+      lyrics: {
+        lines: [
+          { startMs: 5200, endMs: 6100, label: "light the night" },
+          { startMs: 6100, endMs: 7600, label: "raise it higher" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Apply the planned chorus accents.",
+      mode: "create",
+      scope: {
+        targetIds: ["Snowman", "Roofline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      },
+      executionStrategy: {
+        translationIntent: {
+          behaviorTargets: [
+            {
+              appliesTo: "section",
+              section: "Chorus 1",
+              motion: { primaryMotion: "rhythmic pulse" },
+              texture: { primaryTexture: "vocal lyric accents" }
+            }
+          ]
+        },
+        sectionPlans: [
+          {
+            section: "Chorus 1",
+            intentSummary: "apply the planned chorus accents",
+            targetIds: ["Snowman", "Roofline"],
+            effectHints: ["Color Wash", "On"]
+          }
+        ]
+      },
+      sequencingDesignHandoff: {
+        sectionDirectives: [
+          {
+            sectionName: "Chorus 1",
+            motionTarget: "rhythmic pulse",
+            transitionIntent: "vocal lyric pickup"
+          }
+        ]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Snowman / apply Color Wash effect",
+      "Chorus 1 / Roofline / apply On effect"
+    ],
+    sequenceSettings: {
+      durationMs: 9000
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "On", params: [] }
+    ])
+  });
+
+  const timingTracks = out.commands
+    .filter((row) => row.cmd === "timing.insertMarks")
+    .map((row) => row.params.trackName)
+    .sort();
+  assert.deepEqual(timingTracks, ["XD: Beat Grid", "XD: Lyrics", "XD: Song Structure"]);
+  const anchoredTracks = out.commands
+    .filter((row) => row.cmd === "effects.create")
+    .map((row) => row.anchor?.trackName);
+  assert.deepEqual(anchoredTracks, ["XD: Beat Grid", "XD: Lyrics"]);
+});
+
 test("sequence_agent distributes fallback effect anchors across requested cue tracks", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {
