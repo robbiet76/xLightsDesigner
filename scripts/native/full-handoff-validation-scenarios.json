@@ -43,6 +43,18 @@
         "XD: Bars",
         "XD: Lyrics"
       ]
+    },
+    {
+      "name": "cue-anchored-phrase-star-lead",
+      "targetIds": "Star",
+      "selectedTags": "lead",
+      "intentGoal": "Validate metadata-selected sequencing for Star with phrase release timing and melodic line cue anchors.",
+      "expectedTimingTracks": [
+        "XD: Phrase Cues"
+      ],
+      "expectedAnchorTracks": [
+        "XD: Phrase Cues"
+      ]
     }
   ]
 }

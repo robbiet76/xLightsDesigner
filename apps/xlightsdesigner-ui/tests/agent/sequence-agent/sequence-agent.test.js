@@ -1737,6 +1737,66 @@ test("sequence_agent distributes fallback effect anchors across requested cue tr
   assert.deepEqual(alignedTracks, ["XD: Beat Grid", "XD: Bars", "XD: Lyrics"]);
 });
 
+test("sequence_agent distributes fallback anchors across phrase and chord cue tracks", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Bridge", startMs: 10000, endMs: 18000 }
+        ]
+      },
+      lyrics: {
+        plainPhraseFallback: {
+          available: true,
+          phrases: [
+            { startMs: 10000, endMs: 14000, label: "Phrase Hold" },
+            { startMs: 14000, endMs: 18000, label: "Phrase Release" }
+          ]
+        }
+      },
+      chords: {
+        chords: [
+          { startMs: 10000, endMs: 13000, label: "C" },
+          { startMs: 13000, endMs: 16000, label: "G" },
+          { startMs: 16000, endMs: 18000, label: "Am" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Use phrase releases and chord changes for the bridge.",
+      mode: "create",
+      scope: {
+        targetIds: ["Snowman", "MegaTree"],
+        tagNames: [],
+        sections: ["Bridge"]
+      }
+    },
+    sourceLines: [
+      "Bridge / Snowman / phrase release lift",
+      "Bridge / MegaTree / chord change accent"
+    ],
+    sequenceSettings: {
+      durationMs: 20000
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "On", params: [] }
+    ])
+  });
+
+  const timingWrites = out.commands.filter((row) => row.cmd === "timing.insertMarks");
+  assert.ok(timingWrites.some((row) => row.params.trackName === "XD: Phrase Cues"));
+  assert.ok(timingWrites.some((row) => row.params.trackName === "XD: Chord Changes"));
+  const anchoredTracks = out.commands
+    .filter((row) => row.cmd === "effects.create")
+    .map((row) => row.anchor?.trackName);
+  assert.deepEqual(anchoredTracks, ["XD: Phrase Cues", "XD: Chord Changes"]);
+  const alignedTracks = out.commands
+    .filter((row) => row.cmd === "effects.alignToTiming")
+    .map((row) => row.params?.timingTrackName);
+  assert.deepEqual(alignedTracks, ["XD: Phrase Cues", "XD: Chord Changes"]);
+});
+
 test("sequence_agent allows decomposed multi-line direct requests", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {
