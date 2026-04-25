@@ -149,6 +149,11 @@ Suggested fields:
 - `sameStructureDensity`
 - `separationStrategy`
 - `cadenceStrategy`
+- `layerOrderStrategy`
+- `modelOrderStrategy`
+- `layerEditStrategy`
+
+Layering candidates should describe the intended observed result of the stack, not only the newly created row. A candidate may realize its outcome by adding an effect layer, updating an existing layer, deleting a layer, changing timing, reordering layers, or adjusting display/model order when that order affects the render.
 
 ## Realization Refs
 
@@ -161,6 +166,9 @@ Suggested per-entry fields:
 - `settingsRef`
 - `paletteRef`
 - `layerIntent`
+- `layerIndex`
+- `layerOrderRole`
+- `displayOrderRole`
 - `timingRole`
 
 ## Fit Signals

@@ -54,6 +54,8 @@ That is where the system needs evidence for:
 
 Existing sequence preservation can intentionally create this condition. When the planner keeps an existing effect on one layer and adds a new effect on another layer, the result should be evaluated as layered composition, not treated as an automatic conflict. Replacement is a separate policy decision and should be visible in the plan metadata before same-layer reuse is accepted.
 
+The editable unit is the combined observed outcome, not only the individual effect row. A revision may add, delete, update, or reorder any layer that contributes to that outcome. Layer order is part of the observation because xLights render output changes when the same effects occupy different vertical positions. Model/display order is also relevant when overlapping targets, parent groups, submodels, or broad-to-specific refinements interact in the rendered result.
+
 ## Role Boundary
 
 `layering_observation_v1` is not:

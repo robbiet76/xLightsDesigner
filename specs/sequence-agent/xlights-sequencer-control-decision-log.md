@@ -133,3 +133,11 @@ Last Reviewed: 2026-03-11
 - When intent supports layered broad-to-specific coverage, broader group targets should be ordered earlier and more specific model/submodel targets should follow beneath them as refinements.
 - This heuristic is an efficiency rule, not an aesthetic style rule.
 - Existing automation should use explicit final ordering via `sequencer.setDisplayElementOrder`; xLights built-in sort presets are guidance, not a required API dependency.
+
+## D22) Sequencer Placement Is Part of the Effect Outcome (2026-04-25)
+- The observed effect may be the combined result of multiple xLights effect rows across layers.
+- Additive layering is an effect edit, not only a preservation fallback.
+- The agent must be able to add, delete, update, and reorder contributing layers when the requested outcome requires it.
+- Horizontal placement in time and vertical placement in the layer stack are both sequencing semantics.
+- Display/model order is also sequencing semantics when it changes rendered output.
+- Review/apply validation must distinguish additive layering, authorized replacement, layer reordering, layer deletion, and display-order changes instead of collapsing them into a single overlap rule.

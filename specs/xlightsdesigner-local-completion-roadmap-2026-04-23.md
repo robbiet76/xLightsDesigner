@@ -147,6 +147,7 @@ The agent backend eventually becomes shared cloud infrastructure:
 - When touching specs or API docs, scan nearby related docs for stale route names, future-tense migration plans, removed fallback paths, and inactive transaction/legacy contracts; clean those claims in the same slice when the scope is clear.
 - Sequencing should be pass-based: plan the full requested scope, apply one coherent batch, render once after the batch, then iterate only from validation/render/user feedback.
 - Existing sequences must be inspected before modification; generated changes should preserve existing content unless the selected request scope explicitly authorizes replacement.
+- Layered output is an editable sequencing outcome. The app must support adding, deleting, updating, and reordering contributing effect layers; moving effects horizontally in time; and changing display/model order when those placements affect rendering.
 - The agent can mark a pass stable against known checks, but user acceptance remains the final completion signal.
 
 ## Local Owned API Reliability
@@ -169,6 +170,12 @@ Exit criteria:
 - save completes through the owned API
 - validation evidence is written to a run artifact
 - native/app tests remain green after removing stale fallback assumptions
+
+Remaining placement-edit gap:
+- app command schemas and sequencing command graphs already name `effects.update`, `effects.delete`, `effects.deleteLayer`, `effects.compactLayers`, `effects.shift`, `effects.clone`, and `sequencer.setDisplayElementOrder`
+- the current owned batch-plan conversion path applies timing marks plus `effects.create`
+- the current xLights 2026.06 owned API surface in `src-ui-wx/xLightsDesigner` does not yet expose the full edit/reorder route set needed for layer-stack and display-order mutation
+- local completion needs owned API support, app apply wiring, readback validation, and native matrix scenarios for add/update/delete/reorder/display-order edits before the sequencer can fully treat layered outcomes as editable effects
 
 ## Full Native Design Authoring
 

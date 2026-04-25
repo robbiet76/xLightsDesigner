@@ -90,6 +90,8 @@ When the expanded current-sequence context includes sampled existing effects, th
 
 The default preservation move is to place new effect writes on the next open layer when an existing same-target effect already occupies the scoped window. Explicit replacement authorizes same-layer reuse inside the scoped window. Each created effect records `intent.existingSequencePolicy` with overlap counts, replacement authorization, original layer, and planned layer so Review can audit whether the command graph chose additive layering or authorized same-layer replacement.
 
+Layered output is an editable realized effect, not a special preservation exception. The observed result may be changed by adding a layer, deleting a layer, changing any layer's effect/settings/palette/timing, moving an effect horizontally in time, moving it vertically in the layer stack, or changing display/model order. Plan handoffs should treat `layerIndex`, effect time window, target/model order, and display-element order as first-class sequencing placement fields because each one can change rendered output.
+
 ## Future Work
 
 - Replace large embedded downstream objects with artifact refs plus compact summaries where practical.

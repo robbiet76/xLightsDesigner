@@ -239,6 +239,11 @@ Suggested fields:
 - `separationNeed`
 - `colorInteractionPreference`
 - `cadenceInteractionPreference`
+- `layerOrderIntent`
+- `modelOrderIntent`
+- `allowedLayerEdits[]`
+
+Layering intent should treat the combined rendered result as the editable outcome. Valid edit choices include adding layers, deleting layers, changing layer contents, changing timing windows, reordering layers, and reordering affected display/model rows when order changes the rendered result.
 
 ## Novelty
 
