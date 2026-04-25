@@ -1678,6 +1678,65 @@ test("sequence_agent adds need-based cue timing tracks before direct sequencing"
   assert.equal(align.params.timingTrackName, "XD: Beat Grid");
 });
 
+test("sequence_agent distributes fallback effect anchors across requested cue tracks", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 5000, endMs: 9000 }
+        ]
+      },
+      timing: {
+        beats: [
+          { startMs: 5000, endMs: 5500, label: "1" },
+          { startMs: 5500, endMs: 6000, label: "2" }
+        ],
+        bars: [
+          { startMs: 5000, endMs: 7000, label: "Bar 1" },
+          { startMs: 7000, endMs: 9000, label: "Bar 2" }
+        ]
+      },
+      lyrics: {
+        lines: [
+          { startMs: 5200, endMs: 6100, label: "light the night" },
+          { startMs: 6100, endMs: 7600, label: "raise it higher" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Use beat pulses, measure bars, and vocal lyric timing.",
+      mode: "create",
+      scope: {
+        targetIds: ["Snowman", "MegaTree", "Roofline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Snowman / beat pulse",
+      "Chorus 1 / MegaTree / measure bar sweep",
+      "Chorus 1 / Roofline / vocal lyric accent"
+    ],
+    sequenceSettings: {
+      durationMs: 9000
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Bars", params: [] },
+      { effectName: "On", params: [] }
+    ])
+  });
+
+  const anchoredTracks = out.commands
+    .filter((row) => row.cmd === "effects.create")
+    .map((row) => row.anchor?.trackName);
+  assert.deepEqual(anchoredTracks, ["XD: Beat Grid", "XD: Bars", "XD: Lyrics"]);
+  const alignedTracks = out.commands
+    .filter((row) => row.cmd === "effects.alignToTiming")
+    .map((row) => row.params?.timingTrackName);
+  assert.deepEqual(alignedTracks, ["XD: Beat Grid", "XD: Bars", "XD: Lyrics"]);
+});
+
 test("sequence_agent allows decomposed multi-line direct requests", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

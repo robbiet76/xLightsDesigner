@@ -1254,15 +1254,18 @@ function retargetFallbackEffectsToCueTiming({
   cueTrackMarksByTrack = null,
   sequenceSettings = {}
 } = {}) {
-  const trackName = normArray(requestedTrackNames).map((row) => normText(row)).find(Boolean);
-  if (!trackName || !(cueTrackMarksByTrack instanceof Map)) return commands;
+  if (!(cueTrackMarksByTrack instanceof Map)) return commands;
   const marksByTrack = buildPlacementMarksByTrack({
     effectPlacements: [],
     cueTrackMarksByTrack,
     sequenceSettings
   });
-  const marks = normArray(marksByTrack.get(trackName));
-  if (!marks.length) return commands;
+  const cueTracks = normArray(requestedTrackNames)
+    .map((row) => normText(row))
+    .filter(Boolean)
+    .map((trackName) => ({ trackName, marks: normArray(marksByTrack.get(trackName)) }))
+    .filter((row) => row.marks.length);
+  if (!cueTracks.length) return commands;
   let effectIndex = -1;
   const cueByEffectOrdinal = new Map();
   return normArray(commands).map((command) => {
@@ -1275,14 +1278,15 @@ function retargetFallbackEffectsToCueTiming({
         endMs: params.endMs,
         sequenceSettings
       });
-      const mark = findNearestTimingMark({ window, marks }) || marks[effectIndex % marks.length];
+      const cueTrack = cueTracks[effectIndex % cueTracks.length];
+      const mark = findNearestTimingMark({ window, marks: cueTrack.marks }) || cueTrack.marks[effectIndex % cueTrack.marks.length];
       if (!mark) return command;
-      cueByEffectOrdinal.set(effectIndex, mark);
+      cueByEffectOrdinal.set(effectIndex, { trackName: cueTrack.trackName, mark });
       return {
         ...command,
         anchor: {
           kind: "timing_track",
-          trackName,
+          trackName: cueTrack.trackName,
           markLabel: normText(mark?.label),
           startMs: Number(mark.startMs),
           endMs: Number(mark.endMs),
@@ -1300,15 +1304,16 @@ function retargetFallbackEffectsToCueTiming({
       const params = command?.params && typeof command.params === "object" ? command.params : {};
       const ordinalText = normText(command?.id).match(/effect\.align\.(\d+)/)?.[1];
       const ordinal = ordinalText ? Math.max(0, Number(ordinalText) - 1) : effectIndex;
-      const mark = cueByEffectOrdinal.get(ordinal) || cueByEffectOrdinal.get(effectIndex) || marks[0];
-      if (!mark) return command;
+      const cue = cueByEffectOrdinal.get(ordinal) || cueByEffectOrdinal.get(effectIndex) || { trackName: cueTracks[0].trackName, mark: cueTracks[0].marks[0] };
+      const mark = cue.mark;
+      if (!cue.trackName || !mark) return command;
       return {
         ...command,
         params: {
           ...params,
           startMs: Number(mark.startMs),
           endMs: Number(mark.endMs),
-          timingTrackName: trackName
+          timingTrackName: cue.trackName
         }
       };
     }

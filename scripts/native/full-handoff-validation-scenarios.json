@@ -39,7 +39,9 @@
         "XD: Lyrics"
       ],
       "expectedAnchorTracks": [
-        "XD: Beat Grid"
+        "XD: Beat Grid",
+        "XD: Bars",
+        "XD: Lyrics"
       ]
     }
   ]
