@@ -2463,12 +2463,42 @@ function mergePriorityTargets({ primary = [], secondary = [], fallback = [] } = 
   ].filter(Boolean))];
 }
 
+function normalizeVisualPaletteRows(rows = []) {
+  return normArray(rows)
+    .map((row) => ({
+      name: normText(row?.name),
+      hex: normText(row?.hex),
+      role: normText(row?.role)
+    }))
+    .filter((row) => row.name || row.hex || row.role);
+}
+
+function buildVisualDesignPlanningContext(sequencingDesignHandoff = null) {
+  const paletteRows = normalizeVisualPaletteRows(sequencingDesignHandoff?.paletteRoles);
+  const motifs = normArray(sequencingDesignHandoff?.motifDirectives).map((row) => normText(row)).filter(Boolean);
+  const paletteText = paletteRows
+    .map((row) => [row.name, row.role, row.hex].filter(Boolean).join(" "))
+    .filter(Boolean)
+    .join(", ");
+  const motifText = motifs.join(", ");
+  const summaryParts = [
+    paletteText ? `palette: ${paletteText}` : "",
+    motifText ? `motifs: ${motifText}` : ""
+  ].filter(Boolean);
+  return {
+    paletteRows,
+    motifs,
+    summaryText: summaryParts.join(" | ")
+  };
+}
+
 function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [], effectCatalog = null, metadataAssignments = [], sequencerRevisionBrief = null } = {}) {
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
   const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
   const effectPlacements = normArray(scope?.executionStrategy?.effectPlacements);
   const sectionDirectiveIndex = buildSectionDirectiveIndex(scope?.sequencingDesignHandoff);
+  const visualPlanningContext = buildVisualDesignPlanningContext(scope?.sequencingDesignHandoff);
   const availableEffects = buildAvailableEffectSet(effectCatalog);
   const metadataAssignmentIndex = buildMetadataAssignmentIndex(metadataAssignments);
   const revisionBriefExecutionLine = buildRevisionBriefExecutionLine({
@@ -2491,6 +2521,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
         const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
         const effectAvoidances = collectEffectAvoidancesForTargets(prioritizedTargetIds, metadataAssignmentIndex);
         const visualHintBehaviorText = collectDefinedVisualHintBehaviorTextForTargets(prioritizedTargetIds, metadataAssignmentIndex);
+        const visualContextText = normText(visualPlanningContext.summaryText);
         const translationLayer = resolveTranslationLayer({
           translationIntent: scope?.executionStrategy?.translationIntent,
           section: row?.section,
@@ -2501,7 +2532,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           section: row?.section,
           energy: sectionDirective?.energyTarget || row?.energy,
           density: sectionDirective?.densityTarget || row?.density,
-          intentSummary: row?.intentSummary || scope.goal,
+          intentSummary: [row?.intentSummary || scope.goal, visualContextText].filter(Boolean).join(" | "),
           effectHints: [
             ...normArray(row?.effectHints),
             ...normArray(translationLayer?.preferredEffectHints)
@@ -2518,7 +2549,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           translationVisualFamilies: normArray(translationLayer?.preferredVisualFamilies),
           sequencerRevisionBrief
         });
-        const intentSummary = `${normText(row?.intentSummary || scope.goal)}${toneText}`;
+        const intentSummary = `${[normText(row?.intentSummary || scope.goal), visualContextText].filter(Boolean).join(" | ")}${toneText}`;
         return {
           section: normText(row?.section),
           targetIds: prioritizedTargetIds,
@@ -2575,9 +2606,10 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
     effectPlacements,
     seedRecommendations,
     executionSeedLines,
+    visualPlanningContext,
     preferSynthesized: strategySectionPlans.length > 0 || Boolean(revisionBriefExecutionLine),
     strategy: timing.strategy,
-    detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy} parameterPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.parameterPriorGuidance?.priors).length).length} sharedSettingPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.sharedSettingPriorGuidance?.settings).length).length}`
+    detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy} visualPalette=${visualPlanningContext.paletteRows.length} motifs=${visualPlanningContext.motifs.length} parameterPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.parameterPriorGuidance?.priors).length).length} sharedSettingPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.sharedSettingPriorGuidance?.settings).length).length}`
   };
 }
 
@@ -3284,7 +3316,8 @@ function stageCommandGraphSynthesis({
     submodelsById,
     sectionWindowsByName,
     useAllKnownSections,
-    enableEffectTimingAlignment
+    enableEffectTimingAlignment,
+    paletteContext: effect?.visualPlanningContext?.paletteRows || sequencingDesignHandoff?.paletteRoles || null
   });
   const requestedCueTrackNames = inferRequestedCueTimingTracks({
     goal: goalText,
@@ -3650,6 +3683,9 @@ export function buildSequenceAgentPlan({
       preferSynthesized: Boolean(effectiveEffectStrategy?.preferSynthesized),
       strategy: normText(effectiveEffectStrategy?.strategy),
       seedRecommendations: normArray(effectiveEffectStrategy?.seedRecommendations),
+      visualPlanningContext: effectiveEffectStrategy?.visualPlanningContext && typeof effectiveEffectStrategy.visualPlanningContext === "object"
+        ? effectiveEffectStrategy.visualPlanningContext
+        : null,
       selectedCandidateId: normText(effectiveEffectStrategy?.selectedCandidateId),
       selectedCandidateSummary: normText(effectiveEffectStrategy?.selectedCandidateSummary)
     },

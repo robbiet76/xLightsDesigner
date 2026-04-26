@@ -1553,6 +1553,48 @@ test("sequence_agent uses sequencer revision brief to seed execution lines when 
   assert.match(out.executionLines[0], /apply .* effect/i);
 });
 
+test("sequence_agent applies visual asset palette and motif context during seeded planning", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      goal: "Make the chorus feel like a warm window-glow reveal.",
+      scope: {
+        targetIds: ["MegaTree"],
+        sections: ["Chorus 1"],
+        tagNames: ["focal"]
+      },
+      designSummary: "Warm visual asset pack drives the chorus texture.",
+      paletteRoles: [
+        { name: "candle gold", hex: "#ffc45c", role: "warm highlight" },
+        { name: "pine green", hex: "#1f7a4d", role: "support base" }
+      ],
+      motifDirectives: ["soft sparkle", "window glow"],
+      sectionDirectives: [
+        {
+          sectionName: "Chorus 1",
+          energyTarget: "medium",
+          densityTarget: "moderate",
+          motionTarget: "restrained_motion",
+          transitionIntent: "hold",
+          preferredVisualFamilies: ["soft_texture"]
+        }
+      ]
+    },
+    sourceLines: [],
+    baseRevision: "rev-visual-pack",
+    effectCatalog: sampleCatalog()
+  });
+
+  const effect = out.commands.find((row) => row.cmd === "effects.create");
+  assert.ok(effect);
+  assert.equal(effect.params.palette.C_BUTTON_Palette1, "#ffc45c");
+  assert.equal(effect.params.palette.C_BUTTON_Palette2, "#1f7a4d");
+  assert.equal(out.metadata.effectStrategy.visualPlanningContext.paletteRows.length, 2);
+  assert.deepEqual(out.metadata.effectStrategy.visualPlanningContext.motifs, ["soft sparkle", "window glow"]);
+});
+
 test("sequence_agent biases revision effect choice from successful outcome memory", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

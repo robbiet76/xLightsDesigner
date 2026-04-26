@@ -218,6 +218,26 @@ test("command builders preserve direct imperative effect timing and color", () =
   assert.equal(align.params.endMs, 30000);
 });
 
+test("command builders apply contextual visual palette when line has no explicit color", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / MegaTree / apply Shimmer effect with soft sparkle texture"
+  ], {
+    trackName: "XD: Sequencer Plan",
+    effectCatalog: sampleCatalog(),
+    enableEffectTimingAlignment: true,
+    paletteContext: [
+      { name: "candle gold", hex: "#ffc45c", role: "warm highlight" },
+      { name: "pine green", hex: "#1f7a4d", role: "support base" }
+    ]
+  });
+
+  const effect = commands.find((row) => row.cmd === "effects.create");
+  assert.equal(effect.params.palette.C_BUTTON_Palette1, "#ffc45c");
+  assert.equal(effect.params.palette.C_CHECKBOX_Palette1, "1");
+  assert.equal(effect.params.palette.C_BUTTON_Palette2, "#1f7a4d");
+  assert.equal(effect.params.palette.C_CHECKBOX_Palette2, "1");
+});
+
 test("command builders parse direct Color Wash request with explicit minute range", () => {
   const commands = buildDesignerPlanCommands([
     "General / Border-01 / add a Color Wash effect from 1 minute to the 2 minute mark"

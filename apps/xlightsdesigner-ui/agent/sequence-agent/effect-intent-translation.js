@@ -65,7 +65,9 @@ const COLOR_MAP = {
 };
 
 function colorToHex(value = "") {
-  const key = normText(value).toLowerCase();
+  const raw = normText(value);
+  if (/^#[0-9a-f]{6}$/i.test(raw)) return raw.toLowerCase();
+  const key = raw.toLowerCase();
   return COLOR_MAP[key] || "";
 }
 

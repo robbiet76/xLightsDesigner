@@ -28,6 +28,44 @@ function normText(value = "") {
   return String(value || "").trim();
 }
 
+function isHexColor(value = "") {
+  return /^#[0-9a-f]{6}$/i.test(normText(value));
+}
+
+function normalizePaletteColorRows(paletteContext = null) {
+  const source = Array.isArray(paletteContext)
+    ? paletteContext
+    : (Array.isArray(paletteContext?.colors)
+        ? paletteContext.colors
+        : (Array.isArray(paletteContext?.paletteRoles) ? paletteContext.paletteRoles : []));
+  return source
+    .map((row) => {
+      if (typeof row === "string") {
+        return { name: normText(row), hex: "", role: "" };
+      }
+      return {
+        name: normText(row?.name),
+        hex: normText(row?.hex),
+        role: normText(row?.role)
+      };
+    })
+    .filter((row) => row.name || row.hex || row.role);
+}
+
+function paletteRowsToXlightsPalette(rows = []) {
+  const out = {};
+  const hexes = normalizePaletteColorRows(rows)
+    .map((row) => row.hex)
+    .filter(isHexColor)
+    .slice(0, 4);
+  hexes.forEach((hex, index) => {
+    const paletteIndex = index + 1;
+    out[`C_BUTTON_Palette${paletteIndex}`] = hex.toLowerCase();
+    out[`C_CHECKBOX_Palette${paletteIndex}`] = "1";
+  });
+  return out;
+}
+
 function normalizeSequenceSettings(sequenceSettings = {}) {
   const row = sequenceSettings && typeof sequenceSettings === "object" && !Array.isArray(sequenceSettings)
     ? sequenceSettings
@@ -369,7 +407,7 @@ function extractRequestedStartMs(description = "") {
   return null;
 }
 
-function inferPalette(description = "") {
+function inferPalette(description = "", paletteContext = null) {
   const text = normText(description).toLowerCase();
   const colorMap = {
     red: "#ff0000",
@@ -393,6 +431,8 @@ function inferPalette(description = "") {
       };
     }
   }
+  const contextualPalette = paletteRowsToXlightsPalette(paletteContext);
+  if (Object.keys(contextualPalette).length) return contextualPalette;
   return {};
 }
 
@@ -685,7 +725,8 @@ function buildEffectTemplates(
   submodelsById = {},
   trackName = "XD: Sequencer Plan",
   sectionWindows = null,
-  enableEffectTimingAlignment = true
+  enableEffectTimingAlignment = true,
+  paletteContext = null
 ) {
   const fallbackTargets = inferTargets(source, targetIds);
   if (!fallbackTargets.length) return [];
@@ -753,7 +794,7 @@ function buildEffectTemplates(
           startMs: scopedWindow.startMs,
           endMs: scopedWindow.endMs,
           settings: inferSharedSettings(row.description),
-          palette: inferPalette(row.description),
+          palette: inferPalette(row.description, paletteContext),
           sourceGroupId: normText(target?.sourceGroupId),
           sourceGroupRenderPolicy: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.currentFamily || groupGraph[target?.sourceGroupId]?.renderPolicy?.category),
           sourceGroupBufferStyle: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.defaultBufferStyle),
@@ -796,7 +837,8 @@ export function buildDesignerPlanCommands(
     submodelsById = {},
     sectionWindowsByName = null,
     useAllKnownSections = false,
-    enableEffectTimingAlignment = true
+    enableEffectTimingAlignment = true,
+    paletteContext = null
   } = {}
 ) {
   const source = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
@@ -858,7 +900,8 @@ export function buildDesignerPlanCommands(
     submodelsById,
     trackName,
     sectionWindows,
-    enableEffectTimingAlignment
+    enableEffectTimingAlignment,
+    paletteContext
   ).map((row) => {
     const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
     if (displayOrderCommand && !dependsOn.includes(displayOrderCommand.id)) {
