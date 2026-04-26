@@ -79,6 +79,10 @@ struct DesignScreenView: View {
                 designEditor(label: "References", text: $model.intentDraft.references, minHeight: 90)
                 designEditor(label: "Approval Notes", text: $model.intentDraft.approvalNotes, minHeight: 74)
                 HStack(spacing: 10) {
+                    Button(model.isGeneratingVisualInspiration ? "Generating..." : "Generate Visual Inspiration") {
+                        model.generateVisualInspiration()
+                    }
+                    .disabled(model.isGeneratingVisualInspiration)
                     Button("Save Design Intent") {
                         model.saveDesignIntent()
                     }

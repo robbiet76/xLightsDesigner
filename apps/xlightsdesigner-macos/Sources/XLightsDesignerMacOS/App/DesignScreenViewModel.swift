@@ -7,19 +7,23 @@ final class DesignScreenViewModel {
     private let workspace: ProjectWorkspace
     private let pendingWorkService: PendingWorkService
     private let projectService: ProjectService
+    private let visualAssetGenerationService: VisualDesignAssetGenerationService
     var screenModel: DesignScreenModel
     var intentDraft: DesignIntentDraftModel
     var savedIntentDraft: DesignIntentDraftModel
     var transientBanner: WorkflowBannerModel?
+    var isGeneratingVisualInspiration = false
 
     init(
         workspace: ProjectWorkspace,
         pendingWorkService: PendingWorkService = LocalPendingWorkService(),
-        projectService: ProjectService = LocalProjectService()
+        projectService: ProjectService = LocalProjectService(),
+        visualAssetGenerationService: VisualDesignAssetGenerationService = LocalVisualDesignAssetGenerationService()
     ) {
         self.workspace = workspace
         self.pendingWorkService = pendingWorkService
         self.projectService = projectService
+        self.visualAssetGenerationService = visualAssetGenerationService
         let loadedDraft = Self.intentDraft(from: workspace.activeProject)
         self.intentDraft = loadedDraft
         self.savedIntentDraft = loadedDraft
@@ -109,6 +113,52 @@ final class DesignScreenViewModel {
             state: .partial
         )
         updateAuthoringState()
+    }
+
+    func generateVisualInspiration() {
+        guard !isGeneratingVisualInspiration, let activeProject = workspace.activeProject else { return }
+        let intentText = Self.visualGenerationIntentText(from: intentDraft, project: activeProject)
+        guard !intentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            transientBanner = WorkflowBannerModel(
+                id: "visual-inspiration-missing-intent",
+                text: "Save or enter design intent before generating visual inspiration.",
+                state: .blocked
+            )
+            return
+        }
+        isGeneratingVisualInspiration = true
+        transientBanner = WorkflowBannerModel(
+            id: "visual-inspiration-running",
+            text: "Generating visual inspiration board.",
+            state: .partial
+        )
+        Task {
+            do {
+                let result = try await visualAssetGenerationService.generateVisualDesignAssetPack(
+                    projectFilePath: activeProject.projectFilePath,
+                    sequenceID: Self.visualSequenceID(from: activeProject),
+                    intentText: intentText,
+                    themeSummary: Self.visualThemeSummary(from: intentDraft),
+                    baseURL: ""
+                )
+                transientBanner = WorkflowBannerModel(
+                    id: "visual-inspiration-success",
+                    text: "Generated visual inspiration \(result.artifactID.isEmpty ? "" : result.artifactID).",
+                    state: .ready
+                )
+                isGeneratingVisualInspiration = false
+                NotificationCenter.default.post(name: .projectArtifactsDidChange, object: activeProject.projectFilePath)
+                refresh()
+            } catch {
+                transientBanner = WorkflowBannerModel(
+                    id: "visual-inspiration-failed",
+                    text: error.localizedDescription,
+                    state: .blocked
+                )
+                isGeneratingVisualInspiration = false
+                updateAuthoringState()
+            }
+        }
     }
 
     private static func buildScreenModel(
@@ -212,6 +262,39 @@ final class DesignScreenViewModel {
             approvalNotes: string(payload["approvalNotes"]),
             updatedAt: string(payload["updatedAt"])
         )
+    }
+
+    private static func visualGenerationIntentText(from draft: DesignIntentDraftModel, project: ActiveProjectModel) -> String {
+        [
+            draft.goal,
+            draft.mood,
+            draft.targetScope,
+            draft.constraints,
+            draft.references,
+            project.projectName
+        ]
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+        .joined(separator: "\n")
+    }
+
+    private static func visualThemeSummary(from draft: DesignIntentDraftModel) -> String {
+        let summary = [draft.goal, draft.mood]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        return summary.isEmpty ? "custom visual inspiration for the active sequence" : summary
+    }
+
+    private static func visualSequenceID(from project: ActiveProjectModel) -> String {
+        let snapshot = project.snapshot
+        let candidates = [
+            string(snapshot["sequencePathInput"]?.value),
+            string(snapshot["activeSequence"]?.value),
+            string(snapshot["mediaPath"]?.value),
+            project.projectName
+        ]
+        return candidates.first(where: { !$0.isEmpty }) ?? project.projectName
     }
 
     private static func loadVisualInspiration(for project: ActiveProjectModel?) -> DesignVisualInspirationModel {

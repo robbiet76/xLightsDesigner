@@ -7,6 +7,29 @@ private struct InMemoryProjectSessionStore: ProjectSessionStore {
     func saveLastProjectPath(_ path: String?) {}
 }
 
+private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGenerationService, @unchecked Sendable {
+    private(set) var calls: [(projectFilePath: String, sequenceID: String, intentText: String, themeSummary: String, baseURL: String)] = []
+    var result = VisualDesignAssetGenerationResult(
+        artifactID: "visual-pack-test",
+        manifestPath: "/tmp/visual-design-manifest.json",
+        assetDir: "/tmp/visual-design",
+        model: "gpt-image-2"
+    )
+    var error: Error?
+
+    func generateVisualDesignAssetPack(
+        projectFilePath: String,
+        sequenceID: String,
+        intentText: String,
+        themeSummary: String,
+        baseURL: String
+    ) async throws -> VisualDesignAssetGenerationResult {
+        calls.append((projectFilePath, sequenceID, intentText, themeSummary, baseURL))
+        if let error { throw error }
+        return result
+    }
+}
+
 @MainActor
 @Test func designIntentPersistsInProjectSnapshot() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-tests-\(UUID().uuidString)", isDirectory: true)
@@ -169,4 +192,43 @@ private struct InMemoryProjectSessionStore: ProjectSessionStore {
     #expect(model.screenModel.visualInspiration.palette.first?.hex == "#ffc45c")
     #expect(model.screenModel.visualInspiration.revisionSummary.contains("Added pine green support."))
     #expect(model.screenModel.visualInspiration.imagePath.hasSuffix("revisions/board-r002.png"))
+}
+
+@MainActor
+@Test func designScreenGeneratesVisualInspirationThroughService() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-generate-visual-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let service = LocalProjectService(projectsRootPath: root.path)
+    let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
+    let project = try service.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Native Generate Visual \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "/tmp/song.mp3",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    workspace.setProject(project)
+    let visualService = StubVisualDesignAssetGenerationService()
+    let model = DesignScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: service,
+        visualAssetGenerationService: visualService
+    )
+
+    model.intentDraft.goal = "Create a warm candlelit chorus board."
+    model.intentDraft.mood = "Warm gold and pine green."
+    model.intentDraft.targetScope = "Mega tree and roofline."
+    model.generateVisualInspiration()
+
+    try await Task.sleep(nanoseconds: 50_000_000)
+
+    #expect(visualService.calls.count == 1)
+    #expect(visualService.calls.first?.projectFilePath == project.projectFilePath)
+    #expect(visualService.calls.first?.intentText.contains("warm candlelit chorus") == true)
+    #expect(visualService.calls.first?.themeSummary.contains("Warm gold") == true)
+    #expect(model.isGeneratingVisualInspiration == false)
+    #expect(model.transientBanner?.state == .ready)
 }

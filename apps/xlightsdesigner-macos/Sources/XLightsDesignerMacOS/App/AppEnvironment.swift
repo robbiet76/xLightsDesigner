@@ -15,6 +15,7 @@ enum AppEnvironment {
     static let nativeAnalyzeTrackScriptPath = repoRootPath + "/scripts/audio-analysis/native/analyze-track-to-library.mjs"
     static let nativeUpdateTrackIdentityScriptPath = repoRootPath + "/scripts/audio-analysis/native/update-track-identity.mjs"
     static let nativeAssistantConversationScriptPath = repoRootPath + "/scripts/assistant/native/run-app-assistant-conversation.mjs"
+    static let nativeVisualDesignAssetPackScriptPath = repoRootPath + "/scripts/designer/native/generate-visual-design-asset-pack.mjs"
     static let nativeDirectProposalScriptPath = repoRootPath + "/scripts/sequencing/native/generate-native-direct-proposal.mjs"
     static let nativeReviewApplyScriptPath = repoRootPath + "/scripts/sequencing/native/apply-native-review.mjs"
 }
