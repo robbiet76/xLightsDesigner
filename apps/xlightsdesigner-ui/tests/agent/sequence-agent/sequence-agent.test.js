@@ -404,6 +404,116 @@ test("sequence_agent emits update when revision asks to shift an existing effect
   assert.equal(out.warnings.some((row) => /converted .*create into effects.update with 500ms offset/i.test(row)), true);
 });
 
+test("sequence_agent expands explicit layer copy into cloned create commands from current sequence context", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Copy Star layer 0 to MegaTree layer 1"
+    },
+    sourceLines: ["Chorus 1 / copy Star layer 0 to MegaTree layer 1"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "Star",
+            effectName: "Shimmer",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 5000,
+            settings: "ID_SLIDER_Speed=12",
+            palette: "C_BUTTON_Palette1=#ff0000"
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const cloneCommand = out.commands.find((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree");
+  assert.ok(cloneCommand);
+  assert.deepEqual(
+    {
+      layerIndex: cloneCommand.params.layerIndex,
+      effectName: cloneCommand.params.effectName,
+      startMs: cloneCommand.params.startMs,
+      endMs: cloneCommand.params.endMs,
+      settings: cloneCommand.params.settings,
+      palette: cloneCommand.params.palette
+    },
+    {
+      layerIndex: 1,
+      effectName: "Shimmer",
+      startMs: 1000,
+      endMs: 5000,
+      settings: "ID_SLIDER_Speed=12",
+      palette: "C_BUTTON_Palette1=#ff0000"
+    }
+  );
+  assert.equal(cloneCommand.intent.clonePolicy.explicitCloneRequest, true);
+  assert.equal(cloneCommand.intent.clonePolicy.sourceModelName, "Star");
+  assert.equal(cloneCommand.intent.existingSequencePolicy.emittedCloneCreateCommand, true);
+  assert.equal(out.warnings.some((row) => /Cloning 1 effect from Star layer 0 to MegaTree layer 1/i.test(row)), true);
+});
+
+test("sequence_agent expands model copy with time offset while preserving relative effect timing", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Copy Star to MegaTree starting at 10s"
+    },
+    sourceLines: ["Chorus 1 / copy Star to MegaTree starting at 10s"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 2, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "Star",
+            effectName: "On",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 3000
+          },
+          {
+            targetId: "Star",
+            effectName: "Shimmer",
+            layerIndex: 1,
+            startMs: 2000,
+            endMs: 5000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const cloneCommands = out.commands.filter((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree");
+  assert.equal(cloneCommands.length, 2);
+  assert.deepEqual(
+    cloneCommands.map((row) => ({
+      layerIndex: row.params.layerIndex,
+      effectName: row.params.effectName,
+      startMs: row.params.startMs,
+      endMs: row.params.endMs,
+      deltaMs: row.intent.clonePolicy.deltaMs
+    })),
+    [
+      { layerIndex: 0, effectName: "On", startMs: 10000, endMs: 12000, deltaMs: 9000 },
+      { layerIndex: 1, effectName: "Shimmer", startMs: 11000, endMs: 14000, deltaMs: 9000 }
+    ]
+  );
+});
+
 test("sequence_agent emits effect delete when revision asks to remove an existing layered look", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

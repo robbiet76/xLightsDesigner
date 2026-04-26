@@ -828,7 +828,9 @@ function currentSequenceEffectRows(currentSequenceContext = null) {
         layerIndex,
         effectName: normText(row?.effectName || row?.name),
         startMs,
-        endMs
+        endMs,
+        settings: row?.settings ?? "",
+        palette: row?.palette ?? ""
       };
     })
     .filter(Boolean);
@@ -1380,6 +1382,179 @@ function buildEffectTimeShiftUpdateCommandFromCreate({
         overlappingEffectNames: Array.from(new Set(overlaps.map((effect) => effect.effectName).filter(Boolean))).slice(0, 5)
       }
     }
+  };
+}
+
+function inferExplicitCloneIntent({
+  sourceLines = [],
+  executionStrategy = {},
+  scope = {},
+  currentSequenceContext = null,
+  targetIds = [],
+  displayElements = []
+} = {}) {
+  const joined = [
+    ...normArray(sourceLines),
+    normText(scope?.goal),
+    normText(executionStrategy?.implementationMode),
+    normText(executionStrategy?.passScope)
+  ].join(" ").toLowerCase();
+  if (!/\b(copy|paste|clone|duplicate)\b/.test(joined)) return null;
+  const existingEffects = currentSequenceEffectRows(currentSequenceContext);
+  const knownIds = Array.from(new Set([
+    ...existingEffects.map((row) => row.targetId),
+    ...normArray(targetIds).map((row) => normText(row)),
+    ...normalizeDisplayElementRows(displayElements).map((row) => row.id)
+  ].filter(Boolean))).sort((a, b) => b.length - a.length || a.localeCompare(b));
+  if (knownIds.length < 2) return null;
+  const lowerIds = knownIds.map((id) => ({ id, lower: id.toLowerCase() }));
+  let sourceModelName = "";
+  let targetModelName = "";
+  for (const source of lowerIds) {
+    for (const target of lowerIds) {
+      if (source.id === target.id) continue;
+      const sourcePattern = escapeRegExpText(source.lower);
+      const targetPattern = escapeRegExpText(target.lower);
+      const sourceToTarget = new RegExp(`\\b(?:copy|clone|duplicate)\\b[^.;&\\n]{0,40}?\\b${sourcePattern}\\b[^.;&\\n]{0,120}?\\b(?:to|onto|into|on)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
+      const pasteToTarget = new RegExp(`\\b(?:paste)\\b[^.;&\\n]{0,40}?\\b${sourcePattern}\\b[^.;&\\n]{0,120}?\\b(?:to|onto|into|on)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
+      if (sourceToTarget.test(joined) || pasteToTarget.test(joined)) {
+        sourceModelName = source.id;
+        targetModelName = target.id;
+        break;
+      }
+    }
+    if (sourceModelName && targetModelName) break;
+  }
+  if (!sourceModelName || !targetModelName) return null;
+  const sourceLayerMatch = joined.match(/\b(?:source\s+)?layer\s*(\d+)\b/);
+  const targetLayerMatch =
+    joined.match(/\b(?:to|onto|into|on)\b[^.;&\n]{0,80}?\blayer\s*(\d+)\b/) ||
+    joined.match(/\btarget\s+layer\s*(\d+)\b/);
+  const sourceLayerIndex = sourceLayerMatch ? Number(sourceLayerMatch[1]) : null;
+  const targetLayerIndex = targetLayerMatch ? Number(targetLayerMatch[1]) : null;
+  if (sourceLayerIndex !== null && (!Number.isInteger(sourceLayerIndex) || sourceLayerIndex < 0)) return null;
+  if (targetLayerIndex !== null && (!Number.isInteger(targetLayerIndex) || targetLayerIndex < 0)) return null;
+  const targetStartMatch = joined.match(/\b(?:at|starting\s+at|start\s+at)\s*(\d+(?:\.\d+)?)\s*(ms|millisecond|milliseconds|s|sec|secs|second|seconds)\b/);
+  const targetStartMs = targetStartMatch
+    ? (/^s|^sec|^second/.test(targetStartMatch[2]) ? Math.round(Number(targetStartMatch[1]) * 1000) : Math.round(Number(targetStartMatch[1])))
+    : null;
+  return {
+    sourceModelName,
+    targetModelName,
+    sourceLayerIndex,
+    targetLayerIndex,
+    targetStartMs: Number.isFinite(targetStartMs) ? targetStartMs : null
+  };
+}
+
+function buildExplicitCloneCommands({
+  commands = [],
+  currentSequenceContext = null,
+  cloneIntent = null,
+  warnings = []
+} = {}) {
+  if (!cloneIntent) return commands;
+  const existingEffects = currentSequenceEffectRows(currentSequenceContext);
+  const sourceEffects = existingEffects
+    .filter((effect) => effect.targetId === cloneIntent.sourceModelName)
+    .filter((effect) => cloneIntent.sourceLayerIndex === null || Number(effect.layerIndex) === cloneIntent.sourceLayerIndex)
+    .filter((effect) => normText(effect.effectName))
+    .sort((a, b) => Number(a.layerIndex) - Number(b.layerIndex) || Number(a.startMs) - Number(b.startMs) || Number(a.endMs) - Number(b.endMs));
+  if (!sourceEffects.length) return commands;
+  const firstEffectCreate = normArray(commands).find((command) => normText(command?.cmd) === "effects.create");
+  const dependsOn = Array.isArray(firstEffectCreate?.dependsOn) ? firstEffectCreate.dependsOn.slice() : [];
+  const minSourceStartMs = Math.min(...sourceEffects.map((effect) => Number(effect.startMs)));
+  const targetStartMs = cloneIntent.targetStartMs !== null && Number.isFinite(Number(cloneIntent.targetStartMs))
+    ? Number(cloneIntent.targetStartMs)
+    : minSourceStartMs;
+  const deltaMs = targetStartMs - minSourceStartMs;
+  const clonedEffectCommands = sourceEffects.map((effect, index) => {
+    const targetLayerIndex = Number.isInteger(cloneIntent.targetLayerIndex)
+      ? cloneIntent.targetLayerIndex + (Number(effect.layerIndex) - (Number.isInteger(cloneIntent.sourceLayerIndex) ? cloneIntent.sourceLayerIndex : Number(effect.layerIndex)))
+      : Number(effect.layerIndex);
+    const startMs = Math.max(0, Math.round(Number(effect.startMs) + deltaMs));
+    const endMs = Math.max(startMs + 1, Math.round(Number(effect.endMs) + deltaMs));
+    return {
+      id: `effect.clone.${index + 1}`,
+      dependsOn,
+      anchor: {
+        kind: "source_effect",
+        sourceModelName: effect.targetId,
+        sourceLayerIndex: Number(effect.layerIndex),
+        sourceStartMs: Number(effect.startMs),
+        sourceEndMs: Number(effect.endMs),
+        boundarySide: "start",
+        basis: "explicit_clone"
+      },
+      cmd: "effects.create",
+      params: {
+        modelName: cloneIntent.targetModelName,
+        layerIndex: targetLayerIndex,
+        effectName: normText(effect.effectName),
+        startMs,
+        endMs,
+        settings: effect.settings ?? "",
+        palette: effect.palette ?? ""
+      },
+      intent: {
+        clonePolicy: {
+          explicitCloneRequest: true,
+          sourceModelName: effect.targetId,
+          sourceLayerIndex: Number(effect.layerIndex),
+          sourceStartMs: Number(effect.startMs),
+          sourceEndMs: Number(effect.endMs),
+          targetModelName: cloneIntent.targetModelName,
+          targetLayerIndex,
+          targetStartMs: startMs,
+          targetEndMs: endMs,
+          deltaMs
+        },
+        existingSequencePolicy: {
+          replacementAuthorized: true,
+          preserveExistingUnlessScoped: false,
+          emittedCloneCreateCommand: true,
+          originalLayerIndex: Number(effect.layerIndex),
+          plannedLayerIndex: targetLayerIndex,
+          overlapCount: 0
+        }
+      }
+    };
+  });
+  const nonEffectCommands = normArray(commands).filter((command) => normText(command?.cmd) !== "effects.create" && normText(command?.cmd) !== "effects.alignToTiming");
+  warnings.push(`Cloning ${sourceEffects.length} effect${sourceEffects.length === 1 ? "" : "s"} from ${cloneIntent.sourceModelName}${Number.isInteger(cloneIntent.sourceLayerIndex) ? ` layer ${cloneIntent.sourceLayerIndex}` : ""} to ${cloneIntent.targetModelName}${Number.isInteger(cloneIntent.targetLayerIndex) ? ` layer ${cloneIntent.targetLayerIndex}` : ""}.`);
+  return nonEffectCommands.concat(clonedEffectCommands);
+}
+
+function applyExplicitClonePlanning({
+  commands = [],
+  currentSequenceContext = null,
+  sourceLines = [],
+  executionStrategy = {},
+  scope = {},
+  targetIds = [],
+  displayElements = [],
+  capabilityCommands = [],
+  warnings = []
+} = {}) {
+  if (!supportsCommand(capabilityCommands, "effects.create")) return { commands, cloned: false };
+  const cloneIntent = inferExplicitCloneIntent({
+    sourceLines,
+    executionStrategy,
+    scope,
+    currentSequenceContext,
+    targetIds,
+    displayElements
+  });
+  if (!cloneIntent) return { commands, cloned: false };
+  const clonedCommands = buildExplicitCloneCommands({
+    commands,
+    currentSequenceContext,
+    cloneIntent,
+    warnings
+  });
+  return {
+    commands: clonedCommands,
+    cloned: clonedCommands !== commands
   };
 }
 
@@ -2738,15 +2913,28 @@ function stageCommandGraphSynthesis({
     if (Array.isArray(effectCompat.warnings) && effectCompat.warnings.length) {
       warnings.push(...effectCompat.warnings);
     }
-    const preservedCommands = applyExistingSequencePreservation({
+    const clonePlanning = applyExplicitClonePlanning({
       commands: placementGraph.commands,
       currentSequenceContext,
       sourceLines,
       executionStrategy,
       scope,
+      targetIds,
+      displayElements,
       capabilityCommands,
       warnings
     });
+    const preservedCommands = clonePlanning.cloned
+      ? clonePlanning.commands
+      : applyExistingSequencePreservation({
+          commands: placementGraph.commands,
+          currentSequenceContext,
+          sourceLines,
+          executionStrategy,
+          scope,
+          capabilityCommands,
+          warnings
+        });
     const orderedCommands = applyExplicitDisplayOrderPlanning({
       commands: preservedCommands,
       sourceLines,
@@ -2835,15 +3023,28 @@ function stageCommandGraphSynthesis({
     filteredCommands.push(command);
   }
   const commandsOut = decorateCommandsWithDesignMetadata(filteredCommands, executionStrategy);
-  const preservedCommandsOut = applyExistingSequencePreservation({
+  const clonePlanningOut = applyExplicitClonePlanning({
     commands: commandsOut,
     currentSequenceContext,
     sourceLines: executionLines,
     executionStrategy,
     scope,
+    targetIds,
+    displayElements,
     capabilityCommands,
     warnings
   });
+  const preservedCommandsOut = clonePlanningOut.cloned
+    ? clonePlanningOut.commands
+    : applyExistingSequencePreservation({
+        commands: commandsOut,
+        currentSequenceContext,
+        sourceLines: executionLines,
+        executionStrategy,
+        scope,
+        capabilityCommands,
+        warnings
+      });
   const displayOrderedCommandsOut = applyExplicitDisplayOrderPlanning({
     commands: preservedCommandsOut,
     sourceLines: executionLines,
