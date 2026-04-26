@@ -1,0 +1,274 @@
+#!/usr/bin/env node
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import {
+  buildOpenAIVisualImageConfig,
+  buildVisualImageFileFromOpenAIResult,
+  buildVisualInspirationImagePrompt,
+  generateOpenAIVisualImage
+} from "../../../apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js";
+import {
+  buildVisualDesignAssetPack,
+  validateVisualDesignAssetPack
+} from "../../../apps/xlightsdesigner-ui/agent/designer-dialog/visual-design-assets.js";
+import {
+  writeVisualDesignAssetPack
+} from "../../../apps/xlightsdesigner-ui/storage/visual-design-asset-store.mjs";
+
+const DEFAULT_DEPS = {
+  buildOpenAIVisualImageConfig,
+  buildVisualInspirationImagePrompt,
+  generateOpenAIVisualImage,
+  buildVisualImageFileFromOpenAIResult,
+  buildVisualDesignAssetPack,
+  validateVisualDesignAssetPack,
+  writeVisualDesignAssetPack
+};
+
+function str(value = "") {
+  return String(value || "").trim();
+}
+
+function arr(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function readJson(filePath = "") {
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function parseArgs(argv = []) {
+  const out = {};
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = str(argv[i]);
+    if (token === "--payload") out.payloadPath = path.resolve(str(argv[++i] || ""));
+    else if (token === "--payload-json") out.payloadJson = str(argv[++i] || "");
+    else if (token === "--project-file") out.projectFilePath = path.resolve(str(argv[++i] || ""));
+    else if (token === "--sequence-id") out.sequenceId = str(argv[++i] || "");
+    else if (token === "--intent") out.intentText = str(argv[++i] || "");
+    else if (token === "--theme") out.themeSummary = str(argv[++i] || "");
+    else if (token === "--model") out.model = str(argv[++i] || "");
+    else if (token === "--size") out.size = str(argv[++i] || "");
+    else if (token === "--quality") out.quality = str(argv[++i] || "");
+    else if (token === "--format") out.outputFormat = str(argv[++i] || "");
+    else if (token === "--base-url") out.baseUrl = str(argv[++i] || "");
+    else throw new Error(`Unknown argument: ${token}`);
+  }
+  return out;
+}
+
+function mergePayloadArgs(args = {}) {
+  const filePayload = args.payloadPath ? readJson(args.payloadPath) : {};
+  const inlinePayload = args.payloadJson ? JSON.parse(args.payloadJson) : {};
+  return {
+    ...filePayload,
+    ...inlinePayload,
+    projectFilePath: str(args.projectFilePath || inlinePayload.projectFilePath || filePayload.projectFilePath),
+    sequenceId: str(args.sequenceId || inlinePayload.sequenceId || filePayload.sequenceId),
+    intentText: str(args.intentText || inlinePayload.intentText || filePayload.intentText),
+    themeSummary: str(args.themeSummary || inlinePayload.themeSummary || filePayload.themeSummary),
+    visualImageConfig: {
+      ...(isPlainObject(filePayload.visualImageConfig) ? filePayload.visualImageConfig : {}),
+      ...(isPlainObject(inlinePayload.visualImageConfig) ? inlinePayload.visualImageConfig : {}),
+      model: str(args.model || inlinePayload.visualImageConfig?.model || filePayload.visualImageConfig?.model),
+      size: str(args.size || inlinePayload.visualImageConfig?.size || filePayload.visualImageConfig?.size),
+      quality: str(args.quality || inlinePayload.visualImageConfig?.quality || filePayload.visualImageConfig?.quality),
+      outputFormat: str(args.outputFormat || inlinePayload.visualImageConfig?.outputFormat || filePayload.visualImageConfig?.outputFormat),
+      baseUrl: str(args.baseUrl || inlinePayload.visualImageConfig?.baseUrl || filePayload.visualImageConfig?.baseUrl)
+    }
+  };
+}
+
+function firstNonEmptyArray(...values) {
+  for (const value of values) {
+    const rows = arr(value).filter(Boolean);
+    if (rows.length) return rows;
+  }
+  return [];
+}
+
+function inferPalette(payload = {}) {
+  return firstNonEmptyArray(
+    payload.palette,
+    payload.creativeBrief?.visualInspiration?.palette,
+    payload.creativeBrief?.palette,
+    payload.proposalBundle?.palette,
+    [
+      { name: "primary atmosphere", hex: "#8fd8ff", role: "base" },
+      { name: "impact accent", hex: "#ffd36a", role: "accent" }
+    ]
+  );
+}
+
+function inferMotifs(payload = {}) {
+  return firstNonEmptyArray(
+    payload.motifs,
+    payload.creativeBrief?.visualInspiration?.motifs,
+    payload.proposalBundle?.motifs,
+    ["musical motion", "themed texture", "section contrast"]
+  ).map((row) => str(row)).filter(Boolean);
+}
+
+function inferAvoidances(payload = {}) {
+  return firstNonEmptyArray(
+    payload.avoidances,
+    payload.creativeBrief?.avoidances,
+    ["literal xLights layout", "physical house preview", "sequencer UI"]
+  ).map((row) => str(row)).filter(Boolean);
+}
+
+function inferThemeSummary(payload = {}) {
+  return str(
+    payload.themeSummary ||
+    payload.creativeBrief?.visualInspiration?.themeSummary ||
+    payload.creativeBrief?.summary ||
+    payload.proposalBundle?.summary ||
+    payload.intentText ||
+    "custom visual inspiration for the active xLights sequence"
+  );
+}
+
+function inferTrackIdentity(payload = {}) {
+  const analysisIdentity = payload.analysisHandoff?.trackIdentity;
+  const directIdentity = payload.trackIdentity;
+  const source = isPlainObject(directIdentity) ? directIdentity : (isPlainObject(analysisIdentity) ? analysisIdentity : {});
+  return {
+    title: str(source.title || payload.title || "Active sequence"),
+    artist: str(source.artist || payload.artist || ""),
+    contentFingerprint: str(source.contentFingerprint || source.fingerprint || "")
+  };
+}
+
+function requireGenerationEnabled(config = {}) {
+  if (config.enabled !== true) {
+    throw new Error("Live visual image generation is disabled. Set XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1 or pass an enabled provider config.");
+  }
+  if (!str(process.env.OPENAI_API_KEY)) {
+    throw new Error("OPENAI_API_KEY is required for visual image generation.");
+  }
+}
+
+export async function runVisualDesignAssetPackGeneration(options = {}, deps = DEFAULT_DEPS) {
+  const projectFilePath = path.resolve(str(options.projectFilePath));
+  if (!projectFilePath || !fs.existsSync(projectFilePath)) {
+    throw new Error(`Project file not found: ${projectFilePath || "(missing)"}`);
+  }
+  const sequenceId = str(options.sequenceId || options.sequencePath || options.mediaPath || "active-sequence");
+  const palette = inferPalette(options);
+  const motifs = inferMotifs(options);
+  const avoidances = inferAvoidances(options);
+  const themeSummary = inferThemeSummary(options);
+  const visualImageConfig = deps.buildOpenAIVisualImageConfig({
+    ...(isPlainObject(options.visualImageConfig) ? options.visualImageConfig : {}),
+    enabled: options.visualImageConfig?.enabled
+  });
+  if (deps === DEFAULT_DEPS) requireGenerationEnabled(visualImageConfig);
+
+  const prompt = deps.buildVisualInspirationImagePrompt({
+    themeSummary,
+    basePrompt: str(options.prompt || options.intentText || themeSummary),
+    palette,
+    motifs,
+    avoidances,
+    includePaletteInImage: Boolean(options.includePaletteInImage)
+  });
+  const generated = await deps.generateOpenAIVisualImage({
+    apiKey: str(options.apiKey || process.env.OPENAI_API_KEY),
+    baseUrl: visualImageConfig.baseUrl,
+    model: visualImageConfig.model,
+    size: visualImageConfig.size,
+    quality: visualImageConfig.quality,
+    outputFormat: visualImageConfig.outputFormat,
+    prompt,
+    fetchImpl: options.fetchImpl
+  });
+  if (!generated?.ok) {
+    throw new Error(`Visual image generation failed: ${str(generated?.error || generated?.code || "unknown error")}`);
+  }
+  const imageFile = deps.buildVisualImageFileFromOpenAIResult({
+    result: generated,
+    relativePath: "inspiration-board.png"
+  });
+  if (!imageFile?.ok) throw new Error(imageFile?.error || "Generated image could not be converted to a project file.");
+
+  const assetPack = deps.buildVisualDesignAssetPack({
+    sequenceId,
+    trackIdentity: inferTrackIdentity(options),
+    themeSummary,
+    inspirationPrompt: prompt,
+    palette,
+    motifs,
+    avoidances,
+    displayAsset: {
+      ...imageFile.displayAsset,
+      currentRevisionId: "board-r001"
+    },
+    imageRevisions: [
+      {
+        revisionId: "board-r001",
+        parentRevisionId: "",
+        mode: "generate",
+        relativePath: imageFile.file.relativePath,
+        promptRef: "prompt-001",
+        source: { provider: "openai", model: generated.model || visualImageConfig.model, promptRef: "prompt-001" },
+        userRequest: str(options.intentText),
+        changeSummary: "Initial inspiration board generated from Designer intent.",
+        paletteLocked: true
+      }
+    ],
+    prompts: [
+      {
+        promptId: "prompt-001",
+        model: generated.model || visualImageConfig.model,
+        purpose: "inspiration_board",
+        operation: "generate",
+        prompt
+      }
+    ]
+  });
+  const errors = deps.validateVisualDesignAssetPack(assetPack);
+  if (errors.length) throw new Error(`Generated visual asset pack is invalid: ${errors.join("; ")}`);
+
+  const writeResult = deps.writeVisualDesignAssetPack({
+    projectFilePath,
+    assetPack,
+    files: [imageFile.file]
+  });
+  if (!writeResult?.ok) {
+    throw new Error(writeResult?.error || arr(writeResult?.errors).join("; ") || writeResult?.code || "Visual asset pack write failed.");
+  }
+  return {
+    ok: true,
+    projectFilePath,
+    assetPack,
+    artifactId: assetPack.artifactId,
+    assetDir: writeResult.assetDir,
+    manifestPath: writeResult.manifestPath,
+    writtenFiles: writeResult.writtenFiles,
+    model: generated.model || visualImageConfig.model,
+    size: visualImageConfig.size,
+    quality: visualImageConfig.quality,
+    outputFormat: visualImageConfig.outputFormat
+  };
+}
+
+export async function main(argv = process.argv.slice(2), deps = DEFAULT_DEPS) {
+  return runVisualDesignAssetPackGeneration(mergePayloadArgs(parseArgs(argv)), deps);
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  try {
+    const result = await main();
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  } catch (error) {
+    process.stderr.write(`${String(error?.stack || error?.message || error)}\n`);
+    process.exit(1);
+  }
+}
