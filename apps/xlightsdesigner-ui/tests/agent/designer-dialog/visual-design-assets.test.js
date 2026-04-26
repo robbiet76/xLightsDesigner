@@ -56,6 +56,7 @@ test("visual design asset pack builder creates valid compact manifest", () => {
   assert.equal(pack.displayAsset.currentRevisionId, "board-r001");
   assert.equal(pack.imageRevisions[0].mode, "generate");
   assert.equal(pack.imageRevisions[0].paletteLocked, true);
+  assert.equal(pack.imageRevisions[0].source.model, "gpt-image-2");
   assert.deepEqual(validateVisualDesignAssetPack(pack), []);
 });
 
@@ -102,6 +103,8 @@ test("visual design image edit revisions preserve lineage and palette coordinati
   assert.equal(edited.imageRevisions[1].parentRevisionId, "board-r001");
   assert.equal(edited.imageRevisions[1].revisionId, "board-r002");
   assert.equal(edited.imageRevisions[1].paletteLocked, true);
+  assert.equal(edited.imageRevisions[1].source.provider, "openai");
+  assert.equal(edited.imageRevisions[1].source.model, "gpt-image-2");
   assert.equal(edited.displayAsset.currentRevisionId, "board-r002");
   assert.equal(edited.displayAsset.relativePath, "revisions/board-r002.png");
   assert.deepEqual(edited.palette.colors, first.palette.colors);

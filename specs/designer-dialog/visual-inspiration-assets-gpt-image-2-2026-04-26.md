@@ -156,6 +156,11 @@ Minimum shape:
       "relativePath": "inspiration-board.png",
       "promptRef": "prompt-001",
       "maskRef": "",
+      "source": {
+        "provider": "openai",
+        "model": "gpt-image-2",
+        "promptRef": "prompt-001"
+      },
       "userRequest": "",
       "changeSummary": "Initial inspiration board.",
       "paletteLocked": true,
@@ -207,7 +212,7 @@ Minimum shape:
 - generate a palette with named roles and hex colors
 - preserve the palette as required design state and keep the board coordinated with it
 - edit the current inspiration board for conversational tweaks when possible instead of regenerating the board from scratch
-- record each board change as an immutable `imageRevisions[]` entry with parent revision, prompt, user request, palette lock/change status, and output path
+- record each board change as an immutable `imageRevisions[]` entry with parent revision, prompt, source provider/model, user request, palette lock/change status, and output path
 - optionally generate an asset-pack plan with candidate images/videos and intended sequencing use
 - save generated files and manifest under the project app folder
 - add artifact references to the creative brief, proposal bundle, and sequencing design handoff
@@ -280,12 +285,22 @@ Required local tests:
 - Sequencer handoff compaction passes only refs/summaries, not binary payloads
 - native Design/Review automation can display a stored inspiration board fixture and verify handoff references
 
-Live validation should be opt-in:
+Live validation is opt-in because it incurs provider cost:
 
 - generate one inspiration board using `gpt-image-2`
 - write files and manifest into the project app folder
 - show the board in native Design UI
 - pass the artifact reference through Designer -> Sequencer -> Review
+
+Current script:
+
+```bash
+XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1 OPENAI_API_KEY=... \
+  node scripts/native/validate-live-visual-image-generation.mjs \
+  --project-file /path/to/project.xdproj
+```
+
+The script refuses to run unless `XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1` is set. It generates one board, edits it once, and writes both revisions plus `visual-design-manifest.json` under the app project artifact folder.
 
 ## Implementation Order
 
@@ -294,8 +309,8 @@ Live validation should be opt-in:
 3. Extend `sequencing_design_handoff_v2` with compact asset-pack refs, palette roles, and motif directives.
 4. Add native Design UI support for showing a stored inspiration board and palette.
 5. Add conversational board revision controls and fixture validation for edit lineage.
-6. Add a provider adapter for OpenAI image generation/editing with `gpt-image-2`, disabled unless configured.
-7. Add live opt-in validation that generates one board, edits it once, and stores both revisions in the project folder.
+6. Add a provider adapter for OpenAI image generation/editing with `gpt-image-2`, disabled unless configured. Done: adapter request/response construction and fixture tests are in `apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js`.
+7. Add live opt-in validation that generates one board, edits it once, and stores both revisions in the project folder. Done: `scripts/native/validate-live-visual-image-generation.mjs`.
 8. Add sequence-agent use of palette/motif context immediately.
 9. Add picture/video effect placement later when xLights media effect support is implemented.
 

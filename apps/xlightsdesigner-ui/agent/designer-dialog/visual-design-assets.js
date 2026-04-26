@@ -87,6 +87,7 @@ function normalizeImageRevisions(rows = [], displayAsset = {}) {
         relativePath: str(row?.relativePath || displayAsset.relativePath || "inspiration-board.png"),
         promptRef: str(row?.promptRef || `prompt-${String(idx + 1).padStart(3, "0")}`),
         maskRef: str(row?.maskRef),
+        source: normalizeSource(row?.source || { provider: "unknown", model: "gpt-image-2", promptRef: row?.promptRef || `prompt-${String(idx + 1).padStart(3, "0")}` }),
         userRequest: str(row?.userRequest),
         changeSummary: str(row?.changeSummary),
         paletteLocked: row?.paletteLocked !== false,
@@ -239,6 +240,7 @@ export function buildVisualDesignImageEditRevision({
         relativePath: outputPath,
         promptRef: nextPromptId,
         maskRef,
+        source: normalizeSource({ provider: "openai", model: "gpt-image-2", promptRef: nextPromptId }),
         userRequest,
         changeSummary,
         paletteLocked: palette == null,
@@ -308,6 +310,9 @@ export function validateVisualDesignAssetPack(payload = {}) {
     revisionIds.add(revisionId);
     if (!IMAGE_REVISION_MODES.has(str(revision?.mode))) errors.push(`imageRevisions[${idx}].mode is invalid`);
     if (!str(revision?.relativePath)) errors.push(`imageRevisions[${idx}].relativePath is required`);
+    if (!isPlainObject(revision?.source)) errors.push(`imageRevisions[${idx}].source is required`);
+    if (!str(revision?.source?.provider)) errors.push(`imageRevisions[${idx}].source.provider is required`);
+    if (!str(revision?.source?.model)) errors.push(`imageRevisions[${idx}].source.model is required`);
     if (idx > 0 && !str(revision?.parentRevisionId)) {
       errors.push(`imageRevisions[${idx}].parentRevisionId is required`);
     }
