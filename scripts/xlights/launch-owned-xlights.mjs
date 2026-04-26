@@ -304,6 +304,19 @@ function handleAccessibleModals(policy) {
   return { inventory, handled: false, blocked: modalWindows };
 }
 
+function modalBlockedMessageFromHealth(health = {}) {
+  const data = health?.data && typeof health.data === 'object' ? health.data : {};
+  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
+  if (!modalState?.blocked || modalState.observed === false) return '';
+  const titles = Array.isArray(modalState.windows)
+    ? modalState.windows
+      .filter((window) => window?.isModal)
+      .map((window) => String(window?.title || window?.className || '').trim())
+      .filter(Boolean)
+    : [];
+  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
+}
+
 function classifyStartupBlocker(processInfo) {
   const sample = sampleProcess(processInfo.pid);
   const listeningPorts = listListeningPortsForPid(processInfo.pid);
@@ -336,6 +349,12 @@ async function waitForOwnedApi(processInfo, timeoutMs = 45000) {
     lastProbe = await requestJson(endpoint, 2000);
     const data = lastProbe.json?.data || {};
     const state = String(data.state || data.startupState || '').toLowerCase();
+    const modalMessage = modalBlockedMessageFromHealth(lastProbe.json);
+    if (modalMessage) {
+      const error = new Error(modalMessage);
+      error.details = { endpoint, lastProbe, blocker: classifyStartupBlocker(processInfo) };
+      throw error;
+    }
     const ready = lastProbe.ok && lastProbe.json?.ok !== false && (data.startupSettled === true || state === 'ready');
     if (ready) {
       return { endpoint, health: lastProbe.json };

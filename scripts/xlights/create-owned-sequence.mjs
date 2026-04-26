@@ -15,9 +15,30 @@ async function request(path, { method = 'GET', body = null } = {}) {
   return { status: response.status, json };
 }
 
+function modalBlockedMessage(health = {}) {
+  const data = health?.data && typeof health.data === 'object' ? health.data : {};
+  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
+  if (!modalState?.blocked || modalState.observed === false) return '';
+  const titles = Array.isArray(modalState.windows)
+    ? modalState.windows
+      .filter((window) => window?.isModal)
+      .map((window) => String(window?.title || window?.className || '').trim())
+      .filter(Boolean)
+    : [];
+  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
+}
+
+async function assertNoBlockingModal() {
+  const { json } = await request('/health');
+  const message = modalBlockedMessage(json);
+  if (message) throw new Error(message);
+  return json;
+}
+
 async function waitForJob(jobId, timeoutMs = 120000) {
   const started = Date.now();
   for (;;) {
+    await assertNoBlockingModal();
     const { json } = await request(`/jobs/get?jobId=${encodeURIComponent(jobId)}`);
     if (json?.data?.state === 'succeeded') return json;
     if (json?.data?.state === 'failed') throw new Error(JSON.stringify(json));
@@ -27,6 +48,7 @@ async function waitForJob(jobId, timeoutMs = 120000) {
 }
 
 async function main() {
+  await assertNoBlockingModal();
   const explicitPath = process.argv[2];
   const ts = execFileSync('date', ['+%Y%m%d-%H%M%S'], { encoding: 'utf8' }).trim();
   const file = explicitPath || `/Users/robterry/Desktop/Show/Test/API-App-Flow-${ts}.xsq`;

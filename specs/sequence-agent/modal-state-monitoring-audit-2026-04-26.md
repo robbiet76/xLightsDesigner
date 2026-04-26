@@ -10,11 +10,11 @@ Follow-up direction:
 
 ## Current Finding
 
-Modal handling is currently split across several mechanisms, and those mechanisms do not form one reliable state model.
+Modal handling had been split across several mechanisms that did not form one reliable state model. This audit added the first shared owned API state signal, but every caller still needs to consume it consistently.
 
-The launcher script can inspect and optionally click macOS Accessibility-visible xLights windows before the owned API is ready. The owned API itself does not expose active modal/window state through `/health` or any other route. App-side readiness checks and validation scripts mostly treat `/health state=ready` as sufficient, so they can miss a blocking dialog that appears after startup or during an owned API job.
+The launcher script can inspect and optionally click macOS Accessibility-visible xLights windows before the owned API is ready. The owned API now exposes active modal/window state through `/health.data.modalState`. App-side readiness checks and validation scripts must treat `/health state=ready` as insufficient when `modalState.blocked=true`.
 
-This means the system can be simultaneously:
+Before this audit, the system could be simultaneously:
 - API-ready from the app's point of view
 - blocked inside xLights by a native modal from the user's point of view
 - difficult to diagnose because job polling only reports queued/running/failed, not "blocked by modal"
@@ -57,10 +57,8 @@ Current behavior:
 - reports app startup readiness and settle timing
 
 Current gap:
-- no modal count
-- no active modal titles/classes/buttons
-- no "blocked by UI modal" state
-- no root-cause metadata when an API job is stalled because the main thread is inside a dialog
+- `/health.data.modalState` now reports modal count, shown dialog count, titles/classes/buttons, and blocking state
+- remaining gap is route-level root-cause prevention for any unexpected modal surfaced by the state signal
 
 ### App and Validation Readiness Checks
 
@@ -75,12 +73,11 @@ Files observed:
 Current behavior:
 - readiness is based on `/health`
 - job polling is based on `/jobs/get`
-- validation scripts do not inspect modal state except indirectly through launch script failures
+- key app and validation paths now inspect `modalState`
 
 Current gap:
-- no shared modal-aware readiness helper
-- no fail-fast path if xLights reports a blocking modal
-- no validation artifact field proving the UI was unblocked at each major API handoff
+- some smaller runners may still need the shared modal-aware helper instead of local duplicated checks
+- validation artifacts should keep recording modal-state checkpoints at major API handoffs
 
 ## Conflicting or Stale Documentation
 

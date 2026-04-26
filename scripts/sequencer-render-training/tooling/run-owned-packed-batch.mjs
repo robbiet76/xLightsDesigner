@@ -63,10 +63,31 @@ function normalizeJobTerminalState(state = '') {
   return '';
 }
 
+function modalBlockedMessage(health = {}) {
+  const data = health?.data && typeof health.data === 'object' ? health.data : {};
+  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
+  if (!modalState?.blocked || modalState.observed === false) return '';
+  const titles = Array.isArray(modalState.windows)
+    ? modalState.windows
+      .filter((window) => window?.isModal)
+      .map((window) => str(window?.title || window?.className))
+      .filter(Boolean)
+    : [];
+  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
+}
+
+async function assertNoBlockingModal(endpoint) {
+  const health = await request(endpoint, '/health');
+  const message = modalBlockedMessage(health?.json);
+  if (message) throw new Error(message);
+  return health;
+}
+
 async function waitForJob(base, jobId, timeoutMs = 180000) {
   trace(`wait-job-begin jobId=${jobId}`);
   const started = Date.now();
   for (;;) {
+    await assertNoBlockingModal(base);
     const { json } = await request(base, `/jobs/get?jobId=${encodeURIComponent(jobId)}`);
     const state = normalizeJobTerminalState(json?.data?.state || json?.state);
     if (state === 'completed') {
@@ -125,6 +146,10 @@ async function main() {
   trace(`begin sequence=${args.sequence}`);
 
   const health = await request(args.endpoint, '/health');
+  const modalMessage = modalBlockedMessage(health?.json);
+  if (modalMessage) {
+    throw new Error(modalMessage);
+  }
   const state = str(health?.json?.data?.state || health?.json?.data?.status);
   if (state && state.toLowerCase() !== 'ready') {
     throw new Error(`Owned xLights API is not ready: ${JSON.stringify(health.json)}`);
