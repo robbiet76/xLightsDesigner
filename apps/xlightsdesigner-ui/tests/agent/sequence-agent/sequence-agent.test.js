@@ -489,7 +489,7 @@ test("sequence_agent emits owned clone command for explicit layer copy when avai
     },
     baseRevision: "rev-existing",
     effectCatalog: sampleCatalog(),
-    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.clone"]
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "sequencer.setDisplayElementOrder", "effects.create", "effects.clone"]
   });
 
   const cloneCommand = out.commands.find((row) => row.cmd === "effects.clone");
@@ -519,6 +519,51 @@ test("sequence_agent emits owned clone command for explicit layer copy when avai
   );
   assert.equal(cloneCommand.intent.clonePolicy.nativeCloneCommand, true);
   assert.equal(out.warnings.some((row) => /owned effects\.clone/i.test(row)), true);
+});
+
+test("sequence_agent emits one owned clone command for multiple explicit copy targets", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Copy Star layer 0 to MegaTree and Roofline layer 1",
+      scope: {
+        targetIds: ["Star", "MegaTree", "Roofline"],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / copy Star layer 0 to MegaTree and Roofline layer 1"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "Star",
+            effectName: "Shimmer",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 5000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    displayElements: [
+      { id: "Star", name: "Star", type: "model" },
+      { id: "MegaTree", name: "MegaTree", type: "model" },
+      { id: "Roofline", name: "Roofline", type: "model" }
+    ],
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "sequencer.setDisplayElementOrder", "effects.create", "effects.clone"]
+  });
+
+  const cloneCommands = out.commands.filter((row) => row.cmd === "effects.clone");
+  assert.equal(cloneCommands.length, 1);
+  assert.deepEqual(cloneCommands[0].params.targetModels, ["MegaTree", "Roofline"]);
+  assert.equal(cloneCommands[0].params.targetModelName, undefined);
+  assert.deepEqual(cloneCommands[0].intent.clonePolicy.targetModelNames, ["MegaTree", "Roofline"]);
 });
 
 test("sequence_agent expands same-model layer copy into cloned create commands", () => {

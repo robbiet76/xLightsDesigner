@@ -1487,6 +1487,21 @@ function inferExplicitCloneIntent({
     }
   }
   if (!sourceModelName || !targetModelName) return null;
+  const sourceIndexForTargets = joined.indexOf(sourceModelName.toLowerCase());
+  const afterSourceForTargets = sourceIndexForTargets >= 0
+    ? joined.slice(sourceIndexForTargets + sourceModelName.length)
+    : joined;
+  const connectorMatchForTargets = afterSourceForTargets.match(/\b(to|onto|into|on)\b/);
+  const targetSearchText = connectorMatchForTargets
+    ? afterSourceForTargets.slice(connectorMatchForTargets.index + connectorMatchForTargets[0].length)
+    : afterSourceForTargets;
+  const targetModelNames = Array.from(new Set(
+    lowerIds
+      .filter((candidate) => candidate.id !== sourceModelName)
+      .filter((candidate) => new RegExp(`\\b${escapeRegExpText(candidate.lower)}\\b`, "i").test(targetSearchText))
+      .map((candidate) => candidate.id)
+  ));
+  if (!targetModelNames.includes(targetModelName)) targetModelNames.unshift(targetModelName);
   const sourceLayerMatch = sameModelLayerCopy || joined.match(/\b(?:source\s+)?layer\s*(\d+)\b/);
   const targetLayerMatch =
     sameModelLayerCopy ||
@@ -1504,6 +1519,7 @@ function inferExplicitCloneIntent({
     mode: isMoveRequest ? "move" : "copy",
     sourceModelName,
     targetModelName,
+    targetModelNames,
     includeSubmodels,
     knownIds,
     sourceLayerIndex,
@@ -1558,7 +1574,13 @@ function buildExplicitCloneCommands({
     cloneIntent.includeSubmodels !== true;
   if (canUseOwnedClone) {
     const maxSourceEndMs = Math.max(...sourceEffects.map((effect) => Number(effect.endMs)));
-    const targetModels = Array.from(new Set(sourceEffects.map((effect) => normText(effect.cloneTargetId)).filter(Boolean)));
+    const targetModels = Array.from(new Set(
+      (Array.isArray(cloneIntent.targetModelNames) && cloneIntent.targetModelNames.length
+        ? cloneIntent.targetModelNames
+        : sourceEffects.map((effect) => normText(effect.cloneTargetId)))
+        .map((row) => normText(row))
+        .filter(Boolean)
+    ));
     const targetLayerIndex = Number.isInteger(cloneIntent.targetLayerIndex) ? cloneIntent.targetLayerIndex : null;
     const nonEffectCommands = normArray(commands).filter((command) => normText(command?.cmd) !== "effects.create" && normText(command?.cmd) !== "effects.alignToTiming");
     warnings.push(`${cloneIntent.mode === "move" ? "Moving" : "Cloning"} ${sourceEffects.length} effect${sourceEffects.length === 1 ? "" : "s"} from ${cloneIntent.sourceModelName}${Number.isInteger(cloneIntent.sourceLayerIndex) ? ` layer ${cloneIntent.sourceLayerIndex}` : ""} to ${targetModels.join(", ")}${targetLayerIndex !== null ? ` layer ${targetLayerIndex}` : ""} with owned effects.clone.`);
