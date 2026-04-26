@@ -1399,7 +1399,9 @@ function inferExplicitCloneIntent({
     normText(executionStrategy?.implementationMode),
     normText(executionStrategy?.passScope)
   ].join(" ").toLowerCase();
-  if (!/\b(copy|paste|clone|duplicate)\b/.test(joined)) return null;
+  const isMoveRequest = /\b(cut|move\s+effects?|move\s+existing\s+effects?)\b/.test(joined);
+  const isCopyRequest = /\b(copy|paste|clone|duplicate)\b/.test(joined);
+  if (!isCopyRequest && !isMoveRequest) return null;
   const existingEffects = currentSequenceEffectRows(currentSequenceContext);
   const knownIds = Array.from(new Set([
     ...existingEffects.map((row) => row.targetId),
@@ -1416,7 +1418,7 @@ function inferExplicitCloneIntent({
         if (source.id === target.id) continue;
         const sourcePattern = escapeRegExpText(source.lower);
         const targetPattern = escapeRegExpText(target.lower);
-        const sourceToTarget = new RegExp(`\\b(?:copy|clone|duplicate)\\b[^.;&\\n]{0,40}?\\b${sourcePattern}\\b[^.;&\\n]{0,120}?\\b(?:to|onto|into|on)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
+        const sourceToTarget = new RegExp(`\\b(?:copy|clone|duplicate|cut|move(?:\\s+effects?)?)\\b[^.;&\\n]{0,40}?\\b${sourcePattern}\\b[^.;&\\n]{0,120}?\\b(?:to|onto|into|on)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
         const pasteToTarget = new RegExp(`\\b(?:paste)\\b[^.;&\\n]{0,40}?\\b${sourcePattern}\\b[^.;&\\n]{0,120}?\\b(?:to|onto|into|on)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
         if (sourceToTarget.test(joined) || pasteToTarget.test(joined)) {
           sourceModelName = source.id;
@@ -1450,6 +1452,7 @@ function inferExplicitCloneIntent({
     ? (/^s|^sec|^second/.test(targetStartMatch[2]) ? Math.round(Number(targetStartMatch[1]) * 1000) : Math.round(Number(targetStartMatch[1])))
     : null;
   return {
+    mode: isMoveRequest ? "move" : "copy",
     sourceModelName,
     targetModelName,
     sourceLayerIndex,
@@ -1510,6 +1513,7 @@ function buildExplicitCloneCommands({
       intent: {
         clonePolicy: {
           explicitCloneRequest: true,
+          mode: cloneIntent.mode === "move" ? "move" : "copy",
           sourceModelName: effect.targetId,
           sourceLayerIndex: Number(effect.layerIndex),
           sourceStartMs: Number(effect.startMs),
@@ -1531,9 +1535,45 @@ function buildExplicitCloneCommands({
       }
     };
   });
+  const deleteSourceCommands = cloneIntent.mode === "move"
+    ? sourceEffects.map((effect, index) => ({
+        id: `effect.move.delete-source.${index + 1}`,
+        dependsOn: [`effect.clone.${index + 1}`],
+        cmd: "effects.delete",
+        params: {
+          modelName: effect.targetId,
+          layerIndex: Number(effect.layerIndex),
+          startMs: Number(effect.startMs),
+          endMs: Number(effect.endMs),
+          ...(normText(effect.effectName) ? { effectName: normText(effect.effectName) } : {})
+        },
+        intent: {
+          movePolicy: {
+            explicitMoveRequest: true,
+            sourceModelName: effect.targetId,
+            sourceLayerIndex: Number(effect.layerIndex),
+            sourceStartMs: Number(effect.startMs),
+            sourceEndMs: Number(effect.endMs),
+            targetModelName: cloneIntent.targetModelName,
+            targetLayerIndex: Number.isInteger(cloneIntent.targetLayerIndex)
+              ? cloneIntent.targetLayerIndex + (Number(effect.layerIndex) - (Number.isInteger(cloneIntent.sourceLayerIndex) ? cloneIntent.sourceLayerIndex : Number(effect.layerIndex)))
+              : Number(effect.layerIndex)
+          },
+          existingSequencePolicy: {
+            replacementAuthorized: true,
+            preserveExistingUnlessScoped: false,
+            emittedMoveDeleteCommand: true,
+            originalLayerIndex: Number(effect.layerIndex),
+            plannedLayerIndex: Number(effect.layerIndex),
+            overlapCount: 1,
+            overlappingEffectNames: [normText(effect.effectName)].filter(Boolean)
+          }
+        }
+      }))
+    : [];
   const nonEffectCommands = normArray(commands).filter((command) => normText(command?.cmd) !== "effects.create" && normText(command?.cmd) !== "effects.alignToTiming");
-  warnings.push(`Cloning ${sourceEffects.length} effect${sourceEffects.length === 1 ? "" : "s"} from ${cloneIntent.sourceModelName}${Number.isInteger(cloneIntent.sourceLayerIndex) ? ` layer ${cloneIntent.sourceLayerIndex}` : ""} to ${cloneIntent.targetModelName}${Number.isInteger(cloneIntent.targetLayerIndex) ? ` layer ${cloneIntent.targetLayerIndex}` : ""}.`);
-  return nonEffectCommands.concat(clonedEffectCommands);
+  warnings.push(`${cloneIntent.mode === "move" ? "Moving" : "Cloning"} ${sourceEffects.length} effect${sourceEffects.length === 1 ? "" : "s"} from ${cloneIntent.sourceModelName}${Number.isInteger(cloneIntent.sourceLayerIndex) ? ` layer ${cloneIntent.sourceLayerIndex}` : ""} to ${cloneIntent.targetModelName}${Number.isInteger(cloneIntent.targetLayerIndex) ? ` layer ${cloneIntent.targetLayerIndex}` : ""}.`);
+  return nonEffectCommands.concat(clonedEffectCommands, deleteSourceCommands);
 }
 
 function applyExplicitClonePlanning({
@@ -1557,6 +1597,7 @@ function applyExplicitClonePlanning({
     displayElements
   });
   if (!cloneIntent) return { commands, cloned: false };
+  if (cloneIntent.mode === "move" && !supportsCommand(capabilityCommands, "effects.delete")) return { commands, cloned: false };
   const clonedCommands = buildExplicitCloneCommands({
     commands,
     currentSequenceContext,

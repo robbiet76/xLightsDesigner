@@ -511,6 +511,63 @@ test("sequence_agent expands same-model layer copy into cloned create commands",
   assert.equal(out.warnings.some((row) => /Cloning 1 effect from Star layer 0 to Star layer 1/i.test(row)), true);
 });
 
+test("sequence_agent expands cut layer request into clone plus source delete", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Cut Star layer 0 to MegaTree layer 1"
+    },
+    sourceLines: ["Chorus 1 / cut Star layer 0 to MegaTree layer 1"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "Star",
+            effectName: "Shimmer",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 5000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.delete"]
+  });
+
+  const cloneCommand = out.commands.find((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree");
+  const deleteCommand = out.commands.find((row) => row.cmd === "effects.delete" && row.params.modelName === "Star");
+  assert.ok(cloneCommand);
+  assert.ok(deleteCommand);
+  assert.deepEqual(
+    {
+      cloneLayer: cloneCommand.params.layerIndex,
+      cloneEffectName: cloneCommand.params.effectName,
+      cloneMode: cloneCommand.intent.clonePolicy.mode,
+      deleteLayer: deleteCommand.params.layerIndex,
+      deleteEffectName: deleteCommand.params.effectName,
+      deleteStartMs: deleteCommand.params.startMs,
+      deleteEndMs: deleteCommand.params.endMs
+    },
+    {
+      cloneLayer: 1,
+      cloneEffectName: "Shimmer",
+      cloneMode: "move",
+      deleteLayer: 0,
+      deleteEffectName: "Shimmer",
+      deleteStartMs: 1000,
+      deleteEndMs: 5000
+    }
+  );
+  assert.equal(deleteCommand.intent.existingSequencePolicy.emittedMoveDeleteCommand, true);
+  assert.equal(out.warnings.some((row) => /Moving 1 effect from Star layer 0 to MegaTree layer 1/i.test(row)), true);
+});
+
 test("sequence_agent expands model copy with time offset while preserving relative effect timing", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),
