@@ -214,6 +214,17 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
     #expect(model.screenModel.visualInspiration.palette.first?.hex == "#ffc45c")
     #expect(model.screenModel.visualInspiration.revisionSummary.contains("Added pine green support."))
     #expect(model.screenModel.visualInspiration.imagePath.hasSuffix("revisions/board-r002.png"))
+    #expect(model.screenModel.visualInspiration.displayedRevisionId == "board-r002")
+    #expect(model.screenModel.visualInspiration.revisionHistory.count == 2)
+    #expect(model.screenModel.visualInspiration.revisionHistory[1].isCurrent == true)
+    #expect(model.screenModel.visualInspiration.revisionHistory[1].isSelected == true)
+
+    model.selectVisualInspirationRevision("board-r001")
+
+    #expect(model.screenModel.visualInspiration.currentRevisionId == "board-r002")
+    #expect(model.screenModel.visualInspiration.displayedRevisionId == "board-r001")
+    #expect(model.screenModel.visualInspiration.imagePath.hasSuffix("inspiration-board.png"))
+    #expect(model.screenModel.visualInspiration.revisionHistory[0].isSelected == true)
 }
 
 @MainActor

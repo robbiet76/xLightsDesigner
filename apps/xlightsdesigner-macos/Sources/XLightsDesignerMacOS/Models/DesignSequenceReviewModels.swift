@@ -50,13 +50,24 @@ struct DesignPaletteColorModel: Identifiable, Hashable, Sendable {
     let role: String
 }
 
+struct DesignVisualRevisionModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let mode: String
+    let relativePath: String
+    let summary: String
+    let isCurrent: Bool
+    let isSelected: Bool
+}
+
 struct DesignVisualInspirationModel: Sendable {
     let available: Bool
     let title: String
     let summary: String
     let imagePath: String
     let currentRevisionId: String
+    let displayedRevisionId: String
     let revisionSummary: String
+    let revisionHistory: [DesignVisualRevisionModel]
     let paletteSummary: String
     let paletteDisplayMode: String
     let paletteCoordinationRule: String

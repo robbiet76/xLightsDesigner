@@ -15,6 +15,7 @@ final class DesignScreenViewModel {
     var isGeneratingVisualInspiration = false
     var isRevisingVisualInspiration = false
     var visualInspirationRevisionDraft = ""
+    var selectedVisualRevisionID = ""
 
     init(
         workspace: ProjectWorkspace,
@@ -33,7 +34,8 @@ final class DesignScreenViewModel {
             project: workspace.activeProject,
             pendingWork: try? pendingWorkService.loadPendingWork(for: workspace.activeProject),
             intentDraft: loadedDraft,
-            isDirty: false
+            isDirty: false,
+            selectedVisualRevisionID: ""
         )
     }
 
@@ -46,7 +48,8 @@ final class DesignScreenViewModel {
             project: workspace.activeProject,
             pendingWork: pendingWork,
             intentDraft: loadedDraft,
-            isDirty: false
+            isDirty: false,
+            selectedVisualRevisionID: selectedVisualRevisionID
         )
     }
 
@@ -55,7 +58,8 @@ final class DesignScreenViewModel {
             project: workspace.activeProject,
             pendingWork: try? pendingWorkService.loadPendingWork(for: workspace.activeProject),
             intentDraft: intentDraft,
-            isDirty: intentDraft != savedIntentDraft
+            isDirty: intentDraft != savedIntentDraft,
+            selectedVisualRevisionID: selectedVisualRevisionID
         )
     }
 
@@ -78,7 +82,8 @@ final class DesignScreenViewModel {
                 project: saved,
                 pendingWork: try? pendingWorkService.loadPendingWork(for: saved),
                 intentDraft: draft,
-                isDirty: false
+                isDirty: false,
+                selectedVisualRevisionID: selectedVisualRevisionID
             )
         } catch {
             transientBanner = WorkflowBannerModel(
@@ -148,6 +153,7 @@ final class DesignScreenViewModel {
                     text: "Generated visual inspiration \(result.artifactID.isEmpty ? "" : result.artifactID).",
                     state: .ready
                 )
+                selectedVisualRevisionID = ""
                 isGeneratingVisualInspiration = false
                 NotificationCenter.default.post(name: .projectArtifactsDidChange, object: activeProject.projectFilePath)
                 refresh()
@@ -203,6 +209,7 @@ final class DesignScreenViewModel {
                     text: "Revised visual inspiration \(result.currentRevisionID.isEmpty ? result.artifactID : result.currentRevisionID).",
                     state: .ready
                 )
+                selectedVisualRevisionID = ""
                 isRevisingVisualInspiration = false
                 NotificationCenter.default.post(name: .projectArtifactsDidChange, object: activeProject.projectFilePath)
                 refresh()
@@ -218,11 +225,17 @@ final class DesignScreenViewModel {
         }
     }
 
+    func selectVisualInspirationRevision(_ revisionID: String) {
+        selectedVisualRevisionID = revisionID.trimmingCharacters(in: .whitespacesAndNewlines)
+        updateAuthoringState()
+    }
+
     private static func buildScreenModel(
         project: ActiveProjectModel?,
         pendingWork: PendingWorkReadModel?,
         intentDraft: DesignIntentDraftModel,
-        isDirty: Bool
+        isDirty: Bool,
+        selectedVisualRevisionID: String
     ) -> DesignScreenModel {
         let projectName = project?.projectName ?? "No active project"
         let hasProject = project != nil
@@ -231,7 +244,7 @@ final class DesignScreenViewModel {
         let directorSummary = pendingWork?.directorSummary ?? "No director profile loaded."
         let sceneSummary = pendingWork?.designSceneSummary ?? "No design-scene context available."
         let openQuestions = pendingWork?.guidedQuestions ?? []
-        let visualInspiration = loadVisualInspiration(for: project)
+        let visualInspiration = loadVisualInspiration(for: project, selectedRevisionID: selectedVisualRevisionID)
 
         let identity = PendingWorkIdentityModel(
             title: hasProject ? "Current design direction" : "No pending design context",
@@ -354,7 +367,7 @@ final class DesignScreenViewModel {
         return candidates.first(where: { !$0.isEmpty }) ?? project.projectName
     }
 
-    private static func loadVisualInspiration(for project: ActiveProjectModel?) -> DesignVisualInspirationModel {
+    private static func loadVisualInspiration(for project: ActiveProjectModel?, selectedRevisionID: String) -> DesignVisualInspirationModel {
         guard let project else {
             return emptyVisualInspiration(summary: "Open or create a project to generate visual inspiration.")
         }
@@ -369,10 +382,13 @@ final class DesignScreenViewModel {
         let paletteObject = manifest["palette"] as? [String: Any] ?? [:]
         let colors = paletteRows(from: paletteObject["colors"] as? [[String: Any]] ?? creativeIntent["palette"] as? [[String: Any]] ?? [])
         let currentRevisionId = string(displayAsset["currentRevisionId"])
-        let currentRevision = currentRevision(from: manifest["imageRevisions"] as? [[String: Any]] ?? [], currentRevisionId: currentRevisionId)
-        let relativeImagePath = string(currentRevision["relativePath"]).isEmpty
+        let revisions = manifest["imageRevisions"] as? [[String: Any]] ?? []
+        let selectedRevisionId = selectedRevisionID.trimmingCharacters(in: .whitespacesAndNewlines)
+        let displayedRevision = selectedRevision(from: revisions, selectedRevisionID: selectedRevisionId, currentRevisionID: currentRevisionId)
+        let displayedRevisionId = string(displayedRevision["revisionId"], fallback: currentRevisionId)
+        let relativeImagePath = string(displayedRevision["relativePath"]).isEmpty
             ? string(displayAsset["relativePath"])
-            : string(currentRevision["relativePath"])
+            : string(displayedRevision["relativePath"])
         let imagePath = relativeImagePath.isEmpty
             ? ""
             : manifestURL.deletingLastPathComponent().appendingPathComponent(relativeImagePath).path
@@ -381,14 +397,17 @@ final class DesignScreenViewModel {
             : colors.map { color in
                 [color.name, color.hex, color.role].filter { !$0.isEmpty }.joined(separator: " ")
             }.joined(separator: " / ")
-        let revisionSummary = revisionSummary(from: currentRevision)
+        let revisionSummary = revisionSummary(from: displayedRevision)
+        let revisionHistory = revisionHistory(from: revisions, currentRevisionID: currentRevisionId, selectedRevisionID: displayedRevisionId)
         return DesignVisualInspirationModel(
             available: true,
             title: "Visual Inspiration",
             summary: string(creativeIntent["themeSummary"], fallback: "Visual inspiration board is available."),
             imagePath: imagePath,
             currentRevisionId: currentRevisionId,
+            displayedRevisionId: displayedRevisionId,
             revisionSummary: revisionSummary,
+            revisionHistory: revisionHistory,
             paletteSummary: paletteSummary,
             paletteDisplayMode: string(paletteObject["displayMode"], fallback: "separate_and_optional_in_image"),
             paletteCoordinationRule: string(paletteObject["coordinationRule"], fallback: "Image colors must reflect or coordinate with the approved palette."),
@@ -403,7 +422,9 @@ final class DesignScreenViewModel {
             summary: summary,
             imagePath: "",
             currentRevisionId: "",
+            displayedRevisionId: "",
             revisionSummary: "No board revision available.",
+            revisionHistory: [],
             paletteSummary: "No palette available.",
             paletteDisplayMode: "",
             paletteCoordinationRule: "Palette is required once a visual inspiration board exists.",
@@ -458,6 +479,29 @@ final class DesignScreenViewModel {
             return row
         }
         return rows.last ?? [:]
+    }
+
+    private static func selectedRevision(from rows: [[String: Any]], selectedRevisionID: String, currentRevisionID: String) -> [String: Any] {
+        if !selectedRevisionID.isEmpty,
+           let selected = rows.first(where: { string($0["revisionId"]) == selectedRevisionID }) {
+            return selected
+        }
+        return currentRevision(from: rows, currentRevisionId: currentRevisionID)
+    }
+
+    private static func revisionHistory(from rows: [[String: Any]], currentRevisionID: String, selectedRevisionID: String) -> [DesignVisualRevisionModel] {
+        rows.enumerated().map { index, row in
+            let revisionId = string(row["revisionId"], fallback: "revision-\(index + 1)")
+            return DesignVisualRevisionModel(
+                id: revisionId,
+                mode: string(row["mode"]),
+                relativePath: string(row["relativePath"]),
+                summary: revisionSummary(from: row),
+                isCurrent: revisionId == currentRevisionID,
+                isSelected: revisionId == selectedRevisionID
+            )
+        }
+        .filter { !$0.id.isEmpty }
     }
 
     private static func revisionSummary(from row: [String: Any]) -> String {

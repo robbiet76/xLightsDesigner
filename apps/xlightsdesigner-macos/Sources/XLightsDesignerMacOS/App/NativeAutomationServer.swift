@@ -698,7 +698,18 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "summary": visual.summary,
                 "imagePath": visual.imagePath,
                 "currentRevisionId": visual.currentRevisionId,
+                "displayedRevisionId": visual.displayedRevisionId,
                 "revisionSummary": visual.revisionSummary,
+                "revisionHistory": visual.revisionHistory.map {
+                    [
+                        "id": $0.id,
+                        "mode": $0.mode,
+                        "relativePath": $0.relativePath,
+                        "summary": $0.summary,
+                        "isCurrent": $0.isCurrent,
+                        "isSelected": $0.isSelected
+                    ] as [String: Any]
+                },
                 "paletteSummary": visual.paletteSummary,
                 "paletteDisplayMode": visual.paletteDisplayMode,
                 "paletteCoordinationRule": visual.paletteCoordinationRule,

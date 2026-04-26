@@ -116,7 +116,11 @@ struct DesignScreenView: View {
                     .foregroundStyle(.secondary)
                 HStack(spacing: 10) {
                     if !model.screenModel.visualInspiration.currentRevisionId.isEmpty {
-                        chip(model.screenModel.visualInspiration.currentRevisionId)
+                        chip("Current \(model.screenModel.visualInspiration.currentRevisionId)")
+                    }
+                    if !model.screenModel.visualInspiration.displayedRevisionId.isEmpty,
+                       model.screenModel.visualInspiration.displayedRevisionId != model.screenModel.visualInspiration.currentRevisionId {
+                        chip("Viewing \(model.screenModel.visualInspiration.displayedRevisionId)")
                     }
                     if !model.screenModel.visualInspiration.paletteDisplayMode.isEmpty {
                         chip(model.screenModel.visualInspiration.paletteDisplayMode)
@@ -129,6 +133,7 @@ struct DesignScreenView: View {
                 detailRow(label: "Palette", value: model.screenModel.visualInspiration.paletteSummary)
                 detailRow(label: "Palette Rule", value: model.screenModel.visualInspiration.paletteCoordinationRule)
                 if model.screenModel.visualInspiration.available {
+                    revisionHistory(model.screenModel.visualInspiration.revisionHistory)
                     designEditor(label: "Revision Request", text: $model.visualInspirationRevisionDraft, minHeight: 72)
                     Button(model.isRevisingVisualInspiration ? "Revising..." : "Revise Visual Inspiration") {
                         model.reviseVisualInspiration()
@@ -159,6 +164,38 @@ struct DesignScreenView: View {
     private func detailRow(label: String, value: String) -> some View { VStack(alignment: .leading, spacing: 4) { Text(label).font(.headline); Text(value).foregroundStyle(.secondary) } }
     private func bulletSection(title: String, items: [String]) -> some View { VStack(alignment: .leading, spacing: 6) { Text(title).font(.headline); ForEach(Array(items.enumerated()), id: \.offset) { _, item in Text("• \(item)").foregroundStyle(.secondary) } } }
     private func bannerView(_ banner: WorkflowBannerModel) -> some View { Text(banner.text).frame(maxWidth: .infinity, alignment: .leading).padding(12).background(Color(nsColor: .controlBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 10)) }
+    private func revisionHistory(_ revisions: [DesignVisualRevisionModel]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Revision History").font(.headline)
+            if revisions.count > 1 {
+                HStack(spacing: 8) {
+                    ForEach(revisions) { revision in
+                        Button(revision.isCurrent ? "\(revision.id) Current" : revision.id) {
+                            model.selectVisualInspirationRevision(revision.id)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(revision.isSelected)
+                    }
+                    if !model.selectedVisualRevisionID.isEmpty {
+                        Button("Show Current") {
+                            model.selectVisualInspirationRevision("")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if let selected = revisions.first(where: { $0.isSelected }) {
+                    Text(selected.summary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Text("Only the current board revision is available.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
     private func paletteSwatches(_ colors: [DesignPaletteColorModel]) -> some View {
         HStack(spacing: 8) {
             ForEach(colors) { color in
