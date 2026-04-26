@@ -517,9 +517,10 @@ export async function getDisplayElementOrder(endpoint) {
 export async function setDisplayElementOrder(endpoint, orderedIds = []) {
   if (isOwnedEndpoint(endpoint)) {
     const base = deriveOwnedEndpointBase(endpoint);
+    const normalizedIds = Array.isArray(orderedIds) ? orderedIds : [];
     return readOwnedJson(`${base}/elements/display-order`, {
       method: "POST",
-      body: { orderedIds }
+      body: { orderedIds: JSON.stringify(normalizedIds) }
     });
   }
   return postCommand(endpoint, "sequencer.setDisplayElementOrder", { orderedIds });
@@ -567,14 +568,42 @@ export async function listTimingAnalysisPlugins(endpoint) {
 }
 
 export async function createTimingTrack(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const base = deriveOwnedEndpointBase(endpoint);
+    return readOwnedJson(`${base}/timing/ensure-track`, {
+      method: "POST",
+      body: {
+        track: String(params?.trackName || params?.track || "").trim(),
+        subType: String(params?.subType || "").trim()
+      }
+    });
+  }
   return postCommand(endpoint, "timing.createTrack", params);
 }
 
 export async function replaceTimingMarks(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const track = String(params?.trackName || params?.track || "").trim();
+    return readOwnedPost(endpoint, "/timing/add-marks", {
+      track,
+      subType: String(params?.subType || "").trim(),
+      replaceExisting: true,
+      marks: JSON.stringify(Array.isArray(params?.marks) ? params.marks : [])
+    }, { command: "timing.replaceMarks", queued: true });
+  }
   return postCommand(endpoint, "timing.replaceMarks", params);
 }
 
 export async function insertTimingMarks(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const track = String(params?.trackName || params?.track || "").trim();
+    return readOwnedPost(endpoint, "/timing/add-marks", {
+      track,
+      subType: String(params?.subType || "").trim(),
+      replaceExisting: false,
+      marks: JSON.stringify(Array.isArray(params?.marks) ? params.marks : [])
+    }, { command: "timing.insertMarks", queued: true });
+  }
   return postCommand(endpoint, "timing.insertMarks", params);
 }
 

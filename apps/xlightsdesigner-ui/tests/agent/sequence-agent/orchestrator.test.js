@@ -140,6 +140,165 @@ test('orchestrator applies compressible plans through owned batch apply', async 
   assert.equal(ownedJobCalls, 1);
 });
 
+test('orchestrator applies display-order commands through owned direct API', async () => {
+  let orderCall = null;
+  const res = await validateAndApplyPlan({
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: [
+      {
+        id: 'display.order.1',
+        cmd: 'sequencer.setDisplayElementOrder',
+        params: { orderedIds: ['Lyrics', 'AllModels', 'MegaTree'] }
+      }
+    ],
+    expectedRevision: 'rev-1',
+    ...ownedDeps({
+      setDisplayElementOrder: async (endpoint, orderedIds) => {
+        orderCall = { endpoint, orderedIds };
+        return { ok: true, data: { changed: true } };
+      }
+    })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.applyPath, 'owned_direct_commands');
+  assert.equal(res.directExecuted, 1);
+  assert.deepEqual(orderCall.orderedIds, ['Lyrics', 'AllModels', 'MegaTree']);
+});
+
+test('orchestrator applies timing and update commands directly when no create batch exists', async () => {
+  const calls = [];
+  const res = await validateAndApplyPlan({
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: [
+      { id: 'timing.track.create', cmd: 'timing.createTrack', params: { trackName: 'XD: Revision Timing', replaceIfExists: true } },
+      {
+        id: 'timing.marks.insert',
+        dependsOn: ['timing.track.create'],
+        cmd: 'timing.insertMarks',
+        params: {
+          trackName: 'XD: Revision Timing',
+          marks: [
+            { label: 'Chorus', startMs: 0, endMs: 1000 },
+            { label: 'Verse', startMs: 1000, endMs: 2000 }
+          ]
+        }
+      },
+      {
+        id: 'effect.1',
+        dependsOn: ['timing.marks.insert'],
+        cmd: 'effects.update',
+        params: {
+          modelName: 'Star',
+          layerIndex: 0,
+          startMs: 0,
+          endMs: 2000,
+          effectName: 'On',
+          newEffectName: 'Shimmer',
+          newStartMs: 0,
+          newEndMs: 1000
+        }
+      }
+    ],
+    expectedRevision: 'rev-1',
+    ...ownedDeps({
+      createTimingTrack: async (_endpoint, params) => {
+        calls.push(['createTimingTrack', params.trackName]);
+        return { ok: true };
+      },
+      insertTimingMarks: async (_endpoint, params) => {
+        calls.push(['insertTimingMarks', params.trackName, params.marks.length]);
+        return { ok: true, data: { addedMarkCount: params.marks.length } };
+      },
+      updateEffect: async (_endpoint, params) => {
+        calls.push(['updateEffect', params.element, params.newEffectName]);
+        return { data: { jobId: 'owned-job-update-direct' } };
+      }
+    })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.applyPath, 'owned_direct_commands');
+  assert.deepEqual(calls, [
+    ['createTimingTrack', 'XD: Revision Timing'],
+    ['insertTimingMarks', 'XD: Revision Timing', 2],
+    ['updateEffect', 'Star', 'Shimmer']
+  ]);
+});
+
+test('orchestrator applies batch plan plus direct layer edits in command order', async () => {
+  const calls = [];
+  const res = await validateAndApplyPlan({
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: [
+      ...compressibleCommands(),
+      {
+        id: 'effect.update.1',
+        dependsOn: ['effect.1'],
+        cmd: 'effects.update',
+        params: {
+          modelName: 'Snowman',
+          layerIndex: 0,
+          startMs: 1000,
+          endMs: 2000,
+          effectName: 'Color Wash',
+          newLayerIndex: 1,
+          newStartMs: 1000,
+          newEndMs: 2200
+        }
+      },
+      {
+        id: 'layer.reorder.1',
+        dependsOn: ['effect.update.1'],
+        cmd: 'effects.reorderLayer',
+        params: { modelName: 'Snowman', fromLayerIndex: 1, toLayerIndex: 0 }
+      },
+      {
+        id: 'layer.compact.1',
+        dependsOn: ['layer.reorder.1'],
+        cmd: 'effects.compactLayers',
+        params: { modelName: 'Snowman' }
+      }
+    ],
+    expectedRevision: 'rev-1',
+    ...ownedDeps({
+      applySequencingBatchPlan: async () => {
+        calls.push('batch');
+        return { data: { jobId: 'owned-job-batch-1' } };
+      },
+      updateEffect: async (_endpoint, params) => {
+        calls.push(['update', params]);
+        return { data: { jobId: 'owned-job-update-1' } };
+      },
+      reorderEffectLayer: async (_endpoint, params) => {
+        calls.push(['reorder', params]);
+        return { data: { jobId: 'owned-job-reorder-1' } };
+      },
+      compactEffectLayers: async (_endpoint, params) => {
+        calls.push(['compact', params]);
+        return { data: { jobId: 'owned-job-compact-1' } };
+      }
+    })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.applyPath, 'owned_batch_plan_plus_direct');
+  assert.equal(res.directExecuted, 3);
+  assert.equal(calls[0], 'batch');
+  assert.deepEqual(calls[1], ['update', {
+    element: 'Snowman',
+    layer: 0,
+    startMs: 1000,
+    endMs: 2000,
+    effectName: 'Color Wash',
+    newLayer: 1,
+    newStartMs: 1000,
+    newEndMs: 2200
+  }]);
+  assert.deepEqual(calls[2], ['reorder', { element: 'Snowman', fromLayer: 1, toLayer: 0 }]);
+  assert.deepEqual(calls[3], ['compact', { element: 'Snowman' }]);
+});
+
 test('orchestrator fails closed when owned health is unavailable', async () => {
   const res = await validateAndApplyPlan({
     endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',

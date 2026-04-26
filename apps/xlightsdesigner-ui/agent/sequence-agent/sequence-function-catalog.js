@@ -59,6 +59,12 @@ export const SEQUENCE_FUNCTION_CATALOG = {
     requiredCapabilities: ["effects.deleteLayer"],
     writeScope: "target"
   },
+  "effects.reorderLayer": {
+    id: "effects.reorder_layer",
+    category: "effects",
+    requiredCapabilities: ["effects.reorderLayer"],
+    writeScope: "target"
+  },
   "effects.compactLayers": {
     id: "effects.compact_layers",
     category: "effects",

@@ -856,16 +856,346 @@ function hasReplacementIntent({ sourceLines = [], executionStrategy = {}, scope 
   return passScope === "replacement_pass";
 }
 
+function hasExistingEffectEditIntent({ sourceLines = [], executionStrategy = {}, scope = {} } = {}) {
+  const joined = [
+    ...normArray(sourceLines),
+    normText(scope?.goal),
+    normText(executionStrategy?.implementationMode),
+    normText(executionStrategy?.passScope)
+  ].join(" ").toLowerCase();
+  return /\b(change|update|modify|adjust|revise|tweak|replace|rework|edit)\b/.test(joined);
+}
+
+function hasExistingEffectDeleteIntent({ sourceLines = [], executionStrategy = {}, scope = {} } = {}) {
+  const joined = [
+    ...normArray(sourceLines),
+    normText(scope?.goal),
+    normText(executionStrategy?.implementationMode),
+    normText(executionStrategy?.passScope)
+  ].join(" ").toLowerCase();
+  return /\b(delete|remove|clear|erase|drop|cut)\b/.test(joined);
+}
+
+function inferExistingLayerReorderIntent({ sourceLines = [], executionStrategy = {}, scope = {} } = {}) {
+  const joined = [
+    ...normArray(sourceLines),
+    normText(scope?.goal),
+    normText(executionStrategy?.implementationMode),
+    normText(executionStrategy?.passScope)
+  ].join(" ").toLowerCase();
+  if (!/\b(layer|layers)\b/.test(joined)) return null;
+  if (!/\b(move|reorder|place|put|send|shift)\b/.test(joined)) return null;
+  const exact = joined.match(/\blayer\s*(\d+)\b[^.;&\n]{0,60}?\b(?:to|into|onto|at|as)\s*\blayer\s*(\d+)\b/);
+  if (exact) {
+    const fromLayer = Number(exact[1]);
+    const toLayer = Number(exact[2]);
+    if (Number.isInteger(fromLayer) && Number.isInteger(toLayer) && fromLayer >= 0 && toLayer >= 0 && fromLayer !== toLayer) {
+      return { fromLayer, toLayer, relation: "to" };
+    }
+  }
+  const relative = joined.match(/\blayer\s*(\d+)\b[^.;&\n]{0,60}?\b(above|before|below|after)\b[^.;&\n]{0,30}?\blayer\s*(\d+)\b/);
+  if (relative) {
+    const fromLayer = Number(relative[1]);
+    const referenceLayer = Number(relative[3]);
+    if (!Number.isInteger(fromLayer) || !Number.isInteger(referenceLayer) || fromLayer < 0 || referenceLayer < 0) return null;
+    const relation = relative[2];
+    const toLayer = relation === "above" || relation === "before" ? referenceLayer : referenceLayer + 1;
+    if (fromLayer !== toLayer) return { fromLayer, toLayer, relation };
+  }
+  return null;
+}
+
+function supportsCommand(capabilityCommands = [], commandName = "") {
+  const advertised = normArray(capabilityCommands).map((row) => normText(row)).filter(Boolean);
+  return !advertised.length || advertised.includes(commandName);
+}
+
+function normalizeDisplayElementRows(displayElements = []) {
+  return normArray(displayElements)
+    .map((row) => ({
+      id: normText(row?.id || row?.name),
+      type: normText(row?.type).toLowerCase()
+    }))
+    .filter((row) => row.id);
+}
+
+function escapeRegExpText(value = "") {
+  return normText(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function inferExplicitDisplayOrderIntent({ sourceLines = [], scope = {}, executionStrategy = {}, displayElements = [] } = {}) {
+  const rows = normalizeDisplayElementRows(displayElements);
+  if (!rows.length) return null;
+  const modelIds = rows.filter((row) => row.type !== "timing").map((row) => row.id);
+  if (modelIds.length < 2) return null;
+  const joined = [
+    ...normArray(sourceLines),
+    normText(scope?.goal),
+    normText(executionStrategy?.implementationMode),
+    normText(executionStrategy?.passScope)
+  ].join(" ").toLowerCase();
+  if (!/\b(display\s*order|model\s*order|render\s*order|vertical|above|below|before|after|move|reorder|place|put)\b/.test(joined)) {
+    return null;
+  }
+  const lowerIds = modelIds.map((id) => ({ id, lower: id.toLowerCase() }));
+  for (const target of lowerIds) {
+    for (const reference of lowerIds) {
+      if (target.id === reference.id) continue;
+      const targetPattern = escapeRegExpText(target.lower);
+      const referencePattern = escapeRegExpText(reference.lower);
+      const targetFirst = new RegExp(`\\b(?:move|reorder|place|put|send)?\\s*${targetPattern}\\b[^.;&\\n]{0,80}?\\b(above|before|below|after)\\b[^.;&\\n]{0,40}?\\b${referencePattern}\\b`, "i");
+      const direct = joined.match(targetFirst);
+      if (direct) {
+        const relation = normText(direct[1]).toLowerCase();
+        return {
+          targetId: target.id,
+          referenceId: reference.id,
+          placement: relation === "above" || relation === "before" ? "before" : "after",
+          relation
+        };
+      }
+    }
+  }
+  for (const target of lowerIds) {
+    for (const reference of lowerIds) {
+      if (target.id === reference.id) continue;
+      const targetPattern = escapeRegExpText(target.lower);
+      const referencePattern = escapeRegExpText(reference.lower);
+      const referenceFirst = new RegExp(`\\b${referencePattern}\\b[^.;&\\n]{0,80}?\\b(?:should\\s+be\\s+)?(below|after|above|before)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
+      const reverse = joined.match(referenceFirst);
+      if (reverse) {
+        const relation = normText(reverse[1]).toLowerCase();
+        return {
+          targetId: target.id,
+          referenceId: reference.id,
+          placement: relation === "below" || relation === "after" ? "before" : "after",
+          relation
+        };
+      }
+    }
+  }
+  return null;
+}
+
+function buildExplicitDisplayOrderCommand({ displayElements = [], orderIntent = null } = {}) {
+  const rows = normalizeDisplayElementRows(displayElements);
+  if (!rows.length || !orderIntent) return null;
+  const timingIds = rows.filter((row) => row.type === "timing").map((row) => row.id);
+  const modelIds = rows.filter((row) => row.type !== "timing").map((row) => row.id);
+  const targetId = normText(orderIntent.targetId);
+  const referenceId = normText(orderIntent.referenceId);
+  if (!targetId || !referenceId || targetId === referenceId) return null;
+  if (!modelIds.includes(targetId) || !modelIds.includes(referenceId)) return null;
+  const withoutTarget = modelIds.filter((id) => id !== targetId);
+  const referenceIndex = withoutTarget.indexOf(referenceId);
+  if (referenceIndex < 0) return null;
+  const insertIndex = orderIntent.placement === "after" ? referenceIndex + 1 : referenceIndex;
+  const reorderedModels = withoutTarget.slice(0, insertIndex)
+    .concat(targetId, withoutTarget.slice(insertIndex));
+  const orderedIds = timingIds.concat(reorderedModels);
+  const currentIds = rows.map((row) => row.id);
+  if (orderedIds.length === currentIds.length && orderedIds.every((id, idx) => id === currentIds[idx])) {
+    return null;
+  }
+  return {
+    id: "display.order.explicit",
+    cmd: "sequencer.setDisplayElementOrder",
+    params: {
+      orderedIds
+    },
+    intent: {
+      displayOrderPolicy: {
+        explicitOrderRequest: true,
+        targetId,
+        referenceId,
+        placement: orderIntent.placement,
+        relation: normText(orderIntent.relation)
+      }
+    }
+  };
+}
+
+function applyExplicitDisplayOrderPlanning({
+  commands = [],
+  sourceLines = [],
+  executionStrategy = {},
+  scope = {},
+  displayElements = [],
+  capabilityCommands = [],
+  warnings = []
+} = {}) {
+  if (!supportsCommand(capabilityCommands, "sequencer.setDisplayElementOrder")) return commands;
+  const orderIntent = inferExplicitDisplayOrderIntent({ sourceLines, executionStrategy, scope, displayElements });
+  const command = buildExplicitDisplayOrderCommand({ displayElements, orderIntent });
+  if (!command) return commands;
+  warnings.push(`Applying explicit display order request: ${orderIntent.targetId} ${orderIntent.placement} ${orderIntent.referenceId}.`);
+  return [command];
+}
+
+function chooseExistingEffectForEdit(overlaps = [], plannedLayerIndex = 0) {
+  const sorted = normArray(overlaps)
+    .slice()
+    .sort((a, b) => {
+      const aLayerDistance = Math.abs(Number(a?.layerIndex) - Number(plannedLayerIndex));
+      const bLayerDistance = Math.abs(Number(b?.layerIndex) - Number(plannedLayerIndex));
+      return aLayerDistance - bLayerDistance ||
+        Number(a?.layerIndex) - Number(b?.layerIndex) ||
+        Number(a?.startMs) - Number(b?.startMs) ||
+        Number(a?.endMs) - Number(b?.endMs);
+    });
+  return sorted[0] || null;
+}
+
+function buildEffectUpdateCommandFromCreate({
+  command = {},
+  existingEffect = null,
+  replacementAuthorized = false,
+  overlaps = []
+} = {}) {
+  const params = command?.params && typeof command.params === "object" ? command.params : {};
+  if (!existingEffect) return command;
+  const nextLayerIndex = Number(params.layerIndex);
+  const nextStartMs = Number(params.startMs);
+  const nextEndMs = Number(params.endMs);
+  const nextEffectName = normText(params.effectName);
+  if (!Number.isFinite(nextLayerIndex) || !Number.isFinite(nextStartMs) || !Number.isFinite(nextEndMs) || !nextEffectName) {
+    return command;
+  }
+  const selectorEffectName = normText(existingEffect.effectName);
+  return {
+    ...command,
+    id: normText(command?.id) || "effect.update.existing",
+    cmd: "effects.update",
+    params: {
+      modelName: normText(existingEffect.targetId || params.modelName),
+      layerIndex: Number(existingEffect.layerIndex),
+      startMs: Number(existingEffect.startMs),
+      endMs: Number(existingEffect.endMs),
+      ...(selectorEffectName ? { effectName: selectorEffectName } : {}),
+      newLayerIndex: nextLayerIndex,
+      newStartMs: nextStartMs,
+      newEndMs: nextEndMs,
+      newEffectName: nextEffectName,
+      settings: params.settings ?? "",
+      palette: params.palette ?? ""
+    },
+    intent: {
+      ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
+      existingSequencePolicy: {
+        replacementAuthorized,
+        preserveExistingUnlessScoped: true,
+        emittedEditCommand: true,
+        overlapCount: overlaps.length,
+        originalLayerIndex: Number(existingEffect.layerIndex),
+        plannedLayerIndex: nextLayerIndex,
+        overlappingEffectNames: Array.from(new Set(overlaps.map((effect) => effect.effectName).filter(Boolean))).slice(0, 5)
+      }
+    }
+  };
+}
+
+function buildEffectDeleteCommandFromCreate({
+  command = {},
+  existingEffect = null,
+  overlaps = []
+} = {}) {
+  if (!existingEffect) return command;
+  const selectorEffectName = normText(existingEffect.effectName);
+  return {
+    ...command,
+    id: normText(command?.id) || "effect.delete.existing",
+    cmd: "effects.delete",
+    params: {
+      modelName: normText(existingEffect.targetId),
+      layerIndex: Number(existingEffect.layerIndex),
+      startMs: Number(existingEffect.startMs),
+      endMs: Number(existingEffect.endMs),
+      ...(selectorEffectName ? { effectName: selectorEffectName } : {})
+    },
+    intent: {
+      ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
+      existingSequencePolicy: {
+        replacementAuthorized: true,
+        preserveExistingUnlessScoped: false,
+        emittedDeleteCommand: true,
+        overlapCount: overlaps.length,
+        originalLayerIndex: Number(existingEffect.layerIndex),
+        plannedLayerIndex: Number(existingEffect.layerIndex),
+        overlappingEffectNames: Array.from(new Set(overlaps.map((effect) => effect.effectName).filter(Boolean))).slice(0, 5)
+      }
+    }
+  };
+}
+
+function buildEffectReorderLayerCommandFromCreate({
+  command = {},
+  modelName = "",
+  layerReorder = null,
+  overlaps = []
+} = {}) {
+  const fromLayer = Number(layerReorder?.fromLayer);
+  const toLayer = Number(layerReorder?.toLayer);
+  if (!normText(modelName) || !Number.isInteger(fromLayer) || !Number.isInteger(toLayer) || fromLayer < 0 || toLayer < 0 || fromLayer === toLayer) {
+    return command;
+  }
+  return {
+    ...command,
+    id: normText(command?.id) || `effects.reorderLayer:${normText(modelName)}:${fromLayer}:${toLayer}`,
+    cmd: "effects.reorderLayer",
+    params: {
+      modelName: normText(modelName),
+      fromLayerIndex: fromLayer,
+      toLayerIndex: toLayer
+    },
+    intent: {
+      ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
+      existingSequencePolicy: {
+        replacementAuthorized: true,
+        preserveExistingUnlessScoped: false,
+        emittedLayerReorderCommand: true,
+        relation: normText(layerReorder?.relation),
+        overlapCount: overlaps.length,
+        originalLayerIndex: fromLayer,
+        plannedLayerIndex: toLayer,
+        movedEffects: overlaps
+          .filter((effect) => Number(effect.layerIndex) === fromLayer)
+          .map((effect) => ({
+            effectName: normText(effect.effectName),
+            startMs: Number(effect.startMs),
+            endMs: Number(effect.endMs)
+          }))
+          .filter((effect) => effect.effectName && Number.isFinite(effect.startMs) && Number.isFinite(effect.endMs) && effect.endMs > effect.startMs)
+          .slice(0, 5),
+        movedEffectNames: Array.from(new Set(overlaps
+          .filter((effect) => Number(effect.layerIndex) === fromLayer)
+          .map((effect) => effect.effectName)
+          .filter(Boolean))).slice(0, 5),
+        overlappingEffectNames: Array.from(new Set(overlaps.map((effect) => effect.effectName).filter(Boolean))).slice(0, 5)
+      }
+    }
+  };
+}
+
 function applyExistingSequencePreservation({
   commands = [],
   currentSequenceContext = null,
   sourceLines = [],
   executionStrategy = {},
   scope = {},
+  capabilityCommands = [],
   warnings = []
 } = {}) {
   const existingEffects = currentSequenceEffectRows(currentSequenceContext);
   const replacementAuthorized = hasReplacementIntent({ sourceLines, executionStrategy, scope });
+  const existingEditRequested = hasExistingEffectEditIntent({ sourceLines, executionStrategy, scope });
+  const existingDeleteRequested = hasExistingEffectDeleteIntent({ sourceLines, executionStrategy, scope });
+  const layerReorderRequested = inferExistingLayerReorderIntent({ sourceLines, executionStrategy, scope });
+  const editExistingAuthorized = existingEditRequested &&
+    supportsCommand(capabilityCommands, "effects.update");
+  const deleteExistingAuthorized = existingDeleteRequested &&
+    supportsCommand(capabilityCommands, "effects.delete");
+  const layerReorderAuthorized = layerReorderRequested &&
+    supportsCommand(capabilityCommands, "effects.reorderLayer");
   if (!existingEffects.length) return commands;
   return normArray(commands).map((command) => {
     if (normText(command?.cmd) !== "effects.create") return command;
@@ -885,11 +1215,45 @@ function applyExistingSequencePreservation({
           ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
           existingSequencePolicy: {
             replacementAuthorized,
+            editExistingRequested: existingEditRequested,
+            layerReorderRequested: Boolean(layerReorderRequested),
             preserveExistingUnlessScoped: true,
             overlapCount: 0
           }
         }
       };
+    }
+    if (layerReorderAuthorized) {
+      const fromLayer = Number(layerReorderRequested.fromLayer);
+      const modelHasSourceLayer = existingEffects.some((effect) => effect.targetId === modelName && Number(effect.layerIndex) === fromLayer);
+      if (modelHasSourceLayer) {
+        warnings.push(`Reordering existing layers on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.reorderLayer from layer ${fromLayer} to layer ${layerReorderRequested.toLayer}.`);
+        return buildEffectReorderLayerCommandFromCreate({
+          command,
+          modelName,
+          layerReorder: layerReorderRequested,
+          overlaps
+        });
+      }
+    }
+    if (deleteExistingAuthorized) {
+      const existingEffect = chooseExistingEffectForEdit(overlaps, layerIndex);
+      warnings.push(`Deleting existing effect on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.delete on layer ${existingEffect.layerIndex}.`);
+      return buildEffectDeleteCommandFromCreate({
+        command,
+        existingEffect,
+        overlaps
+      });
+    }
+    if (editExistingAuthorized) {
+      const existingEffect = chooseExistingEffectForEdit(overlaps, layerIndex);
+      warnings.push(`Editing existing effect on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.update on layer ${existingEffect.layerIndex}.`);
+      return buildEffectUpdateCommandFromCreate({
+        command,
+        existingEffect,
+        replacementAuthorized: replacementAuthorized || existingEditRequested,
+        overlaps
+      });
     }
     const maxExistingLayer = Math.max(...overlaps.map((effect) => effect.layerIndex));
     const nextLayerIndex = replacementAuthorized ? layerIndex : Math.max(layerIndex, maxExistingLayer + 1);
@@ -906,6 +1270,8 @@ function applyExistingSequencePreservation({
         ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
         existingSequencePolicy: {
           replacementAuthorized,
+          editExistingRequested: existingEditRequested,
+          layerReorderRequested: Boolean(layerReorderRequested),
           preserveExistingUnlessScoped: true,
           overlapCount: overlaps.length,
           originalLayerIndex: layerIndex,
@@ -2042,14 +2408,24 @@ function stageCommandGraphSynthesis({
       sourceLines,
       executionStrategy,
       scope,
+      capabilityCommands,
+      warnings
+    });
+    const orderedCommands = applyExplicitDisplayOrderPlanning({
+      commands: preservedCommands,
+      sourceLines,
+      executionStrategy,
+      scope,
+      displayElements,
+      capabilityCommands,
       warnings
     });
     return {
-      commands: decorateCommandsWithDesignMetadata(preservedCommands, executionStrategy),
+      commands: decorateCommandsWithDesignMetadata(orderedCommands, executionStrategy),
       executionLines: [],
-      estimatedImpact: Number(placementGraph.estimatedImpact || 0),
+      estimatedImpact: orderedCommands.length,
       warnings,
-      validationReady: Boolean(placementGraph.validationReady),
+      validationReady: Boolean(orderedCommands.length),
       detail: `placementCommands=${Array.isArray(placementGraph.commands) ? placementGraph.commands.length : 0} capabilities=${capabilityGate.requiredCapabilities.length}`
     };
   }
@@ -2129,9 +2505,19 @@ function stageCommandGraphSynthesis({
     sourceLines: executionLines,
     executionStrategy,
     scope,
+    capabilityCommands,
     warnings
   });
-  const capabilityGate = evaluateSequencePlanCapabilities({ commands: preservedCommandsOut, capabilityCommands });
+  const displayOrderedCommandsOut = applyExplicitDisplayOrderPlanning({
+    commands: preservedCommandsOut,
+    sourceLines: executionLines,
+    executionStrategy,
+    scope,
+    displayElements,
+    capabilityCommands,
+    warnings
+  });
+  const capabilityGate = evaluateSequencePlanCapabilities({ commands: displayOrderedCommandsOut, capabilityCommands });
   if (!capabilityGate.ok) {
     const err = new Error(capabilityGate.errors.join("; ") || "capability gate failed");
     err.failureCategory = "capability";
@@ -2140,7 +2526,7 @@ function stageCommandGraphSynthesis({
   if (Array.isArray(capabilityGate.warnings) && capabilityGate.warnings.length) {
     warnings.push(...capabilityGate.warnings);
   }
-  const effectCompat = evaluateEffectCommandCompatibility({ commands: preservedCommandsOut, effectCatalog });
+  const effectCompat = evaluateEffectCommandCompatibility({ commands: displayOrderedCommandsOut, effectCatalog });
   if (!effectCompat.ok) {
     const err = new Error(effectCompat.errors.join("; ") || "effect compatibility gate failed");
     err.failureCategory = "validate";
@@ -2150,12 +2536,14 @@ function stageCommandGraphSynthesis({
     warnings.push(...effectCompat.warnings);
   }
   return {
-    commands: preservedCommandsOut,
+    commands: displayOrderedCommandsOut,
     executionLines,
-    estimatedImpact: estimateImpactCount(executionLines),
+    estimatedImpact: displayOrderedCommandsOut.length === 1 && normText(displayOrderedCommandsOut[0]?.cmd) === "sequencer.setDisplayElementOrder"
+      ? 1
+      : estimateImpactCount(executionLines),
     warnings,
-    validationReady: Array.isArray(preservedCommandsOut) && preservedCommandsOut.length > 0,
-    detail: `commands=${Array.isArray(preservedCommandsOut) ? preservedCommandsOut.length : 0} capabilities=${capabilityGate.requiredCapabilities.length}`
+    validationReady: Array.isArray(displayOrderedCommandsOut) && displayOrderedCommandsOut.length > 0,
+    detail: `commands=${Array.isArray(displayOrderedCommandsOut) ? displayOrderedCommandsOut.length : 0} capabilities=${capabilityGate.requiredCapabilities.length}`
   };
 }
 

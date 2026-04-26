@@ -9,6 +9,7 @@ const WRITE_CMDS = new Set([
   "effects.update",
   "effects.delete",
   "effects.deleteLayer",
+  "effects.reorderLayer",
   "effects.compactLayers",
   "effects.setRenderStyle",
   "effects.setPalette",

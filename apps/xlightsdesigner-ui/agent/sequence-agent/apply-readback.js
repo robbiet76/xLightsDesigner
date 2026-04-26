@@ -39,6 +39,151 @@ function finiteNumber(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function intNumber(value, fallback = null) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.round(n) : fallback;
+}
+
+function normalizeElementName(params = {}) {
+  return str(params.modelName || params.element || params.targetId);
+}
+
+function normalizeEffectRow(params = {}) {
+  const modelName = normalizeElementName(params);
+  const layerIndex = intNumber(params.layerIndex ?? params.layer, null);
+  const startMs = intNumber(params.startMs, null);
+  const endMs = intNumber(params.endMs, null);
+  const effectName = str(params.effectName);
+  if (!modelName || layerIndex === null || startMs === null || endMs === null || endMs < startMs || !effectName) {
+    return null;
+  }
+  return {
+    modelName,
+    layerIndex,
+    startMs,
+    endMs,
+    effectName
+  };
+}
+
+function effectMatchesSelector(effect = {}, params = {}) {
+  const selectorModel = normalizeElementName(params);
+  if (selectorModel && effect.modelName !== selectorModel) return false;
+  const selectorLayer = intNumber(params.layerIndex ?? params.layer, null);
+  if (selectorLayer !== null && effect.layerIndex !== selectorLayer) return false;
+  const selectorStart = intNumber(params.startMs, null);
+  if (selectorStart !== null && effect.startMs !== selectorStart) return false;
+  const selectorEnd = intNumber(params.endMs, null);
+  if (selectorEnd !== null && effect.endMs !== selectorEnd) return false;
+  const selectorEffect = str(params.effectName);
+  if (selectorEffect && effect.effectName !== selectorEffect) return false;
+  return true;
+}
+
+function applyLayerReorder(effects = [], modelName = "", fromLayer = null, toLayer = null) {
+  if (!modelName || fromLayer === null || toLayer === null || fromLayer === toLayer) return effects;
+  return effects.map((effect) => {
+    if (effect.modelName !== modelName) return effect;
+    let nextLayer = effect.layerIndex;
+    if (nextLayer === fromLayer) {
+      nextLayer = toLayer;
+    } else if (fromLayer < toLayer && nextLayer > fromLayer && nextLayer <= toLayer) {
+      nextLayer -= 1;
+    } else if (fromLayer > toLayer && nextLayer >= toLayer && nextLayer < fromLayer) {
+      nextLayer += 1;
+    }
+    return nextLayer === effect.layerIndex ? effect : { ...effect, layerIndex: nextLayer };
+  });
+}
+
+function applyLayerCompact(effects = [], modelName = "") {
+  if (!modelName) return effects;
+  const occupied = Array.from(new Set(
+    effects
+      .filter((effect) => effect.modelName === modelName)
+      .map((effect) => effect.layerIndex)
+      .filter((layerIndex) => Number.isInteger(layerIndex) && layerIndex >= 0)
+  )).sort((a, b) => a - b);
+  const layerMap = new Map(occupied.map((layerIndex, index) => [layerIndex, index]));
+  return effects.map((effect) => {
+    if (effect.modelName !== modelName || !layerMap.has(effect.layerIndex)) return effect;
+    const nextLayer = layerMap.get(effect.layerIndex);
+    return nextLayer === effect.layerIndex ? effect : { ...effect, layerIndex: nextLayer };
+  });
+}
+
+function buildExpectedFinalEffects(commands = []) {
+  let effects = [];
+  for (const step of arr(commands)) {
+    const cmd = str(step?.cmd);
+    const params = step?.params && typeof step.params === "object" ? step.params : {};
+    if (cmd === "effects.create") {
+      const effect = normalizeEffectRow(params);
+      if (effect) effects.push({ ...effect, sourceStep: step });
+      continue;
+    }
+    if (cmd === "effects.update") {
+      const matchIndex = effects.findIndex((effect) => effectMatchesSelector(effect, params));
+      if (matchIndex < 0) {
+        const existing = normalizeEffectRow(params);
+        if (existing) {
+          effects.push({
+            modelName: normalizeElementName(params) || existing.modelName,
+            layerIndex: intNumber(params.newLayerIndex ?? params.newLayer ?? params.targetLayerIndex ?? params.targetLayer, existing.layerIndex),
+            startMs: intNumber(params.newStartMs ?? params.targetStartMs, existing.startMs),
+            endMs: intNumber(params.newEndMs ?? params.targetEndMs, existing.endMs),
+            effectName: str(params.newEffectName) || existing.effectName,
+            sourceStep: step
+          });
+        }
+        continue;
+      }
+      const updated = {
+        ...effects[matchIndex],
+        modelName: normalizeElementName(params) || effects[matchIndex].modelName,
+        layerIndex: intNumber(params.newLayerIndex ?? params.newLayer ?? params.targetLayerIndex ?? params.targetLayer, effects[matchIndex].layerIndex),
+        startMs: intNumber(params.newStartMs ?? params.targetStartMs, effects[matchIndex].startMs),
+        endMs: intNumber(params.newEndMs ?? params.targetEndMs, effects[matchIndex].endMs),
+        effectName: str(params.newEffectName) || effects[matchIndex].effectName,
+        sourceStep: {
+          ...effects[matchIndex].sourceStep,
+          updatedBy: step
+        }
+      };
+      effects[matchIndex] = updated;
+      continue;
+    }
+    if (cmd === "effects.delete") {
+      effects = effects.filter((effect) => !effectMatchesSelector(effect, params));
+      continue;
+    }
+    if (cmd === "effects.deleteLayer") {
+      const modelName = normalizeElementName(params);
+      const layerIndex = intNumber(params.layerIndex ?? params.layer, null);
+      if (!modelName || layerIndex === null) continue;
+      effects = effects
+        .filter((effect) => !(effect.modelName === modelName && effect.layerIndex === layerIndex))
+        .map((effect) => effect.modelName === modelName && effect.layerIndex > layerIndex
+          ? { ...effect, layerIndex: effect.layerIndex - 1 }
+          : effect);
+      continue;
+    }
+    if (cmd === "effects.reorderLayer") {
+      effects = applyLayerReorder(
+        effects,
+        normalizeElementName(params),
+        intNumber(params.fromLayerIndex ?? params.fromLayer, null),
+        intNumber(params.toLayerIndex ?? params.toLayer, null)
+      );
+      continue;
+    }
+    if (cmd === "effects.compactLayers") {
+      effects = applyLayerCompact(effects, normalizeElementName(params));
+    }
+  }
+  return effects;
+}
+
 function preservationPolicyForStep(step = {}) {
   const policy = step?.intent?.existingSequencePolicy;
   if (!policy || typeof policy !== "object" || Array.isArray(policy)) return null;
@@ -78,11 +223,10 @@ function buildReadbackDesignContext(planMetadata = {}, sequencingDesignHandoff =
 }
 
 function collectAppliedEffectTargets(commands = []) {
-  return arr(commands)
-    .filter((step) => str(step?.cmd) === "effects.create")
-    .map((step) => ({
-      targetId: str(step?.params?.modelName),
-      effectName: str(step?.params?.effectName)
+  return buildExpectedFinalEffects(commands)
+    .map((effect) => ({
+      targetId: str(effect?.modelName),
+      effectName: str(effect?.effectName)
     }))
     .filter((row) => row.targetId && row.effectName);
 }
@@ -171,16 +315,15 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
     designAlignment: {},
     designChecks: []
   };
+  const expectedFinalEffects = buildExpectedFinalEffects(commands);
   const plannedEffectKeys = new Set(
-    commands
-      .filter((step) => String(step?.cmd || "").trim() === "effects.create")
-      .map((step) => effectPlanKey(
-        step?.params?.modelName,
-        step?.params?.layerIndex,
-        step?.params?.startMs,
-        step?.params?.endMs,
-        step?.params?.effectName
-      ))
+    expectedFinalEffects.map((effect) => effectPlanKey(
+      effect.modelName,
+      effect.layerIndex,
+      effect.startMs,
+      effect.endMs,
+      effect.effectName
+    ))
   );
 
   const readbackChecks = [];
@@ -209,8 +352,10 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
       readbackChecks.push((async () => {
         const expectedOrder = params.orderedIds.map((row) => String(row || "").trim()).filter(Boolean);
         const resp = await getDisplayElementOrder(endpoint);
-        const elements = Array.isArray(resp?.data?.elements) ? resp.data.elements : [];
-        const actualOrder = elements.map((row) => String(row?.id || row?.name || "").trim()).filter(Boolean);
+        const sourceRows = Array.isArray(resp?.data?.rows) && resp.data.rows.length
+          ? resp.data.rows
+          : (Array.isArray(resp?.data?.elements) ? resp.data.elements : []);
+        const actualOrder = sourceRows.map((row) => typeof row === "string" ? row : String(row?.id || row?.name || "").trim()).filter(Boolean);
         const ok =
           expectedOrder.length === actualOrder.length &&
           expectedOrder.every((id, idx) => id === actualOrder[idx]);
@@ -222,14 +367,95 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
         };
       })());
     }
-    if (cmd === "effects.create" && String(params.modelName || "").trim() && listEffects) {
-      const modelName = String(params.modelName || "").trim();
+    if (cmd === "effects.delete" && normalizeElementName(params) && listEffects) {
+      readbackChecks.push((async () => {
+        const modelName = normalizeElementName(params);
+        const layerIndex = intNumber(params.layerIndex ?? params.layer, 0);
+        const startMs = intNumber(params.startMs, 0);
+        const endMs = intNumber(params.endMs, startMs);
+        const effectName = str(params.effectName);
+        const resp = await listEffects(endpoint, { modelName, layerIndex, startMs, endMs });
+        const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
+        const present = effects.some((row) =>
+          (!effectName || str(row?.effectName) === effectName) &&
+          Number(row?.startMs) === startMs &&
+          Number(row?.endMs) === endMs &&
+          Number(row?.layerIndex) === layerIndex
+        );
+        return {
+          kind: "effect-delete",
+          target: `${modelName}@${layerIndex}`,
+          ok: !present,
+          detail: present ? `${effectName || "effect"} still present` : `${effectName || "effect"} absent`
+        };
+      })());
+    }
+    if (cmd === "effects.reorderLayer" && normalizeElementName(params) && listEffects) {
+      const policy = step?.intent?.existingSequencePolicy && typeof step.intent.existingSequencePolicy === "object"
+        ? step.intent.existingSequencePolicy
+        : {};
+      const movedEffectNames = arr(policy?.movedEffectNames).map((row) => str(row)).filter(Boolean);
+      const movedEffects = arr(policy?.movedEffects)
+        .map((row) => ({
+          effectName: str(row?.effectName),
+          startMs: intNumber(row?.startMs, null),
+          endMs: intNumber(row?.endMs, null)
+        }))
+        .filter((row) => row.effectName && row.startMs !== null && row.endMs !== null && row.endMs > row.startMs);
+      if (movedEffectNames.length || movedEffects.length) {
+        readbackChecks.push((async () => {
+          const modelName = normalizeElementName(params);
+          const toLayer = intNumber(params.toLayerIndex ?? params.toLayer, null);
+          if (toLayer === null) {
+            return {
+              kind: "effect-layer-reorder",
+              target: `${modelName}@?`,
+              ok: false,
+              detail: "target layer missing"
+            };
+          }
+          const rowsToVerify = movedEffects.length
+            ? movedEffects
+            : [{ effectName: movedEffectNames[0], startMs: 0, endMs: 1 }];
+          const results = await Promise.all(rowsToVerify.map(async (expected) => {
+            const resp = await listEffects(endpoint, {
+              modelName,
+              layerIndex: toLayer,
+              startMs: expected.startMs,
+              endMs: expected.endMs
+            });
+            const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
+            return effects.some((row) =>
+              Number(row?.layerIndex) === toLayer &&
+              str(row?.effectName) === expected.effectName &&
+              Number(row?.startMs) === expected.startMs &&
+              Number(row?.endMs) === expected.endMs
+            );
+          }));
+          const movedPresent = results.every(Boolean);
+          const expectedNames = rowsToVerify.map((row) => row.effectName).filter(Boolean);
+          return {
+            kind: "effect-layer-reorder",
+            target: `${modelName}@${toLayer}`,
+            ok: movedPresent,
+            detail: movedPresent
+              ? `${expectedNames.join(", ")} moved to layer ${toLayer}`
+              : `${expectedNames.join(", ")} missing from layer ${toLayer}`
+          };
+        })());
+      }
+    }
+  }
+
+  for (const effect of expectedFinalEffects) {
+    if (effect?.modelName && listEffects) {
+      const modelName = effect.modelName;
       const parentId = parseSubmodelParentId(modelName);
-      const layerIndex = Number(params.layerIndex);
-      const startMs = Number(params.startMs);
-      const endMs = Number(params.endMs);
-      const effectName = String(params.effectName || "").trim();
-      const preservationPolicy = preservationPolicyForStep(step);
+      const layerIndex = Number(effect.layerIndex);
+      const startMs = Number(effect.startMs);
+      const endMs = Number(effect.endMs);
+      const effectName = String(effect.effectName || "").trim();
+      const preservationPolicy = preservationPolicyForStep(effect.sourceStep);
       readbackChecks.push((async () => {
         const resp = await listEffects(endpoint, { modelName, layerIndex, startMs, endMs });
         const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
@@ -325,10 +551,10 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
               ok: !broadened,
               detail: broadened ? `${effectName} broadened to overlapping sibling` : "overlapping sibling remained unchanged"
             };
-          })());
-        }
+        })());
       }
     }
+  }
   }
 
   const results = await Promise.allSettled(readbackChecks);

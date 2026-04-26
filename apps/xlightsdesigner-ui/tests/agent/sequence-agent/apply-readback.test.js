@@ -107,6 +107,166 @@ test("apply readback verifies timing, display order, and distributed effects", a
   assert.equal(verification.checks.every((row) => row.ok), true);
 });
 
+test("apply readback accepts display-order wrappers that return string ids", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      cmd: "sequencer.setDisplayElementOrder",
+      params: {
+        orderedIds: ["Lyrics", "AllModels", "MegaTree"]
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    getDisplayElementOrder: async () => ({
+      data: {
+        elements: ["Lyrics", "AllModels", "MegaTree"]
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.ok]),
+    [["display-order", true]]
+  );
+});
+
+test("apply readback verifies final layer placement after update reorder and compact", async () => {
+  const plan = [
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "Star",
+        layerIndex: 0,
+        effectName: "Color Wash",
+        startMs: 0,
+        endMs: 4000
+      }
+    },
+    {
+      cmd: "effects.update",
+      params: {
+        modelName: "Star",
+        layerIndex: 0,
+        startMs: 0,
+        endMs: 4000,
+        effectName: "Color Wash",
+        newLayerIndex: 1,
+        newStartMs: 0,
+        newEndMs: 4500
+      }
+    },
+    {
+      cmd: "effects.reorderLayer",
+      params: {
+        modelName: "Star",
+        fromLayerIndex: 1,
+        toLayerIndex: 0
+      }
+    },
+    {
+      cmd: "effects.compactLayers",
+      params: {
+        modelName: "Star"
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: modelName === "Star" && layerIndex === 0 && startMs === 0 && endMs === 4500
+          ? [{ modelName, layerIndex, startMs, endMs, effectName: "Color Wash" }]
+          : []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [["effect", "Star@0", true]]
+  );
+});
+
+test("apply readback verifies moved effect names after layer reorder", async () => {
+  const plan = [
+    {
+      cmd: "effects.reorderLayer",
+      params: {
+        modelName: "Star",
+        fromLayerIndex: 1,
+        toLayerIndex: 0
+      },
+      intent: {
+        existingSequencePolicy: {
+          emittedLayerReorderCommand: true,
+          movedEffects: [{ effectName: "Shimmer", startMs: 0, endMs: 120000 }],
+          movedEffectNames: ["Shimmer"]
+        }
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: modelName === "Star" && layerIndex === 0 && startMs === 0 && endMs === 120000
+          ? [{ modelName, layerIndex, startMs, endMs, effectName: "Shimmer" }]
+          : []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [["effect-layer-reorder", "Star@0", true]]
+  );
+});
+
+test("apply readback verifies deleted effects are absent from final state", async () => {
+  const plan = [
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "Star",
+        layerIndex: 0,
+        effectName: "Bars",
+        startMs: 0,
+        endMs: 1000
+      }
+    },
+    {
+      cmd: "effects.delete",
+      params: {
+        modelName: "Star",
+        layerIndex: 0,
+        effectName: "Bars",
+        startMs: 0,
+        endMs: 1000
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async () => ({
+      data: {
+        effects: []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [["effect-delete", "Star@0", true]]
+  );
+});
+
 test("apply readback carries design and training context with alignment checks", async () => {
   const plan = [
     {

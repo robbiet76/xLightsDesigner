@@ -307,6 +307,15 @@ export async function executeApplyCore({
       getOwnedJob: deps.getOwnedJob,
       getOwnedHealth: deps.getOwnedHealth,
       getOwnedRevision: deps.getOwnedSequenceRevision,
+      createTimingTrack: deps.createTimingTrack,
+      insertTimingMarks: deps.insertTimingMarks,
+      replaceTimingMarks: deps.replaceTimingMarks,
+      setDisplayElementOrder: deps.setDisplayElementOrder,
+      updateEffect: deps.updateEffect,
+      deleteEffects: deps.deleteEffects,
+      deleteEffectLayer: deps.deleteEffectLayer,
+      reorderEffectLayer: deps.reorderEffectLayer,
+      compactEffectLayers: deps.compactEffectLayers,
       safetyOptions: { maxCommands: 200 }
     });
     lastOrchestrated = orchestrated;

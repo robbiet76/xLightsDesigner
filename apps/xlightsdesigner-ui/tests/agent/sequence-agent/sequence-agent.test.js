@@ -292,6 +292,167 @@ test("sequence_agent keeps scoped layer when replacement is explicitly requested
   assert.equal(out.warnings.some((row) => /Preserving existing effects on MegaTree/i.test(row)), false);
 });
 
+test("sequence_agent emits effect update when edit-capable revision targets an existing layered look", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Change the existing MegaTree layered look to shimmer with tighter timing"
+    },
+    sourceLines: ["Chorus 1 / MegaTree / change existing look to shimmer pulse"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "MegaTree",
+            effectName: "On",
+            layerIndex: 0,
+            startMs: 0,
+            endMs: 120000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.update"]
+  });
+
+  const updateCommand = out.commands.find((row) => row.cmd === "effects.update" && row.params.modelName === "MegaTree");
+  assert.ok(updateCommand);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree"), false);
+  assert.deepEqual(
+    {
+      layerIndex: updateCommand.params.layerIndex,
+      startMs: updateCommand.params.startMs,
+      endMs: updateCommand.params.endMs,
+      effectName: updateCommand.params.effectName,
+      newLayerIndex: updateCommand.params.newLayerIndex,
+      newEffectName: updateCommand.params.newEffectName
+    },
+    {
+      layerIndex: 0,
+      startMs: 0,
+      endMs: 120000,
+      effectName: "On",
+      newLayerIndex: 0,
+      newEffectName: "Shimmer"
+    }
+  );
+  assert.equal(updateCommand.intent.existingSequencePolicy.emittedEditCommand, true);
+  assert.equal(updateCommand.intent.existingSequencePolicy.replacementAuthorized, true);
+  assert.equal(out.warnings.some((row) => /converted .*create into effects.update/i.test(row)), true);
+});
+
+test("sequence_agent emits effect delete when revision asks to remove an existing layered look", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Remove the existing MegaTree shimmer layer from the chorus"
+    },
+    sourceLines: ["Chorus 1 / MegaTree / remove existing shimmer layer"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "MegaTree",
+            effectName: "Shimmer",
+            layerIndex: 1,
+            startMs: 0,
+            endMs: 120000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.delete"]
+  });
+
+  const deleteCommand = out.commands.find((row) => row.cmd === "effects.delete" && row.params.modelName === "MegaTree");
+  assert.ok(deleteCommand);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree"), false);
+  assert.deepEqual(
+    {
+      layerIndex: deleteCommand.params.layerIndex,
+      startMs: deleteCommand.params.startMs,
+      endMs: deleteCommand.params.endMs,
+      effectName: deleteCommand.params.effectName
+    },
+    {
+      layerIndex: 1,
+      startMs: 0,
+      endMs: 120000,
+      effectName: "Shimmer"
+    }
+  );
+  assert.equal(deleteCommand.intent.existingSequencePolicy.emittedDeleteCommand, true);
+  assert.equal(out.warnings.some((row) => /converted .*create into effects.delete/i.test(row)), true);
+});
+
+test("sequence_agent emits layer reorder when revision asks to move an existing layer", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Move the existing MegaTree layer 1 to layer 0 for the chorus"
+    },
+    sourceLines: ["Chorus 1 / MegaTree / move existing layer 1 to layer 0"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 2, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "MegaTree",
+            effectName: "On",
+            layerIndex: 0,
+            startMs: 0,
+            endMs: 120000
+          },
+          {
+            targetId: "MegaTree",
+            effectName: "Shimmer",
+            layerIndex: 1,
+            startMs: 0,
+            endMs: 120000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.reorderLayer"]
+  });
+
+  const reorderCommand = out.commands.find((row) => row.cmd === "effects.reorderLayer" && row.params.modelName === "MegaTree");
+  assert.ok(reorderCommand);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree"), false);
+  assert.deepEqual(
+    {
+      fromLayerIndex: reorderCommand.params.fromLayerIndex,
+      toLayerIndex: reorderCommand.params.toLayerIndex
+    },
+    {
+      fromLayerIndex: 1,
+      toLayerIndex: 0
+    }
+  );
+  assert.equal(reorderCommand.intent.existingSequencePolicy.emittedLayerReorderCommand, true);
+  assert.deepEqual(reorderCommand.intent.existingSequencePolicy.movedEffects, [
+    { effectName: "Shimmer", startMs: 0, endMs: 120000 }
+  ]);
+  assert.equal(out.warnings.some((row) => /converted .*create into effects.reorderLayer/i.test(row)), true);
+});
+
 test("sequence_agent plan metadata carries artistic goal, revision objective, and sequencer brief", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),
@@ -2673,6 +2834,46 @@ test("sequence_agent emits explicit display-element ordering plan for group-firs
     ["Lyrics", "XD: Song Structure", "AllModels", "MegaTree", "Roofline"]
   );
   assert.equal(out.metadata.displayElementCount, 4);
+});
+
+test("sequence_agent emits display-element order only for explicit model order revision", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: { sections: ["Chorus 1"] },
+      briefSeed: { tone: "upbeat" }
+    },
+    intentHandoff: {
+      goal: "Move Roofline above MegaTree in the model order",
+      mode: "revise",
+      scope: {
+        targetIds: ["Roofline", "MegaTree"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Move Roofline above MegaTree in the display order"],
+    displayElements: [
+      { id: "Lyrics", type: "timing" },
+      { id: "MegaTree", type: "model" },
+      { id: "Roofline", type: "model" },
+      { id: "Star", type: "model" }
+    ],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["sequencer.setDisplayElementOrder"]
+  });
+
+  assert.equal(out.validationReady, true);
+  assert.deepEqual(out.commands.map((row) => row.cmd), ["sequencer.setDisplayElementOrder"]);
+  assert.deepEqual(
+    out.commands[0].params.orderedIds,
+    ["Lyrics", "Roofline", "MegaTree", "Star"]
+  );
+  assert.equal(out.commands[0].intent.displayOrderPolicy.explicitOrderRequest, true);
+  assert.equal(out.commands[0].intent.displayOrderPolicy.targetId, "Roofline");
+  assert.equal(out.commands[0].intent.displayOrderPolicy.referenceId, "MegaTree");
+  assert.equal(out.commands[0].intent.displayOrderPolicy.placement, "before");
+  assert.equal(out.warnings.some((row) => /explicit display order request/i.test(row)), true);
 });
 
 test("sequence_agent uses explicit xlights group ids for group-first planning", () => {

@@ -18,6 +18,15 @@ import {
   getOwnedJob,
   getOwnedSequenceRevision,
   applySequencingBatchPlan,
+  createTimingTrack,
+  insertTimingMarks,
+  replaceTimingMarks,
+  setDisplayElementOrder,
+  updateEffect,
+  deleteEffects,
+  deleteEffectLayer,
+  reorderEffectLayer,
+  compactEffectLayers,
   openSequence,
   renderCurrentSequence,
   listEffects
@@ -454,6 +463,15 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     getOwnedJob,
     getOwnedHealth,
     getOwnedRevision: getOwnedSequenceRevision,
+    createTimingTrack,
+    insertTimingMarks,
+    replaceTimingMarks,
+    setDisplayElementOrder,
+    updateEffect,
+    deleteEffects,
+    deleteEffectLayer,
+    reorderEffectLayer,
+    compactEffectLayers,
     safetyOptions: { maxCommands: 200 }
   });
 
@@ -891,11 +909,10 @@ function toFiniteNumber(value) {
   return Number.isFinite(num) ? num : null;
 }
 
-function normalizeCommandsForNativeApply(commands = []) {
+export function normalizeCommandsForNativeApply(commands = []) {
   const rows = Array.isArray(commands) ? commands : [];
-  const filtered = rows.filter((row) => str(row?.cmd) !== 'sequencer.setDisplayElementOrder');
-  const validIds = new Set(filtered.map((row) => str(row?.id)).filter(Boolean));
-  return filtered.map((row) => {
+  const validIds = new Set(rows.map((row) => str(row?.id)).filter(Boolean));
+  return rows.map((row) => {
     const dependsOn = Array.isArray(row?.dependsOn)
       ? row.dependsOn.map((value) => str(value)).filter((value) => validIds.has(value))
       : [];

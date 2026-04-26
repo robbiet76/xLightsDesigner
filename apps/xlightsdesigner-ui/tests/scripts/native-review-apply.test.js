@@ -10,6 +10,7 @@ import {
   createSequenceBackup,
   hydrateAnalysisSectionsFromSelectedTimingTrack,
   hydrateNativeApplyTimingContext,
+  normalizeCommandsForNativeApply,
   renderCurrentSummary,
   summarizePracticalValidation
 } from "../../../../scripts/sequencing/native/apply-native-review.mjs";
@@ -52,6 +53,34 @@ test("renderCurrentSummary prefers rendered sequence path", () => {
     "Rendered xLights sequence: /show/HolidayRoad.xsq"
   );
   assert.equal(renderCurrentSummary({ data: { rendered: true } }), "Rendered current xLights sequence.");
+});
+
+test("normalizeCommandsForNativeApply preserves display-order and layer edit commands", () => {
+  const commands = [
+    { id: "timing.1", cmd: "timing.createTrack", params: { trackName: "XD: Beats" } },
+    {
+      id: "display.order.1",
+      dependsOn: ["timing.1"],
+      cmd: "sequencer.setDisplayElementOrder",
+      params: { orderedIds: ["Lyrics", "AllModels", "MegaTree"] }
+    },
+    {
+      id: "layer.reorder.1",
+      dependsOn: ["display.order.1"],
+      cmd: "effects.reorderLayer",
+      params: { modelName: "MegaTree", fromLayerIndex: 1, toLayerIndex: 0 }
+    }
+  ];
+
+  const out = normalizeCommandsForNativeApply(commands);
+
+  assert.deepEqual(out.map((row) => row.cmd), [
+    "timing.createTrack",
+    "sequencer.setDisplayElementOrder",
+    "effects.reorderLayer"
+  ]);
+  assert.deepEqual(out[1].dependsOn, ["timing.1"]);
+  assert.deepEqual(out[2].dependsOn, ["display.order.1"]);
 });
 
 test("buildNativeApplyVerification attaches practical validation from readback", async () => {

@@ -80,6 +80,213 @@ export function buildOwnedSequencingBatchPlan(commands = []) {
   };
 }
 
+function isOwnedBatchCommand(command = {}) {
+  const cmd = str(command?.cmd);
+  return cmd === "timing.createTrack"
+    || cmd === "timing.insertMarks"
+    || cmd === "timing.replaceMarks"
+    || cmd === "effects.create"
+    || cmd === "effects.alignToTiming";
+}
+
+function directOwnedCommandKind(command = {}) {
+  const cmd = str(command?.cmd);
+  if (
+    cmd === "timing.createTrack"
+    || cmd === "timing.insertMarks"
+    || cmd === "timing.replaceMarks"
+    || cmd === "sequencer.setDisplayElementOrder"
+    || cmd === "effects.update"
+    || cmd === "effects.delete"
+    || cmd === "effects.deleteLayer"
+    || cmd === "effects.reorderLayer"
+    || cmd === "effects.compactLayers"
+  ) {
+    return cmd;
+  }
+  return "";
+}
+
+function normalizeElementParam(params = {}) {
+  return str(params.element || params.modelName || params.targetId);
+}
+
+function optionalIntParam(params = {}, keys = []) {
+  for (const key of keys) {
+    if (params[key] == null || params[key] === "") continue;
+    const value = toInt(params[key], Number.NaN);
+    if (Number.isFinite(value)) return value;
+  }
+  return undefined;
+}
+
+function normalizeEffectSelectorParams(params = {}) {
+  const out = {
+    element: normalizeElementParam(params)
+  };
+  const effectId = optionalIntParam(params, ["effectId", "id"]);
+  const layer = optionalIntParam(params, ["layer", "layerIndex"]);
+  const startMs = optionalIntParam(params, ["startMs"]);
+  const endMs = optionalIntParam(params, ["endMs"]);
+  if (effectId !== undefined) out.effectId = effectId;
+  if (layer !== undefined) out.layer = layer;
+  if (startMs !== undefined) out.startMs = startMs;
+  if (endMs !== undefined) out.endMs = endMs;
+  if (str(params.effectName)) out.effectName = str(params.effectName);
+  return out;
+}
+
+function normalizeEffectUpdateParams(params = {}) {
+  const out = normalizeEffectSelectorParams(params);
+  const newLayer = optionalIntParam(params, ["newLayer", "newLayerIndex", "targetLayer", "targetLayerIndex"]);
+  const newStartMs = optionalIntParam(params, ["newStartMs", "targetStartMs"]);
+  const newEndMs = optionalIntParam(params, ["newEndMs", "targetEndMs"]);
+  if (newLayer !== undefined) out.newLayer = newLayer;
+  if (newStartMs !== undefined) out.newStartMs = newStartMs;
+  if (newEndMs !== undefined) out.newEndMs = newEndMs;
+  if (str(params.newEffectName)) out.newEffectName = str(params.newEffectName);
+  if (params.settings != null) out.settings = params.settings;
+  if (params.palette != null) out.palette = params.palette;
+  return out;
+}
+
+function normalizeLayerCommandParams(params = {}) {
+  const out = {
+    element: normalizeElementParam(params)
+  };
+  const layer = optionalIntParam(params, ["layer", "layerIndex"]);
+  if (layer !== undefined) out.layer = layer;
+  if (params.force != null) out.force = params.force === true || norm(params.force) === "true";
+  return out;
+}
+
+function normalizeReorderLayerParams(params = {}) {
+  const out = {
+    element: normalizeElementParam(params)
+  };
+  const fromLayer = optionalIntParam(params, ["fromLayer", "fromLayerIndex"]);
+  const toLayer = optionalIntParam(params, ["toLayer", "toLayerIndex"]);
+  if (fromLayer !== undefined) out.fromLayer = fromLayer;
+  if (toLayer !== undefined) out.toLayer = toLayer;
+  return out;
+}
+
+function requiredOwnedDirectFns(deps = {}, directCommands = []) {
+  const missing = [];
+  const needed = new Set(directCommands.map((command) => directOwnedCommandKind(command)).filter(Boolean));
+  const requirements = {
+    "timing.createTrack": "createTimingTrack",
+    "timing.insertMarks": "insertTimingMarks",
+    "timing.replaceMarks": "replaceTimingMarks",
+    "sequencer.setDisplayElementOrder": "setDisplayElementOrder",
+    "effects.update": "updateEffect",
+    "effects.delete": "deleteEffects",
+    "effects.deleteLayer": "deleteEffectLayer",
+    "effects.reorderLayer": "reorderEffectLayer",
+    "effects.compactLayers": "compactEffectLayers"
+  };
+  for (const kind of needed) {
+    const fnName = requirements[kind];
+    if (fnName && typeof deps[fnName] !== "function") missing.push(fnName);
+  }
+  return missing;
+}
+
+async function waitForAcceptedOwnedMutation(endpoint, accepted, getOwnedJob) {
+  const jobId = str(accepted?.data?.jobId);
+  if (!jobId) return accepted;
+  const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob);
+  const state = str(settled?.data?.state).toLowerCase();
+  if (state === "failed" || settled?.data?.result?.ok === false) {
+    throw new Error(str(settled?.data?.result?.error?.message || "owned direct command failed"));
+  }
+  return settled;
+}
+
+async function executeOwnedDirectCommand({ endpoint, command, deps }) {
+  const params = command?.params && typeof command.params === "object" ? command.params : {};
+  const kind = directOwnedCommandKind(command);
+  if (kind === "timing.createTrack") {
+    return deps.createTimingTrack(endpoint, params);
+  }
+  if (kind === "timing.insertMarks") {
+    return deps.insertTimingMarks(endpoint, params);
+  }
+  if (kind === "timing.replaceMarks") {
+    return deps.replaceTimingMarks(endpoint, params);
+  }
+  if (kind === "sequencer.setDisplayElementOrder") {
+    const orderedIds = Array.isArray(params.orderedIds) ? params.orderedIds.map((value) => str(value)).filter(Boolean) : [];
+    return waitForAcceptedOwnedMutation(endpoint, await deps.setDisplayElementOrder(endpoint, orderedIds), deps.getOwnedJob);
+  }
+  if (kind === "effects.update") {
+    return waitForAcceptedOwnedMutation(endpoint, await deps.updateEffect(endpoint, normalizeEffectUpdateParams(params)), deps.getOwnedJob);
+  }
+  if (kind === "effects.delete") {
+    return waitForAcceptedOwnedMutation(endpoint, await deps.deleteEffects(endpoint, normalizeEffectSelectorParams(params)), deps.getOwnedJob);
+  }
+  if (kind === "effects.deleteLayer") {
+    return waitForAcceptedOwnedMutation(endpoint, await deps.deleteEffectLayer(endpoint, normalizeLayerCommandParams(params)), deps.getOwnedJob);
+  }
+  if (kind === "effects.reorderLayer") {
+    return waitForAcceptedOwnedMutation(endpoint, await deps.reorderEffectLayer(endpoint, normalizeReorderLayerParams(params)), deps.getOwnedJob);
+  }
+  if (kind === "effects.compactLayers") {
+    return waitForAcceptedOwnedMutation(endpoint, await deps.compactEffectLayers(endpoint, { element: normalizeElementParam(params) }), deps.getOwnedJob);
+  }
+  throw new Error(`Unsupported owned direct command: ${str(command?.cmd)}`);
+}
+
+async function executeOwnedCommandPlan({
+  endpoint,
+  commands,
+  ownedBatchPlan,
+  applySequencingBatchPlan,
+  getOwnedJob,
+  directDeps = {}
+}) {
+  let batchExecuted = false;
+  let jobId = "";
+  let directExecuted = 0;
+  const executeBatch = async () => {
+    if (batchExecuted || !ownedBatchPlan) return;
+    const accepted = await applySequencingBatchPlan(endpoint, ownedBatchPlan);
+    jobId = str(accepted?.data?.jobId);
+    if (!jobId) {
+      throw new Error("owned sequencing.applyBatchPlan returned no jobId");
+    }
+    const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob);
+    const state = str(settled?.data?.state).toLowerCase();
+    if (state === "failed" || settled?.data?.result?.ok === false) {
+      throw new Error(str(settled?.data?.result?.error?.message || "owned sequencing.applyBatchPlan failed"));
+    }
+    batchExecuted = true;
+  };
+
+  for (const command of commands) {
+    if (isOwnedBatchCommand(command) && ownedBatchPlan) {
+      await executeBatch();
+      continue;
+    }
+    if (directOwnedCommandKind(command)) {
+      await executeOwnedDirectCommand({ endpoint, command, deps: { ...directDeps, getOwnedJob } });
+      directExecuted += 1;
+      continue;
+    }
+  }
+  await executeBatch();
+  return {
+    jobId,
+    batchExecuted,
+    directExecuted,
+    applyPath: batchExecuted && directExecuted
+      ? "owned_batch_plan_plus_direct"
+      : batchExecuted
+        ? "owned_batch_plan"
+        : "owned_direct_commands"
+  };
+}
+
 async function waitForOwnedJob(endpoint, jobId, getOwnedJob, attempts = 40, delayMs = 500) {
   for (let idx = 0; idx < attempts; idx += 1) {
     const body = await getOwnedJob(endpoint, jobId);
@@ -108,6 +315,15 @@ export async function validateAndApplyPlan({
   getOwnedJob = null,
   getOwnedHealth = null,
   getOwnedRevision = null,
+  createTimingTrack = null,
+  insertTimingMarks = null,
+  replaceTimingMarks = null,
+  setDisplayElementOrder = null,
+  updateEffect = null,
+  deleteEffects = null,
+  deleteEffectLayer = null,
+  reorderEffectLayer = null,
+  compactEffectLayers = null,
   safetyOptions = {}
 } = {}) {
   if (!endpoint) throw new Error('endpoint is required');
@@ -132,16 +348,31 @@ export async function validateAndApplyPlan({
     };
   }
 
-  const ownedBatchPlan = buildOwnedSequencingBatchPlan(commands);
-  if (!ownedBatchPlan) {
+  const batchCommands = (Array.isArray(commands) ? commands : []).filter((command) => isOwnedBatchCommand(command));
+  const ownedBatchPlan = batchCommands.length ? buildOwnedSequencingBatchPlan(batchCommands) : null;
+  const batchRequiresPlan = batchCommands.some((command) => str(command?.cmd) === "effects.create");
+  const directCommands = (Array.isArray(commands) ? commands : []).filter((command) => {
+    if (!directOwnedCommandKind(command)) return false;
+    return !(ownedBatchPlan && isOwnedBatchCommand(command));
+  });
+  const unsupportedCommands = (Array.isArray(commands) ? commands : []).filter((command) => {
+    if (isOwnedBatchCommand(command)) return false;
+    if (directOwnedCommandKind(command)) return false;
+    return true;
+  });
+  if (unsupportedCommands.length || (batchRequiresPlan && !ownedBatchPlan) || (!ownedBatchPlan && !directCommands.length)) {
     return {
       ok: false,
       stage: "unsupported",
       error: "Command graph cannot be expressed as an owned xLights batch plan.",
-      details: { commandCount: Array.isArray(commands) ? commands.length : 0 }
+      details: {
+        commandCount: Array.isArray(commands) ? commands.length : 0,
+        batchCommandCount: batchCommands.length,
+        unsupportedCommands: unsupportedCommands.map((command) => str(command?.cmd)).filter(Boolean)
+      }
     };
   }
-  if (typeof applySequencingBatchPlan !== "function") {
+  if (ownedBatchPlan && typeof applySequencingBatchPlan !== "function") {
     return {
       ok: false,
       stage: "runtime",
@@ -153,6 +384,25 @@ export async function validateAndApplyPlan({
       ok: false,
       stage: "runtime",
       error: "owned job polling function is required"
+    };
+  }
+  const directDeps = {
+    createTimingTrack,
+    insertTimingMarks,
+    replaceTimingMarks,
+    setDisplayElementOrder,
+    updateEffect,
+    deleteEffects,
+    deleteEffectLayer,
+    reorderEffectLayer,
+    compactEffectLayers
+  };
+  const missingDirectFns = requiredOwnedDirectFns(directDeps, directCommands);
+  if (missingDirectFns.length) {
+    return {
+      ok: false,
+      stage: "runtime",
+      error: `owned direct command functions are required: ${missingDirectFns.join(", ")}`
     };
   }
   let currentRevision = 'unknown';
@@ -206,26 +456,14 @@ export async function validateAndApplyPlan({
   }
 
   try {
-    const accepted = await applySequencingBatchPlan(endpoint, ownedBatchPlan);
-    const jobId = str(accepted?.data?.jobId);
-    if (!jobId) {
-      return {
-        ok: false,
-        stage: "runtime",
-        error: "owned sequencing.applyBatchPlan returned no jobId",
-        details: accepted
-      };
-    }
-    const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob);
-    const state = str(settled?.data?.state).toLowerCase();
-    if (state === "failed") {
-      return {
-        ok: false,
-        stage: "runtime",
-        error: str(settled?.data?.result?.error?.message || "owned sequencing.applyBatchPlan failed"),
-        details: settled
-      };
-    }
+    const execution = await executeOwnedCommandPlan({
+      endpoint,
+      commands: Array.isArray(commands) ? commands : [],
+      ownedBatchPlan,
+      applySequencingBatchPlan,
+      getOwnedJob,
+      directDeps
+    });
     const postRev = typeof getOwnedRevision === 'function'
       ? await getOwnedRevision(endpoint).catch(() => ({ data: { revision: currentRevision } }))
       : { data: { revision: currentRevision } };
@@ -234,11 +472,12 @@ export async function validateAndApplyPlan({
       ok: true,
       stage: "done",
       executedCount: Array.isArray(commands) ? commands.length : 0,
-      jobId,
+      jobId: execution.jobId,
       currentRevision,
       nextRevision,
       warnings: safety.warnings,
-      applyPath: "owned_batch_plan"
+      directExecuted: execution.directExecuted,
+      applyPath: execution.applyPath
     };
   } catch (err) {
     const message = str(err?.message || err);
