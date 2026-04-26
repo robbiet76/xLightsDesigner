@@ -38,6 +38,7 @@ function parseArgs(argv = []) {
     sourceModel: '',
     targetModel: '',
     submodel: '',
+    targetStartMs: null,
     durationMs: 30000,
     frameMs: 50,
     timeoutMs: 120000
@@ -50,6 +51,7 @@ function parseArgs(argv = []) {
     else if (token === '--source-model') out.sourceModel = str(argv[++i]);
     else if (token === '--target-model') out.targetModel = str(argv[++i]);
     else if (token === '--submodel') out.submodel = str(argv[++i]);
+    else if (token === '--target-start-ms') out.targetStartMs = Number(argv[++i]);
     else if (token === '--duration-ms') out.durationMs = Number(argv[++i]);
     else if (token === '--frame-ms') out.frameMs = Number(argv[++i]);
     else if (token === '--timeout-ms') out.timeoutMs = Number(argv[++i]);
@@ -58,6 +60,7 @@ function parseArgs(argv = []) {
   if (!Number.isFinite(out.durationMs) || out.durationMs <= 0) out.durationMs = 30000;
   if (!Number.isFinite(out.frameMs) || out.frameMs <= 0) out.frameMs = 50;
   if (!Number.isFinite(out.timeoutMs) || out.timeoutMs < 1000) out.timeoutMs = 120000;
+  if (!Number.isFinite(out.targetStartMs)) out.targetStartMs = null;
   return out;
 }
 
@@ -271,7 +274,7 @@ async function main() {
     throw new Error(`Seed readback failed: ${JSON.stringify({ scenario, sourceRows })}`);
   }
 
-  const goal = `Copy ${scenario.sourceModel} including submodels to ${scenario.targetModel}`;
+  const goal = `Copy ${scenario.sourceModel} including submodels to ${scenario.targetModel}${args.targetStartMs !== null ? ` starting at ${args.targetStartMs}ms` : ''}`;
   const modelsPayload = await getModels(args.endpoint);
   const displayElements = [
     ...arr(modelsPayload?.data?.models).map((row) => ({ id: str(row?.name), name: str(row?.name), type: str(row?.displayAs || row?.type) })),
@@ -318,8 +321,12 @@ async function main() {
   }, args.timeoutMs);
 
   const targetRows = await readEffectRows(args.endpoint, [scenario.targetModel, scenario.targetSubmodel]);
-  const parentCloned = targetRows.some((row) => row.targetId === scenario.targetModel && row.effectName === 'On' && row.layerIndex === 0 && row.startMs === 1000 && row.endMs === 3000);
-  const submodelCloned = targetRows.some((row) => row.targetId === scenario.targetSubmodel && row.effectName === 'Shimmer' && row.layerIndex === 1 && row.startMs === 2000 && row.endMs === 5000);
+  const expectedParentStartMs = args.targetStartMs !== null ? args.targetStartMs : 1000;
+  const expectedParentEndMs = expectedParentStartMs + 2000;
+  const expectedSubmodelStartMs = expectedParentStartMs + 1000;
+  const expectedSubmodelEndMs = expectedSubmodelStartMs + 3000;
+  const parentCloned = targetRows.some((row) => row.targetId === scenario.targetModel && row.effectName === 'On' && row.layerIndex === 0 && row.startMs === expectedParentStartMs && row.endMs === expectedParentEndMs);
+  const submodelCloned = targetRows.some((row) => row.targetId === scenario.targetSubmodel && row.effectName === 'Shimmer' && row.layerIndex === 1 && row.startMs === expectedSubmodelStartMs && row.endMs === expectedSubmodelEndMs);
   const result = {
     ok: parentCloned && submodelCloned,
     runId,
@@ -340,7 +347,11 @@ async function main() {
       parentSeeded,
       submodelSeeded,
       parentCloned,
-      submodelCloned
+      submodelCloned,
+      expectedParentStartMs,
+      expectedParentEndMs,
+      expectedSubmodelStartMs,
+      expectedSubmodelEndMs
     },
     warnings: plan.warnings || [],
     targetRows
