@@ -4,6 +4,19 @@ Date: 2026-04-26
 Status: Current source audit
 Scope: xLights 2026.06 source, Display Elements panel and Sequencer left-side row headings
 
+## Capability Filter
+
+The context menu is a source of evidence about what xLights can do, not a product requirement to recreate every human shortcut. xLightsDesigner should keep the automated surface small and focused on the operations the app needs to author sequences:
+
+- create effects
+- edit existing effects
+- delete effects
+- clone/copy or move effects when that is the simplest way to express an edit
+- place effects on deterministic models, layers, and timing windows
+- reorder layers or display elements only when vertical order changes the rendered result
+
+Manual workflow helpers such as selection state, hidden clipboard state, show/hide toggles, playback/export shortcuts, and view cleanup actions should stay out of the core agent contract unless a later app workflow needs them directly.
+
 ## User Prompt
 
 > Yes. Cloning or a "copy paste" function will be needed for effects as this is a common practice to duplicate effects. This can be done at various levels. Please audit the right click menu options that come up when a user right clicks in the left side display elements list and decide which functions are needed.
@@ -57,7 +70,7 @@ User-visible actions:
 Needed for xLightsDesigner sequencing:
 
 - `sequencer.setDisplayElementOrder`: already needed and already implemented/app-wired.
-- Visibility/show-hide commands: useful for UI ergonomics and review filtering, but not required for generative sequencing output. Treat as lower priority app UI commands.
+- Visibility/show-hide commands: useful for UI ergonomics and review filtering, but not required for generative sequencing output. Do not add them to the core sequencing API unless a concrete app workflow needs them.
 - Select actions: manual UI convenience only. Agents should target explicit ids/scopes rather than depend on UI selection state.
 - Remove Unused: risky as an automated mutation because it removes display elements from a view. Not needed for sequencing generation.
 - Sorting helpers: useful as deterministic order presets, but not equivalent to creative model/display order. Support later as view-management helpers if needed.
@@ -125,14 +138,14 @@ Row submenu:
 
 Needed for xLightsDesigner sequencing:
 
-- Layer insertion above/below/multiple: needed. The agent needs to create empty layer slots or place copied/created effects at deterministic layer indexes.
-- Delete layer/delete multiple/delete unused: needed. Single delete and compaction are already app-wired; multiple delete can be represented as repeated delete calls or a batch command.
+- Layer insertion above/below/multiple: do not mirror these UI shortcuts directly. The core need is deterministic effect placement. `effects.create` and `effects.clone` should allocate missing layers as needed, and `effects.reorderLayer` should be used only when layer order itself changes the rendered result.
+- Delete layer/delete multiple/delete unused: only needed when the intended edit removes existing rendered content or cleans up layers after an explicit edit. Single delete and compaction are already app-wired; multiple delete can be represented as repeated delete calls or a batch command.
 - Edit layer name: useful but not core to rendered output. Keep as metadata/UI parity unless user intent uses layer labels.
-- Copy row effects: needed. This is source layer to target layer copy.
-- Copy model effects: needed. This is source model to target model copy across all layers.
-- Copy model effects including submodels: needed for advanced reuse, but after base model/layer copy works.
-- Paste row/model effects: needed as explicit clone/copy commands, not clipboard-state operations. API should take source and destination selectors directly.
-- Cut row/model effects: needed as move operations. Can be implemented as clone plus delete after readback or as a dedicated move route.
+- Copy row effects: needed only as the broader `effects.clone` operation with explicit source and destination selectors.
+- Copy model effects: needed only as the broader `effects.clone` operation with explicit source and destination selectors.
+- Copy model effects including submodels: useful for advanced reuse, but still belongs in the same `effects.clone` route rather than separate shortcut commands.
+- Paste row/model effects: do not expose as clipboard-state operations. API should take source and destination selectors directly through `effects.clone`.
+- Cut row/model effects: needed only as move semantics on `effects.clone` or clone plus delete after readback.
 - Delete row/model/submodel/strand/node effects: needed at model and layer scope; submodel/strand/node deletion should wait until target semantics and API coverage are strong enough.
 - Create Timing From Effects: useful for anchoring and validation; lower priority than effect copy/move/delete.
 - Convert To Effect / Promote Node Effects / Convert Effects to Per Model: lower priority transformation workflows. They affect rendering, but are specialized and should not block basic sequencing authoring.
@@ -181,15 +194,11 @@ Observed behavior:
 - Model copy including submodels also selects submodel-layer effects.
 - Paste sets the drop row and invokes `MainSequencer::Paste(true)`.
 
-For xLightsDesigner, this should not be exposed as a hidden clipboard state. The agent needs deterministic, stateless commands:
+For xLightsDesigner, this should not be exposed as a hidden clipboard state. The agent needs one deterministic, stateless operation:
 
-- `effects.cloneLayer`
-- `effects.cloneModel`
-- `effects.cloneSelection` or `effects.cloneWindow`
-- `effects.moveLayerEffects`
-- `effects.moveModelEffects`
+- `effects.clone`
 
-These commands should accept explicit source and destination selectors and return copied effect ids/counts.
+That command should accept explicit source and destination selectors, handle layer/model/window copy and move semantics through parameters, and return copied effect ids/counts. Avoid creating separate API commands for each UI shortcut unless a future requirement proves the single command cannot express the edit safely.
 
 ## Recommended Capability Roadmap
 
