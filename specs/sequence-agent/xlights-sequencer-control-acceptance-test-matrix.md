@@ -42,7 +42,8 @@ Last Reviewed: 2026-04-26
 - Planner and readback flows treat layer deletion, layer compaction, and layer reorder as first-class sequencing edits, not as placeholder effect creation.
 - Horizontal effect movement is accepted through `effects.update` start/end changes; the older `effects.shift` schema name remains a shorthand contract until a dedicated owned route exists.
 - `effects.alignToTiming` honors explicit target filters when it is part of a compatible owned batch plan.
-- `effects.clone` remains a schema-level shorthand contract until a dedicated owned route exists; clone-like behavior should be expressed as explicit create/update commands in current owned apply paths.
+- `effects.clone` supports deterministic source/destination clone or move semantics without UI clipboard state, including same-model layer copy, model-to-model copy, target start offsets, multi-target clone, dry-run, and owned readback summaries.
+- Clone planning must preserve existing destination effects unless replacement is explicit; when the requested destination layer/window is occupied, Review/native apply should move the clone to an open layer and verify the selected layer through readback.
 - Dry-run behavior on mutating effects commands is non-persistent.
 
 ## 7) Validation Endpoint

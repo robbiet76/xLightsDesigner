@@ -172,10 +172,10 @@ Exit criteria:
 - native/app tests remain green after removing stale fallback assumptions
 
 Remaining placement-edit gap:
-- app command schemas and sequencing command graphs name a wider edit vocabulary than the owned runtime currently executes end-to-end; `effects.shift` and `effects.clone` remain schema-level contracts rather than owned direct routes
-- the owned batch-plan conversion path applies timing marks plus `effects.create`, while mixed plans execute `effects.update`, `effects.delete`, `effects.deleteLayer`, `effects.reorderLayer`, `effects.compactLayers`, and `sequencer.setDisplayElementOrder` as direct owned API calls
-- local completion still needs broader native matrix scenarios across realistic existing sequences, especially horizontal movement, clone/copy workflows, and multi-model/layer ordering interactions
-- the sequencer now treats add/update/delete/reorder/display-order/layer-compaction edits as editable layered outcomes; remaining work is coverage depth and the not-yet-owned `clone` shorthand, not basic layer-stack API exposure
+- app command schemas and sequencing command graphs now have owned runtime coverage for the primary placement-edit vocabulary: `effects.create`, `effects.update`, `effects.delete`, `effects.clone`, `effects.deleteLayer`, `effects.reorderLayer`, `effects.compactLayers`, and `sequencer.setDisplayElementOrder`
+- the owned batch-plan conversion path applies timing marks plus create-heavy effect plans through `sequencing.applyBatchPlan`, while mixed plans execute explicit clone/update/delete/layer/display-order edits as direct owned API calls
+- local completion still needs broader overnight native matrix coverage across realistic existing sequences, especially large existing-sequence readback, multi-model/layer ordering interactions, and render-feedback iteration at full-song scale
+- the sequencer treats add/update/delete/clone/reorder/display-order/layer-compaction edits as editable layered outcomes; remaining work is coverage depth, scale/performance validation, and richer designer-agent handoff intent, not basic layer-stack API exposure
 
 ## Full Native Design Authoring
 

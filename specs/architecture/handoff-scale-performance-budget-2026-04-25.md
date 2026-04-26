@@ -92,7 +92,7 @@ The default preservation move is to place new effect writes on the next open lay
 
 Layered output is an editable realized effect, not a special preservation exception. The observed result may be changed by adding a layer, deleting a layer, changing any layer's effect/settings/palette/timing, moving an effect horizontally in time, moving it vertically in the layer stack, or changing display/model order. Plan handoffs should treat `layerIndex`, effect time window, target/model order, and display-element order as first-class sequencing placement fields because each one can change rendered output.
 
-As of 2026-04-25, native review apply can execute mixed owned API plans by compressing timing/effect-create commands into `sequencing.applyBatchPlan` and then applying explicit display-order and effect/layer edit commands through direct owned API calls. This keeps create-heavy plans efficient while allowing `effects.update`, `effects.delete`, `effects.deleteLayer`, `effects.reorderLayer`, `effects.compactLayers`, and `sequencer.setDisplayElementOrder` to remain first-class command-graph operations.
+As of 2026-04-26, native review apply can execute mixed owned API plans by compressing timing/effect-create commands into `sequencing.applyBatchPlan` and then applying explicit display-order and effect/layer edit commands through direct owned API calls. This keeps create-heavy plans efficient while allowing `effects.clone`, `effects.update`, `effects.delete`, `effects.deleteLayer`, `effects.reorderLayer`, `effects.compactLayers`, and `sequencer.setDisplayElementOrder` to remain first-class command-graph operations.
 
 ## Future Work
 

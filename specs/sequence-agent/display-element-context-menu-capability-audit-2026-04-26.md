@@ -204,14 +204,15 @@ That command should accept explicit source and destination selectors, handle lay
 
 Immediate sequencing capability:
 
-1. Add stateless clone/copy planning in the app. Initial layer/model copy planning is implemented as of 2026-04-26 for explicit source/destination model names, same-model layer-to-layer copy, optional source/target layer indexes, optional target start offsets, explicit move/cut requests, multi-target native clone requests, and `including submodels` requests that map source submodel suffixes to known destination submodel ids. When the owned `effects.clone` capability is available, explicit layer/model copy and move planning now emits a native `effects.clone` command so source effect payloads do not need to be expanded through the agent handoff. Multiple destination models are emitted as one native `effects.clone` command with `targetModels`. Native clone planning checks the current sequence context for target model/layer/time overlap and moves the clone to the next open destination layer when the requested paste layer is occupied. The owned xLights clone route allocates missing destination layers before adding cloned effects. The older explicit `effects.create` expansion and move-source `effects.delete` remains as a fallback for older capability sets and for submodel-inclusive copy/move until native submodel mapping is explicitly supported. Native validation now covers parent/submodel clone, shifted clone, submodel delete, and submodel move against real xLights targets.
+1. Add stateless clone/copy planning in the app. Initial layer/model copy planning is implemented as of 2026-04-26 for explicit source/destination model names, same-model layer-to-layer copy, optional source/target layer indexes, optional target start offsets, explicit move/cut requests, multi-target native clone requests, and `including submodels` requests that map source submodel suffixes to known destination submodel ids. Explicit layer/model copy and move planning emits a native `effects.clone` command so source effect payloads do not need to be expanded through the agent handoff. Multiple destination models are emitted as one native `effects.clone` command with `targetModels`. Native clone planning checks the current sequence context for target model/layer/time overlap and moves the clone to the next open destination layer when the requested paste layer is occupied. The owned xLights clone route allocates missing destination layers before adding cloned effects. The older explicit `effects.create` expansion and move-source `effects.delete` remains as a fallback for older capability sets and for submodel-inclusive copy/move until native submodel mapping is explicitly supported. Native validation now covers parent/submodel clone, shifted clone, submodel delete, submodel move, Review open-layer clone placement, layer reorder, horizontal update/time shift, layer deletion, layer compaction, and display/model order changes against real xLights targets.
 2. Add readback validation for cloned effects and move/cut effects: implemented as of 2026-04-26 for target model/layer/window/effect presence, cloned settings/palette payload comparison when readback exposes those fields, move/cut source delete absence, and native `effects.clone` target-window count checks. Native clone move validation also verifies that the source model/layer/window is empty after apply.
-3. Add native validation scenarios for:
+3. Maintain native validation scenarios for:
    - copy one layer to another layer on the same model
    - copy one model's effects to another model
    - copy one model's effects including matching destination submodels
    - copy with time offset to a later section
    - cut or move effects from one row/layer to another row/layer
+   - Review apply open-layer clone placement and layer/display-order edits
 
 Owned API follow-up:
 
@@ -242,10 +243,15 @@ Suggested owned command shape:
 
 Open design choices:
 
-- Whether clone should preserve absolute timing, shift by offset, or stretch to destination timing marks.
 - Whether layer names and layer settings should be copied with effects.
-- Whether overlapping target effects should be preserved by adding layers, replaced, or rejected unless explicit replacement is requested.
 - Whether model-to-model clone should map submodels by matching names when possible.
+- Whether future clone operations should stretch source effects to destination timing marks rather than preserving duration or shifting by offset.
+
+Settled behavior:
+
+- Clone can preserve source timing or shift by target start offset.
+- Overlapping target effects are preserved by moving clone writes to an open layer unless replacement is explicit.
+- The owned route allocates missing destination layers before cloned effects are added.
 
 ## Decision
 

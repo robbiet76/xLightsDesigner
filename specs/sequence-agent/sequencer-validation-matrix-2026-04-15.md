@@ -197,6 +197,8 @@ Default scenario file:
 
 The default matrix covers explicit model target, explicit group target, and tag-only metadata selection. Tag-only validation seeds app metadata for an expected target, then generates from selected tags without putting that target name in the saved design intent.
 
+The scenario file also carries `extraValidations` for native Review apply behaviors that do not fit cleanly into the design-intent generation matrix. As of 2026-04-26, `native-review-explicit-edit-surface` validates owned Review apply coverage for open-layer clone placement, layer reorder, horizontal effect update/time shift, layer deletion, layer compaction, and display/model order changes. Use `--only-extra-validations` for a focused edit-surface smoke run; leave the full `--matrix` run for broader overnight validation.
+
 Section-scoped validation must follow the timing-track agnostic contract in [timing-track-section-scope-audit-2026-04-24.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/timing-track-section-scope-audit-2026-04-24.md). Do not assume `XD: Song Structure` is the only valid section source.
 
 Acceptance rule:
@@ -208,6 +210,7 @@ Acceptance rule:
 - generated proposal scope must include the requested target ids and metadata tags
 - tag-only scenarios must prove the generated scope came from selected app metadata tags rather than explicit target text
 - when apply is enabled, review apply must emit a fresh successful apply artifact
+- extra Review apply validations must verify their requested edit through xLights readback, not only through generated command artifacts
 - when render is enabled, xLights render automation must complete
 
 ## Change-Class Matrix
