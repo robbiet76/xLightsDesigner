@@ -336,6 +336,12 @@ export async function pingCapabilities(endpoint) {
           "effects.getWindow",
           "effects.applyBatch",
           "effects.clone",
+          "effects.update",
+          "effects.delete",
+          "effects.deleteLayer",
+          "effects.reorderLayer",
+          "effects.compactLayers",
+          "sequencer.setDisplayElementOrder",
           "sequencing.applyBatchPlan",
           "jobs.get"
         ],

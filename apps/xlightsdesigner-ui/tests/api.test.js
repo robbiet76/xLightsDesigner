@@ -7,6 +7,7 @@ import {
   getOpenSequence,
   getMediaStatus,
   getEffectDefinitions,
+  pingCapabilities,
   renderCurrentSequence,
   getRenderedSequenceSamples,
   openSequence,
@@ -198,6 +199,28 @@ test("getEffectDefinitions returns trained definitions for owned endpoints", asy
   assert.equal(body.data.source, "stage1_trained_effect_bundle");
   assert.ok(body.data.effects.some((row) => row.effectName === "On"));
   assert.ok(body.data.effects.some((row) => row.effectName === "Color Wash"));
+});
+
+test("pingCapabilities advertises owned sequencing edit and layer commands", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => jsonResponse({
+    ok: true,
+    statusCode: 200,
+    data: { listenerReachable: true, appReady: true, startupSettled: true, state: "ready" }
+  });
+  try {
+    const body = await pingCapabilities("http://127.0.0.1:49915/xlightsdesigner/api");
+    const commands = body.data.commands;
+    assert.equal(commands.includes("effects.clone"), true);
+    assert.equal(commands.includes("effects.update"), true);
+    assert.equal(commands.includes("effects.delete"), true);
+    assert.equal(commands.includes("effects.deleteLayer"), true);
+    assert.equal(commands.includes("effects.reorderLayer"), true);
+    assert.equal(commands.includes("effects.compactLayers"), true);
+    assert.equal(commands.includes("sequencer.setDisplayElementOrder"), true);
+  } finally {
+    global.fetch = originalFetch;
+  }
 });
 
 test("getRenderedSequenceSamples uses owned route and preserves sparse sample payload", async () => {
