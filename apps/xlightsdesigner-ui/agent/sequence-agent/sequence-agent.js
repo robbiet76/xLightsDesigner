@@ -933,6 +933,35 @@ function inferExistingLayerCompactIntent({ sourceLines = [], executionStrategy =
   return { compact: true };
 }
 
+function inferExistingEffectTimeShiftIntent({ sourceLines = [], executionStrategy = {}, scope = {} } = {}) {
+  const joined = [
+    ...normArray(sourceLines),
+    normText(scope?.goal),
+    normText(executionStrategy?.implementationMode),
+    normText(executionStrategy?.passScope)
+  ].join(" ").toLowerCase();
+  if (!/\b(effect|effects|look|layer|layers)\b/.test(joined)) return null;
+  if (!/\b(shift|nudge|move|slide)\b/.test(joined)) return null;
+  if (/\b(to|into|onto|above|below|before|after)\s+layer\s*\d+\b/.test(joined)) return null;
+  const amount = joined.match(/\b(\d+(?:\.\d+)?)\s*(ms|millisecond|milliseconds|s|sec|secs|second|seconds)\b/);
+  if (!amount) return null;
+  const scalar = Number(amount[1]);
+  if (!Number.isFinite(scalar) || scalar <= 0) return null;
+  const unit = amount[2];
+  const deltaBase = /^s|^sec|^second/.test(unit) ? Math.round(scalar * 1000) : Math.round(scalar);
+  const direction =
+    /\b(earlier|back|backward|backwards|left|sooner)\b/.test(joined) ? -1 :
+    /\b(later|forward|forwards|right|after)\b/.test(joined) ? 1 :
+    1;
+  const layerMatch = joined.match(/\blayer\s*(\d+)\b/);
+  const layerIndex = layerMatch ? Number(layerMatch[1]) : null;
+  if (layerIndex !== null && (!Number.isInteger(layerIndex) || layerIndex < 0)) return null;
+  return {
+    deltaMs: direction * deltaBase,
+    layerIndex
+  };
+}
+
 function supportsCommand(capabilityCommands = [], commandName = "") {
   const advertised = normArray(capabilityCommands).map((row) => normText(row)).filter(Boolean);
   return !advertised.length || advertised.includes(commandName);
@@ -1301,6 +1330,59 @@ function buildEffectCompactLayersCommandFromCreate({
   };
 }
 
+function buildEffectTimeShiftUpdateCommandFromCreate({
+  command = {},
+  existingEffect = null,
+  timeShift = null,
+  overlaps = []
+} = {}) {
+  if (!existingEffect) return command;
+  const deltaMs = Number(timeShift?.deltaMs);
+  if (!Number.isFinite(deltaMs) || deltaMs === 0) return command;
+  const originalStartMs = Number(existingEffect.startMs);
+  const originalEndMs = Number(existingEffect.endMs);
+  if (!Number.isFinite(originalStartMs) || !Number.isFinite(originalEndMs) || originalEndMs <= originalStartMs) {
+    return command;
+  }
+  const durationMs = originalEndMs - originalStartMs;
+  const nextStartMs = Math.max(0, Math.round(originalStartMs + deltaMs));
+  const nextEndMs = Math.max(nextStartMs + 1, Math.round(nextStartMs + durationMs));
+  const selectorEffectName = normText(existingEffect.effectName);
+  return {
+    ...command,
+    id: normText(command?.id) || "effect.shift-time.existing",
+    cmd: "effects.update",
+    params: {
+      modelName: normText(existingEffect.targetId),
+      layerIndex: Number(existingEffect.layerIndex),
+      startMs: originalStartMs,
+      endMs: originalEndMs,
+      ...(selectorEffectName ? { effectName: selectorEffectName } : {}),
+      newLayerIndex: Number(existingEffect.layerIndex),
+      newStartMs: nextStartMs,
+      newEndMs: nextEndMs,
+      newEffectName: selectorEffectName
+    },
+    intent: {
+      ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
+      existingSequencePolicy: {
+        replacementAuthorized: true,
+        preserveExistingUnlessScoped: false,
+        emittedTimeShiftCommand: true,
+        deltaMs,
+        overlapCount: overlaps.length,
+        originalLayerIndex: Number(existingEffect.layerIndex),
+        plannedLayerIndex: Number(existingEffect.layerIndex),
+        originalStartMs,
+        originalEndMs,
+        plannedStartMs: nextStartMs,
+        plannedEndMs: nextEndMs,
+        overlappingEffectNames: Array.from(new Set(overlaps.map((effect) => effect.effectName).filter(Boolean))).slice(0, 5)
+      }
+    }
+  };
+}
+
 function applyExistingSequencePreservation({
   commands = [],
   currentSequenceContext = null,
@@ -1317,6 +1399,7 @@ function applyExistingSequencePreservation({
   const layerDeleteRequested = inferExistingLayerDeleteIntent({ sourceLines, executionStrategy, scope });
   const layerReorderRequested = inferExistingLayerReorderIntent({ sourceLines, executionStrategy, scope });
   const layerCompactRequested = inferExistingLayerCompactIntent({ sourceLines, executionStrategy, scope });
+  const timeShiftRequested = inferExistingEffectTimeShiftIntent({ sourceLines, executionStrategy, scope });
   const editExistingAuthorized = existingEditRequested &&
     supportsCommand(capabilityCommands, "effects.update");
   const deleteExistingAuthorized = existingDeleteRequested &&
@@ -1327,6 +1410,8 @@ function applyExistingSequencePreservation({
     supportsCommand(capabilityCommands, "effects.reorderLayer");
   const layerCompactAuthorized = layerCompactRequested &&
     supportsCommand(capabilityCommands, "effects.compactLayers");
+  const timeShiftAuthorized = timeShiftRequested &&
+    supportsCommand(capabilityCommands, "effects.update");
   if (!existingEffects.length) return commands;
   const emittedLayerOperations = new Set();
   const preservedCommands = normArray(commands).map((command) => {
@@ -1340,6 +1425,70 @@ function applyExistingSequencePreservation({
       return command;
     }
     const overlaps = existingEffects.filter((effect) => effect.targetId === modelName && overlapsWindow(effect, { startMs, endMs }));
+    if (layerDeleteAuthorized) {
+      const layerIndexToDelete = Number(layerDeleteRequested.layerIndex);
+      const modelLayerEffects = existingEffects.filter((effect) => effect.targetId === modelName && Number(effect.layerIndex) === layerIndexToDelete);
+      const key = `deleteLayer:${modelName}:${layerIndexToDelete}`;
+      if (modelLayerEffects.length && emittedLayerOperations.has(key)) return null;
+      if (modelLayerEffects.length) {
+        emittedLayerOperations.add(key);
+        warnings.push(`Deleting existing layer on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.deleteLayer for layer ${layerIndexToDelete}.`);
+        return buildEffectDeleteLayerCommandFromCreate({
+          command,
+          modelName,
+          layerDelete: layerDeleteRequested,
+          layerEffects: modelLayerEffects
+        });
+      }
+    }
+    if (layerReorderAuthorized) {
+      const fromLayer = Number(layerReorderRequested.fromLayer);
+      const modelLayerEffects = existingEffects.filter((effect) => effect.targetId === modelName);
+      const modelHasSourceLayer = modelLayerEffects.some((effect) => Number(effect.layerIndex) === fromLayer);
+      const key = `reorderLayer:${modelName}:${fromLayer}:${layerReorderRequested.toLayer}`;
+      if (modelHasSourceLayer && emittedLayerOperations.has(key)) return null;
+      if (modelHasSourceLayer) {
+        emittedLayerOperations.add(key);
+        warnings.push(`Reordering existing layers on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.reorderLayer from layer ${fromLayer} to layer ${layerReorderRequested.toLayer}.`);
+        return buildEffectReorderLayerCommandFromCreate({
+          command,
+          modelName,
+          layerReorder: layerReorderRequested,
+          overlaps: modelLayerEffects
+        });
+      }
+    }
+    if (layerCompactAuthorized) {
+      const modelLayerEffects = existingEffects.filter((effect) => effect.targetId === modelName);
+      const key = `compactLayers:${modelName}`;
+      if (modelLayerEffects.length && emittedLayerOperations.has(key)) return null;
+      if (modelLayerEffects.length) {
+        emittedLayerOperations.add(key);
+        warnings.push(`Compacting existing layers on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.compactLayers.`);
+        return buildEffectCompactLayersCommandFromCreate({
+          command,
+          modelName,
+          layerEffects: modelLayerEffects
+        });
+      }
+    }
+    if (timeShiftAuthorized) {
+      const modelEffects = existingEffects.filter((effect) => effect.targetId === modelName);
+      const scopedEffects = Number.isInteger(timeShiftRequested.layerIndex)
+        ? modelEffects.filter((effect) => Number(effect.layerIndex) === timeShiftRequested.layerIndex)
+        : modelEffects;
+      const sourceEffects = scopedEffects.length ? scopedEffects : overlaps;
+      const existingEffect = chooseExistingEffectForEdit(sourceEffects, layerIndex);
+      if (existingEffect) {
+        warnings.push(`Shifting existing effect on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.update with ${timeShiftRequested.deltaMs}ms offset.`);
+        return buildEffectTimeShiftUpdateCommandFromCreate({
+          command,
+          existingEffect,
+          timeShift: timeShiftRequested,
+          overlaps: sourceEffects
+        });
+      }
+    }
     if (!overlaps.length) {
       return {
         ...command,
@@ -1351,6 +1500,7 @@ function applyExistingSequencePreservation({
             layerDeleteRequested: Boolean(layerDeleteRequested),
             layerReorderRequested: Boolean(layerReorderRequested),
             layerCompactRequested: Boolean(layerCompactRequested),
+            timeShiftRequested: Boolean(timeShiftRequested),
             preserveExistingUnlessScoped: true,
             overlapCount: 0
           }
@@ -1403,6 +1553,21 @@ function applyExistingSequencePreservation({
         });
       }
     }
+    if (timeShiftAuthorized) {
+      const scopedOverlaps = Number.isInteger(timeShiftRequested.layerIndex)
+        ? overlaps.filter((effect) => Number(effect.layerIndex) === timeShiftRequested.layerIndex)
+        : overlaps;
+      const existingEffect = chooseExistingEffectForEdit(scopedOverlaps.length ? scopedOverlaps : overlaps, layerIndex);
+      if (existingEffect) {
+        warnings.push(`Shifting existing effect on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.update with ${timeShiftRequested.deltaMs}ms offset.`);
+        return buildEffectTimeShiftUpdateCommandFromCreate({
+          command,
+          existingEffect,
+          timeShift: timeShiftRequested,
+          overlaps
+        });
+      }
+    }
     if (deleteExistingAuthorized) {
       const existingEffect = chooseExistingEffectForEdit(overlaps, layerIndex);
       warnings.push(`Deleting existing effect on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.delete on layer ${existingEffect.layerIndex}.`);
@@ -1441,6 +1606,7 @@ function applyExistingSequencePreservation({
           layerDeleteRequested: Boolean(layerDeleteRequested),
           layerReorderRequested: Boolean(layerReorderRequested),
           layerCompactRequested: Boolean(layerCompactRequested),
+          timeShiftRequested: Boolean(timeShiftRequested),
           preserveExistingUnlessScoped: true,
           overlapCount: overlaps.length,
           originalLayerIndex: layerIndex,

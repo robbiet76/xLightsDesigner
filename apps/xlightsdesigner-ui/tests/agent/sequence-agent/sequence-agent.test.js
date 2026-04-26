@@ -347,6 +347,63 @@ test("sequence_agent emits effect update when edit-capable revision targets an e
   assert.equal(out.warnings.some((row) => /converted .*create into effects.update/i.test(row)), true);
 });
 
+test("sequence_agent emits update when revision asks to shift an existing effect in time", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Shift the existing MegaTree layer 1 effect 500ms later"
+    },
+    sourceLines: ["Chorus 1 / MegaTree / shift existing layer 1 effect 500ms later"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "MegaTree",
+            effectName: "Shimmer",
+            layerIndex: 1,
+            startMs: 1000,
+            endMs: 5000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.update"]
+  });
+
+  const updateCommand = out.commands.find((row) => row.cmd === "effects.update" && row.params.modelName === "MegaTree");
+  assert.ok(updateCommand);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree"), false);
+  assert.deepEqual(
+    {
+      layerIndex: updateCommand.params.layerIndex,
+      startMs: updateCommand.params.startMs,
+      endMs: updateCommand.params.endMs,
+      newLayerIndex: updateCommand.params.newLayerIndex,
+      newStartMs: updateCommand.params.newStartMs,
+      newEndMs: updateCommand.params.newEndMs,
+      effectName: updateCommand.params.effectName
+    },
+    {
+      layerIndex: 1,
+      startMs: 1000,
+      endMs: 5000,
+      newLayerIndex: 1,
+      newStartMs: 1500,
+      newEndMs: 5500,
+      effectName: "Shimmer"
+    }
+  );
+  assert.equal(updateCommand.intent.existingSequencePolicy.emittedTimeShiftCommand, true);
+  assert.equal(updateCommand.intent.existingSequencePolicy.deltaMs, 500);
+  assert.equal(out.warnings.some((row) => /converted .*create into effects.update with 500ms offset/i.test(row)), true);
+});
+
 test("sequence_agent emits effect delete when revision asks to remove an existing layered look", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

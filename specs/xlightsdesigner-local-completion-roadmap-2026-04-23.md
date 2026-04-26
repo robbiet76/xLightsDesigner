@@ -172,10 +172,10 @@ Exit criteria:
 - native/app tests remain green after removing stale fallback assumptions
 
 Remaining placement-edit gap:
-- app command schemas and sequencing command graphs already name `effects.update`, `effects.delete`, `effects.deleteLayer`, `effects.compactLayers`, `effects.shift`, `effects.clone`, and `sequencer.setDisplayElementOrder`
-- the current owned batch-plan conversion path applies timing marks plus `effects.create`
-- the current xLights 2026.06 owned API surface in `src-ui-wx/xLightsDesigner` does not yet expose the full edit/reorder route set needed for layer-stack and display-order mutation
-- local completion needs owned API support, app apply wiring, readback validation, and native matrix scenarios for add/update/delete/reorder/display-order edits before the sequencer can fully treat layered outcomes as editable effects
+- app command schemas and sequencing command graphs name a wider edit vocabulary than the owned runtime currently executes end-to-end; `effects.shift` and `effects.clone` remain schema-level contracts rather than owned direct routes
+- the owned batch-plan conversion path applies timing marks plus `effects.create`, while mixed plans execute `effects.update`, `effects.delete`, `effects.deleteLayer`, `effects.reorderLayer`, `effects.compactLayers`, and `sequencer.setDisplayElementOrder` as direct owned API calls
+- local completion still needs broader native matrix scenarios across realistic existing sequences, especially horizontal movement, clone/copy workflows, and multi-model/layer ordering interactions
+- the sequencer now treats add/update/delete/reorder/display-order/layer-compaction edits as editable layered outcomes; remaining work is coverage depth and the not-yet-owned `clone` shorthand, not basic layer-stack API exposure
 
 ## Full Native Design Authoring
 
