@@ -703,7 +703,7 @@ def main() -> int:
     ap.add_argument("--analysis-base-url", default="http://127.0.0.1:5055")
     ap.add_argument("--provider", default="beatnet", choices=["beatnet", "librosa", "auto"])
     ap.add_argument("--llm-base-url", default=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"))
-    ap.add_argument("--llm-model", default=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini"))
+    ap.add_argument("--llm-model", default=os.environ.get("OPENAI_MODEL", "gpt-5.4-mini"))
     ap.add_argument("--llm-api-key", default=os.environ.get("OPENAI_API_KEY", ""))
     ap.add_argument("--timeout", type=float, default=180.0)
     ap.add_argument("--out", default="")

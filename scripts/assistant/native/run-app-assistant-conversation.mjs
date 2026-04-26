@@ -11,7 +11,7 @@ import {
   shouldStartDisplayDiscovery
 } from '../../../apps/xlightsdesigner-ui/agent/designer-dialog/display-discovery.js';
 
-const OPENAI_MODEL = 'gpt-5.4';
+const OPENAI_MODEL = 'gpt-5.4-mini';
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
 const AGENT_CONFIG_FILENAME = 'xlightsdesigner-agent-config.json';
 

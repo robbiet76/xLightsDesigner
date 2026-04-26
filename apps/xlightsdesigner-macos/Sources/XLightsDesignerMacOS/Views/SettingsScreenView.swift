@@ -102,7 +102,7 @@ struct SettingsScreenView: View {
     private var providerSection: some View {
         section("Providers", subtitle: "Shared assistant runtime configuration.") {
             LabeledContent("Model") {
-                TextField("gpt-4.1-mini", text: $model.screenModel.agentConfig.model)
+                TextField("gpt-5.4-mini", text: $model.screenModel.agentConfig.model)
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 280)
             }

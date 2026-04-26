@@ -36,7 +36,7 @@ test("app assistant routes design conversation to designer and allows proposal g
       return {
         ok: true,
         provider: "openai",
-        model: "gpt-5.4",
+        model: "gpt-5.4-mini",
         assistantMessage: "I can turn that nostalgic chorus idea into a first proposal.",
         shouldGenerateProposal: true,
         proposalIntent: "Make the chorus warmer and more nostalgic",
@@ -56,7 +56,7 @@ test("app assistant routes design conversation to designer and allows proposal g
   assert.equal(result.result.routeDecision, "designer_dialog");
   assert.equal(result.result.shouldGenerateProposal, true);
   assert.equal(result.result.provider, "openai");
-  assert.equal(result.result.model, "gpt-5.4");
+  assert.equal(result.result.model, "gpt-5.4-mini");
   assert.equal(result.result.handledBy, "designer_dialog");
 });
 

@@ -8,7 +8,7 @@ import path from "node:path";
 const REPO_ROOT = "/Users/robterry/Projects/xLightsDesigner";
 const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || "http://127.0.0.1:49916";
 const DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1";
-const DEFAULT_OPENAI_MODEL = "gpt-5.4";
+const DEFAULT_OPENAI_MODEL = "gpt-5.4-mini";
 const AGENT_CONFIG_FILENAME = "xlightsdesigner-agent-config.json";
 
 function usage() {

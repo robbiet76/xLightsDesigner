@@ -16,6 +16,7 @@ The intended UX is a team chat:
 
 ## Active Entry Points
 - `app-assistant-role-and-boundary.md`
+- `agent-model-selection-policy-2026-04-26.md`
 - `implementation-checklist.md`
 
 
