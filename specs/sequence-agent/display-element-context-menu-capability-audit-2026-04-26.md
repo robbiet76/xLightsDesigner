@@ -195,7 +195,7 @@ These commands should accept explicit source and destination selectors and retur
 
 Immediate sequencing capability:
 
-1. Add stateless clone/copy planning in the app that expands simple copies into explicit `effects.create` commands when source effects are already available from current-sequence context. Initial layer/model copy planning is implemented as of 2026-04-26 for explicit source/destination model names, same-model layer-to-layer copy, optional source/target layer indexes, optional target start offsets, explicit move/cut requests implemented as clone plus source delete, and `including submodels` requests that map source submodel suffixes to known destination submodel ids. Native validation now covers parent/submodel clone, shifted clone, submodel delete, and submodel move against real xLights targets.
+1. Add stateless clone/copy planning in the app. Initial layer/model copy planning is implemented as of 2026-04-26 for explicit source/destination model names, same-model layer-to-layer copy, optional source/target layer indexes, optional target start offsets, explicit move/cut requests, and `including submodels` requests that map source submodel suffixes to known destination submodel ids. When the owned `effects.clone` capability is available, explicit layer/model copy and move planning now emits a native `effects.clone` command so source effect payloads do not need to be expanded through the agent handoff. The older explicit `effects.create` expansion and move-source `effects.delete` remains as a fallback for older capability sets and for submodel-inclusive copy/move until native submodel mapping is explicitly supported. Native validation now covers parent/submodel clone, shifted clone, submodel delete, and submodel move against real xLights targets.
 2. Add readback validation for cloned effects and move/cut effects: implemented as of 2026-04-26 for target model/layer/window/effect presence, cloned settings/palette payload comparison when readback exposes those fields, and move/cut source delete absence.
 3. Add native validation scenarios for:
    - copy one layer to another layer on the same model
@@ -206,7 +206,7 @@ Immediate sequencing capability:
 
 Owned API follow-up:
 
-1. Add owned route for source/destination clone when source context is too large to safely pass through agent handoffs.
+1. Add owned route for source/destination clone when source context is too large to safely pass through agent handoffs. Implemented as `effects.clone` on 2026-04-26 for loaded-sequence source windows, layer-preserving or layer-offset target placement, copy/move mode, dry-run support, and multi-target clone.
 2. Keep the route inside `/src-ui-wx/xLightsDesigner`.
 3. Do not depend on UI selection or clipboard state.
 4. Support dry-run and readback summary fields.

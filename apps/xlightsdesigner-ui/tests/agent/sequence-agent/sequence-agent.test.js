@@ -461,6 +461,66 @@ test("sequence_agent expands explicit layer copy into cloned create commands fro
   assert.equal(out.warnings.some((row) => /Cloning 1 effect from Star layer 0 to MegaTree layer 1/i.test(row)), true);
 });
 
+test("sequence_agent emits owned clone command for explicit layer copy when available", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Copy Star layer 0 to MegaTree layer 1"
+    },
+    sourceLines: ["Chorus 1 / copy Star layer 0 to MegaTree layer 1"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "Star",
+            effectName: "Shimmer",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 5000,
+            settings: "ID_SLIDER_Speed=12",
+            palette: "C_BUTTON_Palette1=#ff0000"
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.clone"]
+  });
+
+  const cloneCommand = out.commands.find((row) => row.cmd === "effects.clone");
+  assert.ok(cloneCommand);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.id?.startsWith("effect.clone.")), false);
+  assert.deepEqual(
+    {
+      sourceModelName: cloneCommand.params.sourceModelName,
+      sourceLayerIndex: cloneCommand.params.sourceLayerIndex,
+      sourceStartMs: cloneCommand.params.sourceStartMs,
+      sourceEndMs: cloneCommand.params.sourceEndMs,
+      targetModelName: cloneCommand.params.targetModelName,
+      targetLayerIndex: cloneCommand.params.targetLayerIndex,
+      targetStartMs: cloneCommand.params.targetStartMs,
+      mode: cloneCommand.params.mode
+    },
+    {
+      sourceModelName: "Star",
+      sourceLayerIndex: 0,
+      sourceStartMs: 1000,
+      sourceEndMs: 5000,
+      targetModelName: "MegaTree",
+      targetLayerIndex: 1,
+      targetStartMs: 1000,
+      mode: "copy"
+    }
+  );
+  assert.equal(cloneCommand.intent.clonePolicy.nativeCloneCommand, true);
+  assert.equal(out.warnings.some((row) => /owned effects\.clone/i.test(row)), true);
+});
+
 test("sequence_agent expands same-model layer copy into cloned create commands", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),
@@ -566,6 +626,55 @@ test("sequence_agent expands cut layer request into clone plus source delete", (
   );
   assert.equal(deleteCommand.intent.existingSequencePolicy.emittedMoveDeleteCommand, true);
   assert.equal(out.warnings.some((row) => /Moving 1 effect from Star layer 0 to MegaTree layer 1/i.test(row)), true);
+});
+
+test("sequence_agent emits owned clone move without separate source delete when available", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Cut Star layer 0 to MegaTree layer 1"
+    },
+    sourceLines: ["Chorus 1 / cut Star layer 0 to MegaTree layer 1"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "Star",
+            effectName: "Shimmer",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 5000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.clone"]
+  });
+
+  const cloneCommand = out.commands.find((row) => row.cmd === "effects.clone");
+  assert.ok(cloneCommand);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.delete" && row.params.modelName === "Star"), false);
+  assert.deepEqual(
+    {
+      sourceModelName: cloneCommand.params.sourceModelName,
+      targetModelName: cloneCommand.params.targetModelName,
+      targetLayerIndex: cloneCommand.params.targetLayerIndex,
+      mode: cloneCommand.params.mode
+    },
+    {
+      sourceModelName: "Star",
+      targetModelName: "MegaTree",
+      targetLayerIndex: 1,
+      mode: "move"
+    }
+  );
+  assert.equal(cloneCommand.intent.existingSequencePolicy.emittedNativeCloneCommand, true);
 });
 
 test("sequence_agent expands submodel move request into clone plus source delete", () => {
