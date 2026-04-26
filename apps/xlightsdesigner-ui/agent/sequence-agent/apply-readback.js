@@ -48,6 +48,26 @@ function normalizeElementName(params = {}) {
   return str(params.modelName || params.element || params.targetId);
 }
 
+function normalizeComparableValue(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value || "").trim();
+    }
+  }
+  return String(value || "").trim();
+}
+
+function compareIfExpected(actual, expected) {
+  const normalizedExpected = normalizeComparableValue(expected);
+  if (!normalizedExpected) return true;
+  return normalizeComparableValue(actual) === normalizedExpected;
+}
+
 function normalizeEffectRow(params = {}) {
   const modelName = normalizeElementName(params);
   const layerIndex = intNumber(params.layerIndex ?? params.layer, null);
@@ -584,6 +604,32 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
             detail: preserved
               ? `original layer ${preservationPolicy.originalLayerIndex} preserved`
               : `original layer ${preservationPolicy.originalLayerIndex} missing preserved effects`
+          };
+        })());
+      }
+      if (effect.sourceStep?.intent?.clonePolicy?.explicitCloneRequest === true) {
+        readbackChecks.push((async () => {
+          const resp = await listEffects(endpoint, { modelName, layerIndex, startMs, endMs });
+          const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
+          const actual = effects.find((row) =>
+            String(row?.effectName || "").trim() === effectName &&
+            Number(row?.startMs) === startMs &&
+            Number(row?.endMs) === endMs &&
+            Number(row?.layerIndex) === layerIndex
+          );
+          const settingsMatch = actual ? compareIfExpected(actual?.settings, effect.sourceStep?.params?.settings) : false;
+          const paletteMatch = actual ? compareIfExpected(actual?.palette, effect.sourceStep?.params?.palette) : false;
+          return {
+            kind: "effect-clone",
+            target: `${modelName}@${layerIndex}`,
+            ok: Boolean(actual) && settingsMatch && paletteMatch,
+            detail: !actual
+              ? `${effectName} missing`
+              : settingsMatch && paletteMatch
+                ? `${effectName} clone matched source payload`
+                : `${effectName} clone payload mismatch`,
+            settingsMatched: settingsMatch,
+            paletteMatched: paletteMatch
           };
         })());
       }

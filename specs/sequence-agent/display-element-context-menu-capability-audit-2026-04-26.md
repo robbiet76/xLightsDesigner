@@ -196,7 +196,7 @@ These commands should accept explicit source and destination selectors and retur
 Immediate sequencing capability:
 
 1. Add stateless clone/copy planning in the app that expands simple copies into explicit `effects.create` commands when source effects are already available from current-sequence context. Initial layer/model copy planning is implemented as of 2026-04-26 for explicit source/destination model names, same-model layer-to-layer copy, optional source/target layer indexes, optional target start offsets, explicit move/cut requests implemented as clone plus source delete, and `including submodels` requests that map source submodel suffixes to known destination submodel ids. Native validation now covers parent/submodel clone, shifted clone, submodel delete, and submodel move against real xLights targets.
-2. Add readback validation for cloned effects and move/cut effects: target model/layer/window/effect/settings/palette should match the expected copied source, and move/cut source effects should no longer exist after the destination clone succeeds.
+2. Add readback validation for cloned effects and move/cut effects: implemented as of 2026-04-26 for target model/layer/window/effect presence, cloned settings/palette payload comparison when readback exposes those fields, and move/cut source delete absence.
 3. Add native validation scenarios for:
    - copy one layer to another layer on the same model
    - copy one model's effects to another model

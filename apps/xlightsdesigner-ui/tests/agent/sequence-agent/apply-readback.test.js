@@ -131,6 +131,113 @@ test("apply readback accepts display-order wrappers that return string ids", asy
   );
 });
 
+test("apply readback verifies cloned effect payload against copied settings and palette", async () => {
+  const plan = [
+    {
+      id: "effect.clone.1",
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 1,
+        effectName: "Shimmer",
+        startMs: 1000,
+        endMs: 5000,
+        settings: "ID_SLIDER_Speed=12",
+        palette: "C_BUTTON_Palette1=#ff0000"
+      },
+      intent: {
+        clonePolicy: {
+          explicitCloneRequest: true,
+          sourceModelName: "Star",
+          sourceLayerIndex: 0,
+          sourceStartMs: 1000,
+          sourceEndMs: 5000,
+          targetModelName: "MegaTree",
+          targetLayerIndex: 1,
+          targetStartMs: 1000,
+          targetEndMs: 5000
+        }
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: modelName === "MegaTree" && layerIndex === 1 && startMs === 1000 && endMs === 5000
+          ? [{
+              modelName,
+              layerIndex,
+              startMs,
+              endMs,
+              effectName: "Shimmer",
+              settings: "ID_SLIDER_Speed=12",
+              palette: "C_BUTTON_Palette1=#ff0000"
+            }]
+          : []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [
+      ["effect", "MegaTree@1", true],
+      ["effect-clone", "MegaTree@1", true]
+    ]
+  );
+  assert.equal(verification.checks.find((row) => row.kind === "effect-clone").settingsMatched, true);
+  assert.equal(verification.checks.find((row) => row.kind === "effect-clone").paletteMatched, true);
+});
+
+test("apply readback flags cloned effect payload mismatches", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      id: "effect.clone.1",
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 1,
+        effectName: "Shimmer",
+        startMs: 1000,
+        endMs: 5000,
+        settings: "ID_SLIDER_Speed=12",
+        palette: "C_BUTTON_Palette1=#ff0000"
+      },
+      intent: {
+        clonePolicy: {
+          explicitCloneRequest: true,
+          sourceModelName: "Star",
+          targetModelName: "MegaTree"
+        }
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async () => ({
+      data: {
+        effects: [{
+          modelName: "MegaTree",
+          layerIndex: 1,
+          startMs: 1000,
+          endMs: 5000,
+          effectName: "Shimmer",
+          settings: "ID_SLIDER_Speed=9",
+          palette: "C_BUTTON_Palette1=#00ff00"
+        }]
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, false);
+  const cloneCheck = verification.checks.find((row) => row.kind === "effect-clone");
+  assert.equal(cloneCheck.ok, false);
+  assert.equal(cloneCheck.settingsMatched, false);
+  assert.equal(cloneCheck.paletteMatched, false);
+});
+
 test("apply readback verifies final layer placement after update reorder and compact", async () => {
   const plan = [
     {
