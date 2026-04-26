@@ -453,6 +453,108 @@ test("sequence_agent emits layer reorder when revision asks to move an existing 
   assert.equal(out.warnings.some((row) => /converted .*create into effects.reorderLayer/i.test(row)), true);
 });
 
+test("sequence_agent emits deleteLayer when revision asks to remove an existing layer", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Remove MegaTree layer 1 from the chorus"
+    },
+    sourceLines: ["Chorus 1 / MegaTree / remove existing layer 1"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 2, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "MegaTree",
+            effectName: "On",
+            layerIndex: 0,
+            startMs: 0,
+            endMs: 120000
+          },
+          {
+            targetId: "MegaTree",
+            effectName: "Shimmer",
+            layerIndex: 1,
+            startMs: 0,
+            endMs: 120000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.deleteLayer"]
+  });
+
+  const deleteLayerCommand = out.commands.find((row) => row.cmd === "effects.deleteLayer" && row.params.modelName === "MegaTree");
+  assert.ok(deleteLayerCommand);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree"), false);
+  assert.deepEqual(
+    {
+      layerIndex: deleteLayerCommand.params.layerIndex,
+      force: deleteLayerCommand.params.force
+    },
+    {
+      layerIndex: 1,
+      force: true
+    }
+  );
+  assert.equal(deleteLayerCommand.intent.existingSequencePolicy.emittedLayerDeleteCommand, true);
+  assert.deepEqual(deleteLayerCommand.intent.existingSequencePolicy.deletedEffects, [
+    { effectName: "Shimmer", startMs: 0, endMs: 120000 }
+  ]);
+  assert.equal(out.warnings.some((row) => /converted .*create into effects.deleteLayer/i.test(row)), true);
+});
+
+test("sequence_agent emits compactLayers when revision asks to compact existing layers", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Compact MegaTree layers after clearing gaps"
+    },
+    sourceLines: ["Chorus 1 / MegaTree / compact existing layers"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 2, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "MegaTree",
+            effectName: "On",
+            layerIndex: 0,
+            startMs: 0,
+            endMs: 120000
+          },
+          {
+            targetId: "MegaTree",
+            effectName: "Shimmer",
+            layerIndex: 2,
+            startMs: 0,
+            endMs: 120000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.compactLayers"]
+  });
+
+  const compactCommand = out.commands.find((row) => row.cmd === "effects.compactLayers" && row.params.modelName === "MegaTree");
+  assert.ok(compactCommand);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "MegaTree"), false);
+  assert.equal(compactCommand.intent.existingSequencePolicy.emittedLayerCompactCommand, true);
+  assert.deepEqual(compactCommand.intent.existingSequencePolicy.compactedEffects, [
+    { effectName: "Shimmer", startMs: 0, endMs: 120000, fromLayerIndex: 2, toLayerIndex: 1 }
+  ]);
+  assert.equal(out.warnings.some((row) => /converted .*create into effects.compactLayers/i.test(row)), true);
+});
+
 test("sequence_agent plan metadata carries artistic goal, revision objective, and sequencer brief", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

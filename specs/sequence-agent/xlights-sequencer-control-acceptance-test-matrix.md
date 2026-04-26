@@ -1,9 +1,9 @@
 # Acceptance Test Matrix: Full Sequencer Control
 
-Status: In Progress (Sprint 0 + WP-9 baseline)
-Date: 2026-03-07
+Status: In Progress
+Date: 2026-04-26
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-03-11
+Last Reviewed: 2026-04-26
 
 ## 1) Sequence Lifecycle
 - `sequence.create` with valid params returns `200` and sequence metadata.
@@ -39,6 +39,7 @@ Last Reviewed: 2026-03-11
 - `effects.create/update` preserve per-effect timing/layer settings such as layer blending, transition type, transition adjustment, transition reverse, and color modifiers when passed through `settings`.
 - `effects.deleteLayer` enforces last-layer protection and only deletes non-empty layers when `force=true`.
 - `effects.compactLayers` removes only empty layers and reports `removedLayerIndexes` deterministically.
+- Planner and readback flows treat layer deletion, layer compaction, and layer reorder as first-class sequencing edits, not as placeholder effect creation.
 - `effects.shift` and `effects.alignToTiming` honor explicit target filters.
 - `effects.clone` enforces source and destination requirements.
 - Dry-run behavior on mutating effects commands is non-persistent.

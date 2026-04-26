@@ -905,6 +905,34 @@ function inferExistingLayerReorderIntent({ sourceLines = [], executionStrategy =
   return null;
 }
 
+function inferExistingLayerDeleteIntent({ sourceLines = [], executionStrategy = {}, scope = {} } = {}) {
+  const joined = [
+    ...normArray(sourceLines),
+    normText(scope?.goal),
+    normText(executionStrategy?.implementationMode),
+    normText(executionStrategy?.passScope)
+  ].join(" ").toLowerCase();
+  if (!/\b(layer|layers)\b/.test(joined)) return null;
+  if (!/\b(delete|remove|clear|erase|drop|cut)\b/.test(joined)) return null;
+  const match = joined.match(/\blayer\s*(\d+)\b/);
+  if (!match) return null;
+  const layerIndex = Number(match[1]);
+  if (!Number.isInteger(layerIndex) || layerIndex < 0) return null;
+  return { layerIndex, force: true };
+}
+
+function inferExistingLayerCompactIntent({ sourceLines = [], executionStrategy = {}, scope = {} } = {}) {
+  const joined = [
+    ...normArray(sourceLines),
+    normText(scope?.goal),
+    normText(executionStrategy?.implementationMode),
+    normText(executionStrategy?.passScope)
+  ].join(" ").toLowerCase();
+  if (!/\b(layer|layers)\b/.test(joined)) return null;
+  if (!/\b(compact|compress|collapse|close\s+gaps|remove\s+empty|delete\s+empty|clear\s+empty)\b/.test(joined)) return null;
+  return { compact: true };
+}
+
 function supportsCommand(capabilityCommands = [], commandName = "") {
   const advertised = normArray(capabilityCommands).map((row) => normText(row)).filter(Boolean);
   return !advertised.length || advertised.includes(commandName);
@@ -1176,6 +1204,103 @@ function buildEffectReorderLayerCommandFromCreate({
   };
 }
 
+function buildEffectDeleteLayerCommandFromCreate({
+  command = {},
+  modelName = "",
+  layerDelete = null,
+  layerEffects = []
+} = {}) {
+  const layerIndex = Number(layerDelete?.layerIndex);
+  if (!normText(modelName) || !Number.isInteger(layerIndex) || layerIndex < 0) return command;
+  const deletedEffects = normArray(layerEffects)
+    .filter((effect) => Number(effect.layerIndex) === layerIndex)
+    .map((effect) => ({
+      effectName: normText(effect.effectName),
+      startMs: Number(effect.startMs),
+      endMs: Number(effect.endMs)
+    }))
+    .filter((effect) => effect.effectName && Number.isFinite(effect.startMs) && Number.isFinite(effect.endMs) && effect.endMs > effect.startMs)
+    .slice(0, 25);
+  return {
+    ...command,
+    id: normText(command?.id) || `effects.deleteLayer:${normText(modelName)}:${layerIndex}`,
+    cmd: "effects.deleteLayer",
+    params: {
+      modelName: normText(modelName),
+      layerIndex,
+      force: layerDelete?.force !== false
+    },
+    intent: {
+      ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
+      existingSequencePolicy: {
+        replacementAuthorized: true,
+        preserveExistingUnlessScoped: false,
+        emittedLayerDeleteCommand: true,
+        originalLayerIndex: layerIndex,
+        plannedLayerIndex: layerIndex,
+        overlapCount: deletedEffects.length,
+        deletedEffects,
+        deletedEffectNames: Array.from(new Set(deletedEffects.map((effect) => effect.effectName).filter(Boolean))).slice(0, 10)
+      }
+    }
+  };
+}
+
+function buildEffectCompactLayersCommandFromCreate({
+  command = {},
+  modelName = "",
+  layerEffects = []
+} = {}) {
+  if (!normText(modelName)) return command;
+  const rows = normArray(layerEffects).filter((effect) => effect.targetId === modelName);
+  const occupied = Array.from(new Set(rows
+    .map((effect) => Number(effect.layerIndex))
+    .filter((layerIndex) => Number.isInteger(layerIndex) && layerIndex >= 0)))
+    .sort((a, b) => a - b);
+  const layerMap = new Map(occupied.map((layerIndex, index) => [layerIndex, index]));
+  const compactedEffects = rows
+    .map((effect) => {
+      const fromLayer = Number(effect.layerIndex);
+      const toLayer = layerMap.has(fromLayer) ? layerMap.get(fromLayer) : fromLayer;
+      return {
+        effectName: normText(effect.effectName),
+        startMs: Number(effect.startMs),
+        endMs: Number(effect.endMs),
+        fromLayerIndex: fromLayer,
+        toLayerIndex: toLayer
+      };
+    })
+    .filter((effect) =>
+      effect.effectName &&
+      Number.isFinite(effect.startMs) &&
+      Number.isFinite(effect.endMs) &&
+      effect.endMs > effect.startMs &&
+      Number.isInteger(effect.fromLayerIndex) &&
+      Number.isInteger(effect.toLayerIndex) &&
+      effect.fromLayerIndex !== effect.toLayerIndex)
+    .slice(0, 25);
+  return {
+    ...command,
+    id: normText(command?.id) || `effects.compactLayers:${normText(modelName)}`,
+    cmd: "effects.compactLayers",
+    params: {
+      modelName: normText(modelName)
+    },
+    intent: {
+      ...(command.intent && typeof command.intent === "object" ? command.intent : {}),
+      existingSequencePolicy: {
+        replacementAuthorized: true,
+        preserveExistingUnlessScoped: false,
+        emittedLayerCompactCommand: true,
+        overlapCount: compactedEffects.length,
+        occupiedLayerIndexes: occupied,
+        compactedEffects,
+        compactedEffectNames: Array.from(new Set(compactedEffects.map((effect) => effect.effectName).filter(Boolean))).slice(0, 10)
+      }
+    }
+  };
+}
+
 function applyExistingSequencePreservation({
   commands = [],
   currentSequenceContext = null,
@@ -1189,15 +1314,22 @@ function applyExistingSequencePreservation({
   const replacementAuthorized = hasReplacementIntent({ sourceLines, executionStrategy, scope });
   const existingEditRequested = hasExistingEffectEditIntent({ sourceLines, executionStrategy, scope });
   const existingDeleteRequested = hasExistingEffectDeleteIntent({ sourceLines, executionStrategy, scope });
+  const layerDeleteRequested = inferExistingLayerDeleteIntent({ sourceLines, executionStrategy, scope });
   const layerReorderRequested = inferExistingLayerReorderIntent({ sourceLines, executionStrategy, scope });
+  const layerCompactRequested = inferExistingLayerCompactIntent({ sourceLines, executionStrategy, scope });
   const editExistingAuthorized = existingEditRequested &&
     supportsCommand(capabilityCommands, "effects.update");
   const deleteExistingAuthorized = existingDeleteRequested &&
     supportsCommand(capabilityCommands, "effects.delete");
+  const layerDeleteAuthorized = layerDeleteRequested &&
+    supportsCommand(capabilityCommands, "effects.deleteLayer");
   const layerReorderAuthorized = layerReorderRequested &&
     supportsCommand(capabilityCommands, "effects.reorderLayer");
+  const layerCompactAuthorized = layerCompactRequested &&
+    supportsCommand(capabilityCommands, "effects.compactLayers");
   if (!existingEffects.length) return commands;
-  return normArray(commands).map((command) => {
+  const emittedLayerOperations = new Set();
+  const preservedCommands = normArray(commands).map((command) => {
     if (normText(command?.cmd) !== "effects.create") return command;
     const params = command?.params && typeof command.params === "object" ? command.params : {};
     const modelName = normText(params.modelName);
@@ -1216,23 +1348,58 @@ function applyExistingSequencePreservation({
           existingSequencePolicy: {
             replacementAuthorized,
             editExistingRequested: existingEditRequested,
+            layerDeleteRequested: Boolean(layerDeleteRequested),
             layerReorderRequested: Boolean(layerReorderRequested),
+            layerCompactRequested: Boolean(layerCompactRequested),
             preserveExistingUnlessScoped: true,
             overlapCount: 0
           }
         }
       };
     }
+    if (layerDeleteAuthorized) {
+      const layerIndexToDelete = Number(layerDeleteRequested.layerIndex);
+      const modelLayerEffects = existingEffects.filter((effect) => effect.targetId === modelName && Number(effect.layerIndex) === layerIndexToDelete);
+      const key = `deleteLayer:${modelName}:${layerIndexToDelete}`;
+      if (modelLayerEffects.length && emittedLayerOperations.has(key)) return null;
+      if (modelLayerEffects.length) {
+        emittedLayerOperations.add(key);
+        warnings.push(`Deleting existing layer on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.deleteLayer for layer ${layerIndexToDelete}.`);
+        return buildEffectDeleteLayerCommandFromCreate({
+          command,
+          modelName,
+          layerDelete: layerDeleteRequested,
+          layerEffects: modelLayerEffects
+        });
+      }
+    }
     if (layerReorderAuthorized) {
       const fromLayer = Number(layerReorderRequested.fromLayer);
       const modelHasSourceLayer = existingEffects.some((effect) => effect.targetId === modelName && Number(effect.layerIndex) === fromLayer);
+      const key = `reorderLayer:${modelName}:${fromLayer}:${layerReorderRequested.toLayer}`;
+      if (modelHasSourceLayer && emittedLayerOperations.has(key)) return null;
       if (modelHasSourceLayer) {
+        emittedLayerOperations.add(key);
         warnings.push(`Reordering existing layers on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.reorderLayer from layer ${fromLayer} to layer ${layerReorderRequested.toLayer}.`);
         return buildEffectReorderLayerCommandFromCreate({
           command,
           modelName,
           layerReorder: layerReorderRequested,
           overlaps
+        });
+      }
+    }
+    if (layerCompactAuthorized) {
+      const modelLayerEffects = existingEffects.filter((effect) => effect.targetId === modelName);
+      const key = `compactLayers:${modelName}`;
+      if (modelLayerEffects.length && emittedLayerOperations.has(key)) return null;
+      if (modelLayerEffects.length) {
+        emittedLayerOperations.add(key);
+        warnings.push(`Compacting existing layers on ${modelName}; converted ${normText(params.effectName) || "planned effect"} create into effects.compactLayers.`);
+        return buildEffectCompactLayersCommandFromCreate({
+          command,
+          modelName,
+          layerEffects: modelLayerEffects
         });
       }
     }
@@ -1271,7 +1438,9 @@ function applyExistingSequencePreservation({
         existingSequencePolicy: {
           replacementAuthorized,
           editExistingRequested: existingEditRequested,
+          layerDeleteRequested: Boolean(layerDeleteRequested),
           layerReorderRequested: Boolean(layerReorderRequested),
+          layerCompactRequested: Boolean(layerCompactRequested),
           preserveExistingUnlessScoped: true,
           overlapCount: overlaps.length,
           originalLayerIndex: layerIndex,
@@ -1281,6 +1450,7 @@ function applyExistingSequencePreservation({
       }
     };
   });
+  return preservedCommands.filter(Boolean);
 }
 
 function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {

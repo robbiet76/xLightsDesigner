@@ -267,6 +267,76 @@ test("apply readback verifies deleted effects are absent from final state", asyn
   );
 });
 
+test("apply readback verifies deleted layer effects are absent", async () => {
+  const plan = [
+    {
+      cmd: "effects.deleteLayer",
+      params: {
+        modelName: "Star",
+        layerIndex: 1,
+        force: true
+      },
+      intent: {
+        existingSequencePolicy: {
+          emittedLayerDeleteCommand: true,
+          deletedEffects: [{ effectName: "Shimmer", startMs: 0, endMs: 120000 }]
+        }
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async () => ({
+      data: {
+        effects: []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [["effect-layer-delete", "Star@1", true]]
+  );
+});
+
+test("apply readback verifies compacted layer effects moved to expected layer", async () => {
+  const plan = [
+    {
+      cmd: "effects.compactLayers",
+      params: {
+        modelName: "Star"
+      },
+      intent: {
+        existingSequencePolicy: {
+          emittedLayerCompactCommand: true,
+          compactedEffects: [
+            { effectName: "Shimmer", startMs: 0, endMs: 120000, fromLayerIndex: 2, toLayerIndex: 1 }
+          ]
+        }
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: modelName === "Star" && layerIndex === 1 && startMs === 0 && endMs === 120000
+          ? [{ modelName, layerIndex, startMs, endMs, effectName: "Shimmer" }]
+          : []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [["effect-layer-compact", "Star", true]]
+  );
+});
+
 test("apply readback carries design and training context with alignment checks", async () => {
   const plan = [
     {

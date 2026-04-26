@@ -445,6 +445,99 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
         })());
       }
     }
+    if (cmd === "effects.deleteLayer" && normalizeElementName(params) && listEffects) {
+      const policy = step?.intent?.existingSequencePolicy && typeof step.intent.existingSequencePolicy === "object"
+        ? step.intent.existingSequencePolicy
+        : {};
+      const deletedEffects = arr(policy?.deletedEffects)
+        .map((row) => ({
+          effectName: str(row?.effectName),
+          startMs: intNumber(row?.startMs, null),
+          endMs: intNumber(row?.endMs, null)
+        }))
+        .filter((row) => row.effectName && row.startMs !== null && row.endMs !== null && row.endMs > row.startMs);
+      readbackChecks.push((async () => {
+        const modelName = normalizeElementName(params);
+        const layerIndex = intNumber(params.layerIndex ?? params.layer, null);
+        if (layerIndex === null) {
+          return {
+            kind: "effect-layer-delete",
+            target: `${modelName}@?`,
+            ok: false,
+            detail: "layer missing"
+          };
+        }
+        const rowsToVerify = deletedEffects.length ? deletedEffects : [{ effectName: "", startMs: undefined, endMs: undefined }];
+        const results = await Promise.all(rowsToVerify.map(async (expected) => {
+          const query = { modelName, layerIndex };
+          if (expected.startMs !== undefined) query.startMs = expected.startMs;
+          if (expected.endMs !== undefined) query.endMs = expected.endMs;
+          const resp = await listEffects(endpoint, query);
+          const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
+          return !effects.some((row) =>
+            Number(row?.layerIndex) === layerIndex &&
+            (!expected.effectName || str(row?.effectName) === expected.effectName) &&
+            (expected.startMs === undefined || Number(row?.startMs) === expected.startMs) &&
+            (expected.endMs === undefined || Number(row?.endMs) === expected.endMs)
+          );
+        }));
+        const layerAbsent = results.every(Boolean);
+        return {
+          kind: "effect-layer-delete",
+          target: `${modelName}@${layerIndex}`,
+          ok: layerAbsent,
+          detail: layerAbsent ? `layer ${layerIndex} effects absent` : `layer ${layerIndex} still contains deleted effects`
+        };
+      })());
+    }
+    if (cmd === "effects.compactLayers" && normalizeElementName(params) && listEffects) {
+      const policy = step?.intent?.existingSequencePolicy && typeof step.intent.existingSequencePolicy === "object"
+        ? step.intent.existingSequencePolicy
+        : {};
+      const compactedEffects = arr(policy?.compactedEffects)
+        .map((row) => ({
+          effectName: str(row?.effectName),
+          startMs: intNumber(row?.startMs, null),
+          endMs: intNumber(row?.endMs, null),
+          fromLayerIndex: intNumber(row?.fromLayerIndex, null),
+          toLayerIndex: intNumber(row?.toLayerIndex, null)
+        }))
+        .filter((row) =>
+          row.effectName &&
+          row.startMs !== null &&
+          row.endMs !== null &&
+          row.endMs > row.startMs &&
+          row.fromLayerIndex !== null &&
+          row.toLayerIndex !== null &&
+          row.fromLayerIndex !== row.toLayerIndex);
+      if (compactedEffects.length) {
+        readbackChecks.push((async () => {
+          const modelName = normalizeElementName(params);
+          const results = await Promise.all(compactedEffects.map(async (expected) => {
+            const resp = await listEffects(endpoint, {
+              modelName,
+              layerIndex: expected.toLayerIndex,
+              startMs: expected.startMs,
+              endMs: expected.endMs
+            });
+            const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
+            return effects.some((row) =>
+              Number(row?.layerIndex) === expected.toLayerIndex &&
+              str(row?.effectName) === expected.effectName &&
+              Number(row?.startMs) === expected.startMs &&
+              Number(row?.endMs) === expected.endMs
+            );
+          }));
+          const compactedPresent = results.every(Boolean);
+          return {
+            kind: "effect-layer-compact",
+            target: modelName,
+            ok: compactedPresent,
+            detail: compactedPresent ? "compacted effects moved to expected layers" : "compacted effects missing from expected layers"
+          };
+        })());
+      }
+    }
   }
 
   for (const effect of expectedFinalEffects) {
