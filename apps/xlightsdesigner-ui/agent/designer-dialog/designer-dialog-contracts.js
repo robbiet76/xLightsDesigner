@@ -2,6 +2,7 @@ import { validateAgentHandoff } from "../handoff-contracts.js";
 import { buildCanonicalSequenceIntentHandoff } from "../sequence-agent/sequence-intent-handoff.js";
 import { buildSequencingDesignHandoffV2 } from "../sequence-agent/sequence-design-handoff.js";
 import { finalizeArtifact } from "../shared/artifact-ids.js";
+import { buildVisualInspirationRefs } from "./visual-design-assets.js";
 
 export const DESIGNER_DIALOG_ROLE = "designer_dialog";
 export const DESIGNER_DIALOG_CONTRACT_VERSION = "1.0";
@@ -130,6 +131,9 @@ export function validateCreativeBrief(payload = {}) {
   if (obj.traceability != null && !isPlainObject(obj.traceability)) {
     errors.push("traceability must be an object when provided");
   }
+  if (obj.visualInspiration != null && !isPlainObject(obj.visualInspiration)) {
+    errors.push("visualInspiration must be an object when provided");
+  }
 
   return errors;
 }
@@ -166,6 +170,9 @@ export function validateProposalBundle(payload = {}) {
   }
   if (obj.traceability != null && !isPlainObject(obj.traceability)) {
     errors.push("traceability must be an object when provided");
+  }
+  if (obj.visualAssets != null && !isPlainObject(obj.visualAssets)) {
+    errors.push("visualAssets must be an object when provided");
   }
 
   return errors;
@@ -254,6 +261,9 @@ export function buildDesignerDialogInput({
 
 export function buildCreativeBriefContract(brief = {}, traceability = null) {
   const obj = isPlainObject(brief) ? brief : {};
+  const visualInspiration = isPlainObject(obj.visualInspiration)
+    ? obj.visualInspiration
+    : (isPlainObject(obj.visualDesignAssetPack) ? buildVisualInspirationRefs(obj.visualDesignAssetPack) : null);
   return finalizeArtifact({
     artifactType: DESIGNER_DIALOG_BRIEF_CONTRACT,
     artifactVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
@@ -268,6 +278,7 @@ export function buildCreativeBriefContract(brief = {}, traceability = null) {
     visualCues: str(obj.visualCues || "No uploaded references."),
     hypotheses: arr(obj.hypotheses).map((row) => str(row)).filter(Boolean),
     notes: str(obj.notes || ""),
+    visualInspiration: isPlainObject(visualInspiration) ? visualInspiration : undefined,
     traceability: isPlainObject(traceability) ? traceability : undefined
   });
 }
@@ -285,6 +296,7 @@ export function buildProposalBundle({
   riskNotes = [],
   impact = {},
   executionPlan = null,
+  visualAssets = null,
   traceability = null
 } = {}) {
   return finalizeArtifact({
@@ -304,6 +316,7 @@ export function buildProposalBundle({
     riskNotes: arr(riskNotes).map((row) => str(row)).filter(Boolean),
     impact: isPlainObject(impact) ? impact : {},
     executionPlan: isPlainObject(executionPlan) ? executionPlan : undefined,
+    visualAssets: isPlainObject(visualAssets) ? visualAssets : undefined,
     traceability: isPlainObject(traceability) ? traceability : undefined
   });
 }
@@ -317,7 +330,8 @@ export function buildIntentHandoffFromDesignerState({
   baseRevision = "unknown",
   elevatedRiskConfirmed = false,
   resolvedTargetIds = [],
-  executionStrategy = null
+  executionStrategy = null,
+  visualDesignAssetPack = null
 } = {}) {
   const sequencingDesignHandoff = buildSequencingDesignHandoffV2({
     requestId: str(requestId),
@@ -326,7 +340,8 @@ export function buildIntentHandoffFromDesignerState({
     creativeBrief,
     proposalBundle,
     resolvedTargetIds,
-    executionStrategy
+    executionStrategy,
+    visualDesignAssetPack
   });
   return {
     ...buildCanonicalSequenceIntentHandoff({

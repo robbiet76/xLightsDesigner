@@ -56,7 +56,10 @@ function buildNormalizedBrief(cloud = {}, fallback = {}) {
       narrativeCues: str(brief.narrativeCues || fallback.narrativeCues),
       visualCues: str(brief.visualCues || fallback.visualCues),
       hypotheses: arr(brief.hypotheses).length ? brief.hypotheses : arr(fallback.hypotheses),
-      notes: str(brief.notes || fallback.notes)
+      notes: str(brief.notes || fallback.notes),
+      visualInspiration: isPlainObject(brief.visualInspiration)
+        ? brief.visualInspiration
+        : (isPlainObject(fallback.visualInspiration) ? fallback.visualInspiration : undefined)
     },
     isPlainObject(fallback.traceability) ? fallback.traceability : null
   );
@@ -101,6 +104,9 @@ function buildNormalizedProposal(cloud = {}, fallback = {}) {
       ...cloudImpact
     },
     executionPlan: isPlainObject(proposal.executionPlan) ? proposal.executionPlan : (isPlainObject(fallback.executionPlan) ? fallback.executionPlan : null),
+    visualAssets: isPlainObject(proposal.visualAssets)
+      ? proposal.visualAssets
+      : (isPlainObject(fallback.visualAssets) ? fallback.visualAssets : null),
     traceability: isPlainObject(fallback.traceability) ? fallback.traceability : null
   });
 }

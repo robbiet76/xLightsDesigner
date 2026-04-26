@@ -16,6 +16,29 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
+function normalizePaletteRoles(rows = []) {
+  return arr(rows)
+    .map((row) => ({
+      name: str(row?.name),
+      hex: str(row?.hex),
+      role: str(row?.role)
+    }))
+    .filter((row) => row.name || row.hex || row.role);
+}
+
+function normalizeMediaAssetDirectives(rows = []) {
+  return arr(rows)
+    .map((row) => ({
+      assetId: str(row?.assetId),
+      kind: str(row?.kind),
+      intendedUse: str(row?.intendedUse),
+      recommendedSections: uniqueStrings(row?.recommendedSections),
+      paletteRoles: uniqueStrings(row?.paletteRoles),
+      motionUse: str(row?.motionUse)
+    }))
+    .filter((row) => row.assetId);
+}
+
 function stripNegativeCueClauses(value = '') {
   const text = str(value);
   if (!text) return '';
@@ -170,7 +193,8 @@ export function buildSequencingDesignHandoffV2({
   creativeBrief = null,
   proposalBundle = null,
   resolvedTargetIds = [],
-  executionStrategy = null
+  executionStrategy = null,
+  visualDesignAssetPack = null
 } = {}) {
   const strategy = isPlainObject(executionStrategy) ? executionStrategy : {};
   const sectionPlans = arr(strategy.sectionPlans);
@@ -204,6 +228,18 @@ export function buildSequencingDesignHandoffV2({
     normalizedIntent?.preservationConstraints?.allowGlobalRewrite ??
     normalizedIntent?.allowGlobalRewrite
   );
+  const visualPack = isPlainObject(visualDesignAssetPack) ? visualDesignAssetPack : null;
+  const visualIntent = isPlainObject(visualPack?.creativeIntent) ? visualPack.creativeIntent : {};
+  const visualInspiration = isPlainObject(creativeBrief?.visualInspiration) ? creativeBrief.visualInspiration : {};
+  const visualAssets = isPlainObject(proposalBundle?.visualAssets) ? proposalBundle.visualAssets : {};
+  const paletteRoles = normalizePaletteRoles(
+    arr(visualIntent.palette).length ? visualIntent.palette : visualInspiration.palette
+  );
+  const motifDirectives = uniqueStrings(
+    arr(visualIntent.motifs).length ? visualIntent.motifs : visualInspiration.motifs
+  );
+  const mediaAssetDirectives = normalizeMediaAssetDirectives(visualPack?.sequenceAssets);
+  const visualAssetPackRef = str(visualPack?.artifactId || visualAssets.assetPackId || visualInspiration.artifactId);
 
   return finalizeArtifact({
     artifactType: 'sequencing_design_handoff_v2',
@@ -229,6 +265,10 @@ export function buildSequencingDesignHandoffV2({
       balanceRule: 'Preserve a readable lead/support/accent hierarchy across the scoped sections.'
     },
     visualFamilyPreferences,
+    visualAssetPackRef: visualAssetPackRef || undefined,
+    paletteRoles: paletteRoles.length ? paletteRoles : undefined,
+    motifDirectives: motifDirectives.length ? motifDirectives : undefined,
+    mediaAssetDirectives: mediaAssetDirectives.length ? mediaAssetDirectives : undefined,
     constraints: {
       preserveTimingTracks: normalizedIntent?.preserveTimingTracks !== false,
       allowGlobalRewrite,

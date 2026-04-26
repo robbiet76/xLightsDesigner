@@ -12,6 +12,7 @@ import {
   buildIntentHandoffFromDesignerState,
   validateDesignerDialogContractGate
 } from "../../../agent/designer-dialog/designer-dialog-contracts.js";
+import { buildVisualDesignAssetPack } from "../../../agent/designer-dialog/visual-design-assets.js";
 
 function sampleInput(overrides = {}) {
   return {
@@ -99,6 +100,7 @@ function sampleResult(overrides = {}) {
     creativeBrief: sampleBrief(),
     proposalBundle: sampleProposal(),
     handoff: buildIntentHandoffFromDesignerState({
+      requestId: "req-1",
       normalizedIntent: {
         goal: "Make chorus bigger and cleaner",
         sections: ["Chorus 1"],
@@ -111,6 +113,18 @@ function sampleResult(overrides = {}) {
       creativeBrief: {
         mood: "punchy",
         paletteIntent: "cool white"
+      },
+      resolvedTargetIds: ["MegaTree"],
+      executionStrategy: {
+        sectionPlans: [
+          {
+            section: "Chorus 1",
+            energy: "high",
+            density: "dense",
+            intentSummary: "Make chorus bigger and cleaner",
+            targetIds: ["MegaTree"]
+          }
+        ]
       },
       elevatedRiskConfirmed: false
     }),
@@ -222,8 +236,60 @@ test("buildCreativeBriefContract normalizes helper output into canonical contrac
   assert.deepEqual(validateCreativeBrief(brief), []);
 });
 
+test("designer contracts accept optional visual inspiration and asset refs", () => {
+  const visualPack = buildVisualDesignAssetPack({
+    sequenceId: "seq-1",
+    themeSummary: "icy choral tension",
+    inspirationPrompt: "Create an icy choral mood collage.",
+    palette: [{ name: "ice blue", hex: "#8fd8ff", role: "cool base" }],
+    motifs: ["ice shimmer"],
+    displayAsset: { relativePath: "inspiration-board.png" }
+  });
+  const brief = buildCreativeBriefContract({
+    summary: "test",
+    goalsSummary: "goals",
+    inspirationSummary: "inspiration",
+    sections: ["Verse", "Chorus"],
+    moodEnergyArc: "rise",
+    narrativeCues: "story",
+    visualCues: "cool white",
+    hypotheses: ["hypothesis"],
+    visualDesignAssetPack: visualPack
+  });
+  const proposal = sampleProposal({
+    visualAssets: {
+      assetPackId: visualPack.artifactId,
+      summary: "Icy choral visual pack.",
+      sequenceAssetCount: visualPack.sequenceAssets.length
+    }
+  });
+
+  assert.deepEqual(validateCreativeBrief(brief), []);
+  assert.deepEqual(validateProposalBundle(proposal), []);
+  assert.equal(brief.visualInspiration.artifactId, visualPack.artifactId);
+  assert.equal(proposal.visualAssets.assetPackId, visualPack.artifactId);
+});
+
 test("buildIntentHandoffFromDesignerState produces valid intent_handoff_v1", () => {
+  const visualPack = buildVisualDesignAssetPack({
+    sequenceId: "seq-1",
+    themeSummary: "cinematic gold lift",
+    inspirationPrompt: "Create a cinematic gold lift board.",
+    palette: [{ name: "warm gold", hex: "#ffd36a", role: "impact highlight" }],
+    motifs: ["gold fanfare"],
+    displayAsset: { relativePath: "inspiration-board.png" },
+    sequenceAssets: [
+      {
+        assetId: "asset-001",
+        kind: "image",
+        relativePath: "images/gold-fanfare.webp",
+        mimeType: "image/webp",
+        intendedUse: "picture_effect_texture"
+      }
+    ]
+  });
   const handoff = buildIntentHandoffFromDesignerState({
+    requestId: "req-1",
     normalizedIntent: {
       goal: "Polish chorus",
       sections: ["Chorus 1"],
@@ -235,22 +301,41 @@ test("buildIntentHandoffFromDesignerState produces valid intent_handoff_v1", () 
     intentText: "Polish chorus",
     creativeBrief: {
       mood: "cinematic",
-      paletteIntent: "warm gold"
+      paletteIntent: "warm gold",
+      visualInspiration: {
+        artifactId: visualPack.artifactId,
+        palette: visualPack.creativeIntent.palette,
+        motifs: visualPack.creativeIntent.motifs
+      }
     },
     elevatedRiskConfirmed: false,
+    resolvedTargetIds: ["MegaTree"],
     executionStrategy: {
       passScope: "whole_sequence",
       implementationMode: "whole_sequence_pass",
       routePreference: "designer_to_sequence_agent",
       shouldUseFullSongStructureTrack: true,
       sectionCount: 4,
-      primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"]
-    }
+      primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+      sectionPlans: [
+        {
+          section: "Chorus 1",
+          energy: "high",
+          density: "dense",
+          intentSummary: "Polish chorus",
+          targetIds: ["MegaTree"]
+        }
+      ]
+    },
+    visualDesignAssetPack: visualPack
   });
 
   const gate = validateDesignerDialogContractGate("result", sampleResult({ handoff }));
   assert.equal(gate.ok, true);
   assert.equal(handoff.executionStrategy.passScope, "whole_sequence");
+  assert.equal(handoff.sequencingDesignHandoff.visualAssetPackRef, visualPack.artifactId);
+  assert.deepEqual(handoff.sequencingDesignHandoff.paletteRoles, visualPack.creativeIntent.palette);
+  assert.equal("imageData" in handoff.sequencingDesignHandoff, false);
 });
 
 test("designer dialog contract gate reports unknown kind", () => {
