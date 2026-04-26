@@ -86,6 +86,74 @@ function normalizeEffectRow(params = {}) {
   };
 }
 
+function parseJsonArrayString(value = "") {
+  const text = str(value);
+  if (!text) return [];
+  try {
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function cloneTargetNames(params = {}, clonePolicy = {}) {
+  const fromArray = arr(params.targetModels).concat(arr(clonePolicy.targetModelNames));
+  const fromJson = typeof params.targetModels === "string" ? parseJsonArrayString(params.targetModels) : [];
+  return Array.from(new Set(
+    [
+      params.targetModelName,
+      params.targetElement,
+      params.targetModel,
+      clonePolicy.targetModelName,
+      ...fromArray,
+      ...fromJson
+    ]
+      .map((row) => str(row))
+      .filter(Boolean)
+  ));
+}
+
+function normalizeCloneReadback(step = {}) {
+  const params = step?.params && typeof step.params === "object" ? step.params : {};
+  const clonePolicy = step?.intent?.clonePolicy && typeof step.intent.clonePolicy === "object"
+    ? step.intent.clonePolicy
+    : {};
+  const sourceModelName = str(params.sourceModelName || params.sourceElement || params.sourceModel || clonePolicy.sourceModelName);
+  const sourceLayerIndex = intNumber(
+    params.sourceLayerIndex ?? params.sourceLayer ?? clonePolicy.sourceLayerIndex,
+    null
+  );
+  const sourceStartMs = intNumber(params.sourceStartMs ?? clonePolicy.sourceStartMs, null);
+  const sourceEndMs = intNumber(params.sourceEndMs ?? clonePolicy.sourceEndMs, null);
+  const targetStartMs = intNumber(params.targetStartMs ?? clonePolicy.targetStartMs, sourceStartMs);
+  const targetLayerIndex = intNumber(
+    params.targetLayerIndex ?? params.targetLayer ?? clonePolicy.targetLayerIndex,
+    sourceLayerIndex
+  );
+  const mode = str(params.mode || clonePolicy.mode).toLowerCase() === "move" ? "move" : "copy";
+  const sourceEffectCount = intNumber(clonePolicy.sourceEffectCount ?? params.sourceEffectCount, null);
+  if (!sourceModelName || sourceStartMs === null || sourceEndMs === null || sourceEndMs <= sourceStartMs || targetStartMs === null) {
+    return null;
+  }
+  const durationMs = sourceEndMs - sourceStartMs;
+  const targetEndMs = targetStartMs + durationMs;
+  const targetModels = cloneTargetNames(params, clonePolicy);
+  if (!targetModels.length) return null;
+  return {
+    sourceModelName,
+    sourceLayerIndex,
+    sourceStartMs,
+    sourceEndMs,
+    targetModels,
+    targetLayerIndex,
+    targetStartMs,
+    targetEndMs,
+    mode,
+    sourceEffectCount: sourceEffectCount !== null && sourceEffectCount > 0 ? sourceEffectCount : 1
+  };
+}
+
 function effectMatchesSelector(effect = {}, params = {}) {
   const selectorModel = normalizeElementName(params);
   if (selectorModel && effect.modelName !== selectorModel) return false;
@@ -409,6 +477,74 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
           detail: present ? `${effectName || "effect"} still present` : `${effectName || "effect"} absent`
         };
       })());
+    }
+    if (cmd === "effects.clone" && listEffects) {
+      const cloneReadback = normalizeCloneReadback(step);
+      if (cloneReadback) {
+        for (const targetModel of cloneReadback.targetModels) {
+          readbackChecks.push((async () => {
+            const query = {
+              modelName: targetModel,
+              startMs: cloneReadback.targetStartMs,
+              endMs: cloneReadback.targetEndMs
+            };
+            if (cloneReadback.targetLayerIndex !== null) query.layerIndex = cloneReadback.targetLayerIndex;
+            const resp = await listEffects(endpoint, query);
+            const effects = arr(resp?.data?.effects);
+            const matchingEffects = effects.filter((row) => {
+              if (str(row?.modelName || targetModel) !== targetModel) return false;
+              if (cloneReadback.targetLayerIndex !== null && Number(row?.layerIndex) !== cloneReadback.targetLayerIndex) return false;
+              const startMs = Number(row?.startMs);
+              const endMs = Number(row?.endMs);
+              return Number.isFinite(startMs) &&
+                Number.isFinite(endMs) &&
+                startMs >= cloneReadback.targetStartMs &&
+                endMs <= cloneReadback.targetEndMs;
+            });
+            const ok = matchingEffects.length >= cloneReadback.sourceEffectCount;
+            return {
+              kind: "effect-clone-native",
+              target: cloneReadback.targetLayerIndex === null ? targetModel : `${targetModel}@${cloneReadback.targetLayerIndex}`,
+              ok,
+              detail: ok
+                ? `found ${matchingEffects.length} cloned effect${matchingEffects.length === 1 ? "" : "s"}`
+                : `expected at least ${cloneReadback.sourceEffectCount} cloned effect${cloneReadback.sourceEffectCount === 1 ? "" : "s"}`,
+              expectedCount: cloneReadback.sourceEffectCount,
+              actualCount: matchingEffects.length
+            };
+          })());
+        }
+        if (cloneReadback.mode === "move") {
+          readbackChecks.push((async () => {
+            const query = {
+              modelName: cloneReadback.sourceModelName,
+              startMs: cloneReadback.sourceStartMs,
+              endMs: cloneReadback.sourceEndMs
+            };
+            if (cloneReadback.sourceLayerIndex !== null) query.layerIndex = cloneReadback.sourceLayerIndex;
+            const resp = await listEffects(endpoint, query);
+            const effects = arr(resp?.data?.effects);
+            const remaining = effects.filter((row) => {
+              if (str(row?.modelName || cloneReadback.sourceModelName) !== cloneReadback.sourceModelName) return false;
+              if (cloneReadback.sourceLayerIndex !== null && Number(row?.layerIndex) !== cloneReadback.sourceLayerIndex) return false;
+              const startMs = Number(row?.startMs);
+              const endMs = Number(row?.endMs);
+              return Number.isFinite(startMs) &&
+                Number.isFinite(endMs) &&
+                startMs >= cloneReadback.sourceStartMs &&
+                endMs <= cloneReadback.sourceEndMs;
+            });
+            const ok = remaining.length === 0;
+            return {
+              kind: "effect-clone-native-source-delete",
+              target: cloneReadback.sourceLayerIndex === null ? cloneReadback.sourceModelName : `${cloneReadback.sourceModelName}@${cloneReadback.sourceLayerIndex}`,
+              ok,
+              detail: ok ? "source window empty after move" : "source window still contains moved effects",
+              actualCount: remaining.length
+            };
+          })());
+        }
+      }
     }
     if (cmd === "effects.reorderLayer" && normalizeElementName(params) && listEffects) {
       const policy = step?.intent?.existingSequencePolicy && typeof step.intent.existingSequencePolicy === "object"

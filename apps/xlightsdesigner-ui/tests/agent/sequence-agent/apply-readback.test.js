@@ -238,6 +238,133 @@ test("apply readback flags cloned effect payload mismatches", async () => {
   assert.equal(cloneCheck.paletteMatched, false);
 });
 
+test("apply readback verifies native clone target window", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      id: "effects.clone.1",
+      cmd: "effects.clone",
+      params: {
+        sourceModelName: "Star",
+        sourceLayerIndex: 0,
+        sourceStartMs: 1000,
+        sourceEndMs: 5000,
+        targetModelName: "MegaTree",
+        targetLayerIndex: 1,
+        targetStartMs: 8000,
+        mode: "copy"
+      },
+      intent: {
+        clonePolicy: {
+          explicitCloneRequest: true,
+          nativeCloneCommand: true,
+          sourceEffectCount: 2,
+          targetModelNames: ["MegaTree"]
+        }
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: modelName === "MegaTree" && layerIndex === 1 && startMs === 8000 && endMs === 12000
+          ? [
+              { modelName, layerIndex, startMs: 8000, endMs: 9000, effectName: "Shimmer" },
+              { modelName, layerIndex, startMs: 9500, endMs: 12000, effectName: "Bars" }
+            ]
+          : []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok, row.actualCount]),
+    [["effect-clone-native", "MegaTree@1", true, 2]]
+  );
+});
+
+test("apply readback verifies native clone move clears source window", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      id: "effects.clone.1",
+      cmd: "effects.clone",
+      params: {
+        sourceModelName: "Star",
+        sourceLayerIndex: 0,
+        sourceStartMs: 1000,
+        sourceEndMs: 5000,
+        targetModelName: "MegaTree",
+        targetLayerIndex: 1,
+        targetStartMs: 8000,
+        mode: "move"
+      },
+      intent: {
+        clonePolicy: {
+          nativeCloneCommand: true,
+          sourceEffectCount: 1,
+          targetModelNames: ["MegaTree"]
+        }
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: modelName === "MegaTree" && layerIndex === 1 && startMs === 8000 && endMs === 12000
+          ? [{ modelName, layerIndex, startMs: 8000, endMs: 12000, effectName: "Shimmer" }]
+          : []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [
+      ["effect-clone-native", "MegaTree@1", true],
+      ["effect-clone-native-source-delete", "Star@0", true]
+    ]
+  );
+});
+
+test("apply readback flags native clone target count mismatch", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      id: "effects.clone.1",
+      cmd: "effects.clone",
+      params: {
+        sourceModelName: "Star",
+        sourceLayerIndex: 0,
+        sourceStartMs: 1000,
+        sourceEndMs: 5000,
+        targetModelName: "MegaTree",
+        targetLayerIndex: 1,
+        targetStartMs: 8000,
+        mode: "copy"
+      },
+      intent: {
+        clonePolicy: {
+          nativeCloneCommand: true,
+          sourceEffectCount: 2
+        }
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async () => ({
+      data: {
+        effects: [{ modelName: "MegaTree", layerIndex: 1, startMs: 8000, endMs: 12000, effectName: "Shimmer" }]
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, false);
+  const cloneCheck = verification.checks.find((row) => row.kind === "effect-clone-native");
+  assert.equal(cloneCheck.ok, false);
+  assert.equal(cloneCheck.expectedCount, 2);
+  assert.equal(cloneCheck.actualCount, 1);
+});
+
 test("apply readback verifies final layer placement after update reorder and compact", async () => {
   const plan = [
     {
