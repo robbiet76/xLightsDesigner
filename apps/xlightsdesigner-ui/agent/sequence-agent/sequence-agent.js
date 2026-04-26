@@ -1542,6 +1542,87 @@ function cloneTargetIdForEffect(effectTargetId = "", cloneIntent = null) {
   return knownIds.includes(mappedTarget) ? mappedTarget : "";
 }
 
+function cloneTargetLayerForSource(sourceLayer = 0, targetBaseLayer = null, sourceBaseLayer = null) {
+  const layer = Number(sourceLayer);
+  if (!Number.isInteger(layer) || layer < 0) return null;
+  if (Number.isInteger(targetBaseLayer)) {
+    return targetBaseLayer + (Number.isInteger(sourceBaseLayer) ? layer - sourceBaseLayer : 0);
+  }
+  return layer;
+}
+
+function cloneTargetLayerOverlaps({
+  existingEffects = [],
+  sourceEffects = [],
+  targetModels = [],
+  targetBaseLayer = null,
+  sourceBaseLayer = null,
+  deltaMs = 0
+} = {}) {
+  const overlaps = [];
+  for (const targetModel of targetModels) {
+    for (const source of sourceEffects) {
+      const targetLayer = cloneTargetLayerForSource(source.layerIndex, targetBaseLayer, sourceBaseLayer);
+      if (targetLayer === null) continue;
+      const startMs = Math.max(0, Math.round(Number(source.startMs) + deltaMs));
+      const endMs = Math.max(startMs + 1, Math.round(Number(source.endMs) + deltaMs));
+      for (const existing of existingEffects) {
+        if (existing.targetId !== targetModel) continue;
+        if (Number(existing.layerIndex) !== targetLayer) continue;
+        if (!overlapsWindow(existing, { startMs, endMs })) continue;
+        overlaps.push({
+          targetId: targetModel,
+          layerIndex: targetLayer,
+          effectName: existing.effectName,
+          startMs: existing.startMs,
+          endMs: existing.endMs
+        });
+      }
+    }
+  }
+  return overlaps;
+}
+
+function chooseOpenCloneBaseLayer({
+  existingEffects = [],
+  sourceEffects = [],
+  targetModels = [],
+  requestedTargetLayer = null,
+  sourceBaseLayer = null,
+  deltaMs = 0
+} = {}) {
+  const sourceLayers = sourceEffects
+    .map((effect) => Number(effect.layerIndex))
+    .filter((layer) => Number.isInteger(layer) && layer >= 0);
+  const minSourceLayer = sourceLayers.length ? Math.min(...sourceLayers) : 0;
+  const startLayer = Number.isInteger(requestedTargetLayer) ? requestedTargetLayer : minSourceLayer;
+  let candidate = Math.max(0, startLayer);
+  for (let guard = 0; guard < 1000; guard++) {
+    const overlaps = cloneTargetLayerOverlaps({
+      existingEffects,
+      sourceEffects,
+      targetModels,
+      targetBaseLayer: candidate,
+      sourceBaseLayer,
+      deltaMs
+    });
+    if (!overlaps.length) return { targetLayerIndex: candidate, overlaps: [] };
+    const maxLayer = Math.max(...overlaps.map((row) => Number(row.layerIndex)).filter(Number.isFinite));
+    candidate = Math.max(candidate + 1, maxLayer + 1);
+  }
+  return {
+    targetLayerIndex: startLayer,
+    overlaps: cloneTargetLayerOverlaps({
+      existingEffects,
+      sourceEffects,
+      targetModels,
+      targetBaseLayer: startLayer,
+      sourceBaseLayer,
+      deltaMs
+    })
+  };
+}
+
 function buildExplicitCloneCommands({
   commands = [],
   currentSequenceContext = null,
@@ -1581,7 +1662,30 @@ function buildExplicitCloneCommands({
         .map((row) => normText(row))
         .filter(Boolean)
     ));
-    const targetLayerIndex = Number.isInteger(cloneIntent.targetLayerIndex) ? cloneIntent.targetLayerIndex : null;
+    const sourceBaseLayer = Number.isInteger(cloneIntent.sourceLayerIndex) ? cloneIntent.sourceLayerIndex : null;
+    const requestedTargetLayerIndex = Number.isInteger(cloneIntent.targetLayerIndex) ? cloneIntent.targetLayerIndex : null;
+    const requestedLayerOverlaps = requestedTargetLayerIndex !== null
+      ? cloneTargetLayerOverlaps({
+          existingEffects,
+          sourceEffects,
+          targetModels,
+          targetBaseLayer: requestedTargetLayerIndex,
+          sourceBaseLayer,
+          deltaMs
+        })
+      : [];
+    const openLayerSelection = chooseOpenCloneBaseLayer({
+      existingEffects,
+      sourceEffects,
+      targetModels,
+      requestedTargetLayer: requestedTargetLayerIndex,
+      sourceBaseLayer,
+      deltaMs
+    });
+    const targetLayerIndex = openLayerSelection.targetLayerIndex;
+    if (requestedTargetLayerIndex !== null && targetLayerIndex !== requestedTargetLayerIndex) {
+      warnings.push(`Preserving existing effects in clone targets; moved native clone from layer ${requestedTargetLayerIndex} to open layer ${targetLayerIndex}.`);
+    }
     const nonEffectCommands = normArray(commands).filter((command) => normText(command?.cmd) !== "effects.create" && normText(command?.cmd) !== "effects.alignToTiming");
     warnings.push(`${cloneIntent.mode === "move" ? "Moving" : "Cloning"} ${sourceEffects.length} effect${sourceEffects.length === 1 ? "" : "s"} from ${cloneIntent.sourceModelName}${Number.isInteger(cloneIntent.sourceLayerIndex) ? ` layer ${cloneIntent.sourceLayerIndex}` : ""} to ${targetModels.join(", ")}${targetLayerIndex !== null ? ` layer ${targetLayerIndex}` : ""} with owned effects.clone.`);
     return nonEffectCommands.concat({
@@ -1590,7 +1694,7 @@ function buildExplicitCloneCommands({
       anchor: {
         kind: "source_effect_window",
         sourceModelName: cloneIntent.sourceModelName,
-        sourceLayerIndex: Number.isInteger(cloneIntent.sourceLayerIndex) ? cloneIntent.sourceLayerIndex : null,
+        sourceLayerIndex: sourceBaseLayer,
         sourceStartMs: minSourceStartMs,
         sourceEndMs: maxSourceEndMs,
         boundarySide: "start",
@@ -1599,7 +1703,7 @@ function buildExplicitCloneCommands({
       cmd: "effects.clone",
       params: {
         sourceModelName: cloneIntent.sourceModelName,
-        ...(Number.isInteger(cloneIntent.sourceLayerIndex) ? { sourceLayerIndex: cloneIntent.sourceLayerIndex } : {}),
+        ...(sourceBaseLayer !== null ? { sourceLayerIndex: sourceBaseLayer } : {}),
         sourceStartMs: minSourceStartMs,
         sourceEndMs: maxSourceEndMs,
         ...(targetModels.length === 1 ? { targetModelName: targetModels[0] } : { targetModels }),
@@ -1613,7 +1717,7 @@ function buildExplicitCloneCommands({
           nativeCloneCommand: true,
           mode: cloneIntent.mode === "move" ? "move" : "copy",
           sourceModelName: cloneIntent.sourceModelName,
-          sourceLayerIndex: Number.isInteger(cloneIntent.sourceLayerIndex) ? cloneIntent.sourceLayerIndex : null,
+          sourceLayerIndex: sourceBaseLayer,
           sourceStartMs: minSourceStartMs,
           sourceEndMs: maxSourceEndMs,
           targetModelNames: targetModels,
@@ -1623,12 +1727,15 @@ function buildExplicitCloneCommands({
           sourceEffectCount: sourceEffects.length
         },
         existingSequencePolicy: {
-          replacementAuthorized: true,
-          preserveExistingUnlessScoped: false,
+          replacementAuthorized: false,
+          preserveExistingUnlessScoped: true,
           emittedNativeCloneCommand: true,
-          originalLayerIndex: Number.isInteger(cloneIntent.sourceLayerIndex) ? cloneIntent.sourceLayerIndex : null,
+          originalLayerIndex: sourceBaseLayer,
           plannedLayerIndex: targetLayerIndex,
-          overlapCount: 0
+          requestedLayerIndex: requestedTargetLayerIndex,
+          avoidedOverlapCount: requestedLayerOverlaps.length,
+          overlapCount: openLayerSelection.overlaps.length,
+          overlappingEffectNames: Array.from(new Set(requestedLayerOverlaps.map((row) => row.effectName).filter(Boolean))).slice(0, 5)
         }
       }
     });

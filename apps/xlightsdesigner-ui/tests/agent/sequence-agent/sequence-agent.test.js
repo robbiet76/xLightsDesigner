@@ -566,6 +566,52 @@ test("sequence_agent emits one owned clone command for multiple explicit copy ta
   assert.deepEqual(cloneCommands[0].intent.clonePolicy.targetModelNames, ["MegaTree", "Roofline"]);
 });
 
+test("sequence_agent moves native clone to an open destination layer when target window is occupied", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Copy Star layer 0 to MegaTree layer 1"
+    },
+    sourceLines: ["Chorus 1 / copy Star layer 0 to MegaTree layer 1"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 2, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "Star",
+            effectName: "Shimmer",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 5000
+          },
+          {
+            targetId: "MegaTree",
+            effectName: "On",
+            layerIndex: 1,
+            startMs: 2000,
+            endMs: 4000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.clone"]
+  });
+
+  const cloneCommand = out.commands.find((row) => row.cmd === "effects.clone");
+  assert.ok(cloneCommand);
+  assert.equal(cloneCommand.params.targetLayerIndex, 2);
+  assert.equal(cloneCommand.intent.existingSequencePolicy.requestedLayerIndex, 1);
+  assert.equal(cloneCommand.intent.existingSequencePolicy.plannedLayerIndex, 2);
+  assert.equal(cloneCommand.intent.existingSequencePolicy.avoidedOverlapCount, 1);
+  assert.equal(cloneCommand.intent.existingSequencePolicy.overlapCount, 0);
+  assert.equal(out.warnings.some((row) => /moved native clone from layer 1 to open layer 2/i.test(row)), true);
+});
+
 test("sequence_agent expands same-model layer copy into cloned create commands", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),
