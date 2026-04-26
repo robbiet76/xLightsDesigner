@@ -5,6 +5,7 @@ struct VisualDesignAssetGenerationResult: Sendable {
     let manifestPath: String
     let assetDir: String
     let model: String
+    let currentRevisionID: String
 }
 
 protocol VisualDesignAssetGenerationService: Sendable {
@@ -12,6 +13,14 @@ protocol VisualDesignAssetGenerationService: Sendable {
         projectFilePath: String,
         sequenceID: String,
         intentText: String,
+        themeSummary: String,
+        baseURL: String
+    ) async throws -> VisualDesignAssetGenerationResult
+
+    func reviseVisualDesignAssetPack(
+        projectFilePath: String,
+        sequenceID: String,
+        revisionRequest: String,
         themeSummary: String,
         baseURL: String
     ) async throws -> VisualDesignAssetGenerationResult
@@ -35,6 +44,7 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             sequenceID: sequenceID,
             intentText: intentText,
             themeSummary: themeSummary,
+            revisionRequest: "",
             baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL
         )
         defer { try? FileManager.default.removeItem(at: payloadURL) }
@@ -55,12 +65,48 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             throw VisualDesignAssetGenerationError.invalidResponse
         }
 
-        return VisualDesignAssetGenerationResult(
-            artifactID: string(json["artifactId"]),
-            manifestPath: string(json["manifestPath"]),
-            assetDir: string(json["assetDir"]),
-            model: string(json["model"])
+        return result(from: json)
+    }
+
+    func reviseVisualDesignAssetPack(
+        projectFilePath: String,
+        sequenceID: String,
+        revisionRequest: String,
+        themeSummary: String,
+        baseURL: String
+    ) async throws -> VisualDesignAssetGenerationResult {
+        let agentConfig = try loadAgentConfig()
+        guard !agentConfig.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw VisualDesignAssetGenerationError.missingAPIKey
+        }
+
+        let payloadURL = try writePayload(
+            projectFilePath: projectFilePath,
+            sequenceID: sequenceID,
+            intentText: "",
+            themeSummary: themeSummary,
+            revisionRequest: revisionRequest,
+            baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL
         )
+        defer { try? FileManager.default.removeItem(at: payloadURL) }
+
+        let output = try await runNode(
+            arguments: [
+                AppEnvironment.nativeVisualDesignAssetPackScriptPath,
+                "--payload", payloadURL.path
+            ],
+            apiKey: agentConfig.apiKey
+        )
+
+        guard
+            let json = try JSONSerialization.jsonObject(with: output) as? [String: Any],
+            let ok = json["ok"] as? Bool,
+            ok == true
+        else {
+            throw VisualDesignAssetGenerationError.invalidResponse
+        }
+
+        return result(from: json)
     }
 
     private func loadAgentConfig() throws -> StoredAgentConfig {
@@ -75,6 +121,7 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
         sequenceID: String,
         intentText: String,
         themeSummary: String,
+        revisionRequest: String,
         baseURL: String
     ) throws -> URL {
         let payload: [String: Any] = [
@@ -82,6 +129,7 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             "sequenceId": sequenceID,
             "intentText": intentText,
             "themeSummary": themeSummary,
+            "revisionRequest": revisionRequest,
             "visualImageConfig": [
                 "enabled": true,
                 "model": "gpt-image-2",
@@ -96,6 +144,16 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             .appendingPathComponent("xld-visual-design-\(UUID().uuidString).json")
         try data.write(to: url, options: .atomic)
         return url
+    }
+
+    private func result(from json: [String: Any]) -> VisualDesignAssetGenerationResult {
+        VisualDesignAssetGenerationResult(
+            artifactID: string(json["artifactId"]),
+            manifestPath: string(json["manifestPath"]),
+            assetDir: string(json["assetDir"]),
+            model: string(json["model"]),
+            currentRevisionID: string(json["currentRevisionId"])
+        )
     }
 
     private func runNode(arguments: [String], apiKey: String) async throws -> Data {

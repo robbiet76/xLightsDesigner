@@ -13,6 +13,8 @@ final class DesignScreenViewModel {
     var savedIntentDraft: DesignIntentDraftModel
     var transientBanner: WorkflowBannerModel?
     var isGeneratingVisualInspiration = false
+    var isRevisingVisualInspiration = false
+    var visualInspirationRevisionDraft = ""
 
     init(
         workspace: ProjectWorkspace,
@@ -116,7 +118,7 @@ final class DesignScreenViewModel {
     }
 
     func generateVisualInspiration() {
-        guard !isGeneratingVisualInspiration, let activeProject = workspace.activeProject else { return }
+        guard !isGeneratingVisualInspiration, !isRevisingVisualInspiration, let activeProject = workspace.activeProject else { return }
         let intentText = Self.visualGenerationIntentText(from: intentDraft, project: activeProject)
         guard !intentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             transientBanner = WorkflowBannerModel(
@@ -156,6 +158,61 @@ final class DesignScreenViewModel {
                     state: .blocked
                 )
                 isGeneratingVisualInspiration = false
+                updateAuthoringState()
+            }
+        }
+    }
+
+    func reviseVisualInspiration() {
+        guard !isGeneratingVisualInspiration, !isRevisingVisualInspiration, let activeProject = workspace.activeProject else { return }
+        guard screenModel.visualInspiration.available else {
+            transientBanner = WorkflowBannerModel(
+                id: "visual-inspiration-revision-missing-board",
+                text: "Generate visual inspiration before revising it.",
+                state: .blocked
+            )
+            return
+        }
+        let revisionRequest = visualInspirationRevisionDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !revisionRequest.isEmpty else {
+            transientBanner = WorkflowBannerModel(
+                id: "visual-inspiration-revision-missing-request",
+                text: "Enter a revision request before updating the visual inspiration board.",
+                state: .blocked
+            )
+            return
+        }
+        isRevisingVisualInspiration = true
+        transientBanner = WorkflowBannerModel(
+            id: "visual-inspiration-revision-running",
+            text: "Revising visual inspiration board.",
+            state: .partial
+        )
+        Task {
+            do {
+                let result = try await visualAssetGenerationService.reviseVisualDesignAssetPack(
+                    projectFilePath: activeProject.projectFilePath,
+                    sequenceID: Self.visualSequenceID(from: activeProject),
+                    revisionRequest: revisionRequest,
+                    themeSummary: Self.visualThemeSummary(from: intentDraft),
+                    baseURL: ""
+                )
+                visualInspirationRevisionDraft = ""
+                transientBanner = WorkflowBannerModel(
+                    id: "visual-inspiration-revision-success",
+                    text: "Revised visual inspiration \(result.currentRevisionID.isEmpty ? result.artifactID : result.currentRevisionID).",
+                    state: .ready
+                )
+                isRevisingVisualInspiration = false
+                NotificationCenter.default.post(name: .projectArtifactsDidChange, object: activeProject.projectFilePath)
+                refresh()
+            } catch {
+                transientBanner = WorkflowBannerModel(
+                    id: "visual-inspiration-revision-failed",
+                    text: error.localizedDescription,
+                    state: .blocked
+                )
+                isRevisingVisualInspiration = false
                 updateAuthoringState()
             }
         }

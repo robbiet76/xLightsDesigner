@@ -82,7 +82,7 @@ struct DesignScreenView: View {
                     Button(model.isGeneratingVisualInspiration ? "Generating..." : "Generate Visual Inspiration") {
                         model.generateVisualInspiration()
                     }
-                    .disabled(model.isGeneratingVisualInspiration)
+                    .disabled(model.isGeneratingVisualInspiration || model.isRevisingVisualInspiration)
                     Button("Save Design Intent") {
                         model.saveDesignIntent()
                     }
@@ -128,6 +128,13 @@ struct DesignScreenView: View {
                 paletteSwatches(model.screenModel.visualInspiration.palette)
                 detailRow(label: "Palette", value: model.screenModel.visualInspiration.paletteSummary)
                 detailRow(label: "Palette Rule", value: model.screenModel.visualInspiration.paletteCoordinationRule)
+                if model.screenModel.visualInspiration.available {
+                    designEditor(label: "Revision Request", text: $model.visualInspirationRevisionDraft, minHeight: 72)
+                    Button(model.isRevisingVisualInspiration ? "Revising..." : "Revise Visual Inspiration") {
+                        model.reviseVisualInspiration()
+                    }
+                    .disabled(model.isGeneratingVisualInspiration || model.isRevisingVisualInspiration || model.visualInspirationRevisionDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 4)

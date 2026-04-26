@@ -9,13 +9,23 @@ private struct InMemoryProjectSessionStore: ProjectSessionStore {
 
 private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGenerationService, @unchecked Sendable {
     private(set) var calls: [(projectFilePath: String, sequenceID: String, intentText: String, themeSummary: String, baseURL: String)] = []
+    private(set) var revisionCalls: [(projectFilePath: String, sequenceID: String, revisionRequest: String, themeSummary: String, baseURL: String)] = []
     var result = VisualDesignAssetGenerationResult(
         artifactID: "visual-pack-test",
         manifestPath: "/tmp/visual-design-manifest.json",
         assetDir: "/tmp/visual-design",
-        model: "gpt-image-2"
+        model: "gpt-image-2",
+        currentRevisionID: "board-r001"
+    )
+    var revisionResult = VisualDesignAssetGenerationResult(
+        artifactID: "visual-pack-test",
+        manifestPath: "/tmp/visual-design-manifest.json",
+        assetDir: "/tmp/visual-design",
+        model: "gpt-image-2",
+        currentRevisionID: "board-r002"
     )
     var error: Error?
+    var revisionError: Error?
 
     func generateVisualDesignAssetPack(
         projectFilePath: String,
@@ -27,6 +37,18 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
         calls.append((projectFilePath, sequenceID, intentText, themeSummary, baseURL))
         if let error { throw error }
         return result
+    }
+
+    func reviseVisualDesignAssetPack(
+        projectFilePath: String,
+        sequenceID: String,
+        revisionRequest: String,
+        themeSummary: String,
+        baseURL: String
+    ) async throws -> VisualDesignAssetGenerationResult {
+        revisionCalls.append((projectFilePath, sequenceID, revisionRequest, themeSummary, baseURL))
+        if let revisionError { throw revisionError }
+        return revisionResult
     }
 }
 
@@ -231,4 +253,82 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
     #expect(visualService.calls.first?.themeSummary.contains("Warm gold") == true)
     #expect(model.isGeneratingVisualInspiration == false)
     #expect(model.transientBanner?.state == .ready)
+}
+
+@MainActor
+@Test func designScreenRevisesVisualInspirationThroughService() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-revise-visual-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let service = LocalProjectService(projectsRootPath: root.path)
+    let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
+    let project = try service.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Native Revise Visual \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "/tmp/song.mp3",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+    let visualDir = projectDir.appendingPathComponent("artifacts/visual-design/seq-1", isDirectory: true)
+    try FileManager.default.createDirectory(at: visualDir, withIntermediateDirectories: true)
+    try Data("fixture".utf8).write(to: visualDir.appendingPathComponent("inspiration-board.png"))
+    let manifest = """
+    {
+      "artifactType": "visual_design_asset_pack_v1",
+      "artifactId": "visual-pack-1",
+      "creativeIntent": {
+        "themeSummary": "Warm candlelit holiday board",
+        "inspirationPrompt": "Create a warm candlelit holiday board.",
+        "palette": [
+          { "name": "candle gold", "hex": "#ffc45c", "role": "warm highlight" }
+        ]
+      },
+      "palette": {
+        "required": true,
+        "colors": [
+          { "name": "candle gold", "hex": "#ffc45c", "role": "warm highlight" }
+        ]
+      },
+      "displayAsset": {
+        "kind": "inspiration_board",
+        "relativePath": "inspiration-board.png",
+        "currentRevisionId": "board-r001"
+      },
+      "imageRevisions": [
+        {
+          "revisionId": "board-r001",
+          "mode": "generate",
+          "relativePath": "inspiration-board.png",
+          "paletteLocked": true,
+          "changeSummary": "Initial board."
+        }
+      ]
+    }
+    """
+    try Data(manifest.utf8).write(to: visualDir.appendingPathComponent("visual-design-manifest.json"))
+    workspace.setProject(project)
+    let visualService = StubVisualDesignAssetGenerationService()
+    let model = DesignScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: service,
+        visualAssetGenerationService: visualService
+    )
+
+    model.intentDraft.goal = "Create a warm candlelit chorus board."
+    model.intentDraft.mood = "Warm gold and pine green."
+    model.visualInspirationRevisionDraft = "Make the candle glow softer while preserving the palette."
+    model.reviseVisualInspiration()
+
+    try await Task.sleep(nanoseconds: 50_000_000)
+
+    #expect(visualService.revisionCalls.count == 1)
+    #expect(visualService.revisionCalls.first?.projectFilePath == project.projectFilePath)
+    #expect(visualService.revisionCalls.first?.revisionRequest.contains("candle glow softer") == true)
+    #expect(visualService.revisionCalls.first?.themeSummary.contains("Warm gold") == true)
+    #expect(model.visualInspirationRevisionDraft == "")
+    #expect(model.isRevisingVisualInspiration == false)
+    #expect(model.transientBanner?.text.contains("board-r002") == true)
 }
