@@ -195,7 +195,7 @@ These commands should accept explicit source and destination selectors and retur
 
 Immediate sequencing capability:
 
-1. Add stateless clone/copy planning in the app that expands simple copies into explicit `effects.create` commands when source effects are already available from current-sequence context. Initial layer/model copy planning is implemented as of 2026-04-26 for explicit source/destination model names, optional source/target layer indexes, and optional target start offsets.
+1. Add stateless clone/copy planning in the app that expands simple copies into explicit `effects.create` commands when source effects are already available from current-sequence context. Initial layer/model copy planning is implemented as of 2026-04-26 for explicit source/destination model names, same-model layer-to-layer copy, optional source/target layer indexes, and optional target start offsets.
 2. Add readback validation for cloned effects: target model/layer/window/effect/settings/palette should match the expected copied source.
 3. Add native validation scenarios for:
    - copy one layer to another layer on the same model

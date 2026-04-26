@@ -461,6 +461,56 @@ test("sequence_agent expands explicit layer copy into cloned create commands fro
   assert.equal(out.warnings.some((row) => /Cloning 1 effect from Star layer 0 to MegaTree layer 1/i.test(row)), true);
 });
 
+test("sequence_agent expands same-model layer copy into cloned create commands", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Copy Star layer 0 to layer 1"
+    },
+    sourceLines: ["Chorus 1 / copy Star layer 0 to layer 1"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "Star",
+            effectName: "Shimmer",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 5000
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const cloneCommand = out.commands.find((row) => row.cmd === "effects.create" && row.params.modelName === "Star" && row.params.layerIndex === 1);
+  assert.ok(cloneCommand);
+  assert.deepEqual(
+    {
+      effectName: cloneCommand.params.effectName,
+      startMs: cloneCommand.params.startMs,
+      endMs: cloneCommand.params.endMs,
+      sourceModelName: cloneCommand.intent.clonePolicy.sourceModelName,
+      targetModelName: cloneCommand.intent.clonePolicy.targetModelName
+    },
+    {
+      effectName: "Shimmer",
+      startMs: 1000,
+      endMs: 5000,
+      sourceModelName: "Star",
+      targetModelName: "Star"
+    }
+  );
+  assert.equal(out.warnings.some((row) => /Cloning 1 effect from Star layer 0 to Star layer 1/i.test(row)), true);
+});
+
 test("sequence_agent expands model copy with time offset while preserving relative effect timing", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

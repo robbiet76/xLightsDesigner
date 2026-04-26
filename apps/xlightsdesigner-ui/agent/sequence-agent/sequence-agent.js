@@ -1406,32 +1406,43 @@ function inferExplicitCloneIntent({
     ...normArray(targetIds).map((row) => normText(row)),
     ...normalizeDisplayElementRows(displayElements).map((row) => row.id)
   ].filter(Boolean))).sort((a, b) => b.length - a.length || a.localeCompare(b));
-  if (knownIds.length < 2) return null;
+  if (!knownIds.length) return null;
   const lowerIds = knownIds.map((id) => ({ id, lower: id.toLowerCase() }));
   let sourceModelName = "";
   let targetModelName = "";
-  for (const source of lowerIds) {
-    for (const target of lowerIds) {
-      if (source.id === target.id) continue;
-      const sourcePattern = escapeRegExpText(source.lower);
-      const targetPattern = escapeRegExpText(target.lower);
-      const sourceToTarget = new RegExp(`\\b(?:copy|clone|duplicate)\\b[^.;&\\n]{0,40}?\\b${sourcePattern}\\b[^.;&\\n]{0,120}?\\b(?:to|onto|into|on)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
-      const pasteToTarget = new RegExp(`\\b(?:paste)\\b[^.;&\\n]{0,40}?\\b${sourcePattern}\\b[^.;&\\n]{0,120}?\\b(?:to|onto|into|on)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
-      if (sourceToTarget.test(joined) || pasteToTarget.test(joined)) {
-        sourceModelName = source.id;
-        targetModelName = target.id;
-        break;
+  if (knownIds.length >= 2) {
+    for (const source of lowerIds) {
+      for (const target of lowerIds) {
+        if (source.id === target.id) continue;
+        const sourcePattern = escapeRegExpText(source.lower);
+        const targetPattern = escapeRegExpText(target.lower);
+        const sourceToTarget = new RegExp(`\\b(?:copy|clone|duplicate)\\b[^.;&\\n]{0,40}?\\b${sourcePattern}\\b[^.;&\\n]{0,120}?\\b(?:to|onto|into|on)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
+        const pasteToTarget = new RegExp(`\\b(?:paste)\\b[^.;&\\n]{0,40}?\\b${sourcePattern}\\b[^.;&\\n]{0,120}?\\b(?:to|onto|into|on)\\b[^.;&\\n]{0,40}?\\b${targetPattern}\\b`, "i");
+        if (sourceToTarget.test(joined) || pasteToTarget.test(joined)) {
+          sourceModelName = source.id;
+          targetModelName = target.id;
+          break;
+        }
       }
+      if (sourceModelName && targetModelName) break;
     }
-    if (sourceModelName && targetModelName) break;
+  }
+  const sameModelLayerCopy = joined.match(/\blayer\s*(\d+)\b[^.;&\n]{0,80}?\b(?:to|onto|into|on)\s*\blayer\s*(\d+)\b/);
+  if ((!sourceModelName || !targetModelName) && sameModelLayerCopy) {
+    const mentionedModel = lowerIds.find((row) => new RegExp(`\\b${escapeRegExpText(row.lower)}\\b`, "i").test(joined));
+    if (mentionedModel) {
+      sourceModelName = mentionedModel.id;
+      targetModelName = mentionedModel.id;
+    }
   }
   if (!sourceModelName || !targetModelName) return null;
-  const sourceLayerMatch = joined.match(/\b(?:source\s+)?layer\s*(\d+)\b/);
+  const sourceLayerMatch = sameModelLayerCopy || joined.match(/\b(?:source\s+)?layer\s*(\d+)\b/);
   const targetLayerMatch =
+    sameModelLayerCopy ||
     joined.match(/\b(?:to|onto|into|on)\b[^.;&\n]{0,80}?\blayer\s*(\d+)\b/) ||
     joined.match(/\btarget\s+layer\s*(\d+)\b/);
   const sourceLayerIndex = sourceLayerMatch ? Number(sourceLayerMatch[1]) : null;
-  const targetLayerIndex = targetLayerMatch ? Number(targetLayerMatch[1]) : null;
+  const targetLayerIndex = targetLayerMatch ? Number(sameModelLayerCopy ? targetLayerMatch[2] : targetLayerMatch[1]) : null;
   if (sourceLayerIndex !== null && (!Number.isInteger(sourceLayerIndex) || sourceLayerIndex < 0)) return null;
   if (targetLayerIndex !== null && (!Number.isInteger(targetLayerIndex) || targetLayerIndex < 0)) return null;
   const targetStartMatch = joined.match(/\b(?:at|starting\s+at|start\s+at)\s*(\d+(?:\.\d+)?)\s*(ms|millisecond|milliseconds|s|sec|secs|second|seconds)\b/);
