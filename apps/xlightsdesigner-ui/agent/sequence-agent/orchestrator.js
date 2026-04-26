@@ -225,7 +225,17 @@ async function waitForAcceptedOwnedMutation(endpoint, accepted, getOwnedJob) {
   const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob);
   const state = str(settled?.data?.state).toLowerCase();
   if (state === "failed" || settled?.data?.result?.ok === false) {
-    throw new Error(str(settled?.data?.result?.error?.message || "owned direct command failed"));
+    const error = settled?.data?.result?.error && typeof settled.data.result.error === "object"
+      ? settled.data.result.error
+      : {};
+    const code = str(error.code);
+    const details = error.details && typeof error.details === "object" ? error.details : {};
+    const conflictCount = Number(details.conflictCount);
+    const conflictSuffix = Number.isFinite(conflictCount) && conflictCount > 0
+      ? ` (${conflictCount} target conflict${conflictCount === 1 ? "" : "s"})`
+      : "";
+    const codePrefix = code ? `${code}: ` : "";
+    throw new Error(`${codePrefix}${str(error.message || "owned direct command failed")}${conflictSuffix}`);
   }
   return settled;
 }

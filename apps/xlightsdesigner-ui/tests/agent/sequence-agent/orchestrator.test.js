@@ -391,6 +391,47 @@ test('orchestrator fails closed when owned job fails', async () => {
   assert.match(String(res.error || ''), /effect rejected/i);
 });
 
+test('orchestrator preserves owned clone target conflict details', async () => {
+  const res = await validateAndApplyPlan({
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: [
+      {
+        id: 'effects.clone.1',
+        cmd: 'effects.clone',
+        params: {
+          sourceModelName: 'Star',
+          sourceLayerIndex: 0,
+          sourceStartMs: 1000,
+          sourceEndMs: 2000,
+          targetModels: ['MegaTree'],
+          targetLayerIndex: 1,
+          targetStartMs: 4000
+        }
+      }
+    ],
+    ...ownedDeps({
+      cloneEffects: async () => ({ data: { jobId: 'owned-job-clone-conflict' } }),
+      getOwnedJob: async () => ({
+        data: {
+          state: 'failed',
+          result: {
+            error: {
+              code: 'TARGET_WINDOW_OCCUPIED',
+              message: 'Clone target layer/time window overlaps existing effects.',
+              details: { conflictCount: 2 }
+            }
+          }
+        }
+      })
+    })
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, 'runtime');
+  assert.match(String(res.error || ''), /TARGET_WINDOW_OCCUPIED/);
+  assert.match(String(res.error || ''), /2 target conflicts/);
+});
+
 test('orchestrator accepts alignToTiming commands that match the owned batch track', async () => {
   let applyCalls = 0;
   const res = await validateAndApplyPlan({
