@@ -8143,7 +8143,15 @@ proposalGenerationRuntime = createProposalGenerationRuntime({
   clearDesignRevisionTarget,
   normalizeMetadataSelectionIds: (...args) => metadataRuntime.normalizeMetadataSelectionIds(...args),
   normalizeMetadataSelectedTags: (...args) => metadataRuntime.normalizeMetadataSelectedTags(...args),
-  clearDesignerDraft
+  clearDesignerDraft,
+  generateVisualDesignAssetPack: async (payload) => {
+    const bridge = getDesktopBridge();
+    if (!bridge || typeof bridge.generateVisualDesignAssetPack !== "function") {
+      pushDiagnostic("warning", "Visual inspiration generation unavailable.", "desktop bridge does not expose generateVisualDesignAssetPack");
+      return null;
+    }
+    return bridge.generateVisualDesignAssetPack(payload);
+  }
 });
 
 async function onRefreshModels() {

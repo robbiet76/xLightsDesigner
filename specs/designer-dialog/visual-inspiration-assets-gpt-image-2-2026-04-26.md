@@ -311,8 +311,9 @@ The script refuses to run unless `XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1` is 
 5. Add conversational board revision controls and fixture validation for edit lineage.
 6. Add a provider adapter for OpenAI image generation/editing with `gpt-image-2`, disabled unless configured. Done: adapter request/response construction and fixture tests are in `apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js`.
 7. Add live opt-in validation that generates one board, edits it once, and stores both revisions in the project folder. Done: `scripts/native/validate-live-visual-image-generation.mjs`.
-8. Add sequence-agent use of palette/motif context immediately.
-9. Add picture/video effect placement later when xLights media effect support is implemented.
+8. Wire visual asset generation into the Designer -> Sequencer handoff path behind explicit user intent. Done: proposal generation now calls an injectable visual asset generator only when the user explicitly asks for an inspiration board/image/asset pack, then attaches compact refs to `creative_brief_v1`, `proposal_bundle_v1`, and `sequencing_design_handoff_v2`.
+9. Add sequence-agent use of palette/motif context immediately.
+10. Add picture/video effect placement later when xLights media effect support is implemented.
 
 ## Open Questions
 

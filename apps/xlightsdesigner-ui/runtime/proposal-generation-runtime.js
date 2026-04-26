@@ -1,4 +1,5 @@
 import { buildCandidateSelectionContext } from "../agent/sequence-agent/candidate-selection-context.js";
+import { buildVisualInspirationRefs } from "../agent/designer-dialog/visual-design-assets.js";
 import {
   resolveRevisionFeedbackFromSnapshots,
   resolveRevisionRetryPressureFromSnapshots
@@ -33,6 +34,92 @@ export function addRevisionFeedbackToProposalLines(lines = [], revisionFeedback 
       ? line
       : `${line}; ${note}`
   ));
+}
+
+export function shouldGenerateVisualDesignAssetsFromIntent(text = "", options = {}) {
+  if (options?.generateVisualDesignAssets === true) return true;
+  if (options?.generateVisualDesignAssets === false) return false;
+  const lower = str(text).toLowerCase();
+  if (!lower) return false;
+  return /\b(inspiration board|mood board|visual inspiration|theme image|generate (an )?image|create (an )?image|palette image|visual asset pack|themed asset pack)\b/.test(lower);
+}
+
+function normalizePaletteRoles(rows = []) {
+  return arr(rows)
+    .map((row) => ({
+      name: str(row?.name),
+      hex: str(row?.hex),
+      role: str(row?.role)
+    }))
+    .filter((row) => row.name || row.hex || row.role);
+}
+
+function normalizeVisualMediaAssetDirectives(rows = []) {
+  return arr(rows)
+    .map((row) => ({
+      assetId: str(row?.assetId),
+      kind: str(row?.kind),
+      relativePath: str(row?.relativePath),
+      intendedUse: str(row?.intendedUse),
+      recommendedSections: arr(row?.recommendedSections).map((value) => str(value)).filter(Boolean),
+      paletteRoles: arr(row?.paletteRoles).map((value) => str(value)).filter(Boolean),
+      motionUse: str(row?.motionUse)
+    }))
+    .filter((row) => row.assetId && row.relativePath);
+}
+
+export function attachVisualDesignAssetPackToOrchestration(orchestration = null, assetPack = null) {
+  if (!orchestration || typeof orchestration !== "object" || !assetPack || typeof assetPack !== "object") {
+    return orchestration;
+  }
+  const refs = buildVisualInspirationRefs(assetPack);
+  const creativeIntent = assetPack.creativeIntent && typeof assetPack.creativeIntent === "object"
+    ? assetPack.creativeIntent
+    : {};
+  const paletteRows = Array.isArray(assetPack?.palette?.colors) && assetPack.palette.colors.length
+    ? assetPack.palette.colors
+    : (Array.isArray(creativeIntent.palette) ? creativeIntent.palette : []);
+  const motifDirectives = Array.isArray(creativeIntent.motifs)
+    ? creativeIntent.motifs.map((row) => str(row)).filter(Boolean)
+    : [];
+  const mediaAssetDirectives = normalizeVisualMediaAssetDirectives(assetPack.sequenceAssets);
+  const visualAssets = {
+    assetPackId: str(assetPack.artifactId),
+    summary: str(creativeIntent.themeSummary || refs.themeSummary),
+    sequenceAssetCount: arr(assetPack.sequenceAssets).length,
+    currentRevisionId: str(assetPack.displayAsset?.currentRevisionId || refs.currentRevisionId),
+    displayAssetRef: str(assetPack.displayAsset?.relativePath || refs.displayAssetRef)
+  };
+  const creativeBrief = orchestration.creativeBrief && typeof orchestration.creativeBrief === "object"
+    ? { ...orchestration.creativeBrief, visualInspiration: refs }
+    : orchestration.creativeBrief;
+  const proposalBundle = orchestration.proposalBundle && typeof orchestration.proposalBundle === "object"
+    ? { ...orchestration.proposalBundle, visualAssets }
+    : orchestration.proposalBundle;
+  const sequencingDesignHandoff = orchestration.sequencingDesignHandoff && typeof orchestration.sequencingDesignHandoff === "object"
+    ? {
+        ...orchestration.sequencingDesignHandoff,
+        visualAssetPackRef: str(assetPack.artifactId),
+        paletteRoles: normalizePaletteRoles(paletteRows),
+        motifDirectives,
+        mediaAssetDirectives
+      }
+    : orchestration.sequencingDesignHandoff;
+  const intentHandoff = orchestration.intentHandoff && typeof orchestration.intentHandoff === "object"
+    ? {
+        ...orchestration.intentHandoff,
+        sequencingDesignHandoff: sequencingDesignHandoff || orchestration.intentHandoff.sequencingDesignHandoff
+      }
+    : orchestration.intentHandoff;
+
+  return {
+    ...orchestration,
+    creativeBrief,
+    proposalBundle,
+    intentHandoff,
+    sequencingDesignHandoff,
+    visualDesignAssetPack: assetPack
+  };
 }
 
 export function createProposalGenerationRuntime(deps = {}) {
@@ -115,7 +202,8 @@ export function createProposalGenerationRuntime(deps = {}) {
     clearDesignRevisionTarget = () => {},
     normalizeMetadataSelectionIds = (values) => values,
     normalizeMetadataSelectedTags = (values) => values,
-    buildCurrentSequenceContextFromReadback = async () => null
+    buildCurrentSequenceContextFromReadback = async () => null,
+    generateVisualDesignAssetPack = null
   } = deps;
 
   async function generateProposal(intentOverride = "", options = {}) {
@@ -368,7 +456,45 @@ export function createProposalGenerationRuntime(deps = {}) {
         render();
         return;
       }
-      const normalizedProposalOrchestration = revisionTarget ? ensureRevisionTargetAppliedToOrchestration(resolvedProposalOrchestration, revisionTarget) : resolvedProposalOrchestration;
+      let normalizedProposalOrchestration = revisionTarget ? ensureRevisionTargetAppliedToOrchestration(resolvedProposalOrchestration, revisionTarget) : resolvedProposalOrchestration;
+      if (
+        !directSequenceMode &&
+        typeof generateVisualDesignAssetPack === "function" &&
+        shouldGenerateVisualDesignAssetsFromIntent(intentText, options)
+      ) {
+        try {
+          markOrchestrationStage(orchestrationRun, "visual_design_assets", "running", "generating visual inspiration asset pack");
+          const visualResult = await generateVisualDesignAssetPack({
+            state,
+            intentText,
+            projectFilePath: str(state.projectFilePath),
+            sequenceId: str(state.activeSequence || state.sequencePathInput || currentSequencePathForSidecar() || state.mediaPath || "active-sequence"),
+            creativeBrief: normalizedProposalOrchestration.creativeBrief || null,
+            proposalBundle: normalizedProposalOrchestration.proposalBundle || null,
+            analysisHandoff,
+            designSceneContext,
+            musicDesignContext,
+            selectedSections: selected
+          });
+          const visualPack = isPlainObject(visualResult?.assetPack)
+            ? visualResult.assetPack
+            : (isPlainObject(visualResult) ? visualResult : null);
+          if (visualPack) {
+            normalizedProposalOrchestration = attachVisualDesignAssetPackToOrchestration(normalizedProposalOrchestration, visualPack);
+            state.creative = state.creative || {};
+            state.creative.visualDesignAssetPack = structuredClone(visualPack);
+            markOrchestrationStage(orchestrationRun, "visual_design_assets", "ok", `assetPack=${str(visualPack.artifactId) || "generated"}`);
+            pushDiagnostic("info", "Visual inspiration asset pack generated.", str(visualPack.artifactId || ""));
+          } else {
+            markOrchestrationStage(orchestrationRun, "visual_design_assets", "warning", "generator returned no asset pack");
+            pushDiagnostic("warning", "Visual inspiration generation skipped.", "generator returned no asset pack");
+          }
+        } catch (err) {
+          const detail = str(err?.message || err);
+          markOrchestrationStage(orchestrationRun, "visual_design_assets", "warning", detail);
+          pushDiagnostic("warning", "Visual inspiration generation failed; continuing with text design proposal.", detail);
+        }
+      }
       if (directSequenceMode) {
         applyDesignerDraftSuccessState(state, {
           proposalBundle: normalizedProposalOrchestration.proposalBundle || null,

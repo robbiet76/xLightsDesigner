@@ -3,8 +3,11 @@ import assert from "node:assert/strict";
 
 import {
   addRevisionFeedbackToProposalLines,
+  attachVisualDesignAssetPackToOrchestration,
+  shouldGenerateVisualDesignAssetsFromIntent,
   createProposalGenerationRuntime
 } from "../../runtime/proposal-generation-runtime.js";
+import { buildVisualDesignAssetPack } from "../../agent/designer-dialog/visual-design-assets.js";
 
 function buildState() {
   return {
@@ -258,6 +261,140 @@ test("sequence-agent automation proposal honors explicit selected metadata tags"
   assert.equal(rendered, true);
 });
 
+test("designer proposal can attach visual inspiration pack when explicitly requested", async () => {
+  const state = buildState();
+  state.flags.planOnlyMode = true;
+  state.health.capabilityCommands = [];
+  state.sequenceSettings = {};
+  state.displayElements = [{ id: "MegaTree", name: "MegaTree", type: "model" }];
+  state.models = [{ id: "MegaTree", name: "MegaTree", type: "Model" }];
+  state.submodels = [];
+  state.sceneGraph = { groupsById: {}, submodelsById: {} };
+  state.creative = { goals: "", inspiration: "", notes: "" };
+  const stages = [];
+  let sequenceInput = null;
+  let generatorInput = null;
+  const visualPack = buildVisualDesignAssetPack({
+    sequenceId: "seq-visual",
+    themeSummary: "icy choral tension with gold release",
+    inspirationPrompt: "Create an icy and gold inspiration board.",
+    palette: [
+      { name: "ice blue", hex: "#8fd8ff", role: "base" },
+      { name: "warm gold", hex: "#ffd36a", role: "accent" }
+    ],
+    motifs: ["bell shimmer"],
+    displayAsset: { relativePath: "inspiration-board.png" }
+  });
+
+  const runtime = createProposalGenerationRuntime({
+    state,
+    buildSequenceSession: () => ({
+      canGenerateSequence: true,
+      planOnlyMode: true,
+      xlightsConnected: false
+    }),
+    beginOrchestrationRun: () => ({ id: "orch-visual" }),
+    markOrchestrationStage: (_run, stage, status, note) => stages.push({ stage, status, note }),
+    executeDesignerProposalOrchestration: () => ({
+      ok: true,
+      creativeBrief: {
+        artifactId: "brief-1",
+        summary: "Brief",
+        goalsSummary: "Goal",
+        inspirationSummary: "Inspiration",
+        visualCues: "icy and gold"
+      },
+      proposalBundle: {
+        artifactId: "proposal-1",
+        proposalId: "proposal-1",
+        summary: "Proposal",
+        scope: { sections: ["Chorus 1"], targetIds: ["MegaTree"], tagNames: [] },
+        lifecycle: { status: "draft" },
+        proposalLines: ["Chorus 1 / MegaTree / icy shimmer"]
+      },
+      intentHandoff: {
+        artifactType: "intent_handoff_v1",
+        goal: "Create a visual inspiration board for the chorus.",
+        mode: "revise",
+        scope: { sections: ["Chorus 1"], targetIds: ["MegaTree"], tagNames: [] }
+      },
+      sequencingDesignHandoff: {
+        artifactType: "sequencing_design_handoff_v2",
+        artifactId: "seq-design-1",
+        createdAt: "2026-04-26T00:00:00.000Z",
+        agentRole: "designer_dialog",
+        requestId: "orch-visual-designer",
+        baseRevision: "rev-1",
+        goal: "Create a visual inspiration board for the chorus.",
+        designSummary: "Proposal",
+        scope: { sections: ["Chorus 1"], targetIds: ["MegaTree"], tagNames: [], timeRangeMs: null },
+        sectionDirectives: [{ section: "Chorus 1", summary: "icy shimmer" }],
+        propRoleAssignments: [],
+        focusPlan: { primaryTargets: ["MegaTree"], secondaryTargets: [], accentTargets: [], balanceRule: "Readable." },
+        visualFamilyPreferences: { prefer: [], avoid: [] },
+        constraints: { preserveTimingTracks: true, allowGlobalRewrite: false, changeTolerance: "medium", readabilityPriority: "medium", flashTolerance: "low" },
+        executionLatitude: "moderate",
+        traceability: { briefId: "brief-1", proposalId: "proposal-1" }
+      },
+      proposalLines: ["Chorus 1 / MegaTree / icy shimmer"],
+      guidedQuestions: []
+    }),
+    generateVisualDesignAssetPack: async (input) => {
+      generatorInput = input;
+      return { assetPack: visualPack };
+    },
+    applyDesignerProposalSuccessToState: (targetState, orchestration) => {
+      targetState.creative.brief = orchestration.creativeBrief;
+      targetState.creative.proposalBundle = orchestration.proposalBundle;
+      targetState.creative.sequencingDesignHandoff = orchestration.sequencingDesignHandoff;
+    },
+    hydrateIntentHandoffExecutionStrategy: (intent) => intent,
+    setAgentHandoff: () => ({ ok: true, errors: [] }),
+    buildDesignerExecutionSeedLines: () => ["Chorus 1 / MegaTree / icy shimmer"],
+    buildSequenceAgentInput: (input) => {
+      sequenceInput = input;
+      return { ...input, ok: true };
+    },
+    buildCurrentSequenceContextFromReadback: async () => ({
+      artifactType: "current_sequence_context_v1",
+      artifactId: "current_sequence_context_v1-visual",
+      summary: { timingTrackCount: 1, effectCount: 1 }
+    }),
+    validateSequenceAgentContractGate: () => ({ ok: true, report: {} }),
+    buildSequenceAgentPlan: () => ({
+      agentRole: "sequence_agent",
+      contractVersion: "1.0",
+      planId: "plan-visual",
+      summary: "Sequence plan",
+      estimatedImpact: 1,
+      warnings: [],
+      commands: [],
+      baseRevision: "rev-1",
+      validationReady: true,
+      executionLines: ["Chorus 1 / MegaTree / apply Color Wash"],
+      metadata: { scope: { sections: ["Chorus 1"], targetIds: ["MegaTree"], tagNames: [] } }
+    }),
+    buildArtifactId: (type) => `${type}-visual`,
+    validateCommandGraph: () => ({ ok: true, nodeCount: 0, errors: [] }),
+    mergeCreativeBriefIntoProposal: (lines) => lines,
+    normalizeMetadataSelectedTags: (values) => values,
+    normalizeMetadataSelectionIds: (values) => values
+  });
+
+  await runtime.generateProposal("Create a visual inspiration board for the chorus.", {
+    requestedRole: "designer_dialog"
+  });
+
+  assert.equal(generatorInput.intentText, "Create a visual inspiration board for the chorus.");
+  assert.equal(state.creative.visualDesignAssetPack.artifactId, visualPack.artifactId);
+  assert.equal(state.creative.brief.visualInspiration.artifactId, visualPack.artifactId);
+  assert.equal(state.creative.proposalBundle.visualAssets.assetPackId, visualPack.artifactId);
+  assert.equal(sequenceInput.sequencingDesignHandoff.visualAssetPackRef, visualPack.artifactId);
+  assert.equal(sequenceInput.sequencingDesignHandoff.paletteRoles[0].hex, "#8fd8ff");
+  assert.deepEqual(sequenceInput.sequencingDesignHandoff.motifDirectives, ["bell shimmer"]);
+  assert.equal(stages.some((row) => row.stage === "visual_design_assets" && row.status === "ok"), true);
+});
+
 test("proposal generation annotates next proposal lines with preservation correction feedback", async () => {
   const state = buildState();
   state.flags.planOnlyMode = true;
@@ -479,4 +616,33 @@ test("addRevisionFeedbackToProposalLines is idempotent for preservation notes", 
   assert.equal(out.length, 1);
   assert.match(out[0], /preserve existing overlapping effects/);
   assert.deepEqual(second, out);
+});
+
+test("visual asset generation intent detection requires explicit visual board language", () => {
+  assert.equal(shouldGenerateVisualDesignAssetsFromIntent("Create a visual inspiration board for this song"), true);
+  assert.equal(shouldGenerateVisualDesignAssetsFromIntent("Make the chorus warmer"), false);
+  assert.equal(shouldGenerateVisualDesignAssetsFromIntent("Make the chorus warmer", { generateVisualDesignAssets: true }), true);
+  assert.equal(shouldGenerateVisualDesignAssetsFromIntent("Generate an image", { generateVisualDesignAssets: false }), false);
+});
+
+test("attachVisualDesignAssetPackToOrchestration adds compact refs without binary data", () => {
+  const pack = buildVisualDesignAssetPack({
+    sequenceId: "seq-attach",
+    themeSummary: "warm candle glow",
+    inspirationPrompt: "Create a warm candle glow board.",
+    palette: [{ name: "candle gold", hex: "#ffc45c", role: "highlight" }],
+    motifs: ["window glow"],
+    displayAsset: { relativePath: "inspiration-board.png" }
+  });
+  const out = attachVisualDesignAssetPackToOrchestration({
+    creativeBrief: { artifactId: "brief-1" },
+    proposalBundle: { artifactId: "proposal-1" },
+    intentHandoff: { artifactId: "intent-1" },
+    sequencingDesignHandoff: { artifactId: "design-handoff-1" }
+  }, pack);
+
+  assert.equal(out.creativeBrief.visualInspiration.artifactId, pack.artifactId);
+  assert.equal(out.proposalBundle.visualAssets.assetPackId, pack.artifactId);
+  assert.equal(out.intentHandoff.sequencingDesignHandoff.visualAssetPackRef, pack.artifactId);
+  assert.equal("imageData" in out.creativeBrief.visualInspiration, false);
 });
