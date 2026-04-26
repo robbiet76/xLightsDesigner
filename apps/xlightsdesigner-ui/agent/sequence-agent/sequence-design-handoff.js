@@ -233,7 +233,9 @@ export function buildSequencingDesignHandoffV2({
   const visualInspiration = isPlainObject(creativeBrief?.visualInspiration) ? creativeBrief.visualInspiration : {};
   const visualAssets = isPlainObject(proposalBundle?.visualAssets) ? proposalBundle.visualAssets : {};
   const paletteRoles = normalizePaletteRoles(
-    arr(visualIntent.palette).length ? visualIntent.palette : visualInspiration.palette
+    arr(visualPack?.palette?.colors).length
+      ? visualPack.palette.colors
+      : (arr(visualIntent.palette).length ? visualIntent.palette : visualInspiration.palette)
   );
   const motifDirectives = uniqueStrings(
     arr(visualIntent.motifs).length ? visualIntent.motifs : visualInspiration.motifs

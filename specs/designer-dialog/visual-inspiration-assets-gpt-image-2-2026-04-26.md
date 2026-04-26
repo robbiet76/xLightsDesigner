@@ -17,6 +17,7 @@ Extend `designer_dialog` from text-only creative direction into a visual design 
 The designer should generate:
 
 - a user-facing inspiration board image for the active song/sequence
+- iterative image revisions as the design conversation evolves
 - a reusable themed asset pack of image and video files that the sequencer may later place through picture/video effects
 - structured metadata that explains palette, theme, intended sequence use, licensing/source, and handoff references
 
@@ -43,9 +44,11 @@ The asset pack gives `sequence_agent` concrete media materials it can use later 
 
 ## OpenAI API Basis
 
-Official OpenAI docs identify `gpt-image-2` as the current GPT Image model for high-quality image generation and editing. The image generation guide supports using the Image API for one-shot image generation and the Responses API for conversational or multi-turn image work. The Image API can generate from a prompt and returns image data that the app can save as a file. OpenAI's video generation docs also support generated video jobs, video content download, thumbnails, spritesheets, and image references for guiding video generation.
+Official OpenAI docs identify GPT Image models as supporting both image generation and image editing. The Image API edits endpoint can modify an existing image from image inputs and a prompt, with optional mask guidance. The Responses API supports conversational or multi-step image work, including multi-turn image editing. OpenAI's video generation docs also support generated video jobs, video content download, thumbnails, spritesheets, and image references for guiding video generation.
 
 Implementation should start with image generation only, then add video generation after the app has the storage, review, and sequencer contracts for media effects.
+
+Image revision behavior should use edit flows when the user accepts the design direction but asks for a small tweak. Full regeneration should be reserved for major theme/palette resets, unusable outputs, or user requests that invalidate the prior board.
 
 ## Storage Rule
 
@@ -63,6 +66,9 @@ Canonical location:
             visual-design-manifest.json
             inspiration-board.png
             palette.json
+            revisions/
+              board-r002.png
+              board-r003.png
             images/
               *.png
               *.webp
@@ -106,13 +112,36 @@ Minimum shape:
     "motifs": ["snow sparkle", "gold fanfare", "soft streetlamp glow"],
     "avoidances": ["do not depict a literal xLights layout"]
   },
+  "palette": {
+    "required": true,
+    "displayMode": "separate_and_optional_in_image",
+    "coordinationRule": "Image colors must reflect or coordinate with the approved palette.",
+    "colors": [
+      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base" }
+    ]
+  },
   "displayAsset": {
     "kind": "inspiration_board",
     "relativePath": "inspiration-board.png",
     "mimeType": "image/png",
     "width": 1536,
-    "height": 1024
+    "height": 1024,
+    "currentRevisionId": "board-r001"
   },
+  "imageRevisions": [
+    {
+      "revisionId": "board-r001",
+      "parentRevisionId": "",
+      "mode": "generate",
+      "relativePath": "inspiration-board.png",
+      "promptRef": "prompt-001",
+      "maskRef": "",
+      "userRequest": "",
+      "changeSummary": "Initial inspiration board.",
+      "paletteLocked": true,
+      "paletteChangeSummary": ""
+    }
+  ],
   "sequenceAssets": [
     {
       "assetId": "asset-001",
@@ -135,6 +164,8 @@ Minimum shape:
       "promptId": "prompt-001",
       "model": "gpt-image-2",
       "purpose": "inspiration_board",
+      "operation": "generate",
+      "inputRevisionId": "",
       "prompt": "..."
     }
   ],
@@ -154,6 +185,9 @@ Minimum shape:
 - generate an inspiration-board prompt that explicitly avoids showing the actual xLights display/layout
 - generate or request one main inspiration board image
 - generate a palette with named roles and hex colors
+- preserve the palette as required design state and keep the board coordinated with it
+- edit the current inspiration board for conversational tweaks when possible instead of regenerating the board from scratch
+- record each board change as an immutable `imageRevisions[]` entry with parent revision, prompt, user request, palette lock/change status, and output path
 - optionally generate an asset-pack plan with candidate images/videos and intended sequencing use
 - save generated files and manifest under the project app folder
 - add artifact references to the creative brief, proposal bundle, and sequencing design handoff
@@ -174,7 +208,10 @@ Minimum shape:
 
 - `visualInspiration.artifactId`
 - `visualInspiration.displayAssetRef`
+- `visualInspiration.currentRevisionId`
 - `visualInspiration.palette[]`
+- `visualInspiration.paletteDisplayMode`
+- `visualInspiration.paletteCoordinationRule`
 
 `proposal_bundle_v1` should gain optional references:
 
@@ -197,7 +234,10 @@ Design screen:
 
 - show the inspiration board for the active song/sequence
 - show palette swatches and motif labels
+- always show the palette when an inspiration board exists
+- show whether the visible board revision preserved the prior palette or intentionally changed it
 - show generation status, warnings, and retry/regenerate controls
+- support conversational board edits as revision updates without losing prior board versions
 - make clear that this is a creative inspiration board, not a physical display render
 
 Review screen:
@@ -214,6 +254,8 @@ Required local tests:
 
 - artifact contract validation for `visual_design_asset_pack_v1`
 - project artifact storage writes under `<app-root>/projects/<project-name>/artifacts/visual-design/`
+- image revision lineage, including edit vs regenerate mode and current revision pointer
+- required palette display/coordination state
 - Designer result can reference a visual asset pack without breaking existing contract validation
 - Sequencer handoff compaction passes only refs/summaries, not binary payloads
 - native Design/Review automation can display a stored inspiration board fixture and verify handoff references
@@ -231,10 +273,11 @@ Live validation should be opt-in:
 2. Extend Designer contract builders and validators with optional visual inspiration refs.
 3. Extend `sequencing_design_handoff_v2` with compact asset-pack refs, palette roles, and motif directives.
 4. Add native Design UI support for showing a stored inspiration board and palette.
-5. Add a provider adapter for OpenAI image generation with `gpt-image-2`, disabled unless configured.
-6. Add live opt-in validation that generates one board and stores it in the project folder.
-7. Add sequence-agent use of palette/motif context immediately.
-8. Add picture/video effect placement later when xLights media effect support is implemented.
+5. Add conversational board revision controls and fixture validation for edit lineage.
+6. Add a provider adapter for OpenAI image generation/editing with `gpt-image-2`, disabled unless configured.
+7. Add live opt-in validation that generates one board, edits it once, and stores both revisions in the project folder.
+8. Add sequence-agent use of palette/motif context immediately.
+9. Add picture/video effect placement later when xLights media effect support is implemented.
 
 ## Open Questions
 

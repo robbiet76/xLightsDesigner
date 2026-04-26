@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  buildVisualDesignImageEditRevision,
   buildVisualDesignAssetPack,
   buildVisualInspirationRefs,
   validateVisualDesignAssetPack
@@ -50,6 +51,11 @@ test("visual design asset pack builder creates valid compact manifest", () => {
   assert.equal(pack.artifactType, "visual_design_asset_pack_v1");
   assert.equal(Number(pack.artifactVersion), 1);
   assert.equal(pack.displayAsset.relativePath, "inspiration-board.png");
+  assert.equal(pack.palette.required, true);
+  assert.deepEqual(pack.palette.colors, pack.creativeIntent.palette);
+  assert.equal(pack.displayAsset.currentRevisionId, "board-r001");
+  assert.equal(pack.imageRevisions[0].mode, "generate");
+  assert.equal(pack.imageRevisions[0].paletteLocked, true);
   assert.deepEqual(validateVisualDesignAssetPack(pack), []);
 });
 
@@ -67,6 +73,63 @@ test("visual inspiration refs keep handoff compact", () => {
 
   assert.equal(refs.artifactId, pack.artifactId);
   assert.equal(refs.displayAssetRef, "inspiration-board.png");
+  assert.equal(refs.currentRevisionId, "board-r001");
   assert.deepEqual(refs.palette, [{ name: "candle gold", hex: "#ffc45c", role: "warm highlight" }]);
+  assert.equal(refs.paletteCoordinationRule, "Image colors must reflect or coordinate with the approved palette.");
   assert.equal("imageData" in refs, false);
+});
+
+test("visual design image edit revisions preserve lineage and palette coordination", () => {
+  const first = buildVisualDesignAssetPack({
+    sequenceId: "seq-1",
+    themeSummary: "warm nostalgic holiday",
+    inspirationPrompt: "Create a warm nostalgic holiday collage.",
+    palette: [{ name: "candle gold", hex: "#ffc45c", role: "warm highlight" }],
+    motifs: ["window glow"],
+    displayAsset: { relativePath: "inspiration-board.png" }
+  });
+
+  const edited = buildVisualDesignImageEditRevision({
+    assetPack: first,
+    userRequest: "Make the window glow softer but keep the same palette.",
+    prompt: "Edit the existing board to soften the window glow. Preserve the candle gold palette.",
+    changeSummary: "Softened the window glow while preserving palette."
+  });
+
+  assert.deepEqual(validateVisualDesignAssetPack(edited), []);
+  assert.equal(edited.imageRevisions.length, 2);
+  assert.equal(edited.imageRevisions[1].mode, "edit");
+  assert.equal(edited.imageRevisions[1].parentRevisionId, "board-r001");
+  assert.equal(edited.imageRevisions[1].revisionId, "board-r002");
+  assert.equal(edited.imageRevisions[1].paletteLocked, true);
+  assert.equal(edited.displayAsset.currentRevisionId, "board-r002");
+  assert.equal(edited.displayAsset.relativePath, "revisions/board-r002.png");
+  assert.deepEqual(edited.palette.colors, first.palette.colors);
+  assert.equal(edited.prompts[1].operation, "edit");
+  assert.equal(edited.prompts[1].inputRevisionId, "board-r001");
+});
+
+test("visual design image edit revisions can intentionally update palette", () => {
+  const first = buildVisualDesignAssetPack({
+    sequenceId: "seq-1",
+    themeSummary: "cool winter",
+    inspirationPrompt: "Create a cool winter collage.",
+    palette: [{ name: "ice blue", hex: "#8fd8ff", role: "base" }],
+    displayAsset: { relativePath: "inspiration-board.png" }
+  });
+
+  const edited = buildVisualDesignImageEditRevision({
+    assetPack: first,
+    userRequest: "Add a little warmer gold to the palette.",
+    palette: [
+      { name: "ice blue", hex: "#8fd8ff", role: "base" },
+      { name: "warm gold", hex: "#ffd36a", role: "accent" }
+    ],
+    paletteChangeSummary: "Added warm gold accent."
+  });
+
+  assert.deepEqual(validateVisualDesignAssetPack(edited), []);
+  assert.equal(edited.imageRevisions[1].paletteLocked, false);
+  assert.equal(edited.imageRevisions[1].paletteChangeSummary, "Added warm gold accent.");
+  assert.equal(edited.palette.colors.length, 2);
 });

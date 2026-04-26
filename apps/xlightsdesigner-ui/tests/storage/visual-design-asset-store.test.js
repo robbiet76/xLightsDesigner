@@ -4,7 +4,10 @@ import path from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildVisualDesignAssetPack } from "../../agent/designer-dialog/visual-design-assets.js";
+import {
+  buildVisualDesignAssetPack,
+  buildVisualDesignImageEditRevision
+} from "../../agent/designer-dialog/visual-design-assets.js";
 import {
   readVisualDesignAssetPack,
   writeVisualDesignAssetPack
@@ -75,4 +78,38 @@ test("visual design asset store rejects paths outside asset folder", () => {
 
   assert.equal(out.ok, false);
   assert.equal(out.code, "INVALID_RELATIVE_PATH");
+});
+
+test("visual design asset store writes edited board revisions in same sequence folder", () => {
+  const { projectFilePath } = makeProjectFixture();
+  const first = buildVisualDesignAssetPack({
+    sequenceId: "seq-1",
+    themeSummary: "warm holiday",
+    inspirationPrompt: "Create a warm holiday board.",
+    palette: [{ name: "candle gold", hex: "#ffc45c", role: "highlight" }],
+    displayAsset: { relativePath: "inspiration-board.png" }
+  });
+  const edited = buildVisualDesignImageEditRevision({
+    assetPack: first,
+    userRequest: "Make it softer.",
+    prompt: "Edit the current board to make the glow softer while preserving the palette."
+  });
+
+  const out = writeVisualDesignAssetPack({
+    projectFilePath,
+    assetPack: edited,
+    files: [
+      { relativePath: "inspiration-board.png", content: "original" },
+      { relativePath: "revisions/board-r002.png", content: "edited" }
+    ]
+  });
+
+  assert.equal(out.ok, true);
+  assert.equal(fs.existsSync(path.join(out.assetDir, "inspiration-board.png")), true);
+  assert.equal(fs.existsSync(path.join(out.assetDir, "revisions", "board-r002.png")), true);
+
+  const read = readVisualDesignAssetPack({ projectFilePath, sequenceId: "seq-1" });
+  assert.equal(read.ok, true);
+  assert.equal(read.assetPack.displayAsset.currentRevisionId, "board-r002");
+  assert.equal(read.assetPack.imageRevisions[1].parentRevisionId, "board-r001");
 });
