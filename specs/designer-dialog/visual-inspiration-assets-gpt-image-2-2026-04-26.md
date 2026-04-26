@@ -308,7 +308,7 @@ The script refuses to run unless `XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1` is 
 2. Extend Designer contract builders and validators with optional visual inspiration refs.
 3. Extend `sequencing_design_handoff_v2` with compact asset-pack refs, palette roles, and motif directives.
 4. Add native Design UI support for showing a stored inspiration board and palette.
-5. Add conversational board revision controls and fixture validation for edit lineage.
+5. Add conversational board revision controls and fixture validation for edit lineage. In progress: the native generator now supports `revisionRequest`, loads the current board image, calls the provider edit path, appends `board-r###` lineage, and writes the revised manifest/files under the same app-owned artifact folder. Native UI controls are still pending.
 6. Add a provider adapter for OpenAI image generation/editing with `gpt-image-2`, disabled unless configured. Done: adapter request/response construction and fixture tests are in `apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js`.
 7. Add live opt-in validation that generates one board, edits it once, and stores both revisions in the project folder. Done: `scripts/native/validate-live-visual-image-generation.mjs`.
 8. Wire visual asset generation into the Designer -> Sequencer handoff path behind explicit user intent. Done: proposal generation now calls an injectable visual asset generator only when the user explicitly asks for an inspiration board/image/asset pack, then attaches compact refs to `creative_brief_v1`, `proposal_bundle_v1`, and `sequencing_design_handoff_v2`.

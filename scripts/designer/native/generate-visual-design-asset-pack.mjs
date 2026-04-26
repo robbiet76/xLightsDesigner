@@ -8,13 +8,16 @@ import {
   buildOpenAIVisualImageConfig,
   buildVisualImageFileFromOpenAIResult,
   buildVisualInspirationImagePrompt,
+  editOpenAIVisualImage,
   generateOpenAIVisualImage
 } from "../../../apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js";
 import {
   buildVisualDesignAssetPack,
+  buildVisualDesignImageEditRevision,
   validateVisualDesignAssetPack
 } from "../../../apps/xlightsdesigner-ui/agent/designer-dialog/visual-design-assets.js";
 import {
+  readVisualDesignAssetPack,
   writeVisualDesignAssetPack
 } from "../../../apps/xlightsdesigner-ui/storage/visual-design-asset-store.mjs";
 
@@ -22,9 +25,12 @@ const DEFAULT_DEPS = {
   buildOpenAIVisualImageConfig,
   buildVisualInspirationImagePrompt,
   generateOpenAIVisualImage,
+  editOpenAIVisualImage,
   buildVisualImageFileFromOpenAIResult,
   buildVisualDesignAssetPack,
+  buildVisualDesignImageEditRevision,
   validateVisualDesignAssetPack,
+  readVisualDesignAssetPack,
   writeVisualDesignAssetPack
 };
 
@@ -54,6 +60,7 @@ function parseArgs(argv = []) {
     else if (token === "--sequence-id") out.sequenceId = str(argv[++i] || "");
     else if (token === "--intent") out.intentText = str(argv[++i] || "");
     else if (token === "--theme") out.themeSummary = str(argv[++i] || "");
+    else if (token === "--revision-request") out.revisionRequest = str(argv[++i] || "");
     else if (token === "--model") out.model = str(argv[++i] || "");
     else if (token === "--size") out.size = str(argv[++i] || "");
     else if (token === "--quality") out.quality = str(argv[++i] || "");
@@ -74,6 +81,7 @@ function mergePayloadArgs(args = {}) {
     sequenceId: str(args.sequenceId || inlinePayload.sequenceId || filePayload.sequenceId),
     intentText: str(args.intentText || inlinePayload.intentText || filePayload.intentText),
     themeSummary: str(args.themeSummary || inlinePayload.themeSummary || filePayload.themeSummary),
+    revisionRequest: str(args.revisionRequest || inlinePayload.revisionRequest || filePayload.revisionRequest),
     visualImageConfig: {
       ...(isPlainObject(filePayload.visualImageConfig) ? filePayload.visualImageConfig : {}),
       ...(isPlainObject(inlinePayload.visualImageConfig) ? inlinePayload.visualImageConfig : {}),
@@ -155,7 +163,127 @@ function requireGenerationEnabled(config = {}) {
   }
 }
 
+function currentRevision(assetPack = {}) {
+  const currentId = str(assetPack?.displayAsset?.currentRevisionId);
+  const revisions = arr(assetPack?.imageRevisions);
+  return revisions.find((row) => str(row?.revisionId) === currentId) || revisions.at(-1) || null;
+}
+
+function readCurrentRevisionImage({ readResult = null } = {}) {
+  const assetPack = readResult?.assetPack;
+  const revision = currentRevision(assetPack);
+  const relativePath = str(revision?.relativePath || assetPack?.displayAsset?.relativePath);
+  if (!relativePath) throw new Error("Existing visual asset pack has no current image revision path.");
+  const imagePath = path.join(readResult.assetDir, path.normalize(relativePath));
+  if (!fs.existsSync(imagePath)) {
+    throw new Error(`Current visual inspiration image not found: ${imagePath}`);
+  }
+  return {
+    revision,
+    relativePath,
+    imagePath,
+    image: fs.readFileSync(imagePath)
+  };
+}
+
+export async function runVisualDesignAssetPackRevision(options = {}, deps = DEFAULT_DEPS) {
+  const projectFilePath = path.resolve(str(options.projectFilePath));
+  if (!projectFilePath || !fs.existsSync(projectFilePath)) {
+    throw new Error(`Project file not found: ${projectFilePath || "(missing)"}`);
+  }
+  const sequenceId = str(options.sequenceId || options.sequencePath || options.mediaPath || "active-sequence");
+  const revisionRequest = str(options.revisionRequest || options.userRequest || options.intentText);
+  if (!revisionRequest) throw new Error("revisionRequest is required for visual inspiration revision.");
+  const visualImageConfig = deps.buildOpenAIVisualImageConfig({
+    ...(isPlainObject(options.visualImageConfig) ? options.visualImageConfig : {}),
+    enabled: options.visualImageConfig?.enabled
+  });
+  if (deps === DEFAULT_DEPS) requireGenerationEnabled(visualImageConfig);
+
+  const readResult = deps.readVisualDesignAssetPack({ projectFilePath, sequenceId });
+  if (!readResult?.ok) {
+    throw new Error(readResult?.error || `No existing visual design asset pack found for sequence: ${sequenceId}`);
+  }
+  const assetPack = readResult.assetPack;
+  const current = readCurrentRevisionImage({ readResult });
+  const palette = inferPalette({ ...options, palette: options.palette || assetPack?.palette?.colors || assetPack?.creativeIntent?.palette });
+  const motifs = inferMotifs({ ...options, motifs: options.motifs || assetPack?.creativeIntent?.motifs });
+  const avoidances = inferAvoidances({ ...options, avoidances: options.avoidances || assetPack?.creativeIntent?.avoidances });
+  const themeSummary = inferThemeSummary({ ...options, themeSummary: options.themeSummary || assetPack?.creativeIntent?.themeSummary });
+  const prompt = deps.buildVisualInspirationImagePrompt({
+    themeSummary,
+    basePrompt: str(options.prompt || assetPack?.creativeIntent?.inspirationPrompt || themeSummary),
+    palette,
+    motifs,
+    avoidances,
+    includePaletteInImage: Boolean(options.includePaletteInImage),
+    revisionRequest
+  });
+  const edited = await deps.editOpenAIVisualImage({
+    apiKey: str(options.apiKey || process.env.OPENAI_API_KEY),
+    baseUrl: visualImageConfig.baseUrl,
+    model: visualImageConfig.model,
+    size: visualImageConfig.size,
+    quality: visualImageConfig.quality,
+    outputFormat: visualImageConfig.outputFormat,
+    prompt,
+    image: current.image,
+    imageFilename: path.basename(current.relativePath) || "input.png",
+    imageMimeType: str(assetPack?.displayAsset?.mimeType || "image/png"),
+    fetchImpl: options.fetchImpl
+  });
+  if (!edited?.ok) {
+    throw new Error(`Visual image edit failed: ${str(edited?.error || edited?.code || "unknown error")}`);
+  }
+
+  const nextIndex = arr(assetPack.imageRevisions).length + 1;
+  const nextRevisionId = `board-r${String(nextIndex).padStart(3, "0")}`;
+  const relativePath = str(options.relativePath || `revisions/${nextRevisionId}.png`);
+  const imageFile = deps.buildVisualImageFileFromOpenAIResult({ result: edited, relativePath });
+  if (!imageFile?.ok) throw new Error(imageFile?.error || "Edited image could not be converted to a project file.");
+  const nextPack = deps.buildVisualDesignImageEditRevision({
+    assetPack,
+    userRequest: revisionRequest,
+    prompt,
+    relativePath,
+    model: edited.model || visualImageConfig.model,
+    displayAsset: imageFile.displayAsset,
+    palette: options.palette || null,
+    paletteChangeSummary: str(options.paletteChangeSummary),
+    changeSummary: str(options.changeSummary || "Revised inspiration board from Designer conversation.")
+  });
+  const errors = deps.validateVisualDesignAssetPack(nextPack);
+  if (errors.length) throw new Error(`Revised visual asset pack is invalid: ${errors.join("; ")}`);
+  const writeResult = deps.writeVisualDesignAssetPack({
+    projectFilePath,
+    assetPack: nextPack,
+    files: [imageFile.file]
+  });
+  if (!writeResult?.ok) {
+    throw new Error(writeResult?.error || arr(writeResult?.errors).join("; ") || writeResult?.code || "Visual asset pack revision write failed.");
+  }
+  return {
+    ok: true,
+    mode: "edit",
+    projectFilePath,
+    assetPack: nextPack,
+    artifactId: nextPack.artifactId,
+    assetDir: writeResult.assetDir,
+    manifestPath: writeResult.manifestPath,
+    writtenFiles: writeResult.writtenFiles,
+    currentRevisionId: nextPack.displayAsset.currentRevisionId,
+    parentRevisionId: str(current.revision?.revisionId),
+    model: edited.model || visualImageConfig.model,
+    size: visualImageConfig.size,
+    quality: visualImageConfig.quality,
+    outputFormat: visualImageConfig.outputFormat
+  };
+}
+
 export async function runVisualDesignAssetPackGeneration(options = {}, deps = DEFAULT_DEPS) {
+  if (str(options.revisionRequest)) {
+    return runVisualDesignAssetPackRevision(options, deps);
+  }
   const projectFilePath = path.resolve(str(options.projectFilePath));
   if (!projectFilePath || !fs.existsSync(projectFilePath)) {
     throw new Error(`Project file not found: ${projectFilePath || "(missing)"}`);

@@ -7,13 +7,16 @@ import assert from "node:assert/strict";
 import {
   buildOpenAIVisualImageConfig,
   buildVisualImageFileFromOpenAIResult,
-  buildVisualInspirationImagePrompt
+  buildVisualInspirationImagePrompt,
+  editOpenAIVisualImage
 } from "../../../../apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js";
 import {
   buildVisualDesignAssetPack,
+  buildVisualDesignImageEditRevision,
   validateVisualDesignAssetPack
 } from "../../../../apps/xlightsdesigner-ui/agent/designer-dialog/visual-design-assets.js";
 import {
+  readVisualDesignAssetPack,
   writeVisualDesignAssetPack
 } from "../../../../apps/xlightsdesigner-ui/storage/visual-design-asset-store.mjs";
 import {
@@ -50,8 +53,11 @@ test("native visual design asset generation writes board image and manifest", as
     buildVisualInspirationImagePrompt,
     buildVisualImageFileFromOpenAIResult,
     buildVisualDesignAssetPack,
+    buildVisualDesignImageEditRevision,
     validateVisualDesignAssetPack,
+    readVisualDesignAssetPack,
     writeVisualDesignAssetPack,
+    editOpenAIVisualImage,
     generateOpenAIVisualImage: async (input) => {
       providerInput = input;
       return {
@@ -75,6 +81,73 @@ test("native visual design asset generation writes board image and manifest", as
   assert.match(providerInput.prompt, /Do not depict the literal xLights display/);
   assert.equal(fs.existsSync(path.join(projectDir, "artifacts", "visual-design", "seq-visual", "visual-design-manifest.json")), true);
   assert.equal(fs.readFileSync(path.join(projectDir, "artifacts", "visual-design", "seq-visual", "inspiration-board.png"), "utf8"), "generated-image");
+});
+
+test("native visual design asset revision edits current board and appends lineage", async () => {
+  const { projectDir, projectFilePath } = makeProjectFixture();
+  const first = buildVisualDesignAssetPack({
+    sequenceId: "seq-visual",
+    themeSummary: "warm candlelit chorus",
+    inspirationPrompt: "Create a warm candlelit board.",
+    palette: [{ name: "candle gold", hex: "#ffc45c", role: "warm highlight" }],
+    motifs: ["window glow"],
+    displayAsset: { relativePath: "inspiration-board.png", currentRevisionId: "board-r001" }
+  });
+  const writeFirst = writeVisualDesignAssetPack({
+    projectFilePath,
+    assetPack: first,
+    files: [{ relativePath: "inspiration-board.png", content: Buffer.from("original-board") }]
+  });
+  assert.equal(writeFirst.ok, true);
+
+  let editInput = null;
+  const result = await runVisualDesignAssetPackGeneration({
+    projectFilePath,
+    sequenceId: "seq-visual",
+    revisionRequest: "Make the candle glow softer while preserving the palette.",
+    visualImageConfig: { enabled: true, model: "gpt-image-2", size: "1536x1024", quality: "medium", outputFormat: "png" }
+  }, {
+    buildOpenAIVisualImageConfig,
+    buildVisualInspirationImagePrompt,
+    buildVisualImageFileFromOpenAIResult,
+    buildVisualDesignAssetPack,
+    buildVisualDesignImageEditRevision,
+    validateVisualDesignAssetPack,
+    readVisualDesignAssetPack,
+    writeVisualDesignAssetPack,
+    generateOpenAIVisualImage: async () => {
+      throw new Error("generation should not run for revisions");
+    },
+    editOpenAIVisualImage: async (input) => {
+      editInput = input;
+      return {
+        ok: true,
+        mode: "edit",
+        image: Buffer.from("edited-board"),
+        mimeType: "image/png",
+        width: 1536,
+        height: 1024,
+        model: input.model,
+        outputFormat: "png"
+      };
+    }
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.mode, "edit");
+  assert.equal(result.currentRevisionId, "board-r002");
+  assert.equal(result.parentRevisionId, "board-r001");
+  assert.equal(editInput.image.toString("utf8"), "original-board");
+  assert.match(editInput.prompt, /Requested revision: Make the candle glow softer/);
+  assert.match(editInput.prompt, /Palette: candle gold #ffc45c/);
+
+  const manifestPath = path.join(projectDir, "artifacts", "visual-design", "seq-visual", "visual-design-manifest.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  assert.equal(manifest.displayAsset.currentRevisionId, "board-r002");
+  assert.equal(manifest.displayAsset.relativePath, "revisions/board-r002.png");
+  assert.equal(manifest.imageRevisions[1].mode, "edit");
+  assert.equal(manifest.imageRevisions[1].parentRevisionId, "board-r001");
+  assert.equal(fs.readFileSync(path.join(projectDir, "artifacts", "visual-design", "seq-visual", "revisions", "board-r002.png"), "utf8"), "edited-board");
 });
 
 test("native visual design asset generation rejects missing project file", async () => {

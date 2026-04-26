@@ -204,6 +204,8 @@ export function buildVisualDesignImageEditRevision({
   prompt = "",
   relativePath = "",
   maskRef = "",
+  model = "gpt-image-2",
+  displayAsset = {},
   palette = null,
   paletteChangeSummary = "",
   changeSummary = ""
@@ -228,6 +230,7 @@ export function buildVisualDesignImageEditRevision({
     avoidances: pack.creativeIntent?.avoidances,
     displayAsset: {
       ...(pack.displayAsset || {}),
+      ...(isPlainObject(displayAsset) ? displayAsset : {}),
       relativePath: outputPath,
       currentRevisionId: revisionId
     },
@@ -240,7 +243,7 @@ export function buildVisualDesignImageEditRevision({
         relativePath: outputPath,
         promptRef: nextPromptId,
         maskRef,
-        source: normalizeSource({ provider: "openai", model: "gpt-image-2", promptRef: nextPromptId }),
+        source: normalizeSource({ provider: "openai", model, promptRef: nextPromptId }),
         userRequest,
         changeSummary,
         paletteLocked: palette == null,
@@ -252,7 +255,7 @@ export function buildVisualDesignImageEditRevision({
       ...arr(pack.prompts),
       {
         promptId: nextPromptId,
-        model: "gpt-image-2",
+        model,
         purpose: "inspiration_board_revision",
         operation: maskRef ? "masked_edit" : "edit",
         inputRevisionId: str(parent?.revisionId),
