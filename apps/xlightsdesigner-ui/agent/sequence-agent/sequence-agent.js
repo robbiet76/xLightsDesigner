@@ -836,6 +836,13 @@ function currentSequenceEffectRows(currentSequenceContext = null) {
     .filter(Boolean);
 }
 
+function submodelSuffixForParent(targetId = "", parentId = "") {
+  const target = normText(targetId);
+  const parent = normText(parentId);
+  if (!target || !parent || !target.startsWith(`${parent}/`)) return "";
+  return target.slice(parent.length);
+}
+
 function overlapsWindow(a = {}, b = {}) {
   const aStart = Number(a?.startMs);
   const aEnd = Number(a?.endMs);
@@ -1402,6 +1409,7 @@ function inferExplicitCloneIntent({
   const isMoveRequest = /\b(cut|move\s+effects?|move\s+existing\s+effects?)\b/.test(joined);
   const isCopyRequest = /\b(copy|paste|clone|duplicate)\b/.test(joined);
   if (!isCopyRequest && !isMoveRequest) return null;
+  const includeSubmodels = /\b(?:incl(?:ude|udes|uding)?|with)\s+sub\s*models?\b/.test(joined);
   const existingEffects = currentSequenceEffectRows(currentSequenceContext);
   const knownIds = Array.from(new Set([
     ...existingEffects.map((row) => row.targetId),
@@ -1455,10 +1463,26 @@ function inferExplicitCloneIntent({
     mode: isMoveRequest ? "move" : "copy",
     sourceModelName,
     targetModelName,
+    includeSubmodels,
+    knownIds,
     sourceLayerIndex,
     targetLayerIndex,
     targetStartMs: Number.isFinite(targetStartMs) ? targetStartMs : null
   };
+}
+
+function cloneTargetIdForEffect(effectTargetId = "", cloneIntent = null) {
+  const sourceModelName = normText(cloneIntent?.sourceModelName);
+  const targetModelName = normText(cloneIntent?.targetModelName);
+  const effectTarget = normText(effectTargetId);
+  if (!sourceModelName || !targetModelName || !effectTarget) return "";
+  if (effectTarget === sourceModelName) return targetModelName;
+  if (cloneIntent?.includeSubmodels !== true) return "";
+  const suffix = submodelSuffixForParent(effectTarget, sourceModelName);
+  if (!suffix) return "";
+  const mappedTarget = `${targetModelName}${suffix}`;
+  const knownIds = Array.isArray(cloneIntent?.knownIds) ? cloneIntent.knownIds : [];
+  return knownIds.includes(mappedTarget) ? mappedTarget : "";
 }
 
 function buildExplicitCloneCommands({
@@ -1470,7 +1494,11 @@ function buildExplicitCloneCommands({
   if (!cloneIntent) return commands;
   const existingEffects = currentSequenceEffectRows(currentSequenceContext);
   const sourceEffects = existingEffects
-    .filter((effect) => effect.targetId === cloneIntent.sourceModelName)
+    .map((effect) => ({
+      ...effect,
+      cloneTargetId: cloneTargetIdForEffect(effect.targetId, cloneIntent)
+    }))
+    .filter((effect) => effect.cloneTargetId)
     .filter((effect) => cloneIntent.sourceLayerIndex === null || Number(effect.layerIndex) === cloneIntent.sourceLayerIndex)
     .filter((effect) => normText(effect.effectName))
     .sort((a, b) => Number(a.layerIndex) - Number(b.layerIndex) || Number(a.startMs) - Number(b.startMs) || Number(a.endMs) - Number(b.endMs));
@@ -1502,7 +1530,7 @@ function buildExplicitCloneCommands({
       },
       cmd: "effects.create",
       params: {
-        modelName: cloneIntent.targetModelName,
+        modelName: effect.cloneTargetId,
         layerIndex: targetLayerIndex,
         effectName: normText(effect.effectName),
         startMs,
@@ -1518,7 +1546,7 @@ function buildExplicitCloneCommands({
           sourceLayerIndex: Number(effect.layerIndex),
           sourceStartMs: Number(effect.startMs),
           sourceEndMs: Number(effect.endMs),
-          targetModelName: cloneIntent.targetModelName,
+          targetModelName: effect.cloneTargetId,
           targetLayerIndex,
           targetStartMs: startMs,
           targetEndMs: endMs,
@@ -1554,7 +1582,7 @@ function buildExplicitCloneCommands({
             sourceLayerIndex: Number(effect.layerIndex),
             sourceStartMs: Number(effect.startMs),
             sourceEndMs: Number(effect.endMs),
-            targetModelName: cloneIntent.targetModelName,
+            targetModelName: effect.cloneTargetId,
             targetLayerIndex: Number.isInteger(cloneIntent.targetLayerIndex)
               ? cloneIntent.targetLayerIndex + (Number(effect.layerIndex) - (Number.isInteger(cloneIntent.sourceLayerIndex) ? cloneIntent.sourceLayerIndex : Number(effect.layerIndex)))
               : Number(effect.layerIndex)
@@ -1572,7 +1600,7 @@ function buildExplicitCloneCommands({
       }))
     : [];
   const nonEffectCommands = normArray(commands).filter((command) => normText(command?.cmd) !== "effects.create" && normText(command?.cmd) !== "effects.alignToTiming");
-  warnings.push(`${cloneIntent.mode === "move" ? "Moving" : "Cloning"} ${sourceEffects.length} effect${sourceEffects.length === 1 ? "" : "s"} from ${cloneIntent.sourceModelName}${Number.isInteger(cloneIntent.sourceLayerIndex) ? ` layer ${cloneIntent.sourceLayerIndex}` : ""} to ${cloneIntent.targetModelName}${Number.isInteger(cloneIntent.targetLayerIndex) ? ` layer ${cloneIntent.targetLayerIndex}` : ""}.`);
+  warnings.push(`${cloneIntent.mode === "move" ? "Moving" : "Cloning"} ${sourceEffects.length} effect${sourceEffects.length === 1 ? "" : "s"} from ${cloneIntent.sourceModelName}${cloneIntent.includeSubmodels ? " including submodels" : ""}${Number.isInteger(cloneIntent.sourceLayerIndex) ? ` layer ${cloneIntent.sourceLayerIndex}` : ""} to ${cloneIntent.targetModelName}${Number.isInteger(cloneIntent.targetLayerIndex) ? ` layer ${cloneIntent.targetLayerIndex}` : ""}.`);
   return nonEffectCommands.concat(clonedEffectCommands, deleteSourceCommands);
 }
 

@@ -621,6 +621,72 @@ test("sequence_agent expands model copy with time offset while preserving relati
   );
 });
 
+test("sequence_agent expands copy including submodels to matching destination submodels", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Copy Star including submodels to MegaTree"
+    },
+    sourceLines: ["Chorus 1 / copy Star including submodels to MegaTree"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 3, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "Star",
+            effectName: "On",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 3000
+          },
+          {
+            targetId: "Star/Left",
+            effectName: "Shimmer",
+            layerIndex: 1,
+            startMs: 2000,
+            endMs: 5000
+          },
+          {
+            targetId: "Star/Right",
+            effectName: "Bars",
+            layerIndex: 1,
+            startMs: 2000,
+            endMs: 5000
+          }
+        ]
+      }
+    },
+    displayElements: [
+      { id: "Star" },
+      { id: "MegaTree" },
+      { id: "MegaTree/Left" }
+    ],
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "sequencer.setDisplayElementOrder"]
+  });
+
+  const cloneCommands = out.commands.filter((row) => row.cmd === "effects.create" && row.id.startsWith("effect.clone."));
+  assert.deepEqual(
+    cloneCommands.map((row) => ({
+      modelName: row.params.modelName,
+      layerIndex: row.params.layerIndex,
+      effectName: row.params.effectName,
+      sourceModelName: row.intent.clonePolicy.sourceModelName,
+      targetModelName: row.intent.clonePolicy.targetModelName
+    })),
+    [
+      { modelName: "MegaTree", layerIndex: 0, effectName: "On", sourceModelName: "Star", targetModelName: "MegaTree" },
+      { modelName: "MegaTree/Left", layerIndex: 1, effectName: "Shimmer", sourceModelName: "Star/Left", targetModelName: "MegaTree/Left" }
+    ]
+  );
+  assert.equal(cloneCommands.some((row) => row.params.modelName === "MegaTree/Right"), false);
+  assert.equal(out.warnings.some((row) => /Cloning 2 effects from Star including submodels to MegaTree/i.test(row)), true);
+});
+
 test("sequence_agent emits effect delete when revision asks to remove an existing layered look", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),
