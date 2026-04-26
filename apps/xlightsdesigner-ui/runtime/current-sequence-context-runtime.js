@@ -51,12 +51,15 @@ function normalizeEffect(effect = {}) {
   const effectName = str(effect?.effectName || effect?.name);
   if (!targetId && !effectName) return null;
   return {
+    effectId: str(effect?.effectId || effect?.id),
     targetId,
     effectName,
     layerIndex: finiteNumber(effect?.layerIndex ?? effect?.layerNumber, 0),
     startMs: finiteNumber(effect?.startMs ?? effect?.start),
     endMs: finiteNumber(effect?.endMs ?? effect?.end),
-    timingTrackName: str(effect?.timingTrackName || effect?.anchor?.trackName)
+    timingTrackName: str(effect?.timingTrackName || effect?.anchor?.trackName),
+    settings: effect?.settings ?? "",
+    palette: effect?.palette ?? ""
   };
 }
 
@@ -168,6 +171,7 @@ export async function buildCurrentSequenceContextFromReadback({
     sequenceRevision,
     timingTracks,
     effects,
+    displayElements,
     selectedSections,
     selectedTargets: targetIds,
     selectedTags,

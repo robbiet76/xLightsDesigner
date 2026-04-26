@@ -13,6 +13,10 @@ test("current sequence context compacts timing tracks and effects", () => {
     selectedSections: ["Chorus 1"],
     selectedTargets: ["MegaTree"],
     selectedTags: ["focal"],
+    displayElements: [
+      { id: "MegaTree", type: "model", layers: [{ layerNumber: 0, effectCount: 1 }] },
+      { id: "Roofline", type: "model", layers: [{ layerNumber: 1, effectCount: 1, layerName: "Overlay" }] }
+    ],
     timingTracks: [
       {
         name: "Beats",
@@ -56,6 +60,8 @@ test("current sequence context compacts timing tracks and effects", () => {
   assert.equal(context.summary.effectCount, 2);
   assert.equal(context.summary.targetCount, 2);
   assert.deepEqual(context.timing.trackNames, ["Beats", "Lyrics"]);
+  assert.deepEqual(context.displayOrder.orderedIds, ["MegaTree", "Roofline"]);
+  assert.equal(context.displayOrder.sample[1].layers[0].layerName, "Overlay");
   assert.deepEqual(context.effects.effectNames, ["Shimmer", "Bars"]);
   assert.equal(context.effects.sample[1].targetId, "Roofline");
   assert.equal(context.effects.sample[1].timingTrackName, "Lyrics");
@@ -66,15 +72,16 @@ test("current sequence context sanitizer keeps only plan-safe summary fields", (
   const context = buildCurrentSequenceContext({
     sequencePath: "/tmp/test.xsq",
     sequenceRevision: "rev-7",
+    displayElements: [{ id: "MegaTree", type: "model", layers: [{ layerNumber: 0, effectCount: 1 }] }],
     timingTracks: [{ name: "Song Structure", marks: [{ label: "Intro", startMs: 0, endMs: 10000 }] }],
-    effects: [{ targetId: "MegaTree", effectName: "On", startMs: 0, endMs: 10000 }]
+    effects: [{ effectId: "fx-1", targetId: "MegaTree", effectName: "On", layerIndex: 0, startMs: 0, endMs: 10000 }]
   });
 
   const safe = sanitizeCurrentSequenceContextForPlan({
     ...context,
     effects: {
       ...context.effects,
-      sample: [{ targetId: "MegaTree", effectName: "On", settings: { largePayload: true } }]
+      sample: [{ effectId: "fx-1", targetId: "MegaTree", effectName: "On", layerIndex: 0, startMs: 0, endMs: 10000, settings: { largePayload: true } }]
     }
   });
 
@@ -82,7 +89,18 @@ test("current sequence context sanitizer keeps only plan-safe summary fields", (
   assert.equal(safe.artifactId, context.artifactId);
   assert.equal(safe.summary.effectCount, 1);
   assert.deepEqual(safe.timing.trackNames, ["Song Structure"]);
+  assert.deepEqual(safe.displayOrder.orderedIds, ["MegaTree"]);
+  assert.equal(safe.displayOrder.sample[0].layerCount, 1);
   assert.deepEqual(safe.effects.effectNames, ["On"]);
   assert.deepEqual(safe.effects.targetIds, ["MegaTree"]);
-  assert.equal("sample" in safe.effects, false);
+  assert.deepEqual(safe.effects.sample, [{
+    effectId: "fx-1",
+    targetId: "MegaTree",
+    effectName: "On",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 10000,
+    timingTrackName: ""
+  }]);
+  assert.equal("settings" in safe.effects.sample[0], false);
 });

@@ -47,12 +47,49 @@ function compactEffect(effect = {}) {
   const effectName = str(effect?.effectName || effect?.name);
   if (!targetId && !effectName) return null;
   return {
+    effectId: str(effect?.effectId || effect?.id),
     targetId,
     effectName,
     layerIndex: finiteNumber(effect?.layerIndex, 0),
     startMs: finiteNumber(effect?.startMs),
     endMs: finiteNumber(effect?.endMs),
-    timingTrackName: str(effect?.timingTrackName || effect?.anchor?.trackName)
+    timingTrackName: str(effect?.timingTrackName || effect?.anchor?.trackName),
+    settings: effect?.settings ?? "",
+    palette: effect?.palette ?? ""
+  };
+}
+
+function compactDisplayElement(row = {}, orderIndex = 0) {
+  const id = str(row?.id || row?.name || row?.modelName);
+  if (!id) return null;
+  const layers = arr(row?.layers)
+    .map((layer) => ({
+      layerNumber: finiteNumber(layer?.layerNumber ?? layer?.layerIndex, 0),
+      effectCount: finiteNumber(layer?.effectCount, 0),
+      layerName: str(layer?.layerName || layer?.name)
+    }))
+    .slice(0, 20);
+  return {
+    id,
+    type: str(row?.type || row?.elementType),
+    orderIndex,
+    layerCount: finiteNumber(row?.layerCount, layers.length),
+    effectCount: finiteNumber(row?.effectCount, layers.reduce((sum, layer) => sum + Number(layer.effectCount || 0), 0)),
+    layers
+  };
+}
+
+function sanitizeEffectSampleForPlan(effect = {}) {
+  const compacted = compactEffect(effect);
+  if (!compacted) return null;
+  return {
+    effectId: compacted.effectId,
+    targetId: compacted.targetId,
+    effectName: compacted.effectName,
+    layerIndex: compacted.layerIndex,
+    startMs: compacted.startMs,
+    endMs: compacted.endMs,
+    timingTrackName: compacted.timingTrackName
   };
 }
 
@@ -61,6 +98,7 @@ export function buildCurrentSequenceContext({
   sequenceRevision = "",
   timingTracks = [],
   effects = [],
+  displayElements = [],
   selectedSections = [],
   selectedTargets = [],
   selectedTags = [],
@@ -71,6 +109,9 @@ export function buildCurrentSequenceContext({
     .filter(Boolean);
   const compactEffects = arr(effects)
     .map((effect) => compactEffect(effect))
+    .filter(Boolean);
+  const compactDisplayElements = arr(displayElements)
+    .map((row, index) => compactDisplayElement(row, index))
     .filter(Boolean);
   const targetIds = uniqueStrings([
     ...selectedTargets,
@@ -111,6 +152,10 @@ export function buildCurrentSequenceContext({
       trackNames: timingTrackNames.slice(0, 40),
       tracks: compactTracks.slice(0, 40)
     },
+    displayOrder: {
+      orderedIds: compactDisplayElements.map((row) => row.id).slice(0, 160),
+      sample: compactDisplayElements.slice(0, 160)
+    },
     effects: {
       effectNames: effectNames.slice(0, 40),
       targetIds: targetIds.slice(0, 80),
@@ -126,6 +171,11 @@ export function sanitizeCurrentSequenceContextForPlan(context = null) {
   const scope = context.scope && typeof context.scope === "object" ? context.scope : {};
   const timing = context.timing && typeof context.timing === "object" ? context.timing : {};
   const effects = context.effects && typeof context.effects === "object" ? context.effects : {};
+  const displayOrder = context.displayOrder && typeof context.displayOrder === "object" ? context.displayOrder : {};
+  const displaySample = arr(displayOrder.sample)
+    .map((row, index) => compactDisplayElement(row, index))
+    .filter(Boolean)
+    .slice(0, 160);
   return {
     artifactType: str(context.artifactType || "current_sequence_context_v1"),
     artifactId: str(context.artifactId),
@@ -155,9 +205,17 @@ export function sanitizeCurrentSequenceContextForPlan(context = null) {
     timing: {
       trackNames: uniqueStrings(timing.trackNames).slice(0, 40)
     },
+    displayOrder: {
+      orderedIds: uniqueStrings(displayOrder.orderedIds).slice(0, 160),
+      sample: displaySample
+    },
     effects: {
       effectNames: uniqueStrings(effects.effectNames).slice(0, 40),
-      targetIds: uniqueStrings(effects.targetIds).slice(0, 80)
+      targetIds: uniqueStrings(effects.targetIds).slice(0, 80),
+      sample: arr(effects.sample)
+        .map((row) => sanitizeEffectSampleForPlan(row))
+        .filter(Boolean)
+        .slice(0, 80)
     }
   };
 }

@@ -20,7 +20,10 @@ test("current sequence context runtime reads timing and scoped effects", async (
     selectedSections: ["Chorus 1"],
     selectedTargets: ["MegaTree"],
     selectedTags: ["lead"],
-    displayElements: [{ id: "Roofline" }]
+    displayElements: [
+      { id: "MegaTree", type: "model", layers: [{ layerNumber: 0, effectCount: 1 }] },
+      { id: "Roofline", type: "model" }
+    ]
   }, {
     getTimingTracks: async () => ({
       data: {
@@ -40,7 +43,7 @@ test("current sequence context runtime reads timing and scoped effects", async (
       return {
         data: {
           effects: [
-            { modelName: params.modelName, effectName: "Shimmer", layerIndex: 0, startMs: 1000, endMs: 2000 }
+            { effectId: "fx-1", modelName: params.modelName, effectName: "Shimmer", layerIndex: 0, startMs: 1000, endMs: 2000 }
           ]
         }
       };
@@ -52,7 +55,10 @@ test("current sequence context runtime reads timing and scoped effects", async (
   assert.equal(context.summary.timingTrackCount, 2);
   assert.equal(context.summary.effectCount, 1);
   assert.deepEqual(context.scope.sections, ["Chorus 1"]);
+  assert.deepEqual(context.displayOrder.orderedIds, ["MegaTree", "Roofline"]);
+  assert.equal(context.displayOrder.sample[0].layers[0].effectCount, 1);
   assert.deepEqual(context.effects.effectNames, ["Shimmer"]);
+  assert.equal(context.effects.sample[0].effectId, "fx-1");
   assert.deepEqual(effectQueries, [
     { modelName: "MegaTree", startMs: 1000, endMs: 4000 }
   ]);
