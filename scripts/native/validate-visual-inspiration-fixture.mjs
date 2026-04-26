@@ -229,7 +229,14 @@ async function main() {
   }
   assertEqual(visual.available, true, 'visualInspiration.available');
   assertEqual(visual.currentRevisionId, 'board-r002', 'visualInspiration.currentRevisionId');
+  assertEqual(visual.displayedRevisionId, 'board-r002', 'visualInspiration.displayedRevisionId');
   assertEqual(visual.palette?.length, 2, 'visualInspiration.palette length');
+  assertEqual(visual.revisionHistory?.length, 2, 'visualInspiration.revisionHistory length');
+  assertEqual(visual.revisionHistory?.[0]?.id, 'board-r001', 'visualInspiration.revisionHistory[0].id');
+  assertEqual(visual.revisionHistory?.[0]?.isCurrent, false, 'visualInspiration.revisionHistory[0].isCurrent');
+  assertEqual(visual.revisionHistory?.[1]?.id, 'board-r002', 'visualInspiration.revisionHistory[1].id');
+  assertEqual(visual.revisionHistory?.[1]?.isCurrent, true, 'visualInspiration.revisionHistory[1].isCurrent');
+  assertEqual(visual.revisionHistory?.[1]?.isSelected, true, 'visualInspiration.revisionHistory[1].isSelected');
   assertEqual(visual.palette?.[0]?.hex, '#ffc45c', 'first palette hex');
   if (!str(visual.imagePath).endsWith('revisions/board-r002.png')) {
     throw new Error(`visualInspiration.imagePath did not point to revised board: ${visual.imagePath}`);
@@ -245,6 +252,8 @@ async function main() {
     projectFile: fixture.projectPath,
     visualDir: fixture.visualDir,
     currentRevisionId: visual.currentRevisionId,
+    displayedRevisionId: visual.displayedRevisionId,
+    revisionHistory: visual.revisionHistory,
     imagePath: visual.imagePath,
     palette: visual.palette,
     revisionSummary: visual.revisionSummary
