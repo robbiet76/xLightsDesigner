@@ -34,6 +34,18 @@ function readTail(filePath, maxLines = 80) {
   }
 }
 
+function modalBlockedMessage(data = {}) {
+  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
+  if (!modalState?.blocked || modalState.observed === false) return '';
+  const titles = Array.isArray(modalState.windows)
+    ? modalState.windows
+      .filter((window) => window?.isModal)
+      .map((window) => String(window?.title || window?.className || '').trim())
+      .filter(Boolean)
+    : [];
+  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
+}
+
 for (;;) {
   try {
     const processes = listXLightsProcesses();
@@ -45,6 +57,10 @@ for (;;) {
     const json = JSON.parse(text);
     const state = String(json?.data?.state || '');
     const settleRemainingMs = Number(json?.data?.settleRemainingMs || 0);
+    const modalMessage = modalBlockedMessage(json?.data || {});
+    if (modalMessage) {
+      throw new Error(modalMessage);
+    }
     const progress = `${state}:${settleRemainingMs}`;
     if (progress !== lastProgress) {
       lastProgress = progress;

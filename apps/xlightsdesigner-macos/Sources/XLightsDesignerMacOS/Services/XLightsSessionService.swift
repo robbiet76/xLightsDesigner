@@ -248,7 +248,10 @@ struct LocalXLightsSessionService: XLightsSessionService {
         let listenerReachable = bool(data["listenerReachable"])
         let appReady = optionalBool(data["appReady"]) ?? true
         let startupSettled = bool(data["startupSettled"]) || state == "ready"
-        if listenerReachable && appReady && (!requireSettled || startupSettled) {
+        let modalState = dictionary(data["modalState"])
+        let modalObserved = optionalBool(modalState["observed"]) ?? true
+        let modalBlocked = modalObserved && bool(modalState["blocked"])
+        if listenerReachable && appReady && (!requireSettled || startupSettled) && !modalBlocked {
             return health
         }
 
@@ -256,6 +259,10 @@ struct LocalXLightsSessionService: XLightsSessionService {
         if !listenerReachable { details.append("listener unreachable") }
         if !appReady { details.append("app not ready") }
         if requireSettled && !startupSettled { details.append("startup not settled") }
+        if modalBlocked {
+            let modalCount = int(modalState["modalCount"])
+            details.append(modalCount > 0 ? "xLights modal blocked (\(modalCount))" : "xLights modal blocked")
+        }
         let retryAfterMs = int(data["retryAfterMs"]) > 0 ? int(data["retryAfterMs"]) : int(data["settleRemainingMs"])
         let retryText = retryAfterMs > 0 ? " retryAfterMs=\(retryAfterMs)" : ""
         let reason = details.isEmpty ? "state=\(state)" : details.joined(separator: ", ")

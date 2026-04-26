@@ -14,6 +14,11 @@ function toInt(value, fallback = -1) {
   return Number.isFinite(n) ? Math.round(n) : fallback;
 }
 
+function ownedModalStateBlocked(data = {}) {
+  const modalState = data?.modalState && typeof data.modalState === "object" ? data.modalState : null;
+  return modalState?.observed !== false && (modalState?.blocked === true || norm(modalState?.blocked) === "true");
+}
+
 export function buildOwnedSequencingBatchPlan(commands = []) {
   const rows = Array.isArray(commands) ? commands : [];
   let trackName = "";
@@ -344,7 +349,7 @@ function isOwnedHealthReady(health = {}) {
   const listenerReachable = data.listenerReachable === true;
   const appReady = data.appReady == null ? true : data.appReady === true;
   const startupSettled = data.startupSettled === true || state === "ready";
-  return health?.ok === true && listenerReachable && appReady && startupSettled;
+  return health?.ok === true && listenerReachable && appReady && startupSettled && !ownedModalStateBlocked(data);
 }
 
 export async function validateAndApplyPlan({
@@ -473,7 +478,8 @@ export async function validateAndApplyPlan({
 
   if (!ownedApiReady) {
     const state = str(ownedHealth?.data?.state || ownedHealth?.data?.startupState || "unknown") || "unknown";
-    const reason = ownedHealthError || `owned xLights API not ready (state=${state})`;
+    const modalBlocked = ownedModalStateBlocked(ownedHealth?.data || {});
+    const reason = ownedHealthError || (modalBlocked ? `owned xLights API blocked by xLights modal (state=${state})` : `owned xLights API not ready (state=${state})`);
     return {
       ok: false,
       stage: "runtime",

@@ -110,6 +110,28 @@ function jobResult(payload) {
   return payload?.data?.result || payload?.result || payload;
 }
 
+function modalBlockedMessage(health = {}) {
+  const data = health?.data && typeof health.data === 'object' ? health.data : {};
+  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
+  if (!modalState?.blocked || modalState.observed === false) return '';
+  const titles = Array.isArray(modalState.windows)
+    ? modalState.windows
+      .filter((window) => window?.isModal)
+      .map((window) => String(window?.title || window?.className || '').trim())
+      .filter(Boolean)
+    : [];
+  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
+}
+
+async function assertNoBlockingModal(endpoint) {
+  const { json: health } = await request(endpoint, '/health', { timeoutMs: 10000 });
+  const message = modalBlockedMessage(health);
+  if (message) {
+    throw new Error(message);
+  }
+  return health;
+}
+
 async function waitForReady(endpoint, timeoutMs) {
   const started = Date.now();
   let lastHealth = null;
@@ -117,6 +139,10 @@ async function waitForReady(endpoint, timeoutMs) {
     const { json: health } = await request(endpoint, '/health');
     lastHealth = health;
     const data = health?.data || {};
+    const modalMessage = modalBlockedMessage(health);
+    if (modalMessage) {
+      throw new Error(modalMessage);
+    }
     if (health?.ok === true && String(data.state || data.startupState || '').toLowerCase() === 'ready') return health;
     if (Date.now() - started > timeoutMs) {
       throw new Error(`Owned xLights API did not become ready within ${timeoutMs}ms: ${JSON.stringify(lastHealth)}`);
@@ -129,6 +155,7 @@ async function waitForJob(endpoint, jobId, { timeoutMs = 180000, allowFailure = 
   const started = Date.now();
   let last = null;
   for (;;) {
+    await assertNoBlockingModal(endpoint);
     const { json } = await request(endpoint, `/jobs/get?jobId=${encodeURIComponent(jobId)}`, { allowError: allowFailure });
     last = json;
     const state = jobState(json);
@@ -232,6 +259,7 @@ async function main() {
 
   try {
     result.health = await waitForReady(args.endpoint, args.readyTimeoutMs);
+    result.modalStateAtStart = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.mediaCurrent = await assertOpenShowFolder(args.endpoint, showDir);
     Object.assign(result, await chooseModels(args.endpoint, args.sourceModel, args.targetModel));
     result.create = await postQueued(args.endpoint, '/sequence/create', {
@@ -240,8 +268,10 @@ async function main() {
       durationMs: args.durationMs,
       frameMs: args.frameMs
     });
+    result.modalStateAfterCreate = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.seedPlan = buildSeedPlan(result.sourceModel, result.targetModel);
     result.seedApply = await postQueued(args.endpoint, '/sequencing/apply-batch-plan', result.seedPlan);
+    result.modalStateAfterSeedApply = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.beforeConflictTargetEffects = await readEffects(args.endpoint, result.targetModel, 3500, 5500, 1);
 
     result.conflictClone = await postQueued(args.endpoint, '/effects/clone', {
@@ -274,6 +304,7 @@ async function main() {
       targetStartMs: 7000,
       mode: 'copy'
     });
+    result.modalStateAfterOpenClone = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.openLayerEffects = await readEffects(args.endpoint, result.targetModel, 6500, 8500, 2);
     if (!result.openLayerEffects.some((effect) => effect.effectName === 'On' && effect.startMs === 7000 && effect.endMs === 8000)) {
       throw new Error('Open-layer clone did not create the expected copied effect.');

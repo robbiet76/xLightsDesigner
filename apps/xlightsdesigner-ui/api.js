@@ -13,6 +13,11 @@ function boolish(value) {
   return false;
 }
 
+function ownedModalStateBlocked(data = {}) {
+  const modalState = data?.modalState && typeof data.modalState === "object" ? data.modalState : null;
+  return modalState ? modalState.observed !== false && boolish(modalState.blocked) : false;
+}
+
 function normalizeBody(raw) {
   const idx = raw.indexOf("{");
   return idx >= 0 ? raw.slice(idx) : raw;
@@ -254,10 +259,12 @@ export function isOwnedHealthReady(health, { requireSettled = true } = {}) {
   const listenerReachable = boolish(data.listenerReachable);
   const appReady = data.appReady == null ? true : boolish(data.appReady);
   const startupSettled = boolish(data.startupSettled) || state === "ready";
+  const modalBlocked = ownedModalStateBlocked(data);
   if (health?.ok !== true) return false;
   if (!listenerReachable) return false;
   if (!appReady) return false;
   if (requireSettled && !startupSettled) return false;
+  if (modalBlocked) return false;
   return true;
 }
 
@@ -273,6 +280,11 @@ async function ensureOwnedReady(endpoint, command, { requireSettled = true } = {
   if (!boolish(data.listenerReachable)) details.push("listener unreachable");
   if (data.appReady === false || String(data.appReady).trim().toLowerCase() === "false") details.push("app not ready");
   if (requireSettled && !boolish(data.startupSettled) && state.toLowerCase() !== "ready") details.push("startup not settled");
+  if (ownedModalStateBlocked(data)) {
+    const modalState = data.modalState && typeof data.modalState === "object" ? data.modalState : {};
+    const modalCount = Number(modalState.modalCount || 0);
+    details.push(`xLights modal blocked${modalCount > 0 ? ` (${modalCount})` : ""}`);
+  }
   const reason = details.length ? details.join(", ") : `state=${state}`;
   const retryText = Number.isFinite(retryAfterMs) && retryAfterMs > 0 ? ` retryAfterMs=${retryAfterMs}` : "";
   throw new Error(`Owned xLights API not ready for ${command}: ${reason}.${retryText}`.trim());

@@ -120,9 +120,32 @@ function jobResult(payload) {
   return payload?.data?.result || payload?.result || payload;
 }
 
+function modalBlockedMessage(health = {}) {
+  const data = health?.data && typeof health.data === 'object' ? health.data : {};
+  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
+  if (!modalState?.blocked || modalState.observed === false) return '';
+  const titles = Array.isArray(modalState.windows)
+    ? modalState.windows
+      .filter((window) => window?.isModal)
+      .map((window) => String(window?.title || window?.className || '').trim())
+      .filter(Boolean)
+    : [];
+  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
+}
+
+async function assertNoBlockingModal(endpoint) {
+  const health = await request(endpoint, '/health', { timeoutMs: 10000 });
+  const message = modalBlockedMessage(health);
+  if (message) {
+    throw new Error(message);
+  }
+  return health;
+}
+
 async function waitForJob(endpoint, jobId, timeoutMs = 180000) {
   const started = Date.now();
   for (;;) {
+    await assertNoBlockingModal(endpoint);
     const payload = await request(endpoint, `/jobs/get?jobId=${encodeURIComponent(jobId)}`, { timeoutMs: 30000 });
     const state = jobState(payload);
     if (state === 'completed') {
@@ -159,6 +182,10 @@ async function waitForReady(endpoint, timeoutMs) {
     const health = await request(endpoint, '/health');
     lastHealth = health;
     const data = health?.data || {};
+    const modalMessage = modalBlockedMessage(health);
+    if (modalMessage) {
+      throw new Error(modalMessage);
+    }
     if (health?.ok === true && String(data.state || data.startupState || '').toLowerCase() === 'ready') {
       return health;
     }
@@ -265,6 +292,7 @@ async function main() {
   const evidencePath = path.join(validationDir, 'owned-api-validation-result.json');
 
   const health = await waitForReady(args.endpoint, args.readyTimeoutMs);
+  await assertNoBlockingModal(args.endpoint);
   const mediaCurrent = await assertOpenShowFolder(args.endpoint, showDir);
   const layoutScene = await request(args.endpoint, '/layout/scene');
   const { model, modelsPayload } = await chooseTargetModel(args.endpoint, args.targetModel);
@@ -305,14 +333,18 @@ async function main() {
 
   try {
     result.create = await postQueued(args.endpoint, '/sequence/create', createBody);
+    result.modalStateAfterCreate = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.applyPayload = buildBatchPayload({
       targetModel,
       effectName: args.effectName,
       durationMs: args.durationMs
     });
     result.apply = await postQueued(args.endpoint, '/sequencing/apply-batch-plan', result.applyPayload);
+    result.modalStateAfterApply = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.render = await postQueued(args.endpoint, '/sequence/render-current', {});
+    result.modalStateAfterRender = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.save = await postQueued(args.endpoint, '/sequence/save', {});
+    result.modalStateAfterSave = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.revision = await request(args.endpoint, '/sequence/revision');
     result.settings = await request(args.endpoint, '/sequence/settings');
     result.expectedFseqExists = await pathExists(expectedFseq);
