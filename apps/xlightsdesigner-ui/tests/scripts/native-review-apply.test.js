@@ -156,6 +156,42 @@ test("buildNativeApplyVerification attaches practical validation from readback",
   });
 });
 
+test("buildNativeApplyVerification wires display-order readback dependency", async () => {
+  const result = await buildNativeApplyVerification({
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    commands: [
+      {
+        cmd: "sequencer.setDisplayElementOrder",
+        params: { orderedIds: ["Lyrics", "AllModels", "MegaTree"] }
+      }
+    ],
+    planHandoff: { metadata: {} },
+    applyResult: { currentRevision: "rev-1", nextRevision: "rev-2" },
+    readDisplayElementOrder: async () => ({
+      data: {
+        elements: ["Lyrics", "AllModels", "MegaTree"]
+      }
+    }),
+    verifyReadback: async (_commands, deps) => {
+      assert.equal(typeof deps.getDisplayElementOrder, "function");
+      const order = await deps.getDisplayElementOrder(deps.endpoint);
+      assert.deepEqual(order.data.elements, ["Lyrics", "AllModels", "MegaTree"]);
+      return {
+        expectedMutationsPresent: true,
+        lockedTracksUnchanged: true,
+        checks: [{ kind: "display-order", target: "master-view", ok: true, detail: "display element order matched" }],
+        designChecks: [],
+        designContext: {},
+        designAlignment: {}
+      };
+    }
+  });
+
+  assert.equal(result.verification.revisionAdvanced, true);
+  assert.equal(result.verification.expectedMutationsPresent, true);
+  assert.equal(result.verification.checks[0].kind, "display-order");
+});
+
 test("hydrateNativeApplyTimingContext expands scoped timing mark to full live track context", async () => {
   const commands = [
     {

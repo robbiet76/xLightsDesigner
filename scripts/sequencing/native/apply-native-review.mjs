@@ -14,6 +14,7 @@ import {
   getRevision,
   getTimingTracks,
   getTimingMarks,
+  getDisplayElementOrder,
   getOwnedHealth,
   getOwnedJob,
   getOwnedSequenceRevision,
@@ -24,6 +25,7 @@ import {
   setDisplayElementOrder,
   updateEffect,
   deleteEffects,
+  cloneEffects,
   deleteEffectLayer,
   reorderEffectLayer,
   compactEffectLayers,
@@ -139,6 +141,7 @@ export async function buildNativeApplyVerification({
   applyResult = null,
   verifyReadback = verifyAppliedPlanReadback,
   readTimingMarks = getTimingMarks,
+  readDisplayElementOrder = getDisplayElementOrder,
   readEffects = listEffects
 } = {}) {
   let verification = {};
@@ -148,6 +151,7 @@ export async function buildNativeApplyVerification({
         endpoint,
         planMetadata: planHandoff?.metadata || {},
         getTimingMarks: readTimingMarks,
+        getDisplayElementOrder: readDisplayElementOrder,
         listEffects: readEffects
       })
       : {};
@@ -469,6 +473,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     setDisplayElementOrder,
     updateEffect,
     deleteEffects,
+    cloneEffects,
     deleteEffectLayer,
     reorderEffectLayer,
     compactEffectLayers,
