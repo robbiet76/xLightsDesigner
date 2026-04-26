@@ -568,6 +568,72 @@ test("sequence_agent expands cut layer request into clone plus source delete", (
   assert.equal(out.warnings.some((row) => /Moving 1 effect from Star layer 0 to MegaTree layer 1/i.test(row)), true);
 });
 
+test("sequence_agent expands submodel move request into clone plus source delete", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      ...sampleIntent(),
+      goal: "Cut effects from MiniCane-03/Rows to MiniCane-02/Rows",
+      scope: {
+        targetIds: ["MiniCane-03/Rows", "MiniCane-02/Rows"],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / cut effects from MiniCane-03/Rows to MiniCane-02/Rows"],
+    currentSequenceContext: {
+      artifactType: "current_sequence_context_v1",
+      sequence: { revision: "rev-existing" },
+      summary: { effectCount: 1, timingTrackCount: 1 },
+      effects: {
+        sample: [
+          {
+            targetId: "MiniCane-03/Rows",
+            effectName: "Shimmer",
+            layerIndex: 1,
+            startMs: 0,
+            endMs: 3000
+          }
+        ]
+      }
+    },
+    displayElements: [
+      { id: "MiniCane-03/Rows", type: "submodel" },
+      { id: "MiniCane-02/Rows", type: "submodel" }
+    ],
+    baseRevision: "rev-existing",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.delete", "sequencer.setDisplayElementOrder"]
+  });
+
+  const cloneCommand = out.commands.find((row) => row.cmd === "effects.create" && row.params.modelName === "MiniCane-02/Rows");
+  const deleteCommand = out.commands.find((row) => row.cmd === "effects.delete" && row.params.modelName === "MiniCane-03/Rows");
+  assert.ok(cloneCommand);
+  assert.ok(deleteCommand);
+  assert.deepEqual(
+    {
+      cloneLayer: cloneCommand.params.layerIndex,
+      cloneEffectName: cloneCommand.params.effectName,
+      cloneStartMs: cloneCommand.params.startMs,
+      cloneEndMs: cloneCommand.params.endMs,
+      deleteLayer: deleteCommand.params.layerIndex,
+      deleteEffectName: deleteCommand.params.effectName,
+      deleteStartMs: deleteCommand.params.startMs,
+      deleteEndMs: deleteCommand.params.endMs
+    },
+    {
+      cloneLayer: 1,
+      cloneEffectName: "Shimmer",
+      cloneStartMs: 0,
+      cloneEndMs: 3000,
+      deleteLayer: 1,
+      deleteEffectName: "Shimmer",
+      deleteStartMs: 0,
+      deleteEndMs: 3000
+    }
+  );
+  assert.equal(deleteCommand.intent.existingSequencePolicy.emittedMoveDeleteCommand, true);
+});
+
 test("sequence_agent expands model copy with time offset while preserving relative effect timing", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

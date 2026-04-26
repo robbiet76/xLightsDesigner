@@ -1437,12 +1437,53 @@ function inferExplicitCloneIntent({
       if (sourceModelName && targetModelName) break;
     }
   }
+  if (!sourceModelName || !targetModelName) {
+    for (const source of lowerIds) {
+      const sourceIndex = joined.indexOf(source.lower);
+      if (sourceIndex < 0) continue;
+      const beforeSource = joined.slice(Math.max(0, sourceIndex - 80), sourceIndex);
+      if (!/\b(copy|paste|clone|duplicate|cut|move(?:\s+effects?)?)\b/.test(beforeSource)) continue;
+      for (const target of lowerIds) {
+        if (source.id === target.id) continue;
+        const targetIndex = joined.indexOf(target.lower, sourceIndex + source.lower.length);
+        if (targetIndex < 0) continue;
+        const between = joined.slice(sourceIndex + source.lower.length, targetIndex);
+        if (!/\b(to|onto|into|on)\b/.test(between)) continue;
+        sourceModelName = source.id;
+        targetModelName = target.id;
+        break;
+      }
+      if (sourceModelName && targetModelName) break;
+    }
+  }
   const sameModelLayerCopy = joined.match(/\blayer\s*(\d+)\b[^.;&\n]{0,80}?\b(?:to|onto|into|on)\s*\blayer\s*(\d+)\b/);
   if ((!sourceModelName || !targetModelName) && sameModelLayerCopy) {
     const mentionedModel = lowerIds.find((row) => new RegExp(`\\b${escapeRegExpText(row.lower)}\\b`, "i").test(joined));
     if (mentionedModel) {
       sourceModelName = mentionedModel.id;
       targetModelName = mentionedModel.id;
+    }
+  }
+  if (sourceModelName && !existingEffects.some((effect) => effect.targetId === sourceModelName)) {
+    sourceModelName = "";
+    targetModelName = "";
+    const sourceCandidates = lowerIds.filter((candidate) => existingEffects.some((effect) => effect.targetId === candidate.id));
+    for (const source of sourceCandidates) {
+      const sourceIndex = joined.indexOf(source.lower);
+      if (sourceIndex < 0) continue;
+      const beforeSource = joined.slice(Math.max(0, sourceIndex - 80), sourceIndex);
+      if (!/\b(copy|paste|clone|duplicate|cut|move(?:\s+effects?)?)\b/.test(beforeSource)) continue;
+      for (const target of lowerIds) {
+        if (source.id === target.id) continue;
+        const targetIndex = joined.indexOf(target.lower, sourceIndex + source.lower.length);
+        if (targetIndex < 0) continue;
+        const between = joined.slice(sourceIndex + source.lower.length, targetIndex);
+        if (!/\b(to|onto|into|on)\b/.test(between)) continue;
+        sourceModelName = source.id;
+        targetModelName = target.id;
+        break;
+      }
+      if (sourceModelName && targetModelName) break;
     }
   }
   if (!sourceModelName || !targetModelName) return null;
@@ -3103,10 +3144,11 @@ function stageCommandGraphSynthesis({
     filteredCommands.push(command);
   }
   const commandsOut = decorateCommandsWithDesignMetadata(filteredCommands, executionStrategy);
+  const explicitPlanningSourceLines = uniqueNormTexts([...sourceLines, ...executionLines]);
   const clonePlanningOut = applyExplicitClonePlanning({
     commands: commandsOut,
     currentSequenceContext,
-    sourceLines: executionLines,
+    sourceLines: explicitPlanningSourceLines,
     executionStrategy,
     scope,
     targetIds,
@@ -3119,7 +3161,7 @@ function stageCommandGraphSynthesis({
     : applyExistingSequencePreservation({
         commands: commandsOut,
         currentSequenceContext,
-        sourceLines: executionLines,
+        sourceLines: explicitPlanningSourceLines,
         executionStrategy,
         scope,
         capabilityCommands,
@@ -3127,7 +3169,7 @@ function stageCommandGraphSynthesis({
       });
   const displayOrderedCommandsOut = applyExplicitDisplayOrderPlanning({
     commands: preservedCommandsOut,
-    sourceLines: executionLines,
+    sourceLines: explicitPlanningSourceLines,
     executionStrategy,
     scope,
     displayElements,

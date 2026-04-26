@@ -5,6 +5,7 @@ import path from 'node:path';
 import {
   applySequencingBatchPlan,
   createSequence,
+  deleteEffects,
   getModels,
   getOwnedHealth,
   getOwnedJob,
@@ -35,6 +36,7 @@ function parseArgs(argv = []) {
     endpoint: process.env.XLD_XLIGHTS_API_URL || DEFAULT_ENDPOINT,
     showDir: DEFAULT_SHOW_DIR,
     mediaFile: DEFAULT_MEDIA_FILE,
+    mode: 'clone',
     sourceModel: '',
     targetModel: '',
     submodel: '',
@@ -48,6 +50,7 @@ function parseArgs(argv = []) {
     if (token === '--endpoint') out.endpoint = str(argv[++i] || out.endpoint);
     else if (token === '--show-dir') out.showDir = path.resolve(str(argv[++i] || out.showDir));
     else if (token === '--media-file') out.mediaFile = path.resolve(str(argv[++i] || out.mediaFile));
+    else if (token === '--mode') out.mode = str(argv[++i] || out.mode).toLowerCase();
     else if (token === '--source-model') out.sourceModel = str(argv[++i]);
     else if (token === '--target-model') out.targetModel = str(argv[++i]);
     else if (token === '--submodel') out.submodel = str(argv[++i]);
@@ -61,6 +64,9 @@ function parseArgs(argv = []) {
   if (!Number.isFinite(out.frameMs) || out.frameMs <= 0) out.frameMs = 50;
   if (!Number.isFinite(out.timeoutMs) || out.timeoutMs < 1000) out.timeoutMs = 120000;
   if (!Number.isFinite(out.targetStartMs)) out.targetStartMs = null;
+  if (!['clone', 'delete', 'move'].includes(out.mode)) {
+    throw new Error(`Unsupported --mode ${out.mode}. Expected clone, delete, or move.`);
+  }
   return out;
 }
 
@@ -178,6 +184,23 @@ async function applyBatchAndWait(endpoint = '', body = {}, timeoutMs = 120000) {
   return response;
 }
 
+async function applyDeleteCommands(endpoint = '', commands = []) {
+  const results = [];
+  for (const command of commands) {
+    const params = command?.params && typeof command.params === 'object' ? command.params : {};
+    const response = await deleteEffects(endpoint, {
+      element: str(params.modelName || params.element),
+      layer: Number(params.layerIndex ?? params.layer),
+      startMs: Number(params.startMs),
+      endMs: Number(params.endMs),
+      ...(str(params.effectName) ? { effectName: str(params.effectName) } : {})
+    });
+    const jobId = str(response?.data?.jobId);
+    results.push(jobId ? await waitForJob(endpoint, jobId) : response);
+  }
+  return results;
+}
+
 function validationMarks(durationMs = 30000) {
   const duration = Math.max(Number(durationMs) || 30000, 3000);
   const introEnd = Math.max(1, Math.floor(duration * 0.2));
@@ -197,12 +220,12 @@ function sampleAnalysis() {
   };
 }
 
-function sampleIntent(goal = '') {
+function sampleIntent(goal = '', targetIds = []) {
   return {
     goal,
     mode: 'revise',
     scope: {
-      targetIds: [],
+      targetIds,
       tagNames: [],
       sections: ['Validation']
     }
@@ -227,7 +250,8 @@ async function main() {
   }
 
   const runId = timestampId();
-  const sequencePath = path.join(args.showDir, VALIDATION_ROOT, 'planner-clone-submodel-api', `planner-clone-submodel-api-${runId}.xsq`);
+  const validationFolder = `planner-${args.mode}-submodel-api`;
+  const sequencePath = path.join(args.showDir, VALIDATION_ROOT, validationFolder, `${validationFolder}-${runId}.xsq`);
   fs.mkdirSync(path.dirname(sequencePath), { recursive: true });
   await createSequence(args.endpoint, {
     file: sequencePath,
@@ -237,6 +261,8 @@ async function main() {
     overwrite: true
   });
 
+  const submodelSeedStartMs = args.mode === 'clone' ? 2000 : 0;
+  const submodelSeedEndMs = args.mode === 'clone' ? 5000 : 3000;
   const seedEffects = [
     {
       element: scenario.sourceModel,
@@ -252,8 +278,8 @@ async function main() {
       element: scenario.sourceSubmodel,
       layer: 1,
       effectName: 'Shimmer',
-      startMs: 2000,
-      endMs: 5000,
+      startMs: submodelSeedStartMs,
+      endMs: submodelSeedEndMs,
       settings: {},
       palette: {},
       clearExisting: false
@@ -274,7 +300,16 @@ async function main() {
     throw new Error(`Seed readback failed: ${JSON.stringify({ scenario, sourceRows })}`);
   }
 
-  const goal = `Copy ${scenario.sourceModel} including submodels to ${scenario.targetModel}${args.targetStartMs !== null ? ` starting at ${args.targetStartMs}ms` : ''}`;
+  const goal = args.mode === 'delete'
+    ? 'Remove existing shimmer layer'
+    : args.mode === 'move'
+      ? `Cut effects from ${scenario.sourceSubmodel} to ${scenario.targetSubmodel}${args.targetStartMs !== null ? ` starting at ${args.targetStartMs}ms` : ''}`
+      : `Copy ${scenario.sourceModel} including submodels to ${scenario.targetModel}${args.targetStartMs !== null ? ` starting at ${args.targetStartMs}ms` : ''}`;
+  const targetIds = args.mode === 'delete'
+    ? [scenario.sourceSubmodel]
+    : args.mode === 'move'
+      ? [scenario.sourceSubmodel, scenario.targetSubmodel]
+      : [scenario.sourceModel, scenario.targetModel];
   const modelsPayload = await getModels(args.endpoint);
   const displayElements = [
     ...arr(modelsPayload?.data?.models).map((row) => ({ id: str(row?.name), name: str(row?.name), type: str(row?.displayAs || row?.type) })),
@@ -283,8 +318,8 @@ async function main() {
   ].filter((row) => row.id);
   const plan = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),
-    intentHandoff: sampleIntent(goal),
-    sourceLines: [`Validation / ${goal}`],
+    intentHandoff: sampleIntent(goal, targetIds),
+    sourceLines: [args.mode === 'delete' ? `Validation / ${scenario.sourceSubmodel} / ${goal}` : `Validation / ${goal}`],
     currentSequenceContext: {
       artifactType: 'current_sequence_context_v1',
       sequence: { revision: 'native-validation' },
@@ -297,39 +332,61 @@ async function main() {
       { effectName: 'On', params: [] },
       { effectName: 'Shimmer', params: [] }
     ]),
-    capabilityCommands: ['timing.createTrack', 'timing.insertMarks', 'effects.create', 'sequencer.setDisplayElementOrder']
+    capabilityCommands: ['timing.createTrack', 'timing.insertMarks', 'effects.create', 'effects.delete', 'sequencer.setDisplayElementOrder']
   });
   const cloneCommands = arr(plan.commands).filter((command) => str(command?.cmd) === 'effects.create' && str(command?.id).startsWith('effect.clone.'));
-  if (cloneCommands.length !== 2) {
+  const deleteCommands = arr(plan.commands).filter((command) => str(command?.cmd) === 'effects.delete');
+  if (args.mode === 'clone' && cloneCommands.length !== 2) {
     throw new Error(`Expected two clone commands for parent plus matching submodel, got ${cloneCommands.length}: ${JSON.stringify(plan.commands)}`);
   }
-  await applyBatchAndWait(args.endpoint, {
-    track: 'XD: Submodel Clone Apply',
-    subType: 'Generic',
-    replaceExistingMarks: false,
-    marks: validationMarks(args.durationMs),
-    effects: cloneCommands.map((command) => ({
-      element: str(command?.params?.modelName),
-      layer: Number(command?.params?.layerIndex),
-      effectName: str(command?.params?.effectName),
-      startMs: Number(command?.params?.startMs),
-      endMs: Number(command?.params?.endMs),
-      settings: command?.params?.settings || {},
-      palette: command?.params?.palette || {},
-      clearExisting: false
-    }))
-  }, args.timeoutMs);
+  if (args.mode === 'move' && (cloneCommands.length !== 1 || deleteCommands.length !== 1)) {
+    throw new Error(`Expected one clone command and one source delete command for submodel move, got clone=${cloneCommands.length} delete=${deleteCommands.length}: ${JSON.stringify(plan.commands)}`);
+  }
+  if (args.mode === 'delete' && (cloneCommands.length !== 0 || deleteCommands.length !== 1)) {
+    throw new Error(`Expected one delete command for submodel delete, got clone=${cloneCommands.length} delete=${deleteCommands.length}: ${JSON.stringify(plan.commands)}`);
+  }
+  if (cloneCommands.length) {
+    await applyBatchAndWait(args.endpoint, {
+      track: `XD: Submodel ${args.mode} Apply`,
+      subType: 'Generic',
+      replaceExistingMarks: false,
+      marks: validationMarks(args.durationMs),
+      effects: cloneCommands.map((command) => ({
+        element: str(command?.params?.modelName),
+        layer: Number(command?.params?.layerIndex),
+        effectName: str(command?.params?.effectName),
+        startMs: Number(command?.params?.startMs),
+        endMs: Number(command?.params?.endMs),
+        settings: command?.params?.settings || {},
+        palette: command?.params?.palette || {},
+        clearExisting: false
+      }))
+    }, args.timeoutMs);
+  }
+  if (deleteCommands.length) {
+    await applyDeleteCommands(args.endpoint, deleteCommands);
+  }
 
+  const finalSourceRows = await readEffectRows(args.endpoint, [scenario.sourceModel, scenario.sourceSubmodel]);
   const targetRows = await readEffectRows(args.endpoint, [scenario.targetModel, scenario.targetSubmodel]);
   const expectedParentStartMs = args.targetStartMs !== null ? args.targetStartMs : 1000;
   const expectedParentEndMs = expectedParentStartMs + 2000;
-  const expectedSubmodelStartMs = expectedParentStartMs + 1000;
-  const expectedSubmodelEndMs = expectedSubmodelStartMs + 3000;
+  const expectedSubmodelStartMs = args.mode === 'move'
+    ? (args.targetStartMs !== null ? args.targetStartMs : submodelSeedStartMs)
+    : expectedParentStartMs + 1000;
+  const expectedSubmodelEndMs = expectedSubmodelStartMs + (submodelSeedEndMs - submodelSeedStartMs);
   const parentCloned = targetRows.some((row) => row.targetId === scenario.targetModel && row.effectName === 'On' && row.layerIndex === 0 && row.startMs === expectedParentStartMs && row.endMs === expectedParentEndMs);
   const submodelCloned = targetRows.some((row) => row.targetId === scenario.targetSubmodel && row.effectName === 'Shimmer' && row.layerIndex === 1 && row.startMs === expectedSubmodelStartMs && row.endMs === expectedSubmodelEndMs);
+  const sourceSubmodelStillPresent = finalSourceRows.some((row) => row.targetId === scenario.sourceSubmodel && row.effectName === 'Shimmer' && row.layerIndex === 1 && row.startMs === submodelSeedStartMs && row.endMs === submodelSeedEndMs);
+  const ok = args.mode === 'clone'
+    ? parentCloned && submodelCloned && sourceSubmodelStillPresent
+    : args.mode === 'move'
+      ? submodelCloned && !sourceSubmodelStillPresent
+      : !sourceSubmodelStillPresent;
   const result = {
-    ok: parentCloned && submodelCloned,
+    ok,
     runId,
+    mode: args.mode,
     sequencePath,
     scenario,
     commandCount: plan.commands.length,
@@ -343,17 +400,27 @@ async function main() {
       sourceModelName: command.intent?.clonePolicy?.sourceModelName,
       targetModelName: command.intent?.clonePolicy?.targetModelName
     })),
+    deleteCommands: deleteCommands.map((command) => ({
+      id: command.id,
+      modelName: command.params.modelName,
+      layerIndex: command.params.layerIndex,
+      effectName: command.params.effectName,
+      startMs: command.params.startMs,
+      endMs: command.params.endMs
+    })),
     checks: {
       parentSeeded,
       submodelSeeded,
       parentCloned,
       submodelCloned,
+      sourceSubmodelStillPresent,
       expectedParentStartMs,
       expectedParentEndMs,
       expectedSubmodelStartMs,
       expectedSubmodelEndMs
     },
     warnings: plan.warnings || [],
+    finalSourceRows,
     targetRows
   };
   const evidencePath = path.join(path.dirname(sequencePath), `${path.basename(sequencePath, '.xsq')}-evidence.json`);
