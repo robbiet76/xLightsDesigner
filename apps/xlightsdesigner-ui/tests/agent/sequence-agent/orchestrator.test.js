@@ -391,6 +391,43 @@ test('orchestrator fails closed when owned job fails', async () => {
   assert.match(String(res.error || ''), /effect rejected/i);
 });
 
+test('orchestrator fails closed when a modal appears during owned job polling', async () => {
+  let healthCalls = 0;
+  const res = await validateAndApplyPlan({
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: compressibleCommands(),
+    ...ownedDeps({
+      getOwnedHealth: async () => {
+        healthCalls += 1;
+        return healthCalls === 1
+          ? { ok: true, data: { state: 'ready', listenerReachable: true, appReady: true, startupSettled: true } }
+          : {
+              ok: true,
+              data: {
+                state: 'ready',
+                listenerReachable: true,
+                appReady: true,
+                startupSettled: true,
+                modalState: {
+                  observed: true,
+                  blocked: true,
+                  modalCount: 1,
+                  windows: [{ title: 'Error' }]
+                }
+              }
+            };
+      },
+      getOwnedJob: async () => {
+        throw new Error('job polling should not continue while modal blocked');
+      }
+    })
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, 'runtime');
+  assert.match(String(res.error || ''), /blocked by xLights modal.*Error/i);
+});
+
 test('orchestrator preserves owned clone target conflict details', async () => {
   const res = await validateAndApplyPlan({
     endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',

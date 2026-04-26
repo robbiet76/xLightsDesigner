@@ -226,7 +226,10 @@ async function waitForXlights(timeoutMs) {
   for (;;) {
     last = await requestJson(`${DEFAULT_XLIGHTS_BASE_URL}/health`, 5000);
     const data = last.json?.data || {};
-    if (last.ok && (data.startupSettled === true || str(data.state).toLowerCase() === 'ready')) {
+    const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : {};
+    const modalObserved = modalState.observed !== false && str(modalState.observed).toLowerCase() !== 'false';
+    const modalBlocked = modalObserved && (modalState.blocked === true || str(modalState.blocked).toLowerCase() === 'true');
+    if (last.ok && (data.startupSettled === true || str(data.state).toLowerCase() === 'ready') && !modalBlocked) {
       return last.json;
     }
     if (Date.now() - started > timeoutMs) {
@@ -261,7 +264,10 @@ async function ensureNativeApp(args) {
 async function ensureXlights(args) {
   const health = await requestJson(`${DEFAULT_XLIGHTS_BASE_URL}/health`, 2000);
   const data = health.json?.data || {};
-  if (health.ok && (data.startupSettled === true || str(data.state).toLowerCase() === 'ready')) {
+  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : {};
+  const modalObserved = modalState.observed !== false && str(modalState.observed).toLowerCase() !== 'false';
+  const modalBlocked = modalObserved && (modalState.blocked === true || str(modalState.blocked).toLowerCase() === 'true');
+  if (health.ok && (data.startupSettled === true || str(data.state).toLowerCase() === 'ready') && !modalBlocked) {
     return { launched: false, health: health.json };
   }
   if (!args.launchXlights) {
@@ -272,6 +278,8 @@ async function ensureXlights(args) {
     'scripts/xlights/launch-owned-xlights.mjs',
     '--show-dir',
     path.resolve(args.showDir),
+    '--modal-policy',
+    'fail',
     '--api-timeout-ms',
     String(args.xlightsTimeoutMs)
   ]);

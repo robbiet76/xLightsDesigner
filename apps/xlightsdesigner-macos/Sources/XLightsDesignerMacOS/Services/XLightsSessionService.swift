@@ -305,6 +305,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
     private func waitForOwnedJobResult(jobID: String, command: String, attempts: Int = 180, delayMs: UInt64 = 500) async throws -> [String: Any] {
         var queuedWithoutStartCount = 0
         for _ in 0..<attempts {
+            _ = try await ensureOwnedRuntimeReady(command: command, requireSettled: false)
             let settled = try await readJSON(from: "/jobs/get?jobId=\(jobID.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? jobID)")
             let data = dictionary(settled["data"])
             let state = string(data["state"]).lowercased()

@@ -19,6 +19,19 @@ function ownedModalStateBlocked(data = {}) {
   return modalState?.observed !== false && (modalState?.blocked === true || norm(modalState?.blocked) === "true");
 }
 
+function describeOwnedModalBlock(data = {}) {
+  const modalState = data?.modalState && typeof data.modalState === "object" ? data.modalState : {};
+  const modalCount = Number(modalState.modalCount || 0);
+  const windows = Array.isArray(modalState.windows) ? modalState.windows : [];
+  const titles = windows
+    .map((window) => str(window?.title))
+    .filter(Boolean)
+    .slice(0, 3);
+  const countText = modalCount > 0 ? ` (${modalCount})` : "";
+  const titleText = titles.length ? `: ${titles.join(", ")}` : "";
+  return `xLights modal blocked${countText}${titleText}`;
+}
+
 export function buildOwnedSequencingBatchPlan(commands = []) {
   const rows = Array.isArray(commands) ? commands : [];
   let trackName = "";
@@ -224,10 +237,10 @@ function requiredOwnedDirectFns(deps = {}, directCommands = []) {
   return missing;
 }
 
-async function waitForAcceptedOwnedMutation(endpoint, accepted, getOwnedJob) {
+async function waitForAcceptedOwnedMutation(endpoint, accepted, getOwnedJob, getOwnedHealth = null) {
   const jobId = str(accepted?.data?.jobId);
   if (!jobId) return accepted;
-  const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob);
+  const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob, getOwnedHealth);
   const state = str(settled?.data?.state).toLowerCase();
   if (state === "failed" || settled?.data?.result?.ok === false) {
     const error = settled?.data?.result?.error && typeof settled.data.result.error === "object"
@@ -259,25 +272,25 @@ async function executeOwnedDirectCommand({ endpoint, command, deps }) {
   }
   if (kind === "sequencer.setDisplayElementOrder") {
     const orderedIds = Array.isArray(params.orderedIds) ? params.orderedIds.map((value) => str(value)).filter(Boolean) : [];
-    return waitForAcceptedOwnedMutation(endpoint, await deps.setDisplayElementOrder(endpoint, orderedIds), deps.getOwnedJob);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.setDisplayElementOrder(endpoint, orderedIds), deps.getOwnedJob, deps.getOwnedHealth);
   }
   if (kind === "effects.update") {
-    return waitForAcceptedOwnedMutation(endpoint, await deps.updateEffect(endpoint, normalizeEffectUpdateParams(params)), deps.getOwnedJob);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.updateEffect(endpoint, normalizeEffectUpdateParams(params)), deps.getOwnedJob, deps.getOwnedHealth);
   }
   if (kind === "effects.delete") {
-    return waitForAcceptedOwnedMutation(endpoint, await deps.deleteEffects(endpoint, normalizeEffectSelectorParams(params)), deps.getOwnedJob);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.deleteEffects(endpoint, normalizeEffectSelectorParams(params)), deps.getOwnedJob, deps.getOwnedHealth);
   }
   if (kind === "effects.clone") {
-    return waitForAcceptedOwnedMutation(endpoint, await deps.cloneEffects(endpoint, normalizeCloneEffectParams(params)), deps.getOwnedJob);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.cloneEffects(endpoint, normalizeCloneEffectParams(params)), deps.getOwnedJob, deps.getOwnedHealth);
   }
   if (kind === "effects.deleteLayer") {
-    return waitForAcceptedOwnedMutation(endpoint, await deps.deleteEffectLayer(endpoint, normalizeLayerCommandParams(params)), deps.getOwnedJob);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.deleteEffectLayer(endpoint, normalizeLayerCommandParams(params)), deps.getOwnedJob, deps.getOwnedHealth);
   }
   if (kind === "effects.reorderLayer") {
-    return waitForAcceptedOwnedMutation(endpoint, await deps.reorderEffectLayer(endpoint, normalizeReorderLayerParams(params)), deps.getOwnedJob);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.reorderEffectLayer(endpoint, normalizeReorderLayerParams(params)), deps.getOwnedJob, deps.getOwnedHealth);
   }
   if (kind === "effects.compactLayers") {
-    return waitForAcceptedOwnedMutation(endpoint, await deps.compactEffectLayers(endpoint, { element: normalizeElementParam(params) }), deps.getOwnedJob);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.compactEffectLayers(endpoint, { element: normalizeElementParam(params) }), deps.getOwnedJob, deps.getOwnedHealth);
   }
   throw new Error(`Unsupported owned direct command: ${str(command?.cmd)}`);
 }
@@ -288,6 +301,7 @@ async function executeOwnedCommandPlan({
   ownedBatchPlan,
   applySequencingBatchPlan,
   getOwnedJob,
+  getOwnedHealth,
   directDeps = {}
 }) {
   let batchExecuted = false;
@@ -300,7 +314,7 @@ async function executeOwnedCommandPlan({
     if (!jobId) {
       throw new Error("owned sequencing.applyBatchPlan returned no jobId");
     }
-    const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob);
+    const settled = await waitForOwnedJob(endpoint, jobId, getOwnedJob, getOwnedHealth);
     const state = str(settled?.data?.state).toLowerCase();
     if (state === "failed" || settled?.data?.result?.ok === false) {
       throw new Error(str(settled?.data?.result?.error?.message || "owned sequencing.applyBatchPlan failed"));
@@ -314,7 +328,7 @@ async function executeOwnedCommandPlan({
       continue;
     }
     if (directOwnedCommandKind(command)) {
-      await executeOwnedDirectCommand({ endpoint, command, deps: { ...directDeps, getOwnedJob } });
+      await executeOwnedDirectCommand({ endpoint, command, deps: { ...directDeps, getOwnedJob, getOwnedHealth } });
       directExecuted += 1;
       continue;
     }
@@ -332,8 +346,15 @@ async function executeOwnedCommandPlan({
   };
 }
 
-async function waitForOwnedJob(endpoint, jobId, getOwnedJob, attempts = 40, delayMs = 500) {
+async function waitForOwnedJob(endpoint, jobId, getOwnedJob, getOwnedHealth = null, attempts = 40, delayMs = 500) {
   for (let idx = 0; idx < attempts; idx += 1) {
+    if (typeof getOwnedHealth === "function") {
+      const health = await getOwnedHealth(endpoint);
+      const data = health?.data && typeof health.data === "object" ? health.data : {};
+      if (ownedModalStateBlocked(data)) {
+        throw new Error(`Owned xLights job ${jobId} is blocked by ${describeOwnedModalBlock(data)}`);
+      }
+    }
     const body = await getOwnedJob(endpoint, jobId);
     const state = str(body?.data?.state).toLowerCase();
     if (state === "succeeded" || state === "completed") return body;
@@ -510,6 +531,7 @@ export async function validateAndApplyPlan({
       ownedBatchPlan,
       applySequencingBatchPlan,
       getOwnedJob,
+      getOwnedHealth,
       directDeps
     });
     const postRev = typeof getOwnedRevision === 'function'

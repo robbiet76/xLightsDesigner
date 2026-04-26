@@ -18,6 +18,19 @@ function ownedModalStateBlocked(data = {}) {
   return modalState ? modalState.observed !== false && boolish(modalState.blocked) : false;
 }
 
+function describeOwnedModalBlock(data = {}) {
+  const modalState = data?.modalState && typeof data.modalState === "object" ? data.modalState : {};
+  const modalCount = Number(modalState.modalCount || 0);
+  const windows = Array.isArray(modalState.windows) ? modalState.windows : [];
+  const titles = windows
+    .map((window) => String(window?.title || "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  const countText = modalCount > 0 ? ` (${modalCount})` : "";
+  const titleText = titles.length ? `: ${titles.join(", ")}` : "";
+  return `xLights modal blocked${countText}${titleText}`;
+}
+
 function normalizeBody(raw) {
   const idx = raw.indexOf("{");
   return idx >= 0 ? raw.slice(idx) : raw;
@@ -223,6 +236,11 @@ async function waitForOwnedJobResult(endpoint, command, jobId, attempts = OWNED_
     throw new Error(`Owned xLights ${command} returned no jobId`);
   }
   for (let index = 0; index < attempts; index += 1) {
+    const health = await getOwnedHealth(endpoint);
+    const data = health?.data && typeof health.data === "object" ? health.data : {};
+    if (ownedModalStateBlocked(data)) {
+      throw new Error(`Owned xLights job ${normalizedJobId} for ${command} is blocked by ${describeOwnedModalBlock(data)}`);
+    }
     const settled = await getOwnedJob(endpoint, normalizedJobId);
     const state = String(settled?.data?.state || "").trim().toLowerCase();
     if (state === "queued" || state === "running") {

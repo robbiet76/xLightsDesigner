@@ -128,6 +128,7 @@ test("openSequence waits for owned queued job completion", async () => {
       [
         "http://127.0.0.1:49915/xlightsdesigner/api/health",
         "http://127.0.0.1:49915/xlightsdesigner/api/sequence/open",
+        "http://127.0.0.1:49915/xlightsdesigner/api/health",
         "http://127.0.0.1:49915/xlightsdesigner/api/jobs/get?jobId=job-123"
       ]
     );
@@ -336,6 +337,7 @@ test("renderCurrentSequence waits for owned queued job completion", async () => 
       [
         "http://127.0.0.1:49915/xlightsdesigner/api/health",
         "http://127.0.0.1:49915/xlightsdesigner/api/sequence/render-current",
+        "http://127.0.0.1:49915/xlightsdesigner/api/health",
         "http://127.0.0.1:49915/xlightsdesigner/api/jobs/get?jobId=job-render-1"
       ]
     );
@@ -389,11 +391,56 @@ test("closeSequence uses owned close route and waits for queued completion", asy
       [
         "http://127.0.0.1:49915/xlightsdesigner/api/health",
         "http://127.0.0.1:49915/xlightsdesigner/api/sequence/close",
+        "http://127.0.0.1:49915/xlightsdesigner/api/health",
         "http://127.0.0.1:49915/xlightsdesigner/api/jobs/get?jobId=job-close-1"
       ]
     );
     assert.match(calls[1].body, /"force":true/);
     assert.match(calls[1].body, /"quiet":true/);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("owned queued job polling fails closed when a modal appears", async () => {
+  const originalFetch = global.fetch;
+  let healthCalls = 0;
+  global.fetch = async (url) => {
+    if (String(url).endsWith("/health")) {
+      healthCalls += 1;
+      return jsonResponse({
+        ok: true,
+        statusCode: 200,
+        data: healthCalls === 1
+          ? { listenerReachable: true, appReady: true, startupSettled: true, state: "ready" }
+          : {
+              listenerReachable: true,
+              appReady: true,
+              startupSettled: true,
+              state: "ready",
+              modalState: {
+                observed: true,
+                blocked: true,
+                modalCount: 1,
+                windows: [{ title: "Save changes?" }]
+              }
+            }
+      });
+    }
+    if (String(url).endsWith("/sequence/render-current")) {
+      return jsonResponse({
+        ok: true,
+        statusCode: 202,
+        data: { accepted: true, jobId: "job-modal-1", state: "queued" }
+      });
+    }
+    throw new Error(`Unexpected fetch ${url}`);
+  };
+  try {
+    await assert.rejects(
+      () => renderCurrentSequence("http://127.0.0.1:49915/xlightsdesigner/api"),
+      /blocked by xLights modal.*Save changes\?/i
+    );
   } finally {
     global.fetch = originalFetch;
   }
