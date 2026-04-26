@@ -43,6 +43,26 @@ struct DesignRationalePaneModel: Sendable {
     let warnings: [String]
 }
 
+struct DesignPaletteColorModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let name: String
+    let hex: String
+    let role: String
+}
+
+struct DesignVisualInspirationModel: Sendable {
+    let available: Bool
+    let title: String
+    let summary: String
+    let imagePath: String
+    let currentRevisionId: String
+    let revisionSummary: String
+    let paletteSummary: String
+    let paletteDisplayMode: String
+    let paletteCoordinationRule: String
+    let palette: [DesignPaletteColorModel]
+}
+
 struct DesignIntentDraftModel: Equatable, Sendable {
     var goal: String
     var mood: String
@@ -71,6 +91,7 @@ struct DesignScreenModel: Sendable {
     let summary: DesignSummaryBandModel
     let proposal: DesignProposalPaneModel
     let authoring: DesignAuthoringPaneModel
+    let visualInspiration: DesignVisualInspirationModel
     let rationale: DesignRationalePaneModel
     let banners: [WorkflowBannerModel]
 }

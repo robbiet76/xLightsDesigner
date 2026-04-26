@@ -87,3 +87,86 @@ private struct InMemoryProjectSessionStore: ProjectSessionStore {
     #expect(payload?["approvalNotes"] as? String == "Approved for sequencing draft.")
     #expect(model.intentDraft.targetScope == "House outline and mega tree.")
 }
+
+@MainActor
+@Test func designScreenLoadsVisualInspirationManifestFromProjectArtifacts() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-visual-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let service = LocalProjectService(projectsRootPath: root.path)
+    let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
+    let project = try service.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Native Visual Test \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+    let visualDir = projectDir.appendingPathComponent("artifacts/visual-design/seq-1", isDirectory: true)
+    try FileManager.default.createDirectory(at: visualDir, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: visualDir.appendingPathComponent("revisions", isDirectory: true), withIntermediateDirectories: true)
+    try Data("fixture".utf8).write(to: visualDir.appendingPathComponent("revisions/board-r002.png"))
+    let manifest = """
+    {
+      "artifactType": "visual_design_asset_pack_v1",
+      "artifactId": "visual-pack-1",
+      "creativeIntent": {
+        "themeSummary": "Warm candlelit holiday board",
+        "palette": [
+          { "name": "candle gold", "hex": "#ffc45c", "role": "warm highlight" }
+        ],
+        "motifs": ["window glow"]
+      },
+      "palette": {
+        "required": true,
+        "displayMode": "separate_and_optional_in_image",
+        "coordinationRule": "Image colors must reflect or coordinate with the approved palette.",
+        "colors": [
+          { "name": "candle gold", "hex": "#ffc45c", "role": "warm highlight" },
+          { "name": "pine green", "hex": "#1f6f4a", "role": "support" }
+        ]
+      },
+      "displayAsset": {
+        "kind": "inspiration_board",
+        "relativePath": "revisions/board-r002.png",
+        "currentRevisionId": "board-r002"
+      },
+      "imageRevisions": [
+        {
+          "revisionId": "board-r001",
+          "mode": "generate",
+          "relativePath": "inspiration-board.png",
+          "paletteLocked": true,
+          "changeSummary": "Initial board."
+        },
+        {
+          "revisionId": "board-r002",
+          "parentRevisionId": "board-r001",
+          "mode": "edit",
+          "relativePath": "revisions/board-r002.png",
+          "paletteLocked": false,
+          "paletteChangeSummary": "Added pine green support.",
+          "changeSummary": "Softened glow."
+        }
+      ]
+    }
+    """
+    try Data(manifest.utf8).write(to: visualDir.appendingPathComponent("visual-design-manifest.json"))
+
+    workspace.setProject(project)
+    let model = DesignScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: service
+    )
+
+    #expect(model.screenModel.visualInspiration.available == true)
+    #expect(model.screenModel.visualInspiration.summary == "Warm candlelit holiday board")
+    #expect(model.screenModel.visualInspiration.currentRevisionId == "board-r002")
+    #expect(model.screenModel.visualInspiration.palette.count == 2)
+    #expect(model.screenModel.visualInspiration.palette.first?.hex == "#ffc45c")
+    #expect(model.screenModel.visualInspiration.revisionSummary.contains("Added pine green support."))
+    #expect(model.screenModel.visualInspiration.imagePath.hasSuffix("revisions/board-r002.png"))
+}

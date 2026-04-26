@@ -124,6 +124,7 @@ final class DesignScreenViewModel {
         let directorSummary = pendingWork?.directorSummary ?? "No director profile loaded."
         let sceneSummary = pendingWork?.designSceneSummary ?? "No design-scene context available."
         let openQuestions = pendingWork?.guidedQuestions ?? []
+        let visualInspiration = loadVisualInspiration(for: project)
 
         let identity = PendingWorkIdentityModel(
             title: hasProject ? "Current design direction" : "No pending design context",
@@ -173,6 +174,7 @@ final class DesignScreenViewModel {
                 canSave: hasProject && isDirty,
                 lastSavedSummary: intentDraft.updatedAt.isEmpty ? "Not saved yet." : "Last saved \(intentDraft.updatedAt)."
             ),
+            visualInspiration: visualInspiration,
             rationale: DesignRationalePaneModel(
                 rationaleNotes: hasProject ? [
                     pendingWork?.moodEnergyArc ?? "No mood/energy arc available.",
@@ -212,6 +214,126 @@ final class DesignScreenViewModel {
         )
     }
 
+    private static func loadVisualInspiration(for project: ActiveProjectModel?) -> DesignVisualInspirationModel {
+        guard let project else {
+            return emptyVisualInspiration(summary: "Open or create a project to generate visual inspiration.")
+        }
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        let visualRoot = projectDir.appendingPathComponent("artifacts/visual-design", isDirectory: true)
+        guard let manifestURL = latestVisualDesignManifest(in: visualRoot),
+              let manifest = readJSONDictionary(from: manifestURL) else {
+            return emptyVisualInspiration(summary: "No visual inspiration board has been generated yet.")
+        }
+        let creativeIntent = manifest["creativeIntent"] as? [String: Any] ?? [:]
+        let displayAsset = manifest["displayAsset"] as? [String: Any] ?? [:]
+        let paletteObject = manifest["palette"] as? [String: Any] ?? [:]
+        let colors = paletteRows(from: paletteObject["colors"] as? [[String: Any]] ?? creativeIntent["palette"] as? [[String: Any]] ?? [])
+        let currentRevisionId = string(displayAsset["currentRevisionId"])
+        let currentRevision = currentRevision(from: manifest["imageRevisions"] as? [[String: Any]] ?? [], currentRevisionId: currentRevisionId)
+        let relativeImagePath = string(currentRevision["relativePath"]).isEmpty
+            ? string(displayAsset["relativePath"])
+            : string(currentRevision["relativePath"])
+        let imagePath = relativeImagePath.isEmpty
+            ? ""
+            : manifestURL.deletingLastPathComponent().appendingPathComponent(relativeImagePath).path
+        let paletteSummary = colors.isEmpty
+            ? "Palette is required but no palette colors were found in the manifest."
+            : colors.map { color in
+                [color.name, color.hex, color.role].filter { !$0.isEmpty }.joined(separator: " ")
+            }.joined(separator: " / ")
+        let revisionSummary = revisionSummary(from: currentRevision)
+        return DesignVisualInspirationModel(
+            available: true,
+            title: "Visual Inspiration",
+            summary: string(creativeIntent["themeSummary"], fallback: "Visual inspiration board is available."),
+            imagePath: imagePath,
+            currentRevisionId: currentRevisionId,
+            revisionSummary: revisionSummary,
+            paletteSummary: paletteSummary,
+            paletteDisplayMode: string(paletteObject["displayMode"], fallback: "separate_and_optional_in_image"),
+            paletteCoordinationRule: string(paletteObject["coordinationRule"], fallback: "Image colors must reflect or coordinate with the approved palette."),
+            palette: colors
+        )
+    }
+
+    private static func emptyVisualInspiration(summary: String) -> DesignVisualInspirationModel {
+        DesignVisualInspirationModel(
+            available: false,
+            title: "Visual Inspiration",
+            summary: summary,
+            imagePath: "",
+            currentRevisionId: "",
+            revisionSummary: "No board revision available.",
+            paletteSummary: "No palette available.",
+            paletteDisplayMode: "",
+            paletteCoordinationRule: "Palette is required once a visual inspiration board exists.",
+            palette: []
+        )
+    }
+
+    private static func latestVisualDesignManifest(in root: URL) -> URL? {
+        guard let enumerator = FileManager.default.enumerator(
+            at: root,
+            includingPropertiesForKeys: [.contentModificationDateKey, .isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else { return nil }
+        var latest: (url: URL, modifiedAt: Date)?
+        for case let url as URL in enumerator {
+            guard url.lastPathComponent == "visual-design-manifest.json" else { continue }
+            let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .isRegularFileKey])
+            guard values?.isRegularFile == true else { continue }
+            let modifiedAt = values?.contentModificationDate ?? .distantPast
+            if latest == nil || modifiedAt > latest!.modifiedAt {
+                latest = (url, modifiedAt)
+            }
+        }
+        return latest?.url
+    }
+
+    private static func readJSONDictionary(from url: URL) -> [String: Any]? {
+        guard let data = try? Data(contentsOf: url),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        return object
+    }
+
+    private static func paletteRows(from rows: [[String: Any]]) -> [DesignPaletteColorModel] {
+        rows.enumerated().map { index, row in
+            let name = string(row["name"])
+            let hex = string(row["hex"])
+            let role = string(row["role"])
+            return DesignPaletteColorModel(
+                id: [name, hex, role].filter { !$0.isEmpty }.joined(separator: "::").isEmpty ? "palette-\(index)" : [name, hex, role].filter { !$0.isEmpty }.joined(separator: "::"),
+                name: name,
+                hex: hex,
+                role: role
+            )
+        }
+        .filter { !$0.name.isEmpty || !$0.hex.isEmpty || !$0.role.isEmpty }
+    }
+
+    private static func currentRevision(from rows: [[String: Any]], currentRevisionId: String) -> [String: Any] {
+        if let row = rows.first(where: { string($0["revisionId"]) == currentRevisionId }) {
+            return row
+        }
+        return rows.last ?? [:]
+    }
+
+    private static func revisionSummary(from row: [String: Any]) -> String {
+        let revisionId = string(row["revisionId"])
+        let mode = string(row["mode"])
+        let changeSummary = string(row["changeSummary"])
+        let paletteLocked = (row["paletteLocked"] as? Bool) ?? true
+        let paletteText = paletteLocked ? "Palette preserved." : string(row["paletteChangeSummary"], fallback: "Palette changed.")
+        return [
+            revisionId.isEmpty ? "" : "Revision \(revisionId)",
+            mode.isEmpty ? "" : mode.replacingOccurrences(of: "_", with: " "),
+            changeSummary,
+            paletteText
+        ].filter { !$0.isEmpty }.joined(separator: " • ")
+    }
+
     private static func snapshotPayload(from draft: DesignIntentDraftModel) -> [String: Any] {
         [
             "goal": draft.goal.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -226,6 +348,11 @@ final class DesignScreenViewModel {
 
     private static func string(_ value: Any?) -> String {
         (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    private static func string(_ value: Any?, fallback: String) -> String {
+        let out = string(value)
+        return out.isEmpty ? fallback : out
     }
 
     private static func isoNow() -> String {

@@ -687,11 +687,29 @@ final class NativeAutomationServer: @unchecked Sendable {
     @MainActor
     private func designSnapshot() -> [String: Any] {
         let screen = model.designScreenModel.screenModel
+        let visual = screen.visualInspiration
         return [
             "title": screen.title,
             "subtitle": screen.subtitle,
             "briefSummary": screen.summary.briefSummary,
             "proposalSummary": screen.summary.proposalSummary,
+            "visualInspiration": [
+                "available": visual.available,
+                "summary": visual.summary,
+                "imagePath": visual.imagePath,
+                "currentRevisionId": visual.currentRevisionId,
+                "revisionSummary": visual.revisionSummary,
+                "paletteSummary": visual.paletteSummary,
+                "paletteDisplayMode": visual.paletteDisplayMode,
+                "paletteCoordinationRule": visual.paletteCoordinationRule,
+                "palette": visual.palette.map {
+                    [
+                        "name": $0.name,
+                        "hex": $0.hex,
+                        "role": $0.role
+                    ]
+                }
+            ],
             "nativeDesignIntent": [
                 "goal": model.designScreenModel.intentDraft.goal,
                 "mood": model.designScreenModel.intentDraft.mood,

@@ -10,7 +10,10 @@ struct DesignScreenView: View {
             if let banner = model.transientBanner { bannerView(banner) }
             summaryBand
             AdaptiveSplitView(breakpoint: 1100, spacing: 20) {
-                authoringPane
+                VStack(alignment: .leading, spacing: 20) {
+                    visualInspirationPane
+                    authoringPane
+                }
             } secondary: {
                 VStack(alignment: .leading, spacing: 20) {
                     proposalPane
@@ -93,6 +96,40 @@ struct DesignScreenView: View {
         }
     }
 
+    private var visualInspirationPane: some View {
+        GroupBox(model.screenModel.visualInspiration.title) {
+            VStack(alignment: .leading, spacing: 12) {
+                if model.screenModel.visualInspiration.available,
+                   let image = NSImage(contentsOfFile: model.screenModel.visualInspiration.imagePath) {
+                    Image(nsImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: 260)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(nsColor: .separatorColor)))
+                }
+                Text(model.screenModel.visualInspiration.summary)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    if !model.screenModel.visualInspiration.currentRevisionId.isEmpty {
+                        chip(model.screenModel.visualInspiration.currentRevisionId)
+                    }
+                    if !model.screenModel.visualInspiration.paletteDisplayMode.isEmpty {
+                        chip(model.screenModel.visualInspiration.paletteDisplayMode)
+                    }
+                }
+                Text(model.screenModel.visualInspiration.revisionSummary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                paletteSwatches(model.screenModel.visualInspiration.palette)
+                detailRow(label: "Palette", value: model.screenModel.visualInspiration.paletteSummary)
+                detailRow(label: "Palette Rule", value: model.screenModel.visualInspiration.paletteCoordinationRule)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 4)
+        }
+    }
+
     private var rationalePane: some View {
         GroupBox("Rationale") {
             VStack(alignment: .leading, spacing: 14) {
@@ -111,6 +148,39 @@ struct DesignScreenView: View {
     private func detailRow(label: String, value: String) -> some View { VStack(alignment: .leading, spacing: 4) { Text(label).font(.headline); Text(value).foregroundStyle(.secondary) } }
     private func bulletSection(title: String, items: [String]) -> some View { VStack(alignment: .leading, spacing: 6) { Text(title).font(.headline); ForEach(Array(items.enumerated()), id: \.offset) { _, item in Text("• \(item)").foregroundStyle(.secondary) } } }
     private func bannerView(_ banner: WorkflowBannerModel) -> some View { Text(banner.text).frame(maxWidth: .infinity, alignment: .leading).padding(12).background(Color(nsColor: .controlBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 10)) }
+    private func paletteSwatches(_ colors: [DesignPaletteColorModel]) -> some View {
+        HStack(spacing: 8) {
+            ForEach(colors) { color in
+                VStack(alignment: .leading, spacing: 4) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(colorFromHex(color.hex))
+                        .frame(width: 42, height: 28)
+                        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color(nsColor: .separatorColor)))
+                    Text(color.name.isEmpty ? color.hex : color.name)
+                        .font(.caption)
+                        .lineLimit(1)
+                    if !color.role.isEmpty {
+                        Text(color.role)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .frame(width: 92, alignment: .leading)
+            }
+        }
+    }
+    private func colorFromHex(_ hex: String) -> Color {
+        var value = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.hasPrefix("#") { value.removeFirst() }
+        guard value.count == 6, let intValue = Int(value, radix: 16) else {
+            return Color(nsColor: .controlAccentColor)
+        }
+        let red = Double((intValue >> 16) & 0xff) / 255.0
+        let green = Double((intValue >> 8) & 0xff) / 255.0
+        let blue = Double(intValue & 0xff) / 255.0
+        return Color(red: red, green: green, blue: blue)
+    }
     private func designEditor(label: String, text: Binding<String>, minHeight: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label).font(.headline)
