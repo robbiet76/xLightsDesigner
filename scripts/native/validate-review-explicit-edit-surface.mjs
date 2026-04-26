@@ -1,8 +1,17 @@
 #!/usr/bin/env node
-import { mkdir, stat, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { writeProjectArtifacts } from '../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
+import {
+  assertNoBlockingModal,
+  assertOpenShowFolder,
+  pathExists,
+  postQueued,
+  request as requestOwned,
+  str,
+  waitForReady as waitForOwnedReady
+} from '../xlights/owned-api-validation-helpers.mjs';
 
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
 const DEFAULT_NATIVE_URL = 'http://127.0.0.1:49916';
@@ -28,10 +37,6 @@ function usage() {
     '  --ready-timeout-ms <n>    Timeout waiting for readiness. Defaults to 120000.',
     '  --help                    Show this help.'
   ].join('\n');
-}
-
-function str(value = '') {
-  return String(value || '').trim();
 }
 
 function parseArgs(argv) {
@@ -80,15 +85,6 @@ function parseArgs(argv) {
   return args;
 }
 
-async function pathExists(filePath) {
-  try {
-    await stat(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function request(baseUrl, route, { method = 'GET', body = null, timeoutMs = 60000, allowError = false } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -117,43 +113,6 @@ async function request(baseUrl, route, { method = 'GET', body = null, timeoutMs 
   }
 }
 
-function modalBlockedMessage(health = {}) {
-  const data = health?.data && typeof health.data === 'object' ? health.data : {};
-  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
-  if (!modalState?.blocked || modalState.observed === false) return '';
-  const titles = Array.isArray(modalState.windows)
-    ? modalState.windows
-      .filter((window) => window?.isModal)
-      .map((window) => str(window?.title || window?.className))
-      .filter(Boolean)
-    : [];
-  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
-}
-
-async function assertNoBlockingModal(endpoint) {
-  const health = await request(endpoint, '/health', { timeoutMs: 10000 });
-  const message = modalBlockedMessage(health);
-  if (message) throw new Error(message);
-  return health;
-}
-
-async function waitForOwnedReady(endpoint, timeoutMs) {
-  const started = Date.now();
-  let lastHealth = null;
-  for (;;) {
-    const health = await request(endpoint, '/health', { timeoutMs: 10000 });
-    lastHealth = health;
-    const data = health?.data || {};
-    const modalMessage = modalBlockedMessage(health);
-    if (modalMessage) throw new Error(modalMessage);
-    if (health?.ok === true && String(data.state || data.startupState || '').toLowerCase() === 'ready') return health;
-    if (Date.now() - started > timeoutMs) {
-      throw new Error(`Owned xLights API did not become ready within ${timeoutMs}ms: ${JSON.stringify(lastHealth)}`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-}
-
 async function waitForNativeReady(nativeUrl, timeoutMs) {
   const started = Date.now();
   let last = null;
@@ -168,54 +127,8 @@ async function waitForNativeReady(nativeUrl, timeoutMs) {
   }
 }
 
-function jobState(payload) {
-  const state = String(payload?.data?.state || payload?.state || '').trim().toLowerCase();
-  return state === 'succeeded' ? 'completed' : state;
-}
-
-function jobResult(payload) {
-  return payload?.data?.result || payload?.result || payload;
-}
-
-async function waitForJob(endpoint, jobId, { timeoutMs = 180000 } = {}) {
-  const started = Date.now();
-  let last = null;
-  for (;;) {
-    await assertNoBlockingModal(endpoint);
-    const json = await request(endpoint, `/jobs/get?jobId=${encodeURIComponent(jobId)}`);
-    last = json;
-    const state = jobState(json);
-    const result = jobResult(json);
-    if (state === 'completed') {
-      if (result?.ok === false) throw new Error(`Job ${jobId} completed with failed result: ${JSON.stringify(result)}`);
-      return { state, payload: json, result };
-    }
-    if (state === 'failed') throw new Error(`Job ${jobId} failed: ${JSON.stringify(json)}`);
-    if (Date.now() - started > timeoutMs) throw new Error(`Timed out waiting for job ${jobId}. Last response: ${JSON.stringify(last)}`);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-}
-
-async function postQueued(endpoint, route, body, options = {}) {
-  const accepted = await request(endpoint, route, { method: 'POST', body });
-  const jobId = str(accepted?.data?.jobId);
-  if (!jobId) throw new Error(`${route} returned no jobId: ${JSON.stringify(accepted)}`);
-  const settled = await waitForJob(endpoint, jobId, options);
-  return { accepted, settled };
-}
-
-async function assertOpenShowFolder(endpoint, expectedShowDir) {
-  const json = await request(endpoint, '/media/current');
-  const reportedShowDir = str(json?.data?.showDirectory);
-  if (!reportedShowDir) throw new Error('/media/current did not report an open show folder.');
-  const actual = path.resolve(reportedShowDir).replace(/\/+$/, '');
-  const expected = path.resolve(expectedShowDir).replace(/\/+$/, '');
-  if (actual !== expected) throw new Error(`xLights is open to ${actual}; expected ${expected}.`);
-  return json;
-}
-
 async function chooseModels(endpoint, requestedSource, requestedTarget) {
-  const json = await request(endpoint, '/layout/models');
+  const { json } = await requestOwned(endpoint, '/layout/models');
   const models = Array.isArray(json?.data?.models) ? json.data.models : [];
   const usable = models
     .map((model) => ({ name: str(model?.name), displayAs: str(model?.displayAs) }))
@@ -230,7 +143,7 @@ async function chooseModels(endpoint, requestedSource, requestedTarget) {
 
 async function readEffects(endpoint, element, startMs, endMs, layer = null) {
   const query = new URLSearchParams({ element, startMs: String(startMs), endMs: String(endMs) });
-  const json = await request(endpoint, `/effects/window?${query}`);
+  const { json } = await requestOwned(endpoint, `/effects/window?${query}`);
   const effects = Array.isArray(json?.data?.effects) ? json.data.effects : [];
   return effects
     .map((effect) => ({
@@ -251,7 +164,7 @@ function hasEffect(effects, { effectName, layer, startMs, endMs }) {
 }
 
 async function readDisplayOrder(endpoint) {
-  const json = await request(endpoint, '/elements/display-order');
+  const { json } = await requestOwned(endpoint, '/elements/display-order');
   const elements = Array.isArray(json?.data?.elements) ? json.data.elements : [];
   return elements.map((row) => str(row?.id || row?.name)).filter(Boolean);
 }
@@ -359,7 +272,7 @@ async function waitForNativeApplyIdle(nativeUrl, previousApplyId = '', timeoutMs
   let last = null;
   let completedApply = null;
   for (;;) {
-    last = await request(nativeUrl, '/sequencer-validation-snapshot', { timeoutMs: 10000, allowError: true });
+    last = await request(nativeUrl, '/sequencer-validation-snapshot', { timeoutMs: 60000, allowError: true });
     const latest = last?.latestApplyResult && typeof last.latestApplyResult === 'object'
       ? last.latestApplyResult
       : null;
@@ -367,7 +280,7 @@ async function waitForNativeApplyIdle(nativeUrl, previousApplyId = '', timeoutMs
     if (latest && latestId && latestId !== previousApplyId && str(latest?.status).toLowerCase() === 'applied') {
       completedApply = { snapshot: last, applyResult: latest };
     }
-    const appSnapshot = await request(nativeUrl, '/snapshot', { timeoutMs: 10000, allowError: true });
+    const appSnapshot = await request(nativeUrl, '/snapshot', { timeoutMs: 60000, allowError: true });
     const applying = Boolean(appSnapshot?.pages?.review?.isApplying);
     const blockedBanner = Array.isArray(appSnapshot?.pages?.review?.banners)
       ? appSnapshot.pages.review.banners.find((banner) => String(banner?.state || '').toLowerCase() === 'blocked')
