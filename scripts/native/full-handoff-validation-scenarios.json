@@ -1,5 +1,13 @@
 {
   "artifactType": "xlightsdesigner_native_handoff_validation_scenarios_v1",
+  "extraValidations": [
+    {
+      "name": "native-review-explicit-edit-surface",
+      "type": "nativeReviewExplicitEditSurface",
+      "sourceModel": "Star",
+      "targetModel": "Spinner-01"
+    }
+  ],
   "scenarios": [
     {
       "name": "model-star-lead",

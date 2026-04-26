@@ -33,6 +33,8 @@ function usage() {
     '  --tag-only                    Seed expected target metadata, then generate from tags without target text.',
     '  --matrix                       Run the default metadata handoff scenario matrix.',
     '  --matrix-file <path>           Run scenarios from a JSON matrix file.',
+    '  --skip-extra-validations       Skip matrix extra validations.',
+    '  --only-extra-validations       Run only matrix extra validations.',
     '  --duration-ms <n>              Validation sequence duration. Defaults to 30000.',
     '  --frame-ms <n>                 Validation sequence frame interval. Defaults to 50.',
     '  --timeout-ms <n>               End-to-end validation timeout. Defaults to 180000.',
@@ -68,7 +70,9 @@ function parseArgs(argv = []) {
     renderAfterApply: true,
     tagOnly: false,
     matrix: false,
-    matrixFile: ''
+    matrixFile: '',
+    extraValidations: true,
+    onlyExtraValidations: false
   };
   for (let index = 0; index < argv.length; index += 1) {
     const token = str(argv[index]);
@@ -104,6 +108,11 @@ function parseArgs(argv = []) {
     else if (token === '--xlights-timeout-ms') args.xlightsTimeoutMs = Number(next());
     else if (token === '--skip-launch-native') args.launchNative = false;
     else if (token === '--skip-launch-xlights') args.launchXlights = false;
+    else if (token === '--skip-extra-validations') args.extraValidations = false;
+    else if (token === '--only-extra-validations') {
+      args.matrix = true;
+      args.onlyExtraValidations = true;
+    }
     else if (token === '--no-apply-review') args.applyReview = false;
     else if (token === '--no-render-after-apply') args.renderAfterApply = false;
     else throw new Error(`Unknown argument: ${token}`);
@@ -163,7 +172,8 @@ function loadMatrixScenarios(matrixFile = '') {
   }
   return {
     filePath,
-    scenarios: scenarios.map(normalizeScenario)
+    scenarios: scenarios.map(normalizeScenario),
+    extraValidations: Array.isArray(document?.extraValidations) ? document.extraValidations : []
   };
 }
 
@@ -338,6 +348,57 @@ async function runValidationScenario(args, showDir, scenario) {
   };
 }
 
+function normalizeExtraValidation(row = {}, index = 0) {
+  const type = str(row?.type || row?.validationType);
+  if (!type) throw new Error(`Extra validation ${index + 1} is missing type.`);
+  return {
+    name: str(row?.name) || type,
+    type,
+    sourceModel: str(row?.sourceModel),
+    targetModel: str(row?.targetModel),
+    projectFile: str(row?.projectFile),
+    timeoutMs: Number.isFinite(Number(row?.timeoutMs)) ? Number(row.timeoutMs) : null
+  };
+}
+
+function buildExtraValidationArgs(args, showDir, validation = {}) {
+  if (validation.type !== 'nativeReviewExplicitEditSurface') {
+    throw new Error(`Unsupported extra validation type: ${validation.type}`);
+  }
+  const validationArgs = [
+    'scripts/native/validate-review-explicit-edit-surface.mjs',
+    '--show-dir',
+    showDir,
+    '--endpoint',
+    DEFAULT_XLIGHTS_BASE_URL,
+    '--native-url',
+    DEFAULT_NATIVE_BASE_URL,
+    '--duration-ms',
+    String(args.durationMs),
+    '--frame-ms',
+    String(args.frameMs),
+    '--ready-timeout-ms',
+    String(args.xlightsTimeoutMs)
+  ];
+  if (validation.projectFile) validationArgs.push('--project-file', validation.projectFile);
+  if (validation.sourceModel) validationArgs.push('--source-model', validation.sourceModel);
+  if (validation.targetModel) validationArgs.push('--target-model', validation.targetModel);
+  return validationArgs;
+}
+
+async function runExtraValidation(args, showDir, validation) {
+  const normalized = normalizeExtraValidation(validation);
+  const runOptions = normalized.timeoutMs
+    ? { maxBuffer: 1024 * 1024 * 50, env: { ...process.env, XLD_VALIDATION_TIMEOUT_MS: String(normalized.timeoutMs) } }
+    : { maxBuffer: 1024 * 1024 * 50 };
+  const result = await run('node', buildExtraValidationArgs(args, showDir, normalized), runOptions);
+  return {
+    name: normalized.name,
+    type: normalized.type,
+    ...JSON.parse(result.stdout)
+  };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const showDir = path.resolve(args.showDir);
@@ -347,12 +408,20 @@ async function main() {
   await run('node', ['scripts/native/automation.mjs', 'refresh-xlights-session']);
 
   const matrix = args.matrix ? loadMatrixScenarios(args.matrixFile) : null;
-  const scenarios = matrix
+  const scenarios = args.onlyExtraValidations
+    ? []
+    : matrix
     ? matrix.scenarios
     : [{ name: args.tagOnly ? 'single-tag-only' : 'single', targetIds: args.targetIds, selectedTags: args.selectedTags, tagOnly: args.tagOnly }];
   const validations = [];
   for (const scenario of scenarios) {
     validations.push(await runValidationScenario(args, showDir, scenario));
+  }
+  const extraValidations = [];
+  if (matrix && args.extraValidations) {
+    for (const validation of matrix.extraValidations) {
+      extraValidations.push(await runExtraValidation(args, showDir, validation));
+    }
   }
   console.log(JSON.stringify({
     ok: true,
@@ -368,7 +437,7 @@ async function main() {
       listenerReachable: xlights.health?.data?.listenerReachable === true
     },
     ...(matrix ? { matrixFile: matrix.filePath } : {}),
-    ...(args.matrix ? { validations } : { validation: validations[0] })
+    ...(args.matrix ? { validations, extraValidations } : { validation: validations[0] })
   }, null, 2));
 }
 

@@ -177,12 +177,18 @@ function buildSeedPlan(sourceModel, targetModel) {
     marks: [
       { label: 'Clone Source', startMs: 1000, endMs: 2000 },
       { label: 'Layer Reorder', startMs: 3000, endMs: 4000 },
-      { label: 'Layer Preserve', startMs: 5000, endMs: 6000 }
+      { label: 'Layer Preserve', startMs: 5000, endMs: 6000 },
+      { label: 'Update Target', startMs: 7000, endMs: 8000 },
+      { label: 'Delete Target', startMs: 9000, endMs: 10000 },
+      { label: 'Compact Target', startMs: 11000, endMs: 12000 }
     ],
     effects: [
       { element: sourceModel, layer: 0, effectName: 'On', startMs: 1000, endMs: 2000, settings: {}, palette: {}, clearExisting: true },
       { element: sourceModel, layer: 0, effectName: 'Bars', startMs: 3000, endMs: 4000, settings: {}, palette: {}, clearExisting: true },
       { element: sourceModel, layer: 1, effectName: 'Shimmer', startMs: 3000, endMs: 4000, settings: {}, palette: {}, clearExisting: true },
+      { element: sourceModel, layer: 0, effectName: 'Color Wash', startMs: 7000, endMs: 8000, settings: {}, palette: {}, clearExisting: true },
+      { element: sourceModel, layer: 1, effectName: 'Twinkle', startMs: 9000, endMs: 10000, settings: {}, palette: {}, clearExisting: true },
+      { element: sourceModel, layer: 3, effectName: 'Pinwheel', startMs: 11000, endMs: 12000, settings: {}, palette: {}, clearExisting: true },
       { element: targetModel, layer: 0, effectName: 'Color Wash', startMs: 1000, endMs: 2000, settings: {}, palette: {}, clearExisting: true }
     ]
   };
@@ -355,13 +361,22 @@ async function main() {
     result.modalStateAfterCreate = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.seedPlan = buildSeedPlan(result.sourceModel, result.targetModel);
     result.seedApply = await postQueued(args.endpoint, '/sequencing/apply-batch-plan', result.seedPlan);
-    result.afterSeedSource = await readEffects(args.endpoint, result.sourceModel, 900, 6100);
+    result.afterSeedSource = await readEffects(args.endpoint, result.sourceModel, 900, 12100);
     result.afterSeedTarget = await readEffects(args.endpoint, result.targetModel, 900, 2100);
     if (!hasEffect(result.afterSeedSource, { effectName: 'On', layer: 0, startMs: 1000, endMs: 2000 })) {
       throw new Error('Seed did not create source clone effect.');
     }
     if (!hasEffect(result.afterSeedSource, { effectName: 'Shimmer', layer: 1, startMs: 3000, endMs: 4000 })) {
       throw new Error('Seed did not create source layer 1 effect.');
+    }
+    if (!hasEffect(result.afterSeedSource, { effectName: 'Color Wash', layer: 0, startMs: 7000, endMs: 8000 })) {
+      throw new Error('Seed did not create source update effect.');
+    }
+    if (!hasEffect(result.afterSeedSource, { effectName: 'Twinkle', layer: 1, startMs: 9000, endMs: 10000 })) {
+      throw new Error('Seed did not create source delete-layer effect.');
+    }
+    if (!hasEffect(result.afterSeedSource, { effectName: 'Pinwheel', layer: 3, startMs: 11000, endMs: 12000 })) {
+      throw new Error('Seed did not create source compact-layer effect.');
     }
     if (!hasEffect(result.afterSeedTarget, { effectName: 'Color Wash', layer: 0, startMs: 1000, endMs: 2000 })) {
       throw new Error('Seed did not create occupied target layer.');
@@ -416,6 +431,66 @@ async function main() {
       throw new Error('Layer reorder scenario did not shift Bars to layer 1.');
     }
 
+    result.updateScenario = await applyReviewScenario({
+      nativeUrl: args.nativeUrl,
+      projectFile: args.projectFile,
+      runId: args.runId,
+      step: 'effect-update',
+      sourceModel: result.sourceModel,
+      targetModel: result.targetModel,
+      summary: `Update existing ${result.sourceModel} layer 0 effect by shifting it later.`,
+      proposalLines: [
+        `Validation / ${result.sourceModel} / shift existing effect on layer 0 later by 500 ms`
+      ],
+      targetIds: [result.sourceModel],
+      previousApplyId
+    });
+    previousApplyId = result.updateScenario.latestApplyId;
+    result.afterUpdateSource = await readEffects(args.endpoint, result.sourceModel, 2900, 4600);
+    if (!hasEffect(result.afterUpdateSource, { effectName: 'Shimmer', layer: 0, startMs: 3500, endMs: 4500 })) {
+      throw new Error('Update scenario did not shift the existing layer 0 Shimmer effect later by 500 ms.');
+    }
+
+    result.deleteLayerScenario = await applyReviewScenario({
+      nativeUrl: args.nativeUrl,
+      projectFile: args.projectFile,
+      runId: args.runId,
+      step: 'layer-delete',
+      sourceModel: result.sourceModel,
+      targetModel: result.targetModel,
+      summary: `Remove existing ${result.sourceModel} layer 1.`,
+      proposalLines: [
+        `Validation / ${result.sourceModel} / remove existing layer 1`
+      ],
+      targetIds: [result.sourceModel],
+      previousApplyId
+    });
+    previousApplyId = result.deleteLayerScenario.latestApplyId;
+    result.afterDeleteLayerSource = await readEffects(args.endpoint, result.sourceModel, 2900, 10100);
+    if (hasEffect(result.afterDeleteLayerSource, { effectName: 'Bars', layer: 1, startMs: 3000, endMs: 4000 })) {
+      throw new Error('Delete-layer scenario did not remove the layer 1 Bars effect.');
+    }
+
+    result.compactLayerScenario = await applyReviewScenario({
+      nativeUrl: args.nativeUrl,
+      projectFile: args.projectFile,
+      runId: args.runId,
+      step: 'layer-compact',
+      sourceModel: result.sourceModel,
+      targetModel: result.targetModel,
+      summary: `Compact existing ${result.sourceModel} layers after deleting gaps.`,
+      proposalLines: [
+        `Validation / ${result.sourceModel} / compact existing layers`
+      ],
+      targetIds: [result.sourceModel],
+      previousApplyId
+    });
+    previousApplyId = result.compactLayerScenario.latestApplyId;
+    result.afterCompactLayerSource = await readEffects(args.endpoint, result.sourceModel, 10900, 12100);
+    if (!hasEffect(result.afterCompactLayerSource, { effectName: 'Pinwheel', layer: 1, startMs: 11000, endMs: 12000 })) {
+      throw new Error('Compact-layers scenario did not move Pinwheel into the first open compacted layer.');
+    }
+
     result.displayOrderBefore = await readDisplayOrder(args.endpoint);
     if (!result.displayOrderBefore.includes(result.sourceModel) || !result.displayOrderBefore.includes(result.targetModel)) {
       throw new Error(`Display order did not include validation models: ${result.sourceModel}, ${result.targetModel}`);
@@ -467,6 +542,9 @@ async function main() {
     targetModel: result.targetModel,
     cloneOpenLayerVerified: hasEffect(result.afterCloneTarget, { effectName: 'On', layer: 1, startMs: 1000, endMs: 2000 }),
     layerReorderVerified: hasEffect(result.afterLayerReorderSource, { effectName: 'Shimmer', layer: 0, startMs: 3000, endMs: 4000 }),
+    updateVerified: hasEffect(result.afterUpdateSource, { effectName: 'Shimmer', layer: 0, startMs: 3500, endMs: 4500 }),
+    deleteLayerVerified: !hasEffect(result.afterDeleteLayerSource, { effectName: 'Bars', layer: 1, startMs: 3000, endMs: 4000 }),
+    compactLayersVerified: hasEffect(result.afterCompactLayerSource, { effectName: 'Pinwheel', layer: 1, startMs: 11000, endMs: 12000 }),
     displayOrderVerified: result.displayOrderAfter.indexOf(result.targetModel) < result.displayOrderAfter.indexOf(result.sourceModel)
   }, null, 2));
 }
