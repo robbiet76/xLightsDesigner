@@ -305,6 +305,7 @@ export async function pingCapabilities(endpoint) {
           "elements.getSummary",
           "effects.getWindow",
           "effects.applyBatch",
+          "effects.clone",
           "sequencing.applyBatchPlan",
           "jobs.get"
         ],
@@ -686,6 +687,17 @@ export async function deleteEffects(endpoint, params = {}) {
     });
   }
   return postCommand(endpoint, "effects.delete", params);
+}
+
+export async function cloneEffects(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const base = deriveOwnedEndpointBase(endpoint);
+    return readOwnedJson(`${base}/effects/clone`, {
+      method: "POST",
+      body: params
+    });
+  }
+  return postCommand(endpoint, "effects.clone", params);
 }
 
 export async function deleteEffectLayer(endpoint, params = {}) {

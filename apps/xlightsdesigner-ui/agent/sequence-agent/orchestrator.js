@@ -98,6 +98,7 @@ function directOwnedCommandKind(command = {}) {
     || cmd === "sequencer.setDisplayElementOrder"
     || cmd === "effects.update"
     || cmd === "effects.delete"
+    || cmd === "effects.clone"
     || cmd === "effects.deleteLayer"
     || cmd === "effects.reorderLayer"
     || cmd === "effects.compactLayers"
@@ -150,6 +151,31 @@ function normalizeEffectUpdateParams(params = {}) {
   return out;
 }
 
+function normalizeCloneEffectParams(params = {}) {
+  const out = {};
+  const sourceElement = str(params.sourceElement || params.sourceModel || params.sourceModelName || params.modelName);
+  const targetElement = str(params.targetElement || params.targetModel || params.targetModelName);
+  const targetModels = Array.isArray(params.targetModels)
+    ? params.targetModels.map((value) => str(value)).filter(Boolean)
+    : [];
+  if (sourceElement) out.sourceElement = sourceElement;
+  if (targetElement) out.targetElement = targetElement;
+  if (targetModels.length) out.targetModels = targetModels;
+  const sourceLayer = optionalIntParam(params, ["sourceLayer", "sourceLayerIndex"]);
+  const targetLayer = optionalIntParam(params, ["targetLayer", "targetLayerIndex"]);
+  const sourceStartMs = optionalIntParam(params, ["sourceStartMs", "startMs"]);
+  const sourceEndMs = optionalIntParam(params, ["sourceEndMs", "endMs"]);
+  const targetStartMs = optionalIntParam(params, ["targetStartMs"]);
+  if (sourceLayer !== undefined) out.sourceLayer = sourceLayer;
+  if (targetLayer !== undefined) out.targetLayer = targetLayer;
+  if (sourceStartMs !== undefined) out.sourceStartMs = sourceStartMs;
+  if (sourceEndMs !== undefined) out.sourceEndMs = sourceEndMs;
+  if (targetStartMs !== undefined) out.targetStartMs = targetStartMs;
+  if (str(params.mode)) out.mode = str(params.mode);
+  if (params.dryRun != null) out.dryRun = params.dryRun === true || norm(params.dryRun) === "true";
+  return out;
+}
+
 function normalizeLayerCommandParams(params = {}) {
   const out = {
     element: normalizeElementParam(params)
@@ -181,6 +207,7 @@ function requiredOwnedDirectFns(deps = {}, directCommands = []) {
     "sequencer.setDisplayElementOrder": "setDisplayElementOrder",
     "effects.update": "updateEffect",
     "effects.delete": "deleteEffects",
+    "effects.clone": "cloneEffects",
     "effects.deleteLayer": "deleteEffectLayer",
     "effects.reorderLayer": "reorderEffectLayer",
     "effects.compactLayers": "compactEffectLayers"
@@ -224,6 +251,9 @@ async function executeOwnedDirectCommand({ endpoint, command, deps }) {
   }
   if (kind === "effects.delete") {
     return waitForAcceptedOwnedMutation(endpoint, await deps.deleteEffects(endpoint, normalizeEffectSelectorParams(params)), deps.getOwnedJob);
+  }
+  if (kind === "effects.clone") {
+    return waitForAcceptedOwnedMutation(endpoint, await deps.cloneEffects(endpoint, normalizeCloneEffectParams(params)), deps.getOwnedJob);
   }
   if (kind === "effects.deleteLayer") {
     return waitForAcceptedOwnedMutation(endpoint, await deps.deleteEffectLayer(endpoint, normalizeLayerCommandParams(params)), deps.getOwnedJob);
@@ -321,6 +351,7 @@ export async function validateAndApplyPlan({
   setDisplayElementOrder = null,
   updateEffect = null,
   deleteEffects = null,
+  cloneEffects = null,
   deleteEffectLayer = null,
   reorderEffectLayer = null,
   compactEffectLayers = null,
@@ -393,6 +424,7 @@ export async function validateAndApplyPlan({
     setDisplayElementOrder,
     updateEffect,
     deleteEffects,
+    cloneEffects,
     deleteEffectLayer,
     reorderEffectLayer,
     compactEffectLayers

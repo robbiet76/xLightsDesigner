@@ -226,6 +226,49 @@ test('orchestrator applies timing and update commands directly when no create ba
   ]);
 });
 
+test('orchestrator applies owned clone command directly', async () => {
+  const calls = [];
+  const res = await validateAndApplyPlan({
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands: [
+      {
+        id: 'effect.clone.native.1',
+        cmd: 'effects.clone',
+        params: {
+          sourceModelName: 'Star',
+          sourceLayerIndex: 0,
+          sourceStartMs: 1000,
+          sourceEndMs: 5000,
+          targetModelName: 'MegaTree',
+          targetLayerIndex: 1,
+          targetStartMs: 8000,
+          mode: 'move'
+        }
+      }
+    ],
+    expectedRevision: 'rev-1',
+    ...ownedDeps({
+      cloneEffects: async (_endpoint, params) => {
+        calls.push(params);
+        return { data: { jobId: 'owned-job-clone-1' } };
+      }
+    })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.applyPath, 'owned_direct_commands');
+  assert.deepEqual(calls, [{
+    sourceElement: 'Star',
+    targetElement: 'MegaTree',
+    sourceLayer: 0,
+    targetLayer: 1,
+    sourceStartMs: 1000,
+    sourceEndMs: 5000,
+    targetStartMs: 8000,
+    mode: 'move'
+  }]);
+});
+
 test('orchestrator applies batch plan plus direct layer edits in command order', async () => {
   const calls = [];
   const res = await validateAndApplyPlan({
