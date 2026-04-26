@@ -757,7 +757,10 @@ final class SequenceScreenViewModel {
               let dataObject = json["data"] as? [String: Any] else {
             return false
         }
-        return bool(dataObject["listenerReachable"])
+        let modalState = dataObject["modalState"] as? [String: Any] ?? [:]
+        let modalObserved = optionalBool(modalState["observed"]) ?? true
+        let modalBlocked = modalObserved && bool(modalState["blocked"])
+        return bool(dataObject["listenerReachable"]) && !modalBlocked
     }
 
     nonisolated private static func fetchOpenSequence() async -> OpenSequenceSnapshot {
@@ -794,6 +797,14 @@ final class SequenceScreenViewModel {
     nonisolated private static func bool(_ value: Any?) -> Bool {
         if let bool = value as? Bool { return bool }
         return String(describing: value ?? "").lowercased() == "true"
+    }
+
+    nonisolated private static func optionalBool(_ value: Any?) -> Bool? {
+        if let bool = value as? Bool { return bool }
+        let text = String(describing: value ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if text == "true" || text == "1" || text == "yes" { return true }
+        if text == "false" || text == "0" || text == "no" { return false }
+        return nil
     }
 
     nonisolated private static func int(_ value: Any?) -> Int {

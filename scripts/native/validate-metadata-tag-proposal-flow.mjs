@@ -159,6 +159,7 @@ async function waitForXlightsJob({ jobId = '', timeoutMs = 30000 } = {}) {
   const started = Date.now();
   let last = null;
   while (Date.now() - started < timeoutMs) {
+    await assertXlightsNotBlocked();
     last = await requestXlightsApi('/jobs/get', { jobId });
     const state = str(last?.data?.state).toLowerCase();
     const result = last?.data?.result && typeof last.data.result === 'object' ? last.data.result : null;
@@ -172,6 +173,26 @@ async function waitForXlightsJob({ jobId = '', timeoutMs = 30000 } = {}) {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   throw new Error(`Timed out waiting for xLights job ${jobId}. Last response: ${JSON.stringify(last)}`);
+}
+
+function modalBlockedMessage(health = {}) {
+  const data = health?.data && typeof health.data === 'object' ? health.data : {};
+  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
+  if (!modalState?.blocked || modalState.observed === false) return '';
+  const titles = Array.isArray(modalState.windows)
+    ? modalState.windows
+      .filter((window) => window?.isModal)
+      .map((window) => str(window?.title || window?.className))
+      .filter(Boolean)
+    : [];
+  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
+}
+
+async function assertXlightsNotBlocked() {
+  const health = await requestXlightsApi('/health', {});
+  const message = modalBlockedMessage(health);
+  if (message) throw new Error(message);
+  return health;
 }
 
 function arr(value) {

@@ -104,6 +104,28 @@ def owned_health(port: int):
     return read_json_url(f"{owned_base_url(port)}/health")
 
 
+def modal_blocked_message(health: dict | None):
+    data = (health or {}).get("data") or {}
+    modal_state = data.get("modalState") or {}
+    if modal_state.get("observed") is False or modal_state.get("blocked") is not True:
+        return ""
+    titles = []
+    for window in modal_state.get("windows") or []:
+        if window.get("isModal"):
+            title = strv(window.get("title") or window.get("className"))
+            if title:
+                titles.append(title)
+    return "xLights is blocked by a modal" + (f": {', '.join(titles)}" if titles else "")
+
+
+def assert_owned_not_blocked(port: int):
+    health = owned_health(port)
+    message = modal_blocked_message(health)
+    if message:
+        raise RuntimeError(message)
+    return health
+
+
 def owned_layout_settings(port: int):
     return owned_get(port, "/layout/settings")
 
@@ -114,7 +136,7 @@ def owned_ready(port: int):
     except Exception:
         return False
     data = body.get("data") or {}
-    return body.get("ok") is True and strv(data.get("state")) == "ready"
+    return body.get("ok") is True and strv(data.get("state")) == "ready" and not modal_blocked_message(body)
 
 
 def launch_workspace_xlights(port: int, show_dir: Path | None = None):
@@ -151,6 +173,9 @@ def wait_for_owned_ready(port: int, timeout_seconds=180):
         try:
             health = owned_health(port)
             last_health = health
+            message = modal_blocked_message(health)
+            if message:
+                raise RuntimeError(message)
             data = health.get("data") or {}
             if health.get("ok") is True and strv(data.get("state")) == "ready":
                 return health
@@ -204,6 +229,7 @@ def owned_post(port: int, path: str, body: dict | None = None):
 def wait_for_owned_job(port: int, job_id: str, timeout_seconds=180):
     deadline = time.time() + timeout_seconds
     while time.time() < deadline:
+        assert_owned_not_blocked(port)
         settled = owned_get(port, "/jobs/get", {"jobId": job_id})
         state = strv(((settled.get("data") or {}).get("state"))).lower()
         if state in {"queued", "running"}:

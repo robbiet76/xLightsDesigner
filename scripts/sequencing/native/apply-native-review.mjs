@@ -1142,6 +1142,7 @@ function scopedProposalPlacements(proposalBundle = {}) {
 
 async function waitForOwnedJob(endpoint = '', jobId = '', attempts = 60, delayMs = 500) {
   for (let index = 0; index < attempts; index += 1) {
+    await assertOwnedXlightsNotBlocked(endpoint);
     const settled = await getOwnedJob(endpoint, jobId);
     const state = str(settled?.data?.state).toLowerCase();
     if (state === 'queued' || state === 'running') {
@@ -1151,6 +1152,26 @@ async function waitForOwnedJob(endpoint = '', jobId = '', attempts = 60, delayMs
     return settled;
   }
   throw new Error(`Timed out waiting for owned xLights job ${jobId}.`);
+}
+
+function modalBlockedMessage(health = {}) {
+  const data = health?.data && typeof health.data === 'object' ? health.data : {};
+  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
+  if (!modalState?.blocked || modalState.observed === false) return '';
+  const titles = Array.isArray(modalState.windows)
+    ? modalState.windows
+      .filter((window) => window?.isModal)
+      .map((window) => str(window?.title || window?.className))
+      .filter(Boolean)
+    : [];
+  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
+}
+
+async function assertOwnedXlightsNotBlocked(endpoint = '') {
+  const health = await getOwnedHealth(endpoint);
+  const message = modalBlockedMessage(health);
+  if (message) throw new Error(message);
+  return health;
 }
 
 function persistedArtifactWithFallback(artifact = null) {

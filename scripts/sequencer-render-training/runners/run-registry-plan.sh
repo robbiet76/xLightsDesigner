@@ -13,7 +13,7 @@ wait_owned_ready() {
   local idx
   for idx in $(seq 1 "${attempts}"); do
     if curl --max-time 10 -fsS "http://127.0.0.1:49915/xlightsdesigner/api/health" \
-      | jq -e '.ok == true and (((.data.state // "") | ascii_downcase) == "ready" or ((.data.state // "") == ""))' >/dev/null; then
+      | jq -e '.ok == true and (((.data.state // "") | ascii_downcase) == "ready" or ((.data.state // "") == "")) and (((.data.modalState.observed // true) == false) or ((.data.modalState.blocked // false) == false))' >/dev/null; then
       return 0
     fi
     sleep "${delay}"
