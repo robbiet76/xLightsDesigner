@@ -42,6 +42,26 @@ The asset pack gives `sequence_agent` concrete media materials it can use later 
 - video clips or generated video references
 - thumbnails/spritesheets for Review UI
 
+## Source And Resolution Requirements
+
+Generated media should be original, custom-made content whenever possible. The normal path is generated imagery from the configured image provider, not internet-searched or scraped imagery.
+
+Rules:
+
+- Prefer generated images over web-searched images.
+- Do not use internet image search as a default source for inspiration boards or sequence assets.
+- If external/user-supplied references are used, record them as references that guide generation, not as untracked assets copied into sequencing.
+- Every generated image must record provider/model/prompt metadata in the manifest.
+- The app should preserve enough resolution for future reuse while displaying scaled-down previews in the UI.
+
+Initial resolution policy:
+
+- inspiration board source image target: 1536px wide or larger when the provider supports it
+- native UI preview: scaled down to fit the Design pane
+- generated sequence still assets: store source resolution plus optional preview/thumbnail
+- thumbnails/spritesheets: stored separately from source files so low-resolution UI display does not destroy source quality
+- if the provider only returns a smaller image, the manifest must record actual width/height and the UI must scale down rather than upscale aggressively
+
 ## OpenAI API Basis
 
 Official OpenAI docs identify GPT Image models as supporting both image generation and image editing. The Image API edits endpoint can modify an existing image from image inputs and a prompt, with optional mask guidance. The Responses API supports conversational or multi-step image work, including multi-turn image editing. OpenAI's video generation docs also support generated video jobs, video content download, thumbnails, spritesheets, and image references for guiding video generation.

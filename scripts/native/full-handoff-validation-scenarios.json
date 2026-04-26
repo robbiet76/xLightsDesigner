@@ -2,6 +2,10 @@
   "artifactType": "xlightsdesigner_native_handoff_validation_scenarios_v1",
   "extraValidations": [
     {
+      "name": "native-visual-inspiration-fixture",
+      "type": "nativeVisualInspirationFixture"
+    },
+    {
       "name": "native-review-explicit-edit-surface",
       "type": "nativeReviewExplicitEditSurface",
       "sourceModel": "Star",

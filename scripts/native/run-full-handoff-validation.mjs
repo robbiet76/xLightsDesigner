@@ -357,11 +357,22 @@ function normalizeExtraValidation(row = {}, index = 0) {
     sourceModel: str(row?.sourceModel),
     targetModel: str(row?.targetModel),
     projectFile: str(row?.projectFile),
+    nativeUrl: str(row?.nativeUrl),
     timeoutMs: Number.isFinite(Number(row?.timeoutMs)) ? Number(row.timeoutMs) : null
   };
 }
 
 function buildExtraValidationArgs(args, showDir, validation = {}) {
+  if (validation.type === 'nativeVisualInspirationFixture') {
+    const validationArgs = [
+      'scripts/native/validate-visual-inspiration-fixture.mjs',
+      '--native-url',
+      validation.nativeUrl || DEFAULT_NATIVE_BASE_URL
+    ];
+    if (validation.projectFile) validationArgs.push('--project-file', validation.projectFile);
+    if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
+    return validationArgs;
+  }
   if (validation.type !== 'nativeReviewExplicitEditSurface') {
     throw new Error(`Unsupported extra validation type: ${validation.type}`);
   }
