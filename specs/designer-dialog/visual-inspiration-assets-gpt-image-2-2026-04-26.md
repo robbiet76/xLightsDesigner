@@ -1,0 +1,245 @@
+# Designer Visual Inspiration And Sequence Asset Generation
+
+Status: Draft
+Date: 2026-04-26
+Owner: xLightsDesigner Team
+
+## User Prompt
+
+> I would like to explore adding the GPT Image 2 engine into the designer agent. Instead of only providing an overview of the song design, I would like them to do the following:
+>
+> Generate an image to be displayed in the app for the active song/sequence that shouws visually the inspiration/theme for the solg as well as the color palette. This is not intended to be an image of what the display itself will look like but more of a collage of imagery and color that provides a sense of what the sequncing will achive. This will be a helpful featuer for the user as it will give them an expectation of the feel of the end product. I would like the designer to also generate a collection of image and/or video files within the theme that the sequencer will use in the sequence. We have not added the picture and video effects yet but this is where they will come into use. We can store these files with the song metadata within the xLightsDesigner app folder which the sequencer can use as needed.
+
+## Purpose
+
+Extend `designer_dialog` from text-only creative direction into a visual design producer.
+
+The designer should generate:
+
+- a user-facing inspiration board image for the active song/sequence
+- a reusable themed asset pack of image and video files that the sequencer may later place through picture/video effects
+- structured metadata that explains palette, theme, intended sequence use, licensing/source, and handoff references
+
+This is not a preview render of the physical xLights display. It is a mood, theme, and palette artifact that helps the user understand the intended feel of the finished sequence before sequencing work is applied.
+
+## Product Intent
+
+The visual board gives the director a fast expectation of the creative direction:
+
+- theme and emotional tone
+- color palette
+- visual motifs
+- texture and motion references
+- genre-appropriate atmosphere
+
+The asset pack gives `sequence_agent` concrete media materials it can use later when xLights picture/video effects are supported:
+
+- still textures
+- themed background plates
+- motif images
+- short motion loops
+- video clips or generated video references
+- thumbnails/spritesheets for Review UI
+
+## OpenAI API Basis
+
+Official OpenAI docs identify `gpt-image-2` as the current GPT Image model for high-quality image generation and editing. The image generation guide supports using the Image API for one-shot image generation and the Responses API for conversational or multi-turn image work. The Image API can generate from a prompt and returns image data that the app can save as a file. OpenAI's video generation docs also support generated video jobs, video content download, thumbnails, spritesheets, and image references for guiding video generation.
+
+Implementation should start with image generation only, then add video generation after the app has the storage, review, and sequencer contracts for media effects.
+
+## Storage Rule
+
+All generated inspiration and sequence assets are xLightsDesigner-owned metadata and must live under the app-owned project folder, not the linked xLights show folder.
+
+Canonical location:
+
+```text
+<app-root>/
+  projects/
+    <project-name>/
+      artifacts/
+        visual-design/
+          <sequence-id-or-song-id>/
+            visual-design-manifest.json
+            inspiration-board.png
+            palette.json
+            images/
+              *.png
+              *.webp
+            videos/
+              *.mp4
+              *.webp
+            thumbnails/
+              *.webp
+            spritesheets/
+              *.jpg
+```
+
+The manifest is the canonical handoff artifact. Files are referenced by relative paths from the manifest so project moves remain possible.
+
+## New Artifact Contract
+
+Artifact type:
+
+- `visual_design_asset_pack_v1`
+
+Minimum shape:
+
+```json
+{
+  "artifactType": "visual_design_asset_pack_v1",
+  "artifactVersion": 1,
+  "artifactId": "visual-design-asset-pack-...",
+  "createdAt": "2026-04-26T00:00:00.000Z",
+  "sequenceId": "project-local-sequence-id",
+  "trackIdentity": {
+    "title": "Song Title",
+    "artist": "Artist",
+    "contentFingerprint": "optional-track-fingerprint"
+  },
+  "creativeIntent": {
+    "themeSummary": "cinematic snowy brass celebration",
+    "inspirationPrompt": "prompt used for the inspiration board",
+    "palette": [
+      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base" }
+    ],
+    "motifs": ["snow sparkle", "gold fanfare", "soft streetlamp glow"],
+    "avoidances": ["do not depict a literal xLights layout"]
+  },
+  "displayAsset": {
+    "kind": "inspiration_board",
+    "relativePath": "inspiration-board.png",
+    "mimeType": "image/png",
+    "width": 1536,
+    "height": 1024
+  },
+  "sequenceAssets": [
+    {
+      "assetId": "asset-001",
+      "kind": "image",
+      "relativePath": "images/snow-sparkle-texture.webp",
+      "mimeType": "image/webp",
+      "intendedUse": "picture_effect_texture",
+      "recommendedSections": ["Intro", "Verse 1"],
+      "paletteRoles": ["cool base", "sparkle highlight"],
+      "motionUse": "static_or_slow_pan",
+      "source": {
+        "provider": "openai",
+        "model": "gpt-image-2",
+        "promptRef": "prompt-001"
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "promptId": "prompt-001",
+      "model": "gpt-image-2",
+      "purpose": "inspiration_board",
+      "prompt": "..."
+    }
+  ],
+  "handoff": {
+    "sequencerUse": "optional",
+    "requiresMediaEffects": true,
+    "artifactRefs": []
+  }
+}
+```
+
+## Designer Responsibilities
+
+`designer_dialog` should:
+
+- synthesize the song identity, audio analysis, user direction, director profile, and display metadata into a visual theme
+- generate an inspiration-board prompt that explicitly avoids showing the actual xLights display/layout
+- generate or request one main inspiration board image
+- generate a palette with named roles and hex colors
+- optionally generate an asset-pack plan with candidate images/videos and intended sequencing use
+- save generated files and manifest under the project app folder
+- add artifact references to the creative brief, proposal bundle, and sequencing design handoff
+
+## Sequencer Responsibilities
+
+`sequence_agent` should:
+
+- treat `visual_design_asset_pack_v1` as optional enhancement context
+- use palette roles and motifs immediately for effect selection and color choices
+- use image/video file assets only when picture/video effects are available and the media asset is compatible with the target model/effect
+- never require generated media assets to complete a normal sequence pass
+- include selected media assets in Review so the user can see which generated files will be placed
+
+## Handoff Additions
+
+`creative_brief_v1` should gain optional references:
+
+- `visualInspiration.artifactId`
+- `visualInspiration.displayAssetRef`
+- `visualInspiration.palette[]`
+
+`proposal_bundle_v1` should gain optional references:
+
+- `visualAssets.assetPackId`
+- `visualAssets.summary`
+- `visualAssets.sequenceAssetCount`
+
+`sequencing_design_handoff_v2` should gain optional references:
+
+- `visualAssetPackRef`
+- `paletteRoles[]`
+- `motifDirectives[]`
+- `mediaAssetDirectives[]`
+
+The handoff should pass compact references and summaries, not base64 image data or full binary payloads.
+
+## UI Behavior
+
+Design screen:
+
+- show the inspiration board for the active song/sequence
+- show palette swatches and motif labels
+- show generation status, warnings, and retry/regenerate controls
+- make clear that this is a creative inspiration board, not a physical display render
+
+Review screen:
+
+- show any media assets the sequencer intends to use
+- show the target sections/models/effects where those assets will be placed
+- allow the user to approve sequencing use separately from simply accepting the design theme
+
+## Validation
+
+Initial validation should not require live OpenAI calls.
+
+Required local tests:
+
+- artifact contract validation for `visual_design_asset_pack_v1`
+- project artifact storage writes under `<app-root>/projects/<project-name>/artifacts/visual-design/`
+- Designer result can reference a visual asset pack without breaking existing contract validation
+- Sequencer handoff compaction passes only refs/summaries, not binary payloads
+- native Design/Review automation can display a stored inspiration board fixture and verify handoff references
+
+Live validation should be opt-in:
+
+- generate one inspiration board using `gpt-image-2`
+- write files and manifest into the project app folder
+- show the board in native Design UI
+- pass the artifact reference through Designer -> Sequencer -> Review
+
+## Implementation Order
+
+1. Add `visual_design_asset_pack_v1` contract, storage routing, fixtures, and tests.
+2. Extend Designer contract builders and validators with optional visual inspiration refs.
+3. Extend `sequencing_design_handoff_v2` with compact asset-pack refs, palette roles, and motif directives.
+4. Add native Design UI support for showing a stored inspiration board and palette.
+5. Add a provider adapter for OpenAI image generation with `gpt-image-2`, disabled unless configured.
+6. Add live opt-in validation that generates one board and stores it in the project folder.
+7. Add sequence-agent use of palette/motif context immediately.
+8. Add picture/video effect placement later when xLights media effect support is implemented.
+
+## Open Questions
+
+- Should the user explicitly approve generation cost before each live image/video generation, or can project settings allow automatic generation?
+- Should inspiration boards be regenerated per design revision or versioned as immutable snapshots?
+- How many sequence assets should be generated by default for a song?
+- Should video generation be a separate explicit action because of latency and cost?
+- What file formats should be preferred for xLights picture/video compatibility once media effects are implemented?

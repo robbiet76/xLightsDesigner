@@ -24,6 +24,7 @@ Cleanup audit:
 - [display-metadata-v1-2026-04-08.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/display-metadata-v1-2026-04-08.md)
 - [design-scene-context-v1.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/design-scene-context-v1.md)
 - [music-design-context-v1.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/music-design-context-v1.md)
+- [visual-inspiration-assets-gpt-image-2-2026-04-26.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/visual-inspiration-assets-gpt-image-2-2026-04-26.md)
 
 ## Supporting Active Specs
 

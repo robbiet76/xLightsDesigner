@@ -78,6 +78,14 @@ Recommended layout under app root:
             ownership.json
             apply-history.jsonl
             verification.json
+      artifacts/
+        visual-design/
+          <sequence-id-or-song-id>/
+            visual-design-manifest.json
+            inspiration-board.png
+            images/
+            videos/
+            thumbnails/
       diagnostics/
   library/
     tracks/
@@ -93,6 +101,7 @@ Top-level meanings:
 - `<app-root>/projects/`: project-owned workspaces.
 - `<app-root>/library/tracks/`: shared reusable audio-analysis records owned by `audio_analyst`.
 - `<project>/sequencing/`: sequence-specific runtime/planning state owned by `sequence_agent`.
+- `<project>/artifacts/visual-design/`: Designer-owned visual inspiration boards, palettes, and generated media asset packs for sequence use.
 - `<project>/diagnostics/`: project-scoped debugging and run artifacts.
 - `<app-root>/diagnostics/`: optional shared/global diagnostics.
 - `<app-root>/cache/`: optional shared/global cache.
