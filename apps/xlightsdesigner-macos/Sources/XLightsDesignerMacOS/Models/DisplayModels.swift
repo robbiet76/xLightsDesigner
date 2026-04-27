@@ -10,7 +10,6 @@ struct DisplayHeaderModel: Sendable {
     let title: String
     let subtitle: String
     let activeProjectName: String
-    let activeSequenceName: String
     let sourceSummary: String
 }
 

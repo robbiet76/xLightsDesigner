@@ -725,8 +725,7 @@ final class NativeAutomationServer: @unchecked Sendable {
     private func displayHeaderFocusText(screen: DisplayScreenModel) -> String {
         let projectName = screen.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !projectName.isEmpty, projectName != "No Project" else { return "" }
-        let sequenceName = model.currentTargetContext().sequenceName
-        return sequenceName.isEmpty ? "Project: \(projectName)" : "Project: \(projectName) • Sequence: \(sequenceName)"
+        return "Project: \(projectName)"
     }
 
     @MainActor

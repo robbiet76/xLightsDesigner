@@ -447,7 +447,7 @@ This ordering reflects the product journey, not just a nav list.
 5. `History` must remain immutable and retrospective.
 6. `Settings` must stay outside the workflow journey.
 7. `Layout` is a support workflow, not a primary creative or apply workflow.
-8. Page headers may show one concise focus line below the title/subtitle when it clarifies the current target. This line must use the shared active project target context, not local stale selections: Project and Display show the active project/sequence, Audio shows the active audio track, Design/Sequence/Review show the active sequence, and History stays anchored to the active project/sequence even when the user inspects an older event.
+8. Page headers may show one concise focus line below the title/subtitle when it clarifies the current target. This line must use the shared active project target context, not local stale selections: Project and Display show the active project, Audio shows the active audio track, Design/Sequence/Review show the active sequence, and History stays anchored to the active project/sequence even when the user inspects an older event.
 
 ## Decisions Locked Here
 
