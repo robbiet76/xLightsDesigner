@@ -10,6 +10,7 @@ struct HistoryHeaderModel: Sendable {
     let title: String
     let subtitle: String
     let activeProjectName: String
+    let activeSequenceName: String
 }
 
 struct HistorySummaryModel: Sendable {

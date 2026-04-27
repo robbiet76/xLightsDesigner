@@ -23,6 +23,7 @@ import Testing
             title: "Display",
             subtitle: "",
             activeProjectName: project.projectName,
+            activeSequenceName: "",
             sourceSummary: "test"
         ),
         readinessSummary: DisplayReadinessSummaryModel(

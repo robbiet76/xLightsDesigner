@@ -4,6 +4,8 @@ import Observation
 @MainActor
 @Observable
 final class AudioScreenViewModel {
+    private let workspace: ProjectWorkspace?
+    private let projectService: ProjectService
     private let trackLibraryService: TrackLibraryService
     private let fileSelectionService: FileSelectionService
     private let audioExecutionService: AudioExecutionService
@@ -18,13 +20,21 @@ final class AudioScreenViewModel {
 
     private(set) var allRows: [AudioLibraryRowModel]
 
+    var activeProject: ActiveProjectModel? {
+        workspace?.activeProject
+    }
+
     init(
         rows: [AudioLibraryRowModel],
         selectedRowID: AudioLibraryRowModel.ID? = nil,
+        workspace: ProjectWorkspace? = nil,
+        projectService: ProjectService = LocalProjectService(),
         trackLibraryService: TrackLibraryService = LocalTrackLibraryService(),
         fileSelectionService: FileSelectionService = NativeFileSelectionService(),
         audioExecutionService: AudioExecutionService = LocalAudioExecutionService()
     ) {
+        self.workspace = workspace
+        self.projectService = projectService
         self.trackLibraryService = trackLibraryService
         self.fileSelectionService = fileSelectionService
         self.audioExecutionService = audioExecutionService
@@ -33,6 +43,24 @@ final class AudioScreenViewModel {
         if let selectedRowID {
             selectRow(id: selectedRowID)
         }
+    }
+
+    convenience init(
+        workspace: ProjectWorkspace,
+        projectService: ProjectService = LocalProjectService(),
+        trackLibraryService: TrackLibraryService = LocalTrackLibraryService(),
+        fileSelectionService: FileSelectionService = NativeFileSelectionService(),
+        audioExecutionService: AudioExecutionService = LocalAudioExecutionService()
+    ) {
+        self.init(
+            rows: [],
+            selectedRowID: nil,
+            workspace: workspace,
+            projectService: projectService,
+            trackLibraryService: trackLibraryService,
+            fileSelectionService: fileSelectionService,
+            audioExecutionService: audioExecutionService
+        )
     }
 
     var header: AudioHeaderModel {
@@ -69,7 +97,9 @@ final class AudioScreenViewModel {
             let rows = try trackLibraryService.loadLibraryRows()
             allRows = rows
             let preferredSelection = selectedRowID.flatMap { id in rows.contains(where: { $0.id == id }) ? id : nil }
-            let fallbackSelection = preferredSelection
+            let targetSelection = targetAudioRowID(in: rows)
+            let fallbackSelection = targetSelection
+                ?? preferredSelection
                 ?? rows.first(where: { $0.status == .needsReview })?.id
                 ?? rows.first?.id
             selectRow(id: fallbackSelection)
@@ -99,6 +129,7 @@ final class AudioScreenViewModel {
             return
         }
         currentResult = .track(trackResult(from: row))
+        persistAudioTarget(row)
     }
 
     func analyzeTrack() {
@@ -277,6 +308,45 @@ final class AudioScreenViewModel {
             editableArtistDraft: row.artist == "Unverified" ? "" : row.artist,
             canConfirmIdentity: row.canConfirmIdentity
         )
+    }
+
+    private func targetAudioRowID(in rows: [AudioLibraryRowModel]) -> AudioLibraryRowModel.ID? {
+        let context = ProjectTargetContext.resolve(project: workspace?.activeProject)
+        let targetPath = ProjectTargetContext.normalizedPath(context.audioPath)
+        let targetName = context.audioName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if !targetPath.isEmpty,
+           let row = rows.first(where: { ProjectTargetContext.normalizedPath($0.sourceMediaPath) == targetPath }) {
+            return row.id
+        }
+        if !targetName.isEmpty,
+           let row = rows.first(where: { $0.displayName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == targetName }) {
+            return row.id
+        }
+        return nil
+    }
+
+    private func persistAudioTarget(_ row: AudioLibraryRowModel) {
+        guard var project = workspace?.activeProject else { return }
+        let sourcePath = row.sourceMediaPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sourcePath.isEmpty else { return }
+        guard ProjectTargetContext.normalizedPath(string(project.snapshot["audioPathInput"]?.value)) != ProjectTargetContext.normalizedPath(sourcePath) else { return }
+        project.snapshot["audioPathInput"] = AnyCodable(sourcePath)
+        do {
+            let saved = try projectService.saveProject(project)
+            workspace?.setProject(saved)
+        } catch {
+            currentResult = .error(AudioErrorModel(
+                title: "Unable to update audio focus",
+                explanation: String(error.localizedDescription),
+                canRetry: true
+            ))
+        }
+    }
+
+    private func string(_ value: Any?) -> String {
+        guard let value else { return "" }
+        if let string = value as? String { return string.trimmingCharacters(in: .whitespacesAndNewlines) }
+        return String(describing: value).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

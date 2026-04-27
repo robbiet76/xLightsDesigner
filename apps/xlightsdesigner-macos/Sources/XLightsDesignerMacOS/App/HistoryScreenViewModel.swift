@@ -11,7 +11,7 @@ final class HistoryScreenViewModel {
     var searchQuery = ""
     var selectedRowID: HistoryRowModel.ID?
     var screenModel = HistoryScreenModel(
-        header: HistoryHeaderModel(title: "History", subtitle: "Browse retrospective revisions and previously applied changes.", activeProjectName: "No Project"),
+        header: HistoryHeaderModel(title: "History", subtitle: "Browse retrospective revisions and previously applied changes.", activeProjectName: "No Project", activeSequenceName: ""),
         summary: HistorySummaryModel(totalEventCount: 0, latestEventSummary: "No history available.", latestEventTimestamp: "", groupedTypeSummaries: []),
         rows: [],
         selectedEvent: .none("Select a historical event to inspect details."),
@@ -38,13 +38,16 @@ final class HistoryScreenViewModel {
     func loadHistory() {
         do {
             let result = try historyService.loadHistory(for: workspace.activeProject)
-            let selected = selectedRowID.flatMap { id in result.rows.contains(where: { $0.id == id }) ? id : nil } ?? result.rows.first?.id
+            let target = ProjectTargetContext.resolve(project: workspace.activeProject)
+            let selected = selectedRowID.flatMap { id in result.rows.contains(where: { $0.id == id }) ? id : nil }
+                ?? result.rows.first(where: { rowMatchesTarget($0, target: target) })?.id
             detailsByID = result.detailsByID
             screenModel = HistoryScreenModel(
                 header: HistoryHeaderModel(
                     title: "History",
                     subtitle: "Browse retrospective revisions and previously applied changes.",
-                    activeProjectName: workspace.activeProject?.projectName ?? "No Project"
+                    activeProjectName: workspace.activeProject?.projectName ?? "No Project",
+                    activeSequenceName: target.sequenceName
                 ),
                 summary: result.summary,
                 rows: result.rows,
@@ -54,7 +57,12 @@ final class HistoryScreenViewModel {
             selectRow(id: selected)
         } catch {
             screenModel = HistoryScreenModel(
-                header: HistoryHeaderModel(title: "History", subtitle: "Browse retrospective revisions and previously applied changes.", activeProjectName: workspace.activeProject?.projectName ?? "No Project"),
+                header: HistoryHeaderModel(
+                    title: "History",
+                    subtitle: "Browse retrospective revisions and previously applied changes.",
+                    activeProjectName: workspace.activeProject?.projectName ?? "No Project",
+                    activeSequenceName: ProjectTargetContext.resolve(project: workspace.activeProject).sequenceName
+                ),
                 summary: HistorySummaryModel(totalEventCount: 0, latestEventSummary: "History could not be loaded.", latestEventTimestamp: "", groupedTypeSummaries: []),
                 rows: [],
                 selectedEvent: .error(String(error.localizedDescription)),
@@ -90,5 +98,12 @@ final class HistoryScreenViewModel {
               let artifactPath = detail.artifactPath,
               !artifactPath.isEmpty else { return }
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: artifactPath)])
+    }
+
+    private func rowMatchesTarget(_ row: HistoryRowModel, target: ProjectTargetContext) -> Bool {
+        let sequenceName = target.sequenceName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !sequenceName.isEmpty else { return false }
+        let rowSequence = row.sequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return rowSequence == sequenceName || rowSequence.contains(sequenceName)
     }
 }

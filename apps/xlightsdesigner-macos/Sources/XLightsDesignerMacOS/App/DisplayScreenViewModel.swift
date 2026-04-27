@@ -62,6 +62,7 @@ final class DisplayScreenViewModel {
             title: "Display",
             subtitle: "Create and maintain project display metadata grounded in the active xLights layout.",
             activeProjectName: "No Project",
+            activeSequenceName: "",
             sourceSummary: ""
         ),
         readinessSummary: DisplayReadinessSummaryModel(
@@ -276,6 +277,7 @@ final class DisplayScreenViewModel {
                     title: "Display",
                     subtitle: "Review and manage the display metadata the agents are learning from your layout.",
                     activeProjectName: workspace.activeProject?.projectName ?? "No Project",
+                    activeSequenceName: ProjectTargetContext.resolve(project: workspace.activeProject).sequenceName,
                     sourceSummary: result.sourceSummary
                 ),
                 readinessSummary: result.readiness,
@@ -295,6 +297,7 @@ final class DisplayScreenViewModel {
                     title: "Display",
                     subtitle: "Review and manage the display metadata the agents are learning from your layout.",
                     activeProjectName: workspace.activeProject?.projectName ?? "No Project",
+                    activeSequenceName: ProjectTargetContext.resolve(project: workspace.activeProject).sequenceName,
                     sourceSummary: "xLights owned API"
                 ),
                 readinessSummary: DisplayReadinessSummaryModel(

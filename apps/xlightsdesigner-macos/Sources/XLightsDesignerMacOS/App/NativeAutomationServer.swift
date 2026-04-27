@@ -390,6 +390,10 @@ final class NativeAutomationServer: @unchecked Sendable {
         let normalizedPath = filePath.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedPath.isEmpty else { return }
         activeProject.snapshot["sequencePathInput"] = AnyCodable(normalizedPath)
+        let sequenceName = ProjectTargetContext.nameWithoutExtension(normalizedPath)
+        if !sequenceName.isEmpty {
+            activeProject.snapshot["activeSequence"] = AnyCodable(sequenceName)
+        }
         do {
             let saved = try projectService.saveProject(activeProject)
             model.workspace.setProject(saved)
@@ -459,6 +463,7 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "nextRecommendedPhases": phase.nextRecommendedPhases.map(\.rawValue)
             ],
             "assistantVisible": model.showAssistantPanel,
+            "activeTarget": activeTargetSnapshot(),
             "workspace": workspaceSnapshot(),
             "xlights": xlightsSessionSnapshot(),
             "assistant": assistantSnapshot(),
@@ -481,6 +486,18 @@ final class NativeAutomationServer: @unchecked Sendable {
             "projectFilePath": model.workspace.activeProject?.projectFilePath ?? "",
             "showFolder": model.workspace.activeProject?.showFolder ?? "",
             "banner": model.workspace.projectBanner?.text ?? ""
+        ]
+    }
+
+    @MainActor
+    private func activeTargetSnapshot() -> [String: Any] {
+        let target = model.currentTargetContext()
+        return [
+            "projectName": target.projectName,
+            "sequenceName": target.sequenceName,
+            "sequencePath": target.sequencePath,
+            "audioName": target.audioName,
+            "audioPath": target.audioPath
         ]
     }
 
@@ -708,12 +725,8 @@ final class NativeAutomationServer: @unchecked Sendable {
     private func displayHeaderFocusText(screen: DisplayScreenModel) -> String {
         let projectName = screen.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !projectName.isEmpty, projectName != "No Project" else { return "" }
-        switch screen.selectedMetadata {
-        case let .selected(entry):
-            return "Project: \(projectName) • Selected: \(entry.subject) / \(entry.category)"
-        default:
-            return "Project: \(projectName)"
-        }
+        let sequenceName = model.currentTargetContext().sequenceName
+        return sequenceName.isEmpty ? "Project: \(projectName)" : "Project: \(projectName) • Sequence: \(sequenceName)"
     }
 
     @MainActor
@@ -734,6 +747,10 @@ final class NativeAutomationServer: @unchecked Sendable {
 
     @MainActor
     private func audioHeaderFocusText() -> String {
+        let target = model.currentTargetContext()
+        if !target.audioName.isEmpty {
+            return "Audio: \(target.audioName)"
+        }
         switch model.audioScreenModel.currentResult {
         case let .track(track):
             let artist = track.artist.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -897,9 +914,9 @@ final class NativeAutomationServer: @unchecked Sendable {
 
     @MainActor
     private func reviewHeaderFocusText(screen: ReviewScreenModel) -> String {
-        let target = screen.pendingSummary.targetSequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !target.isEmpty, target != "No target sequence." else { return "" }
-        return "Target: \(target)"
+        let target = model.currentTargetContext()
+        guard !target.sequenceName.isEmpty else { return "" }
+        return "Sequence: \(target.sequenceName)"
     }
 
     @MainActor
@@ -926,14 +943,13 @@ final class NativeAutomationServer: @unchecked Sendable {
 
     @MainActor
     private func historyHeaderFocusText(screen: HistoryScreenModel) -> String {
-        switch screen.selectedEvent {
-        case let .selected(event):
-            let sequence = event.relatedSequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines)
-            return sequence.isEmpty ? "Selected: \(event.identity)" : "Selected: \(event.identity) • \(sequence)"
-        default:
-            let projectName = screen.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
-            return projectName.isEmpty || projectName == "No Project" ? "" : "Project: \(projectName)"
+        let projectName = screen.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !projectName.isEmpty, projectName != "No Project" else { return "" }
+        let sequenceName = screen.header.activeSequenceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if sequenceName.isEmpty {
+            return "Project: \(projectName)"
         }
+        return "Project: \(projectName) • Sequence: \(sequenceName)"
     }
 
     @MainActor

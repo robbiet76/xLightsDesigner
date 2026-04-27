@@ -245,6 +245,7 @@ struct SequenceScreenView: View {
                 saveBeforeSwitch: saveBeforeSwitch
             )
         }
+        model.persistActiveSequencePath(filePath, mediaFile: model.preferredMediaFile())
         model.refresh()
     }
 

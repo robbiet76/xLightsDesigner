@@ -32,14 +32,13 @@ struct HistoryScreenView: View {
     }
 
     private var headerFocusText: String {
-        switch model.screenModel.selectedEvent {
-        case let .selected(detail):
-            let sequence = detail.relatedSequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines)
-            return sequence.isEmpty ? "Selected: \(detail.identity)" : "Selected: \(detail.identity) • \(sequence)"
-        default:
-            let projectName = model.screenModel.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
-            return projectName.isEmpty || projectName == "No Project" ? "" : "Project: \(projectName)"
+        let projectName = model.screenModel.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !projectName.isEmpty, projectName != "No Project" else { return "" }
+        let sequenceName = model.screenModel.header.activeSequenceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if sequenceName.isEmpty {
+            return "Project: \(projectName)"
         }
+        return "Project: \(projectName) • Sequence: \(sequenceName)"
     }
 
     private var summaryBand: some View {

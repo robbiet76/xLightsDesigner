@@ -37,6 +37,10 @@ struct AudioScreenView: View {
     }
 
     private var headerFocusText: String {
+        let target = ProjectTargetContext.resolve(project: model.activeProject)
+        if !target.audioName.isEmpty {
+            return "Audio: \(target.audioName)"
+        }
         switch model.currentResult {
         case let .track(track):
             let artist = track.artist.trimmingCharacters(in: .whitespacesAndNewlines)

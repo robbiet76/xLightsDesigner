@@ -81,12 +81,11 @@ struct DisplayScreenView: View {
     private var headerFocusText: String {
         let projectName = model.screenModel.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !projectName.isEmpty, projectName != "No Project" else { return "" }
-        switch model.screenModel.selectedMetadata {
-        case let .selected(entry):
-            return "Project: \(projectName) • Selected: \(entry.subject) / \(entry.category)"
-        default:
+        let sequenceName = model.screenModel.header.activeSequenceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if sequenceName.isEmpty {
             return "Project: \(projectName)"
         }
+        return "Project: \(projectName) • Sequence: \(sequenceName)"
     }
 
     private func compactTopSection(height: CGFloat) -> some View {

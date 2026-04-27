@@ -203,13 +203,19 @@ final class ReviewScreenViewModel {
         let projectName = project?.projectName ?? "No active project"
         let hasProject = project != nil
         let state: PendingWorkState = hasProject ? .partial : .blocked
-        let activeSequenceName = pendingWork?.activeSequenceName ?? "No active sequence"
+        let targetContext = ProjectTargetContext.resolve(project: project)
+        let activeSequenceName = targetContext.sequenceName.isEmpty
+            ? (pendingWork?.activeSequenceName ?? "No active sequence")
+            : targetContext.sequenceName
+        let pendingMatchesTarget = pendingWorkMatchesTarget(project: project, pendingWork: pendingWork)
         let blockers = reviewBlockers(project: project, pendingWork: pendingWork)
         let canApply = blockers.isEmpty
         let pendingSummary = pendingWork?.proposalSummary ?? "There is no pending implementation context yet."
         let targetSequenceSummary = hasProject ? activeSequenceName : "No target sequence."
         let readinessSummary = hasProject
-            ? "Pending work is visible and can be evaluated before owned API apply execution."
+            ? (pendingMatchesTarget
+                ? "Pending work is visible and can be evaluated before owned API apply execution."
+                : "Pending work exists, but it does not match the current project sequence focus.")
             : "Project context is required before review becomes actionable."
         let hasRestorePoint = !lastAppliedSequencePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !lastSequenceBackupPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -298,6 +304,13 @@ final class ReviewScreenViewModel {
                     state: state
                     )
                 ]
+                if !pendingMatchesTarget {
+                    banners.append(WorkflowBannerModel(
+                        id: "review-target-mismatch",
+                        text: "Review artifacts do not match the current sequence focus. Regenerate the sequencing proposal for the selected sequence before applying.",
+                        state: .blocked
+                    ))
+                }
                 if let transientBanner { banners.append(transientBanner) }
                 return banners
             }()
@@ -349,6 +362,9 @@ final class ReviewScreenViewModel {
     private static func reviewBlockers(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> [String] {
         guard let project else { return ["Project context missing."] }
         guard let pendingWork else { return ["Generate a sequencing proposal before apply."] }
+        if !pendingWorkMatchesTarget(project: project, pendingWork: pendingWork) {
+            return ["Pending review artifacts do not match the selected project sequence."]
+        }
         let activeSequenceName = pendingWork.activeSequenceName.trimmingCharacters(in: .whitespacesAndNewlines)
         if activeSequenceName.isEmpty || activeSequenceName == "No active sequence" || activeSequenceName == "No sequence selected yet" {
             return ["No active sequence loaded."]
@@ -371,6 +387,20 @@ final class ReviewScreenViewModel {
             return ["Generated proposal has no sequence commands to apply."]
         }
         return []
+    }
+
+    private static func pendingWorkMatchesTarget(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> Bool {
+        guard let project, let pendingWork else { return true }
+        let context = ProjectTargetContext.resolve(project: project)
+        let targetPath = ProjectTargetContext.normalizedPath(context.sequencePath)
+        let pendingPath = ProjectTargetContext.normalizedPath(pendingWork.activeSequencePath)
+        if !targetPath.isEmpty, !pendingPath.isEmpty, pendingWork.activeSequencePath != "No active sequence path" {
+            return targetPath == pendingPath
+        }
+        let targetName = context.sequenceName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let pendingName = pendingWork.activeSequenceName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !targetName.isEmpty, !pendingName.isEmpty, pendingName != "no active sequence" else { return true }
+        return targetName == pendingName
     }
 
     nonisolated private static func isPathWithinShowFolder(_ candidatePath: String, _ showFolderPath: String) -> Bool {

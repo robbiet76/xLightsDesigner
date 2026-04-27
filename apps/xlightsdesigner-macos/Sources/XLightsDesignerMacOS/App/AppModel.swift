@@ -7,6 +7,7 @@ final class AppModel {
     private let displayDiscoveryStore: DisplayDiscoveryStateStore
     private let userProfileStore: AssistantUserProfileStore
     private let xlightsDerivedMetadataService: XLightsDerivedMetadataService
+    private let projectService: ProjectService
 
     var selectedWorkflow: WorkflowID = .project
     var showSettings = false
@@ -29,16 +30,18 @@ final class AppModel {
     init(
         displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore(),
         userProfileStore: AssistantUserProfileStore = LocalAssistantUserProfileStore(),
-        xlightsDerivedMetadataService: XLightsDerivedMetadataService = DefaultXLightsDerivedMetadataService()
+        xlightsDerivedMetadataService: XLightsDerivedMetadataService = DefaultXLightsDerivedMetadataService(),
+        projectService: ProjectService = LocalProjectService()
     ) {
         self.displayDiscoveryStore = displayDiscoveryStore
         self.userProfileStore = userProfileStore
         self.xlightsDerivedMetadataService = xlightsDerivedMetadataService
+        self.projectService = projectService
         let workspace = ProjectWorkspace()
         self.workspace = workspace
         self.xlightsSessionModel = XLightsSessionViewModel(workspace: workspace)
         self.assistantModel = AssistantWindowViewModel(workspace: workspace)
-        self.audioScreenModel = AudioScreenViewModel.sample()
+        self.audioScreenModel = AudioScreenViewModel(workspace: workspace)
         self.projectScreenModel = ProjectScreenViewModel(workspace: workspace)
         self.displayScreenModel = DisplayScreenViewModel(workspace: workspace)
         self.designScreenModel = DesignScreenViewModel(workspace: workspace)
@@ -49,9 +52,13 @@ final class AppModel {
         self.settingsScreenModel.load()
         self.xlightsSessionModel.onSignificantChange = { [weak self] _, _ in
             Task { @MainActor in
+                self?.syncProjectTargetFromXLightsSession()
                 self?.displayScreenModel.loadDisplay()
+                self?.audioScreenModel.loadLibrary()
+                self?.designScreenModel.refresh()
                 self?.sequenceScreenModel.refresh()
                 self?.reviewScreenModel.refresh()
+                self?.historyScreenModel.loadHistory()
             }
         }
         self.xlightsSessionModel.refresh()
@@ -112,6 +119,10 @@ final class AppModel {
                 return "No history item selected"
             }
         }
+    }
+
+    func currentTargetContext() -> ProjectTargetContext {
+        ProjectTargetContext.resolve(project: workspace.activeProject)
     }
 
     func assistantContext() -> AssistantContextModel {
@@ -569,6 +580,7 @@ final class AppModel {
     }
 
     func refreshCurrentWorkflow() {
+        syncProjectTargetFromXLightsSession()
         switch selectedWorkflow {
         case .project:
             projectScreenModel.loadInitialProject()
@@ -595,6 +607,7 @@ final class AppModel {
     }
 
     func refreshAll() {
+        syncProjectTargetFromXLightsSession()
         projectScreenModel.loadInitialProject()
         displayScreenModel.loadDisplay()
         audioScreenModel.loadLibrary()
@@ -604,6 +617,45 @@ final class AppModel {
         historyScreenModel.loadHistory()
         settingsScreenModel.load()
         xlightsSessionModel.refresh()
+    }
+
+    func syncProjectTargetFromXLightsSession() {
+        guard var project = workspace.activeProject else { return }
+        let snapshot = xlightsSessionModel.snapshot
+        guard snapshot.isReachable, snapshot.isSequenceOpen, snapshot.projectShowMatches else { return }
+        let sequencePath = snapshot.sequencePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sequencePath.isEmpty else { return }
+
+        let sequenceName = ProjectTargetContext.nameWithoutExtension(sequencePath)
+        let audioPath = snapshot.mediaFile.trimmingCharacters(in: .whitespacesAndNewlines)
+        var changed = false
+
+        if string(project.snapshot["sequencePathInput"]?.value) != sequencePath {
+            project.snapshot["sequencePathInput"] = AnyCodable(sequencePath)
+            changed = true
+        }
+        if !sequenceName.isEmpty, string(project.snapshot["activeSequence"]?.value) != sequenceName {
+            project.snapshot["activeSequence"] = AnyCodable(sequenceName)
+            changed = true
+        }
+        if !audioPath.isEmpty, string(project.snapshot["audioPathInput"]?.value) != audioPath {
+            project.snapshot["audioPathInput"] = AnyCodable(audioPath)
+            changed = true
+        }
+        if changed {
+            do {
+                let saved = try projectService.saveProject(project)
+                workspace.setProject(saved)
+            } catch {
+                print("Failed to sync project target from xLights session: \(error)")
+            }
+        }
+    }
+
+    private func string(_ value: Any?) -> String {
+        guard let value else { return "" }
+        if let string = value as? String { return string.trimmingCharacters(in: .whitespacesAndNewlines) }
+        return String(describing: value).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func buildDisplayDiscoveryCandidates(

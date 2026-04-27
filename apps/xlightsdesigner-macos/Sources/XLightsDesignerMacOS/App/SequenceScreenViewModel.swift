@@ -132,6 +132,38 @@ final class SequenceScreenViewModel {
         return ""
     }
 
+    func persistActiveSequencePath(_ filePath: String, mediaFile: String?) {
+        guard var project = workspace.activeProject else { return }
+        let sequencePath = filePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sequencePath.isEmpty else { return }
+        let sequenceName = ProjectTargetContext.nameWithoutExtension(sequencePath)
+        let audioPath = mediaFile?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        var changed = false
+        if ProjectTargetContext.normalizedPath(Self.string(project.snapshot["sequencePathInput"]?.value)) != ProjectTargetContext.normalizedPath(sequencePath) {
+            project.snapshot["sequencePathInput"] = AnyCodable(sequencePath)
+            changed = true
+        }
+        if !sequenceName.isEmpty, Self.string(project.snapshot["activeSequence"]?.value) != sequenceName {
+            project.snapshot["activeSequence"] = AnyCodable(sequenceName)
+            changed = true
+        }
+        if !audioPath.isEmpty, ProjectTargetContext.normalizedPath(Self.string(project.snapshot["audioPathInput"]?.value)) != ProjectTargetContext.normalizedPath(audioPath) {
+            project.snapshot["audioPathInput"] = AnyCodable(audioPath)
+            changed = true
+        }
+        guard changed else { return }
+        do {
+            let saved = try projectService.saveProject(project)
+            workspace.setProject(saved)
+        } catch {
+            transientBanner = WorkflowBannerModel(
+                id: "sequence-target-save-failed",
+                text: "Unable to save the project sequence focus: \(error.localizedDescription)",
+                state: .blocked
+            )
+        }
+    }
+
     private func sanitizeSequenceBaseName(_ raw: String) -> String {
         let allowed = CharacterSet.alphanumerics.union(.whitespaces)
         let filtered = String(raw.unicodeScalars.map { allowed.contains($0) ? String($0) : " " }.joined())
