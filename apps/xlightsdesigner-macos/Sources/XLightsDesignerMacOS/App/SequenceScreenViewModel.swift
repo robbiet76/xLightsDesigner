@@ -666,7 +666,7 @@ final class SequenceScreenViewModel {
         if health == false {
             banners.append(WorkflowBannerModel(id: "sequence-xlights-required", text: "Sequence needs a live xLights session for full session validation.", state: .blocked))
         } else if effectiveSequenceLoaded == false {
-            banners.append(WorkflowBannerModel(id: "sequence-open-required", text: "Open the target sequence in xLights to validate live sequence context.", state: .blocked))
+            banners.append(WorkflowBannerModel(id: "sequence-open-required", text: "Open the sequence in xLights to validate live sequence context.", state: .blocked))
         }
         if timingReview.needsReview {
             banners.append(WorkflowBannerModel(id: "timing-review", text: timingReview.summaryText, state: .partial))

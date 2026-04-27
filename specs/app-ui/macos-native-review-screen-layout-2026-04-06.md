@@ -90,7 +90,7 @@ Purpose:
 Required contents:
 - concise pending-change summary
 - pending status
-- target sequence/context summary
+- sequence/context summary
 - high-level readiness state
 
 Required empty-state alternative:

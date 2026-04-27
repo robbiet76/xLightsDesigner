@@ -41,7 +41,7 @@ struct DesignScreenView: View {
             : model.screenModel.activeSequenceID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !sequenceId.isEmpty else { return "" }
         let revision = visual.currentRevisionId.trimmingCharacters(in: .whitespacesAndNewlines)
-        return visual.available && !revision.isEmpty ? "Song / Sequence: \(sequenceId) • Visual \(revision)" : "Song / Sequence: \(sequenceId)"
+        return visual.available && !revision.isEmpty ? "Sequence: \(sequenceId) • Visual \(revision)" : "Sequence: \(sequenceId)"
     }
 
     private var summaryBand: some View {

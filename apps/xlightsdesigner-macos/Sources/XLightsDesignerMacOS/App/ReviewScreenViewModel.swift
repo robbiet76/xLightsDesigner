@@ -211,7 +211,7 @@ final class ReviewScreenViewModel {
         let blockers = reviewBlockers(project: project, pendingWork: pendingWork)
         let canApply = blockers.isEmpty
         let pendingSummary = pendingWork?.proposalSummary ?? "There is no pending implementation context yet."
-        let targetSequenceSummary = hasProject ? activeSequenceName : "No target sequence."
+        let targetSequenceSummary = hasProject ? activeSequenceName : "No sequence."
         let readinessSummary = hasProject
             ? (pendingMatchesTarget
                 ? "Pending work is visible and can be evaluated before owned API apply execution."
@@ -333,9 +333,9 @@ final class ReviewScreenViewModel {
         }
         let sequencePath = pendingWork.activeSequencePath.trimmingCharacters(in: .whitespacesAndNewlines)
         if sequencePath.isEmpty || sequencePath == "No active sequence path" {
-            return "Apply is blocked until a target sequence path is selected. Current constraints: \(constraints)"
+            return "Apply is blocked until a sequence path is selected. Current constraints: \(constraints)"
         }
-        return "Before apply, the current sequence file will be copied to this project's artifacts/backups folder. Target: \(sequencePath). Current constraints: \(constraints)"
+        return "Before apply, the current sequence file will be copied to this project's artifacts/backups folder. Sequence: \(sequencePath). Current constraints: \(constraints)"
     }
 
     private static func buildApplyPreviewLines(pendingWork: PendingWorkReadModel?) -> [String] {

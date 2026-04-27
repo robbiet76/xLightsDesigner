@@ -37,9 +37,9 @@ struct ReviewScreenView: View {
     }
 
     private var headerFocusText: String {
-        let target = model.screenModel.pendingSummary.targetSequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !target.isEmpty, target != "No target sequence." else { return "" }
-        return "Target: \(target)"
+        let sequence = model.screenModel.pendingSummary.targetSequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sequence.isEmpty, sequence != "No sequence." else { return "" }
+        return "Sequence: \(sequence)"
     }
 
     private var pendingBand: some View {
@@ -49,7 +49,7 @@ struct ReviewScreenView: View {
                 Text(model.screenModel.pendingSummary.identity.subtitle).foregroundStyle(.secondary)
                 HStack(spacing: 10) { chip(model.screenModel.pendingSummary.identity.state.rawValue); chip(model.screenModel.pendingSummary.identity.updatedSummary) }
                 detailRow(label: "Pending Summary", value: model.screenModel.pendingSummary.pendingSummary)
-                detailRow(label: "Target Sequence", value: model.screenModel.pendingSummary.targetSequenceSummary)
+                detailRow(label: "Sequence", value: model.screenModel.pendingSummary.targetSequenceSummary)
                 detailRow(label: "Readiness", value: model.screenModel.pendingSummary.readinessSummary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
