@@ -6,11 +6,19 @@ struct PageHeaderFocusText: View {
     var body: some View {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if !value.isEmpty {
-            Text(value)
-                .font(.subheadline)
+            focusText(value)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
                 .textSelection(.enabled)
         }
+    }
+
+    private func focusText(_ value: String) -> Text {
+        guard let range = value.range(of: ": ") else {
+            return Text(value).fontWeight(.semibold)
+        }
+        let label = String(value[..<range.upperBound])
+        let target = String(value[range.upperBound...])
+        return Text(label) + Text(target).fontWeight(.semibold)
     }
 }
