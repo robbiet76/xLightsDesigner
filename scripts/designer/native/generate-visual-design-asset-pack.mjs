@@ -104,17 +104,40 @@ function firstNonEmptyArray(...values) {
   return [];
 }
 
+const DEFAULT_VISUAL_PALETTE = [
+  { name: "ice blue", hex: "#8fd8ff", role: "cool base" },
+  { name: "warm gold", hex: "#ffd36a", role: "impact accent" },
+  { name: "cranberry red", hex: "#c8324a", role: "holiday accent" },
+  { name: "pine green", hex: "#1f7a4a", role: "support" }
+];
+
+function normalizePaletteRows(rows = []) {
+  const seen = new Set();
+  return arr(rows)
+    .map((row) => ({
+      name: str(row?.name),
+      hex: str(row?.hex),
+      role: str(row?.role)
+    }))
+    .filter((row) => row.name || row.hex || row.role)
+    .filter((row) => {
+      const key = `${row.name}|${row.hex}|${row.role}`.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 8);
+}
+
 function inferPalette(payload = {}) {
-  return firstNonEmptyArray(
+  const palette = firstNonEmptyArray(
     payload.palette,
     payload.creativeBrief?.visualInspiration?.palette,
     payload.creativeBrief?.palette,
     payload.proposalBundle?.palette,
-    [
-      { name: "primary atmosphere", hex: "#8fd8ff", role: "base" },
-      { name: "impact accent", hex: "#ffd36a", role: "accent" }
-    ]
+    DEFAULT_VISUAL_PALETTE
   );
+  return normalizePaletteRows(palette);
 }
 
 function inferMotifs(payload = {}) {

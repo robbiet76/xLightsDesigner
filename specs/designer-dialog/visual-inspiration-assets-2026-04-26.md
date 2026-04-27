@@ -129,7 +129,10 @@ Minimum shape:
     "themeSummary": "cinematic snowy brass celebration",
     "inspirationPrompt": "prompt used for the inspiration board",
     "palette": [
-      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base" }
+      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base" },
+      { "name": "warm gold", "hex": "#ffd36a", "role": "impact accent" },
+      { "name": "cranberry red", "hex": "#c8324a", "role": "holiday accent" },
+      { "name": "pine green", "hex": "#1f7a4a", "role": "support" }
     ],
     "motifs": ["snow sparkle", "gold fanfare", "soft streetlamp glow"],
     "avoidances": ["do not depict a literal xLights layout"]
@@ -139,7 +142,10 @@ Minimum shape:
     "displayMode": "separate_and_optional_in_image",
     "coordinationRule": "Image colors must reflect or coordinate with the approved palette.",
     "colors": [
-      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base" }
+      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base" },
+      { "name": "warm gold", "hex": "#ffd36a", "role": "impact accent" },
+      { "name": "cranberry red", "hex": "#c8324a", "role": "holiday accent" },
+      { "name": "pine green", "hex": "#1f7a4a", "role": "support" }
     ]
   },
   "displayAsset": {
@@ -226,6 +232,7 @@ Minimum shape:
 - generate an inspiration-board prompt that explicitly avoids showing the actual xLights display/layout
 - generate or request one main inspiration board image
 - generate a palette with named roles and hex colors
+- respect the xLights palette limit of 8 colors; fewer colors are acceptable when the design only needs them
 - preserve the palette as required design state and keep the board coordinated with it
 - edit the current inspiration board for conversational tweaks when possible instead of regenerating the board from scratch
 - record each board change as an immutable `imageRevisions[]` entry with parent revision, prompt, source provider/model, user request, palette lock/change status, and output path

@@ -472,7 +472,7 @@ final class DesignScreenViewModel {
     }
 
     private static func paletteRows(from rows: [[String: Any]]) -> [DesignPaletteColorModel] {
-        rows.enumerated().map { index, row in
+        rows.prefix(8).enumerated().map { index, row in
             let name = string(row["name"])
             let hex = string(row["hex"])
             let role = string(row["role"])

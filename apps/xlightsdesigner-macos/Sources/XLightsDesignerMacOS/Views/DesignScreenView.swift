@@ -235,12 +235,13 @@ struct DesignScreenView: View {
         }
     }
     private func paletteSwatches(_ colors: [DesignPaletteColorModel]) -> some View {
-        HStack(spacing: 8) {
-            ForEach(colors) { color in
+        let visibleColors = Array(colors.prefix(8))
+        return LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], alignment: .leading, spacing: 10) {
+            ForEach(visibleColors) { color in
                 VStack(alignment: .leading, spacing: 4) {
                     RoundedRectangle(cornerRadius: 4)
                         .fill(colorFromHex(color.hex))
-                        .frame(width: 42, height: 28)
+                        .frame(height: 28)
                         .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color(nsColor: .separatorColor)))
                     Text(color.name.isEmpty ? color.hex : color.name)
                         .font(.caption)
@@ -252,7 +253,7 @@ struct DesignScreenView: View {
                             .lineLimit(1)
                     }
                 }
-                .frame(width: 92, alignment: .leading)
+                .frame(maxWidth: 130, alignment: .leading)
             }
         }
     }

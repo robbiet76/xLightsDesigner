@@ -74,6 +74,26 @@ test("visual design asset pack builder creates valid compact manifest", () => {
   assert.deepEqual(validateVisualDesignAssetPack(pack), []);
 });
 
+test("visual design asset pack palette is capped at xLights eight-color limit", () => {
+  const palette = Array.from({ length: 10 }, (_, index) => ({
+    name: `color ${index + 1}`,
+    hex: `#${String(index + 1).padStart(6, "0")}`,
+    role: `slot ${index + 1}`
+  }));
+
+  const pack = buildVisualDesignAssetPack({
+    sequenceId: "seq-eight-colors",
+    themeSummary: "full xLights palette",
+    inspirationPrompt: "Create an inspiration board with a broad palette.",
+    palette,
+    displayAsset: { relativePath: "inspiration-board.png" }
+  });
+
+  assert.equal(pack.palette.colors.length, 8);
+  assert.equal(pack.creativeIntent.palette.length, 8);
+  assert.deepEqual(validateVisualDesignAssetPack(pack), []);
+});
+
 test("visual inspiration refs keep handoff compact", () => {
   const pack = buildVisualDesignAssetPack({
     sequenceId: "seq-1",

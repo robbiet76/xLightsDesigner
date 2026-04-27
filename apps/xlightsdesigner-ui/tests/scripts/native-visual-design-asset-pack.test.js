@@ -175,3 +175,43 @@ test("native visual design asset generation rejects missing project file", async
     /Project file not found/
   );
 });
+
+test("native visual design asset generation uses richer default palette up to xLights limit", async () => {
+  const { projectFilePath } = makeProjectFixture();
+  let providerInput = null;
+  const result = await runVisualDesignAssetPackGeneration({
+    projectFilePath,
+    sequenceId: "seq-default-palette",
+    intentText: "Create a holiday road trip visual inspiration board.",
+    visualImageConfig: { enabled: true, model: "gpt-image-1.5", size: "1536x1024", quality: "medium", outputFormat: "png" }
+  }, {
+    buildOpenAIVisualImageConfig,
+    buildVisualInspirationImagePrompt,
+    buildVisualImageFileFromOpenAIResult,
+    buildDefaultVisualMediaAssetPlans,
+    buildVisualDesignAssetPack,
+    buildVisualDesignImageEditRevision,
+    validateVisualDesignAssetPack,
+    readVisualDesignAssetPack,
+    writeVisualDesignAssetPack,
+    editOpenAIVisualImage,
+    generateOpenAIVisualImage: async (input) => {
+      providerInput = input;
+      return {
+        ok: true,
+        image: Buffer.from("generated-image"),
+        mimeType: "image/png",
+        width: 1536,
+        height: 1024,
+        model: input.model,
+        outputFormat: "png"
+      };
+    }
+  });
+
+  assert.equal(result.assetPack.palette.colors.length, 4);
+  assert.equal(result.assetPack.palette.colors.length <= 8, true);
+  assert.deepEqual(result.assetPack.palette.colors.map((row) => row.hex), ["#8fd8ff", "#ffd36a", "#c8324a", "#1f7a4a"]);
+  assert.match(providerInput.prompt, /cranberry red #c8324a/);
+  assert.match(providerInput.prompt, /pine green #1f7a4a/);
+});

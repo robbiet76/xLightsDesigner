@@ -32,7 +32,8 @@ function normalizePalette(rows = []) {
       hex: str(row?.hex),
       role: str(row?.role)
     }))
-    .filter((row) => row.name || row.hex || row.role);
+    .filter((row) => row.name || row.hex || row.role)
+    .slice(0, 8);
 }
 
 function normalizePaletteContract({ palette = [], paletteDisplay = {} } = {}) {
@@ -315,6 +316,9 @@ export function validateVisualDesignAssetPack(payload = {}) {
   if (obj.palette?.required !== true) errors.push("palette.required must be true");
   if (!Array.isArray(obj.palette?.colors) || !obj.palette.colors.length) {
     errors.push("palette.colors is required");
+  }
+  if (Array.isArray(obj.palette?.colors) && obj.palette.colors.length > 8) {
+    errors.push("palette.colors must not exceed 8 colors");
   }
   if (!isPlainObject(obj.displayAsset)) errors.push("displayAsset is required");
   if (!DISPLAY_ASSET_KINDS.has(str(obj.displayAsset?.kind))) {
