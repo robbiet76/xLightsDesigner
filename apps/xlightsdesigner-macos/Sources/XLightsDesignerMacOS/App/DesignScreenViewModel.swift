@@ -179,6 +179,24 @@ final class DesignScreenViewModel {
     }
 
     func reviseVisualInspiration() {
+        let revisionRequest = visualInspirationRevisionDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        reviseVisualInspiration(revisionRequest: revisionRequest, clearDraftOnSuccess: true)
+    }
+
+    func reviseVisualInspirationToMatchPalette() {
+        let request = screenModel.visualInspiration.paletteRevisionRequest.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !request.isEmpty else {
+            transientBanner = WorkflowBannerModel(
+                id: "visual-inspiration-palette-revision-unavailable",
+                text: "No palette coordination revision is currently needed.",
+                state: .partial
+            )
+            return
+        }
+        reviseVisualInspiration(revisionRequest: request, clearDraftOnSuccess: false)
+    }
+
+    private func reviseVisualInspiration(revisionRequest: String, clearDraftOnSuccess: Bool) {
         guard !isGeneratingVisualInspiration, !isRevisingVisualInspiration, let activeProject = workspace.activeProject else { return }
         guard screenModel.visualInspiration.available else {
             transientBanner = WorkflowBannerModel(
@@ -188,7 +206,6 @@ final class DesignScreenViewModel {
             )
             return
         }
-        let revisionRequest = visualInspirationRevisionDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !revisionRequest.isEmpty else {
             transientBanner = WorkflowBannerModel(
                 id: "visual-inspiration-revision-missing-request",
@@ -212,7 +229,9 @@ final class DesignScreenViewModel {
                     themeSummary: Self.visualThemeSummary(from: intentDraft),
                     baseURL: ""
                 )
-                visualInspirationRevisionDraft = ""
+                if clearDraftOnSuccess {
+                    visualInspirationRevisionDraft = ""
+                }
                 transientBanner = WorkflowBannerModel(
                     id: "visual-inspiration-revision-success",
                     text: "Revised visual inspiration \(result.currentRevisionID.isEmpty ? result.artifactID : result.currentRevisionID).",
@@ -411,7 +430,10 @@ final class DesignScreenViewModel {
             }.joined(separator: " / ")
         let revisionSummary = revisionSummary(from: displayedRevision)
         let revisionHistory = revisionHistory(from: revisions, currentRevisionID: currentRevisionId, selectedRevisionID: displayedRevisionId)
-        let paletteValidationSummary = paletteValidationSummary(from: paletteObject["validation"] as? [String: Any])
+        let paletteValidation = paletteObject["validation"] as? [String: Any]
+        let paletteValidationSummary = paletteValidationSummary(from: paletteValidation)
+        let paletteNeedsRevision = paletteValidationNeedsRevision(from: paletteValidation)
+        let paletteRevisionRequest = paletteRevisionRequest(from: paletteValidation, colors: colors)
         return DesignVisualInspirationModel(
             available: true,
             title: "Visual Inspiration",
@@ -425,6 +447,8 @@ final class DesignScreenViewModel {
             paletteDisplayMode: string(paletteObject["displayMode"], fallback: "separate_and_optional_in_image"),
             paletteCoordinationRule: string(paletteObject["coordinationRule"], fallback: "Designer palette is canonical for sequencing; image colors are diagnostic validation context."),
             paletteValidationSummary: paletteValidationSummary,
+            paletteValidationNeedsRevision: paletteNeedsRevision,
+            paletteRevisionRequest: paletteRevisionRequest,
             palette: colors
         )
     }
@@ -443,6 +467,8 @@ final class DesignScreenViewModel {
             paletteDisplayMode: "",
             paletteCoordinationRule: "Palette is required once a visual inspiration board exists.",
             paletteValidationSummary: "",
+            paletteValidationNeedsRevision: false,
+            paletteRevisionRequest: "",
             palette: []
         )
     }
@@ -456,6 +482,29 @@ final class DesignScreenViewModel {
         let recommendation = string(validation["recommendation"])
         let countSummary = required > 0 ? "Palette validation \(status): \(matched)/\(required) required colors matched." : "Palette validation \(status)."
         return [countSummary, recommendation].filter { !$0.isEmpty }.joined(separator: " ")
+    }
+
+    private static func paletteValidationNeedsRevision(from validation: [String: Any]?) -> Bool {
+        guard let validation else { return false }
+        return string(validation["status"]) == "warn"
+    }
+
+    private static func paletteRevisionRequest(from validation: [String: Any]?, colors: [DesignPaletteColorModel]) -> String {
+        guard paletteValidationNeedsRevision(from: validation) else { return "" }
+        let paletteSummary = colors
+            .prefix(8)
+            .map { color in
+                [color.name, color.hex, color.role].filter { !$0.isEmpty }.joined(separator: " ")
+            }
+            .filter { !$0.isEmpty }
+            .joined(separator: "; ")
+        let recommendation = string(validation?["recommendation"])
+        return [
+            "Revise the current inspiration image so it visibly coordinates with the approved Designer lighting palette.",
+            paletteSummary.isEmpty ? "" : "Preserve these canonical sequencing colors: \(paletteSummary).",
+            "Do not change the canonical palette or add palette strips, labels, legends, or swatches inside the image.",
+            recommendation
+        ].filter { !$0.isEmpty }.joined(separator: " ")
     }
 
     private static func latestVisualDesignManifest(in root: URL) -> URL? {

@@ -266,6 +266,7 @@ Minimum shape:
 - preserve the palette as required design state and keep the board coordinated with it
 - revise/regenerate the image when it does not coordinate with the approved Designer palette
 - record image/palette coordination validation as diagnostics; validation must never rewrite the Designer palette
+- expose palette coordination warnings as actionable revision state in the app and automation layer so the Designer agent can request a targeted image revision that preserves the approved palette
 - do not render palette strips, labeled swatches, legends, or color chips inside the inspiration image
 - edit the current inspiration board for conversational tweaks when possible instead of regenerating the board from scratch
 - record each board change as an immutable `imageRevisions[]` entry with parent revision, prompt, source provider/model, user request, palette lock/change status, and output path

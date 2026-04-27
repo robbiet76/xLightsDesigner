@@ -53,6 +53,14 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
 }
 
 @MainActor
+private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) async throws {
+    let deadline = Date().addingTimeInterval(timeout)
+    while !condition(), Date() < deadline {
+        try await Task.sleep(for: .milliseconds(10))
+    }
+}
+
+@MainActor
 @Test func designIntentPersistsInProjectSnapshot() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -168,6 +176,12 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
         "required": true,
         "displayMode": "separate_and_optional_in_image",
         "coordinationRule": "Designer palette is canonical for sequencing; image colors are diagnostic validation context.",
+        "validation": {
+          "status": "warn",
+          "matchedColorCount": 1,
+          "requiredColorCount": 2,
+          "recommendation": "Revise the image to better reflect the Designer palette; do not replace the Designer palette with sampled image colors."
+        },
         "colors": [
           { "name": "candle gold", "hex": "#ffc45c", "role": "warm highlight" },
           { "name": "pine green", "hex": "#1f6f4a", "role": "support" }
@@ -218,6 +232,9 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
     #expect(model.screenModel.visualInspiration.revisionHistory.count == 2)
     #expect(model.screenModel.visualInspiration.revisionHistory[1].isCurrent == true)
     #expect(model.screenModel.visualInspiration.revisionHistory[1].isSelected == true)
+    #expect(model.screenModel.visualInspiration.paletteValidationNeedsRevision == true)
+    #expect(model.screenModel.visualInspiration.paletteValidationSummary.contains("1/2 required colors matched") == true)
+    #expect(model.screenModel.visualInspiration.paletteRevisionRequest.contains("#ffc45c") == true)
 
     model.selectVisualInspirationRevision("board-r001")
 
@@ -225,6 +242,87 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
     #expect(model.screenModel.visualInspiration.displayedRevisionId == "board-r001")
     #expect(model.screenModel.visualInspiration.imagePath.hasSuffix("inspiration-board.png"))
     #expect(model.screenModel.visualInspiration.revisionHistory[0].isSelected == true)
+}
+
+@MainActor
+@Test func designScreenCanReviseVisualInspirationToMatchPalette() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-revise-palette-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let service = LocalProjectService(projectsRootPath: root.path)
+    let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
+    let project = try service.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Native Revise Palette \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "/tmp/song.mp3",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+    let visualDir = projectDir.appendingPathComponent("artifacts/visual-design/seq-1", isDirectory: true)
+    try FileManager.default.createDirectory(at: visualDir, withIntermediateDirectories: true)
+    try Data("fixture".utf8).write(to: visualDir.appendingPathComponent("inspiration-board.png"))
+    let manifest = """
+    {
+      "artifactType": "visual_design_asset_pack_v1",
+      "artifactId": "visual-pack-1",
+      "creativeIntent": {
+        "themeSummary": "Moonlit winter road trip",
+        "palette": [
+          { "name": "moonlit blue", "hex": "#2f6dff", "role": "cool base" },
+          { "name": "cabin amber", "hex": "#ffb84d", "role": "warm contrast" }
+        ]
+      },
+      "palette": {
+        "required": true,
+        "validation": {
+          "status": "warn",
+          "matchedColorCount": 1,
+          "requiredColorCount": 2,
+          "recommendation": "Revise the image to better reflect the Designer palette; do not replace the Designer palette with sampled image colors."
+        },
+        "colors": [
+          { "name": "moonlit blue", "hex": "#2f6dff", "role": "cool base" },
+          { "name": "cabin amber", "hex": "#ffb84d", "role": "warm contrast" }
+        ]
+      },
+      "displayAsset": {
+        "kind": "inspiration_board",
+        "relativePath": "inspiration-board.png",
+        "currentRevisionId": "board-r001"
+      },
+      "imageRevisions": [
+        {
+          "revisionId": "board-r001",
+          "mode": "generate",
+          "relativePath": "inspiration-board.png",
+          "paletteLocked": true,
+          "changeSummary": "Initial board."
+        }
+      ]
+    }
+    """
+    try Data(manifest.utf8).write(to: visualDir.appendingPathComponent("visual-design-manifest.json"))
+    workspace.setProject(project)
+    let visualService = StubVisualDesignAssetGenerationService()
+    let model = DesignScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: service,
+        visualAssetGenerationService: visualService
+    )
+
+    model.reviseVisualInspirationToMatchPalette()
+
+    try await waitUntil { visualService.revisionCalls.count == 1 && model.isRevisingVisualInspiration == false }
+
+    #expect(visualService.revisionCalls.count == 1)
+    #expect(visualService.revisionCalls.first?.revisionRequest.contains("approved Designer lighting palette") == true)
+    #expect(visualService.revisionCalls.first?.revisionRequest.contains("#2f6dff") == true)
+    #expect(visualService.revisionCalls.first?.revisionRequest.contains("Do not change the canonical palette") == true)
+    #expect(model.isRevisingVisualInspiration == false)
+    #expect(model.transientBanner?.state == .ready)
 }
 
 @MainActor
@@ -288,7 +386,7 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
     model.intentDraft.targetScope = "Mega tree and roofline."
     model.generateVisualInspiration()
 
-    try await Task.sleep(nanoseconds: 50_000_000)
+    try await waitUntil { visualService.calls.count == 1 && model.isGeneratingVisualInspiration == false }
 
     #expect(visualService.calls.count == 1)
     #expect(visualService.calls.first?.projectFilePath == project.projectFilePath)
@@ -365,7 +463,7 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
     model.visualInspirationRevisionDraft = "Make the candle glow softer while preserving the palette."
     model.reviseVisualInspiration()
 
-    try await Task.sleep(nanoseconds: 50_000_000)
+    try await waitUntil { visualService.revisionCalls.count == 1 && model.isRevisingVisualInspiration == false }
 
     #expect(visualService.revisionCalls.count == 1)
     #expect(visualService.revisionCalls.first?.projectFilePath == project.projectFilePath)

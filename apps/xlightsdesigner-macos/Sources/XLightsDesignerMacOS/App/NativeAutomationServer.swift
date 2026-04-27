@@ -235,6 +235,15 @@ final class NativeAutomationServer: @unchecked Sendable {
         case "generateVisualInspiration":
             model.designScreenModel.generateVisualInspiration()
             return .json(200, body: ["ok": true, "accepted": true])
+        case "reviseVisualInspiration":
+            let revisionRequest = String(payload["revisionRequest"] as? String ?? payload["request"] as? String ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            model.designScreenModel.visualInspirationRevisionDraft = revisionRequest
+            model.designScreenModel.reviseVisualInspiration()
+            return .json(200, body: ["ok": true, "accepted": true])
+        case "reviseVisualInspirationToMatchPalette":
+            model.designScreenModel.reviseVisualInspirationToMatchPalette()
+            return .json(200, body: ["ok": true, "accepted": true])
         case "applyReview":
             model.reviewScreenModel.applyPendingWork()
             return .json(200, body: ["ok": true, "isApplying": model.reviewScreenModel.isApplying])
@@ -717,6 +726,8 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "paletteDisplayMode": visual.paletteDisplayMode,
                 "paletteCoordinationRule": visual.paletteCoordinationRule,
                 "paletteValidationSummary": visual.paletteValidationSummary,
+                "paletteValidationNeedsRevision": visual.paletteValidationNeedsRevision,
+                "paletteRevisionRequest": visual.paletteRevisionRequest,
                 "palette": visual.palette.map {
                     [
                         "name": $0.name,

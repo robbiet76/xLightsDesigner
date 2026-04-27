@@ -135,6 +135,12 @@ struct DesignScreenView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    if model.screenModel.visualInspiration.paletteValidationNeedsRevision {
+                        Button(model.isRevisingVisualInspiration ? "Revising..." : "Revise to Match Palette") {
+                            model.reviseVisualInspirationToMatchPalette()
+                        }
+                        .disabled(model.isGeneratingVisualInspiration || model.isRevisingVisualInspiration)
+                    }
                 }
                 Spacer(minLength: 16)
                 if !model.screenModel.visualInspiration.currentRevisionId.isEmpty {
