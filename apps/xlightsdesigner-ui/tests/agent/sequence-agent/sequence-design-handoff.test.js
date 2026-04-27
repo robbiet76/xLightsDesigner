@@ -54,6 +54,18 @@ test("sequencing design handoff carries compact visual asset references", () => 
         paletteRoles: ["warm highlight"],
         motionUse: "static_or_slow_pan"
       }
+    ],
+    mediaAssetPlans: [
+      {
+        assetId: "planned-asset-001",
+        kind: "image",
+        status: "planned",
+        intendedUse: "picture_effect_motif_overlay",
+        recommendedSections: ["Chorus"],
+        paletteRoles: ["warm highlight"],
+        motifs: ["window glow"],
+        motionUse: "overlay_or_masked_reveal"
+      }
     ]
   });
 
@@ -93,6 +105,19 @@ test("sequencing design handoff carries compact visual asset references", () => 
       recommendedSections: ["Intro"],
       paletteRoles: ["warm highlight"],
       motionUse: "static_or_slow_pan"
+    }
+  ]);
+  assert.deepEqual(artifact.mediaAssetPlanDirectives, [
+    {
+      assetId: "planned-asset-001",
+      kind: "image",
+      status: "planned",
+      intendedUse: "picture_effect_motif_overlay",
+      recommendedSections: ["Chorus"],
+      paletteRoles: ["warm highlight"],
+      motifs: ["window glow"],
+      motionUse: "overlay_or_masked_reveal",
+      promptRef: ""
     }
   ]);
   assert.equal("imageData" in artifact, false);

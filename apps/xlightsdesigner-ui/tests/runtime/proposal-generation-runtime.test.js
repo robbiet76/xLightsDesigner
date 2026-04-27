@@ -643,6 +643,7 @@ test("attachVisualDesignAssetPackToOrchestration adds compact refs without binar
 
   assert.equal(out.creativeBrief.visualInspiration.artifactId, pack.artifactId);
   assert.equal(out.proposalBundle.visualAssets.assetPackId, pack.artifactId);
+  assert.equal(out.proposalBundle.visualAssets.mediaAssetPlanCount, 0);
   assert.equal(out.intentHandoff.sequencingDesignHandoff.visualAssetPackRef, pack.artifactId);
   assert.equal("imageData" in out.creativeBrief.visualInspiration, false);
 });

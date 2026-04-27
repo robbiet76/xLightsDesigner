@@ -7,6 +7,7 @@ const ASSET_KINDS = new Set(["image", "video", "thumbnail", "spritesheet"]);
 const DISPLAY_ASSET_KINDS = new Set(["inspiration_board"]);
 const PROVIDERS = new Set(["openai", "local_fixture", "user_supplied", "unknown"]);
 const IMAGE_REVISION_MODES = new Set(["generate", "edit", "masked_edit", "manual_import"]);
+const MEDIA_ASSET_PLAN_STATUSES = new Set(["planned", "generated", "approved", "rejected", "deferred"]);
 
 function str(value = "") {
   return String(value || "").trim();
@@ -126,6 +127,28 @@ function normalizeSequenceAssets(rows = []) {
     .filter((row) => row.assetId && row.relativePath);
 }
 
+function normalizeMediaAssetPlans(rows = []) {
+  return arr(rows)
+    .map((row, idx) => {
+      const kind = str(row?.kind).toLowerCase();
+      const status = str(row?.status || "planned").toLowerCase();
+      return {
+        assetId: str(row?.assetId || `planned-asset-${String(idx + 1).padStart(3, "0")}`),
+        kind: ASSET_KINDS.has(kind) ? kind : "image",
+        status: MEDIA_ASSET_PLAN_STATUSES.has(status) ? status : "planned",
+        intendedUse: str(row?.intendedUse || "picture_effect_texture"),
+        generationPrompt: str(row?.generationPrompt),
+        recommendedSections: uniqueStrings(row?.recommendedSections),
+        paletteRoles: uniqueStrings(row?.paletteRoles),
+        motifs: uniqueStrings(row?.motifs),
+        motionUse: str(row?.motionUse),
+        promptRef: str(row?.promptRef),
+        relativePath: str(row?.relativePath)
+      };
+    })
+    .filter((row) => row.assetId && row.intendedUse);
+}
+
 function normalizePrompts(rows = []) {
   return arr(rows)
     .map((row, idx) => ({
@@ -151,6 +174,7 @@ export function buildVisualDesignAssetPack({
   displayAsset = {},
   imageRevisions = [],
   sequenceAssets = [],
+  mediaAssetPlans = [],
   prompts = [],
   handoff = {}
 } = {}) {
@@ -189,6 +213,7 @@ export function buildVisualDesignAssetPack({
     },
     imageRevisions: normalizedImageRevisions,
     sequenceAssets: normalizeSequenceAssets(sequenceAssets),
+    mediaAssetPlans: normalizeMediaAssetPlans(mediaAssetPlans),
     prompts: normalizedPrompts,
     handoff: {
       sequencerUse: str(handoff?.sequencerUse || "optional"),
@@ -251,6 +276,7 @@ export function buildVisualDesignImageEditRevision({
       }
     ],
     sequenceAssets: pack.sequenceAssets,
+    mediaAssetPlans: pack.mediaAssetPlans,
     prompts: [
       ...arr(pack.prompts),
       {
@@ -298,12 +324,19 @@ export function validateVisualDesignAssetPack(payload = {}) {
   if (!str(obj.displayAsset?.currentRevisionId)) errors.push("displayAsset.currentRevisionId is required");
   if (!Array.isArray(obj.imageRevisions) || !obj.imageRevisions.length) errors.push("imageRevisions is required");
   if (!Array.isArray(obj.sequenceAssets)) errors.push("sequenceAssets must be an array");
+  if (obj.mediaAssetPlans != null && !Array.isArray(obj.mediaAssetPlans)) errors.push("mediaAssetPlans must be an array");
   if (!Array.isArray(obj.prompts) || !obj.prompts.length) errors.push("prompts is required");
 
   for (const [idx, asset] of arr(obj.sequenceAssets).entries()) {
     if (!str(asset?.assetId)) errors.push(`sequenceAssets[${idx}].assetId is required`);
     if (!ASSET_KINDS.has(str(asset?.kind))) errors.push(`sequenceAssets[${idx}].kind is invalid`);
     if (!str(asset?.relativePath)) errors.push(`sequenceAssets[${idx}].relativePath is required`);
+  }
+  for (const [idx, plan] of arr(obj.mediaAssetPlans).entries()) {
+    if (!str(plan?.assetId)) errors.push(`mediaAssetPlans[${idx}].assetId is required`);
+    if (!ASSET_KINDS.has(str(plan?.kind))) errors.push(`mediaAssetPlans[${idx}].kind is invalid`);
+    if (!MEDIA_ASSET_PLAN_STATUSES.has(str(plan?.status))) errors.push(`mediaAssetPlans[${idx}].status is invalid`);
+    if (!str(plan?.intendedUse)) errors.push(`mediaAssetPlans[${idx}].intendedUse is required`);
   }
   const revisionIds = new Set();
   for (const [idx, revision] of arr(obj.imageRevisions).entries()) {
@@ -340,6 +373,54 @@ export function buildVisualInspirationRefs(assetPack = {}) {
     paletteDisplayMode: str(palette.displayMode),
     paletteCoordinationRule: str(palette.coordinationRule),
     themeSummary: str(creativeIntent.themeSummary),
-    motifs: uniqueStrings(creativeIntent.motifs)
+    motifs: uniqueStrings(creativeIntent.motifs),
+    mediaAssetPlanCount: arr(obj.mediaAssetPlans).length
   };
+}
+
+export function buildDefaultVisualMediaAssetPlans({
+  themeSummary = "",
+  palette = [],
+  motifs = [],
+  sections = []
+} = {}) {
+  const paletteRoles = normalizePalette(palette).map((row) => row.role || row.name || row.hex).filter(Boolean);
+  const motifRows = uniqueStrings(motifs);
+  const sectionRows = uniqueStrings(sections);
+  const theme = str(themeSummary || "active song visual theme");
+  return [
+    {
+      assetId: "planned-asset-001",
+      kind: "image",
+      status: "planned",
+      intendedUse: "picture_effect_texture",
+      generationPrompt: `Generate an original high-resolution texture plate for ${theme}. It should coordinate with the approved palette and avoid depicting the physical xLights display.`,
+      recommendedSections: sectionRows.slice(0, 2),
+      paletteRoles: paletteRoles.slice(0, 3),
+      motifs: motifRows.slice(0, 3),
+      motionUse: "static_or_slow_pan"
+    },
+    {
+      assetId: "planned-asset-002",
+      kind: "image",
+      status: "planned",
+      intendedUse: "picture_effect_motif_overlay",
+      generationPrompt: `Generate an original transparent or dark-background motif overlay for ${theme}, emphasizing ${motifRows.slice(0, 2).join(", ") || "the main visual motifs"}.`,
+      recommendedSections: sectionRows,
+      paletteRoles: paletteRoles.slice(0, 2),
+      motifs: motifRows.slice(0, 4),
+      motionUse: "overlay_or_masked_reveal"
+    },
+    {
+      assetId: "planned-asset-003",
+      kind: "video",
+      status: "deferred",
+      intendedUse: "video_effect_motion_loop",
+      generationPrompt: `Generate a short seamless motion loop for ${theme} after video effect support is available. Keep motion readable at low display resolution.`,
+      recommendedSections: sectionRows,
+      paletteRoles: paletteRoles,
+      motifs: motifRows,
+      motionUse: "short_loop_or_slow_reveal"
+    }
+  ];
 }

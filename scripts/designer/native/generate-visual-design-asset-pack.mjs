@@ -12,6 +12,7 @@ import {
   generateOpenAIVisualImage
 } from "../../../apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js";
 import {
+  buildDefaultVisualMediaAssetPlans,
   buildVisualDesignAssetPack,
   buildVisualDesignImageEditRevision,
   validateVisualDesignAssetPack
@@ -27,6 +28,7 @@ const DEFAULT_DEPS = {
   generateOpenAIVisualImage,
   editOpenAIVisualImage,
   buildVisualImageFileFromOpenAIResult,
+  buildDefaultVisualMediaAssetPlans,
   buildVisualDesignAssetPack,
   buildVisualDesignImageEditRevision,
   validateVisualDesignAssetPack,
@@ -129,6 +131,16 @@ function inferAvoidances(payload = {}) {
     payload.avoidances,
     payload.creativeBrief?.avoidances,
     ["literal xLights layout", "physical house preview", "sequencer UI"]
+  ).map((row) => str(row)).filter(Boolean);
+}
+
+function inferSections(payload = {}) {
+  return firstNonEmptyArray(
+    payload.sections,
+    payload.selectedSections,
+    payload.creativeBrief?.sections,
+    payload.proposalBundle?.scope?.sections,
+    payload.sequencingDesignHandoff?.scope?.sections
   ).map((row) => str(row)).filter(Boolean);
 }
 
@@ -292,6 +304,7 @@ export async function runVisualDesignAssetPackGeneration(options = {}, deps = DE
   const palette = inferPalette(options);
   const motifs = inferMotifs(options);
   const avoidances = inferAvoidances(options);
+  const sections = inferSections(options);
   const themeSummary = inferThemeSummary(options);
   const visualImageConfig = deps.buildOpenAIVisualImageConfig({
     ...(isPlainObject(options.visualImageConfig) ? options.visualImageConfig : {}),
@@ -334,6 +347,12 @@ export async function runVisualDesignAssetPackGeneration(options = {}, deps = DE
     palette,
     motifs,
     avoidances,
+    mediaAssetPlans: deps.buildDefaultVisualMediaAssetPlans({
+      themeSummary,
+      palette,
+      motifs,
+      sections
+    }),
     displayAsset: {
       ...imageFile.displayAsset,
       currentRevisionId: "board-r001"

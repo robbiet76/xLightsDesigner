@@ -39,6 +39,22 @@ function normalizeMediaAssetDirectives(rows = []) {
     .filter((row) => row.assetId);
 }
 
+function normalizeMediaAssetPlanDirectives(rows = []) {
+  return arr(rows)
+    .map((row) => ({
+      assetId: str(row?.assetId),
+      kind: str(row?.kind),
+      status: str(row?.status),
+      intendedUse: str(row?.intendedUse),
+      recommendedSections: uniqueStrings(row?.recommendedSections),
+      paletteRoles: uniqueStrings(row?.paletteRoles),
+      motifs: uniqueStrings(row?.motifs),
+      motionUse: str(row?.motionUse),
+      promptRef: str(row?.promptRef)
+    }))
+    .filter((row) => row.assetId);
+}
+
 function stripNegativeCueClauses(value = '') {
   const text = str(value);
   if (!text) return '';
@@ -241,6 +257,7 @@ export function buildSequencingDesignHandoffV2({
     arr(visualIntent.motifs).length ? visualIntent.motifs : visualInspiration.motifs
   );
   const mediaAssetDirectives = normalizeMediaAssetDirectives(visualPack?.sequenceAssets);
+  const mediaAssetPlanDirectives = normalizeMediaAssetPlanDirectives(visualPack?.mediaAssetPlans);
   const visualAssetPackRef = str(visualPack?.artifactId || visualAssets.assetPackId || visualInspiration.artifactId);
 
   return finalizeArtifact({
@@ -271,6 +288,7 @@ export function buildSequencingDesignHandoffV2({
     paletteRoles: paletteRoles.length ? paletteRoles : undefined,
     motifDirectives: motifDirectives.length ? motifDirectives : undefined,
     mediaAssetDirectives: mediaAssetDirectives.length ? mediaAssetDirectives : undefined,
+    mediaAssetPlanDirectives: mediaAssetPlanDirectives.length ? mediaAssetPlanDirectives : undefined,
     constraints: {
       preserveTimingTracks: normalizedIntent?.preserveTimingTracks !== false,
       allowGlobalRewrite,

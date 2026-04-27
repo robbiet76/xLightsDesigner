@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  buildDefaultVisualMediaAssetPlans,
   buildVisualDesignImageEditRevision,
   buildVisualDesignAssetPack,
   buildVisualInspirationRefs,
@@ -45,7 +46,16 @@ test("visual design asset pack builder creates valid compact manifest", () => {
           promptRef: "prompt-001"
         }
       }
-    ]
+    ],
+    mediaAssetPlans: buildDefaultVisualMediaAssetPlans({
+      themeSummary: "icy choral tension with gold release",
+      palette: [
+        { name: "ice blue", hex: "#8fd8ff", role: "cool base" },
+        { name: "warm gold", hex: "#ffd36a", role: "impact highlight" }
+      ],
+      motifs: ["ice shards", "bell shimmer"],
+      sections: ["Intro", "Chorus"]
+    })
   });
 
   assert.equal(pack.artifactType, "visual_design_asset_pack_v1");
@@ -57,6 +67,10 @@ test("visual design asset pack builder creates valid compact manifest", () => {
   assert.equal(pack.imageRevisions[0].mode, "generate");
   assert.equal(pack.imageRevisions[0].paletteLocked, true);
   assert.equal(pack.imageRevisions[0].source.model, "gpt-image-2");
+  assert.equal(pack.mediaAssetPlans.length, 3);
+  assert.equal(pack.mediaAssetPlans[0].status, "planned");
+  assert.equal(pack.mediaAssetPlans[2].kind, "video");
+  assert.equal(pack.mediaAssetPlans[2].status, "deferred");
   assert.deepEqual(validateVisualDesignAssetPack(pack), []);
 });
 
@@ -77,6 +91,7 @@ test("visual inspiration refs keep handoff compact", () => {
   assert.equal(refs.currentRevisionId, "board-r001");
   assert.deepEqual(refs.palette, [{ name: "candle gold", hex: "#ffc45c", role: "warm highlight" }]);
   assert.equal(refs.paletteCoordinationRule, "Image colors must reflect or coordinate with the approved palette.");
+  assert.equal(refs.mediaAssetPlanCount, 0);
   assert.equal("imageData" in refs, false);
 });
 

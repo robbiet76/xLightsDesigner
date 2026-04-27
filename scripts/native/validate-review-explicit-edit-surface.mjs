@@ -348,6 +348,8 @@ async function main() {
   try {
     result.ownedHealth = await waitForOwnedReady(args.endpoint, args.readyTimeoutMs);
     result.nativeHealth = await waitForNativeReady(args.nativeUrl, args.readyTimeoutMs);
+    result.openProject = await nativeAction(args.nativeUrl, 'openProject', { filePath: args.projectFile });
+    result.nativeRefreshAfterOpenProject = await nativeAction(args.nativeUrl, 'refreshAll');
     result.modalStateAtStart = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.mediaCurrent = await assertOpenShowFolder(args.endpoint, args.showDir);
     Object.assign(result, await chooseModels(args.endpoint, args.sourceModel, args.targetModel));
@@ -357,10 +359,14 @@ async function main() {
       durationMs: args.durationMs,
       frameMs: args.frameMs
     });
+    result.nativeRefreshAfterCreate = await nativeAction(args.nativeUrl, 'refreshXLightsSession');
+    result.nativeRefreshAllAfterCreate = await nativeAction(args.nativeUrl, 'refreshAll');
     await waitForOwnedReady(args.endpoint, args.readyTimeoutMs);
     result.modalStateAfterCreate = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.seedPlan = buildSeedPlan(result.sourceModel, result.targetModel);
     result.seedApply = await postQueued(args.endpoint, '/sequencing/apply-batch-plan', result.seedPlan);
+    result.nativeRefreshAfterSeed = await nativeAction(args.nativeUrl, 'refreshXLightsSession');
+    result.nativeRefreshAllAfterSeed = await nativeAction(args.nativeUrl, 'refreshAll');
     result.afterSeedSource = await readEffects(args.endpoint, result.sourceModel, 900, 12100);
     result.afterSeedTarget = await readEffects(args.endpoint, result.targetModel, 900, 2100);
     if (!hasEffect(result.afterSeedSource, { effectName: 'On', layer: 0, startMs: 1000, endMs: 2000 })) {

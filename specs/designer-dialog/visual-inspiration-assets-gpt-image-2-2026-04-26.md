@@ -184,6 +184,20 @@ Minimum shape:
       }
     }
   ],
+  "mediaAssetPlans": [
+    {
+      "assetId": "planned-asset-001",
+      "kind": "image",
+      "status": "planned",
+      "intendedUse": "picture_effect_texture",
+      "generationPrompt": "Generate an original high-resolution texture plate...",
+      "recommendedSections": ["Intro", "Verse 1"],
+      "paletteRoles": ["cool base", "sparkle highlight"],
+      "motifs": ["snow sparkle"],
+      "motionUse": "static_or_slow_pan",
+      "promptRef": ""
+    }
+  ],
   "prompts": [
     {
       "promptId": "prompt-001",
@@ -214,6 +228,7 @@ Minimum shape:
 - edit the current inspiration board for conversational tweaks when possible instead of regenerating the board from scratch
 - record each board change as an immutable `imageRevisions[]` entry with parent revision, prompt, source provider/model, user request, palette lock/change status, and output path
 - optionally generate an asset-pack plan with candidate images/videos and intended sequencing use
+- keep planned media assets separate from generated file-backed `sequenceAssets` until files actually exist
 - save generated files and manifest under the project app folder
 - add artifact references to the creative brief, proposal bundle, and sequencing design handoff
 
@@ -250,8 +265,10 @@ Minimum shape:
 - `paletteRoles[]`
 - `motifDirectives[]`
 - `mediaAssetDirectives[]`
+- `mediaAssetPlanDirectives[]`
 
 The handoff should pass compact references and summaries, not base64 image data or full binary payloads.
+`mediaAssetDirectives[]` are file-backed generated assets. `mediaAssetPlanDirectives[]` are future generation/use intentions and must not be treated as available xLights media files until promoted to `sequenceAssets[]`.
 
 ## UI Behavior
 
@@ -316,7 +333,8 @@ The script refuses to run unless `XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1` is 
 9. Add native generator entry point for bridge use. Done: `scripts/designer/native/generate-visual-design-asset-pack.mjs` generates one board through the configured image provider, writes `inspiration-board.png`, and writes `visual-design-manifest.json` under the app project artifact folder.
 10. Add native Design screen generation action. Done: the macOS Design screen exposes an explicit `Generate Visual Inspiration` action backed by `LocalVisualDesignAssetGenerationService`; it uses the stored agent API key/base URL, runs the native generator, and writes only to the app-owned project artifact folder.
 11. Add sequence-agent use of palette/motif context immediately. Done: `sequence_agent` now carries `paletteRoles` and `motifDirectives` into planning metadata, uses motifs as effect-selection context, and applies palette-role hex values to generated xLights palette params when no explicit prompt color overrides them.
-12. Add picture/video effect placement later when xLights media effect support is implemented.
+12. Add media asset plan metadata for future Picture/Video use. Done: generated visual manifests now distinguish generated file-backed `sequenceAssets[]` from planned `mediaAssetPlans[]`, and the Designer -> Sequencer handoff carries compact `mediaAssetPlanDirectives[]` without binary payloads.
+13. Add picture/video effect placement later when xLights media effect support is implemented.
 
 ## Open Questions
 

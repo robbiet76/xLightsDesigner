@@ -68,6 +68,22 @@ function normalizeVisualMediaAssetDirectives(rows = []) {
     .filter((row) => row.assetId && row.relativePath);
 }
 
+function normalizeVisualMediaAssetPlanDirectives(rows = []) {
+  return arr(rows)
+    .map((row) => ({
+      assetId: str(row?.assetId),
+      kind: str(row?.kind),
+      status: str(row?.status),
+      intendedUse: str(row?.intendedUse),
+      recommendedSections: arr(row?.recommendedSections).map((value) => str(value)).filter(Boolean),
+      paletteRoles: arr(row?.paletteRoles).map((value) => str(value)).filter(Boolean),
+      motifs: arr(row?.motifs).map((value) => str(value)).filter(Boolean),
+      motionUse: str(row?.motionUse),
+      promptRef: str(row?.promptRef)
+    }))
+    .filter((row) => row.assetId);
+}
+
 export function attachVisualDesignAssetPackToOrchestration(orchestration = null, assetPack = null) {
   if (!orchestration || typeof orchestration !== "object" || !assetPack || typeof assetPack !== "object") {
     return orchestration;
@@ -83,10 +99,12 @@ export function attachVisualDesignAssetPackToOrchestration(orchestration = null,
     ? creativeIntent.motifs.map((row) => str(row)).filter(Boolean)
     : [];
   const mediaAssetDirectives = normalizeVisualMediaAssetDirectives(assetPack.sequenceAssets);
+  const mediaAssetPlanDirectives = normalizeVisualMediaAssetPlanDirectives(assetPack.mediaAssetPlans);
   const visualAssets = {
     assetPackId: str(assetPack.artifactId),
     summary: str(creativeIntent.themeSummary || refs.themeSummary),
     sequenceAssetCount: arr(assetPack.sequenceAssets).length,
+    mediaAssetPlanCount: arr(assetPack.mediaAssetPlans).length,
     currentRevisionId: str(assetPack.displayAsset?.currentRevisionId || refs.currentRevisionId),
     displayAssetRef: str(assetPack.displayAsset?.relativePath || refs.displayAssetRef)
   };
@@ -102,7 +120,8 @@ export function attachVisualDesignAssetPackToOrchestration(orchestration = null,
         visualAssetPackRef: str(assetPack.artifactId),
         paletteRoles: normalizePaletteRoles(paletteRows),
         motifDirectives,
-        mediaAssetDirectives
+        mediaAssetDirectives,
+        mediaAssetPlanDirectives
       }
     : orchestration.sequencingDesignHandoff;
   const intentHandoff = orchestration.intentHandoff && typeof orchestration.intentHandoff === "object"

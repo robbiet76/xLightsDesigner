@@ -11,6 +11,7 @@ import {
   editOpenAIVisualImage
 } from "../../../../apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js";
 import {
+  buildDefaultVisualMediaAssetPlans,
   buildVisualDesignAssetPack,
   buildVisualDesignImageEditRevision,
   validateVisualDesignAssetPack
@@ -52,6 +53,7 @@ test("native visual design asset generation writes board image and manifest", as
     buildOpenAIVisualImageConfig,
     buildVisualInspirationImagePrompt,
     buildVisualImageFileFromOpenAIResult,
+    buildDefaultVisualMediaAssetPlans,
     buildVisualDesignAssetPack,
     buildVisualDesignImageEditRevision,
     validateVisualDesignAssetPack,
@@ -77,6 +79,9 @@ test("native visual design asset generation writes board image and manifest", as
   assert.equal(result.assetPack.displayAsset.relativePath, "inspiration-board.png");
   assert.equal(result.assetPack.displayAsset.width, 1536);
   assert.equal(result.assetPack.imageRevisions[0].source.model, "gpt-image-2");
+  assert.equal(result.assetPack.mediaAssetPlans.length, 3);
+  assert.equal(result.assetPack.mediaAssetPlans[0].status, "planned");
+  assert.equal(result.assetPack.mediaAssetPlans[2].kind, "video");
   assert.match(providerInput.prompt, /Palette: ice blue #8fd8ff/);
   assert.match(providerInput.prompt, /Do not depict the literal xLights display/);
   assert.equal(fs.existsSync(path.join(projectDir, "artifacts", "visual-design", "seq-visual", "visual-design-manifest.json")), true);
@@ -110,6 +115,7 @@ test("native visual design asset revision edits current board and appends lineag
     buildOpenAIVisualImageConfig,
     buildVisualInspirationImagePrompt,
     buildVisualImageFileFromOpenAIResult,
+    buildDefaultVisualMediaAssetPlans,
     buildVisualDesignAssetPack,
     buildVisualDesignImageEditRevision,
     validateVisualDesignAssetPack,
@@ -160,6 +166,7 @@ test("native visual design asset generation rejects missing project file", async
       buildOpenAIVisualImageConfig,
       buildVisualInspirationImagePrompt,
       buildVisualImageFileFromOpenAIResult,
+      buildDefaultVisualMediaAssetPlans,
       buildVisualDesignAssetPack,
       validateVisualDesignAssetPack,
       writeVisualDesignAssetPack,
