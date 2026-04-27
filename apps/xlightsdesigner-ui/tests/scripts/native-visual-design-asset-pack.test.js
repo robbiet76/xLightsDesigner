@@ -48,7 +48,7 @@ test("native visual design asset generation writes board image and manifest", as
       { name: "warm gold", hex: "#ffd36a", role: "accent" }
     ],
     motifs: ["bell shimmer"],
-    visualImageConfig: { enabled: true, model: "gpt-image-2", size: "1536x1024", quality: "medium", outputFormat: "png" }
+    visualImageConfig: { enabled: true, model: "gpt-image-1.5", size: "1536x1024", quality: "medium", outputFormat: "png" }
   }, {
     buildOpenAIVisualImageConfig,
     buildVisualInspirationImagePrompt,
@@ -78,7 +78,7 @@ test("native visual design asset generation writes board image and manifest", as
   assert.equal(result.assetPack.sequenceId, "seq-visual");
   assert.equal(result.assetPack.displayAsset.relativePath, "inspiration-board.png");
   assert.equal(result.assetPack.displayAsset.width, 1536);
-  assert.equal(result.assetPack.imageRevisions[0].source.model, "gpt-image-2");
+  assert.equal(result.assetPack.imageRevisions[0].source.model, "gpt-image-1.5");
   assert.equal(result.assetPack.mediaAssetPlans.length, 3);
   assert.equal(result.assetPack.mediaAssetPlans[0].status, "planned");
   assert.equal(result.assetPack.mediaAssetPlans[2].kind, "video");
@@ -110,7 +110,7 @@ test("native visual design asset revision edits current board and appends lineag
     projectFilePath,
     sequenceId: "seq-visual",
     revisionRequest: "Make the candle glow softer while preserving the palette.",
-    visualImageConfig: { enabled: true, model: "gpt-image-2", size: "1536x1024", quality: "medium", outputFormat: "png" }
+    visualImageConfig: { enabled: true, model: "gpt-image-1.5", size: "1536x1024", quality: "medium", outputFormat: "png" }
   }, {
     buildOpenAIVisualImageConfig,
     buildVisualInspirationImagePrompt,

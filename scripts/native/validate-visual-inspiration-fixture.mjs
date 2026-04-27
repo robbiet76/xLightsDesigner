@@ -182,7 +182,7 @@ function createFixtureProject(projectFile = '') {
     prompts: [
       {
         promptId: 'prompt-001',
-        model: 'gpt-image-2',
+        model: 'gpt-image-1.5',
         purpose: 'inspiration_board',
         operation: 'generate',
         inputRevisionId: '',
@@ -190,7 +190,7 @@ function createFixtureProject(projectFile = '') {
       },
       {
         promptId: 'prompt-002',
-        model: 'gpt-image-2',
+        model: 'gpt-image-1.5',
         purpose: 'inspiration_board_revision',
         operation: 'edit',
         inputRevisionId: 'board-r001',

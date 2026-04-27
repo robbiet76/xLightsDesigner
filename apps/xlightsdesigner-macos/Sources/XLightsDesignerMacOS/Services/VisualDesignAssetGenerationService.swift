@@ -46,7 +46,7 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             themeSummary: themeSummary,
             revisionRequest: "",
             baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL,
-            model: "gpt-image-2"
+            model: "gpt-image-1.5"
         )
         return try await runVisualAssetScriptWithFallback(
             payloadURL: payloadURL,
@@ -79,7 +79,7 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             themeSummary: themeSummary,
             revisionRequest: revisionRequest,
             baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL,
-            model: "gpt-image-2"
+            model: "gpt-image-1.5"
         )
         return try await runVisualAssetScriptWithFallback(
             payloadURL: payloadURL,
@@ -145,7 +145,7 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
         do {
             return try await runVisualAssetScript(payloadURL: payloadURL, apiKey: apiKey)
         } catch let error as VisualDesignAssetGenerationError {
-            guard error.shouldFallbackFromGPTImage2 else { throw error }
+            guard error.shouldFallbackFromTargetImageModel else { throw error }
             let fallbackPayloadURL = try writePayload(
                 projectFilePath: projectFilePath,
                 sequenceID: sequenceID,
@@ -240,10 +240,10 @@ enum VisualDesignAssetGenerationError: LocalizedError {
         }
     }
 
-    var shouldFallbackFromGPTImage2: Bool {
+    var shouldFallbackFromTargetImageModel: Bool {
         guard case let .processFailed(message) = self else { return false }
         let lower = message.lowercased()
-        return lower.contains("gpt-image-2") &&
+        return lower.contains("gpt-image-1.5") &&
             (lower.contains("organization must be verified") || lower.contains("verify organization"))
     }
 }

@@ -27,12 +27,12 @@ test("visual image prompt preserves palette and avoids literal xLights output", 
   assert.match(prompt, /Do not depict the literal xLights display/);
 });
 
-test("openai image generation request defaults to target resolution and gpt-image-2", () => {
+test("openai image generation request defaults to target resolution and gpt-image-1.5", () => {
   const request = buildOpenAIImageGenerationRequest({
     prompt: "Create an original holiday inspiration board."
   });
 
-  assert.equal(request.model, "gpt-image-2");
+  assert.equal(request.model, "gpt-image-1.5");
   assert.equal(request.size, "1536x1024");
   assert.equal(request.quality, "medium");
   assert.equal(request.output_format, "png");
@@ -70,7 +70,7 @@ test("generateOpenAIVisualImage posts to images generation endpoint with injecte
   });
 
   assert.equal(result.ok, true);
-  assert.equal(result.model, "gpt-image-2");
+  assert.equal(result.model, "gpt-image-1.5");
   assert.equal(result.image.toString("utf8"), "generated");
   assert.equal(calls[0].url, "https://api.openai.test/v1/images/generations");
   assert.equal(JSON.parse(calls[0].init.body).size, "1536x1024");
@@ -110,7 +110,7 @@ test("visual image file adapter preserves display dimensions for store writes", 
       mimeType: "image/png",
       width: 1536,
       height: 1024,
-      model: "gpt-image-2"
+      model: "gpt-image-1.5"
     },
     relativePath: "inspiration-board.png"
   });
@@ -122,7 +122,7 @@ test("visual image file adapter preserves display dimensions for store writes", 
 });
 
 test("openai visual image config requires explicit live enable flag", () => {
-  const cfg = buildOpenAIVisualImageConfig({ model: "gpt-image-2" });
+  const cfg = buildOpenAIVisualImageConfig({ model: "gpt-image-1.5" });
   assert.equal(cfg.enabled, false);
-  assert.equal(cfg.model, "gpt-image-2");
+  assert.equal(cfg.model, "gpt-image-1.5");
 });

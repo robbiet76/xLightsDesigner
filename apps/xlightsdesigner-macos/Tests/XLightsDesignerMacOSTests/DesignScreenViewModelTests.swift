@@ -14,14 +14,14 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
         artifactID: "visual-pack-test",
         manifestPath: "/tmp/visual-design-manifest.json",
         assetDir: "/tmp/visual-design",
-        model: "gpt-image-2",
+        model: "gpt-image-1.5",
         currentRevisionID: "board-r001"
     )
     var revisionResult = VisualDesignAssetGenerationResult(
         artifactID: "visual-pack-test",
         manifestPath: "/tmp/visual-design-manifest.json",
         assetDir: "/tmp/visual-design",
-        model: "gpt-image-2",
+        model: "gpt-image-1.5",
         currentRevisionID: "board-r002"
     )
     var error: Error?

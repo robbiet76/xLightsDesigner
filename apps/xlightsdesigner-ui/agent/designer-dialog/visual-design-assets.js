@@ -88,7 +88,7 @@ function normalizeImageRevisions(rows = [], displayAsset = {}) {
         relativePath: str(row?.relativePath || displayAsset.relativePath || "inspiration-board.png"),
         promptRef: str(row?.promptRef || `prompt-${String(idx + 1).padStart(3, "0")}`),
         maskRef: str(row?.maskRef),
-        source: normalizeSource(row?.source || { provider: "unknown", model: "gpt-image-2", promptRef: row?.promptRef || `prompt-${String(idx + 1).padStart(3, "0")}` }),
+        source: normalizeSource(row?.source || { provider: "unknown", model: "gpt-image-1.5", promptRef: row?.promptRef || `prompt-${String(idx + 1).padStart(3, "0")}` }),
         userRequest: str(row?.userRequest),
         changeSummary: str(row?.changeSummary),
         paletteLocked: row?.paletteLocked !== false,
@@ -153,7 +153,7 @@ function normalizePrompts(rows = []) {
   return arr(rows)
     .map((row, idx) => ({
       promptId: str(row?.promptId || `prompt-${String(idx + 1).padStart(3, "0")}`),
-      model: str(row?.model || "gpt-image-2"),
+      model: str(row?.model || "gpt-image-1.5"),
       purpose: str(row?.purpose || "inspiration_board"),
       operation: str(row?.operation || (idx === 0 ? "generate" : "edit")),
       inputRevisionId: str(row?.inputRevisionId),
@@ -188,7 +188,7 @@ export function buildVisualDesignAssetPack({
   );
   const normalizedPrompts = normalizePrompts(prompts.length ? prompts : [{
     promptId: "prompt-001",
-    model: "gpt-image-2",
+    model: "gpt-image-1.5",
     purpose: "inspiration_board",
     operation: "generate",
     prompt: inspirationPrompt
@@ -229,7 +229,7 @@ export function buildVisualDesignImageEditRevision({
   prompt = "",
   relativePath = "",
   maskRef = "",
-  model = "gpt-image-2",
+  model = "gpt-image-1.5",
   displayAsset = {},
   palette = null,
   paletteChangeSummary = "",

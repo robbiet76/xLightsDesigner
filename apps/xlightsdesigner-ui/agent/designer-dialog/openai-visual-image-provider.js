@@ -1,5 +1,5 @@
 export const OPENAI_VISUAL_IMAGE_PROVIDER = "openai";
-export const DEFAULT_OPENAI_VISUAL_IMAGE_MODEL = "gpt-image-2";
+export const DEFAULT_OPENAI_VISUAL_IMAGE_MODEL = "gpt-image-1.5";
 export const DEFAULT_OPENAI_VISUAL_IMAGE_SIZE = "1536x1024";
 export const DEFAULT_OPENAI_VISUAL_IMAGE_QUALITY = "medium";
 export const DEFAULT_OPENAI_VISUAL_IMAGE_FORMAT = "png";
