@@ -8,17 +8,13 @@ struct DesignScreenView: View {
             header
             if let banner = model.screenModel.banners.first { bannerView(banner) }
             if let banner = model.transientBanner { bannerView(banner) }
-            summaryBand
-            AdaptiveSplitView(breakpoint: 1100, spacing: 20) {
+            ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     visualInspirationPane
                     authoringPane
+                    supportingDetailPane
                 }
-            } secondary: {
-                VStack(alignment: .leading, spacing: 20) {
-                    proposalPane
-                    rationalePane
-                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
         }
         .padding(24)
@@ -32,7 +28,8 @@ struct DesignScreenView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(model.screenModel.title).font(.largeTitle).fontWeight(.semibold)
-            Text(model.screenModel.subtitle).foregroundStyle(.secondary)
+            Text(model.screenModel.visualInspiration.available ? model.screenModel.visualInspiration.summary : model.screenModel.subtitle)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -68,16 +65,19 @@ struct DesignScreenView: View {
     }
 
     private var authoringPane: some View {
-        GroupBox(model.screenModel.authoring.title) {
+        GroupBox("Design Conversation") {
             VStack(alignment: .leading, spacing: 14) {
-                Text(model.screenModel.authoring.summary)
-                    .foregroundStyle(.secondary)
                 designEditor(label: "Goal", text: $model.intentDraft.goal, minHeight: 74)
                 designEditor(label: "Mood / Style", text: $model.intentDraft.mood, minHeight: 74)
-                designEditor(label: "Target Scope", text: $model.intentDraft.targetScope, minHeight: 74)
-                designEditor(label: "Constraints", text: $model.intentDraft.constraints, minHeight: 90)
-                designEditor(label: "References", text: $model.intentDraft.references, minHeight: 90)
-                designEditor(label: "Approval Notes", text: $model.intentDraft.approvalNotes, minHeight: 74)
+                DisclosureGroup("Sequencing Notes") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        designEditor(label: "Target Scope", text: $model.intentDraft.targetScope, minHeight: 70)
+                        designEditor(label: "Constraints", text: $model.intentDraft.constraints, minHeight: 80)
+                        designEditor(label: "References", text: $model.intentDraft.references, minHeight: 80)
+                        designEditor(label: "Approval Notes", text: $model.intentDraft.approvalNotes, minHeight: 70)
+                    }
+                    .padding(.top, 8)
+                }
                 HStack(spacing: 10) {
                     Button(model.isGeneratingVisualInspiration ? "Generating..." : "Generate Visual Inspiration") {
                         model.generateVisualInspiration()
@@ -101,63 +101,101 @@ struct DesignScreenView: View {
     }
 
     private var visualInspirationPane: some View {
-        GroupBox(model.screenModel.visualInspiration.title) {
-            VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
+            if model.screenModel.visualInspiration.available {
                 if model.screenModel.visualInspiration.available,
                    let image = NSImage(contentsOfFile: model.screenModel.visualInspiration.imagePath) {
                     Image(nsImage: image)
                         .resizable()
                         .scaledToFit()
-                        .frame(maxWidth: .infinity, maxHeight: 260)
+                        .frame(maxWidth: .infinity, maxHeight: 540)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(nsColor: .separatorColor)))
                 }
-                Text(model.screenModel.visualInspiration.summary)
-                    .foregroundStyle(.secondary)
-                HStack(spacing: 10) {
-                    if !model.screenModel.visualInspiration.currentRevisionId.isEmpty {
-                        chip("Current \(model.screenModel.visualInspiration.currentRevisionId)")
-                    }
-                    if !model.screenModel.visualInspiration.displayedRevisionId.isEmpty,
-                       model.screenModel.visualInspiration.displayedRevisionId != model.screenModel.visualInspiration.currentRevisionId {
-                        chip("Viewing \(model.screenModel.visualInspiration.displayedRevisionId)")
-                    }
-                    if !model.screenModel.visualInspiration.paletteDisplayMode.isEmpty {
-                        chip(model.screenModel.visualInspiration.paletteDisplayMode)
-                    }
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(model.screenModel.visualInspiration.title)
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    Text(model.screenModel.visualInspiration.summary)
+                        .foregroundStyle(.secondary)
                 }
-                Text(model.screenModel.visualInspiration.revisionSummary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                paletteSwatches(model.screenModel.visualInspiration.palette)
-                detailRow(label: "Palette", value: model.screenModel.visualInspiration.paletteSummary)
-                detailRow(label: "Palette Rule", value: model.screenModel.visualInspiration.paletteCoordinationRule)
-                if model.screenModel.visualInspiration.available {
+                .frame(maxWidth: .infinity, minHeight: 260, alignment: .center)
+                .background(Color(nsColor: .controlBackgroundColor))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(nsColor: .separatorColor)))
+            }
+
+            HStack(alignment: .top, spacing: 18) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Palette").font(.headline)
+                    paletteSwatches(model.screenModel.visualInspiration.palette)
+                }
+                Spacer(minLength: 16)
+                if !model.screenModel.visualInspiration.currentRevisionId.isEmpty {
+                    chip("Current \(model.screenModel.visualInspiration.currentRevisionId)")
+                }
+                if !model.screenModel.visualInspiration.displayedRevisionId.isEmpty,
+                   model.screenModel.visualInspiration.displayedRevisionId != model.screenModel.visualInspiration.currentRevisionId {
+                    chip("Viewing \(model.screenModel.visualInspiration.displayedRevisionId)")
+                }
+            }
+
+            if model.screenModel.visualInspiration.available {
+                DisclosureGroup("Image Revisions") {
+                    VStack(alignment: .leading, spacing: 12) {
                     revisionHistory(model.screenModel.visualInspiration.revisionHistory)
                     designEditor(label: "Revision Request", text: $model.visualInspirationRevisionDraft, minHeight: 72)
                     Button(model.isRevisingVisualInspiration ? "Revising..." : "Revise Visual Inspiration") {
                         model.reviseVisualInspiration()
                     }
                     .disabled(model.isGeneratingVisualInspiration || model.isRevisingVisualInspiration || model.visualInspirationRevisionDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                    .padding(.top, 8)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 4)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var rationalePane: some View {
-        GroupBox("Rationale") {
-            VStack(alignment: .leading, spacing: 14) {
-                bulletSection(title: "Rationale Notes", items: model.screenModel.rationale.rationaleNotes)
-                bulletSection(title: "Assumptions", items: model.screenModel.rationale.assumptions)
-                bulletSection(title: "Open Questions", items: model.screenModel.rationale.openQuestions)
-                bulletSection(title: "Warnings", items: model.screenModel.rationale.warnings)
+    private var supportingDetailPane: some View {
+        GroupBox("Supporting Detail") {
+            VStack(alignment: .leading, spacing: 12) {
+                DisclosureGroup("Design Summary") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(model.screenModel.summary.identity.title).font(.title3).fontWeight(.semibold)
+                        Text(model.screenModel.summary.identity.subtitle).foregroundStyle(.secondary)
+                        HStack(spacing: 10) {
+                            chip(model.screenModel.summary.identity.state.rawValue)
+                            chip(model.screenModel.summary.identity.updatedSummary)
+                        }
+                        detailRow(label: "Brief", value: model.screenModel.summary.briefSummary)
+                        detailRow(label: "Proposal", value: model.screenModel.summary.proposalSummary)
+                        detailRow(label: "Readiness", value: model.screenModel.summary.readinessText)
+                    }
+                    .padding(.top, 8)
+                }
+                DisclosureGroup("Proposal") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        detailRow(label: model.screenModel.proposal.briefTitle, value: model.screenModel.proposal.briefSummary)
+                        detailRow(label: model.screenModel.proposal.proposalTitle, value: model.screenModel.proposal.proposalSummary)
+                        detailRow(label: "Reference Direction", value: model.screenModel.proposal.referenceDirection)
+                        detailRow(label: "Director Influence", value: model.screenModel.proposal.directorInfluence)
+                    }
+                    .padding(.top, 8)
+                }
+                DisclosureGroup("Rationale") {
+                    VStack(alignment: .leading, spacing: 14) {
+                        bulletSection(title: "Rationale Notes", items: model.screenModel.rationale.rationaleNotes)
+                        bulletSection(title: "Assumptions", items: model.screenModel.rationale.assumptions)
+                        bulletSection(title: "Open Questions", items: model.screenModel.rationale.openQuestions)
+                        bulletSection(title: "Warnings", items: model.screenModel.rationale.warnings)
+                    }
+                    .padding(.top, 8)
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .frame(maxWidth: 460, alignment: .topLeading)
     }
 
     private func chip(_ text: String) -> some View { Text(text).padding(.horizontal, 10).padding(.vertical, 4).background(Color(nsColor: .controlBackgroundColor)).clipShape(Capsule()) }
