@@ -270,6 +270,7 @@ Minimum shape:
 - do not render palette strips, labeled swatches, legends, or color chips inside the inspiration image
 - edit the current inspiration board for conversational tweaks when possible instead of regenerating the board from scratch
 - record each board change as an immutable `imageRevisions[]` entry with parent revision, prompt, source provider/model, user request, palette lock/change status, and output path
+- rotate live validation across different available sequences instead of repeatedly using one sequence, so visual design, handoff, and artifact lookup behavior is exercised across multiple project contexts
 - optionally generate an asset-pack plan with candidate images/videos and intended sequencing use
 - keep planned media assets separate from generated file-backed `sequenceAssets` until files actually exist
 - save generated files and manifest under the project app folder

@@ -61,6 +61,7 @@ struct DesignVisualRevisionModel: Identifiable, Hashable, Sendable {
 
 struct DesignVisualInspirationModel: Sendable {
     let available: Bool
+    let sequenceId: String
     let title: String
     let summary: String
     let imagePath: String

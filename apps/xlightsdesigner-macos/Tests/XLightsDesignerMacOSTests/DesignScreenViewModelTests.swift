@@ -180,7 +180,11 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
           "status": "warn",
           "matchedColorCount": 1,
           "requiredColorCount": 2,
-          "recommendation": "Revise the image to better reflect the Designer palette; do not replace the Designer palette with sampled image colors."
+          "recommendation": "Revise the image to better reflect the Designer palette; do not replace the Designer palette with sampled image colors.",
+          "matches": [
+            { "paletteName": "candle gold", "paletteHex": "#ffc45c", "imageHex": "#f4c65f", "distance": 20, "status": "matched" },
+            { "paletteName": "pine green", "paletteHex": "#1f6f4a", "imageHex": "#142c66", "distance": 88, "status": "distant" }
+          ]
         },
         "colors": [
           { "name": "candle gold", "hex": "#ffc45c", "role": "warm highlight" },
@@ -235,6 +239,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     #expect(model.screenModel.visualInspiration.paletteValidationNeedsRevision == true)
     #expect(model.screenModel.visualInspiration.paletteValidationSummary.contains("1/2 required colors matched") == true)
     #expect(model.screenModel.visualInspiration.paletteRevisionRequest.contains("#ffc45c") == true)
+    #expect(model.screenModel.visualInspiration.paletteRevisionRequest.contains("underrepresented palette colors: pine green #1f6f4a") == true)
 
     model.selectVisualInspirationRevision("board-r001")
 
@@ -280,7 +285,11 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
           "status": "warn",
           "matchedColorCount": 1,
           "requiredColorCount": 2,
-          "recommendation": "Revise the image to better reflect the Designer palette; do not replace the Designer palette with sampled image colors."
+          "recommendation": "Revise the image to better reflect the Designer palette; do not replace the Designer palette with sampled image colors.",
+          "matches": [
+            { "paletteName": "moonlit blue", "paletteHex": "#2f6dff", "imageHex": "#526ee0", "distance": 47, "status": "matched" },
+            { "paletteName": "cabin amber", "paletteHex": "#ffb84d", "imageHex": "#836cb4", "distance": 178, "status": "distant" }
+          ]
         },
         "colors": [
           { "name": "moonlit blue", "hex": "#2f6dff", "role": "cool base" },
@@ -320,6 +329,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     #expect(visualService.revisionCalls.count == 1)
     #expect(visualService.revisionCalls.first?.revisionRequest.contains("approved Designer lighting palette") == true)
     #expect(visualService.revisionCalls.first?.revisionRequest.contains("#2f6dff") == true)
+    #expect(visualService.revisionCalls.first?.revisionRequest.contains("underrepresented palette colors: cabin amber #ffb84d") == true)
     #expect(visualService.revisionCalls.first?.revisionRequest.contains("Do not change the canonical palette") == true)
     #expect(model.isRevisingVisualInspiration == false)
     #expect(model.transientBanner?.state == .ready)

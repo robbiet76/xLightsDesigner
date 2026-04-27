@@ -224,7 +224,7 @@ final class DesignScreenViewModel {
             do {
                 let result = try await visualAssetGenerationService.reviseVisualDesignAssetPack(
                     projectFilePath: activeProject.projectFilePath,
-                    sequenceID: Self.visualSequenceID(from: activeProject),
+                    sequenceID: Self.visualRevisionSequenceID(project: activeProject, visual: screenModel.visualInspiration),
                     revisionRequest: revisionRequest,
                     themeSummary: Self.visualThemeSummary(from: intentDraft),
                     baseURL: ""
@@ -398,6 +398,11 @@ final class DesignScreenViewModel {
         !visualSequenceID(from: project).isEmpty
     }
 
+    private static func visualRevisionSequenceID(project: ActiveProjectModel, visual: DesignVisualInspirationModel) -> String {
+        let artifactSequenceId = visual.sequenceId.trimmingCharacters(in: .whitespacesAndNewlines)
+        return artifactSequenceId.isEmpty ? visualSequenceID(from: project) : artifactSequenceId
+    }
+
     private static func loadVisualInspiration(for project: ActiveProjectModel?, selectedRevisionID: String) -> DesignVisualInspirationModel {
         guard let project else {
             return emptyVisualInspiration(summary: "Open or create a project to generate visual inspiration.")
@@ -436,6 +441,7 @@ final class DesignScreenViewModel {
         let paletteRevisionRequest = paletteRevisionRequest(from: paletteValidation, colors: colors)
         return DesignVisualInspirationModel(
             available: true,
+            sequenceId: string(manifest["sequenceId"]),
             title: "Visual Inspiration",
             summary: string(creativeIntent["themeSummary"], fallback: "Visual inspiration board is available."),
             imagePath: imagePath,
@@ -456,6 +462,7 @@ final class DesignScreenViewModel {
     private static func emptyVisualInspiration(summary: String) -> DesignVisualInspirationModel {
         DesignVisualInspirationModel(
             available: false,
+            sequenceId: "",
             title: "Visual Inspiration",
             summary: summary,
             imagePath: "",
@@ -498,10 +505,21 @@ final class DesignScreenViewModel {
             }
             .filter { !$0.isEmpty }
             .joined(separator: "; ")
+        let distantColors = ((validation?["matches"] as? [[String: Any]]) ?? [])
+            .filter { string($0["status"]) == "distant" }
+            .map { row in
+                [
+                    string(row["paletteName"]),
+                    string(row["paletteHex"])
+                ].filter { !$0.isEmpty }.joined(separator: " ")
+            }
+            .filter { !$0.isEmpty }
+            .joined(separator: "; ")
         let recommendation = string(validation?["recommendation"])
         return [
             "Revise the current inspiration image so it visibly coordinates with the approved Designer lighting palette.",
             paletteSummary.isEmpty ? "" : "Preserve these canonical sequencing colors: \(paletteSummary).",
+            distantColors.isEmpty ? "" : "Increase the visible presence of these currently underrepresented palette colors: \(distantColors).",
             "Do not change the canonical palette or add palette strips, labels, legends, or swatches inside the image.",
             recommendation
         ].filter { !$0.isEmpty }.joined(separator: " ")

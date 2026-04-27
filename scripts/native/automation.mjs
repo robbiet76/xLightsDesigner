@@ -3,7 +3,7 @@
 const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || 'http://127.0.0.1:49916';
 
 function usage() {
-  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | get-sequencer-validation-snapshot | open-project <projectFilePath> | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | generate-sequence-proposal [selectedTags] | propose-display-metadata-from-layout | apply-display-metadata-proposals | update-display-target-intent <targetIds> [rolePreference] [semanticHints] [effectAvoidances] | apply-assistant-action-request <actionType> [payloadJson] [reason] | reset-assistant-memory | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant\nrelated: run full handoff validation with `node scripts/native/run-full-handoff-validation.mjs`');
+  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | get-sequencer-validation-snapshot | open-project <projectFilePath> | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | generate-visual-inspiration | revise-visual-inspiration <request> | revise-visual-inspiration-to-match-palette | generate-sequence-proposal [selectedTags] | propose-display-metadata-from-layout | apply-display-metadata-proposals | update-display-target-intent <targetIds> [rolePreference] [semanticHints] [effectAvoidances] | apply-assistant-action-request <actionType> [payloadJson] [reason] | reset-assistant-memory | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant\nrelated: run full handoff validation with `node scripts/native/run-full-handoff-validation.mjs`');
   process.exit(2);
 }
 
@@ -88,6 +88,18 @@ switch (command) {
       action: 'generateSequenceProposal',
       selectedTagNames: rest.join(' ').trim()
     });
+    break;
+  case 'generate-visual-inspiration':
+    await request('POST', '/action', { action: 'generateVisualInspiration' });
+    break;
+  case 'revise-visual-inspiration':
+    await request('POST', '/action', {
+      action: 'reviseVisualInspiration',
+      revisionRequest: rest.join(' ').trim()
+    });
+    break;
+  case 'revise-visual-inspiration-to-match-palette':
+    await request('POST', '/action', { action: 'reviseVisualInspirationToMatchPalette' });
     break;
   case 'update-display-target-intent': {
     const [targetIds = '', rolePreference = '', semanticHints = '', effectAvoidances = ''] = rest;

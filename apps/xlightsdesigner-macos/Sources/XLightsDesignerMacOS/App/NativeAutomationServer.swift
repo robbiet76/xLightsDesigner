@@ -234,16 +234,31 @@ final class NativeAutomationServer: @unchecked Sendable {
             ])
         case "generateVisualInspiration":
             model.designScreenModel.generateVisualInspiration()
-            return .json(200, body: ["ok": true, "accepted": true])
+            return .json(200, body: [
+                "ok": true,
+                "accepted": true,
+                "isGeneratingVisualInspiration": model.designScreenModel.isGeneratingVisualInspiration,
+                "banner": workflowBannerPayload(model.designScreenModel.transientBanner)
+            ])
         case "reviseVisualInspiration":
             let revisionRequest = String(payload["revisionRequest"] as? String ?? payload["request"] as? String ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             model.designScreenModel.visualInspirationRevisionDraft = revisionRequest
             model.designScreenModel.reviseVisualInspiration()
-            return .json(200, body: ["ok": true, "accepted": true])
+            return .json(200, body: [
+                "ok": true,
+                "accepted": true,
+                "isRevisingVisualInspiration": model.designScreenModel.isRevisingVisualInspiration,
+                "banner": workflowBannerPayload(model.designScreenModel.transientBanner)
+            ])
         case "reviseVisualInspirationToMatchPalette":
             model.designScreenModel.reviseVisualInspirationToMatchPalette()
-            return .json(200, body: ["ok": true, "accepted": true])
+            return .json(200, body: [
+                "ok": true,
+                "accepted": true,
+                "isRevisingVisualInspiration": model.designScreenModel.isRevisingVisualInspiration,
+                "banner": workflowBannerPayload(model.designScreenModel.transientBanner)
+            ])
         case "applyReview":
             model.reviewScreenModel.applyPendingWork()
             return .json(200, body: ["ok": true, "isApplying": model.reviewScreenModel.isApplying])
@@ -707,6 +722,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             "proposalSummary": screen.summary.proposalSummary,
             "visualInspiration": [
                 "available": visual.available,
+                "sequenceId": visual.sequenceId,
                 "summary": visual.summary,
                 "imagePath": visual.imagePath,
                 "currentRevisionId": visual.currentRevisionId,
@@ -746,8 +762,30 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "updatedAt": model.designScreenModel.intentDraft.updatedAt,
                 "isDirty": model.designScreenModel.intentDraft != model.designScreenModel.savedIntentDraft
             ],
-            "banners": screen.banners.map { ["text": $0.text, "state": $0.state.rawValue] }
+            "isGeneratingVisualInspiration": model.designScreenModel.isGeneratingVisualInspiration,
+            "isRevisingVisualInspiration": model.designScreenModel.isRevisingVisualInspiration,
+            "transientBanner": workflowBannerPayload(model.designScreenModel.transientBanner),
+            "banners": designBanners().map { ["text": $0.text, "state": $0.state.rawValue] }
         ]
+    }
+
+    @MainActor
+    private func workflowBannerPayload(_ banner: WorkflowBannerModel?) -> Any {
+        guard let banner else { return NSNull() }
+        return [
+            "id": banner.id,
+            "text": banner.text,
+            "state": banner.state.rawValue
+        ]
+    }
+
+    @MainActor
+    private func designBanners() -> [WorkflowBannerModel] {
+        var banners = model.designScreenModel.screenModel.banners
+        if let transientBanner = model.designScreenModel.transientBanner {
+            banners.append(transientBanner)
+        }
+        return banners
     }
 
     @MainActor
