@@ -105,7 +105,7 @@ Canonical location:
 
 The manifest is the canonical handoff artifact. Files are referenced by relative paths from the manifest so project moves remain possible.
 
-The palette in the manifest is the canonical sequencing palette. For generated inspiration boards, the app should derive this palette from the generated image file after generation or revision, up to the xLights limit of 8 colors. Prompt-provided palettes may guide generation, but they are not canonical until reconciled with the actual image output. The app may assign human-readable names and functional roles to derived colors for the UI and agent context, but it must preserve the exact derived hex values for xLights.
+The manifest keeps two related palette views. `palette.imageColors[]` is the reference palette extracted from the generated inspiration image. `palette.lightingColors[]` and `palette.colors[]` are the canonical sequencing palette: the image-derived subset that is practical for RGB lights and xLights sequencing. Very dark colors, low-impact grays, and browns that read poorly on RGB pixels may remain in `imageColors[]` as theme context but must not be handed to the Sequencer as required palette colors. Prompt-provided palettes may guide generation, but they are not canonical until reconciled with the actual image output. The app may assign human-readable names and functional roles to derived colors for the UI and agent context, but it must preserve the exact selected hex values for xLights.
 
 ## New Artifact Contract
 
@@ -136,18 +136,33 @@ Minimum shape:
       { "name": "cranberry red", "hex": "#c8324a", "role": "holiday accent" },
       { "name": "pine green", "hex": "#1f7a4a", "role": "support" }
     ],
+    "imagePalette": [
+      { "name": "deep charcoal", "hex": "#161616", "role": "shadow" },
+      { "name": "warm gold", "hex": "#ffd36a", "role": "impact accent" }
+    ],
+    "lightingPalette": [
+      { "name": "warm gold", "hex": "#ffd36a", "role": "impact accent", "sourceHex": "#ffd36a", "suitability": "rgb_light_color" },
+      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base", "sourceHex": "#8fd8ff", "suitability": "rgb_light_color" }
+    ],
     "motifs": ["snow sparkle", "gold fanfare", "soft streetlamp glow"],
     "avoidances": ["do not depict a literal xLights layout"]
   },
   "palette": {
     "required": true,
-    "displayMode": "separate_and_optional_in_image",
-    "coordinationRule": "Image colors must reflect or coordinate with the approved palette.",
+    "displayMode": "image_and_lighting_palettes",
+    "coordinationRule": "Image colors are the generated visual reference; lighting colors are the image-derived subset suitable for RGB sequencing.",
     "colors": [
-      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base" },
+      { "name": "warm gold", "hex": "#ffd36a", "role": "impact accent", "sourceHex": "#ffd36a", "suitability": "rgb_light_color" },
+      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base", "sourceHex": "#8fd8ff", "suitability": "rgb_light_color" }
+    ],
+    "imageColors": [
+      { "name": "deep charcoal", "hex": "#161616", "role": "shadow" },
       { "name": "warm gold", "hex": "#ffd36a", "role": "impact accent" },
-      { "name": "cranberry red", "hex": "#c8324a", "role": "holiday accent" },
-      { "name": "pine green", "hex": "#1f7a4a", "role": "support" }
+      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base" }
+    ],
+    "lightingColors": [
+      { "name": "warm gold", "hex": "#ffd36a", "role": "impact accent", "sourceHex": "#ffd36a", "suitability": "rgb_light_color" },
+      { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base", "sourceHex": "#8fd8ff", "suitability": "rgb_light_color" }
     ]
   },
   "displayAsset": {
@@ -233,9 +248,10 @@ Minimum shape:
 - synthesize the song identity, audio analysis, user direction, director profile, and display metadata into a visual theme
 - generate an inspiration-board prompt that explicitly avoids showing the actual xLights display/layout
 - generate or request one main inspiration board image
-- derive a palette with named roles and hex colors from the generated image output
+- derive a reference image palette with named roles and hex colors from the generated image output
+- derive the canonical xLights sequencing palette from the image palette by keeping only colors that make practical sense for RGB lights
 - improve derived color names/roles for readability while preserving exact derived hex values for xLights
-- respect the xLights palette limit of 8 colors; fewer colors are acceptable when the design only needs them
+- respect the xLights palette limit of 8 colors; fewer colors are acceptable when the design only needs them or when only a subset of image colors is suitable for lighting
 - preserve the palette as required design state and keep the board coordinated with it
 - do not render palette strips, labeled swatches, legends, or color chips inside the inspiration image
 - edit the current inspiration board for conversational tweaks when possible instead of regenerating the board from scratch
@@ -262,7 +278,8 @@ Minimum shape:
 - `visualInspiration.artifactId`
 - `visualInspiration.displayAssetRef`
 - `visualInspiration.currentRevisionId`
-- `visualInspiration.palette[]`
+- `visualInspiration.palette[]` / `visualInspiration.lightingPalette[]`
+- `visualInspiration.imagePalette[]`
 - `visualInspiration.paletteDisplayMode`
 - `visualInspiration.paletteCoordinationRule`
 

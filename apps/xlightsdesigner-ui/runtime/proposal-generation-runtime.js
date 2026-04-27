@@ -92,9 +92,13 @@ export function attachVisualDesignAssetPackToOrchestration(orchestration = null,
   const creativeIntent = assetPack.creativeIntent && typeof assetPack.creativeIntent === "object"
     ? assetPack.creativeIntent
     : {};
-  const paletteRows = Array.isArray(assetPack?.palette?.colors) && assetPack.palette.colors.length
-    ? assetPack.palette.colors
-    : (Array.isArray(creativeIntent.palette) ? creativeIntent.palette : []);
+  const paletteRows = Array.isArray(assetPack?.palette?.lightingColors) && assetPack.palette.lightingColors.length
+    ? assetPack.palette.lightingColors
+    : (Array.isArray(assetPack?.palette?.colors) && assetPack.palette.colors.length
+        ? assetPack.palette.colors
+        : (Array.isArray(creativeIntent.lightingPalette) && creativeIntent.lightingPalette.length
+            ? creativeIntent.lightingPalette
+            : (Array.isArray(creativeIntent.palette) ? creativeIntent.palette : [])));
   const motifDirectives = Array.isArray(creativeIntent.motifs)
     ? creativeIntent.motifs.map((row) => str(row)).filter(Boolean)
     : [];

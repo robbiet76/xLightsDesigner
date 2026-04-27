@@ -36,14 +36,36 @@ function normalizePalette(rows = []) {
     .slice(0, 8);
 }
 
+function normalizeLightingPalette(rows = []) {
+  return arr(rows)
+    .map((row) => {
+      const normalized = {
+        name: str(row?.name),
+        hex: str(row?.hex),
+        role: str(row?.role)
+      };
+      const sourceHex = str(row?.sourceHex);
+      const suitability = str(row?.suitability);
+      if (sourceHex) normalized.sourceHex = sourceHex;
+      if (suitability) normalized.suitability = suitability;
+      return normalized;
+    })
+    .filter((row) => row.name || row.hex || row.role)
+    .slice(0, 8);
+}
+
 function normalizePaletteContract({ palette = [], paletteDisplay = {} } = {}) {
-  const rows = normalizePalette(palette);
+  const rows = normalizeLightingPalette(palette);
   const display = isPlainObject(paletteDisplay) ? paletteDisplay : {};
+  const imageColors = normalizePalette(display.imageColors || rows);
+  const lightingColors = normalizeLightingPalette(display.lightingColors || display.lightingPalette || rows);
   return {
     required: true,
-    displayMode: str(display.displayMode || display.mode || "separate_and_optional_in_image"),
+    displayMode: str(display.displayMode || display.mode || "image_and_lighting_palettes"),
     coordinationRule: str(display.coordinationRule || "Image colors must reflect or coordinate with the approved palette."),
-    colors: rows
+    colors: lightingColors,
+    imageColors,
+    lightingColors
   };
 }
 
@@ -203,7 +225,9 @@ export function buildVisualDesignAssetPack({
     creativeIntent: {
       themeSummary: str(themeSummary),
       inspirationPrompt: str(inspirationPrompt),
-      palette: normalizedPalette.colors,
+      palette: normalizedPalette.lightingColors,
+      imagePalette: normalizedPalette.imageColors,
+      lightingPalette: normalizedPalette.lightingColors,
       motifs: uniqueStrings(motifs),
       avoidances: uniqueStrings(avoidances)
     },
@@ -233,6 +257,7 @@ export function buildVisualDesignImageEditRevision({
   model = "gpt-image-1.5",
   displayAsset = {},
   palette = null,
+  paletteDisplay = null,
   paletteChangeSummary = "",
   changeSummary = ""
 } = {}) {
@@ -251,7 +276,7 @@ export function buildVisualDesignImageEditRevision({
     themeSummary: pack.creativeIntent?.themeSummary,
     inspirationPrompt: pack.creativeIntent?.inspirationPrompt || editPrompt,
     palette: nextPalette,
-    paletteDisplay: pack.palette,
+    paletteDisplay: paletteDisplay || (palette == null ? pack.palette : {}),
     motifs: pack.creativeIntent?.motifs,
     avoidances: pack.creativeIntent?.avoidances,
     displayAsset: {
@@ -320,6 +345,12 @@ export function validateVisualDesignAssetPack(payload = {}) {
   if (Array.isArray(obj.palette?.colors) && obj.palette.colors.length > 8) {
     errors.push("palette.colors must not exceed 8 colors");
   }
+  if (Array.isArray(obj.palette?.imageColors) && obj.palette.imageColors.length > 8) {
+    errors.push("palette.imageColors must not exceed 8 colors");
+  }
+  if (Array.isArray(obj.palette?.lightingColors) && obj.palette.lightingColors.length > 8) {
+    errors.push("palette.lightingColors must not exceed 8 colors");
+  }
   if (!isPlainObject(obj.displayAsset)) errors.push("displayAsset is required");
   if (!DISPLAY_ASSET_KINDS.has(str(obj.displayAsset?.kind))) {
     errors.push("displayAsset.kind must be inspiration_board");
@@ -373,7 +404,9 @@ export function buildVisualInspirationRefs(assetPack = {}) {
     artifactId: str(obj.artifactId),
     displayAssetRef: str(displayAsset.relativePath),
     currentRevisionId: str(displayAsset.currentRevisionId),
-    palette: normalizePalette(palette.colors || creativeIntent.palette),
+    palette: normalizeLightingPalette(palette.lightingColors || palette.colors || creativeIntent.lightingPalette || creativeIntent.palette),
+    imagePalette: normalizePalette(palette.imageColors || creativeIntent.imagePalette),
+    lightingPalette: normalizeLightingPalette(palette.lightingColors || palette.colors || creativeIntent.lightingPalette || creativeIntent.palette),
     paletteDisplayMode: str(palette.displayMode),
     paletteCoordinationRule: str(palette.coordinationRule),
     themeSummary: str(creativeIntent.themeSummary),

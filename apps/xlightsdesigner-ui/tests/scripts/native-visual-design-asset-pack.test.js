@@ -223,6 +223,10 @@ test("native visual design asset generation stores palette derived from generate
     { name: "image color 2", hex: "#ddaa33", role: "support" },
     { name: "image color 3", hex: "#8a2030", role: "support" }
   ];
+  const lightingPalette = [
+    { name: "image color 2", hex: "#ddaa33", role: "support", sourceHex: "#ddaa33", suitability: "rgb_light_color" },
+    { name: "image color 3", hex: "#8a2030", role: "support", sourceHex: "#8a2030", suitability: "rgb_light_color" }
+  ];
   const result = await runVisualDesignAssetPackGeneration({
     projectFilePath,
     sequenceId: "seq-derived-palette",
@@ -243,7 +247,10 @@ test("native visual design asset generation stores palette derived from generate
     readVisualDesignAssetPack,
     writeVisualDesignAssetPack,
     editOpenAIVisualImage,
-    derivePaletteFromImageFile: () => derivedPalette,
+    deriveImageAndLightingPalettesFromImageFile: () => ({
+      imagePalette: derivedPalette,
+      lightingPalette
+    }),
     generateOpenAIVisualImage: async (input) => ({
       ok: true,
       image: Buffer.from("generated-image"),
@@ -255,8 +262,9 @@ test("native visual design asset generation stores palette derived from generate
     })
   });
 
-  assert.deepEqual(result.assetPack.palette.colors, derivedPalette);
-  assert.deepEqual(result.assetPack.creativeIntent.palette, derivedPalette);
-  assert.deepEqual(result.assetPack.mediaAssetPlans[0].paletteRoles, ["dominant", "support"]);
-  assert.deepEqual(result.assetPack.mediaAssetPlans[2].paletteRoles, ["dominant", "support"]);
+  assert.deepEqual(result.assetPack.palette.imageColors, derivedPalette);
+  assert.deepEqual(result.assetPack.palette.colors, lightingPalette);
+  assert.deepEqual(result.assetPack.creativeIntent.palette, lightingPalette);
+  assert.deepEqual(result.assetPack.mediaAssetPlans[0].paletteRoles, ["support"]);
+  assert.deepEqual(result.assetPack.mediaAssetPlans[2].paletteRoles, ["support"]);
 });

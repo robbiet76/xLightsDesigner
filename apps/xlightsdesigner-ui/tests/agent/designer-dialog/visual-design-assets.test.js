@@ -94,6 +94,35 @@ test("visual design asset pack palette is capped at xLights eight-color limit", 
   assert.deepEqual(validateVisualDesignAssetPack(pack), []);
 });
 
+test("visual design asset pack separates image reference colors from lighting palette", () => {
+  const imageColors = [
+    { name: "deep black", hex: "#0f0c0c", role: "shadow" },
+    { name: "warm amber", hex: "#b4510a", role: "accent" },
+    { name: "winter blue", hex: "#256eb1", role: "accent" }
+  ];
+  const lightingColors = [
+    { name: "warm amber", hex: "#b4510a", role: "accent", sourceHex: "#b4510a", suitability: "rgb_light_color" },
+    { name: "winter blue", hex: "#256eb1", role: "accent", sourceHex: "#256eb1", suitability: "rgb_light_color" }
+  ];
+
+  const pack = buildVisualDesignAssetPack({
+    sequenceId: "seq-lighting-palette",
+    themeSummary: "generated image with practical RGB palette",
+    inspirationPrompt: "Create a custom inspiration board.",
+    palette: lightingColors,
+    paletteDisplay: { imageColors, lightingColors },
+    displayAsset: { relativePath: "inspiration-board.png" }
+  });
+
+  assert.deepEqual(pack.palette.colors, lightingColors);
+  assert.deepEqual(pack.palette.imageColors, imageColors);
+  assert.deepEqual(pack.palette.lightingColors, lightingColors);
+  assert.deepEqual(pack.creativeIntent.palette, lightingColors);
+  assert.deepEqual(pack.creativeIntent.imagePalette, imageColors);
+  assert.deepEqual(pack.creativeIntent.lightingPalette, lightingColors);
+  assert.deepEqual(validateVisualDesignAssetPack(pack), []);
+});
+
 test("visual inspiration refs keep handoff compact", () => {
   const pack = buildVisualDesignAssetPack({
     sequenceId: "seq-1",

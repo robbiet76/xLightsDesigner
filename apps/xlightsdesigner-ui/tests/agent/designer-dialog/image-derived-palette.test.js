@@ -3,6 +3,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  buildLightingPaletteFromImagePalette,
+  deriveImageAndLightingPalettesFromImageFile,
   derivePaletteFromImageFile
 } from "../../../agent/designer-dialog/image-derived-palette.js";
 
@@ -85,4 +87,37 @@ test("derivePaletteFromImageFile names colors while preserving exact derived hex
   assert.deepEqual(hexValues, ["#f5ebdd", "#0f0c0c", "#b4510a", "#256eb1", "#53230b"]);
   assert.deepEqual(palette.map((row) => row.name), ["pale glow", "deep black", "warm amber", "winter blue", "burnt umber"]);
   assert.deepEqual(palette.map((row) => row.role), ["dominant", "shadow", "accent", "accent", "accent"]);
+});
+
+test("lighting palette keeps only image colors that work on RGB lights", () => {
+  const imagePalette = [
+    { name: "pale glow", hex: "#f5ebdd", role: "dominant" },
+    { name: "deep black", hex: "#0f0c0c", role: "shadow" },
+    { name: "burnt umber", hex: "#53230b", role: "accent" },
+    { name: "warm amber", hex: "#b4510a", role: "accent" },
+    { name: "winter blue", hex: "#256eb1", role: "accent" },
+    { name: "smoky gray", hex: "#533c3b", role: "support" }
+  ];
+
+  const lightingPalette = buildLightingPaletteFromImagePalette(imagePalette);
+
+  assert.deepEqual(lightingPalette.map((row) => row.hex), ["#f5ebdd", "#b4510a", "#256eb1"]);
+  assert.deepEqual(lightingPalette.map((row) => row.sourceHex), ["#f5ebdd", "#b4510a", "#256eb1"]);
+  assert.equal(lightingPalette.every((row) => row.suitability), true);
+});
+
+test("deriveImageAndLightingPalettesFromImageFile returns reference and lighting palettes", () => {
+  const png = makePng({
+    width: 3,
+    height: 2,
+    pixels: [
+      { r: 245, g: 235, b: 221 }, { r: 245, g: 235, b: 221 }, { r: 15, g: 12, b: 12 },
+      { r: 180, g: 81, b: 10 }, { r: 37, g: 110, b: 177 }, { r: 83, g: 35, b: 11 }
+    ]
+  });
+
+  const palettes = deriveImageAndLightingPalettesFromImageFile({ content: png, mimeType: "image/png", maxColors: 5 });
+
+  assert.deepEqual(palettes.imagePalette.map((row) => row.hex), ["#f5ebdd", "#0f0c0c", "#b4510a", "#256eb1", "#53230b"]);
+  assert.deepEqual(palettes.lightingPalette.map((row) => row.hex), ["#f5ebdd", "#b4510a", "#256eb1"]);
 });

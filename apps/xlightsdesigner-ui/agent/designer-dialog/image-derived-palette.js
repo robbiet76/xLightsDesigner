@@ -62,6 +62,52 @@ function roleName(color = {}, index = 0) {
   return "support";
 }
 
+function parseHex(hex = "") {
+  const raw = str(hex).replace(/^#/, "");
+  if (!/^[0-9a-fA-F]{6}$/.test(raw)) return null;
+  return {
+    r: Number.parseInt(raw.slice(0, 2), 16),
+    g: Number.parseInt(raw.slice(2, 4), 16),
+    b: Number.parseInt(raw.slice(4, 6), 16)
+  };
+}
+
+export function buildLightingPaletteFromImagePalette(palette = [], { maxColors = 8 } = {}) {
+  const out = [];
+  const seen = new Set();
+  for (const row of Array.isArray(palette) ? palette : []) {
+    const rgb = parseHex(row?.hex);
+    if (!rgb) continue;
+    const suitability = lightingSuitability(rgb);
+    if (!suitability.ok) continue;
+    const hex = str(row?.hex);
+    const key = hex.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      name: str(row?.name),
+      hex,
+      role: str(row?.role),
+      sourceHex: str(row?.hex),
+      suitability: suitability.reason
+    });
+    if (out.length >= Math.max(1, Math.min(8, Number(maxColors) || 8))) break;
+  }
+  return out;
+}
+
+function lightingSuitability(color = {}) {
+  const { hue, saturation, lightness } = rgbToHsl(color);
+  const brightness = (clampByte(color.r) + clampByte(color.g) + clampByte(color.b)) / (255 * 3);
+  if (lightness <= 0.2 || brightness <= 0.18) return { ok: false, reason: "too_dark_for_rgb_lights" };
+  if (saturation <= 0.14 && lightness < 0.7) return { ok: false, reason: "too_gray_for_palette_role" };
+  const isBrownRange = hue >= 16 && hue < 45 && lightness < 0.45 && saturation < 0.72;
+  if (isBrownRange) return { ok: false, reason: "brown_reads_poorly_on_rgb_lights" };
+  if (lightness >= 0.82 && saturation <= 0.32) return { ok: true, reason: "rgb_light_highlight" };
+  if (saturation >= 0.42 && lightness >= 0.28) return { ok: true, reason: "rgb_light_color" };
+  return { ok: false, reason: "low_impact_on_rgb_lights" };
+}
+
 function colorDistance(a = {}, b = {}) {
   return Math.sqrt(
     Math.pow((a.r || 0) - (b.r || 0), 2) +
@@ -201,4 +247,12 @@ export function derivePaletteFromImageFile({ content = null, mimeType = "", maxC
   const decoded = decodePngPixels(content);
   if (!decoded.ok) return [];
   return derivePaletteFromPixels(decoded.pixels, { maxColors });
+}
+
+export function deriveImageAndLightingPalettesFromImageFile({ content = null, mimeType = "", maxColors = 8 } = {}) {
+  const imagePalette = derivePaletteFromImageFile({ content, mimeType, maxColors });
+  return {
+    imagePalette,
+    lightingPalette: buildLightingPaletteFromImagePalette(imagePalette, { maxColors })
+  };
 }
