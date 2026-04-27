@@ -12,6 +12,56 @@ function toHex({ r = 0, g = 0, b = 0 } = {}) {
   return `#${[r, g, b].map((value) => clampByte(value).toString(16).padStart(2, "0")).join("")}`;
 }
 
+function rgbToHsl({ r = 0, g = 0, b = 0 } = {}) {
+  const red = clampByte(r) / 255;
+  const green = clampByte(g) / 255;
+  const blue = clampByte(b) / 255;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const lightness = (max + min) / 2;
+  const delta = max - min;
+  if (delta === 0) return { hue: 0, saturation: 0, lightness };
+  const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+  let hue = 0;
+  if (max === red) hue = 60 * (((green - blue) / delta) % 6);
+  else if (max === green) hue = 60 * (((blue - red) / delta) + 2);
+  else hue = 60 * (((red - green) / delta) + 4);
+  return { hue: (hue + 360) % 360, saturation, lightness };
+}
+
+function colorName(color = {}) {
+  const { hue, saturation, lightness } = rgbToHsl(color);
+  if (lightness >= 0.9 && saturation <= 0.25) return "soft ivory";
+  if (lightness >= 0.86) return "pale glow";
+  if (lightness <= 0.08) return "deep black";
+  if (lightness <= 0.16 && saturation <= 0.25) return "deep charcoal";
+  if (lightness <= 0.2 && hue >= 195 && hue < 260) return "midnight blue";
+  if (saturation <= 0.18) {
+    if (lightness < 0.35) return "smoky gray";
+    if (lightness < 0.7) return "soft gray";
+    return "silver mist";
+  }
+  if (hue < 16 || hue >= 345) return lightness < 0.42 ? "deep red" : "cranberry red";
+  if (hue < 38) return lightness < 0.35 ? "burnt umber" : "warm amber";
+  if (hue < 58) return lightness < 0.55 ? "antique gold" : "candle gold";
+  if (hue < 78) return "golden lime";
+  if (hue < 150) return lightness < 0.38 ? "pine green" : "fresh green";
+  if (hue < 190) return "teal glow";
+  if (hue < 225) return lightness < 0.38 ? "deep winter blue" : "winter blue";
+  if (hue < 260) return "indigo blue";
+  if (hue < 305) return "violet";
+  return "magenta";
+}
+
+function roleName(color = {}, index = 0) {
+  if (index === 0) return "dominant";
+  const { saturation, lightness } = rgbToHsl(color);
+  if (lightness <= 0.18) return "shadow";
+  if (lightness >= 0.82) return "highlight";
+  if (saturation >= 0.55) return "accent";
+  return "support";
+}
+
 function colorDistance(a = {}, b = {}) {
   return Math.sqrt(
     Math.pow((a.r || 0) - (b.r || 0), 2) +
@@ -139,9 +189,9 @@ export function derivePaletteFromPixels(pixels = [], { maxColors = 8, binSize = 
   }
 
   return selected.map((color, index) => ({
-    name: `image color ${index + 1}`,
+    name: colorName(color),
     hex: toHex(color),
-    role: index === 0 ? "dominant" : "support"
+    role: roleName(color, index)
   }));
 }
 

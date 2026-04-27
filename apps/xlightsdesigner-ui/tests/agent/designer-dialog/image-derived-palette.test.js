@@ -65,5 +65,24 @@ test("derivePaletteFromImageFile extracts dominant png colors", () => {
   assert.equal(palette.length >= 3, true);
   assert.equal(palette.length <= 4, true);
   assert.equal(palette[0].role, "dominant");
+  assert.equal(/image color/i.test(palette.map((row) => row.name).join(",")), false);
   assert.match(palette.map((row) => row.hex).join(","), /#22784a/);
+});
+
+test("derivePaletteFromImageFile names colors while preserving exact derived hex values", () => {
+  const png = makePng({
+    width: 3,
+    height: 2,
+    pixels: [
+      { r: 245, g: 235, b: 221 }, { r: 245, g: 235, b: 221 }, { r: 15, g: 12, b: 12 },
+      { r: 180, g: 81, b: 10 }, { r: 37, g: 110, b: 177 }, { r: 83, g: 35, b: 11 }
+    ]
+  });
+
+  const palette = derivePaletteFromImageFile({ content: png, mimeType: "image/png", maxColors: 5 });
+  const hexValues = palette.map((row) => row.hex);
+
+  assert.deepEqual(hexValues, ["#f5ebdd", "#0f0c0c", "#b4510a", "#256eb1", "#53230b"]);
+  assert.deepEqual(palette.map((row) => row.name), ["pale glow", "deep black", "warm amber", "winter blue", "burnt umber"]);
+  assert.deepEqual(palette.map((row) => row.role), ["dominant", "shadow", "accent", "accent", "accent"]);
 });

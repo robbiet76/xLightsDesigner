@@ -105,7 +105,7 @@ Canonical location:
 
 The manifest is the canonical handoff artifact. Files are referenced by relative paths from the manifest so project moves remain possible.
 
-The palette in the manifest is the canonical sequencing palette. For generated inspiration boards, the app should derive this palette from the generated image file after generation or revision, up to the xLights limit of 8 colors. Prompt-provided palettes may guide generation, but they are not canonical until reconciled with the actual image output.
+The palette in the manifest is the canonical sequencing palette. For generated inspiration boards, the app should derive this palette from the generated image file after generation or revision, up to the xLights limit of 8 colors. Prompt-provided palettes may guide generation, but they are not canonical until reconciled with the actual image output. The app may assign human-readable names and functional roles to derived colors for the UI and agent context, but it must preserve the exact derived hex values for xLights.
 
 ## New Artifact Contract
 
@@ -234,6 +234,7 @@ Minimum shape:
 - generate an inspiration-board prompt that explicitly avoids showing the actual xLights display/layout
 - generate or request one main inspiration board image
 - derive a palette with named roles and hex colors from the generated image output
+- improve derived color names/roles for readability while preserving exact derived hex values for xLights
 - respect the xLights palette limit of 8 colors; fewer colors are acceptable when the design only needs them
 - preserve the palette as required design state and keep the board coordinated with it
 - do not render palette strips, labeled swatches, legends, or color chips inside the inspiration image
