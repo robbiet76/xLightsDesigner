@@ -79,8 +79,8 @@ export function buildVisualInspirationImagePrompt({
     arr(motifs).length ? `Motifs: ${arr(motifs).map((row) => str(row)).filter(Boolean).join(", ")}.` : "",
     str(revisionRequest) ? `Requested revision: ${str(revisionRequest)}.` : "",
     includePaletteInImage
-      ? "Include a small tasteful palette strip with labeled color swatches inside the image."
-      : "Do not include visible text unless explicitly needed for a small palette strip.",
+      ? "Use the palette as color direction only; do not render palette strips, swatch labels, legends, or color chips inside the image."
+      : "Do not include visible text, palette strips, labeled swatches, legends, or color chips.",
     "Create a custom original mood-board collage for sequence inspiration only.",
     "Do not depict the literal xLights display, controller layout, UI, timeline, or physical house preview.",
     arr(avoidances).length ? `Avoid: ${arr(avoidances).map((row) => str(row)).filter(Boolean).join(", ")}.` : ""

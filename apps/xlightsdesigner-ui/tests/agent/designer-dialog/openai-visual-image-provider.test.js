@@ -24,6 +24,7 @@ test("visual image prompt preserves palette and avoids literal xLights output", 
 
   assert.match(prompt, /Palette: ice blue #8fd8ff/);
   assert.match(prompt, /warm gold #ffd36a/);
+  assert.match(prompt, /Do not include visible text, palette strips, labeled swatches, legends, or color chips/);
   assert.match(prompt, /Do not depict the literal xLights display/);
 });
 
