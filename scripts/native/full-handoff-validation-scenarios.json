@@ -2,6 +2,11 @@
   "artifactType": "xlightsdesigner_native_handoff_validation_scenarios_v1",
   "extraValidations": [
     {
+      "name": "native-active-target-sync",
+      "type": "nativeActiveTargetSync",
+      "projectFile": "/Users/robterry/Documents/Lights/xLightsDesigner/projects/Christmas 2026/Christmas 2026.xdproj"
+    },
+    {
       "name": "native-visual-inspiration-fixture",
       "type": "nativeVisualInspirationFixture"
     },

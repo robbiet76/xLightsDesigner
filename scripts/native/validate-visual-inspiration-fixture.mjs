@@ -80,38 +80,8 @@ function writeFixturePng(filePath = '') {
   fs.writeFileSync(filePath, png);
 }
 
-function createFixtureProject(projectFile = '') {
-  const root = projectFile
-    ? path.dirname(path.dirname(path.resolve(projectFile)))
-    : fs.mkdtempSync(path.join(os.tmpdir(), 'xld-visual-fixture-'));
-  const projectName = projectFile
-    ? path.basename(projectFile, '.xdproj')
-    : 'Visual Inspiration Fixture';
-  const projectDir = projectFile
-    ? path.dirname(path.resolve(projectFile))
-    : path.join(root, 'projects', projectName);
-  const projectPath = projectFile
-    ? path.resolve(projectFile)
-    : path.join(projectDir, `${projectName}.xdproj`);
-  ensureDir(projectDir);
-  const projectDoc = {
-    version: 1,
-    projectName,
-    showFolder: '/tmp/xld-visual-fixture-show',
-    mediaPath: '',
-    key: `${projectName}::/tmp/xld-visual-fixture-show`,
-    id: 'visual-inspiration-fixture',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    snapshot: {
-      projectName,
-      projectFilePath: projectPath,
-      mediaPath: ''
-    }
-  };
-  fs.writeFileSync(projectPath, JSON.stringify(projectDoc, null, 2), 'utf8');
-
-  const visualDir = path.join(projectDir, 'artifacts', 'visual-design', 'visual-fixture-sequence');
+function writeVisualFixtureManifest(projectDir = '', sequenceId = 'visual-fixture-sequence') {
+  const visualDir = path.join(projectDir, 'artifacts', 'visual-design', sequenceId);
   const boardPath = path.join(visualDir, 'inspiration-board.png');
   const revisedPath = path.join(visualDir, 'revisions', 'board-r002.png');
   writeFixturePng(boardPath);
@@ -121,7 +91,7 @@ function createFixtureProject(projectFile = '') {
     artifactVersion: 1,
     artifactId: 'visual-design-asset-pack-fixture',
     createdAt: new Date().toISOString(),
-    sequenceId: 'visual-fixture-sequence',
+    sequenceId,
     trackIdentity: {
       title: 'Visual Fixture',
       artist: 'xLightsDesigner',
@@ -204,7 +174,43 @@ function createFixtureProject(projectFile = '') {
     }
   };
   fs.writeFileSync(path.join(visualDir, 'visual-design-manifest.json'), JSON.stringify(manifest, null, 2), 'utf8');
-  return { projectPath, projectDir, visualDir, boardPath: revisedPath };
+  return { visualDir, boardPath: revisedPath };
+}
+
+function createFixtureProject(projectFile = '') {
+  const root = projectFile
+    ? path.dirname(path.dirname(path.resolve(projectFile)))
+    : fs.mkdtempSync(path.join(os.tmpdir(), 'xld-visual-fixture-'));
+  const projectName = projectFile
+    ? path.basename(projectFile, '.xdproj')
+    : 'Visual Inspiration Fixture';
+  const projectDir = projectFile
+    ? path.dirname(path.resolve(projectFile))
+    : path.join(root, 'projects', projectName);
+  const projectPath = projectFile
+    ? path.resolve(projectFile)
+    : path.join(projectDir, `${projectName}.xdproj`);
+  ensureDir(projectDir);
+  const projectDoc = {
+    version: 1,
+    projectName,
+    showFolder: '/tmp/xld-visual-fixture-show',
+    mediaPath: '',
+    key: `${projectName}::/tmp/xld-visual-fixture-show`,
+    id: 'visual-inspiration-fixture',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    snapshot: {
+      projectName,
+      projectFilePath: projectPath,
+      mediaPath: '',
+      sequencePathInput: 'visual-fixture-sequence',
+      activeSequence: 'visual-fixture-sequence'
+    }
+  };
+  fs.writeFileSync(projectPath, JSON.stringify(projectDoc, null, 2), 'utf8');
+
+  return { projectPath, projectDir, ...writeVisualFixtureManifest(projectDir, 'visual-fixture-sequence') };
 }
 
 function assertEqual(actual, expected, label) {
@@ -213,14 +219,34 @@ function assertEqual(actual, expected, label) {
   }
 }
 
+async function waitForFixtureVisual(baseUrl, fixture, timeoutMs) {
+  const started = Date.now();
+  let last = null;
+  while (Date.now() - started < timeoutMs) {
+    last = await request(baseUrl, 'GET', '/snapshot');
+    const projectFilePath = str(last?.workspace?.projectFilePath);
+    const visual = last?.pages?.design?.visualInspiration || {};
+    if (projectFilePath === fixture.projectPath && visual.available === true) {
+      return last;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`Timed out waiting for fixture visual inspiration to load. Last snapshot: ${JSON.stringify(last?.pages?.design?.visualInspiration || {})}`);
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const fixture = createFixtureProject(args.projectFile);
   await waitForNative(args.nativeUrl, args.timeoutMs);
   await request(args.nativeUrl, 'POST', '/action', { action: 'openProject', filePath: fixture.projectPath });
+  const syncedSnapshot = await request(args.nativeUrl, 'GET', '/snapshot');
+  const syncedSequenceId = str(syncedSnapshot?.activeTarget?.sequenceName) || 'visual-fixture-sequence';
+  const syncedFixture = writeVisualFixtureManifest(fixture.projectDir, syncedSequenceId);
+  fixture.visualDir = syncedFixture.visualDir;
+  fixture.boardPath = syncedFixture.boardPath;
   await request(args.nativeUrl, 'POST', '/action', { action: 'selectWorkflow', workflow: 'design' });
   await request(args.nativeUrl, 'POST', '/action', { action: 'refreshCurrentWorkflow' });
-  const snapshot = await request(args.nativeUrl, 'GET', '/snapshot');
+  const snapshot = await waitForFixtureVisual(args.nativeUrl, fixture, args.timeoutMs);
   const visual = snapshot?.pages?.design?.visualInspiration || {};
   if (!snapshot?.pages?.design || !('visualInspiration' in snapshot.pages.design)) {
     throw new Error(

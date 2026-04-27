@@ -89,6 +89,7 @@ Sequencing proof-loop progress:
 - native automation can now apply a synthetic assistant action request through the same awaited app action path, so agent handoff behavior can be validated without depending on a live model response
 - native and JS automation proposal paths now accept explicit selected Display metadata tags, with regression coverage proving selected target-intent tags reach direct proposal generation and sequence-agent planning
 - native automation CLI now exposes metadata-tagged proposal generation and includes a validation script for the full target-intent update -> selected-tag proposal -> sequencer snapshot proof path
+- native full-handoff validation now includes active project/sequence/audio target synchronization checks across Project, Display, Audio, Design, Sequence, Review, and History, plus sequence-scoped visual inspiration fixture validation that follows the app/xLights active target after sync
 - native Review success state and automation artifact summaries now expose the Display metadata assignment count used during apply
 - native History proof chains now retain the Display metadata assignment count from apply results and review-pass summaries
 - sequencer revision planning now maps unresolved prior-pass proof signals into bounded revision roles so the next pass can bias realization from the proof loop

@@ -385,6 +385,16 @@ function buildExtraValidationArgs(args, showDir, validation = {}) {
     if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
     return validationArgs;
   }
+  if (validation.type === 'nativeActiveTargetSync') {
+    const validationArgs = [
+      'scripts/native/validate-active-target-sync.mjs',
+      '--native-url',
+      validation.nativeUrl || DEFAULT_NATIVE_BASE_URL
+    ];
+    if (validation.projectFile) validationArgs.push('--project-file', validation.projectFile);
+    if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
+    return validationArgs;
+  }
   if (validation.type !== 'nativeReviewExplicitEditSurface') {
     throw new Error(`Unsupported extra validation type: ${validation.type}`);
   }
