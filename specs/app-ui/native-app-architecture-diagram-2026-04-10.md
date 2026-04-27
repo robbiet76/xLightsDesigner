@@ -87,7 +87,7 @@ This is the current practical architecture, not a future-state concept sketch.
 
 SwiftUI owns:
 - page navigation
-- phase header
+- page headers and workflow navigation
 - chat presentation
 - view/view-model state
 - app-level action execution

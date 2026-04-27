@@ -31,7 +31,7 @@ Evidence in code:
   - `Review`
   - `History`
   - `Settings`
-- team chat, workflow phase header, sidebar, and phase-aware routing all live in the native app
+- team chat, sidebar, page headers, and phase-aware routing all live in the native app
 - native automation and validation now target the SwiftUI app directly
 
 Working rule:

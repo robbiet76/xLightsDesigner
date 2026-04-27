@@ -66,8 +66,6 @@ struct AppSidebar: View {
 
     @ViewBuilder
     private func workflowRow(for workflow: WorkflowID, isCollapsed: Bool) -> some View {
-        let recommended = WorkflowID.preferredWorkflow(for: model.currentWorkflowPhase().phaseID)
-        let isRecommended = workflow == recommended
         let isSelected = workflow == model.selectedWorkflow
 
         HStack(spacing: 10) {
@@ -76,27 +74,10 @@ struct AppSidebar: View {
                     .font(.system(size: 18, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Color.white : Color.accentColor)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .overlay(alignment: .topTrailing) {
-                        if isRecommended && !isSelected {
-                            Circle()
-                                .fill(Color.accentColor)
-                                .frame(width: 8, height: 8)
-                                .offset(x: 4, y: -4)
-                            }
-                    }
                     .padding(.vertical, 6)
             } else {
                 Label(workflow.rawValue, systemImage: iconName(for: workflow))
                 Spacer(minLength: 8)
-                if isRecommended && !isSelected {
-                    Text("Recommended")
-                        .font(.caption2)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.accentColor.opacity(0.18))
-                        .clipShape(Capsule())
-                }
             }
         }
         .help(isCollapsed ? workflow.rawValue : "")

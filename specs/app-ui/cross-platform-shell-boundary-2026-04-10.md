@@ -102,7 +102,7 @@ Each native shell owns:
 - windowing
 - navigation
 - page layout
-- phase header rendering
+- page header rendering
 - chat rendering
 - local interaction controls
 - native settings surfaces
