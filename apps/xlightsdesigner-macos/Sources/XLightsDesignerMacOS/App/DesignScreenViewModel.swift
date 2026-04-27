@@ -391,7 +391,9 @@ final class DesignScreenViewModel {
             string(snapshot["activeSequence"]?.value),
             string(snapshot["mediaPath"]?.value)
         ]
-        return candidates.first(where: { !$0.isEmpty }) ?? ""
+        return candidates
+            .map { visualSequenceToken(from: $0) }
+            .first(where: { !$0.isEmpty }) ?? ""
     }
 
     private static func hasSelectedSongContext(_ project: ActiveProjectModel) -> Bool {
@@ -409,10 +411,28 @@ final class DesignScreenViewModel {
         }
         let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
         let visualRoot = projectDir.appendingPathComponent("artifacts/visual-design", isDirectory: true)
+        let sequenceId = visualSequenceID(from: project)
+        if !sequenceId.isEmpty,
+           let sequenceManifestURL = visualDesignManifestURL(for: sequenceId, in: visualRoot),
+           FileManager.default.fileExists(atPath: sequenceManifestURL.path),
+           let sequenceManifest = readJSONDictionary(from: sequenceManifestURL) {
+            return visualInspiration(from: sequenceManifest, manifestURL: sequenceManifestURL, selectedRevisionID: selectedRevisionID)
+        }
+        if !sequenceId.isEmpty {
+            return emptyVisualInspiration(summary: "No visual inspiration board has been generated for \(sequenceId) yet.")
+        }
         guard let manifestURL = latestVisualDesignManifest(in: visualRoot),
               let manifest = readJSONDictionary(from: manifestURL) else {
             return emptyVisualInspiration(summary: "No visual inspiration board has been generated yet.")
         }
+        return visualInspiration(from: manifest, manifestURL: manifestURL, selectedRevisionID: selectedRevisionID)
+    }
+
+    private static func visualInspiration(
+        from manifest: [String: Any],
+        manifestURL: URL,
+        selectedRevisionID: String
+    ) -> DesignVisualInspirationModel {
         let creativeIntent = manifest["creativeIntent"] as? [String: Any] ?? [:]
         let displayAsset = manifest["displayAsset"] as? [String: Any] ?? [:]
         let paletteObject = manifest["palette"] as? [String: Any] ?? [:]
@@ -478,6 +498,36 @@ final class DesignScreenViewModel {
             paletteRevisionRequest: "",
             palette: []
         )
+    }
+
+    private static func visualDesignManifestURL(for sequenceId: String, in root: URL) -> URL? {
+        let token = sanitizePathToken(sequenceId)
+        guard !token.isEmpty else { return nil }
+        return root.appendingPathComponent(token, isDirectory: true).appendingPathComponent("visual-design-manifest.json")
+    }
+
+    private static func visualSequenceToken(from value: String) -> String {
+        let raw = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else { return "" }
+        let url = URL(fileURLWithPath: raw)
+        let lastComponent = url.lastPathComponent
+        if lastComponent.contains(".") {
+            return sanitizePathToken(url.deletingPathExtension().lastPathComponent)
+        }
+        return sanitizePathToken(raw)
+    }
+
+    private static func sanitizePathToken(_ value: String) -> String {
+        let invalidScalars = CharacterSet(charactersIn: "<>:\"/\\|?*")
+            .union(.controlCharacters)
+        let sanitized = value
+            .components(separatedBy: invalidScalars)
+            .joined(separator: " ")
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: "-")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+        return String(sanitized.prefix(120))
     }
 
     private static func paletteValidationSummary(from validation: [String: Any]?) -> String {

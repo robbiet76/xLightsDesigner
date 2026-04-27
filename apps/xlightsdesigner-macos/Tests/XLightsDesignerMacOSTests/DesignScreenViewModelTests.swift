@@ -259,7 +259,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
         draft: ProjectDraftModel(
             projectName: "Native Revise Palette \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
-            mediaPath: "/tmp/song.mp3",
+            mediaPath: "/tmp/seq-1.xsq",
             migrateMetadata: false,
             migrationSourceProjectPath: ""
         )
@@ -336,6 +336,80 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
 }
 
 @MainActor
+@Test func designScreenScopesVisualInspirationToSelectedSequence() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-sequence-scope-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let service = LocalProjectService(projectsRootPath: root.path)
+    let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
+    var project = try service.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Native Sequence Scope \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "/tmp/show/CandyCaneLane/CandyCaneLane.xsq",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    project.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/CandyCaneLane/CandyCaneLane.xsq")
+    project = try service.saveProject(project)
+    let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+
+    func writeManifest(sequenceId: String, summary: String) throws {
+        let visualDir = projectDir.appendingPathComponent("artifacts/visual-design/\(sequenceId)", isDirectory: true)
+        try FileManager.default.createDirectory(at: visualDir, withIntermediateDirectories: true)
+        try Data("fixture".utf8).write(to: visualDir.appendingPathComponent("inspiration-board.png"))
+        let manifest = """
+        {
+          "artifactType": "visual_design_asset_pack_v1",
+          "artifactId": "visual-pack-\(sequenceId)",
+          "sequenceId": "\(sequenceId)",
+          "creativeIntent": {
+            "themeSummary": "\(summary)",
+            "palette": [
+              { "name": "white", "hex": "#ffffff", "role": "highlight" }
+            ]
+          },
+          "palette": {
+            "required": true,
+            "colors": [
+              { "name": "white", "hex": "#ffffff", "role": "highlight" }
+            ]
+          },
+          "displayAsset": {
+            "kind": "inspiration_board",
+            "relativePath": "inspiration-board.png",
+            "currentRevisionId": "board-r001"
+          },
+          "imageRevisions": [
+            {
+              "revisionId": "board-r001",
+              "mode": "generate",
+              "relativePath": "inspiration-board.png",
+              "paletteLocked": true,
+              "changeSummary": "Initial board."
+            }
+          ]
+        }
+        """
+        try Data(manifest.utf8).write(to: visualDir.appendingPathComponent("visual-design-manifest.json"))
+    }
+
+    try writeManifest(sequenceId: "HolidayRoad", summary: "Holiday Road board")
+    try writeManifest(sequenceId: "CandyCaneLane", summary: "Candy Cane Lane board")
+
+    workspace.setProject(project)
+    let model = DesignScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: service
+    )
+
+    #expect(model.screenModel.visualInspiration.available == true)
+    #expect(model.screenModel.visualInspiration.sequenceId == "CandyCaneLane")
+    #expect(model.screenModel.visualInspiration.summary == "Candy Cane Lane board")
+}
+
+@MainActor
 @Test func designScreenBlocksVisualInspirationWithoutSelectedSong() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-missing-song-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -377,7 +451,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
         draft: ProjectDraftModel(
             projectName: "Native Generate Visual \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
-            mediaPath: "/tmp/song.mp3",
+            mediaPath: "/tmp/seq-1.xsq",
             migrateMetadata: false,
             migrationSourceProjectPath: ""
         )
@@ -416,7 +490,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
         draft: ProjectDraftModel(
             projectName: "Native Revise Visual \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
-            mediaPath: "/tmp/song.mp3",
+            mediaPath: "/tmp/seq-1.xsq",
             migrateMetadata: false,
             migrationSourceProjectPath: ""
         )
