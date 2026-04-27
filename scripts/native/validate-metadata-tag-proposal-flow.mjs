@@ -701,14 +701,15 @@ async function assertExistingEffectReplacement({ snapshot = {}, seedExistingEffe
     const policy = command?.intent?.existingSequencePolicy && typeof command.intent.existingSequencePolicy === 'object'
       ? command.intent.existingSequencePolicy
       : null;
-    return str(command?.cmd) === 'effects.create'
+    const commandName = str(command?.cmd);
+    return (commandName === 'effects.create' || commandName === 'effects.update')
       && str(params.modelName) === str(seedExistingEffect.element)
       && policy
       && Number(policy.overlapCount || 0) > 0
       && policy.replacementAuthorized === true
       && Number(policy.originalLayerIndex) === Number(seedExistingEffect.layer)
       && Number(policy.plannedLayerIndex) === Number(seedExistingEffect.layer)
-      && Number(params.layerIndex) === Number(seedExistingEffect.layer);
+      && Number(params.newLayerIndex ?? params.layerIndex) === Number(seedExistingEffect.layer);
   });
   if (!replacementCommands.length) {
     throw new Error(`Expected generated plan to authorize replacement on seeded layer ${seedExistingEffect.layer}.`);
@@ -717,11 +718,12 @@ async function assertExistingEffectReplacement({ snapshot = {}, seedExistingEffe
   const replacementReadbacks = [];
   for (const command of replacementCommands) {
     const params = command?.params && typeof command.params === 'object' ? command.params : {};
+    const commandName = str(command?.cmd);
     const modelName = str(params.modelName);
-    const layerIndex = Number(params.layerIndex);
-    const startMs = Number(params.startMs);
-    const endMs = Number(params.endMs);
-    const effectName = str(params.effectName);
+    const layerIndex = Number(params.newLayerIndex ?? params.layerIndex);
+    const startMs = Number(params.newStartMs ?? params.startMs);
+    const endMs = Number(params.newEndMs ?? params.endMs);
+    const effectName = str(params.newEffectName || params.effectName);
     const payload = await requestXlightsApi('/effects/window', {
       element: modelName,
       startMs,
@@ -740,6 +742,7 @@ async function assertExistingEffectReplacement({ snapshot = {}, seedExistingEffe
       startMs,
       endMs,
       effectName,
+      commandName,
       present
     });
   }
