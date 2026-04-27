@@ -15,6 +15,7 @@ import {
   derivePaletteFromImageFile
 } from "../../../apps/xlightsdesigner-ui/agent/designer-dialog/image-derived-palette.js";
 import {
+  buildPaletteCoordinationValidation,
   buildDefaultVisualMediaAssetPlans,
   buildVisualDesignAssetPack,
   buildVisualDesignImageEditRevision,
@@ -28,6 +29,7 @@ import {
 const DEFAULT_DEPS = {
   buildOpenAIVisualImageConfig,
   buildVisualInspirationImagePrompt,
+  buildPaletteCoordinationValidation,
   derivePaletteFromImageFile,
   generateOpenAIVisualImage,
   editOpenAIVisualImage,
@@ -293,6 +295,9 @@ export async function runVisualDesignAssetPackRevision(options = {}, deps = DEFA
   const imageFile = deps.buildVisualImageFileFromOpenAIResult({ result: edited, relativePath });
   if (!imageFile?.ok) throw new Error(imageFile?.error || "Edited image could not be converted to a project file.");
   const imagePalette = deriveImagePalette({ deps, imageFile });
+  const paletteValidation = typeof deps.buildPaletteCoordinationValidation === "function"
+    ? deps.buildPaletteCoordinationValidation({ designerPalette, imagePalette })
+    : {};
   const nextPack = deps.buildVisualDesignImageEditRevision({
     assetPack,
     userRequest: revisionRequest,
@@ -303,7 +308,8 @@ export async function runVisualDesignAssetPackRevision(options = {}, deps = DEFA
     palette: designerPalette,
     paletteDisplay: {
       imageColors: imagePalette,
-      lightingColors: designerPalette
+      lightingColors: designerPalette,
+      validation: paletteValidation
     },
     paletteChangeSummary: str(options.paletteChangeSummary || "Designer palette preserved; image palette sampled for validation only."),
     changeSummary: str(options.changeSummary || "Revised inspiration board from Designer conversation.")
@@ -383,6 +389,9 @@ export async function runVisualDesignAssetPackGeneration(options = {}, deps = DE
   });
   if (!imageFile?.ok) throw new Error(imageFile?.error || "Generated image could not be converted to a project file.");
   const imagePalette = deriveImagePalette({ deps, imageFile });
+  const paletteValidation = typeof deps.buildPaletteCoordinationValidation === "function"
+    ? deps.buildPaletteCoordinationValidation({ designerPalette, imagePalette })
+    : {};
 
   const assetPack = deps.buildVisualDesignAssetPack({
     sequenceId,
@@ -392,7 +401,8 @@ export async function runVisualDesignAssetPackGeneration(options = {}, deps = DE
     palette: designerPalette,
     paletteDisplay: {
       imageColors: imagePalette,
-      lightingColors: designerPalette
+      lightingColors: designerPalette,
+      validation: paletteValidation
     },
     motifs,
     avoidances,

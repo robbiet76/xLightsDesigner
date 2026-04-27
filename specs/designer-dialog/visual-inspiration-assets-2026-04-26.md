@@ -105,7 +105,7 @@ Canonical location:
 
 The manifest is the canonical handoff artifact. Files are referenced by relative paths from the manifest so project moves remain possible.
 
-The manifest keeps two related palette views. `palette.colors[]` and `palette.lightingColors[]` are the canonical sequencing palette selected by the Designer agent before image generation. This palette is intentional design state, chosen for the song, user direction, display, RGB-light suitability, and sequencing goals. `palette.imageColors[]` is optional diagnostic context sampled from the generated inspiration image to help validate whether the image visually coordinates with the approved palette. The app must not replace the Designer palette with image-sampled colors. If the generated image drifts away from the approved palette, the correct action is to revise/regenerate the image, not to scrape a new sequencing palette from it.
+The manifest keeps two related palette views. `palette.colors[]` and `palette.lightingColors[]` are the canonical sequencing palette selected by the Designer agent before image generation. This palette is intentional design state, chosen for the song, user direction, display, RGB-light suitability, and sequencing goals. `palette.imageColors[]` is optional diagnostic context sampled from the generated inspiration image to help validate whether the image visually coordinates with the approved palette. `palette.validation` records that coordination check. The app must not replace the Designer palette with image-sampled colors. If the generated image drifts away from the approved palette, the correct action is to revise/regenerate the image, not to scrape a new sequencing palette from it.
 
 ## New Artifact Contract
 
@@ -163,7 +163,18 @@ Minimum shape:
     "lightingColors": [
       { "name": "warm gold", "hex": "#ffd36a", "role": "impact accent" },
       { "name": "ice blue", "hex": "#8fd8ff", "role": "cool base" }
-    ]
+    ],
+    "validation": {
+      "status": "pass",
+      "method": "nearest_rgb_distance_v1",
+      "matchedColorCount": 2,
+      "requiredColorCount": 2,
+      "averageDistance": 42,
+      "recommendation": "Image coordinates with the Designer palette.",
+      "matches": [
+        { "paletteName": "warm gold", "paletteHex": "#ffd36a", "imageHex": "#f9ca63", "distance": 31, "status": "matched" }
+      ]
+    }
   },
   "displayAsset": {
     "kind": "inspiration_board",
@@ -254,6 +265,7 @@ Minimum shape:
 - respect the xLights palette limit of 8 colors; fewer colors are acceptable when the design only needs them
 - preserve the palette as required design state and keep the board coordinated with it
 - revise/regenerate the image when it does not coordinate with the approved Designer palette
+- record image/palette coordination validation as diagnostics; validation must never rewrite the Designer palette
 - do not render palette strips, labeled swatches, legends, or color chips inside the inspiration image
 - edit the current inspiration board for conversational tweaks when possible instead of regenerating the board from scratch
 - record each board change as an immutable `imageRevisions[]` entry with parent revision, prompt, source provider/model, user request, palette lock/change status, and output path

@@ -71,6 +71,7 @@ struct DesignVisualInspirationModel: Sendable {
     let paletteSummary: String
     let paletteDisplayMode: String
     let paletteCoordinationRule: String
+    let paletteValidationSummary: String
     let palette: [DesignPaletteColorModel]
 }
 

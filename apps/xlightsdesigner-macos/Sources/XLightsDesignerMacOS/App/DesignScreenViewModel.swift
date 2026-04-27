@@ -411,6 +411,7 @@ final class DesignScreenViewModel {
             }.joined(separator: " / ")
         let revisionSummary = revisionSummary(from: displayedRevision)
         let revisionHistory = revisionHistory(from: revisions, currentRevisionID: currentRevisionId, selectedRevisionID: displayedRevisionId)
+        let paletteValidationSummary = paletteValidationSummary(from: paletteObject["validation"] as? [String: Any])
         return DesignVisualInspirationModel(
             available: true,
             title: "Visual Inspiration",
@@ -423,6 +424,7 @@ final class DesignScreenViewModel {
             paletteSummary: paletteSummary,
             paletteDisplayMode: string(paletteObject["displayMode"], fallback: "separate_and_optional_in_image"),
             paletteCoordinationRule: string(paletteObject["coordinationRule"], fallback: "Designer palette is canonical for sequencing; image colors are diagnostic validation context."),
+            paletteValidationSummary: paletteValidationSummary,
             palette: colors
         )
     }
@@ -440,8 +442,20 @@ final class DesignScreenViewModel {
             paletteSummary: "No palette available.",
             paletteDisplayMode: "",
             paletteCoordinationRule: "Palette is required once a visual inspiration board exists.",
+            paletteValidationSummary: "",
             palette: []
         )
+    }
+
+    private static func paletteValidationSummary(from validation: [String: Any]?) -> String {
+        guard let validation else { return "" }
+        let status = string(validation["status"])
+        guard !status.isEmpty, status != "not_evaluated" else { return "" }
+        let matched = int(validation["matchedColorCount"])
+        let required = int(validation["requiredColorCount"])
+        let recommendation = string(validation["recommendation"])
+        let countSummary = required > 0 ? "Palette validation \(status): \(matched)/\(required) required colors matched." : "Palette validation \(status)."
+        return [countSummary, recommendation].filter { !$0.isEmpty }.joined(separator: " ")
     }
 
     private static func latestVisualDesignManifest(in root: URL) -> URL? {
@@ -549,6 +563,12 @@ final class DesignScreenViewModel {
     private static func string(_ value: Any?, fallback: String) -> String {
         let out = string(value)
         return out.isEmpty ? fallback : out
+    }
+
+    private static func int(_ value: Any?) -> Int {
+        if let intValue = value as? Int { return intValue }
+        if let number = value as? NSNumber { return number.intValue }
+        return Int(string(value)) ?? 0
     }
 
     private static func isoNow() -> String {

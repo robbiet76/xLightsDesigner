@@ -716,6 +716,7 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "paletteSummary": visual.paletteSummary,
                 "paletteDisplayMode": visual.paletteDisplayMode,
                 "paletteCoordinationRule": visual.paletteCoordinationRule,
+                "paletteValidationSummary": visual.paletteValidationSummary,
                 "palette": visual.palette.map {
                     [
                         "name": $0.name,

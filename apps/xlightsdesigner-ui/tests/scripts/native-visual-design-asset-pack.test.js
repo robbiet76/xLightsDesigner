@@ -11,6 +11,7 @@ import {
   editOpenAIVisualImage
 } from "../../../../apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js";
 import {
+  buildPaletteCoordinationValidation,
   buildDefaultVisualMediaAssetPlans,
   buildVisualDesignAssetPack,
   buildVisualDesignImageEditRevision,
@@ -53,6 +54,7 @@ test("native visual design asset generation writes board image and manifest", as
     buildOpenAIVisualImageConfig,
     buildVisualInspirationImagePrompt,
     buildVisualImageFileFromOpenAIResult,
+    buildPaletteCoordinationValidation,
     buildDefaultVisualMediaAssetPlans,
     buildVisualDesignAssetPack,
     buildVisualDesignImageEditRevision,
@@ -115,6 +117,7 @@ test("native visual design asset revision edits current board and appends lineag
     buildOpenAIVisualImageConfig,
     buildVisualInspirationImagePrompt,
     buildVisualImageFileFromOpenAIResult,
+    buildPaletteCoordinationValidation,
     buildDefaultVisualMediaAssetPlans,
     buildVisualDesignAssetPack,
     buildVisualDesignImageEditRevision,
@@ -188,6 +191,7 @@ test("native visual design asset generation uses richer default palette up to xL
     buildOpenAIVisualImageConfig,
     buildVisualInspirationImagePrompt,
     buildVisualImageFileFromOpenAIResult,
+    buildPaletteCoordinationValidation,
     buildDefaultVisualMediaAssetPlans,
     buildVisualDesignAssetPack,
     buildVisualDesignImageEditRevision,
@@ -237,6 +241,7 @@ test("native visual design asset generation keeps designer palette canonical and
     buildOpenAIVisualImageConfig,
     buildVisualInspirationImagePrompt,
     buildVisualImageFileFromOpenAIResult,
+    buildPaletteCoordinationValidation,
     buildDefaultVisualMediaAssetPlans,
     buildVisualDesignAssetPack,
     buildVisualDesignImageEditRevision,
@@ -258,6 +263,8 @@ test("native visual design asset generation keeps designer palette canonical and
 
   assert.deepEqual(result.assetPack.palette.imageColors, derivedPalette);
   assert.deepEqual(result.assetPack.palette.colors, designerPalette);
+  assert.equal(result.assetPack.palette.validation.status, "warn");
+  assert.match(result.assetPack.palette.validation.recommendation, /Revise the image/i);
   assert.deepEqual(result.assetPack.creativeIntent.palette, designerPalette);
   assert.deepEqual(result.assetPack.mediaAssetPlans[0].paletteRoles, ["fallback"]);
   assert.deepEqual(result.assetPack.mediaAssetPlans[2].paletteRoles, ["fallback"]);

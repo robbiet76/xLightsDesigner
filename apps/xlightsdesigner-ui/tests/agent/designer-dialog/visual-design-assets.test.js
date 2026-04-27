@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   buildDefaultVisualMediaAssetPlans,
+  buildPaletteCoordinationValidation,
   buildVisualDesignImageEditRevision,
   buildVisualDesignAssetPack,
   buildVisualInspirationRefs,
@@ -120,6 +121,35 @@ test("visual design asset pack keeps designer palette canonical and image colors
   assert.deepEqual(pack.creativeIntent.palette, lightingColors);
   assert.deepEqual(pack.creativeIntent.imagePalette, imageColors);
   assert.deepEqual(pack.creativeIntent.lightingPalette, lightingColors);
+  assert.deepEqual(validateVisualDesignAssetPack(pack), []);
+});
+
+test("palette coordination validation warns without changing Designer palette", () => {
+  const designerPalette = [
+    { name: "electric cyan", hex: "#00d7ff", role: "cool accent" },
+    { name: "hot magenta", hex: "#ff2bd6", role: "impact accent" },
+    { name: "lime green", hex: "#7cff2b", role: "energy accent" }
+  ];
+  const imagePalette = [
+    { name: "midnight blue", hex: "#071433", role: "dominant" },
+    { name: "deep blue", hex: "#142c66", role: "support" }
+  ];
+
+  const validation = buildPaletteCoordinationValidation({ designerPalette, imagePalette });
+  const pack = buildVisualDesignAssetPack({
+    sequenceId: "seq-palette-validation",
+    themeSummary: "palette validation",
+    inspirationPrompt: "Create a custom board.",
+    palette: designerPalette,
+    paletteDisplay: { imageColors: imagePalette, lightingColors: designerPalette, validation },
+    displayAsset: { relativePath: "inspiration-board.png" }
+  });
+
+  assert.equal(pack.palette.validation.status, "warn");
+  assert.equal(pack.palette.validation.requiredColorCount, 2);
+  assert.equal(pack.palette.validation.matches.length, 3);
+  assert.deepEqual(pack.palette.colors, designerPalette);
+  assert.match(pack.palette.validation.recommendation, /Revise the image/i);
   assert.deepEqual(validateVisualDesignAssetPack(pack), []);
 });
 

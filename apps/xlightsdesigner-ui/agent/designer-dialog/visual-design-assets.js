@@ -36,6 +36,46 @@ function normalizePalette(rows = []) {
     .slice(0, 8);
 }
 
+function parseHexColor(hex = "") {
+  const raw = str(hex).replace(/^#/, "");
+  if (!/^[0-9a-fA-F]{6}$/.test(raw)) return null;
+  return {
+    r: Number.parseInt(raw.slice(0, 2), 16),
+    g: Number.parseInt(raw.slice(2, 4), 16),
+    b: Number.parseInt(raw.slice(4, 6), 16)
+  };
+}
+
+function colorDistance(left = {}, right = {}) {
+  return Math.sqrt(
+    Math.pow((Number(left.r) || 0) - (Number(right.r) || 0), 2) +
+    Math.pow((Number(left.g) || 0) - (Number(right.g) || 0), 2) +
+    Math.pow((Number(left.b) || 0) - (Number(right.b) || 0), 2)
+  );
+}
+
+function normalizePaletteValidation(validation = {}) {
+  const obj = isPlainObject(validation) ? validation : {};
+  const matches = arr(obj.matches)
+    .map((row) => ({
+      paletteName: str(row?.paletteName),
+      paletteHex: str(row?.paletteHex),
+      imageHex: str(row?.imageHex),
+      distance: Number.isFinite(Number(row?.distance)) ? Number(row.distance) : null,
+      status: str(row?.status)
+    }))
+    .filter((row) => row.paletteHex || row.imageHex);
+  return {
+    status: str(obj.status || "not_evaluated"),
+    method: str(obj.method || "nearest_rgb_distance_v1"),
+    matchedColorCount: Number.isFinite(Number(obj.matchedColorCount)) ? Number(obj.matchedColorCount) : 0,
+    requiredColorCount: Number.isFinite(Number(obj.requiredColorCount)) ? Number(obj.requiredColorCount) : 0,
+    averageDistance: Number.isFinite(Number(obj.averageDistance)) ? Number(obj.averageDistance) : null,
+    recommendation: str(obj.recommendation),
+    matches
+  };
+}
+
 function normalizeLightingPalette(rows = []) {
   return arr(rows)
     .map((row) => ({
@@ -52,13 +92,15 @@ function normalizePaletteContract({ palette = [], paletteDisplay = {} } = {}) {
   const display = isPlainObject(paletteDisplay) ? paletteDisplay : {};
   const imageColors = normalizePalette(display.imageColors || rows);
   const lightingColors = normalizeLightingPalette(display.lightingColors || display.lightingPalette || rows);
+  const validation = normalizePaletteValidation(display.validation || display.paletteValidation);
   return {
     required: true,
     displayMode: str(display.displayMode || display.mode || "image_and_lighting_palettes"),
     coordinationRule: str(display.coordinationRule || "Designer palette is canonical for sequencing; image colors are diagnostic validation context."),
     colors: lightingColors,
     imageColors,
-    lightingColors
+    lightingColors,
+    validation
   };
 }
 
@@ -400,12 +442,78 @@ export function buildVisualInspirationRefs(assetPack = {}) {
     palette: normalizeLightingPalette(palette.lightingColors || palette.colors || creativeIntent.lightingPalette || creativeIntent.palette),
     imagePalette: normalizePalette(palette.imageColors || creativeIntent.imagePalette),
     lightingPalette: normalizeLightingPalette(palette.lightingColors || palette.colors || creativeIntent.lightingPalette || creativeIntent.palette),
+    paletteValidation: normalizePaletteValidation(palette.validation || palette.paletteValidation),
     paletteDisplayMode: str(palette.displayMode),
     paletteCoordinationRule: str(palette.coordinationRule),
     themeSummary: str(creativeIntent.themeSummary),
     motifs: uniqueStrings(creativeIntent.motifs),
     mediaAssetPlanCount: arr(obj.mediaAssetPlans).length
   };
+}
+
+export function buildPaletteCoordinationValidation({
+  designerPalette = [],
+  imagePalette = [],
+  matchDistance = 92,
+  minimumMatchRatio = 0.6
+} = {}) {
+  const paletteRows = normalizePalette(designerPalette);
+  const imageRows = normalizePalette(imagePalette)
+    .map((row) => ({ ...row, rgb: parseHexColor(row.hex) }))
+    .filter((row) => row.rgb);
+  if (!paletteRows.length || !imageRows.length) {
+    return normalizePaletteValidation({
+      status: "not_evaluated",
+      method: "nearest_rgb_distance_v1",
+      matchedColorCount: 0,
+      requiredColorCount: paletteRows.length,
+      recommendation: "Generate or sample an inspiration image before evaluating palette coordination."
+    });
+  }
+  const threshold = Number.isFinite(Number(matchDistance)) ? Number(matchDistance) : 92;
+  const matches = paletteRows.map((paletteColor) => {
+    const paletteRgb = parseHexColor(paletteColor.hex);
+    if (!paletteRgb) {
+      return {
+        paletteName: paletteColor.name,
+        paletteHex: paletteColor.hex,
+        imageHex: "",
+        distance: null,
+        status: "invalid_palette_color"
+      };
+    }
+    const nearest = imageRows
+      .map((imageColor) => ({
+        imageColor,
+        distance: colorDistance(paletteRgb, imageColor.rgb)
+      }))
+      .sort((a, b) => a.distance - b.distance)[0];
+    return {
+      paletteName: paletteColor.name,
+      paletteHex: paletteColor.hex,
+      imageHex: nearest?.imageColor?.hex || "",
+      distance: nearest ? Math.round(nearest.distance) : null,
+      status: nearest && nearest.distance <= threshold ? "matched" : "distant"
+    };
+  });
+  const matchedColorCount = matches.filter((row) => row.status === "matched").length;
+  const distanceRows = matches.map((row) => row.distance).filter((value) => Number.isFinite(Number(value)));
+  const averageDistance = distanceRows.length
+    ? Math.round(distanceRows.reduce((sum, value) => sum + Number(value), 0) / distanceRows.length)
+    : null;
+  const requiredColorCount = Math.max(1, Math.ceil(paletteRows.length * Math.max(0, Math.min(1, Number(minimumMatchRatio) || 0.6))));
+  const status = matchedColorCount >= requiredColorCount ? "pass" : "warn";
+  return normalizePaletteValidation({
+    status,
+    method: "nearest_rgb_distance_v1",
+    matchedColorCount,
+    requiredColorCount,
+    averageDistance,
+    recommendation: status === "pass"
+      ? "Image coordinates with the Designer palette."
+      : "Revise the image to better reflect the Designer palette; do not replace the Designer palette with sampled image colors.",
+    matches
+  });
 }
 
 export function buildDefaultVisualMediaAssetPlans({

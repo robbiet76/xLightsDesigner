@@ -130,6 +130,11 @@ struct DesignScreenView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Palette").font(.headline)
                     paletteSwatches(model.screenModel.visualInspiration.palette)
+                    if !model.screenModel.visualInspiration.paletteValidationSummary.isEmpty {
+                        Text(model.screenModel.visualInspiration.paletteValidationSummary)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer(minLength: 16)
                 if !model.screenModel.visualInspiration.currentRevisionId.isEmpty {
