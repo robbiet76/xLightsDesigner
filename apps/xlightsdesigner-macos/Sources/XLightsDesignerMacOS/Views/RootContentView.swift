@@ -10,6 +10,7 @@ struct RootContentView: View {
 
             VStack(spacing: 0) {
                 workflowPhaseHeader
+                workFocusBand
 
                 HSplitView {
                     ZStack(alignment: .topTrailing) {
@@ -94,6 +95,77 @@ struct RootContentView: View {
         .overlay(alignment: .bottom) {
             Divider()
         }
+    }
+
+    private var workFocusBand: some View {
+        let focus = model.currentWorkFocus()
+        return HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(focus.label)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(focus.title.isEmpty ? "No active focus" : focus.title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+                if !focus.detail.isEmpty {
+                    Text(focus.detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer(minLength: 12)
+
+            HStack(spacing: 8) {
+                focusStateChip(focus.state.rawValue, state: focus.state)
+                ForEach(Array(focus.chips.prefix(4).enumerated()), id: \.offset) { _, chipText in
+                    if !chipText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        focusChip(chipText)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Color(nsColor: .textBackgroundColor))
+        .overlay(alignment: .bottom) {
+            Divider()
+        }
+    }
+
+    private func focusChip(_ text: String) -> some View {
+        Text(text)
+            .font(.caption)
+            .lineLimit(1)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+    }
+
+    private func focusStateChip(_ text: String, state: PendingWorkState) -> some View {
+        let tint: Color
+        switch state {
+        case .ready:
+            tint = .green
+        case .blocked:
+            tint = .red
+        case .partial:
+            tint = .orange
+        case .none:
+            tint = .secondary
+        }
+        return Text(text)
+            .font(.caption)
+            .fontWeight(.medium)
+            .lineLimit(1)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background(tint.opacity(0.14))
+            .foregroundStyle(tint)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 
     private func phaseOwnerTitle(for roleID: String) -> String {

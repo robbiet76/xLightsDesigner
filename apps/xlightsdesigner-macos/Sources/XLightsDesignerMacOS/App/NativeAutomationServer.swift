@@ -459,6 +459,7 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "nextRecommendedPhases": phase.nextRecommendedPhases.map(\.rawValue)
             ],
             "assistantVisible": model.showAssistantPanel,
+            "workFocus": workFocusSnapshot(),
             "workspace": workspaceSnapshot(),
             "xlights": xlightsSessionSnapshot(),
             "assistant": assistantSnapshot(),
@@ -629,6 +630,18 @@ final class NativeAutomationServer: @unchecked Sendable {
             "readinessItems": screen.readinessItems.map { ["label": $0.label, "value": $0.value, "status": $0.status.rawValue] },
             "hints": screen.hints.map(\.text),
             "banners": screen.banners.map { ["text": $0.text, "level": $0.level.rawValue] }
+        ]
+    }
+
+    @MainActor
+    private func workFocusSnapshot() -> [String: Any] {
+        let focus = model.currentWorkFocus()
+        return [
+            "label": focus.label,
+            "title": focus.title,
+            "detail": focus.detail,
+            "chips": focus.chips,
+            "state": focus.state.rawValue
         ]
     }
 

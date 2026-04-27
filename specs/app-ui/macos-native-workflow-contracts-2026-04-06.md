@@ -447,6 +447,7 @@ This ordering reflects the product journey, not just a nav list.
 5. `History` must remain immutable and retrospective.
 6. `Settings` must stay outside the workflow journey.
 7. `Layout` is a support workflow, not a primary creative or apply workflow.
+8. The shell may show a shared current-work focus band below the workflow header, but the focus content must be page-specific: selected track or batch on Audio, active song/sequence on Design and Sequence, pending target on Review, selected event on History, and project/display context on setup support pages.
 
 ## Decisions Locked Here
 
@@ -456,6 +457,7 @@ This ordering reflects the product journey, not just a nav list.
 4. `Audio` and `Sequence` remain distinct and must not be blended
 5. `Review` and `History` remain distinct and must not be blended
 6. `Settings` remains globally available but outside the workflow path
+7. current-work focus belongs below the workflow header, not inside individual page headers, so it can clarify the page target without implying that every page is song-scoped
 
 ## Immediate Next Design Step
 

@@ -3,6 +3,38 @@ import Testing
 @testable import XLightsDesignerMacOS
 
 @MainActor
+@Test func currentWorkFocusUsesPageSpecificTargets() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-work-focus-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let projectService = LocalProjectService(projectsRootPath: root.path)
+    var project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Focus Project \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "/tmp/show/CandyCaneLane/CandyCaneLane.xsq",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    project.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/CandyCaneLane/CandyCaneLane.xsq")
+    project = try projectService.saveProject(project)
+    let model = AppModel()
+    model.workspace.setProject(project)
+
+    model.selectedWorkflow = .design
+    let designFocus = model.currentWorkFocus()
+    #expect(designFocus.label == "Design Focus")
+    #expect(designFocus.title == "CandyCaneLane")
+
+    model.selectedWorkflow = .audio
+    model.audioScreenModel.selectRow(id: "carol-bells")
+    let audioFocus = model.currentWorkFocus()
+    #expect(audioFocus.label == "Audio Focus")
+    #expect(audioFocus.title == "Carol Of The Bells")
+    #expect(audioFocus.chips.contains("Needs Review"))
+}
+
+@MainActor
 @Test func assistantActionCanSeedDisplayMetadataFromLayout() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-assistant-action-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
