@@ -28,9 +28,20 @@ struct DesignScreenView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(model.screenModel.title).font(.largeTitle).fontWeight(.semibold)
-            Text(model.screenModel.visualInspiration.available ? model.screenModel.visualInspiration.summary : model.screenModel.subtitle)
+            Text(model.screenModel.subtitle)
                 .foregroundStyle(.secondary)
+            PageHeaderFocusText(text: headerFocusText)
         }
+    }
+
+    private var headerFocusText: String {
+        let visual = model.screenModel.visualInspiration
+        let sequenceId = model.screenModel.activeSequenceID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? visual.sequenceId.trimmingCharacters(in: .whitespacesAndNewlines)
+            : model.screenModel.activeSequenceID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sequenceId.isEmpty else { return "" }
+        let revision = visual.currentRevisionId.trimmingCharacters(in: .whitespacesAndNewlines)
+        return visual.available && !revision.isEmpty ? "Song / Sequence: \(sequenceId) • Visual \(revision)" : "Song / Sequence: \(sequenceId)"
     }
 
     private var summaryBand: some View {

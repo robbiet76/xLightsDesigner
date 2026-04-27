@@ -31,8 +31,27 @@ struct AudioScreenView: View {
                 .fontWeight(.semibold)
             Text(model.header.subtitle)
                 .foregroundStyle(.secondary)
+            PageHeaderFocusText(text: headerFocusText)
         }
         .layoutPriority(1)
+    }
+
+    private var headerFocusText: String {
+        switch model.currentResult {
+        case let .track(track):
+            let artist = track.artist.trimmingCharacters(in: .whitespacesAndNewlines)
+            return artist.isEmpty || artist == "Unverified"
+                ? "Track: \(track.displayName)"
+                : "Track: \(track.displayName) • \(artist)"
+        case let .batchRunning(batch):
+            return "Batch: \(batch.batchLabel) • \(batch.processedCount)/\(batch.totalCount)"
+        case let .batchComplete(batch):
+            return "Batch: \(batch.batchLabel) • \(batch.followUpActionText)"
+        case let .error(error):
+            return "Issue: \(error.title)"
+        case .empty:
+            return ""
+        }
     }
 
     private var summarySection: some View {

@@ -459,7 +459,6 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "nextRecommendedPhases": phase.nextRecommendedPhases.map(\.rawValue)
             ],
             "assistantVisible": model.showAssistantPanel,
-            "workFocus": workFocusSnapshot(),
             "workspace": workspaceSnapshot(),
             "xlights": xlightsSessionSnapshot(),
             "assistant": assistantSnapshot(),
@@ -619,6 +618,7 @@ final class NativeAutomationServer: @unchecked Sendable {
         return [
             "title": screen.header.title,
             "subtitle": screen.header.subtitle,
+            "headerFocus": projectHeaderFocusText(),
             "statusBadge": screen.header.statusBadge,
             "activeProjectName": screen.summary?.projectName ?? "",
             "projectFolderPath": screen.summary?.projectFilePath ?? "",
@@ -634,15 +634,9 @@ final class NativeAutomationServer: @unchecked Sendable {
     }
 
     @MainActor
-    private func workFocusSnapshot() -> [String: Any] {
-        let focus = model.currentWorkFocus()
-        return [
-            "label": focus.label,
-            "title": focus.title,
-            "detail": focus.detail,
-            "chips": focus.chips,
-            "state": focus.state.rawValue
-        ]
+    private func projectHeaderFocusText() -> String {
+        guard let summary = model.projectScreenModel.screenModel.summary else { return "" }
+        return "Project: \(summary.projectName)"
     }
 
     @MainActor
@@ -666,6 +660,7 @@ final class NativeAutomationServer: @unchecked Sendable {
         return [
             "title": screen.header.title,
             "subtitle": screen.header.subtitle,
+            "headerFocus": displayHeaderFocusText(screen: screen),
             "activeProjectName": screen.header.activeProjectName,
             "sourceSummary": screen.header.sourceSummary,
             "targetCount": screen.rows.count,
@@ -710,11 +705,24 @@ final class NativeAutomationServer: @unchecked Sendable {
     }
 
     @MainActor
+    private func displayHeaderFocusText(screen: DisplayScreenModel) -> String {
+        let projectName = screen.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !projectName.isEmpty, projectName != "No Project" else { return "" }
+        switch screen.selectedMetadata {
+        case let .selected(entry):
+            return "Project: \(projectName) • Selected: \(entry.subject) / \(entry.category)"
+        default:
+            return "Project: \(projectName)"
+        }
+    }
+
+    @MainActor
     private func audioSnapshot() -> [String: Any] {
         let header = model.audioScreenModel.header
         return [
             "title": header.title,
             "subtitle": header.subtitle,
+            "headerFocus": audioHeaderFocusText(),
             "totalCount": header.totalCount,
             "completeCount": header.completeCount,
             "partialCount": header.partialCount,
@@ -725,12 +733,32 @@ final class NativeAutomationServer: @unchecked Sendable {
     }
 
     @MainActor
+    private func audioHeaderFocusText() -> String {
+        switch model.audioScreenModel.currentResult {
+        case let .track(track):
+            let artist = track.artist.trimmingCharacters(in: .whitespacesAndNewlines)
+            return artist.isEmpty || artist == "Unverified"
+                ? "Track: \(track.displayName)"
+                : "Track: \(track.displayName) • \(artist)"
+        case let .batchRunning(batch):
+            return "Batch: \(batch.batchLabel) • \(batch.processedCount)/\(batch.totalCount)"
+        case let .batchComplete(batch):
+            return "Batch: \(batch.batchLabel) • \(batch.followUpActionText)"
+        case let .error(error):
+            return "Issue: \(error.title)"
+        case .empty:
+            return ""
+        }
+    }
+
+    @MainActor
     private func designSnapshot() -> [String: Any] {
         let screen = model.designScreenModel.screenModel
         let visual = screen.visualInspiration
         return [
             "title": screen.title,
             "subtitle": screen.subtitle,
+            "headerFocus": designHeaderFocusText(screen: screen),
             "briefSummary": screen.summary.briefSummary,
             "proposalSummary": screen.summary.proposalSummary,
             "visualInspiration": [
@@ -783,6 +811,17 @@ final class NativeAutomationServer: @unchecked Sendable {
     }
 
     @MainActor
+    private func designHeaderFocusText(screen: DesignScreenModel) -> String {
+        let visual = screen.visualInspiration
+        let sequenceId = screen.activeSequenceID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? visual.sequenceId.trimmingCharacters(in: .whitespacesAndNewlines)
+            : screen.activeSequenceID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sequenceId.isEmpty else { return "" }
+        let revision = visual.currentRevisionId.trimmingCharacters(in: .whitespacesAndNewlines)
+        return visual.available && !revision.isEmpty ? "Song / Sequence: \(sequenceId) • Visual \(revision)" : "Song / Sequence: \(sequenceId)"
+    }
+
+    @MainActor
     private func workflowBannerPayload(_ banner: WorkflowBannerModel?) -> Any {
         guard let banner else { return NSNull() }
         return [
@@ -807,6 +846,7 @@ final class NativeAutomationServer: @unchecked Sendable {
         return [
             "title": screen.title,
             "subtitle": screen.subtitle,
+            "headerFocus": sequenceHeaderFocusText(screen: screen),
             "hasLiveSequence": screen.hasLiveSequence,
             "planOnlyMode": screen.planOnlyMode,
             "activeSequenceName": screen.activeSequence.activeSequenceName,
@@ -824,6 +864,13 @@ final class NativeAutomationServer: @unchecked Sendable {
     }
 
     @MainActor
+    private func sequenceHeaderFocusText(screen: SequenceScreenModel) -> String {
+        let sequenceName = screen.activeSequence.activeSequenceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sequenceName.isEmpty, sequenceName != "No live sequence open", sequenceName != "No sequence" else { return "" }
+        return "Sequence: \(sequenceName)"
+    }
+
+    @MainActor
     private func sequenceBanners(screen: SequenceScreenModel) -> [WorkflowBannerModel] {
         var banners = screen.banners
         if let transientBanner = model.sequenceScreenModel.transientBanner {
@@ -838,6 +885,7 @@ final class NativeAutomationServer: @unchecked Sendable {
         return [
             "title": screen.title,
             "subtitle": screen.subtitle,
+            "headerFocus": reviewHeaderFocusText(screen: screen),
             "pendingSummary": screen.pendingSummary.pendingSummary,
             "targetSequenceSummary": screen.pendingSummary.targetSequenceSummary,
             "canApply": screen.actions.canApply,
@@ -845,6 +893,13 @@ final class NativeAutomationServer: @unchecked Sendable {
             "isApplying": model.reviewScreenModel.isApplying,
             "banners": screen.banners.map { ["text": $0.text, "state": $0.state.rawValue] }
         ]
+    }
+
+    @MainActor
+    private func reviewHeaderFocusText(screen: ReviewScreenModel) -> String {
+        let target = screen.pendingSummary.targetSequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !target.isEmpty, target != "No target sequence." else { return "" }
+        return "Target: \(target)"
     }
 
     @MainActor
@@ -862,10 +917,23 @@ final class NativeAutomationServer: @unchecked Sendable {
         return [
             "title": screen.header.title,
             "subtitle": screen.header.subtitle,
+            "headerFocus": historyHeaderFocusText(screen: screen),
             "rowCount": screen.rows.count,
             "selectedSummary": selectedSummary,
             "banners": screen.banners.map { ["text": $0.text, "state": $0.state.rawValue] }
         ]
+    }
+
+    @MainActor
+    private func historyHeaderFocusText(screen: HistoryScreenModel) -> String {
+        switch screen.selectedEvent {
+        case let .selected(event):
+            let sequence = event.relatedSequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines)
+            return sequence.isEmpty ? "Selected: \(event.identity)" : "Selected: \(event.identity) • \(sequence)"
+        default:
+            let projectName = screen.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+            return projectName.isEmpty || projectName == "No Project" ? "" : "Project: \(projectName)"
+        }
     }
 
     @MainActor

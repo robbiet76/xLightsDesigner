@@ -73,13 +73,20 @@ struct DisplayScreenView: View {
                 .fontWeight(.semibold)
             Text(model.screenModel.header.subtitle)
                 .foregroundStyle(.secondary)
-            if model.screenModel.header.activeProjectName != "No Project" {
-                Text("Project: \(model.screenModel.header.activeProjectName)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+            PageHeaderFocusText(text: headerFocusText)
         }
         .layoutPriority(1)
+    }
+
+    private var headerFocusText: String {
+        let projectName = model.screenModel.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !projectName.isEmpty, projectName != "No Project" else { return "" }
+        switch model.screenModel.selectedMetadata {
+        case let .selected(entry):
+            return "Project: \(projectName) • Selected: \(entry.subject) / \(entry.category)"
+        default:
+            return "Project: \(projectName)"
+        }
     }
 
     private func compactTopSection(height: CGFloat) -> some View {

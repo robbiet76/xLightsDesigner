@@ -1,14 +1,6 @@
 import Foundation
 import Observation
 
-struct WorkFocusModel: Sendable {
-    let label: String
-    let title: String
-    let detail: String
-    let chips: [String]
-    let state: PendingWorkState
-}
-
 @MainActor
 @Observable
 final class AppModel {
@@ -119,97 +111,6 @@ final class AppModel {
             default:
                 return "No history item selected"
             }
-        }
-    }
-
-    func currentWorkFocus() -> WorkFocusModel {
-        let projectName = workspace.activeProject?.projectName.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let showFolder = workspace.activeProject?.showFolder.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let xlights = xlightsSessionModel.snapshot
-        switch selectedWorkflow {
-        case .project:
-            return WorkFocusModel(
-                label: "Project Focus",
-                title: projectName.isEmpty ? "No active project" : projectName,
-                detail: workspace.activeProject?.projectFilePath ?? "Open or create a project.",
-                chips: [showFolder.isEmpty ? "" : "Show \(lastPathComponent(showFolder))"].filter { !$0.isEmpty },
-                state: projectName.isEmpty ? .blocked : .ready
-            )
-        case .display:
-            let selected: String
-            switch displayScreenModel.screenModel.selectedMetadata {
-            case let .selected(entry):
-                selected = "\(entry.subject) • \(entry.category)"
-            default:
-                selected = "Display metadata workspace"
-            }
-            return WorkFocusModel(
-                label: "Display Focus",
-                title: selected,
-                detail: projectName.isEmpty ? "No active project." : "Project \(projectName)",
-                chips: [
-                    "Targets \(displayScreenModel.screenModel.readinessSummary.totalTargets)",
-                    "Metadata \(displayScreenModel.screenModel.metadataRows.count)"
-                ],
-                state: projectName.isEmpty ? .blocked : .ready
-            )
-        case .audio:
-            return audioWorkFocus(projectName: projectName)
-        case .design:
-            let visual = designScreenModel.screenModel.visualInspiration
-            let sequenceName = selectedSequenceName(fallback: visual.sequenceId)
-            return WorkFocusModel(
-                label: "Design Focus",
-                title: sequenceName.isEmpty ? "No selected song or sequence" : sequenceName,
-                detail: visual.available ? visual.summary : visual.summary,
-                chips: [
-                    visual.available ? "Visual \(visual.currentRevisionId)" : "No visual board",
-                    projectName.isEmpty ? "" : projectName
-                ].filter { !$0.isEmpty },
-                state: sequenceName.isEmpty ? .partial : .ready
-            )
-        case .sequence:
-            let sequenceName = selectedSequenceName(fallback: sequenceScreenModel.screenModel.activeSequence.activeSequenceName)
-            return WorkFocusModel(
-                label: "Sequence Focus",
-                title: sequenceName.isEmpty ? "No live sequence open" : sequenceName,
-                detail: xlights.sequencePath.isEmpty ? sequenceScreenModel.screenModel.activeSequence.boundTrackSummary : xlights.sequencePath,
-                chips: [
-                    sequenceScreenModel.screenModel.overview.translationSource,
-                    "Items \(sequenceScreenModel.screenModel.overview.itemCount)",
-                    sequenceScreenModel.screenModel.overview.commandCount > 0 ? "Commands \(sequenceScreenModel.screenModel.overview.commandCount)" : ""
-                ].filter { !$0.isEmpty },
-                state: sequenceScreenModel.screenModel.hasLiveSequence ? .ready : .partial
-            )
-        case .review:
-            return WorkFocusModel(
-                label: "Review Focus",
-                title: reviewScreenModel.screenModel.pendingSummary.targetSequenceSummary,
-                detail: reviewScreenModel.screenModel.pendingSummary.pendingSummary,
-                chips: [
-                    reviewScreenModel.screenModel.readiness.state.rawValue,
-                    reviewScreenModel.screenModel.actions.canApply ? "Apply ready" : "Review gate"
-                ],
-                state: reviewScreenModel.screenModel.actions.canApply ? .ready : .partial
-            )
-        case .history:
-            let title: String
-            let detail: String
-            switch historyScreenModel.screenModel.selectedEvent {
-            case let .selected(event):
-                title = event.relatedSequenceSummary.isEmpty ? "Selected history event" : event.relatedSequenceSummary
-                detail = event.changeSummary
-            default:
-                title = projectName.isEmpty ? "History" : projectName
-                detail = "Browse prior work and validation records."
-            }
-            return WorkFocusModel(
-                label: "History Focus",
-                title: title,
-                detail: detail,
-                chips: ["Events \(historyScreenModel.screenModel.summary.totalEventCount)"],
-                state: .partial
-            )
         }
     }
 
@@ -372,77 +273,6 @@ final class AppModel {
         case .review:
             return reviewScreenModel.screenModel.pendingSummary.pendingSummary
         }
-    }
-
-    private func audioWorkFocus(projectName: String) -> WorkFocusModel {
-        switch audioScreenModel.currentResult {
-        case let .track(track):
-            return WorkFocusModel(
-                label: "Audio Focus",
-                title: track.displayName,
-                detail: track.artist.isEmpty ? track.lastAnalyzedSummary : track.artist,
-                chips: [track.status.rawValue, track.identityState.rawValue],
-                state: track.status == .complete ? .ready : .partial
-            )
-        case let .batchRunning(batch):
-            return WorkFocusModel(
-                label: "Audio Focus",
-                title: batch.batchLabel,
-                detail: batch.progressNote,
-                chips: ["Batch", "\(batch.processedCount)/\(batch.totalCount)"],
-                state: .partial
-            )
-        case let .batchComplete(batch):
-            return WorkFocusModel(
-                label: "Audio Focus",
-                title: batch.batchLabel,
-                detail: batch.followUpActionText,
-                chips: ["Batch complete", "Needs review \(batch.needsReviewCount)"],
-                state: batch.needsReviewCount == 0 && batch.failedCount == 0 ? .ready : .partial
-            )
-        case let .error(error):
-            return WorkFocusModel(
-                label: "Audio Focus",
-                title: error.title,
-                detail: error.explanation,
-                chips: ["Error"],
-                state: .blocked
-            )
-        case .empty:
-            return WorkFocusModel(
-                label: "Audio Focus",
-                title: "Track library",
-                detail: projectName.isEmpty ? "No project context." : "Project \(projectName)",
-                chips: ["Tracks \(audioScreenModel.header.totalCount)"],
-                state: .partial
-            )
-        }
-    }
-
-    private func selectedSequenceName(fallback: String = "") -> String {
-        let candidates = [
-            xlightsSessionModel.snapshot.sequencePath,
-            fallback,
-            workspace.activeProject?.snapshot["sequencePathInput"]?.value as? String,
-            workspace.activeProject?.snapshot["activeSequence"]?.value as? String,
-            workspace.activeProject?.snapshot["mediaPath"]?.value as? String
-        ]
-        for candidate in candidates {
-            let value = String(candidate ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !value.isEmpty, value != "No live sequence open", value != "No active sequence" else { continue }
-            let url = URL(fileURLWithPath: value)
-            let name = url.lastPathComponent.contains(".")
-                ? url.deletingPathExtension().lastPathComponent
-                : value
-            if !name.isEmpty { return name }
-        }
-        return ""
-    }
-
-    private func lastPathComponent(_ path: String) -> String {
-        let value = path.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !value.isEmpty else { return "" }
-        return URL(fileURLWithPath: value).lastPathComponent
     }
 
     private func inferredInteractionStyle() -> String {

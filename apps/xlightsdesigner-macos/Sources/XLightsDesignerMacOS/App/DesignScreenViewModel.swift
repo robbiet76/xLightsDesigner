@@ -273,6 +273,7 @@ final class DesignScreenViewModel {
         let sceneSummary = pendingWork?.designSceneSummary ?? "No design-scene context available."
         let openQuestions = pendingWork?.guidedQuestions ?? []
         let visualInspiration = loadVisualInspiration(for: project, selectedRevisionID: selectedVisualRevisionID)
+        let activeSequenceID = project.map { visualSequenceID(from: $0) } ?? ""
 
         let identity = PendingWorkIdentityModel(
             title: hasProject ? "Current design direction" : "No pending design context",
@@ -298,6 +299,7 @@ final class DesignScreenViewModel {
         return DesignScreenModel(
             title: "Design",
             subtitle: "Creative direction, proposal intent, and rationale for the current work item.",
+            activeSequenceID: activeSequenceID,
             summary: DesignSummaryBandModel(
                 identity: identity,
                 briefSummary: hasProject ? briefSummary : "No creative brief is active yet.",

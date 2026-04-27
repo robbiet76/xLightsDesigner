@@ -44,8 +44,15 @@ struct SequenceScreenView: View {
                 .fontWeight(.semibold)
             Text(model.screenModel.subtitle)
                 .foregroundStyle(.secondary)
+            PageHeaderFocusText(text: headerFocusText)
         }
         .layoutPriority(1)
+    }
+
+    private var headerFocusText: String {
+        let sequenceName = model.screenModel.activeSequence.activeSequenceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sequenceName.isEmpty, sequenceName != "No live sequence open", sequenceName != "No sequence" else { return "" }
+        return "Sequence: \(sequenceName)"
     }
 
     private var summarySection: some View {

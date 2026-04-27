@@ -25,7 +25,22 @@ struct ReviewScreenView: View {
         }
     }
 
-    private var header: some View { VStack(alignment: .leading, spacing: 8) { Text(model.screenModel.title).font(.largeTitle).fontWeight(.semibold); Text(model.screenModel.subtitle).foregroundStyle(.secondary) } }
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(model.screenModel.title)
+                .font(.largeTitle)
+                .fontWeight(.semibold)
+            Text(model.screenModel.subtitle)
+                .foregroundStyle(.secondary)
+            PageHeaderFocusText(text: headerFocusText)
+        }
+    }
+
+    private var headerFocusText: String {
+        let target = model.screenModel.pendingSummary.targetSequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !target.isEmpty, target != "No target sequence." else { return "" }
+        return "Target: \(target)"
+    }
 
     private var pendingBand: some View {
         GroupBox("Pending Work") {

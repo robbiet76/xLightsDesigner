@@ -103,6 +103,7 @@ struct DesignAuthoringPaneModel: Sendable {
 struct DesignScreenModel: Sendable {
     let title: String
     let subtitle: String
+    let activeSequenceID: String
     let summary: DesignSummaryBandModel
     let proposal: DesignProposalPaneModel
     let authoring: DesignAuthoringPaneModel

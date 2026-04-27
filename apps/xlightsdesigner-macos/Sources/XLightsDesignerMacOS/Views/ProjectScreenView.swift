@@ -46,7 +46,13 @@ struct ProjectScreenView: View {
                 .fontWeight(.semibold)
             Text(model.screenModel.header.subtitle)
                 .foregroundStyle(.secondary)
+            PageHeaderFocusText(text: headerFocusText)
         }
+    }
+
+    private var headerFocusText: String {
+        guard let summary = model.screenModel.summary else { return "" }
+        return "Project: \(summary.projectName)"
     }
 
     private var topBand: some View {

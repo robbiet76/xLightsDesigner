@@ -405,6 +405,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     )
 
     #expect(model.screenModel.visualInspiration.available == true)
+    #expect(model.screenModel.activeSequenceID == "CandyCaneLane")
     #expect(model.screenModel.visualInspiration.sequenceId == "CandyCaneLane")
     #expect(model.screenModel.visualInspiration.summary == "Candy Cane Lane board")
 }

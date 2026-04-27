@@ -27,9 +27,18 @@ struct HistoryScreenView: View {
                 .fontWeight(.semibold)
             Text(model.screenModel.header.subtitle)
                 .foregroundStyle(.secondary)
-            Text(model.screenModel.header.activeProjectName)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            PageHeaderFocusText(text: headerFocusText)
+        }
+    }
+
+    private var headerFocusText: String {
+        switch model.screenModel.selectedEvent {
+        case let .selected(detail):
+            let sequence = detail.relatedSequenceSummary.trimmingCharacters(in: .whitespacesAndNewlines)
+            return sequence.isEmpty ? "Selected: \(detail.identity)" : "Selected: \(detail.identity) • \(sequence)"
+        default:
+            let projectName = model.screenModel.header.activeProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+            return projectName.isEmpty || projectName == "No Project" ? "" : "Project: \(projectName)"
         }
     }
 
