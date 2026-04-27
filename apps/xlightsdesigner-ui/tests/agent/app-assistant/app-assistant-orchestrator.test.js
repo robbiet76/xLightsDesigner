@@ -60,6 +60,67 @@ test("app assistant routes design conversation to designer and allows proposal g
   assert.equal(result.result.handledBy, "designer_dialog");
 });
 
+test("app assistant blocks design kickoff through chat until a song or sequence is selected", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      throw new Error("cloud agent should not be called without selected song context");
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Create a visual inspiration board and start the design process for this song",
+    messages: [],
+    context: { route: "design", activeSequenceLoaded: false, xlights: { sequenceOpen: false, sequencePath: "", mediaFile: "", projectShowMatches: true } },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "designer_dialog");
+  assert.equal(result.result.handledBy, "designer_dialog");
+  assert.equal(result.result.shouldGenerateProposal, false);
+  assert.equal(result.result.diagnostics.responseCode, "SONG_CONTEXT_REQUIRED");
+  assert.match(result.result.assistantMessage, /Select or open a song\/sequence first/);
+});
+
+test("app assistant allows design kickoff through chat when xLights has an active sequence", async () => {
+  let called = false;
+  const bridge = {
+    async runAgentConversation() {
+      called = true;
+      return {
+        ok: true,
+        provider: "openai",
+        model: "gpt-5.4-mini",
+        assistantMessage: "I can start the design from the active sequence.",
+        shouldGenerateProposal: true,
+        proposalIntent: "Create a visual inspiration board for this song",
+        responseId: "resp-song-selected"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Create a visual inspiration board for this song",
+    messages: [],
+    context: {
+      route: "design",
+      activeSequenceLoaded: true,
+      xlights: {
+        sequenceOpen: true,
+        sequencePath: "/show/ActiveSong.xsq",
+        mediaFile: "/show/media/ActiveSong.mp3",
+        projectShowMatches: true
+      }
+    },
+    bridge
+  });
+
+  assert.equal(called, true);
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "designer_dialog");
+  assert.equal(result.result.shouldGenerateProposal, true);
+});
+
 test("app assistant routes analysis requests to audio_analyst", async () => {
   const bridge = {
     async runAgentConversation() {

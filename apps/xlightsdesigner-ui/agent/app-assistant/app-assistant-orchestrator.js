@@ -98,6 +98,52 @@ function isDirectSequencingRequest(text = "") {
   );
 }
 
+function hasSelectedSongContext(context = {}) {
+  const xlights = context?.xlights && typeof context.xlights === "object" ? context.xlights : {};
+  const xlightsMatchesProject = xlights.projectShowMatches !== false;
+  return Boolean(
+    context?.activeSequenceLoaded ||
+    context?.sequenceOpen ||
+    (xlightsMatchesProject && (xlights.sequenceOpen || str(xlights.sequencePath) || str(xlights.mediaFile))) ||
+    str(context?.sequencePathInput) ||
+    str(context?.audioPathInput) ||
+    str(context?.mediaPath)
+  );
+}
+
+function isSongDesignStartRequest(text = "") {
+  const lower = str(text).toLowerCase();
+  if (!lower) return false;
+  const designLanguage = /\b(design|creative direction|concept|look|feel|mood|theme|inspiration|mood board|inspiration board|visual inspiration|theme image|image|asset pack)\b/.test(lower);
+  const generationLanguage = /\b(start|begin|create|build|generate|make|draft|proposal|design process|board|image)\b/.test(lower);
+  const songScope = /\b(song|sequence|track|chorus|verse|bridge|intro|outro|section)\b/.test(lower);
+  return designLanguage && (generationLanguage || songScope);
+}
+
+function buildMissingSongDesignResult({ input = {}, addressedTo = "" } = {}) {
+  const routeDecision = "designer_dialog";
+  return {
+    ok: true,
+    result: buildAppAssistantResult({
+      assistantMessage: "Select or open a song/sequence first. Once there is an active song context, I can start the design process or generate the visual inspiration board for that specific sequence.",
+      routeDecision,
+      handledBy: routeDecision,
+      addressedTo,
+      identities: input.context?.teamChat?.identities || input.context?.teamIdentities || DEFAULT_TEAM_CHAT_IDENTITIES,
+      shouldGenerateProposal: false,
+      proposalIntent: "",
+      diagnostics: buildDiagnostics({
+        routeDecision,
+        bridgeOk: false,
+        responseCode: "SONG_CONTEXT_REQUIRED",
+        context: input.context,
+        addressedTo
+      }),
+      warnings: ["A selected song or active sequence is required before design generation."]
+    })
+  };
+}
+
 function inferAddressedRole({ userMessage = "", context = {} } = {}) {
   const text = str(userMessage).toLowerCase();
   const identities = context?.teamChat?.identities || context?.teamIdentities || DEFAULT_TEAM_CHAT_IDENTITIES;
@@ -439,6 +485,10 @@ export async function executeAppAssistantConversation({
     };
   }
 
+  if (!hasSelectedSongContext(input.context) && isSongDesignStartRequest(input.userMessage)) {
+    return buildMissingSongDesignResult({ input, addressedTo });
+  }
+
   const response = await bridge.runAgentConversation({
     userMessage: input.userMessage,
     messages: input.messages,
@@ -485,7 +535,7 @@ export async function executeAppAssistantConversation({
     (discoveryShouldStart || discoveryShouldContinue);
   const allowProposalGeneration =
     (routeDecision === "designer_dialog" || routeDecision === "sequence_agent") &&
-    (Boolean(context?.sequenceOpen) || Boolean(context?.planOnlyMode));
+    (hasSelectedSongContext(context) || Boolean(context?.planOnlyMode));
   const explicitSwitch = isExplicitPhaseSwitchIntent(userMessage);
   const shouldUseAppAssistantTransitionMessage =
     explicitSwitch &&

@@ -74,6 +74,8 @@ Image revision behavior should use edit flows when the user accepts the design d
 
 All generated inspiration and sequence assets are xLightsDesigner-owned metadata and must live under the app-owned project folder, not the linked xLights show folder.
 
+Visual inspiration is song/sequence-scoped. The Designer must not start the song design process or generate an inspiration image until the user has selected or opened a song/sequence context. Project name must not be used as a fallback sequence id for image generation. If the user asks through team chat before a song/sequence is active, the Designer should block the generation request and ask the user to select or open the song/sequence first.
+
 Canonical location:
 
 ```text
@@ -302,6 +304,7 @@ Required local tests:
 - Designer result can reference a visual asset pack without breaking existing contract validation
 - Sequencer handoff compaction passes only refs/summaries, not binary payloads
 - native Design/Review automation can display a stored inspiration board fixture and verify handoff references
+- assistant-chat validation blocks design/image generation when no song/sequence is selected
 
 Live validation is opt-in because it incurs provider cost:
 
@@ -334,7 +337,8 @@ The script refuses to run unless `XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1` is 
 10. Add native Design screen generation action. Done: the macOS Design screen exposes an explicit `Generate Visual Inspiration` action backed by `LocalVisualDesignAssetGenerationService`; it uses the stored agent API key/base URL, runs the native generator, and writes only to the app-owned project artifact folder.
 11. Add sequence-agent use of palette/motif context immediately. Done: `sequence_agent` now carries `paletteRoles` and `motifDirectives` into planning metadata, uses motifs as effect-selection context, and applies palette-role hex values to generated xLights palette params when no explicit prompt color overrides them.
 12. Add media asset plan metadata for future Picture/Video use. Done: generated visual manifests now distinguish generated file-backed `sequenceAssets[]` from planned `mediaAssetPlans[]`, and the Designer -> Sequencer handoff carries compact `mediaAssetPlanDirectives[]` without binary payloads.
-13. Add picture/video effect placement later when xLights media effect support is implemented.
+13. Require selected song/sequence context before Designer song-design or image generation starts. Done: team-chat design/image prompts now block without selected song context, native visual generation no longer falls back to project name, and `scripts/native/validate-design-chat-song-gate.mjs` validates the no-song chat path.
+14. Add picture/video effect placement later when xLights media effect support is implemented.
 
 ## Open Questions
 

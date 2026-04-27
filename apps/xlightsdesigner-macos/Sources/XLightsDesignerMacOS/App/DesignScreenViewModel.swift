@@ -124,6 +124,15 @@ final class DesignScreenViewModel {
 
     func generateVisualInspiration() {
         guard !isGeneratingVisualInspiration, !isRevisingVisualInspiration, let activeProject = workspace.activeProject else { return }
+        guard Self.hasSelectedSongContext(activeProject) else {
+            transientBanner = WorkflowBannerModel(
+                id: "visual-inspiration-missing-song",
+                text: "Select or open a song/sequence before generating visual inspiration.",
+                state: .blocked
+            )
+            updateAuthoringState()
+            return
+        }
         let intentText = Self.visualGenerationIntentText(from: intentDraft, project: activeProject)
         guard !intentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             transientBanner = WorkflowBannerModel(
@@ -361,10 +370,13 @@ final class DesignScreenViewModel {
         let candidates = [
             string(snapshot["sequencePathInput"]?.value),
             string(snapshot["activeSequence"]?.value),
-            string(snapshot["mediaPath"]?.value),
-            project.projectName
+            string(snapshot["mediaPath"]?.value)
         ]
-        return candidates.first(where: { !$0.isEmpty }) ?? project.projectName
+        return candidates.first(where: { !$0.isEmpty }) ?? ""
+    }
+
+    private static func hasSelectedSongContext(_ project: ActiveProjectModel) -> Bool {
+        !visualSequenceID(from: project).isEmpty
     }
 
     private static func loadVisualInspiration(for project: ActiveProjectModel?, selectedRevisionID: String) -> DesignVisualInspirationModel {

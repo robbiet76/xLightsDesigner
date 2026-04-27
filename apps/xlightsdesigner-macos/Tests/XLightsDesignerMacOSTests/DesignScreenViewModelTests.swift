@@ -228,6 +228,38 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
 }
 
 @MainActor
+@Test func designScreenBlocksVisualInspirationWithoutSelectedSong() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-missing-song-tests-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let service = LocalProjectService(projectsRootPath: root.path)
+    let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
+    let project = try service.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Native Missing Song \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    workspace.setProject(project)
+    let visualService = StubVisualDesignAssetGenerationService()
+    let model = DesignScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: service,
+        visualAssetGenerationService: visualService
+    )
+
+    model.intentDraft.goal = "Create a warm candlelit chorus board."
+    model.generateVisualInspiration()
+
+    #expect(visualService.calls.isEmpty)
+    #expect(model.transientBanner?.state == .blocked)
+    #expect(model.transientBanner?.text.contains("Select or open a song/sequence") == true)
+}
+
+@MainActor
 @Test func designScreenGeneratesVisualInspirationThroughService() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-generate-visual-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
