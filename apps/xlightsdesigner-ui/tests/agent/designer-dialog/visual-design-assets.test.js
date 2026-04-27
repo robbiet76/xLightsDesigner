@@ -94,15 +94,15 @@ test("visual design asset pack palette is capped at xLights eight-color limit", 
   assert.deepEqual(validateVisualDesignAssetPack(pack), []);
 });
 
-test("visual design asset pack separates image reference colors from lighting palette", () => {
+test("visual design asset pack keeps designer palette canonical and image colors diagnostic", () => {
   const imageColors = [
     { name: "deep black", hex: "#0f0c0c", role: "shadow" },
     { name: "warm amber", hex: "#b4510a", role: "accent" },
     { name: "winter blue", hex: "#256eb1", role: "accent" }
   ];
   const lightingColors = [
-    { name: "warm amber", hex: "#b4510a", role: "accent", sourceHex: "#b4510a", suitability: "rgb_light_color" },
-    { name: "winter blue", hex: "#256eb1", role: "accent", sourceHex: "#256eb1", suitability: "rgb_light_color" }
+    { name: "electric cyan", hex: "#00d7ff", role: "designer accent" },
+    { name: "hot magenta", hex: "#ff2bd6", role: "designer accent" }
   ];
 
   const pack = buildVisualDesignAssetPack({
@@ -139,7 +139,7 @@ test("visual inspiration refs keep handoff compact", () => {
   assert.equal(refs.displayAssetRef, "inspiration-board.png");
   assert.equal(refs.currentRevisionId, "board-r001");
   assert.deepEqual(refs.palette, [{ name: "candle gold", hex: "#ffc45c", role: "warm highlight" }]);
-  assert.equal(refs.paletteCoordinationRule, "Image colors must reflect or coordinate with the approved palette.");
+  assert.equal(refs.paletteCoordinationRule, "Designer palette is canonical for sequencing; image colors are diagnostic validation context.");
   assert.equal(refs.mediaAssetPlanCount, 0);
   assert.equal("imageData" in refs, false);
 });

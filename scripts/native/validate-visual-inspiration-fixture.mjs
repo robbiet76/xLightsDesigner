@@ -139,8 +139,8 @@ function createFixtureProject(projectFile = '') {
     },
     palette: {
       required: true,
-      displayMode: 'separate_and_optional_in_image',
-      coordinationRule: 'Image colors must reflect or coordinate with the approved palette.',
+      displayMode: 'image_and_lighting_palettes',
+      coordinationRule: 'Designer palette is canonical for sequencing; image colors are diagnostic validation context.',
       colors: [
         { name: 'candle gold', hex: '#ffc45c', role: 'warm highlight' },
         { name: 'pine green', hex: '#1f6f4a', role: 'support' }
@@ -244,7 +244,7 @@ async function main() {
   if (!str(visual.revisionSummary).includes('Palette preserved')) {
     throw new Error(`visualInspiration.revisionSummary did not capture palette preservation: ${visual.revisionSummary}`);
   }
-  if (!str(visual.paletteCoordinationRule).includes('approved palette')) {
+  if (!str(visual.paletteCoordinationRule).includes('Designer palette is canonical')) {
     throw new Error(`visualInspiration.paletteCoordinationRule missing expected text: ${visual.paletteCoordinationRule}`);
   }
   console.log(JSON.stringify({

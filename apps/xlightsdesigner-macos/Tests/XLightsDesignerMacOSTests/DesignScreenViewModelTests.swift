@@ -167,7 +167,7 @@ private final class StubVisualDesignAssetGenerationService: VisualDesignAssetGen
       "palette": {
         "required": true,
         "displayMode": "separate_and_optional_in_image",
-        "coordinationRule": "Image colors must reflect or coordinate with the approved palette.",
+        "coordinationRule": "Designer palette is canonical for sequencing; image colors are diagnostic validation context.",
         "colors": [
           { "name": "candle gold", "hex": "#ffc45c", "role": "warm highlight" },
           { "name": "pine green", "hex": "#1f6f4a", "role": "support" }

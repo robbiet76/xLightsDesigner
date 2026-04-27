@@ -38,18 +38,11 @@ function normalizePalette(rows = []) {
 
 function normalizeLightingPalette(rows = []) {
   return arr(rows)
-    .map((row) => {
-      const normalized = {
-        name: str(row?.name),
-        hex: str(row?.hex),
-        role: str(row?.role)
-      };
-      const sourceHex = str(row?.sourceHex);
-      const suitability = str(row?.suitability);
-      if (sourceHex) normalized.sourceHex = sourceHex;
-      if (suitability) normalized.suitability = suitability;
-      return normalized;
-    })
+    .map((row) => ({
+      name: str(row?.name),
+      hex: str(row?.hex),
+      role: str(row?.role)
+    }))
     .filter((row) => row.name || row.hex || row.role)
     .slice(0, 8);
 }
@@ -62,7 +55,7 @@ function normalizePaletteContract({ palette = [], paletteDisplay = {} } = {}) {
   return {
     required: true,
     displayMode: str(display.displayMode || display.mode || "image_and_lighting_palettes"),
-    coordinationRule: str(display.coordinationRule || "Image colors must reflect or coordinate with the approved palette."),
+    coordinationRule: str(display.coordinationRule || "Designer palette is canonical for sequencing; image colors are diagnostic validation context."),
     colors: lightingColors,
     imageColors,
     lightingColors

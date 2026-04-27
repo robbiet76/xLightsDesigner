@@ -422,7 +422,7 @@ final class DesignScreenViewModel {
             revisionHistory: revisionHistory,
             paletteSummary: paletteSummary,
             paletteDisplayMode: string(paletteObject["displayMode"], fallback: "separate_and_optional_in_image"),
-            paletteCoordinationRule: string(paletteObject["coordinationRule"], fallback: "Image colors must reflect or coordinate with the approved palette."),
+            paletteCoordinationRule: string(paletteObject["coordinationRule"], fallback: "Designer palette is canonical for sequencing; image colors are diagnostic validation context."),
             palette: colors
         )
     }

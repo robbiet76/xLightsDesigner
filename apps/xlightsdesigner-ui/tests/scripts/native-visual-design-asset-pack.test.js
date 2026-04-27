@@ -216,25 +216,22 @@ test("native visual design asset generation uses richer default palette up to xL
   assert.match(providerInput.prompt, /pine green #1f7a4a/);
 });
 
-test("native visual design asset generation stores palette derived from generated image", async () => {
+test("native visual design asset generation keeps designer palette canonical and stores image palette as diagnostics", async () => {
   const { projectFilePath } = makeProjectFixture();
   const derivedPalette = [
     { name: "image color 1", hex: "#224466", role: "dominant" },
     { name: "image color 2", hex: "#ddaa33", role: "support" },
     { name: "image color 3", hex: "#8a2030", role: "support" }
   ];
-  const lightingPalette = [
-    { name: "image color 2", hex: "#ddaa33", role: "support", sourceHex: "#ddaa33", suitability: "rgb_light_color" },
-    { name: "image color 3", hex: "#8a2030", role: "support", sourceHex: "#8a2030", suitability: "rgb_light_color" }
+  const designerPalette = [
+    { name: "fallback blue", hex: "#8fd8ff", role: "fallback" },
+    { name: "fallback gold", hex: "#ffd36a", role: "fallback" }
   ];
   const result = await runVisualDesignAssetPackGeneration({
     projectFilePath,
     sequenceId: "seq-derived-palette",
     intentText: "Create a holiday road trip visual inspiration board.",
-    palette: [
-      { name: "fallback blue", hex: "#8fd8ff", role: "fallback" },
-      { name: "fallback gold", hex: "#ffd36a", role: "fallback" }
-    ],
+    palette: designerPalette,
     visualImageConfig: { enabled: true, model: "gpt-image-1.5", size: "1536x1024", quality: "medium", outputFormat: "png" }
   }, {
     buildOpenAIVisualImageConfig,
@@ -247,10 +244,7 @@ test("native visual design asset generation stores palette derived from generate
     readVisualDesignAssetPack,
     writeVisualDesignAssetPack,
     editOpenAIVisualImage,
-    deriveImageAndLightingPalettesFromImageFile: () => ({
-      imagePalette: derivedPalette,
-      lightingPalette
-    }),
+    derivePaletteFromImageFile: () => derivedPalette,
     generateOpenAIVisualImage: async (input) => ({
       ok: true,
       image: Buffer.from("generated-image"),
@@ -263,8 +257,8 @@ test("native visual design asset generation stores palette derived from generate
   });
 
   assert.deepEqual(result.assetPack.palette.imageColors, derivedPalette);
-  assert.deepEqual(result.assetPack.palette.colors, lightingPalette);
-  assert.deepEqual(result.assetPack.creativeIntent.palette, lightingPalette);
-  assert.deepEqual(result.assetPack.mediaAssetPlans[0].paletteRoles, ["support"]);
-  assert.deepEqual(result.assetPack.mediaAssetPlans[2].paletteRoles, ["support"]);
+  assert.deepEqual(result.assetPack.palette.colors, designerPalette);
+  assert.deepEqual(result.assetPack.creativeIntent.palette, designerPalette);
+  assert.deepEqual(result.assetPack.mediaAssetPlans[0].paletteRoles, ["fallback"]);
+  assert.deepEqual(result.assetPack.mediaAssetPlans[2].paletteRoles, ["fallback"]);
 });

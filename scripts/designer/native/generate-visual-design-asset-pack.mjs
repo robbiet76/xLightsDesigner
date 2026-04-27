@@ -12,8 +12,6 @@ import {
   generateOpenAIVisualImage
 } from "../../../apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js";
 import {
-  buildLightingPaletteFromImagePalette,
-  deriveImageAndLightingPalettesFromImageFile,
   derivePaletteFromImageFile
 } from "../../../apps/xlightsdesigner-ui/agent/designer-dialog/image-derived-palette.js";
 import {
@@ -30,8 +28,6 @@ import {
 const DEFAULT_DEPS = {
   buildOpenAIVisualImageConfig,
   buildVisualInspirationImagePrompt,
-  buildLightingPaletteFromImagePalette,
-  deriveImageAndLightingPalettesFromImageFile,
   derivePaletteFromImageFile,
   generateOpenAIVisualImage,
   editOpenAIVisualImage,
@@ -137,26 +133,6 @@ function normalizePaletteRows(rows = []) {
     .slice(0, 8);
 }
 
-function normalizeLightingPaletteRows(rows = []) {
-  const seen = new Set();
-  return arr(rows)
-    .map((row) => ({
-      name: str(row?.name),
-      hex: str(row?.hex),
-      role: str(row?.role),
-      sourceHex: str(row?.sourceHex),
-      suitability: str(row?.suitability)
-    }))
-    .filter((row) => row.name || row.hex || row.role)
-    .filter((row) => {
-      const key = `${row.name}|${row.hex}|${row.role}|${row.sourceHex}|${row.suitability}`.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .slice(0, 8);
-}
-
 function inferPalette(payload = {}) {
   const palette = firstNonEmptyArray(
     payload.palette,
@@ -168,43 +144,16 @@ function inferPalette(payload = {}) {
   return normalizePaletteRows(palette);
 }
 
-function deriveOrFallbackPalettes({ deps = DEFAULT_DEPS, imageFile = null, fallbackPalette = [] } = {}) {
-  if (typeof deps.deriveImageAndLightingPalettesFromImageFile === "function") {
-    const derived = deps.deriveImageAndLightingPalettesFromImageFile({
-      content: imageFile?.file?.content,
-      mimeType: imageFile?.displayAsset?.mimeType || imageFile?.file?.mimeType || "image/png",
-      maxColors: 8
-    });
-    const imagePalette = normalizePaletteRows(derived?.imagePalette);
-    const lightingPalette = normalizeLightingPaletteRows(derived?.lightingPalette);
-    if (imagePalette.length || lightingPalette.length) {
-      return {
-        imagePalette,
-        lightingPalette: lightingPalette.length ? lightingPalette : normalizeLightingPaletteRows(fallbackPalette)
-      };
-    }
-  }
+function deriveImagePalette({ deps = DEFAULT_DEPS, imageFile = null } = {}) {
   if (typeof deps.derivePaletteFromImageFile === "function") {
     const imagePalette = normalizePaletteRows(deps.derivePaletteFromImageFile({
       content: imageFile?.file?.content,
       mimeType: imageFile?.displayAsset?.mimeType || imageFile?.file?.mimeType || "image/png",
       maxColors: 8
     }));
-    if (imagePalette.length) {
-      const lightingPalette = typeof deps.buildLightingPaletteFromImagePalette === "function"
-        ? normalizeLightingPaletteRows(deps.buildLightingPaletteFromImagePalette(imagePalette, { maxColors: 8 }))
-        : normalizeLightingPaletteRows(imagePalette);
-      return {
-        imagePalette,
-        lightingPalette: lightingPalette.length ? lightingPalette : normalizeLightingPaletteRows(fallbackPalette)
-      };
-    }
+    if (imagePalette.length) return imagePalette;
   }
-  const fallback = normalizePaletteRows(fallbackPalette);
-  return {
-    imagePalette: fallback,
-    lightingPalette: normalizeLightingPaletteRows(fallback)
-  };
+  return [];
 }
 
 function inferMotifs(payload = {}) {
@@ -308,14 +257,14 @@ export async function runVisualDesignAssetPackRevision(options = {}, deps = DEFA
   }
   const assetPack = readResult.assetPack;
   const current = readCurrentRevisionImage({ readResult });
-  const fallbackPalette = inferPalette({ ...options, palette: options.palette || assetPack?.palette?.colors || assetPack?.creativeIntent?.palette });
+  const designerPalette = inferPalette({ ...options, palette: options.palette || assetPack?.palette?.colors || assetPack?.creativeIntent?.palette });
   const motifs = inferMotifs({ ...options, motifs: options.motifs || assetPack?.creativeIntent?.motifs });
   const avoidances = inferAvoidances({ ...options, avoidances: options.avoidances || assetPack?.creativeIntent?.avoidances });
   const themeSummary = inferThemeSummary({ ...options, themeSummary: options.themeSummary || assetPack?.creativeIntent?.themeSummary });
   const prompt = deps.buildVisualInspirationImagePrompt({
     themeSummary,
     basePrompt: str(options.prompt || assetPack?.creativeIntent?.inspirationPrompt || themeSummary),
-    palette: fallbackPalette,
+    palette: designerPalette,
     motifs,
     avoidances,
     includePaletteInImage: Boolean(options.includePaletteInImage),
@@ -343,8 +292,7 @@ export async function runVisualDesignAssetPackRevision(options = {}, deps = DEFA
   const relativePath = str(options.relativePath || `revisions/${nextRevisionId}.png`);
   const imageFile = deps.buildVisualImageFileFromOpenAIResult({ result: edited, relativePath });
   if (!imageFile?.ok) throw new Error(imageFile?.error || "Edited image could not be converted to a project file.");
-  const palettes = deriveOrFallbackPalettes({ deps, imageFile, fallbackPalette });
-  const palette = palettes.lightingPalette;
+  const imagePalette = deriveImagePalette({ deps, imageFile });
   const nextPack = deps.buildVisualDesignImageEditRevision({
     assetPack,
     userRequest: revisionRequest,
@@ -352,12 +300,12 @@ export async function runVisualDesignAssetPackRevision(options = {}, deps = DEFA
     relativePath,
     model: edited.model || visualImageConfig.model,
     displayAsset: imageFile.displayAsset,
-    palette,
+    palette: designerPalette,
     paletteDisplay: {
-      imageColors: palettes.imagePalette,
-      lightingColors: palettes.lightingPalette
+      imageColors: imagePalette,
+      lightingColors: designerPalette
     },
-    paletteChangeSummary: str(options.paletteChangeSummary || "Palette derived from revised image."),
+    paletteChangeSummary: str(options.paletteChangeSummary || "Designer palette preserved; image palette sampled for validation only."),
     changeSummary: str(options.changeSummary || "Revised inspiration board from Designer conversation.")
   });
   const errors = deps.validateVisualDesignAssetPack(nextPack);
@@ -397,7 +345,7 @@ export async function runVisualDesignAssetPackGeneration(options = {}, deps = DE
     throw new Error(`Project file not found: ${projectFilePath || "(missing)"}`);
   }
   const sequenceId = str(options.sequenceId || options.sequencePath || options.mediaPath || "active-sequence");
-  const fallbackPalette = inferPalette(options);
+  const designerPalette = inferPalette(options);
   const motifs = inferMotifs(options);
   const avoidances = inferAvoidances(options);
   const sections = inferSections(options);
@@ -411,7 +359,7 @@ export async function runVisualDesignAssetPackGeneration(options = {}, deps = DE
   const prompt = deps.buildVisualInspirationImagePrompt({
     themeSummary,
     basePrompt: str(options.prompt || options.intentText || themeSummary),
-    palette: fallbackPalette,
+    palette: designerPalette,
     motifs,
     avoidances,
     includePaletteInImage: Boolean(options.includePaletteInImage)
@@ -434,24 +382,23 @@ export async function runVisualDesignAssetPackGeneration(options = {}, deps = DE
     relativePath: "inspiration-board.png"
   });
   if (!imageFile?.ok) throw new Error(imageFile?.error || "Generated image could not be converted to a project file.");
-  const palettes = deriveOrFallbackPalettes({ deps, imageFile, fallbackPalette });
-  const palette = palettes.lightingPalette;
+  const imagePalette = deriveImagePalette({ deps, imageFile });
 
   const assetPack = deps.buildVisualDesignAssetPack({
     sequenceId,
     trackIdentity: inferTrackIdentity(options),
     themeSummary,
     inspirationPrompt: prompt,
-    palette,
+    palette: designerPalette,
     paletteDisplay: {
-      imageColors: palettes.imagePalette,
-      lightingColors: palettes.lightingPalette
+      imageColors: imagePalette,
+      lightingColors: designerPalette
     },
     motifs,
     avoidances,
     mediaAssetPlans: deps.buildDefaultVisualMediaAssetPlans({
       themeSummary,
-      palette,
+      palette: designerPalette,
       motifs,
       sections
     }),
