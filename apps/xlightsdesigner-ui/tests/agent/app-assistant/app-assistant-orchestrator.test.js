@@ -119,6 +119,7 @@ test("app assistant allows design kickoff through chat when xLights has an activ
   assert.equal(result.ok, true);
   assert.equal(result.result.routeDecision, "designer_dialog");
   assert.equal(result.result.shouldGenerateProposal, true);
+  assert.equal(result.result.actionRequest.actionType, "generate_visual_inspiration");
   assert.equal(result.result.diagnostics.sequenceOpen, true);
 });
 

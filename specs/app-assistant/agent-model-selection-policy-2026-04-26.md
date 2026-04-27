@@ -45,7 +45,7 @@ Do not silently escalate model size. Escalation should be visible in diagnostics
 
 ## Image Generation
 
-The designer visual inspiration feature uses the image-generation model separately from the text agent model. The current target for generated inspiration images and themed sequence media is `gpt-image-2`, with prompt/revision/provider metadata recorded in the visual design asset manifest.
+The designer visual inspiration feature uses the image-generation model separately from the text agent model. The current target for generated inspiration images and themed sequence media is `gpt-image-2`, with prompt/revision/provider metadata recorded in the visual design asset manifest. If provider access blocks `gpt-image-2`, the app may fall back to `gpt-image-1` and must record the actual model used.
 
 ## Audit Notes
 

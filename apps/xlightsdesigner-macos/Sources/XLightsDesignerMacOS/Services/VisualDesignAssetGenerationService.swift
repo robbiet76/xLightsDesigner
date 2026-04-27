@@ -45,27 +45,19 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             intentText: intentText,
             themeSummary: themeSummary,
             revisionRequest: "",
-            baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL
+            baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL,
+            model: "gpt-image-2"
         )
-        defer { try? FileManager.default.removeItem(at: payloadURL) }
-
-        let output = try await runNode(
-            arguments: [
-                AppEnvironment.nativeVisualDesignAssetPackScriptPath,
-                "--payload", payloadURL.path
-            ],
+        return try await runVisualAssetScriptWithFallback(
+            payloadURL: payloadURL,
+            projectFilePath: projectFilePath,
+            sequenceID: sequenceID,
+            intentText: intentText,
+            themeSummary: themeSummary,
+            revisionRequest: "",
+            baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL,
             apiKey: agentConfig.apiKey
         )
-
-        guard
-            let json = try JSONSerialization.jsonObject(with: output) as? [String: Any],
-            let ok = json["ok"] as? Bool,
-            ok == true
-        else {
-            throw VisualDesignAssetGenerationError.invalidResponse
-        }
-
-        return result(from: json)
     }
 
     func reviseVisualDesignAssetPack(
@@ -86,27 +78,19 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             intentText: "",
             themeSummary: themeSummary,
             revisionRequest: revisionRequest,
-            baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL
+            baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL,
+            model: "gpt-image-2"
         )
-        defer { try? FileManager.default.removeItem(at: payloadURL) }
-
-        let output = try await runNode(
-            arguments: [
-                AppEnvironment.nativeVisualDesignAssetPackScriptPath,
-                "--payload", payloadURL.path
-            ],
+        return try await runVisualAssetScriptWithFallback(
+            payloadURL: payloadURL,
+            projectFilePath: projectFilePath,
+            sequenceID: sequenceID,
+            intentText: "",
+            themeSummary: themeSummary,
+            revisionRequest: revisionRequest,
+            baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? agentConfig.baseURL : baseURL,
             apiKey: agentConfig.apiKey
         )
-
-        guard
-            let json = try JSONSerialization.jsonObject(with: output) as? [String: Any],
-            let ok = json["ok"] as? Bool,
-            ok == true
-        else {
-            throw VisualDesignAssetGenerationError.invalidResponse
-        }
-
-        return result(from: json)
     }
 
     private func loadAgentConfig() throws -> StoredAgentConfig {
@@ -122,7 +106,8 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
         intentText: String,
         themeSummary: String,
         revisionRequest: String,
-        baseURL: String
+        baseURL: String,
+        model: String
     ) throws -> URL {
         let payload: [String: Any] = [
             "projectFilePath": projectFilePath,
@@ -132,7 +117,7 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             "revisionRequest": revisionRequest,
             "visualImageConfig": [
                 "enabled": true,
-                "model": "gpt-image-2",
+                "model": model,
                 "baseUrl": baseURL.isEmpty ? "https://api.openai.com/v1" : baseURL,
                 "size": "1536x1024",
                 "quality": "medium",
@@ -144,6 +129,55 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
             .appendingPathComponent("xld-visual-design-\(UUID().uuidString).json")
         try data.write(to: url, options: .atomic)
         return url
+    }
+
+    private func runVisualAssetScriptWithFallback(
+        payloadURL: URL,
+        projectFilePath: String,
+        sequenceID: String,
+        intentText: String,
+        themeSummary: String,
+        revisionRequest: String,
+        baseURL: String,
+        apiKey: String
+    ) async throws -> VisualDesignAssetGenerationResult {
+        defer { try? FileManager.default.removeItem(at: payloadURL) }
+        do {
+            return try await runVisualAssetScript(payloadURL: payloadURL, apiKey: apiKey)
+        } catch let error as VisualDesignAssetGenerationError {
+            guard error.shouldFallbackFromGPTImage2 else { throw error }
+            let fallbackPayloadURL = try writePayload(
+                projectFilePath: projectFilePath,
+                sequenceID: sequenceID,
+                intentText: intentText,
+                themeSummary: themeSummary,
+                revisionRequest: revisionRequest,
+                baseURL: baseURL,
+                model: "gpt-image-1"
+            )
+            defer { try? FileManager.default.removeItem(at: fallbackPayloadURL) }
+            return try await runVisualAssetScript(payloadURL: fallbackPayloadURL, apiKey: apiKey)
+        }
+    }
+
+    private func runVisualAssetScript(payloadURL: URL, apiKey: String) async throws -> VisualDesignAssetGenerationResult {
+        let output = try await runNode(
+            arguments: [
+                AppEnvironment.nativeVisualDesignAssetPackScriptPath,
+                "--payload", payloadURL.path
+            ],
+            apiKey: apiKey
+        )
+
+        guard
+            let json = try JSONSerialization.jsonObject(with: output) as? [String: Any],
+            let ok = json["ok"] as? Bool,
+            ok == true
+        else {
+            throw VisualDesignAssetGenerationError.invalidResponse
+        }
+
+        return result(from: json)
     }
 
     private func result(from json: [String: Any]) -> VisualDesignAssetGenerationResult {
@@ -204,6 +238,13 @@ enum VisualDesignAssetGenerationError: LocalizedError {
         case let .processFailed(message):
             return message.isEmpty ? "Visual inspiration generation failed." : message
         }
+    }
+
+    var shouldFallbackFromGPTImage2: Bool {
+        guard case let .processFailed(message) = self else { return false }
+        let lower = message.lowercased()
+        return lower.contains("gpt-image-2") &&
+            (lower.contains("organization must be verified") || lower.contains("verify organization"))
     }
 }
 

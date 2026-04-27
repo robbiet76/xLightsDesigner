@@ -313,6 +313,8 @@ Live validation is opt-in because it incurs provider cost:
 - show the board in native Design UI
 - pass the artifact reference through Designer -> Sequencer -> Review
 
+Provider access can vary by account. On 2026-04-26 the local OpenAI organization returned an organization verification requirement for `gpt-image-2`; the app should surface that clearly and may fall back to `gpt-image-1` so the user can still generate a board while preserving model/source metadata in the manifest.
+
 Current script:
 
 ```bash
@@ -338,7 +340,8 @@ The script refuses to run unless `XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1` is 
 11. Add sequence-agent use of palette/motif context immediately. Done: `sequence_agent` now carries `paletteRoles` and `motifDirectives` into planning metadata, uses motifs as effect-selection context, and applies palette-role hex values to generated xLights palette params when no explicit prompt color overrides them.
 12. Add media asset plan metadata for future Picture/Video use. Done: generated visual manifests now distinguish generated file-backed `sequenceAssets[]` from planned `mediaAssetPlans[]`, and the Designer -> Sequencer handoff carries compact `mediaAssetPlanDirectives[]` without binary payloads.
 13. Require selected song/sequence context before Designer song-design or image generation starts. Done: team-chat design/image prompts now block without selected song context, native visual generation no longer falls back to project name, and `scripts/native/validate-design-chat-song-gate.mjs` validates the no-song chat path.
-14. Add picture/video effect placement later when xLights media effect support is implemented.
+14. Trigger native visual generation from explicit Designer chat image/board requests. Done: app-assistant action requests now include `generate_visual_inspiration`, and the macOS app routes that action to the same Design-screen generator.
+15. Add picture/video effect placement later when xLights media effect support is implemented.
 
 ## Open Questions
 

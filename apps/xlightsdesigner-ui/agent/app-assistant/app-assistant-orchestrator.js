@@ -120,6 +120,12 @@ function isSongDesignStartRequest(text = "") {
   return designLanguage && (generationLanguage || songScope);
 }
 
+function isVisualInspirationGenerationRequest(text = "") {
+  const lower = str(text).toLowerCase();
+  if (!lower) return false;
+  return /\b(inspiration board|mood board|visual inspiration|theme image|palette image|visual asset pack|generate (an )?image|create (an )?image)\b/.test(lower);
+}
+
 function buildMissingSongDesignResult({ input = {}, addressedTo = "" } = {}) {
   const routeDecision = "designer_dialog";
   return {
@@ -527,6 +533,20 @@ export async function executeAppAssistantConversation({
       }
     : null;
   const normalizedActionRequest = normalizeActionRequest(response?.actionRequest);
+  const shouldGenerateVisualInspiration =
+    routeDecision === "designer_dialog" &&
+    hasSelectedSongContext(context) &&
+    isVisualInspirationGenerationRequest(userMessage);
+  const resolvedActionRequest =
+    normalizedActionRequest?.actionType
+      ? normalizedActionRequest
+      : shouldGenerateVisualInspiration
+        ? {
+            actionType: "generate_visual_inspiration",
+            payload: {},
+            reason: "User explicitly requested a visual inspiration image or board for the active song."
+          }
+        : null;
   const discoveryShouldStart = shouldStartDisplayDiscovery({ context, userMessage });
   const discoveryShouldContinue = shouldContinueDisplayDiscovery({ context });
   const discoveryActive =
@@ -592,7 +612,7 @@ export async function executeAppAssistantConversation({
           }
         : undefined,
       phaseTransition: normalizedPhaseTransition?.phaseId ? normalizedPhaseTransition : undefined,
-      actionRequest: normalizedActionRequest?.actionType ? normalizedActionRequest : undefined,
+      actionRequest: resolvedActionRequest?.actionType ? resolvedActionRequest : undefined,
       artifactCard: response?.artifactCard && typeof response.artifactCard === "object"
         ? response.artifactCard
         : undefined,

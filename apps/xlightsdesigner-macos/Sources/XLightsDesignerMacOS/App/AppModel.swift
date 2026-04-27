@@ -431,6 +431,11 @@ final class AppModel {
             refreshAll()
         case "save_design_intent", "update_design_intent":
             designScreenModel.applyDesignIntentPayload(request.payload)
+        case "generate_visual_inspiration":
+            if !request.payload.isEmpty {
+                designScreenModel.applyDesignIntentPayload(request.payload)
+            }
+            designScreenModel.generateVisualInspiration()
         case "generate_sequence_proposal":
             sequenceScreenModel.generateProposalFromDesignIntent()
         case "propose_display_metadata_from_layout":

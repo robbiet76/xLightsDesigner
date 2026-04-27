@@ -150,7 +150,7 @@ async function runSelectedSongScenario(args) {
   });
   await request(args.nativeUrl, 'POST', '/action', { action: 'refreshXLightsSession' });
   await request(args.nativeUrl, 'POST', '/action', { action: 'refreshAll' });
-  const assistant = await sendDesignPrompt(args.nativeUrl, args.timeoutMs);
+  const assistant = await sendDesignPrompt(args.nativeUrl, args.timeoutMs, 'Mira, what design direction would you suggest for this active song?');
   const text = str(assistant?.lastMessage?.text);
   if (/select or open a song\/sequence first/i.test(text)) {
     throw new Error(`Assistant incorrectly blocked design chat despite selected song. Last message: ${text}`);

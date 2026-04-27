@@ -232,6 +232,9 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "messageCount": model.assistantModel.messages.count,
                 "lastMessage": assistantSnapshot()["lastMessage"] ?? NSNull()
             ])
+        case "generateVisualInspiration":
+            model.designScreenModel.generateVisualInspiration()
+            return .json(200, body: ["ok": true, "accepted": true])
         case "applyReview":
             model.reviewScreenModel.applyPendingWork()
             return .json(200, body: ["ok": true, "isApplying": model.reviewScreenModel.isApplying])
