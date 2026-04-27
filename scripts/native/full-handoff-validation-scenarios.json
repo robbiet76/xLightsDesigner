@@ -6,6 +6,10 @@
       "type": "nativeVisualInspirationFixture"
     },
     {
+      "name": "native-design-chat-song-gate",
+      "type": "nativeDesignChatSongGate"
+    },
+    {
       "name": "native-review-explicit-edit-surface",
       "type": "nativeReviewExplicitEditSurface",
       "sourceModel": "Star",

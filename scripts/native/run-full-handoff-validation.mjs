@@ -373,6 +373,18 @@ function buildExtraValidationArgs(args, showDir, validation = {}) {
     if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
     return validationArgs;
   }
+  if (validation.type === 'nativeDesignChatSongGate') {
+    const validationArgs = [
+      'scripts/native/validate-design-chat-song-gate.mjs',
+      '--native-url',
+      validation.nativeUrl || DEFAULT_NATIVE_BASE_URL,
+      '--show-dir',
+      showDir
+    ];
+    if (validation.projectFile) validationArgs.push('--project-file', validation.projectFile);
+    if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
+    return validationArgs;
+  }
   if (validation.type !== 'nativeReviewExplicitEditSurface') {
     throw new Error(`Unsupported extra validation type: ${validation.type}`);
   }

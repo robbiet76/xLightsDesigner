@@ -327,7 +327,7 @@ function buildDiagnostics({ routeDecision = "general", bridgeOk = false, respons
     addressedTo: str(addressedTo),
     bridgeOk: Boolean(bridgeOk),
     responseCode: str(responseCode),
-    sequenceOpen: Boolean(context?.sequenceOpen),
+    sequenceOpen: Boolean(context?.sequenceOpen) || hasSelectedSongContext(context),
     planOnlyMode: Boolean(context?.planOnlyMode),
     generatedAt: new Date().toISOString()
   };
