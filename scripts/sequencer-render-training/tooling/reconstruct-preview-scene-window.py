@@ -139,7 +139,7 @@ def main():
                 continue
             frames = decoded.get("frames") or []
             if frame_offset < 0 or frame_offset >= len(frames):
-                raise RuntimeError(f"frame offset {frame_offset} out of range for model {model_name}")
+                continue
             frame = frames[frame_offset]
             model = model_lookup[model_name]
             active_nodes = join_active_nodes(model, frame)
@@ -157,12 +157,16 @@ def main():
                 "activeCentroid": compute_centroid(active_nodes),
                 "activeNodes": active_nodes,
             })
-        first_decoded = next(iter(per_model.values()))
-        source_frame = (first_decoded.get("frames") or [])[frame_offset]
+        source_frame = None
+        for decoded in per_model.values():
+            frames = decoded.get("frames") or []
+            if 0 <= frame_offset < len(frames):
+                source_frame = frames[frame_offset]
+                break
         window_frames.append({
             "frameOffset": frame_offset,
-            "frameIndex": source_frame["frameIndex"],
-            "frameTimeMs": source_frame["frameTimeMs"],
+            "frameIndex": source_frame["frameIndex"] if source_frame else None,
+            "frameTimeMs": source_frame["frameTimeMs"] if source_frame else None,
             "activeModelCount": len(frame_models),
             "activeNodeCount": total_active_nodes,
             "models": frame_models,

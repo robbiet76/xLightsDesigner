@@ -175,9 +175,162 @@ test("build-unified-training-set derives bounded parameter priors from screening
   assert.equal(prior.parameterName, "speed");
   assert.equal(prior.geometryProfile, "arch_grouped");
   assert.equal(prior.paletteMode, "rgb_primary");
-  assert.equal(prior.distinctAnchorCount, 2);
-  assert.equal(prior.configurationCoverageStatus, "single_reference_per_geometry");
-  assert.equal(prior.anchorProfiles.length, 2);
-  assert.equal(prior.anchorProfiles[0].parameterValue, 5);
-  assert.equal(prior.anchorProfiles[0].behaviorHints.includes("forward_motion"), true);
+	  assert.equal(prior.distinctAnchorCount, 2);
+	  assert.equal(prior.configurationCoverageStatus, "single_reference_per_geometry");
+	  assert.equal(prior.behaviorDimensions.abstraction, "sparse_anchor_trend");
+	  assert.equal(prior.behaviorDimensions.dimensions.motion.direction, "increases");
+	  assert.equal(prior.behaviorDimensions.generalization.exactCombinationRequired, false);
+	  assert.equal(prior.behaviorDimensions.behaviorRules.some((row) => row.dimension === "motion" && row.direction === "increases"), true);
+	  assert.equal(prior.anchorProfiles.length, 2);
+	  assert.equal(prior.anchorProfiles[0].parameterValue, 5);
+	  assert.equal(prior.anchorProfiles[0].behaviorHints.includes("forward_motion"), true);
+	});
+
+test("build-unified-training-set derives behavior dimensions from current fseq decoder metrics", () => {
+  const root = mkdtempSync(join(tmpdir(), "unified-training-current-fseq-"));
+  const outcomeDir = join(root, "outcomes");
+  const screeningDir = join(root, "screening");
+  const outFile = join(root, "training-set.json");
+  mkdirSync(outcomeDir, { recursive: true });
+  mkdirSync(screeningDir, { recursive: true });
+
+  const makeRecord = ({ sampleId, speed, temporalChangeMean, activeNodeRatio }) => ({
+    recordVersion: "1.0",
+    sampleId,
+    effectName: "Marquee",
+    fixture: {
+      modelType: "arch",
+      geometryProfile: "arch_grouped"
+    },
+    trainingContext: {
+      screenedParameterName: "speed",
+      screeningPaletteMode: "mono_white"
+    },
+    effectSettings: { speed },
+    observations: {
+      labels: ["effect:marquee", "forward_motion", "palette_mono_white"]
+    },
+    features: {
+      temporalChangeMean,
+      averageActiveNodeRatio: activeNodeRatio,
+      analysis: {
+        qualitySignals: {
+          coverage: activeNodeRatio,
+          motion: temporalChangeMean
+        }
+      }
+    },
+    modelMetadata: {
+      resolvedModelType: "arch",
+      resolvedGeometryProfile: "arch_grouped",
+      nodeCount: 150,
+      channelsPerNode: 3,
+      structuralSettings: { DisplayAs: "Arches" }
+    }
+  });
+
+  writeFileSync(join(screeningDir, "marquee-speed-1.record.json"), JSON.stringify(makeRecord({
+    sampleId: "marquee-speed-1-mono-white-generated-v1",
+    speed: 1,
+    temporalChangeMean: 0.01,
+    activeNodeRatio: 0.25
+  }), null, 2));
+  writeFileSync(join(screeningDir, "marquee-speed-9.record.json"), JSON.stringify(makeRecord({
+    sampleId: "marquee-speed-9-mono-white-generated-v1",
+    speed: 9,
+    temporalChangeMean: 0.09,
+    activeNodeRatio: 0.8
+  }), null, 2));
+
+  execFileSync("node", [
+    resolve("scripts/sequencer-render-training/tooling/build-unified-training-set.mjs"),
+    outFile,
+    outcomeDir,
+    screeningDir
+  ], {
+    cwd: resolve("."),
+    stdio: "pipe"
+  });
+
+  const artifact = JSON.parse(readFileSync(outFile, "utf8"));
+  const marquee = artifact.effects.find((row) => row.effectName === "Marquee");
+  const prior = marquee.parameterLearning.derivedPriors.priors.find((row) => row.parameterName === "speed" && row.paletteMode === "mono_white");
+  assert.equal(prior.behaviorDimensions.dimensions.motion.direction, "increases");
+  assert.equal(prior.behaviorDimensions.dimensions.coverage.direction, "increases");
+  assert.equal(prior.behaviorDimensions.dimensions.colorDiversity, undefined);
+  assert.equal(prior.behaviorDimensions.behaviorRules.some((row) => row.dimension === "coverage"), true);
+});
+
+test("build-unified-training-set derives RGB palette color behavior from rendered node values", () => {
+  const root = mkdtempSync(join(tmpdir(), "unified-training-rgb-color-"));
+  const outcomeDir = join(root, "outcomes");
+  const screeningDir = join(root, "screening");
+  const outFile = join(root, "training-set.json");
+  mkdirSync(outcomeDir, { recursive: true });
+  mkdirSync(screeningDir, { recursive: true });
+
+  const red = [255, 0, 0];
+  const green = [0, 255, 0];
+  const blue = [0, 0, 255];
+  const lowColorFrame = [red, red, red, red, red, red];
+  const highColorFrame = [red, green, blue, red, green, blue];
+  const makeRecord = ({ sampleId, barCount, frames }) => ({
+    recordVersion: "1.0",
+    sampleId,
+    effectName: "Bars",
+    fixture: {
+      modelType: "arch",
+      geometryProfile: "arch_grouped"
+    },
+    trainingContext: {
+      screenedParameterName: "barCount",
+      screeningPaletteMode: "rgb_primary"
+    },
+    effectSettings: { barCount },
+    observations: {
+      labels: ["effect:bars", "palette_rgb_primary", "barCount"]
+    },
+    features: {
+      temporalChangeMean: 0.01,
+      averageActiveNodeRatio: 1,
+      frames: frames.map((nodeRgb, index) => ({ frameIndex: index, nodeRgb }))
+    },
+    modelMetadata: {
+      resolvedModelType: "arch",
+      resolvedGeometryProfile: "arch_grouped",
+      nodeCount: 6,
+      channelsPerNode: 3,
+      structuralSettings: { DisplayAs: "Arches" }
+    }
+  });
+
+  writeFileSync(join(screeningDir, "bars-barCount-1.record.json"), JSON.stringify(makeRecord({
+    sampleId: "bars-barCount-1-rgb-primary-generated-v1",
+    barCount: 1,
+    frames: [lowColorFrame, lowColorFrame]
+  }), null, 2));
+  writeFileSync(join(screeningDir, "bars-barCount-5.record.json"), JSON.stringify(makeRecord({
+    sampleId: "bars-barCount-5-rgb-primary-generated-v1",
+    barCount: 5,
+    frames: [highColorFrame, [green, blue, red, green, blue, red]]
+  }), null, 2));
+
+  execFileSync("node", [
+    resolve("scripts/sequencer-render-training/tooling/build-unified-training-set.mjs"),
+    outFile,
+    outcomeDir,
+    screeningDir
+  ], {
+    cwd: resolve("."),
+    stdio: "pipe"
+  });
+
+  const artifact = JSON.parse(readFileSync(outFile, "utf8"));
+  const bars = artifact.effects.find((row) => row.effectName === "Bars");
+  const prior = bars.parameterLearning.derivedPriors.priors.find((row) => row.parameterName === "barCount" && row.paletteMode === "rgb_primary");
+  assert.equal(prior.behaviorDimensions.dimensions.colorDiversity.direction, "increases");
+  assert.equal(prior.behaviorDimensions.dimensions.colorBandDensity.direction, "increases");
+  assert.equal(prior.behaviorDimensions.dimensions.colorTravel.direction, "increases");
+  assert.equal(prior.behaviorDimensions.behaviorRules.some((row) => row.dimension === "colorDiversity"), true);
+  assert.equal(prior.anchorProfiles.some((row) => row.meanRenderedColorDiversity > 0), true);
 });

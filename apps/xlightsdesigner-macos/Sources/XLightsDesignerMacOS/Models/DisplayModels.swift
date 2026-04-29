@@ -24,7 +24,7 @@ struct DisplayReadinessSummaryModel: Sendable {
 }
 
 enum DisplayMetadataStatus: String, Sendable {
-    case confirmed = "Confirmed"
+    case confirmed = "Current"
     case proposed = "Proposed"
 }
 

@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "twinkle-steps-spinner-standard-mono-white-20",
+  "createdAt": "2026-04-28T14:23:35.931Z",
+  "effectName": "Twinkle",
+  "geometryProfile": "spinner_standard",
+  "modelType": "spinner",
+  "parameterRegion": {
+    "parameterName": "steps",
+    "regionKind": "single_value",
+    "valueSummary": "20",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "mono_white"
+  },
+  "paletteContext": {
+    "paletteMode": "mono_white"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "fast_twinkle",
+    "motionPacing": "",
+    "textureDensity": "fast_twinkle,radial_pattern_fit,registry_generated,sparse_twinkle,strobe_twinkle,twinkle_pattern,medium_twinkle,dense_twinkle,rerandomized_twinkle,soft_twinkle,surging_twinkle,classic_twinkle",
+    "energyLevel": "restrained",
+    "coverageLevel": "sparse",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "sparse",
+    "nonBlankRatio": 0.008899,
+    "temporalMotion": 0.006509,
+    "temporalColorDelta": 0.006509,
+    "temporalBrightnessDelta": 0.006509,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 11,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "spinner_standard"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

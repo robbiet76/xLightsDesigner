@@ -183,7 +183,9 @@ test("effect intent translation keeps On effect payload minimal for live apply",
   });
 
   assert.deepEqual(out.settings, {});
-  assert.deepEqual(out.palette, {});
+  assert.equal(out.palette.C_BUTTON_Palette1, "#ffd700");
+  assert.equal(out.palette.C_BUTTON_Palette2, "#ffffff");
+  assert.equal(out.palette.C_CHECKBOX_Palette1, "1");
 });
 
 test("effect intent translation applies bounded derived prior settings for safe screened axes", () => {
@@ -213,6 +215,64 @@ test("effect intent translation applies bounded derived prior settings for safe 
   assert.equal(out.settings.E_SPEED, 7);
   assert.equal(out.settings.E_ARMSIZE, 75);
   assert.equal(Object.prototype.hasOwnProperty.call(out.settings, "E_STYLE"), false);
+});
+
+test("effect intent translation writes configured behavior priors through generated parameter registry", () => {
+  const wash = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "Color Wash",
+      parameterPriorGuidance: {
+        effectName: "Color Wash",
+        priors: [
+          {
+            parameterName: "cycles",
+            sourceRecordId: "color-wash-cycles-matrix-high-density-rgb-primary-4",
+            recommendedAnchors: [{ parameterValue: 4 }]
+          }
+        ]
+      }
+    },
+    effectCatalog: null
+  });
+
+  assert.equal(wash.settings.E_TEXTCTRL_ColorWash_Cycles, "4");
+  assert.equal(wash.settings.E_SLIDER_ColorWash_Cycles, 40);
+
+  const spirals = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "Spirals",
+      parameterPriorGuidance: {
+        priors: [
+          {
+            parameterName: "grow",
+            sourceRecordId: "spirals-grow-tree-flat-single-layer-rgb-primary-true",
+            recommendedAnchors: [{ parameterValue: true }]
+          }
+        ]
+      }
+    },
+    effectCatalog: { byName: { Spirals: { effectName: "Spirals", params: [] } } }
+  });
+
+  assert.equal(spirals.settings.E_CHECKBOX_Spirals_Grow, "1");
+
+  const strand = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "SingleStrand",
+      parameterPriorGuidance: {
+        priors: [
+          {
+            parameterName: "bandSize",
+            sourceRecordId: "singlestrand-bandsize-arch-standard-rgb-primary-12",
+            recommendedAnchors: [{ parameterValue: 12 }]
+          }
+        ]
+      }
+    },
+    effectCatalog: null
+  });
+
+  assert.equal(strand.settings.E_SLIDER_Skips_BandSize, 12);
 });
 
 test("effect intent translation applies bounded derived prior booleans and enums when schema matching is clean", () => {

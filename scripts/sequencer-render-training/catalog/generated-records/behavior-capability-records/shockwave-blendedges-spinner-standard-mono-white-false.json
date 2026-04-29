@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "shockwave-blendedges-spinner-standard-mono-white-false",
-  "createdAt": "2026-04-16T18:35:27.480Z",
+  "createdAt": "2026-04-28T14:23:35.929Z",
   "effectName": "Shockwave",
   "geometryProfile": "spinner_standard",
   "modelType": "spinner",
@@ -20,31 +20,31 @@
   },
   "behaviorSignals": {
     "primaryMotion": "subtle_motion",
-    "primaryTexture": "blendEdges_false",
+    "primaryTexture": "centered_shockwave",
     "motionPacing": "subtle_motion",
-    "textureDensity": "blendEdges_false,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
+    "textureDensity": "centered_shockwave,crisp_shockwave,decelerating_shockwave,decoded_fseq,hard_edge_shockwave,large_shockwave,radial_pattern_fit,registry_generated,repeating_shockwave,scaled_shockwave,shockwave_pattern,thin_shockwave",
     "energyLevel": "restrained",
-    "coverageLevel": "focused",
+    "coverageLevel": "sparse",
     "hierarchySuitability": "unknown",
     "geometryCoupling": "observed",
-    "stability": "low"
+    "stability": "medium"
   },
   "renderOutcomeSignals": {
     "temporalRead": "subtle_motion",
-    "densityRead": "moderate",
-    "nonBlankRatio": 0.55,
-    "temporalMotion": 0.019761,
-    "temporalColorDelta": 0.016312,
-    "temporalBrightnessDelta": 0.016312,
+    "densityRead": "sparse",
+    "nonBlankRatio": 0.079671,
+    "temporalMotion": 0.008606,
+    "temporalColorDelta": 0.008515,
+    "temporalBrightnessDelta": 0.008515,
     "clarityRead": "unknown",
     "contrastRead": "unknown"
   },
   "confidence": {
-    "level": "low",
+    "level": "medium",
     "evidenceClass": "aggregated_render",
-    "coverageStatus": "single_reference_per_geometry"
+    "coverageStatus": "multi_configuration_sampled"
   },
-  "evidenceCount": 1,
+  "evidenceCount": 38,
   "traceability": {
     "sourceArtifactIds": [
       "sequencer_unified_training_set_v1"

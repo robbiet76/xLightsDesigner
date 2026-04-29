@@ -183,13 +183,43 @@ struct AssistantWindowView: View {
             if !card.chips.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
+                        if isDisplayMetadataCard(card), card.chips.count > 1 {
+                            Button {
+                                selectDisplayMetadata(card.chips)
+                            } label: {
+                                Text("Show All")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                            }
+                            .buttonStyle(.plain)
+                            .background(Color.accentColor.opacity(0.12))
+                            .clipShape(Capsule())
+                            .help("Select all updated Display metadata records")
+                        }
                         ForEach(card.chips, id: \.self) { chip in
-                            Text(chip)
-                                .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                            if isDisplayMetadataCard(card) {
+                                Button {
+                                    selectDisplayMetadata([chip])
+                                } label: {
+                                    Text(chip)
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                }
+                                .buttonStyle(.plain)
                                 .background(Color(nsColor: .windowBackgroundColor))
                                 .clipShape(Capsule())
+                                .help("Show \(chip) in Display metadata")
+                            } else {
+                                Text(chip)
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color(nsColor: .windowBackgroundColor))
+                                    .clipShape(Capsule())
+                            }
                         }
                     }
                 }
@@ -203,6 +233,18 @@ struct AssistantWindowView: View {
                 .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func isDisplayMetadataCard(_ card: AssistantArtifactCardModel) -> Bool {
+        card.artifactType == "display_understanding_v1"
+    }
+
+    private func selectDisplayMetadata(_ subjects: [String]) {
+        appModel.selectedWorkflow = .display
+        Task { @MainActor in
+            await appModel.displayScreenModel.reloadDisplay()
+            _ = appModel.displayScreenModel.selectMetadataRows(matchingSubjects: subjects)
+        }
     }
 
     private func bubbleColor(for message: AssistantMessageModel) -> Color {

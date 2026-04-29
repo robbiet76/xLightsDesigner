@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "marquee-bandsize-arch-grouped-rgb-primary-3",
+  "createdAt": "2026-04-28T14:23:35.928Z",
+  "effectName": "Marquee",
+  "geometryProfile": "arch_grouped",
+  "modelType": "arch",
+  "parameterRegion": {
+    "parameterName": "bandSize",
+    "regionKind": "single_value",
+    "valueSummary": "3",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "paletteContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "arch_pattern_fit",
+    "motionPacing": "",
+    "textureDensity": "arch_pattern_fit,behavior_anchor,continuous_bands,decoded_fseq,forward_motion,marquee_coverage,marquee_pattern,skip_0,tight_marquee,segmented_bands,segmented_marquee,skip_4",
+    "energyLevel": "elevated",
+    "coverageLevel": "focused",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "high"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "moderate",
+    "nonBlankRatio": 0.588977,
+    "temporalMotion": 0.371144,
+    "temporalColorDelta": 0.371144,
+    "temporalBrightnessDelta": 0.371144,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "high",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "multi_configuration_sampled"
+  },
+  "evidenceCount": 9,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_grouped"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

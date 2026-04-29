@@ -65,6 +65,24 @@ def infer_node_count(model):
     parm1 = int(model.attrib.get("parm1", "0") or "0")
     parm2 = int(model.attrib.get("parm2", "0") or "0")
     parm3 = int(model.attrib.get("parm3", "0") or "0")
+    num_strings = int(model.attrib.get("NumStrings", "0") or "0")
+    nodes_per_string = int(model.attrib.get("NodesPerString", "0") or "0")
+    strands_per_string = int(model.attrib.get("StrandsPerString", "1") or "1")
+    num_arches = int(model.attrib.get("NumArches", "0") or "0")
+    nodes_per_arch = int(model.attrib.get("NodesPerArch", "0") or "0")
+    num_canes = int(model.attrib.get("NumCanes", "0") or "0")
+    nodes_per_cane = int(model.attrib.get("NodesPerCane", "0") or "0")
+    arms_per_string = int(model.attrib.get("ArmsPerString", "0") or "0")
+    nodes_per_arm = int(model.attrib.get("NodesPerArm", "0") or "0")
+
+    if "arches" in display_as and num_arches and nodes_per_arch:
+        return num_arches * nodes_per_arch
+    if "candy canes" in display_as and num_canes and nodes_per_cane:
+        return num_canes * nodes_per_cane
+    if "spinner" in display_as and arms_per_string and nodes_per_arm:
+        return max(num_strings, 1) * arms_per_string * nodes_per_arm
+    if nodes_per_string and num_strings:
+        return nodes_per_string * num_strings * max(strands_per_string, 1)
 
     if "matrix" in display_as:
         if parm1 and parm2:
@@ -78,7 +96,8 @@ def infer_node_count(model):
     raise ValueError(f"unable to infer node count for model {model.attrib.get('name')}")
 
 
-def resolve_model_family(display_as):
+def resolve_model_family(display_as, attrs=None):
+    attrs = attrs or {}
     raw = (display_as or "").strip().lower()
     normalized = re.sub(r"[^a-z0-9]+", "_", raw).strip("_")
 
@@ -90,6 +109,8 @@ def resolve_model_family(display_as):
         return "cane"
     if raw in {"horiz matrix", "vert matrix", "matrix"}:
         return "matrix"
+    if raw == "tree":
+        return "tree_360" if float(attrs.get("TreeDegrees", "0") or "0") >= 300 else "tree_flat"
     if raw == "tree flat":
         return "tree_flat"
     if raw == "tree 360":
@@ -149,10 +170,11 @@ def structural_attributes(model):
 
 def geometry_traits(display_as, attrs):
     traits = []
-    model_type = resolve_model_family(display_as)
+    model_type = resolve_model_family(display_as, attrs)
     traits.append(f"type:{model_type}")
 
-    if attrs.get("LayerSizes"):
+    layer_sizes = [row.strip() for row in (attrs.get("LayerSizes") or "").split(",") if row.strip()]
+    if len(layer_sizes) > 1:
         traits.append("layered")
     if attrs.get("CandyCaneSticks", "").lower() == "true":
         traits.append("stick_segments")
@@ -167,9 +189,12 @@ def geometry_traits(display_as, attrs):
     if attrs.get("ZigZag", "").lower() == "true":
         traits.append("zigzag")
 
-    parm1 = attrs.get("parm1")
-    parm2 = attrs.get("parm2")
-    parm3 = attrs.get("parm3")
+    def int_attr(name, fallback="0"):
+        return int(attrs.get(name, fallback) or fallback)
+
+    parm1 = attrs.get("parm1") or attrs.get("NumStrings") or attrs.get("NumArches") or attrs.get("NumCanes")
+    parm2 = attrs.get("parm2") or attrs.get("NodesPerString") or attrs.get("NodesPerArch") or attrs.get("NodesPerCane")
+    parm3 = attrs.get("parm3") or attrs.get("StarPoints") or attrs.get("ArmsPerString")
     if model_type == "single_line":
         if parm2 == "1":
             traits.append("single_node")
@@ -189,8 +214,8 @@ def geometry_traits(display_as, attrs):
             traits.append("low_node_density")
     if model_type == "matrix":
         if parm1 and parm2:
-            rows = int(parm1)
-            cols = int(parm2)
+            rows = int_attr("NumStrings", parm1)
+            cols = int_attr("NodesPerString", parm2)
             traits.append(f"matrix:{rows}x{cols}")
             cells = rows * cols
             if cells <= 256:
@@ -212,7 +237,7 @@ def geometry_traits(display_as, attrs):
 
 
 def resolve_geometry_profile(display_as, attrs):
-    model_type = resolve_model_family(display_as)
+    model_type = resolve_model_family(display_as, attrs)
     traits = set(geometry_traits(display_as, attrs))
 
     if model_type == "single_line":
@@ -280,8 +305,8 @@ def main():
     channel_count = node_count * channels_per_node
 
     display_as = target.attrib.get("DisplayAs")
-    resolved_model_family = resolve_model_family(display_as)
     attrs = structural_attributes(target)
+    resolved_model_family = resolve_model_family(display_as, attrs)
     traits = geometry_traits(display_as, attrs)
     geometry_profile = resolve_geometry_profile(display_as, attrs)
     print(json.dumps({

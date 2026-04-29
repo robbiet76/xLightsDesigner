@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "description": "Audit-driven focused causal-anchor plan for first expansion into missing high-value effect families after the 2026-04-28 current-effect run.",
+  "sourceAudit": "scripts/sequencer-render-training/catalog/effect-sampling-audit-v1.json",
+  "plans": [
+    {
+      "planId": "butterfly-matrix-audit-new",
+      "effect": "Butterfly",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/butterfly-matrix-expanded-sweep-v1.json",
+      "parameters": ["colors", "speed", "style"]
+    },
+    {
+      "planId": "circles-matrix-audit-new",
+      "effect": "Circles",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/circles-matrix-expanded-sweep-v1.json",
+      "parameters": ["count", "size", "speed"]
+    },
+    {
+      "planId": "fire-matrix-audit-new",
+      "effect": "Fire",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/fire-matrix-expanded-sweep-v1.json",
+      "parameters": ["growthCycles", "height", "location"]
+    },
+    {
+      "planId": "fireworks-matrix-audit-new",
+      "effect": "Fireworks",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/fireworks-matrix-expanded-sweep-v1.json",
+      "parameters": ["count", "explosions", "velocity"]
+    },
+    {
+      "planId": "lightning-matrix-audit-new",
+      "effect": "Lightning",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/lightning-matrix-expanded-sweep-v1.json",
+      "parameters": ["forked", "numberBolts", "numberSegments"]
+    }
+  ]
+}

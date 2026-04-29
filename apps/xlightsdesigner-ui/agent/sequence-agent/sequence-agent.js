@@ -13,6 +13,12 @@ import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
 import { translatePlacementIntentToXlights } from "./effect-intent-translation.js";
 import { resolveTranslationLayer } from "./translation-layer.js";
 import {
+  buildFullDisplayPlan,
+  buildVisualDesignPlanningContext,
+  collectDefinedVisualHintBehaviorTextForTargets,
+  collectEffectAvoidancesForTargets
+} from "./full-display-planner.js";
+import {
   buildCrossEffectSharedSettingsKnowledgeMetadata,
   buildDerivedParameterKnowledgeMetadata,
   buildStage1TrainingKnowledgeMetadata,
@@ -116,12 +122,16 @@ function deriveExecutionStrategy(intentHandoff = {}) {
         if (!Number.isFinite(layerIndex) || layerIndex < 0) return null;
         return {
           placementId: normText(row?.placementId) || `placement-${index + 1}`,
+          sourceSectionLabel: normText(row?.sourceSectionLabel || row?.section || row?.timingContext?.anchorLabel),
+          section: normText(row?.section || row?.sourceSectionLabel || row?.timingContext?.anchorLabel),
           designId: normText(row?.designId),
           designRevision: Number.isInteger(Number(row?.designRevision)) ? Number(row.designRevision) : 0,
           designAuthor: normText(row?.designAuthor),
           targetId,
           layerIndex,
           effectName,
+          targetRole: normText(row?.targetRole),
+          compositionRole: normText(row?.compositionRole),
           startMs,
           endMs,
           timingContext: row?.timingContext && typeof row.timingContext === "object" && !Array.isArray(row.timingContext)
@@ -2107,41 +2117,6 @@ function applyExistingSequencePreservation({
   return preservedCommands.filter(Boolean);
 }
 
-function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
-  const out = [];
-  const seen = new Set();
-  for (const targetId of normArray(targetIds).map((row) => normText(row)).filter(Boolean)) {
-    const assignment = metadataAssignmentIndex.get(targetId);
-    const values = normArray(assignment?.effectAvoidances).map((row) => normText(row)).filter(Boolean);
-    for (const value of values) {
-      const key = value.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push(value);
-    }
-  }
-  return out;
-}
-
-function collectDefinedVisualHintBehaviorTextForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
-  const out = [];
-  const seen = new Set();
-  for (const targetId of normArray(targetIds).map((row) => normText(row)).filter(Boolean)) {
-    const assignment = metadataAssignmentIndex.get(targetId);
-    const definitions = normArray(assignment?.visualHintDefinitions);
-    for (const definition of definitions) {
-      const value = normText(definition?.behavioralIntent);
-      const status = normText(definition?.status).toLowerCase();
-      if (!value || (status && status !== "defined")) continue;
-      const key = value.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push(value);
-    }
-  }
-  return out;
-}
-
 function inferRevisionBriefPreferredEffects(brief = {}) {
   const tendencyEffects = inferRevisionBriefTendencyEffects(brief);
   if (tendencyEffects.length) return tendencyEffects;
@@ -2213,7 +2188,8 @@ function buildParameterPriorGuidance({
   targetIds = [],
   displayElements = [],
   intentSummary = "",
-  sequencerRevisionBrief = null
+  sequencerRevisionBrief = null,
+  configuredBehaviorRecommendation = null
 } = {}) {
   const preferredPaletteMode = inferPreferredPaletteMode({ effectName });
   const desiredBehaviorHints = inferDesiredParameterBehaviorHints({
@@ -2230,14 +2206,46 @@ function buildParameterPriorGuidance({
     limit: 3,
     anchorsPerPrior: 2
   });
+  const configuredHint = configuredBehaviorRecommendation && typeof configuredBehaviorRecommendation === "object"
+    ? configuredBehaviorRecommendation.parameterPriorHint
+    : null;
+  const configuredParameterName = normText(configuredHint?.parameterName);
+  const configuredParameterValue = configuredHint?.parameterValue;
+  const configuredPrior = configuredParameterName && configuredParameterName !== "baseline" && configuredParameterValue !== undefined && configuredParameterValue !== null && normText(configuredParameterValue) !== ""
+    ? {
+        parameterName: configuredParameterName,
+        geometryProfile: normText(configuredBehaviorRecommendation?.geometryProfile),
+        modelType: normText(configuredBehaviorRecommendation?.modelType),
+        paletteMode: normText(configuredBehaviorRecommendation?.paletteMode || preferredPaletteMode),
+        confidence: normText(configuredBehaviorRecommendation?.confidence?.level),
+        configurationCoverageStatus: normText(configuredBehaviorRecommendation?.confidence?.coverageStatus),
+        sourceRecordId: normText(configuredBehaviorRecommendation?.recordId),
+        recommendedAnchors: [{
+          parameterValue: configuredParameterValue,
+          sampleCount: Number(configuredBehaviorRecommendation?.evidenceCount || 0),
+          meanTemporalMotion: Number(configuredBehaviorRecommendation?.renderOutcomeSignals?.temporalMotion || 0),
+          meanTemporalColorDelta: Number(configuredBehaviorRecommendation?.renderOutcomeSignals?.temporalColorDelta || 0),
+          meanTemporalBrightnessDelta: Number(configuredBehaviorRecommendation?.renderOutcomeSignals?.temporalBrightnessDelta || 0),
+          meanNonBlankRatio: Number(configuredBehaviorRecommendation?.renderOutcomeSignals?.nonBlankRatio || 0),
+          temporalSignatureHints: normText(configuredBehaviorRecommendation?.behaviorSignals?.motionPacing).split(",").map((row) => normText(row)).filter(Boolean),
+          behaviorHints: normText(configuredBehaviorRecommendation?.behaviorSignals?.textureDensity).split(",").map((row) => normText(row)).filter(Boolean),
+          score: Number(configuredBehaviorRecommendation?.score || 0)
+        }]
+      }
+    : null;
+  const priors = [
+    configuredPrior,
+    ...normArray(recommendation?.priors).filter((prior) => normText(prior?.parameterName) !== configuredParameterName)
+  ].filter(Boolean);
   return {
     effectName: normText(effectName),
     preferredPaletteMode,
     desiredBehaviorHints,
+    configuredBehaviorRecordId: normText(configuredBehaviorRecommendation?.recordId),
     recommendationMode: normText(recommendation?.recommendationMode),
     matchedGeometryProfiles: normArray(recommendation?.matchedGeometryProfiles),
     matchedModelTypes: normArray(recommendation?.matchedModelTypes),
-    priors: normArray(recommendation?.priors)
+    priors
   };
 }
 
@@ -2463,44 +2471,32 @@ function mergePriorityTargets({ primary = [], secondary = [], fallback = [] } = 
   ].filter(Boolean))];
 }
 
-function normalizeVisualPaletteRows(rows = []) {
-  return normArray(rows)
-    .map((row) => ({
-      name: normText(row?.name),
-      hex: normText(row?.hex),
-      role: normText(row?.role)
-    }))
-    .filter((row) => row.name || row.hex || row.role);
-}
-
-function buildVisualDesignPlanningContext(sequencingDesignHandoff = null) {
-  const paletteRows = normalizeVisualPaletteRows(sequencingDesignHandoff?.paletteRoles);
-  const motifs = normArray(sequencingDesignHandoff?.motifDirectives).map((row) => normText(row)).filter(Boolean);
-  const paletteText = paletteRows
-    .map((row) => [row.name, row.role, row.hex].filter(Boolean).join(" "))
-    .filter(Boolean)
-    .join(", ");
-  const motifText = motifs.join(", ");
-  const summaryParts = [
-    paletteText ? `palette: ${paletteText}` : "",
-    motifText ? `motifs: ${motifText}` : ""
-  ].filter(Boolean);
-  return {
-    paletteRows,
-    motifs,
-    summaryText: summaryParts.join(" | ")
-  };
-}
-
-function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [], effectCatalog = null, metadataAssignments = [], sequencerRevisionBrief = null } = {}) {
+function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [], groupIds = [], groupsById = {}, effectCatalog = null, metadataAssignments = [], sequencerRevisionBrief = null, sequenceSettings = {} } = {}) {
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
   const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
-  const effectPlacements = normArray(scope?.executionStrategy?.effectPlacements);
   const sectionDirectiveIndex = buildSectionDirectiveIndex(scope?.sequencingDesignHandoff);
   const visualPlanningContext = buildVisualDesignPlanningContext(scope?.sequencingDesignHandoff);
   const availableEffects = buildAvailableEffectSet(effectCatalog);
   const metadataAssignmentIndex = buildMetadataAssignmentIndex(metadataAssignments);
+  const generatedFullDisplayPlan = buildFullDisplayPlan({
+    scope,
+    analysisHandoff,
+    sequenceSettings,
+    displayElements,
+    groupIds,
+    groupsById,
+    availableEffects,
+    metadataAssignmentIndex,
+    visualPlanningContext,
+    sequencerRevisionBrief,
+    buildParameterPriorGuidance,
+    buildSharedSettingPriorGuidance
+  });
+  const generatedFullDisplayPlacements = normArray(generatedFullDisplayPlan?.effectPlacements);
+  const effectPlacements = generatedFullDisplayPlacements.length
+    ? generatedFullDisplayPlacements
+    : normArray(scope?.executionStrategy?.effectPlacements);
   const revisionBriefExecutionLine = buildRevisionBriefExecutionLine({
     brief: sequencerRevisionBrief,
     scope,
@@ -2511,7 +2507,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
     secondary: normArray(sequencerRevisionBrief?.revisionTargets),
     fallback: normArray(sequencerRevisionBrief?.targetScope)
   });
-  const seedRecommendations = strategySectionPlans.length
+  const sectionSeedRecommendations = strategySectionPlans.length
     ? strategySectionPlans.map((row) => {
         const prioritizedTargetIds = mergePriorityTargets({
           primary: briefPriorityTargets,
@@ -2600,6 +2596,40 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           })
         };
       })()];
+  const seedRecommendations = generatedFullDisplayPlacements.length
+    ? generatedFullDisplayPlacements
+        .slice(0, Math.max(1, strategySectionPlans.length || 8))
+        .map((placement) => {
+          const effectName = normText(placement?.effectName);
+          const targetId = normText(placement?.targetId);
+          const section = normText(placement?.sourceSectionLabel || placement?.section);
+          const intentSummary = `${normText(placement?.intentSummary || scope.goal)}${toneText}`;
+          const targetIds = targetId ? [targetId] : normArray(scope.targetIds);
+          return {
+            section,
+            targetIds,
+            effectName,
+            executionLine: buildStructuredExecutionLine({
+              section,
+              targetIds,
+              fallbackTargetIds: scope.targetIds,
+              intentSummary,
+              effectName
+            }),
+            parameterPriorGuidance: placement?.parameterPriorGuidance || buildParameterPriorGuidance({
+              effectName,
+              targetIds,
+              displayElements,
+              intentSummary,
+              sequencerRevisionBrief
+            }),
+            sharedSettingPriorGuidance: placement?.sharedSettingPriorGuidance || buildSharedSettingPriorGuidance({
+              sequencerRevisionBrief,
+              intentSummary
+            })
+          };
+        })
+    : sectionSeedRecommendations;
   const executionSeedLines = seedRecommendations.map((row) => row.executionLine);
   return {
     toneHint,
@@ -2607,6 +2637,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
     seedRecommendations,
     executionSeedLines,
     visualPlanningContext,
+    compositionPlan: generatedFullDisplayPlan?.compositionPlan || null,
     preferSynthesized: strategySectionPlans.length > 0 || Boolean(revisionBriefExecutionLine),
     strategy: timing.strategy,
     detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy} visualPalette=${visualPlanningContext.paletteRows.length} motifs=${visualPlanningContext.motifs.length} parameterPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.parameterPriorGuidance?.priors).length).length} sharedSettingPriorGuidance=${seedRecommendations.filter((row) => normArray(row?.sharedSettingPriorGuidance?.settings).length).length}`
@@ -3035,7 +3066,8 @@ function buildCommandsFromEffectPlacements({
   groupIds = [],
   displayElements = [],
   groupsById = {},
-  effectCatalog = null
+  effectCatalog = null,
+  capabilityCommands = null
 } = {}) {
   const placements = normArray(effectPlacements);
   if (!placements.length) {
@@ -3152,7 +3184,13 @@ function buildCommandsFromEffectPlacements({
         designId: normText(placement?.designId),
         designRevision: Number.isInteger(Number(placement?.designRevision)) ? Number(placement.designRevision) : 0,
         designAuthor: normText(placement?.designAuthor),
+        section: normText(placement?.section || placement?.sourceSectionLabel || placement?.timingContext?.anchorLabel),
+        sourceSectionLabel: normText(placement?.sourceSectionLabel || placement?.section || placement?.timingContext?.anchorLabel),
         settingsIntent: placement.settingsIntent,
+        targetRole: normText(placement?.targetRole),
+        sourceAggregateTargetId: normText(placement?.sourceAggregateTargetId),
+        targetGranularity: normText(placement?.targetGranularity),
+        compositionRole: normText(placement?.compositionRole),
         sharedSettingPriorGuidance: placementSharedSettingPriorGuidance,
         parameterPriorGuidance: placementParameterPriorGuidance,
         paletteIntent: placement.paletteIntent,
@@ -3165,7 +3203,8 @@ function buildCommandsFromEffectPlacements({
   const sequenceSettingsCommand = buildSequenceSettingsCommand({
     effectCommands,
     groupIds,
-    sequenceSettings
+    sequenceSettings,
+    capabilityCommands
   });
   const normalizedEffectCommands = effectCommands.map((row) => {
     if (!sequenceSettingsCommand) return row;
@@ -3238,7 +3277,8 @@ function stageCommandGraphSynthesis({
       groupIds,
       displayElements,
       groupsById,
-      effectCatalog
+      effectCatalog,
+      capabilityCommands
     });
     const capabilityGate = evaluateSequencePlanCapabilities({ commands: placementGraph.commands, capabilityCommands });
     if (!capabilityGate.ok) {
@@ -3317,7 +3357,8 @@ function stageCommandGraphSynthesis({
     sectionWindowsByName,
     useAllKnownSections,
     enableEffectTimingAlignment,
-    paletteContext: effect?.visualPlanningContext?.paletteRows || sequencingDesignHandoff?.paletteRoles || null
+    paletteContext: effect?.visualPlanningContext?.paletteRows || sequencingDesignHandoff?.paletteRoles || null,
+    capabilityCommands
   });
   const requestedCueTrackNames = inferRequestedCueTimingTracks({
     goal: goalText,
@@ -3539,7 +3580,7 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     fn: () => (typeof stageOverrides.effect_strategy === "function"
       ? stageOverrides.effect_strategy({ scope, analysisHandoff: safeAnalysis, timing })
-      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements, effectCatalog, metadataAssignments, sequencerRevisionBrief }))
+      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements, groupIds, groupsById, effectCatalog, metadataAssignments, sequencerRevisionBrief, sequenceSettings: effectiveSequenceSettings }))
   });
 
   const resolvedCandidateSelectionContext = candidateSelectionContext && typeof candidateSelectionContext === "object"
@@ -3653,6 +3694,9 @@ export function buildSequenceAgentPlan({
     tagNames: scope.tagNames,
     stageOrder: STAGE_ORDER.slice(),
     executionStrategy: scope.executionStrategy,
+    effectPlacements: Array.isArray(effectiveEffectStrategy?.effectPlacements)
+      ? effectiveEffectStrategy.effectPlacements
+      : [],
     sequencingDesignHandoff: scope.sequencingDesignHandoff,
     sequenceArtisticGoal: sequenceArtisticGoal && typeof sequenceArtisticGoal === "object" ? sequenceArtisticGoal : null,
     sequenceRevisionObjective: sequenceRevisionObjective && typeof sequenceRevisionObjective === "object" ? sequenceRevisionObjective : null,
@@ -3668,13 +3712,24 @@ export function buildSequenceAgentPlan({
       ...normArray(scope?.executionStrategy?.sectionPlans).map((row) => normText(row?.designAuthor)),
       ...normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designAuthor))
     ].filter(Boolean))),
-    effectPlacementCount: Array.isArray(scope?.executionStrategy?.effectPlacements)
-      ? scope.executionStrategy.effectPlacements.length
+    effectPlacementCount: Array.isArray(effectiveEffectStrategy?.effectPlacements)
+      ? effectiveEffectStrategy.effectPlacements.length
       : 0,
     sequencingDesignHandoffSummary: normText(scope?.sequencingDesignHandoff?.designSummary),
     sequencingSectionDirectiveCount: Array.isArray(scope?.sequencingDesignHandoff?.sectionDirectives)
       ? scope.sequencingDesignHandoff.sectionDirectives.length
       : 0,
+    referenceSequencePatterns: scope?.sequencingDesignHandoff?.referenceSequencePatterns && typeof scope.sequencingDesignHandoff.referenceSequencePatterns === "object"
+      ? {
+          artifactId: normText(scope.sequencingDesignHandoff.referenceSequencePatterns.artifactId),
+          analyzedSequenceCount: Number(scope.sequencingDesignHandoff.referenceSequencePatterns.analyzedSequenceCount || 0),
+          averageEffectsPerSequence: Number(scope.sequencingDesignHandoff.referenceSequencePatterns.averageEffectsPerSequence || 0),
+          averageActiveTargets: Number(scope.sequencingDesignHandoff.referenceSequencePatterns.averageActiveTargets || 0),
+          averageLayeredTargets: Number(scope.sequencingDesignHandoff.referenceSequencePatterns.averageLayeredTargets || 0),
+          densityPerMinute: scope.sequencingDesignHandoff.referenceSequencePatterns.densityPerMinute || {},
+          commonEffects: normArray(scope.sequencingDesignHandoff.referenceSequencePatterns.commonEffects).slice(0, 12)
+        }
+      : null,
     trainingKnowledge: buildStage1TrainingKnowledgeMetadata(),
     parameterTrainingKnowledge: buildDerivedParameterKnowledgeMetadata(),
     sharedSettingTrainingKnowledge: buildCrossEffectSharedSettingsKnowledgeMetadata(),
@@ -3685,6 +3740,9 @@ export function buildSequenceAgentPlan({
       seedRecommendations: normArray(effectiveEffectStrategy?.seedRecommendations),
       visualPlanningContext: effectiveEffectStrategy?.visualPlanningContext && typeof effectiveEffectStrategy.visualPlanningContext === "object"
         ? effectiveEffectStrategy.visualPlanningContext
+        : null,
+      compositionPlan: effectiveEffectStrategy?.compositionPlan && typeof effectiveEffectStrategy.compositionPlan === "object"
+        ? effectiveEffectStrategy.compositionPlan
         : null,
       selectedCandidateId: normText(effectiveEffectStrategy?.selectedCandidateId),
       selectedCandidateSummary: normText(effectiveEffectStrategy?.selectedCandidateSummary)

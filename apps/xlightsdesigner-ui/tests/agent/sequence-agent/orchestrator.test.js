@@ -140,6 +140,59 @@ test('orchestrator applies compressible plans through owned batch apply', async 
   assert.equal(ownedJobCalls, 1);
 });
 
+test('orchestrator applies auxiliary timing tracks directly while batching primary effects', async () => {
+  const commands = [
+    ...compressibleCommands({ markCommand: 'timing.replaceMarks' }),
+    {
+      id: 'timing.track.create.beats',
+      cmd: 'timing.createTrack',
+      params: { trackName: 'XD: Beat Grid', replaceIfExists: true }
+    },
+    {
+      id: 'timing.marks.replace.beats',
+      dependsOn: ['timing.track.create.beats'],
+      cmd: 'timing.replaceMarks',
+      params: {
+        trackName: 'XD: Beat Grid',
+        marks: [
+          { startMs: 0, endMs: 500, label: '1' },
+          { startMs: 500, endMs: 1000, label: '2' }
+        ]
+      }
+    }
+  ];
+  const directTimingCalls = [];
+  let batchPayload = null;
+  const res = await validateAndApplyPlan({
+    endpoint: 'http://127.0.0.1:49915/xlightsdesigner/api',
+    commands,
+    expectedRevision: 'rev-1',
+    ...ownedDeps({
+      createTimingTrack: async (_endpoint, params) => {
+        directTimingCalls.push(`create:${params.trackName}`);
+        return { data: { jobId: `job-create-${directTimingCalls.length}` } };
+      },
+      replaceTimingMarks: async (_endpoint, params) => {
+        directTimingCalls.push(`replace:${params.trackName}`);
+        return { data: { jobId: `job-replace-${directTimingCalls.length}` } };
+      },
+      applySequencingBatchPlan: async (_endpoint, payload) => {
+        batchPayload = payload;
+        return { data: { jobId: 'owned-job-mixed' } };
+      }
+    })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.applyPath, 'owned_batch_plan_plus_direct');
+  assert.equal(batchPayload.track, 'XD: Song Structure');
+  assert.equal(batchPayload.effects.length, 1);
+  assert.deepEqual(directTimingCalls, [
+    'create:XD: Beat Grid',
+    'replace:XD: Beat Grid'
+  ]);
+});
+
 test('orchestrator applies display-order commands through owned direct API', async () => {
   let orderCall = null;
   const res = await validateAndApplyPlan({
@@ -506,7 +559,7 @@ test('owned batch builder preserves corpus-backed settings and metadata payloads
     B_CHOICE_BufferStyle: 'Per Preview',
     E_TEXTCTRL_Pictures_Filename: '/Users/robterry/Documents/Lights/assets/snowflake.png'
   };
-  const palette = { C_BUTTON_Palette1: '#ffffff' };
+  const palette = { C_BUTTON_Palette1: '#ffffff', C_SLIDER_Contrast: 0 };
   const commands = compressibleCommands({
     modelName: 'MegaTree',
     effectName: 'Pictures',
@@ -523,7 +576,13 @@ test('owned batch builder preserves corpus-backed settings and metadata payloads
 
   assert.equal(batchPlan.track, 'XD: Song Structure');
   assert.equal(batchPlan.effects.length, 1);
-  assert.deepEqual(batchPlan.effects[0].settings, settings);
-  assert.deepEqual(batchPlan.effects[0].palette, palette);
+  assert.equal(
+    batchPlan.effects[0].settings,
+    'T_CHOICE_LayerMethod=Layered,T_CHOICE_In_Transition_Type=Wipe,T_CHOICE_Out_Transition_Type=Circle Explode,B_CHOICE_BufferStyle=Per Preview,E_TEXTCTRL_Pictures_Filename=/Users/robterry/Documents/Lights/assets/snowflake.png'
+  );
+  assert.equal(
+    batchPlan.effects[0].palette,
+    'C_BUTTON_Palette1=#FFFFFF,C_SLIDER_Contrast=0,C_BUTTON_Palette2=#FF0000,C_BUTTON_Palette3=#00FF00,C_BUTTON_Palette4=#0000FF,C_BUTTON_Palette5=#FFFF00,C_BUTTON_Palette6=#000000,C_BUTTON_Palette7=#00FFFF,C_BUTTON_Palette8=#FF00FF'
+  );
   assert.equal(batchPlan.effects[0].element, 'MegaTree');
 });

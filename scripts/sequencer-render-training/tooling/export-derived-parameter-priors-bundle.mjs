@@ -43,13 +43,18 @@ function buildEffectPriorBundle(effect = {}) {
           meanTemporalColorDelta: Number(anchor?.meanTemporalColorDelta || 0),
           meanTemporalBrightnessDelta: Number(anchor?.meanTemporalBrightnessDelta || 0),
           meanNonBlankRatio: Number(anchor?.meanNonBlankRatio || 0),
+          meanRenderedColorDiversity: Number(anchor?.meanRenderedColorDiversity || 0),
+          meanRenderedDominantColorStability: Number(anchor?.meanRenderedDominantColorStability || 0),
+          meanRenderedColorBandDensity: Number(anchor?.meanRenderedColorBandDensity || 0),
+          meanRenderedGradientSmoothness: Number(anchor?.meanRenderedGradientSmoothness || 0),
+          meanRenderedTemporalColorTravel: Number(anchor?.meanRenderedTemporalColorTravel || 0),
           temporalSignatureHints: unique(anchor?.temporalSignatureHints),
           behaviorHints: unique(anchor?.behaviorHints)
         }))
-        .filter((anchor) => anchor.sampleCount > 0);
-      if (!geometryProfile || !anchorProfiles.length) return null;
-      return {
-        parameterName: normText(row?.parameterName),
+	        .filter((anchor) => anchor.sampleCount > 0);
+	      if (!geometryProfile || !anchorProfiles.length) return null;
+	      return {
+	        parameterName: normText(row?.parameterName),
         geometryProfile,
         modelType: normText(representativeness?.modelType),
         analyzerFamily: normText(representativeness?.analyzerFamily),
@@ -57,11 +62,12 @@ function buildEffectPriorBundle(effect = {}) {
         confidence: normText(row?.confidence),
         configurationCoverageStatus: normText(row?.configurationCoverageStatus),
         configurationProfileCount: Number(row?.configurationProfileCount || 0),
-        distinctAnchorCount: Number(row?.distinctAnchorCount || 0),
-        sampleCount: Number(row?.sampleCount || 0),
-        structuralSignatures: unique(row?.structuralSignatures),
-        anchorProfiles
-      };
+	        distinctAnchorCount: Number(row?.distinctAnchorCount || 0),
+	        sampleCount: Number(row?.sampleCount || 0),
+	        structuralSignatures: unique(row?.structuralSignatures),
+	        behaviorDimensions: row?.behaviorDimensions || null,
+	        anchorProfiles
+	      };
     })
     .filter(Boolean);
   return {

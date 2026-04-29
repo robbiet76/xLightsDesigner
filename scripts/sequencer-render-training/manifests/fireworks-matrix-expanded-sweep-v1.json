@@ -1,0 +1,56 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "fireworks-matrix-expanded-sweep-v1",
+  "description": "First focused Fireworks sweep on the canonical high-density matrix model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Fireworks particle burst baseline using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "fireworks-matrix-centered-v1",
+      "effectName": "Fireworks",
+      "effectSettings": {
+        "count": 50,
+        "explosions": 8,
+        "velocity": 4,
+        "fade": 50,
+        "gravity": true,
+        "xLocation": 50
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "particle_burst",
+        "centered_fireworks"
+      ]
+    },
+    {
+      "sampleId": "fireworks-matrix-random-v1",
+      "effectName": "Fireworks",
+      "effectSettings": {
+        "count": 50,
+        "explosions": 16,
+        "velocity": 4,
+        "fade": 50,
+        "gravity": false,
+        "xLocation": -1
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "particle_burst",
+        "random_fireworks"
+      ]
+    }
+  ]
+}

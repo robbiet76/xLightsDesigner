@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "bars-direction-arch-grouped-mono-white-down",
+  "createdAt": "2026-04-28T14:23:35.928Z",
+  "effectName": "Bars",
+  "geometryProfile": "arch_grouped",
+  "modelType": "arch",
+  "parameterRegion": {
+    "parameterName": "direction",
+    "regionKind": "single_value",
+    "valueSummary": "down",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "mono_white"
+  },
+  "paletteContext": {
+    "paletteMode": "mono_white"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "arch_pattern_fit",
+    "motionPacing": "",
+    "textureDensity": "arch_pattern_fit,bar_pattern,decoded_fseq,multi_bar,registry_generated,single_bar",
+    "energyLevel": "restrained",
+    "coverageLevel": "broad",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "high"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "dense",
+    "nonBlankRatio": 0.75,
+    "temporalMotion": 0,
+    "temporalColorDelta": 0,
+    "temporalBrightnessDelta": 0,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "high",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "multi_configuration_sampled"
+  },
+  "evidenceCount": 4,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "arch_grouped"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

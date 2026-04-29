@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "twinkle-count-tree-360-round-rgb-primary-3",
+  "createdAt": "2026-04-28T14:23:35.931Z",
+  "effectName": "Twinkle",
+  "geometryProfile": "tree_360_round",
+  "modelType": "tree_360",
+  "parameterRegion": {
+    "parameterName": "count",
+    "regionKind": "single_value",
+    "valueSummary": "3",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "paletteContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "interaction_sweep",
+    "motionPacing": "",
+    "textureDensity": "interaction_sweep,medium_twinkle,slow_twinkle,soft_twinkle,tree_pattern_fit,twinkle_pattern",
+    "energyLevel": "restrained",
+    "coverageLevel": "sparse",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "sparse",
+    "nonBlankRatio": 0.02832,
+    "temporalMotion": 0.001238,
+    "temporalColorDelta": 0.001238,
+    "temporalBrightnessDelta": 0.001238,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "tree_360_round"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

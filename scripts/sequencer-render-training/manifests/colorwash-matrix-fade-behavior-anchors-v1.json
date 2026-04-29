@@ -1,0 +1,156 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "colorwash-matrix-fade-behavior-anchors-v1",
+  "description": "Focused Color Wash behavior anchors on a high-density matrix for single-color and multi-color representative palette modes.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Keeps Color Wash settings mostly fixed while sampling cycles and fade-axis anchors that should produce measurable coverage, motion, and color-distribution deltas."
+  },
+  "samples": [
+    {
+      "sampleId": "colorwash-matrix-cycles-0_5-anchor-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 0.5,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "colorwash_cycles", "slow_cycle"]
+    },
+    {
+      "sampleId": "colorwash-matrix-cycles-2_0-anchor-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 2.0,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "colorwash_cycles", "medium_cycle"]
+    },
+    {
+      "sampleId": "colorwash-matrix-cycles-4_0-anchor-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 4.0,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "colorwash_cycles", "fast_cycle"]
+    },
+    {
+      "sampleId": "colorwash-matrix-vfade-off-anchor-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 2.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "vFade",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "colorwash_vfade", "vertical_fade_off"]
+    },
+    {
+      "sampleId": "colorwash-matrix-vfade-on-anchor-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 2.0,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "vFade",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "colorwash_vfade", "vertical_fade_on"]
+    },
+    {
+      "sampleId": "colorwash-matrix-hfade-off-anchor-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 2.0,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "hFade",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "colorwash_hfade", "horizontal_fade_off"]
+    },
+    {
+      "sampleId": "colorwash-matrix-hfade-on-anchor-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 2.0,
+        "vFade": true,
+        "hFade": true,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "hFade",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "colorwash_hfade", "horizontal_fade_on"]
+    }
+  ]
+}

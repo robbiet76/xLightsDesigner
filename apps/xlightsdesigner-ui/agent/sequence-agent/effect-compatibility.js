@@ -1,3 +1,5 @@
+import { EFFECT_PARAMETER_REGISTRY_BUNDLE } from "./generated/effect-parameter-registry.js";
+
 function normText(value = "") {
   return String(value || "").trim();
 }
@@ -18,6 +20,10 @@ function isEffectMutationCommand(cmd = "") {
 function isHighRiskGroupRenderPolicy(category = "") {
   const key = normText(category).toLowerCase();
   return key === "overlay" || key === "stack" || key === "single_line" || key === "per_model_strand";
+}
+
+function normalizeEnumKey(value = "") {
+  return normText(value).toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
 const SHARED_EFFECT_SETTINGS = {
@@ -169,19 +175,63 @@ const SHARED_EFFECT_SETTINGS = {
 
 function checkParamValueType(param = {}, value) {
   const type = normText(param.type).toLowerCase();
-  if (type === "bool") return typeof value === "boolean";
-  if (type === "int") return Number.isFinite(Number(value));
+  if (type === "bool") return typeof value === "boolean" || ["0", "1", "true", "false"].includes(normText(value).toLowerCase());
+  if (type === "int" || type === "number" || type === "float") return Number.isFinite(Number(value));
   if (type === "enum") return typeof value === "string";
   if (type === "curve") return typeof value === "string" || value == null;
   if (type === "file") return typeof value === "string";
   return typeof value === "string" || typeof value === "number" || typeof value === "boolean";
 }
 
+function resolveRegistryEffect(effectName = "") {
+  const effects = EFFECT_PARAMETER_REGISTRY_BUNDLE?.effects || {};
+  const exact = effects[normText(effectName)];
+  if (exact) return exact;
+  const normalized = normalizeEnumKey(effectName);
+  return Object.entries(effects).find(([name]) => normalizeEnumKey(name) === normalized)?.[1] || null;
+}
+
+function buildRegistryParamIndex(effectName = "") {
+  const effect = resolveRegistryEffect(effectName);
+  const out = {};
+  const params = asObject(effect?.parameters);
+  for (const parameter of Object.values(params)) {
+    const upstreamId = normText(parameter?.upstreamId);
+    if (!upstreamId) continue;
+    const controlType = normText(parameter?.controlType).toLowerCase();
+    const type = normText(parameter?.type).toLowerCase();
+    if (controlType === "checkbox" || type === "bool" || type === "boolean") {
+      out[`E_CHECKBOX_${upstreamId}`] = { ...parameter, type: "bool" };
+      continue;
+    }
+    if (controlType === "choice" || type === "enum") {
+      out[`E_CHOICE_${upstreamId}`] = { ...parameter, type: "enum" };
+      continue;
+    }
+    if (controlType === "slider" && type === "float") {
+      out[`E_TEXTCTRL_${upstreamId}`] = { ...parameter, type: "number", min: null, max: null };
+      out[`E_SLIDER_${upstreamId}`] = { ...parameter, type: "int" };
+      continue;
+    }
+    if (controlType === "slider" || type === "int" || type === "integer") {
+      out[`E_SLIDER_${upstreamId}`] = { ...parameter, type: "int" };
+      continue;
+    }
+    if (type === "float" || type === "number") {
+      out[`E_TEXTCTRL_${upstreamId}`] = { ...parameter, type: "number" };
+      continue;
+    }
+    out[`E_TEXTCTRL_${upstreamId}`] = { ...parameter, type: "string" };
+  }
+  return out;
+}
+
 function evaluateSettingsAgainstDefinition(settings = {}, definition = {}) {
   const warnings = [];
   const params = asObject(definition.paramIndex);
+  const registryParams = buildRegistryParamIndex(definition.effectName);
   for (const [key, value] of Object.entries(asObject(settings))) {
-    const param = params[key] || SHARED_EFFECT_SETTINGS[key];
+    const param = params[key] || registryParams[key] || SHARED_EFFECT_SETTINGS[key];
     if (!param) {
       warnings.push(`Unknown settings key for effect ${definition.effectName}: ${key}`);
       continue;

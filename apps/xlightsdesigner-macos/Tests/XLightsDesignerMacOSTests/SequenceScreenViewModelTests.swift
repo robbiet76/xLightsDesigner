@@ -66,7 +66,7 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
         selectedSections: ["Chorus 1"],
         timingTrackName: "User Timing"
     )
-    try await Task.sleep(for: .milliseconds(120))
+    try await xldWaitUntil { model.isGeneratingProposal == false }
 
     #expect(proposalService.selectedTagNames == ["lead", "centerpiece"])
     #expect(proposalService.selectedSections == ["Chorus 1"])
@@ -126,7 +126,7 @@ private final class ProjectArtifactNotificationRecorder {
     )
 
     model.generateProposalFromDesignIntent()
-    try await Task.sleep(for: .milliseconds(120))
+    try await xldWaitUntil { model.isGeneratingProposal == false }
 
     #expect(proposalService.projectFilePath == project.projectFilePath)
     #expect(proposalService.prompt.contains("Goal: Make the chorus feel like a clean red and white canopy."))
@@ -180,7 +180,9 @@ private final class ProjectArtifactNotificationRecorder {
     }
 
     model.generateProposalFromDesignIntent()
-    try await Task.sleep(for: .milliseconds(120))
+    try await xldWaitUntil {
+        recorder.count == 1 && model.isGeneratingProposal == false
+    }
 
     #expect(recorder.count == 1)
     #expect(model.isGeneratingProposal == false)

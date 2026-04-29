@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "fire-location-matrix-high-density-rgb-primary-left",
+  "createdAt": "2026-04-28T14:23:35.928Z",
+  "effectName": "Fire",
+  "geometryProfile": "matrix_high_density",
+  "modelType": "matrix",
+  "parameterRegion": {
+    "parameterName": "location",
+    "regionKind": "single_value",
+    "valueSummary": "Left",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "paletteContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "registry_generated",
+    "motionPacing": "",
+    "textureDensity": "registry_generated",
+    "energyLevel": "moderate",
+    "coverageLevel": "broad",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "dense",
+    "nonBlankRatio": 0.829404,
+    "temporalMotion": 0.054533,
+    "temporalColorDelta": 0.054533,
+    "temporalBrightnessDelta": 0.054533,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 2,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "matrix_high_density"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

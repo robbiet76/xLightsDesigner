@@ -1,0 +1,54 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "lightning-matrix-expanded-sweep-v1",
+  "description": "First focused Lightning sweep on the canonical high-density matrix model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Lightning directional strike baseline using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "lightning-matrix-up-v1",
+      "effectName": "Lightning",
+      "effectSettings": {
+        "direction": "Up",
+        "forked": false,
+        "numberBolts": 10,
+        "numberSegments": 5,
+        "width": 2
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "directional_strike",
+        "up_lightning"
+      ]
+    },
+    {
+      "sampleId": "lightning-matrix-forked-v1",
+      "effectName": "Lightning",
+      "effectSettings": {
+        "direction": "Down",
+        "forked": true,
+        "numberBolts": 10,
+        "numberSegments": 5,
+        "width": 2
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "directional_strike",
+        "forked_lightning"
+      ]
+    }
+  ]
+}

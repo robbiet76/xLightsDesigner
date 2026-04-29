@@ -311,6 +311,10 @@ function buildPhaseArtifactCard({ context = {}, phaseTransition = {}, projectMis
     const insightCount = Array.isArray(discoveryCapture.insights) ? discoveryCapture.insights.length : 0;
     const resolvedCount = Array.isArray(discoveryCapture.resolvedBranches) ? discoveryCapture.resolvedBranches.length : 0;
     const unresolvedCount = Array.isArray(discoveryCapture.unresolvedBranches) ? discoveryCapture.unresolvedBranches.length : 0;
+    const insightChips = [...new Set(discoveryCapture.insights
+      .map((row) => String(row?.subject || '').trim())
+      .filter(Boolean))]
+      .slice(0, 8);
     const summaryParts = [];
     if (insightCount > 0) summaryParts.push(`${insightCount} insight${insightCount === 1 ? '' : 's'} captured`);
     if (resolvedCount > 0) summaryParts.push(`${resolvedCount} branch${resolvedCount === 1 ? '' : 'es'} resolved`);
@@ -323,7 +327,7 @@ function buildPhaseArtifactCard({ context = {}, phaseTransition = {}, projectMis
       artifactType: 'display_understanding_v1',
       title: 'Display Discovery Updated',
       summary: truncateText([summaryParts.join('. '), firstInsightText].filter(Boolean).join('. '), 280),
-      chips: ['Display Discovery', `${insightCount} Insight${insightCount === 1 ? '' : 's'}`]
+      chips: insightChips.length ? insightChips : ['Display Discovery', `${insightCount} Insight${insightCount === 1 ? '' : 's'}`]
     };
   }
 

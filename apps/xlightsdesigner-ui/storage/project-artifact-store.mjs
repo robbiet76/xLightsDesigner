@@ -11,11 +11,13 @@ const ARTIFACT_DIRS = {
   creative_brief_v1: path.join("artifacts", "briefs"),
   proposal_bundle_v1: path.join("artifacts", "proposals"),
   intent_handoff_v1: path.join("artifacts", "intent-handoffs"),
+  sequencing_design_handoff_v2: path.join("artifacts", "sequencing-design-handoffs"),
   plan_handoff_v1: path.join("artifacts", "plans"),
   apply_result_v1: path.join("artifacts", "apply-results"),
   render_observation_v1: path.join("artifacts", "render-observations"),
   sequence_render_critique_context_v1: path.join("artifacts", "render-critique-contexts"),
   effect_family_outcome_record_v1: path.join("artifacts", "effect-outcomes"),
+  sequence_reference_patterns_v1: path.join("artifacts", "sequence-reference-patterns"),
   history_entry_v1: "history"
 };
 

@@ -95,6 +95,93 @@ python3 "${ROOT_DIR}/tooling/normalize-manifest.py" \
   --standards "${standards_path}" \
   --out-file "${normalized_manifest_path}"
 MANIFEST_FILE="${normalized_manifest_path}"
+if [[ -n "${TRAINING_PALETTE_PROTOCOL:-}" ]]; then
+  palette_expanded_manifest_path="${OUT_DIR}/manifest.palette-expanded.json"
+  node --input-type=module - "${MANIFEST_FILE}" "${palette_expanded_manifest_path}" "${TRAINING_PALETTE_PROTOCOL}" <<'NODE'
+import fs from "node:fs";
+
+const [inputPath, outputPath, protocolRaw] = process.argv.slice(2);
+const manifest = JSON.parse(fs.readFileSync(inputPath, "utf8"));
+const protocol = String(protocolRaw || "")
+  .split(",")
+  .map((row) => row.trim())
+  .filter(Boolean);
+
+const palettePath = process.env.TRAINING_DEFAULT_PALETTE_PATH
+  || "/Users/robterry/xLights-2026.06/resources/palettes/Default.xpalette";
+
+function loadXpalette(path) {
+  const raw = fs.readFileSync(path, "utf8");
+  const line = raw
+    .split(/\r?\n/)
+    .map((row) => row.trim())
+    .find((row) => row && row.includes(","));
+  if (!line) throw new Error(`Palette file is empty: ${path}`);
+  const colors = line
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (!colors.length) throw new Error(`Palette file has no color slots: ${path}`);
+  return Object.fromEntries(
+    colors.slice(0, 8).map((color, index) => [`C_BUTTON_Palette${index + 1}`, color])
+  );
+}
+
+const defaultPalette = loadXpalette(palettePath);
+const profiles = {
+  mono_white: {
+    paletteProfile: "mono_white",
+    palette: defaultPalette,
+    paletteSourcePath: palettePath,
+    paletteActivationMode: "xlights_default",
+    paletteActiveSlots: [1]
+  },
+  rgb_primary: {
+    paletteProfile: "rgb_primary",
+    palette: defaultPalette,
+    paletteSourcePath: palettePath,
+    paletteActivationMode: "xlights_default",
+    paletteActiveSlots: [2, 3, 4]
+  }
+};
+
+const expanded = [];
+for (const sample of Array.isArray(manifest.samples) ? manifest.samples : []) {
+  for (const profileName of protocol) {
+    const profile = profiles[profileName];
+    if (!profile) throw new Error(`Unsupported TRAINING_PALETTE_PROTOCOL profile: ${profileName}`);
+    expanded.push({
+      ...sample,
+      sampleId: `${sample.sampleId}-${profileName}`,
+      sharedSettings: {
+        ...(sample.sharedSettings || {}),
+        ...profile,
+        trainingPaletteStandard: profileName
+      },
+      labelHints: [
+        ...new Set([
+          ...(Array.isArray(sample.labelHints) ? sample.labelHints : []),
+          `palette_${profileName}`
+        ])
+      ],
+      trainingContext: {
+        ...(sample.trainingContext || {}),
+        screeningPaletteMode: profileName
+      }
+    });
+  }
+}
+
+manifest.samples = expanded;
+manifest.trainingStandard = {
+  ...(manifest.trainingStandard || {}),
+  paletteProtocol: protocol,
+  paletteProtocolSource: "TRAINING_PALETTE_PROTOCOL"
+};
+fs.writeFileSync(outputPath, `${JSON.stringify(manifest, null, 2)}\n`);
+NODE
+  MANIFEST_FILE="${palette_expanded_manifest_path}"
+fi
 decoder_frame_mode="$(jq -r '.interpretationFramework.decodePolicy.frameMode // "auto"' "${standards_path}")"
 decoder_max_frame_cells="$(jq -r '.interpretationFramework.decodePolicy.maxFrameCells // 250000' "${standards_path}")"
 
@@ -103,6 +190,36 @@ sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
 model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
 expected_model_type="$(jq -r '.modelType // empty' <<<"${fixture_json}")"
 fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
+if [[ -n "${TRAINING_API_STAGING_ROOT:-}" ]]; then
+  canonical_training_root="$(cd "${RENDER_TRAINING_ROOT}" && pwd)"
+  staging_training_root="$(mkdir -p "${TRAINING_API_STAGING_ROOT}" && cd "${TRAINING_API_STAGING_ROOT}" && pwd)"
+  sequence_abs="$(cd "$(dirname "${sequence_path}")" && pwd)/$(basename "${sequence_path}")"
+  case "${sequence_abs}" in
+    "${canonical_training_root}"/*)
+      sequence_rel="${sequence_abs#"${canonical_training_root}/"}"
+      mkdir -p "$(dirname "${staging_training_root}/${sequence_rel}")"
+      for show_file in xlights_rgbeffects.xml xlights_networks.xml xlights_keybindings.xml xlights_effectpresets.json; do
+        if [[ -f "${canonical_training_root}/${show_file}" ]]; then
+          cp "${canonical_training_root}/${show_file}" "${staging_training_root}/${show_file}"
+        fi
+      done
+      cp "${sequence_abs}" "${staging_training_root}/${sequence_rel}"
+      source_fseq="${sequence_abs%.xsq}.fseq"
+      if [[ -f "${source_fseq}" ]]; then
+        cp "${source_fseq}" "${staging_training_root}/${sequence_rel%.xsq}.fseq"
+      fi
+      sequence_path="${staging_training_root}/${sequence_rel}"
+      fixture_json="$(jq -c --arg sequencePath "${sequence_path}" '.sequencePath = $sequencePath' <<<"${fixture_json}")"
+      RENDER_TRAINING_ROOT="${staging_training_root}"
+      ;;
+    *)
+      echo "TRAINING_API_STAGING_ROOT can only stage sequences under RENDER_TRAINING_ROOT." >&2
+      echo "  sequence: ${sequence_abs}" >&2
+      echo "  root: ${canonical_training_root}" >&2
+      exit 1
+      ;;
+  esac
+fi
 show_dir="$(resolve_show_dir_for_sequence "${sequence_path}")"
 model_metadata_json="$(python3 "${ROOT_DIR}/tooling/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
 resolved_model_type="$(jq -r '.resolvedModelType' <<<"${model_metadata_json}")"
@@ -119,7 +236,10 @@ decoder_bin="$("${ROOT_DIR}/tooling/build-fseq-window-decoder.sh")"
 geometry_artifact_path="${GEOMETRY_ARTIFACT_PATH:-${ROOT_DIR}/proofs/preview-scene-geometry-render-training-live.json}"
 preview_window_frame_offsets="${PREVIEW_WINDOW_FRAME_OFFSETS:-8,10,12}"
 pack_id="$(jq -r '.packId // "packed-batch"' "${MANIFEST_FILE}")"
-training_working_dir="${RENDER_TRAINING_ROOT}/working"
+# Keep generated working sequences in the show root. xLights resolves the show
+# directory from the sequence path, so placing the file in a child folder makes
+# that child folder look like a separate, incomplete show directory.
+training_working_dir="${RENDER_TRAINING_ROOT}"
 training_fseq_dir="${RENDER_TRAINING_ROOT}/fseq"
 training_records_dir="${RENDER_TRAINING_ROOT}/records"
 training_manifests_dir="${RENDER_TRAINING_ROOT}/manifests"
@@ -135,12 +255,8 @@ batch_execution_path="${OUT_DIR}/owned-batch-execution.json"
 cp "${sequence_path}" "${working_sequence_path}"
 jq '.' "${MANIFEST_FILE}" > "${batch_manifest_copy}"
 
-sample_ids=()
-while IFS= read -r sample_id; do
-  [[ -n "${sample_id}" ]] || continue
-  sample_ids+=("${sample_id}")
-done < <(jq -r '.samples[].sampleId' "${MANIFEST_FILE}")
-[[ "${#sample_ids[@]}" -gt 0 ]] || { echo "Manifest contains no samples" >&2; exit 1; }
+sample_count="$(jq -r '.samples | length' "${MANIFEST_FILE}")"
+[[ "${sample_count}" -gt 0 ]] || { echo "Manifest contains no samples" >&2; exit 1; }
 
 log_batch "owned-health-begin manifest=${MANIFEST_FILE}"
 wait_owned_ready
@@ -151,13 +267,26 @@ marks_json='[]'
 effects_json='[]'
 current_start_ms="${fixture_start_ms}"
 
-for sample_id in "${sample_ids[@]}"; do
-  sample_json="$(jq -c --arg sid "${sample_id}" '.samples[] | select(.sampleId == $sid)' "${MANIFEST_FILE}")"
+for sample_index in $(seq 0 $((sample_count - 1))); do
+  sample_json="$(jq -c --argjson index "${sample_index}" '.samples[$index]' "${MANIFEST_FILE}")"
+  sample_id="$(jq -r '.sampleId' <<<"${sample_json}")"
   effect_name="$(jq -r '.effectName' <<<"${sample_json}")"
   placement_id="$(jq -r '.placementId // empty' <<<"${sample_json}")"
   shared_settings_json="$(jq -c '.sharedSettings // {}' <<<"${sample_json}")"
   effect_settings_json="$(jq -c '.effectSettings // {}' <<<"${sample_json}")"
-  palette_json="$(jq -c '.sharedSettings.palette // {}' <<<"${sample_json}")"
+  palette_json="$(jq -c '
+    (.sharedSettings.palette // {}) as $palette
+    | (.sharedSettings.paletteActiveSlots // []) as $activeSlots
+    | $palette + (
+        reduce range(1; 9) as $slot ({};
+          . + {
+            ("C_CHECKBOX_Palette\($slot)"): (
+              if ($activeSlots | index($slot)) then "1" else "0" end
+            )
+          }
+        )
+      )
+  ' <<<"${sample_json}")"
   duration_ms="$(jq -r --argjson fixture "${fixture_json}" '((.timingWindow.endMs // ($fixture.startMs + (($fixture.endMs - $fixture.startMs)))) - (.timingWindow.startMs // $fixture.startMs))' <<<"${sample_json}")"
   duration_class="$(jq -r --argjson fixture "${fixture_json}" '(.timingWindow.durationClass // $fixture.durationClass // "short")' <<<"${sample_json}")"
   start_ms="${current_start_ms}"
@@ -196,6 +325,32 @@ for sample_id in "${sample_ids[@]}"; do
     '{sampleId:$sampleId,sample:$sample,assignedWindow:{startMs:$startMs,endMs:$endMs,durationMs:($endMs-$startMs),durationClass:$durationClass}}')"
   sample_plan_json="$(jq -cn --argjson rows "${sample_plan_json}" --argjson row "${plan_row}" '$rows + [$row]')"
 done
+
+required_sequence_duration_ms="${current_start_ms}"
+python3 - "${working_sequence_path}" "${required_sequence_duration_ms}" <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+
+path = sys.argv[1]
+required_ms = int(sys.argv[2])
+required_seconds = max(0.0, (required_ms + 1000) / 1000.0)
+tree = ET.parse(path)
+root = tree.getroot()
+head = root.find("head")
+if head is None:
+    raise SystemExit(f"Sequence has no head element: {path}")
+duration = head.find("sequenceDuration")
+if duration is None:
+    duration = ET.SubElement(head, "sequenceDuration")
+try:
+    current_seconds = float(duration.text or "0")
+except ValueError:
+    current_seconds = 0.0
+if current_seconds + 0.001 >= required_seconds:
+    raise SystemExit(0)
+duration.text = f"{required_seconds:.3f}"
+tree.write(path, encoding="UTF-8", xml_declaration=True)
+PY
 
 jq -cn \
   --arg track "XD: Training Samples" \
@@ -305,6 +460,7 @@ while IFS= read -r planned_row; do
     --argjson durationMs "$((end_ms-start_ms))" \
     --arg durationClass "${duration_class}" \
     --argjson sharedSettings "$(jq -c '.sharedSettings // {}' <<<"${sample_json}")" \
+    --argjson sampleTrainingContext "$(jq -c '.trainingContext // {}' <<<"${sample_json}")" \
     --argjson effectSettings "$(jq -c '.effectSettings // {}' <<<"${sample_json}")" \
     --argjson observations "${observations_json}" \
     --argjson modelMetadata "${model_metadata_json}" \
@@ -328,6 +484,12 @@ while IFS= read -r planned_row; do
         durationClass: $durationClass
       },
       sharedSettings: $sharedSettings,
+      trainingContext: (($sampleTrainingContext // {}) + ($sharedSettings as $ss | {
+        screeningPaletteMode: ($ss.paletteProfile // ""),
+        trainingPaletteStandard: ($ss.trainingPaletteStandard // ""),
+        paletteActivationMode: ($ss.paletteActivationMode // ""),
+        paletteActiveSlots: ($ss.paletteActiveSlots // [])
+      })),
       effectSettings: $effectSettings,
       artifact: {
         mode: $mode,
@@ -384,7 +546,7 @@ jq -cn \
   --arg batchExecutionPath "${batch_execution_path}" \
   --arg batchPayloadPath "${batch_payload_path}" \
   --arg workingSequencePath "${working_sequence_path}" \
-  --argjson total "${#sample_ids[@]}" \
+  --argjson total "${sample_count}" \
   --argjson passed "${passed}" \
   --argjson failed "${failed}" \
   --arg logPath "${log_path}" \

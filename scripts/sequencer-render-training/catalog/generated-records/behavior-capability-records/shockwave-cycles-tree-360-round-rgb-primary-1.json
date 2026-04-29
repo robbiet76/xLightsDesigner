@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "shockwave-cycles-tree-360-round-rgb-primary-1",
+  "createdAt": "2026-04-28T14:23:35.929Z",
+  "effectName": "Shockwave",
+  "geometryProfile": "tree_360_round",
+  "modelType": "tree_360",
+  "parameterRegion": {
+    "parameterName": "cycles",
+    "regionKind": "single_value",
+    "valueSummary": "1",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "paletteContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "blended_shockwave",
+    "motionPacing": "",
+    "textureDensity": "blended_shockwave,centered_shockwave,compact_decelerating_shockwave,compact_shockwave,decelerating_shockwave,decoded_fseq,interaction_sweep,medium_width_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,tree_pattern_fit",
+    "energyLevel": "restrained",
+    "coverageLevel": "sparse",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "sparse",
+    "nonBlankRatio": 0.136805,
+    "temporalMotion": 0.001265,
+    "temporalColorDelta": 0.001265,
+    "temporalBrightnessDelta": 0.001265,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 1,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "tree_360_round"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

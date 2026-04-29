@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "description": "Audit-driven focused causal-anchor plan for remaining high-priority effect sampling gaps after the 2026-04-28 new-effect run.",
+  "sourceAudit": "scripts/sequencer-render-training/catalog/effect-sampling-audit-v1.json",
+  "plans": [
+    {
+      "planId": "on-matrix-audit-remaining",
+      "effect": "On",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/on-matrix-reduced-sweep-v1.json",
+      "parameters": ["endLevel", "shimmer", "startLevel"]
+    },
+    {
+      "planId": "shimmer-treeflat-audit-remaining",
+      "effect": "Shimmer",
+      "geometryProfile": "tree_flat_single_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/shimmer-treeflat-expanded-sweep-v1.json",
+      "parameters": ["cycles", "dutyFactor"]
+    },
+    {
+      "planId": "snowflakes-matrix-audit-remaining",
+      "effect": "Snowflakes",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/snowflakes-matrix-expanded-sweep-v1.json",
+      "parameters": ["count", "speed", "type"]
+    },
+    {
+      "planId": "strobe-matrix-audit-remaining",
+      "effect": "Strobe",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/strobe-matrix-expanded-sweep-v1.json",
+      "parameters": ["duration", "numberStrobes", "type"]
+    },
+    {
+      "planId": "wave-matrix-audit-remaining",
+      "effect": "Wave",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/wave-matrix-expanded-sweep-v1.json",
+      "parameters": ["numberWaves", "type", "waveSpeed"]
+    }
+  ]
+}

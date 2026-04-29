@@ -281,6 +281,9 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
   const addressedRole = inferAddressedRole({ userMessage, context });
   const phase = currentWorkflowPhase(context);
   const userText = str(userMessage).toLowerCase();
+  const responsePhaseId = str(response?.phaseTransition?.phaseId).toLowerCase();
+  const responsePhaseOwner = transitionOwnerRole(responsePhaseId);
+  const explicitPhaseSwitch = isExplicitPhaseSwitchIntent(userText);
 
   if (addressedRole === APP_ASSISTANT_ROLE) {
     return "general";
@@ -291,13 +294,19 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
       if (isDirectSequencingRequest(userText)) {
         return "sequence_agent";
       }
-      if (addressedRole === APP_ASSISTANT_ROLE || !addressedRole || isExplicitPhaseSwitchIntent(userText)) {
+      if (explicitPhaseSwitch && responsePhaseId === "display_discovery" && responsePhaseOwner !== APP_ASSISTANT_ROLE) {
+        return responsePhaseOwner;
+      }
+      if (addressedRole === APP_ASSISTANT_ROLE || !addressedRole || explicitPhaseSwitch) {
         return "general";
       }
       return "general";
     }
 
-    if (isExplicitPhaseSwitchIntent(userText)) {
+    if (explicitPhaseSwitch) {
+      if (responsePhaseId === "display_discovery" && responsePhaseOwner !== APP_ASSISTANT_ROLE) {
+        return responsePhaseOwner;
+      }
       return "general";
     }
 
@@ -445,6 +454,201 @@ function normalizeActionRequest(value = null) {
   return { actionType, payload, reason };
 }
 
+function splitDisplayList(text = "") {
+  return str(text)
+    .split(/,|\band\b|\/|\n/)
+    .map((value) => str(value).replace(/^[-*]\s*/, "").replace(/^["'`]+|["'`.]+$/g, ""))
+    .filter(Boolean)
+    .filter((value) => !/^(the|and|or|also|all of them)$/i.test(value));
+}
+
+function addDisplayInsight(insights, seen, subject, subjectType, category, value, rationale, targetNames = []) {
+  const normalizedSubject = str(subject);
+  const normalizedCategory = str(category);
+  const normalizedValue = str(value);
+  if (!normalizedSubject || !normalizedCategory || !normalizedValue) return;
+  const key = `${normalizedSubject.toLowerCase()}::${normalizedCategory.toLowerCase()}::${normalizedValue.toLowerCase()}`;
+  if (seen.has(key)) return;
+  seen.add(key);
+  insights.push({
+    subject: normalizedSubject,
+    subjectType: str(subjectType || "Model"),
+    category: normalizedCategory,
+    value: normalizedValue,
+    rationale: str(rationale),
+    targetNames: arr(targetNames).map((name) => str(name)).filter(Boolean)
+  });
+}
+
+function parseNamedBlock(text = "", labelPattern) {
+  const match = str(text).match(labelPattern);
+  if (!match) return [];
+  const tail = str(match[1] || "");
+  const firstParagraph = tail.split(/\n\s*\n/)[0] || "";
+  return splitDisplayList(firstParagraph);
+}
+
+function buildDisplayDiscoveryFallbackInsights(userMessage = "") {
+  const text = str(userMessage);
+  const lower = text.toLowerCase();
+  const insights = [];
+  const seen = new Set();
+
+  const primaryFocal = parseNamedBlock(text, /main focal point(?: elements)?(?: in my show)?(?: are|:)?(?: the following)?:?\s*([\s\S]*?)(?:second level|third level|support|sure\.|$)/i);
+  for (const name of primaryFocal) {
+    addDisplayInsight(
+      insights,
+      seen,
+      name,
+      "Model",
+      "focal_hierarchy",
+      "Primary focal element that often leads the display.",
+      "User explicitly listed this as a main focal point.",
+      [name]
+    );
+  }
+
+  const secondaryFocal = parseNamedBlock(text, /second level focal points? would be:?\s*([\s\S]*?)(?:third level|support|sure\.|$)/i);
+  for (const name of secondaryFocal) {
+    addDisplayInsight(
+      insights,
+      seen,
+      name,
+      "Model",
+      "focal_hierarchy",
+      "Secondary focal element that can take lead when the display focus shifts.",
+      "User explicitly listed this as a second-level focal point.",
+      [name]
+    );
+  }
+
+  const tertiaryFocal = parseNamedBlock(text, /third level(?:[^:\n]*)?:?\s*([\s\S]*?)(?:support|sure\.|$)/i);
+  for (const name of tertiaryFocal) {
+    addDisplayInsight(
+      insights,
+      seen,
+      name,
+      "Model",
+      "focal_hierarchy",
+      "Occasional focal element, usually supporting or background unless intentionally featured.",
+      "User explicitly described this as a third-level focal element.",
+      [name]
+    );
+  }
+
+  if (/\bmove the focus around\b|\bnot always lean on\b|\bmix it up\b/i.test(text)) {
+    addDisplayInsight(
+      insights,
+      seen,
+      "Display focus strategy",
+      "Display",
+      "sequencing_strategy",
+      "Focus should move around the display; secondary and supporting elements may take center stage when musically appropriate.",
+      "User clarified that focal hierarchy describes typical usage, not a rigid sequencing rule.",
+      []
+    );
+  }
+
+  if (/\b(gutters?|borders?)\b.*\bframe|\bOutlines\b.*\bframing/i.test(text)) {
+    addDisplayInsight(
+      insights,
+      seen,
+      "Outlines",
+      "Group",
+      "spatial_role",
+      "Framing layer for gutters and borders around the display.",
+      "User identified the Outlines group as intentionally created for framing.",
+      ["Outlines"]
+    );
+  }
+
+  if (/\bfloods?\b/i.test(text) && /\b(light volume|volume lighting|add light volume|wash)\b/i.test(text)) {
+    addDisplayInsight(
+      insights,
+      seen,
+      "Floods",
+      "Group",
+      "spatial_role",
+      "Light-volume layer used throughout the display, with flood groups serving different focal areas.",
+      "User described floods as adding light volume and noted multiple flood groups with different focal points.",
+      ["Floods"]
+    );
+  }
+
+  if (/\bcandy canes?\b/i.test(text) && /\b(yard foreground|lower portion|frame)\b/i.test(text)) {
+    addDisplayInsight(
+      insights,
+      seen,
+      "CandyCanes",
+      "Group",
+      "spatial_role",
+      "Foreground structure and lower-display framing layer.",
+      "User described candy canes as yard foreground structure that frames the lower portion of the display.",
+      ["CandyCanes"]
+    );
+  }
+
+  if (/\bsnowflakes?\b/i.test(text) && /\b(upper portion|frame|framing)\b/i.test(text)) {
+    addDisplayInsight(
+      insights,
+      seen,
+      "Snowflakes",
+      "Group",
+      "spatial_role",
+      "Upper-display framing layer that can also be used by group or individual model.",
+      "User described snowflakes as framing the upper portion of the display.",
+      ["Snowflakes"]
+    );
+  }
+
+  if (/\bspiral trees?\b|\bshrubs?\b/i.test(text)) {
+    if (/\bsupporting role\b/i.test(text)) {
+      addDisplayInsight(
+        insights,
+        seen,
+        "Spirals_Shrubs",
+        "Group",
+        "spatial_role",
+        "Supporting display layer.",
+        "User described spiral trees and shrubs as supporting elements.",
+        ["Spirals_Shrubs"]
+      );
+    }
+    if (/\brhythm support\b|\brhythmic\b/i.test(text)) {
+      addDisplayInsight(
+        insights,
+        seen,
+        "Spirals_Shrubs",
+        "Group",
+        "rhythm_role",
+        "Rhythm-support layer for musical movement and pulse.",
+        "User described spiral trees and shrubs as useful for rhythm support.",
+        ["Spirals_Shrubs"]
+      );
+    }
+  }
+
+  return insights;
+}
+
+function mergeDisplayDiscoveryInsights(primary = [], fallback = []) {
+  const merged = [];
+  const seen = new Set();
+  for (const insight of [...arr(primary), ...arr(fallback)]) {
+    addDisplayInsight(
+      merged,
+      seen,
+      insight?.subject,
+      insight?.subjectType,
+      insight?.category,
+      insight?.value,
+      insight?.rationale,
+      insight?.targetNames
+    );
+  }
+  return merged;
+}
+
 export async function executeAppAssistantConversation({
   userMessage = "",
   messages = [],
@@ -547,12 +751,23 @@ export async function executeAppAssistantConversation({
             reason: "User explicitly requested a visual inspiration image or board for the active song."
           }
         : null;
+  const fallbackDisplayDiscoveryInsights = buildDisplayDiscoveryFallbackInsights(input.userMessage);
+  const hasStructuredDisplayDiscoveryCapture =
+    response?.displayDiscoveryCapture &&
+    typeof response.displayDiscoveryCapture === "object" &&
+    !Array.isArray(response.displayDiscoveryCapture);
   const discoveryShouldStart = shouldStartDisplayDiscovery({ context, userMessage });
   const discoveryShouldContinue = shouldContinueDisplayDiscovery({ context });
+  const activeDisplayDiscoveryPhase = currentWorkflowPhase(context).phaseId === "display_discovery";
   const discoveryActive =
-    routeDecision === "designer_dialog" &&
-    !hasMeaningfulDisplayMetadata(context) &&
-    (discoveryShouldStart || discoveryShouldContinue);
+    activeDisplayDiscoveryPhase ||
+    hasStructuredDisplayDiscoveryCapture ||
+    fallbackDisplayDiscoveryInsights.length > 0 ||
+    (
+      routeDecision === "designer_dialog" &&
+      !hasMeaningfulDisplayMetadata(context) &&
+      (discoveryShouldStart || discoveryShouldContinue)
+    );
   const allowProposalGeneration =
     (routeDecision === "designer_dialog" || routeDecision === "sequence_agent") &&
     (hasSelectedSongContext(context) || Boolean(context?.planOnlyMode));
@@ -566,6 +781,12 @@ export async function executeAppAssistantConversation({
     routeDecision === "general" &&
     !normalizedPhaseTransition?.phaseId &&
     (phase.status === "handoff_pending" || phase.status === "ready_to_close");
+  const displayDiscoveryInsights = mergeDisplayDiscoveryInsights(
+    Array.isArray(response?.displayDiscoveryCapture?.insights)
+      ? response.displayDiscoveryCapture.insights
+      : [],
+    discoveryActive ? fallbackDisplayDiscoveryInsights : []
+  );
 
   return {
     ok: true,
@@ -589,9 +810,7 @@ export async function executeAppAssistantConversation({
             status: str(response?.displayDiscoveryCapture?.status || "in_progress"),
             scope: "groups_models_v1",
             shouldCaptureTurn: true,
-            insights: Array.isArray(response?.displayDiscoveryCapture?.insights)
-              ? response.displayDiscoveryCapture.insights
-              : [],
+            insights: displayDiscoveryInsights,
             unresolvedBranches: Array.isArray(response?.displayDiscoveryCapture?.unresolvedBranches)
               ? response.displayDiscoveryCapture.unresolvedBranches
               : [],

@@ -1,0 +1,156 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "bars-archgroup-palette-behavior-anchors-v1",
+  "description": "Focused Bars behavior anchors on grouped arches for palette repetition and gradient behavior.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "ArchGroup",
+    "modelType": "arch",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Samples Bars palette repetition and gradient anchors under single-color and multi-color representative palette modes."
+  },
+  "samples": [
+    {
+      "sampleId": "bars-archgroup-barcount-1-anchor-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "barCount": 1,
+        "direction": "Left",
+        "cycles": 5,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "trainingContext": {
+        "screenedParameterName": "barCount",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "bars_palette_repetition", "barcount_1", "large_bands"]
+    },
+    {
+      "sampleId": "bars-archgroup-barcount-3-anchor-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "barCount": 3,
+        "direction": "Left",
+        "cycles": 5,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "trainingContext": {
+        "screenedParameterName": "barCount",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "bars_palette_repetition", "barcount_3", "medium_bands"]
+    },
+    {
+      "sampleId": "bars-archgroup-barcount-5-anchor-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "barCount": 5,
+        "direction": "Left",
+        "cycles": 5,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "trainingContext": {
+        "screenedParameterName": "barCount",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "bars_palette_repetition", "barcount_5", "thin_bands"]
+    },
+    {
+      "sampleId": "bars-archgroup-gradient-off-anchor-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "barCount": 3,
+        "direction": "Left",
+        "cycles": 5,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "trainingContext": {
+        "screenedParameterName": "gradient",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "bars_gradient", "hard_edges"]
+    },
+    {
+      "sampleId": "bars-archgroup-gradient-on-anchor-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "barCount": 3,
+        "direction": "Left",
+        "cycles": 5,
+        "highlight": false,
+        "gradient": true,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "trainingContext": {
+        "screenedParameterName": "gradient",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "bars_gradient", "soft_color_blend"]
+    },
+    {
+      "sampleId": "bars-archgroup-cycles-2-anchor-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "barCount": 3,
+        "direction": "Left",
+        "cycles": 2,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "bars_motion", "slow_scroll"]
+    },
+    {
+      "sampleId": "bars-archgroup-cycles-10-anchor-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "barCount": 3,
+        "direction": "Left",
+        "cycles": 10,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "bars_motion", "fast_scroll"]
+    }
+  ]
+}

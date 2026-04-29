@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "singlestrand-bandsize-arch-single-rgb-primary-7",
-  "createdAt": "2026-04-16T18:35:27.481Z",
+  "createdAt": "2026-04-28T14:23:35.929Z",
   "effectName": "SingleStrand",
   "geometryProfile": "arch_single",
   "modelType": "arch",
@@ -22,29 +22,29 @@
     "primaryMotion": "subtle_motion",
     "primaryTexture": "arch_pattern",
     "motionPacing": "subtle_motion",
-    "textureDensity": "arch_pattern,arch_pattern_fit,bandSize_7,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion",
+    "textureDensity": "arch_pattern,arch_pattern_fit,bandSize_7,chase_pattern,fragmented_pattern,single_direction_chase,sparse_sampled_motion,decoded_fseq,directionality:left_to_right,left_motion,registry_generated,skip_pattern",
     "energyLevel": "restrained",
-    "coverageLevel": "broad",
+    "coverageLevel": "sparse",
     "hierarchySuitability": "unknown",
     "geometryCoupling": "observed",
-    "stability": "medium"
+    "stability": "high"
   },
   "renderOutcomeSignals": {
     "temporalRead": "subtle_motion",
-    "densityRead": "dense",
-    "nonBlankRatio": 0.75,
-    "temporalMotion": 0.015901,
-    "temporalColorDelta": 0.009902,
-    "temporalBrightnessDelta": 0.00857,
+    "densityRead": "sparse",
+    "nonBlankRatio": 0.224,
+    "temporalMotion": 0.013042,
+    "temporalColorDelta": 0.011842,
+    "temporalBrightnessDelta": 0.011576,
     "clarityRead": "unknown",
     "contrastRead": "unknown"
   },
   "confidence": {
-    "level": "medium",
+    "level": "high",
     "evidenceClass": "aggregated_render",
-    "coverageStatus": "single_reference_per_geometry"
+    "coverageStatus": "multi_configuration_sampled"
   },
-  "evidenceCount": 1,
+  "evidenceCount": 5,
   "traceability": {
     "sourceArtifactIds": [
       "sequencer_unified_training_set_v1"

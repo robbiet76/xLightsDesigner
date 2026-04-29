@@ -4,11 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getModels, getDisplayElements, getEffectDefinitions, getRevision } from '../../../apps/xlightsdesigner-ui/api.js';
+import { getModels, getDisplayElements, getEffectDefinitions, getLayoutGroupMemberships, getRevision } from '../../../apps/xlightsdesigner-ui/api.js';
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
 import { buildEffectDefinitionCatalog } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/effect-definition-catalog.js';
 import { executeDirectSequenceRequestOrchestration } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/direct-sequence-orchestrator.js';
 import { STAGE1_TRAINED_EFFECT_BUNDLE } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/generated/stage1-trained-effect-bundle.js';
+import { finalizeArtifact } from '../../../apps/xlightsdesigner-ui/agent/shared/artifact-ids.js';
 import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
 import { loadProjectDisplayMetadataAssignments } from './project-display-metadata.mjs';
 
@@ -19,6 +20,7 @@ const DEFAULT_DEPS = {
   getModels,
   getDisplayElements,
   getEffectDefinitions,
+  getLayoutGroupMemberships,
   buildAnalysisHandoffFromArtifact,
   buildEffectDefinitionCatalog,
   executeDirectSequenceRequestOrchestration,
@@ -87,6 +89,332 @@ function buildNativeEffectCatalog(effectDefinitions = [], deps = DEFAULT_DEPS) {
   });
 }
 
+function displayElementId(row = {}) {
+  return str(row?.id || row?.name || row?.modelName || row?.targetId);
+}
+
+function normalizeDisplayElements(res = {}) {
+  const elements = Array.isArray(res?.data?.elements) ? res.data.elements : [];
+  return elements.map((row) => {
+    if (typeof row === 'string') return { id: row, name: row };
+    const name = str(row?.name || row?.id);
+    return { ...row, id: str(row?.id || name), name };
+  }).filter((row) => row.id || row.name);
+}
+
+function normalizeLayoutModelRows(models = []) {
+  return Array.isArray(models)
+    ? models
+        .map((row) => {
+          const name = str(row?.name || row?.id);
+          const position = row?.transform?.position && typeof row.transform.position === 'object'
+            ? row.transform.position
+            : {};
+          return {
+            ...row,
+            id: str(row?.id || name),
+            name,
+            type: str(row?.type || row?.displayAs || row?.kind),
+            displayAs: str(row?.displayAs || row?.type || row?.kind),
+            positionX: row?.positionX ?? row?.x ?? row?.centerX ?? position.x,
+            positionY: row?.positionY ?? row?.y ?? row?.centerY ?? position.y,
+            positionZ: row?.positionZ ?? row?.z ?? position.z
+          };
+        })
+        .filter((row) => row.id || row.name)
+    : [];
+}
+
+function mergeDisplayElementsWithLayoutModels(displayElements = [], models = []) {
+  const normalizedElements = Array.isArray(displayElements) ? displayElements : [];
+  const normalizedModels = normalizeLayoutModelRows(models);
+  const modelsById = new Map(normalizedModels.map((row) => [displayElementId(row).toLowerCase(), row]));
+  const out = [];
+  const seen = new Set();
+  for (const element of normalizedElements) {
+    const id = displayElementId(element);
+    if (!id) continue;
+    const model = modelsById.get(id.toLowerCase()) || {};
+    out.push({
+      ...model,
+      ...element,
+      id: str(element.id || model.id || id),
+      name: str(element.name || model.name || id),
+      displayAs: str(model.displayAs || element.displayAs || element.type),
+      positionX: element.positionX ?? element.x ?? element.centerX ?? model.positionX,
+      positionY: element.positionY ?? element.y ?? element.centerY ?? model.positionY,
+      positionZ: element.positionZ ?? element.z ?? model.positionZ
+    });
+    seen.add(id.toLowerCase());
+  }
+  for (const model of normalizedModels) {
+    const id = displayElementId(model);
+    if (!id || seen.has(id.toLowerCase())) continue;
+    out.push(model);
+    seen.add(id.toLowerCase());
+  }
+  return out;
+}
+
+function normalizeMemberName(member = {}) {
+  return str(member?.id || member?.name || member?.targetId || member);
+}
+
+function buildGroupsById(groupMemberships = {}) {
+  const groups = Array.isArray(groupMemberships?.data?.groups) ? groupMemberships.data.groups : [];
+  const out = {};
+  for (const group of groups) {
+    const id = str(group?.groupName || group?.name || group?.id);
+    if (!id) continue;
+    out[id] = {
+      id,
+      name: id,
+      type: 'group',
+      members: {
+        direct: (Array.isArray(group.directMembers) ? group.directMembers : []).map(normalizeMemberName).filter(Boolean),
+        active: (Array.isArray(group.activeMembers) ? group.activeMembers : []).map(normalizeMemberName).filter(Boolean),
+        flattened: (Array.isArray(group.flattenedMembers) ? group.flattenedMembers : []).map(normalizeMemberName).filter(Boolean),
+        flattenedAll: (Array.isArray(group.flattenedAllMembers) ? group.flattenedAllMembers : []).map(normalizeMemberName).filter(Boolean)
+      }
+    };
+  }
+  return out;
+}
+
+function normalizeArray(value) {
+  return Array.isArray(value) ? value.map((row) => str(row)).filter(Boolean) : [];
+}
+
+function normalizePaletteRows(rows = []) {
+  return Array.isArray(rows)
+    ? rows
+        .map((row, index) => {
+          if (typeof row === 'string') {
+            return {
+              name: `palette ${index + 1}`,
+              hex: str(row),
+              role: index === 0 ? 'base' : (index === 1 ? 'highlight' : 'accent')
+            };
+          }
+          return {
+            name: str(row?.name || row?.label || `palette ${index + 1}`),
+            hex: str(row?.hex || row?.color || row?.value),
+            role: str(row?.role || row?.usage || row?.intent)
+          };
+        })
+        .filter((row) => /^#[0-9a-f]{6}$/i.test(row.hex))
+        .slice(0, 8)
+    : [];
+}
+
+function fallbackLightingPaletteForNativeIntent(nativeDesignIntent = {}, snapshot = {}) {
+  const text = [
+    str(nativeDesignIntent?.goal),
+    str(nativeDesignIntent?.mood),
+    str(nativeDesignIntent?.targetScope),
+    str(nativeDesignIntent?.constraints),
+    str(nativeDesignIntent?.references)
+  ].join(' ').toLowerCase();
+  if (/\b(christmas|holiday|warm|gold|candle|pine|red|green)\b/.test(text)) {
+    return [
+      { name: 'candle gold', hex: '#ffd36a', role: 'warm highlight' },
+      { name: 'evergreen', hex: '#1f7a4a', role: 'support base' },
+      { name: 'deep red', hex: '#c8324a', role: 'accent' },
+      { name: 'ice white', hex: '#dff6ff', role: 'cool sparkle' }
+    ];
+  }
+  return normalizePaletteRows(snapshot?.inspiration?.paletteSwatches).length
+    ? []
+    : [
+        { name: 'ice blue', hex: '#8fd8ff', role: 'base' },
+        { name: 'warm gold', hex: '#ffd36a', role: 'highlight' },
+        { name: 'deep rose', hex: '#c8324a', role: 'accent' },
+        { name: 'clean green', hex: '#1f7a4a', role: 'support' }
+      ];
+}
+
+function resolveNativeDesignPaletteRows({ nativeDesignIntent = {}, snapshot = {} } = {}) {
+  const candidates = [
+    nativeDesignIntent?.lightingPalette,
+    nativeDesignIntent?.palette,
+    nativeDesignIntent?.paletteRoles,
+    snapshot?.visualDesignAssetPack?.palette?.lightingColors,
+    snapshot?.visualDesignAssetPack?.palette?.colors,
+    snapshot?.inspiration?.paletteSwatches
+  ];
+  for (const rows of candidates) {
+    const normalized = normalizePaletteRows(rows);
+    if (normalized.length) return normalized;
+  }
+  return fallbackLightingPaletteForNativeIntent(nativeDesignIntent, snapshot);
+}
+
+function buildSectionDirectivesFromExecutionPlan(executionPlan = {}) {
+  const sectionPlans = Array.isArray(executionPlan?.sectionPlans) ? executionPlan.sectionPlans : [];
+  return sectionPlans
+    .map((row) => {
+      const sectionName = str(row?.section);
+      if (!sectionName) return null;
+      const intentSummary = str(row?.intentSummary);
+      return {
+        sectionName,
+        sectionPurpose: /intro/i.test(sectionName) ? 'intro_establish' : (/outro/i.test(sectionName) ? 'outro_resolve' : 'section_develop'),
+        energyTarget: str(row?.energy) || (/chorus|peak|reveal/i.test(`${sectionName} ${intentSummary}`) ? 'high' : 'medium'),
+        motionTarget: /restrained|hold|calm|soft/i.test(intentSummary) ? 'restrained_motion' : 'steady_motion',
+        densityTarget: str(row?.density) || (/dense|bigger|full|peak/i.test(intentSummary) ? 'dense' : 'moderate'),
+        transitionIntent: /build|bigger|lift|peak/i.test(intentSummary) ? 'build' : (/resolve|ending|outro/i.test(intentSummary) ? 'resolve' : 'hold'),
+        preferredVisualFamilies: normalizeArray(row?.effectHints),
+        avoidVisualFamilies: [],
+        notes: intentSummary
+      };
+    })
+    .filter(Boolean);
+}
+
+function buildPropRoleAssignments(metadataAssignments = [], fallbackTargetIds = []) {
+  const rows = metadataAssignments.length
+    ? metadataAssignments
+    : normalizeArray(fallbackTargetIds).map((targetId) => ({ targetId }));
+  return rows
+    .map((row, index) => {
+      const targetId = str(row?.targetId);
+      if (!targetId) return null;
+      const role = str(row?.rolePreference) || (index === 0 ? 'lead' : 'support');
+      return {
+        targetId,
+        role,
+        priority: index + 1,
+        behaviorIntent: normalizeArray(row?.semanticHints).slice(0, 3).join(', ') || `${role} display role`
+      };
+    })
+    .filter(Boolean);
+}
+
+function compactReferenceSequencePatterns(patterns = null) {
+  if (!patterns || typeof patterns !== 'object' || Array.isArray(patterns)) return null;
+  const aggregate = patterns?.aggregate && typeof patterns.aggregate === 'object' ? patterns.aggregate : {};
+  return {
+    artifactId: str(patterns?.artifactId),
+    artifactType: str(patterns?.artifactType),
+    sourceMode: str(patterns?.source?.mode),
+    analyzedSequenceCount: Number(patterns?.source?.analyzedSequenceCount || aggregate.sequenceCount || 0),
+    averageEffectsPerSequence: Number(aggregate.averageEffectsPerSequence || 0),
+    averageActiveTargets: Number(aggregate.averageActiveTargets || 0),
+    averageLayeredTargets: Number(aggregate.averageLayeredTargets || 0),
+    densityPerMinute: aggregate.densityPerMinute && typeof aggregate.densityPerMinute === 'object'
+      ? aggregate.densityPerMinute
+      : {},
+    commonEffects: Array.isArray(aggregate.commonEffects) ? aggregate.commonEffects.slice(0, 12) : [],
+    targetRoleMix: Array.isArray(aggregate.targetRoleMix) ? aggregate.targetRoleMix.slice(0, 8) : [],
+    bucketEffectPatterns: Object.fromEntries(
+      Object.entries(aggregate.bucketEffectPatterns || {})
+        .slice(0, 6)
+        .map(([bucket, rows]) => [bucket, Array.isArray(rows) ? rows.slice(0, 6) : []])
+    )
+  };
+}
+
+function loadLatestReferenceSequencePatterns(projectFile = '') {
+  const projectDir = path.dirname(str(projectFile));
+  const artifactPath = latestJsonFile(path.join(projectDir, 'artifacts', 'sequence-reference-patterns'));
+  if (!artifactPath) return null;
+  try {
+    return compactReferenceSequencePatterns(readJson(artifactPath));
+  } catch {
+    return null;
+  }
+}
+
+function buildNativeSequencingDesignHandoff({
+  projectDoc = {},
+  prompt = '',
+  proposalBundle = {},
+  intentHandoff = {},
+  metadataAssignments = [],
+  referenceSequencePatterns = null,
+  requestId = '',
+  baseRevision = ''
+} = {}) {
+  const snapshot = projectDoc?.snapshot && typeof projectDoc.snapshot === 'object' ? projectDoc.snapshot : {};
+  const nativeDesignIntent = snapshot?.nativeDesignIntent && typeof snapshot.nativeDesignIntent === 'object'
+    ? snapshot.nativeDesignIntent
+    : {};
+  const executionPlan = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === 'object' ? proposalBundle.executionPlan : {};
+  const scope = proposalBundle?.scope && typeof proposalBundle.scope === 'object'
+    ? proposalBundle.scope
+    : (intentHandoff?.scope && typeof intentHandoff.scope === 'object' ? intentHandoff.scope : {});
+  const targetIds = normalizeArray(scope?.targetIds);
+  const tagNames = normalizeArray(scope?.tagNames);
+  const sections = normalizeArray(scope?.sections);
+  const goal = str(nativeDesignIntent?.goal || proposalBundle?.summary || intentHandoff?.goal || prompt);
+  const designSummary = [
+    goal,
+    str(nativeDesignIntent?.mood),
+    str(nativeDesignIntent?.targetScope)
+  ].filter(Boolean).join(' | ');
+  const assignments = buildPropRoleAssignments(metadataAssignments, targetIds);
+  const leadTargets = assignments.filter((row) => row.role === 'lead').map((row) => row.targetId);
+  const supportTargets = assignments.filter((row) => row.role !== 'lead' && row.role !== 'accent').map((row) => row.targetId);
+  const accentTargets = assignments.filter((row) => row.role === 'accent').map((row) => row.targetId);
+  const paletteRoles = resolveNativeDesignPaletteRows({ nativeDesignIntent, snapshot });
+
+  return finalizeArtifact({
+    artifactType: 'sequencing_design_handoff_v2',
+    artifactVersion: '2.0',
+    contractVersion: '2.0',
+    agentRole: 'designer_dialog',
+    requestId: str(requestId) || `native-design-${Date.now()}`,
+    baseRevision: str(baseRevision || intentHandoff?.baseRevision || 'unknown'),
+    goal,
+    designSummary,
+    scope: {
+      sections,
+      targetIds,
+      tagNames,
+      timeRangeMs: null
+    },
+    sectionDirectives: buildSectionDirectivesFromExecutionPlan(executionPlan),
+    propRoleAssignments: assignments,
+    focusPlan: {
+      primaryTargets: leadTargets.length ? leadTargets : targetIds.slice(0, 3),
+      secondaryTargets: supportTargets,
+      accentTargets,
+      balanceRule: 'full-display roles are assigned deterministically from project display metadata and selected tags'
+    },
+    visualFamilyPreferences: {
+      preferred: ['large_form_motion', 'soft_texture', 'segmented_directional'],
+      allowed: ['spiral_flow', 'radial_rotation', 'diffuse_shockwave', 'soft_texture'],
+      avoid: []
+    },
+    paletteRoles: paletteRoles.length ? paletteRoles : undefined,
+    referenceSequencePatterns,
+    constraints: {
+      preserveTimingTracks: true,
+      allowGlobalRewrite: Boolean(intentHandoff?.constraints?.allowGlobalRewrite ?? true),
+      changeTolerance: str(intentHandoff?.constraints?.changeTolerance || 'medium'),
+      readabilityPriority: 'high',
+      flashTolerance: 'medium'
+    },
+    avoidances: metadataAssignments.flatMap((row) => normalizeArray(row?.effectAvoidances)),
+    executionLatitude: 'moderate',
+    traceability: {
+      briefId: str(nativeDesignIntent?.artifactId || nativeDesignIntent?.updatedAt),
+      proposalId: str(proposalBundle?.artifactId),
+      directorProfileSignals: [],
+      designSceneSignals: normalizeArray(nativeDesignIntent?.targetScope),
+      musicDesignSignals: normalizeArray(nativeDesignIntent?.references)
+    },
+    nativeDesignIntent: {
+      mood: str(nativeDesignIntent?.mood),
+      targetScope: str(nativeDesignIntent?.targetScope),
+      constraints: str(nativeDesignIntent?.constraints),
+      references: str(nativeDesignIntent?.references),
+      approvalNotes: str(nativeDesignIntent?.approvalNotes),
+      updatedAt: str(nativeDesignIntent?.updatedAt)
+    }
+  });
+}
+
 function parseArgs(argv = []) {
   const out = {
     projectFile: '',
@@ -150,11 +478,20 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
   const modelsRes = await deps.getModels(args.endpoint).catch(() => ({ ok: false, data: { models: [] } }));
   const displayRes = await deps.getDisplayElements(args.endpoint).catch(() => ({ ok: false, data: { elements: [] } }));
   const effectsRes = await deps.getEffectDefinitions(args.endpoint).catch(() => ({ ok: false, data: { effects: [] } }));
+  const groupMembershipsRes = typeof deps.getLayoutGroupMemberships === 'function'
+    ? await deps.getLayoutGroupMemberships(args.endpoint).catch(() => ({ ok: false, data: { groups: [] } }))
+    : { data: { groups: [] } };
   const models = Array.isArray(modelsRes?.data?.models) ? modelsRes.data.models : [];
-  const displayElements = Array.isArray(displayRes?.data?.elements) ? displayRes.data.elements : [];
+  const displayElements = mergeDisplayElementsWithLayoutModels(normalizeDisplayElements(displayRes), models);
   const effectDefinitions = Array.isArray(effectsRes?.data?.effects) ? effectsRes.data.effects : [];
   const effectCatalog = buildNativeEffectCatalog(effectDefinitions, deps);
-  const metadataAssignments = loadProjectDisplayMetadataAssignments(args.projectFile);
+  const groupMemberships = groupMembershipsRes?.ok === false ? { data: { groups: [] } } : groupMembershipsRes;
+  const groupsById = buildGroupsById(groupMemberships);
+  const metadataAssignments = loadProjectDisplayMetadataAssignments(args.projectFile, {
+    layoutRows: models,
+    groupMemberships
+  });
+  const referenceSequencePatterns = loadLatestReferenceSequencePatterns(args.projectFile);
 
   const orchestration = deps.executeDirectSequenceRequestOrchestration({
     requestId: `native-benchmark-${Date.now()}`,
@@ -168,6 +505,8 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
     models,
     submodels: [],
     displayElements,
+    groupIds: Object.keys(groupsById),
+    groupsById,
     effectCatalog,
     metadataAssignments,
     existingDesignIds: []
@@ -176,10 +515,28 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
   if (!orchestration?.ok || !orchestration?.proposalBundle || !orchestration?.intentHandoff) {
     throw new Error(orchestration?.warnings?.join('\n') || orchestration?.summary || 'Direct sequencing orchestration failed.');
   }
+  const sequencingDesignHandoff = buildNativeSequencingDesignHandoff({
+    projectDoc,
+    prompt,
+    proposalBundle: orchestration.proposalBundle,
+    intentHandoff: orchestration.intentHandoff,
+    metadataAssignments,
+    referenceSequencePatterns,
+    requestId: `native-benchmark-${Date.now()}`,
+    baseRevision: str(revision?.data?.revision || snapshot.sequencePathInput || 'unknown')
+  });
+  const intentHandoff = finalizeArtifact({
+    ...orchestration.intentHandoff,
+    sequencingDesignHandoff
+  });
+  const proposalBundle = finalizeArtifact({
+    ...orchestration.proposalBundle,
+    sequencingDesignHandoffRef: sequencingDesignHandoff.artifactId
+  });
 
   const writeResult = deps.writeProjectArtifacts({
     projectFilePath: args.projectFile,
-    artifacts: [orchestration.intentHandoff, orchestration.proposalBundle]
+    artifacts: [intentHandoff, proposalBundle, sequencingDesignHandoff]
   });
   if (!writeResult?.ok) {
     throw new Error(writeResult?.error || 'Failed to write project artifacts.');
@@ -190,8 +547,9 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
     projectFile: args.projectFile,
     summary: orchestration.summary,
     warnings: orchestration.warnings || [],
-    proposalArtifactId: orchestration.proposalBundle.artifactId,
-    intentArtifactId: orchestration.intentHandoff.artifactId,
+    proposalArtifactId: proposalBundle.artifactId,
+    intentArtifactId: intentHandoff.artifactId,
+    sequencingDesignHandoffArtifactId: sequencingDesignHandoff.artifactId,
     metadataAssignmentCount: metadataAssignments.length,
     rows: writeResult.rows || []
   };

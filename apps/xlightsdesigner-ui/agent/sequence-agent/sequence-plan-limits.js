@@ -1,0 +1,1 @@
+export const REVIEW_APPLY_MAX_COMMANDS = 500;

@@ -1,4 +1,5 @@
 import { getEffectIntentCapability } from "./effect-intent-capabilities.js";
+import { EFFECT_PARAMETER_REGISTRY_BUNDLE } from "./generated/effect-parameter-registry.js";
 
 function normText(value = "") {
   return String(value || "").trim();
@@ -73,11 +74,21 @@ function colorToHex(value = "") {
 
 function buildPaletteFromIntent(paletteIntent = {}) {
   const out = {};
-  const colors = Array.isArray(paletteIntent?.colors) ? paletteIntent.colors.map((row) => colorToHex(row)).filter(Boolean) : [];
-  colors.slice(0, 4).forEach((hex, idx) => {
+  const canonicalColors = Array.isArray(paletteIntent?.paletteColors)
+    ? paletteIntent.paletteColors.map((row) => colorToHex(row)).filter(Boolean)
+    : [];
+  const colors = canonicalColors.length
+    ? canonicalColors
+    : (Array.isArray(paletteIntent?.colors) ? paletteIntent.colors.map((row) => colorToHex(row)).filter(Boolean) : []);
+  colors.slice(0, 8).forEach((hex, idx) => {
     const index = idx + 1;
     out[`C_BUTTON_Palette${index}`] = hex;
-    out[`C_CHECKBOX_Palette${index}`] = "1";
+  });
+  const activeIndexes = Array.isArray(paletteIntent?.activePaletteIndexes)
+    ? paletteIntent.activePaletteIndexes.map((row) => Number(row)).filter((row) => Number.isInteger(row) && row >= 1 && row <= 8)
+    : colors.slice(0, 8).map((_, idx) => idx + 1);
+  activeIndexes.forEach((index) => {
+    if (out[`C_BUTTON_Palette${index}`]) out[`C_CHECKBOX_Palette${index}`] = "1";
   });
   const brightness = mapScale(paletteIntent?.brightness, {
     low: 70,
@@ -192,11 +203,96 @@ function resolveBooleanSetting(value) {
   return null;
 }
 
-function writeDirectPriorSetting(settings, effectDefinition, rawParameterName = "", rawValue = null) {
+function clampNumber(value, min, max) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  const lower = Number.isFinite(Number(min)) ? Number(min) : Number.NEGATIVE_INFINITY;
+  const upper = Number.isFinite(Number(max)) ? Number(max) : Number.POSITIVE_INFINITY;
+  return Math.max(lower, Math.min(upper, n));
+}
+
+function resolveRegistryEffect(effectName = "") {
+  const effects = EFFECT_PARAMETER_REGISTRY_BUNDLE?.effects || {};
+  const exact = effects[normText(effectName)];
+  if (exact) return exact;
+  const normalized = normalizeEnumKey(effectName);
+  return Object.entries(effects).find(([name]) => normalizeEnumKey(name) === normalized)?.[1] || null;
+}
+
+function writeRegistryPriorSetting(settings, effectName = "", rawParameterName = "", rawValue = null) {
+  const parameter = resolveRegistryEffect(effectName)?.parameters?.[normalizeEnumKey(rawParameterName)];
+  if (!parameter?.upstreamId) return false;
+
+  const controlType = normText(parameter.controlType).toLowerCase();
+  const type = normText(parameter.type).toLowerCase();
+  const upstreamId = normText(parameter.upstreamId);
+  if (controlType === "checkbox" || type === "bool" || type === "boolean") {
+    const value = resolveBooleanSetting(rawValue);
+    if (value == null) return false;
+    const key = `E_CHECKBOX_${upstreamId}`;
+    if (Object.prototype.hasOwnProperty.call(settings, key)) return false;
+    settings[key] = value;
+    return true;
+  }
+
+  if (controlType === "choice" || type === "enum") {
+    const value = normText(rawValue);
+    if (!value) return false;
+    const key = `E_CHOICE_${upstreamId}`;
+    if (Object.prototype.hasOwnProperty.call(settings, key)) return false;
+    settings[key] = value;
+    return true;
+  }
+
+  if (controlType === "slider" && type === "float") {
+    const rawNumber = Number(rawValue);
+    if (!Number.isFinite(rawNumber)) return false;
+    const divisor = Number.isFinite(Number(parameter.divisor)) && Number(parameter.divisor) !== 0 ? Number(parameter.divisor) : 1;
+    const sliderValue = clampInt(rawNumber * divisor, parameter.min, parameter.max, null);
+    if (sliderValue == null) return false;
+    const textKey = `E_TEXTCTRL_${upstreamId}`;
+    const sliderKey = `E_SLIDER_${upstreamId}`;
+    if (!Object.prototype.hasOwnProperty.call(settings, textKey)) settings[textKey] = String(rawValue);
+    if (!Object.prototype.hasOwnProperty.call(settings, sliderKey)) settings[sliderKey] = sliderValue;
+    return true;
+  }
+
+  if (controlType === "slider" || type === "int" || type === "integer") {
+    const value = clampInt(rawValue, parameter.min, parameter.max, null);
+    if (value == null) return false;
+    const key = `E_SLIDER_${upstreamId}`;
+    if (Object.prototype.hasOwnProperty.call(settings, key)) return false;
+    settings[key] = value;
+    return true;
+  }
+
+  if (type === "float" || type === "number") {
+    const value = clampNumber(rawValue, parameter.min, parameter.max);
+    if (value == null) return false;
+    const key = `E_TEXTCTRL_${upstreamId}`;
+    if (Object.prototype.hasOwnProperty.call(settings, key)) return false;
+    settings[key] = String(value);
+    return true;
+  }
+
+  const value = normText(rawValue);
+  if (!value) return false;
+  const key = `E_TEXTCTRL_${upstreamId}`;
+  if (Object.prototype.hasOwnProperty.call(settings, key)) return false;
+  settings[key] = value;
+  return true;
+}
+
+function writeDirectPriorSetting(settings, effectDefinition, rawParameterName = "", rawValue = null, effectName = "") {
   const desiredName = normText(rawParameterName);
-  if (!desiredName || !effectDefinition || !Array.isArray(effectDefinition?.params)) return false;
+  if (!desiredName) return false;
+  if (!effectDefinition || !Array.isArray(effectDefinition?.params)) {
+    return writeRegistryPriorSetting(settings, effectName, rawParameterName, rawValue);
+  }
   const param = effectDefinition.params.find((row) => normalizeEnumKey(row?.name).includes(normalizeEnumKey(desiredName)));
-  if (!param || Object.prototype.hasOwnProperty.call(settings, param.name)) return false;
+  if (!param || Object.prototype.hasOwnProperty.call(settings, param.name)) {
+    return writeRegistryPriorSetting(settings, effectName, rawParameterName, rawValue);
+  }
   if (param.type === "int") {
     const min = Number.isFinite(Number(param.min)) ? Number(param.min) : Number.MIN_SAFE_INTEGER;
     const max = Number.isFinite(Number(param.max)) ? Number(param.max) : Number.MAX_SAFE_INTEGER;
@@ -217,7 +313,21 @@ function writeDirectPriorSetting(settings, effectDefinition, rawParameterName = 
     settings[param.name] = resolved;
     return true;
   }
-  return false;
+  if (param.type === "float" || param.type === "number") {
+    const min = Number.isFinite(Number(param.min)) ? Number(param.min) : Number.NEGATIVE_INFINITY;
+    const max = Number.isFinite(Number(param.max)) ? Number(param.max) : Number.POSITIVE_INFINITY;
+    const value = clampNumber(rawValue, min, max);
+    if (value == null) return false;
+    settings[param.name] = value;
+    return true;
+  }
+  if (param.type === "string" || param.type === "text") {
+    const value = normText(rawValue);
+    if (!value) return false;
+    settings[param.name] = value;
+    return true;
+  }
+  return writeRegistryPriorSetting(settings, effectName, rawParameterName, rawValue);
 }
 
 const SAFE_DERIVED_PRIOR_PARAMETERS = Object.freeze(new Set([
@@ -258,7 +368,7 @@ const SHARED_SETTING_KEY_MAP = Object.freeze({
   layerMorph: "T_CHECKBOX_LayerMorph"
 });
 
-function buildSettingsFromDerivedPriorGuidance(parameterPriorGuidance = {}, effectDefinition = null) {
+function buildSettingsFromDerivedPriorGuidance(parameterPriorGuidance = {}, effectDefinition = null, effectName = "") {
   const out = {};
   const priors = Array.isArray(parameterPriorGuidance?.priors) ? parameterPriorGuidance.priors : [];
   for (const prior of priors) {
@@ -268,7 +378,13 @@ function buildSettingsFromDerivedPriorGuidance(parameterPriorGuidance = {}, effe
       ? prior.recommendedAnchors[0]
       : null;
     if (!anchor) continue;
-    writeDirectPriorSetting(out, effectDefinition, prior?.parameterName, anchor?.parameterValue);
+    writeDirectPriorSetting(
+      out,
+      effectDefinition,
+      prior?.parameterName,
+      anchor?.parameterValue,
+      parameterPriorGuidance?.effectName || effectName
+    );
   }
   return out;
 }
@@ -366,7 +482,7 @@ export function translatePlacementIntentToXlights({
       asObject(placement?.sharedSettingPriorGuidance),
       sharedIntentSettings
     ),
-    ...buildSettingsFromDerivedPriorGuidance(asObject(placement?.parameterPriorGuidance), effectDefinition),
+    ...buildSettingsFromDerivedPriorGuidance(asObject(placement?.parameterPriorGuidance), effectDefinition, effectName),
     ...buildLayerSettingsFromIntent(asObject(placement?.layerIntent)),
     ...buildRenderSettingsFromIntent(asObject(placement?.renderIntent))
   };
@@ -374,7 +490,10 @@ export function translatePlacementIntentToXlights({
   if (effectName === 'On') {
     return {
       settings: {},
-      palette: {}
+      palette: {
+        ...translatedPalette,
+        ...asObject(placement?.palette)
+      }
     };
   }
   return {

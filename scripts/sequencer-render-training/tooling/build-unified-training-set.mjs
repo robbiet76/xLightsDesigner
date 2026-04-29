@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
 
@@ -128,11 +128,10 @@ function slug(value = "") {
 
 function loadOutcomeRecords(recordsDirPath) {
   if (!existsSync(recordsDirPath)) return [];
-  return readdirSync(recordsDirPath)
-    .filter((name) => name.endsWith(".json"))
-    .map((name) => {
+  return listJsonFiles(recordsDirPath)
+    .map((filePath) => {
       try {
-        return JSON.parse(readFileSync(join(recordsDirPath, name), "utf8"));
+        return JSON.parse(readFileSync(filePath, "utf8"));
       } catch {
         return null;
       }
@@ -142,16 +141,29 @@ function loadOutcomeRecords(recordsDirPath) {
 
 function loadScreeningRecords(recordsDirPath) {
   if (!existsSync(recordsDirPath)) return [];
-  return readdirSync(recordsDirPath)
-    .filter((name) => name.endsWith(".json"))
-    .map((name) => {
+  return listJsonFiles(recordsDirPath)
+    .map((filePath) => {
       try {
-        return JSON.parse(readFileSync(join(recordsDirPath, name), "utf8"));
+        return compactScreeningRecord(JSON.parse(readFileSync(filePath, "utf8")));
       } catch {
         return null;
       }
     })
     .filter((row) => row && row.recordVersion === "1.0" && String(row?.effectName || "").trim());
+}
+
+function listJsonFiles(dirPath) {
+  const out = [];
+  for (const name of readdirSync(dirPath)) {
+    const fullPath = join(dirPath, name);
+    const stats = statSync(fullPath);
+    if (stats.isDirectory()) {
+      out.push(...listJsonFiles(fullPath));
+    } else if (name.endsWith(".json")) {
+      out.push(fullPath);
+    }
+  }
+  return out.sort((a, b) => a.localeCompare(b));
 }
 
 function buildSeedRolePriors(effectName = "") {
@@ -293,8 +305,267 @@ function average(values = []) {
   return nums.reduce((sum, row) => sum + row, 0) / nums.length;
 }
 
+function firstFinite(...values) {
+  for (const value of values) {
+    if (value === null || value === undefined || value === "") continue;
+    const num = Number(value);
+    if (Number.isFinite(num)) return num;
+  }
+  return 0;
+}
+
+function firstFiniteOrNaN(...values) {
+  for (const value of values) {
+    if (value === null || value === undefined || value === "") continue;
+    const num = Number(value);
+    if (Number.isFinite(num)) return num;
+  }
+  return NaN;
+}
+
+const COLOR_METRIC_CACHE = new WeakMap();
+const RGB_DISTANCE_MAX = Math.sqrt(255 * 255 * 3);
+
+function rgbTuple(value) {
+  if (!Array.isArray(value) || value.length < 3) return null;
+  const tuple = value.slice(0, 3).map((channel) => {
+    const num = Number(channel);
+    if (!Number.isFinite(num)) return 0;
+    return Math.max(0, Math.min(255, Math.round(num)));
+  });
+  return tuple;
+}
+
+function rgbEnergy(tuple = []) {
+  return Number(tuple[0] || 0) + Number(tuple[1] || 0) + Number(tuple[2] || 0);
+}
+
+function rgbKey(tuple = []) {
+  return `${tuple[0] || 0},${tuple[1] || 0},${tuple[2] || 0}`;
+}
+
+function colorClassKey(tuple = []) {
+  const max = Math.max(Number(tuple[0] || 0), Number(tuple[1] || 0), Number(tuple[2] || 0));
+  const min = Math.min(Number(tuple[0] || 0), Number(tuple[1] || 0), Number(tuple[2] || 0));
+  if (max <= 8) return "";
+  if (max - min <= 12) return "white";
+  const normalized = tuple.map((channel) => Math.round((Number(channel || 0) / max) * 4) / 4);
+  return normalized.join(",");
+}
+
+function rgbDistance(a = [], b = []) {
+  const dr = Number(a[0] || 0) - Number(b[0] || 0);
+  const dg = Number(a[1] || 0) - Number(b[1] || 0);
+  const db = Number(a[2] || 0) - Number(b[2] || 0);
+  return Math.sqrt((dr * dr) + (dg * dg) + (db * db)) / RGB_DISTANCE_MAX;
+}
+
+function frameRgbRows(features = {}) {
+  if (!Array.isArray(features?.frames)) return [];
+  return features.frames
+    .map((frame) => Array.isArray(frame?.nodeRgb) ? frame.nodeRgb.map(rgbTuple).filter(Boolean) : [])
+    .filter((rows) => rows.length);
+}
+
+function calculateRenderedColorMetrics(record = {}) {
+  const cached = COLOR_METRIC_CACHE.get(record);
+  if (cached) return cached;
+  const frames = frameRgbRows(record?.features || {});
+  if (!frames.length) {
+    const empty = {
+      renderedColorDiversity: NaN,
+      renderedDominantColorStability: NaN,
+      renderedColorBandDensity: NaN,
+      renderedGradientSmoothness: NaN,
+      renderedTemporalColorTravel: NaN
+    };
+    COLOR_METRIC_CACHE.set(record, empty);
+    return empty;
+  }
+
+  const distinctColors = new Set();
+  const dominantKeys = [];
+  const bandDensities = [];
+  const adjacentSmoothness = [];
+  let temporalTravelSum = 0;
+  let temporalTravelPairs = 0;
+  const activeFrameThreshold = 8;
+  let activeFrameCount = 0;
+
+  for (const frame of frames) {
+    const active = frame.filter((tuple) => rgbEnergy(tuple) > activeFrameThreshold);
+    if (!active.length) {
+      continue;
+    }
+    activeFrameCount += 1;
+
+    const counts = new Map();
+    for (const tuple of active) {
+      const key = colorClassKey(tuple);
+      if (!key) continue;
+      distinctColors.add(key);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const dominant = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+    dominantKeys.push(dominant?.[0] || "");
+
+    let transitions = 0;
+    let adjacentDelta = 0;
+    let adjacentPairs = 0;
+    let previousActiveKey = "";
+    let previousActiveTuple = null;
+    for (const tuple of frame) {
+      if (rgbEnergy(tuple) <= activeFrameThreshold) continue;
+      const key = colorClassKey(tuple);
+      if (!key) continue;
+      if (previousActiveKey && key !== previousActiveKey) transitions += 1;
+      if (previousActiveTuple) {
+        adjacentDelta += rgbDistance(previousActiveTuple, tuple);
+        adjacentPairs += 1;
+      }
+      previousActiveKey = key;
+      previousActiveTuple = tuple;
+    }
+    bandDensities.push(active.length > 1 ? transitions / (active.length - 1) : 0);
+    adjacentSmoothness.push(adjacentPairs ? Math.max(0, 1 - (adjacentDelta / adjacentPairs)) : 1);
+  }
+
+  if (!activeFrameCount) {
+    const empty = {
+      renderedColorDiversity: NaN,
+      renderedDominantColorStability: NaN,
+      renderedColorBandDensity: NaN,
+      renderedGradientSmoothness: NaN,
+      renderedTemporalColorTravel: NaN
+    };
+    COLOR_METRIC_CACHE.set(record, empty);
+    return empty;
+  }
+
+  for (let index = 1; index < frames.length; index += 1) {
+    const previous = frames[index - 1];
+    const current = frames[index];
+    const length = Math.min(previous.length, current.length);
+    if (!length) continue;
+    for (let nodeIndex = 0; nodeIndex < length; nodeIndex += 1) {
+      temporalTravelSum += rgbDistance(previous[nodeIndex], current[nodeIndex]);
+      temporalTravelPairs += 1;
+    }
+  }
+
+  let dominantTransitions = 0;
+  let dominantComparisons = 0;
+  for (let index = 1; index < dominantKeys.length; index += 1) {
+    const previous = dominantKeys[index - 1];
+    const current = dominantKeys[index];
+    if (!previous || !current) continue;
+    dominantComparisons += 1;
+    if (previous !== current) dominantTransitions += 1;
+  }
+
+  const metrics = {
+    renderedColorDiversity: round6(Math.min(1, distinctColors.size / 8)),
+    renderedDominantColorStability: round6(dominantComparisons ? 1 - (dominantTransitions / dominantComparisons) : 1),
+    renderedColorBandDensity: round6(average(bandDensities)),
+    renderedGradientSmoothness: round6(average(adjacentSmoothness)),
+    renderedTemporalColorTravel: round6(temporalTravelPairs ? temporalTravelSum / temporalTravelPairs : 0)
+  };
+  COLOR_METRIC_CACHE.set(record, metrics);
+  return metrics;
+}
+
+function recordMetric(record = {}, canonicalName = "") {
+  const features = record?.features || {};
+  const analysisSignals = features?.analysis?.qualitySignals || {};
+  const colorMetrics = calculateRenderedColorMetrics(record);
+  if (canonicalName === "temporalMotionMean") {
+    return firstFinite(
+      features.temporalMotionMean,
+      features.temporalChangeMean,
+      features.centroidMotionMean,
+      analysisSignals.motion
+    );
+  }
+  if (canonicalName === "temporalColorDeltaMean") {
+    return firstFinite(
+      features.temporalColorDeltaMean,
+      features.temporalRgbDeltaMean,
+      colorMetrics.renderedTemporalColorTravel,
+      features.temporalChangeMean
+    );
+  }
+  if (canonicalName === "temporalBrightnessDeltaMean") {
+    return firstFinite(
+      features.temporalBrightnessDeltaMean,
+      features.temporalChangeMean
+    );
+  }
+  if (canonicalName === "nonBlankSampledFrameRatio") {
+    return firstFinite(
+      features.nonBlankSampledFrameRatio,
+      features.averageActiveNodeRatio,
+      features.maxActiveNodeRatio,
+      analysisSignals.coverage
+    );
+  }
+  if (canonicalName === "renderedColorDiversity") {
+    return firstFiniteOrNaN(features.renderedColorDiversity, colorMetrics.renderedColorDiversity);
+  }
+  if (canonicalName === "renderedDominantColorStability") {
+    return firstFiniteOrNaN(features.renderedDominantColorStability, colorMetrics.renderedDominantColorStability);
+  }
+  if (canonicalName === "renderedColorBandDensity") {
+    return firstFiniteOrNaN(features.renderedColorBandDensity, colorMetrics.renderedColorBandDensity);
+  }
+  if (canonicalName === "renderedGradientSmoothness") {
+    return firstFiniteOrNaN(features.renderedGradientSmoothness, colorMetrics.renderedGradientSmoothness);
+  }
+  if (canonicalName === "renderedTemporalColorTravel") {
+    return firstFiniteOrNaN(features.renderedTemporalColorTravel, colorMetrics.renderedTemporalColorTravel);
+  }
+  return 0;
+}
+
+function compactScreeningRecord(record = {}) {
+  if (!record || record.recordVersion !== "1.0") return record;
+  const features = record.features || {};
+  const colorMetrics = calculateRenderedColorMetrics(record);
+  return {
+    recordVersion: record.recordVersion,
+    sampleId: record.sampleId,
+    effectName: record.effectName,
+    placementId: record.placementId,
+    effectSettings: record.effectSettings || {},
+    sharedSettings: record.sharedSettings || {},
+    trainingContext: record.trainingContext || {},
+    observations: record.observations || {},
+    fixture: record.fixture || {},
+    modelMetadata: record.modelMetadata || {},
+    features: {
+      temporalMotionMean: features.temporalMotionMean,
+      temporalChangeMean: features.temporalChangeMean,
+      centroidMotionMean: features.centroidMotionMean,
+      temporalColorDeltaMean: features.temporalColorDeltaMean,
+      temporalRgbDeltaMean: features.temporalRgbDeltaMean,
+      temporalBrightnessDeltaMean: features.temporalBrightnessDeltaMean,
+      nonBlankSampledFrameRatio: features.nonBlankSampledFrameRatio,
+      averageActiveNodeRatio: features.averageActiveNodeRatio,
+      maxActiveNodeRatio: features.maxActiveNodeRatio,
+      temporalSignature: features.temporalSignature,
+      renderedColorDiversity: firstFiniteOrNaN(features.renderedColorDiversity, colorMetrics.renderedColorDiversity),
+      renderedDominantColorStability: firstFiniteOrNaN(features.renderedDominantColorStability, colorMetrics.renderedDominantColorStability),
+      renderedColorBandDensity: firstFiniteOrNaN(features.renderedColorBandDensity, colorMetrics.renderedColorBandDensity),
+      renderedGradientSmoothness: firstFiniteOrNaN(features.renderedGradientSmoothness, colorMetrics.renderedGradientSmoothness),
+      renderedTemporalColorTravel: firstFiniteOrNaN(features.renderedTemporalColorTravel, colorMetrics.renderedTemporalColorTravel),
+      analysis: {
+        qualitySignals: features?.analysis?.qualitySignals || {}
+      }
+    }
+  };
+}
+
 function filterBehaviorHints(labels = [], parameterName = "") {
-  const excludedPrefixes = ["effect:", "model:", "palette_", "render_style:"];
+  const excludedPrefixes = ["effect:", "model:", "palette_", "render_style:", "intent:", "pattern_family:"];
   const excludedExact = new Set([String(parameterName || "").trim(), "range_sample"]);
   return uniqueStrings(labels).filter((label) => {
     const value = String(label || "").trim();
@@ -310,23 +581,118 @@ function confidenceForDerivedPrior({ distinctAnchorCount = 0, sampleCount = 0, c
   return "none";
 }
 
+function numericValue(value) {
+  if (typeof value === "boolean") return value ? 1 : 0;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function classifyTrend(points = [], fieldName = "") {
+  const ordered = points
+    .map((point) => ({
+      x: numericValue(point.parameterValue),
+      y: point[fieldName] === null || point[fieldName] === undefined || point[fieldName] === "" ? NaN : Number(point[fieldName])
+    }))
+    .filter((point) => point.x !== null && Number.isFinite(point.y))
+    .sort((a, b) => a.x - b.x);
+  if (ordered.length < 2) {
+    return {
+      direction: "unknown",
+      magnitude: 0,
+      range: { low: null, high: null },
+      evidencePointCount: ordered.length
+    };
+  }
+  const lowPoint = ordered[0];
+  const highPoint = ordered[ordered.length - 1];
+  const delta = highPoint.y - lowPoint.y;
+  const absDelta = Math.abs(delta);
+  const direction = absDelta < 0.005 ? "flat" : (delta > 0 ? "increases" : "decreases");
+  return {
+    direction,
+    magnitude: round6(absDelta),
+    range: {
+      low: round6(lowPoint.y),
+      high: round6(highPoint.y)
+    },
+    evidencePointCount: ordered.length
+  };
+}
+
+function buildBehaviorDimensions(anchorProfiles = [], group = {}) {
+  const isMultiColorPalette = String(group.paletteMode || "").trim() !== "mono_white";
+  const dimensions = {
+    motion: classifyTrend(anchorProfiles, "meanTemporalMotion"),
+    colorRhythm: classifyTrend(anchorProfiles, "meanTemporalColorDelta"),
+    brightnessRhythm: classifyTrend(anchorProfiles, "meanTemporalBrightnessDelta"),
+    coverage: classifyTrend(anchorProfiles, "meanNonBlankRatio"),
+    ...(isMultiColorPalette ? {
+      colorDiversity: classifyTrend(anchorProfiles, "meanRenderedColorDiversity"),
+      dominantColorStability: classifyTrend(anchorProfiles, "meanRenderedDominantColorStability"),
+      colorBandDensity: classifyTrend(anchorProfiles, "meanRenderedColorBandDensity"),
+      gradientSmoothness: classifyTrend(anchorProfiles, "meanRenderedGradientSmoothness"),
+      colorTravel: classifyTrend(anchorProfiles, "meanRenderedTemporalColorTravel")
+    } : {})
+  };
+  const meaningful = Object.entries(dimensions)
+    .filter(([, value]) => value.direction !== "unknown")
+    .sort((a, b) => b[1].magnitude - a[1].magnitude);
+  const dominant = meaningful[0] || null;
+  const behaviorRules = meaningful
+    .filter(([, value]) => value.magnitude >= 0.005)
+    .map(([dimension, value]) => ({
+      dimension,
+      direction: value.direction,
+      magnitude: value.magnitude,
+      summary: `${group.parameterName} ${value.direction} ${dimension}`
+    }));
+  return {
+    schemaVersion: "1.0",
+    abstraction: "sparse_anchor_trend",
+    parameterName: group.parameterName,
+    geometryProfile: group.geometryProfile,
+    paletteMode: group.paletteMode,
+    dimensions,
+    dominantDimension: dominant ? dominant[0] : "unknown",
+    behaviorRules,
+    generalization: {
+      interpolationPolicy: "interpolate_between_observed_anchors",
+      extrapolationPolicy: "low_confidence_outside_observed_anchor_range",
+      exactCombinationRequired: false
+    },
+    confidence: {
+      level: anchorProfiles.length >= 3 ? "medium" : (anchorProfiles.length >= 2 ? "low" : "none"),
+      basis: anchorProfiles.length >= 2 ? "observed_anchor_delta" : "insufficient_anchor_delta",
+      anchorCount: anchorProfiles.length
+    }
+  };
+}
+
 function buildDerivedParameterPriors(records = [], configurationRepresentativeness = { coverageStatus: "none", profiles: [] }) {
   const groups = new Map();
   for (const record of records) {
-    const parameterName = String(record?.trainingContext?.screenedParameterName || "").trim();
-    if (!parameterName) continue;
+    const explicitParameterName = String(record?.trainingContext?.screenedParameterName || "").trim();
+    const parameterNames = explicitParameterName
+      ? [explicitParameterName]
+      : Object.entries(record?.effectSettings || {})
+        .filter(([, value]) => ["number", "boolean", "string"].includes(typeof value))
+        .map(([key]) => String(key || "").trim())
+        .filter(Boolean);
     const geometryProfile = String(record?.fixture?.geometryProfile || record?.modelMetadata?.resolvedGeometryProfile || "").trim();
     const paletteMode = String(record?.trainingContext?.screeningPaletteMode || "").trim() || "default";
-    const key = JSON.stringify([parameterName, geometryProfile, paletteMode]);
-    if (!groups.has(key)) {
-      groups.set(key, {
-        parameterName,
-        geometryProfile,
-        paletteMode,
-        records: []
-      });
+    for (const parameterName of parameterNames) {
+      if (!(parameterName in (record?.effectSettings || {}))) continue;
+      const key = JSON.stringify([parameterName, geometryProfile, paletteMode]);
+      if (!groups.has(key)) {
+        groups.set(key, {
+          parameterName,
+          geometryProfile,
+          paletteMode,
+          records: []
+        });
+      }
+      groups.get(key).records.push(record);
     }
-    groups.get(key).records.push(record);
   }
 
   const priors = [...groups.values()].map((group) => {
@@ -342,6 +708,11 @@ function buildDerivedParameterPriors(records = [], configurationRepresentativene
           temporalColorDeltaMean: [],
           temporalBrightnessDeltaMean: [],
           nonBlankSampledFrameRatio: [],
+          renderedColorDiversity: [],
+          renderedDominantColorStability: [],
+          renderedColorBandDensity: [],
+          renderedGradientSmoothness: [],
+          renderedTemporalColorTravel: [],
           temporalSignatures: [],
           behaviorHints: [],
           structuralSignatures: []
@@ -349,10 +720,15 @@ function buildDerivedParameterPriors(records = [], configurationRepresentativene
       }
       const next = anchorMap.get(anchorKey);
       next.sampleCount += 1;
-      next.temporalMotionMean.push(record?.features?.temporalMotionMean);
-      next.temporalColorDeltaMean.push(record?.features?.temporalColorDeltaMean);
-      next.temporalBrightnessDeltaMean.push(record?.features?.temporalBrightnessDeltaMean);
-      next.nonBlankSampledFrameRatio.push(record?.features?.nonBlankSampledFrameRatio);
+      next.temporalMotionMean.push(recordMetric(record, "temporalMotionMean"));
+      next.temporalColorDeltaMean.push(recordMetric(record, "temporalColorDeltaMean"));
+      next.temporalBrightnessDeltaMean.push(recordMetric(record, "temporalBrightnessDeltaMean"));
+      next.nonBlankSampledFrameRatio.push(recordMetric(record, "nonBlankSampledFrameRatio"));
+      next.renderedColorDiversity.push(recordMetric(record, "renderedColorDiversity"));
+      next.renderedDominantColorStability.push(recordMetric(record, "renderedDominantColorStability"));
+      next.renderedColorBandDensity.push(recordMetric(record, "renderedColorBandDensity"));
+      next.renderedGradientSmoothness.push(recordMetric(record, "renderedGradientSmoothness"));
+      next.renderedTemporalColorTravel.push(recordMetric(record, "renderedTemporalColorTravel"));
       next.temporalSignatures.push(String(record?.features?.temporalSignature || "").trim());
       next.behaviorHints.push(...filterBehaviorHints(record?.observations?.labels || [], group.parameterName));
       next.structuralSignatures.push(buildConfigurationProfile(record).structuralSignature);
@@ -365,6 +741,11 @@ function buildDerivedParameterPriors(records = [], configurationRepresentativene
       meanTemporalColorDelta: round6(average(row.temporalColorDeltaMean)),
       meanTemporalBrightnessDelta: round6(average(row.temporalBrightnessDeltaMean)),
       meanNonBlankRatio: round6(average(row.nonBlankSampledFrameRatio)),
+      meanRenderedColorDiversity: round6(average(row.renderedColorDiversity)),
+      meanRenderedDominantColorStability: round6(average(row.renderedDominantColorStability)),
+      meanRenderedColorBandDensity: round6(average(row.renderedColorBandDensity)),
+      meanRenderedGradientSmoothness: round6(average(row.renderedGradientSmoothness)),
+      meanRenderedTemporalColorTravel: round6(average(row.renderedTemporalColorTravel)),
       behaviorHints: uniqueStrings(row.behaviorHints).slice(0, 12),
       structuralSignatures: uniqueStrings(row.structuralSignatures)
     })).sort((a, b) =>
@@ -372,12 +753,13 @@ function buildDerivedParameterPriors(records = [], configurationRepresentativene
       b.meanTemporalColorDelta - a.meanTemporalColorDelta ||
       String(a.parameterValue).localeCompare(String(b.parameterValue))
     );
-    const geometryProfiles = configurationRepresentativeness?.profiles || [];
-    const matchingProfiles = geometryProfiles.filter((row) => row.geometryProfile === group.geometryProfile);
-    return {
-      parameterName: group.parameterName,
-      geometryProfile: group.geometryProfile,
-      paletteMode: group.paletteMode,
+	    const geometryProfiles = configurationRepresentativeness?.profiles || [];
+	    const matchingProfiles = geometryProfiles.filter((row) => row.geometryProfile === group.geometryProfile);
+	    const behaviorDimensions = buildBehaviorDimensions(anchorProfiles, group);
+	    return {
+	      parameterName: group.parameterName,
+	      geometryProfile: group.geometryProfile,
+	      paletteMode: group.paletteMode,
       sampleCount: group.records.length,
       distinctAnchorCount: anchorProfiles.length,
       configurationCoverageStatus: matchingProfiles.length > 1
@@ -385,14 +767,15 @@ function buildDerivedParameterPriors(records = [], configurationRepresentativene
         : (matchingProfiles.length === 1 ? "single_reference_per_geometry" : "none"),
       configurationProfileCount: matchingProfiles.length,
       structuralSignatures: uniqueStrings(matchingProfiles.map((row) => row.structuralSignature)),
-      confidence: confidenceForDerivedPrior({
-        distinctAnchorCount: anchorProfiles.length,
-        sampleCount: group.records.length,
-        coverageStatus: matchingProfiles.length > 1 ? "multi_configuration_sampled" : (matchingProfiles.length === 1 ? "single_reference_per_geometry" : "none")
-      }),
-      anchorProfiles
-    };
-  }).sort((a, b) =>
+	      confidence: confidenceForDerivedPrior({
+	        distinctAnchorCount: anchorProfiles.length,
+	        sampleCount: group.records.length,
+	        coverageStatus: matchingProfiles.length > 1 ? "multi_configuration_sampled" : (matchingProfiles.length === 1 ? "single_reference_per_geometry" : "none")
+	      }),
+	      behaviorDimensions,
+	      anchorProfiles
+	    };
+	  }).sort((a, b) =>
     a.parameterName.localeCompare(b.parameterName) ||
     a.geometryProfile.localeCompare(b.geometryProfile) ||
     a.paletteMode.localeCompare(b.paletteMode)

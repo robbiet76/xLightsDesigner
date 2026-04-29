@@ -321,6 +321,16 @@ test("review apply handoff preserves metadata-resolved proposal targets for sequ
       energyArc: "hold",
       focusElements: ["MegaTree"],
       colorDirection: ""
+    },
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      artifactId: "sequencing_design_handoff_v2-test",
+      designSummary: "Designer says MegaTree should carry the chorus lead.",
+      scope: {
+        targetIds: ["MegaTree"],
+        tagNames: ["lead"],
+        sections: ["Chorus 1"]
+      }
     }
   };
   const proposalBundle = {
@@ -403,6 +413,8 @@ test("review apply handoff preserves metadata-resolved proposal targets for sequ
 
   assert.deepEqual(reviewIntentHandoff.scope.targetIds, ["MegaTree"]);
   assert.deepEqual(reviewIntentHandoff.scope.tagNames, ["lead"]);
+  assert.equal(reviewIntentHandoff.sequencingDesignHandoff.artifactId, "sequencing_design_handoff_v2-test");
+  assert.equal(out.metadata.sequencingDesignHandoffSummary, "Designer says MegaTree should carry the chorus lead.");
   assert.deepEqual(out.metadata.scope.targetIds, ["MegaTree"]);
   assert.deepEqual(out.metadata.scope.tagNames, ["lead"]);
   assert.deepEqual(out.metadata.executionStrategy.sectionPlans[0].targetIds, ["MegaTree"]);

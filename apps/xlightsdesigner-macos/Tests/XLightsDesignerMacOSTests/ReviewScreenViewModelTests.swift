@@ -217,7 +217,9 @@ private func reviewPendingWork(
     }
 
     model.applyPendingWork()
-    try await Task.sleep(for: .milliseconds(120))
+    try await xldWaitUntil {
+        model.isApplying == false && recorder.count == 1
+    }
 
     #expect(model.isApplying == false)
     #expect(model.transientBanner?.state == .ready)
@@ -282,11 +284,11 @@ private func reviewPendingWork(
 
     #expect(model.screenModel.actions.canRestoreBackup == false)
     model.applyPendingWork()
-    try await Task.sleep(for: .milliseconds(120))
+    try await xldWaitUntil { model.screenModel.actions.canRestoreBackup == true }
     #expect(model.screenModel.actions.canRestoreBackup == true)
 
     model.restoreLastBackup()
-    try await Task.sleep(for: .milliseconds(120))
+    try await xldWaitUntil { model.isRestoringBackup == false && !recorder.sequencePath.isEmpty }
 
     #expect(recorder.sequencePath == "/tmp/HolidayRoad.xsq")
     #expect(recorder.backupPath == "/tmp/project/artifacts/backups/HolidayRoad-preapply-rev-1.xsq")

@@ -1,4 +1,5 @@
 import { buildPracticalSequenceValidation } from "../agent/sequence-agent/practical-sequence-validation.js";
+import { REVIEW_APPLY_MAX_COMMANDS } from "../agent/sequence-agent/sequence-plan-limits.js";
 import { buildTimingTrackProvenanceRecord } from "./timing-track-provenance.js";
 import {
   refreshSequenceArtisticGoalFromPracticalValidation,
@@ -316,7 +317,7 @@ export async function executeApplyCore({
       deleteEffectLayer: deps.deleteEffectLayer,
       reorderEffectLayer: deps.reorderEffectLayer,
       compactEffectLayers: deps.compactEffectLayers,
-      safetyOptions: { maxCommands: 200 }
+      safetyOptions: { maxCommands: REVIEW_APPLY_MAX_COMMANDS }
     });
     lastOrchestrated = orchestrated;
 
@@ -411,7 +412,10 @@ export async function executeApplyCore({
       renderObservation,
       designSceneContext,
       sequencingDesignHandoff,
-      musicDesignContext
+      musicDesignContext,
+      metadataAssignments,
+      compositionPlan: planHandoff?.metadata?.effectStrategy?.compositionPlan || planHandoff?.metadata?.compositionPlan || null,
+      practicalValidation
     });
     state.sequenceAgentRuntime.renderCritiqueContext = renderCritiqueContext;
     const nextRenderValidationEvidence = buildRenderValidationEvidence({

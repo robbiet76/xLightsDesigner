@@ -62,6 +62,7 @@ These are the current operating specs for sequencing work.
 - [effect-training-reference-file-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-training-reference-file-v1-2026-04-15.md)
 - [sequencer-validation-matrix-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-validation-matrix-2026-04-15.md)
 - [sequencer-validation-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-validation-audit-2026-04-15.md)
+- [sequencer-control-quality-refactor-plan-2026-04-27.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-control-quality-refactor-plan-2026-04-27.md)
 - [xlights-2026-06-api-migration-plan-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md)
 - [xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md)
 - [xlights-2026-06-api-compatibility-matrix-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md)

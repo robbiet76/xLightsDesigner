@@ -330,7 +330,7 @@ test("addressed Lyric structure follow-up stays with audio analyst", async () =>
   assert.equal(result.result.handledBy, "audio_analyst");
 });
 
-test("explicit phase switch uses app assistant transition message instead of specialist kickoff", async () => {
+test("explicit display discovery phase switch lets designer start the conversation", async () => {
   const bridge = {
     async runAgentConversation() {
       return {
@@ -364,11 +364,187 @@ test("explicit phase switch uses app assistant transition message instead of spe
   });
 
   assert.equal(result.ok, true);
-  assert.equal(result.result.routeDecision, "general");
-  assert.equal(result.result.handledBy, "app_assistant");
+  assert.equal(result.result.routeDecision, "designer_dialog");
+  assert.equal(result.result.handledBy, "designer_dialog");
   assert.equal(result.result.phaseTransition.phaseId, "display_discovery");
-  assert.match(result.result.assistantMessage, /Next: Display Discovery\./i);
-  assert.doesNotMatch(result.result.assistantMessage, /main focal elements/i);
+  assert.match(result.result.assistantMessage, /main focal elements/i);
+});
+
+test("active display discovery captures turns even when prior metadata exists", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "Snowman and Train are primary focal elements. What usually frames them?",
+        shouldGenerateProposal: false,
+        responseId: "resp-display-existing-metadata",
+        displayDiscoveryCapture: {
+          status: "in_progress",
+          insights: [
+            {
+              subject: "Snowman",
+              subjectType: "Model",
+              category: "focal_hierarchy",
+              value: "Primary focal element that often leads the display.",
+              rationale: "User explicitly named Snowman as a main focal point.",
+              targetNames: ["Snowman"]
+            }
+          ],
+          resolvedBranches: ["primary focal hierarchy"]
+        }
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Snowman and Train are main focal points.",
+    messages: [],
+    context: {
+      route: "display",
+      workflowPhase: {
+        phaseId: "display_discovery",
+        ownerRole: "designer_dialog",
+        status: "in_progress"
+      },
+      display: {
+        targetCount: 187,
+        labelNames: ["Snowflakes"],
+        labeledTargetCount: 10
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "designer_dialog");
+  assert.equal(result.result.handledBy, "designer_dialog");
+  assert.equal(result.result.displayDiscovery.shouldCaptureTurn, true);
+  assert.ok(result.result.displayDiscovery.insights.length >= 1);
+  assert.equal(result.result.displayDiscovery.insights[0].subject, "Snowman");
+});
+
+test("display discovery extracts clear hierarchy statements when structured capture is missing", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "I captured that hierarchy. What supports those focal elements?",
+        shouldGenerateProposal: false,
+        responseId: "resp-display-fallback"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: [
+      "The main focal point elements in my show are the following:",
+      "",
+      "Snowman, Train, Snowball, Star",
+      "",
+      "Second level focal points would be:",
+      "",
+      "HiddenTree/HiddenTree Star, Presents, Spinners",
+      "",
+      "The third level which are rarely focal points are:",
+      "",
+      "Wreathes, Icicles"
+    ].join("\n"),
+    messages: [],
+    context: {
+      route: "display",
+      workflowPhase: {
+        phaseId: "display_discovery",
+        ownerRole: "designer_dialog",
+        status: "in_progress"
+      },
+      display: { targetCount: 187 }
+    },
+    bridge
+  });
+
+  const subjects = result.result.displayDiscovery.insights.map((row) => row.subject);
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "designer_dialog");
+  assert.deepEqual(subjects.slice(0, 4), ["Snowman", "Train", "Snowball", "Star"]);
+  assert.ok(subjects.includes("Presents"));
+  assert.ok(subjects.includes("Wreathes"));
+  assert.match(result.result.displayDiscovery.insights.find((row) => row.subject === "Snowman").value, /Primary focal/i);
+});
+
+test("display discovery extracts framing and rhythm roles when structured capture is missing", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "I captured the framing and support roles.",
+        shouldGenerateProposal: false,
+        responseId: "resp-display-role-fallback"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "The gutters and borders tend to frame things. You will find a group called \"Outlines\" that was created with this framing intent. Floods add light volume. Candy canes frame the yard foreground lower portion, snowflakes frame the upper portion, and spiral trees and shrubs play a supporting role and provide rhythm support.",
+    messages: [],
+    context: {
+      route: "display",
+      workflowPhase: {
+        phaseId: "display_discovery",
+        ownerRole: "designer_dialog",
+        status: "in_progress"
+      },
+      display: { targetCount: 187 }
+    },
+    bridge
+  });
+
+  const bySubject = new Map(result.result.displayDiscovery.insights.map((row) => [`${row.subject}::${row.category}`, row]));
+  assert.equal(result.ok, true);
+  assert.equal(result.result.handledBy, "designer_dialog");
+  assert.match(bySubject.get("Outlines::spatial_role")?.value || "", /Framing layer/i);
+  assert.match(bySubject.get("Floods::spatial_role")?.value || "", /Light-volume layer/i);
+  assert.match(bySubject.get("CandyCanes::spatial_role")?.value || "", /Foreground structure/i);
+  assert.match(bySubject.get("Snowflakes::spatial_role")?.value || "", /Upper-display framing/i);
+  assert.match(bySubject.get("Spirals_Shrubs::rhythm_role")?.value || "", /Rhythm-support/i);
+});
+
+test("display metadata learning can happen outside formal display discovery", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "That helps the design context.",
+        shouldGenerateProposal: false,
+        responseId: "resp-display-incidental"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "For this design, remember that the gutters and borders tend to frame things and the group called Outlines was created with this framing intent.",
+    messages: [],
+    context: {
+      route: "design",
+      workflowPhase: {
+        phaseId: "design",
+        ownerRole: "designer_dialog",
+        status: "in_progress"
+      },
+      display: {
+        targetCount: 187,
+        labelNames: ["Snowflakes"],
+        labeledTargetCount: 10
+      },
+      sequenceOpen: true
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "designer_dialog");
+  assert.equal(result.result.displayDiscovery.shouldCaptureTurn, true);
+  assert.equal(result.result.displayDiscovery.insights[0].subject, "Outlines");
+  assert.match(result.result.displayDiscovery.insights[0].value, /Framing layer/i);
 });
 
 test("handoff pending uses phase closure summary and next phases", async () => {

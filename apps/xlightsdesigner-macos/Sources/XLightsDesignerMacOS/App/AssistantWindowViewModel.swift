@@ -124,8 +124,17 @@ final class AssistantWindowViewModel {
                 displayName: displayName(for: result.handledBy, context: context),
                 artifactCard: result.artifactCard
             ))
-            if context.workflowPhaseStatus == WorkflowPhaseStatus.notStarted.rawValue &&
-                result.handledBy == context.workflowPhaseOwnerRole {
+            if let transition = result.phaseTransition {
+                onPhaseTransition?(transition)
+            }
+            let transitionOwnerRole = result.phaseTransition.map { ownerRole(for: $0.phaseID) } ?? ""
+            if (
+                context.workflowPhaseStatus == WorkflowPhaseStatus.notStarted.rawValue &&
+                result.handledBy == context.workflowPhaseOwnerRole
+            ) || (
+                result.phaseTransition != nil &&
+                result.handledBy == transitionOwnerRole
+            ) {
                 onPhaseStarted?()
             }
             if !result.userPreferenceNotes.isEmpty {
@@ -133,9 +142,6 @@ final class AssistantWindowViewModel {
             }
             if let mission = result.projectMission {
                 try? saveProjectMission(mission, project: project)
-            }
-            if let transition = result.phaseTransition {
-                onPhaseTransition?(transition)
             }
             if let actionRequest = result.actionRequest {
                 onActionRequest?(actionRequest)
@@ -434,6 +440,19 @@ final class AssistantWindowViewModel {
             return "I'm \(identity.displayName). \(roleSummary)"
         }
         return "I'm \(displayName(for: roleID, context: context)). \(roleSummary) You can call me \(nickname) if you'd like."
+    }
+
+    private func ownerRole(for phaseID: WorkflowPhaseID) -> String {
+        switch phaseID {
+        case .setup:
+            return "app_assistant"
+        case .projectMission, .displayDiscovery, .design:
+            return "designer_dialog"
+        case .audioAnalysis:
+            return "audio_analyst"
+        case .sequencing, .review:
+            return "sequence_agent"
+        }
     }
 
     private func roleSummaryText(for roleID: String) -> String {

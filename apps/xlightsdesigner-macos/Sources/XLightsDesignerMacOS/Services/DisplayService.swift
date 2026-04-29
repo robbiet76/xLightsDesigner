@@ -111,7 +111,7 @@ struct XLightsDisplayService: DisplayService {
                 if unresolvedCount > 0 {
                     state = .needsReview
                     explanation = unresolvedCount == rows.count
-                        ? "No display metadata has been confirmed yet."
+                        ? "No current display metadata has been captured yet."
                         : "\(unresolvedCount) xLights models are still unmapped by the current display metadata."
                     nextStep = validProject
                 } else {

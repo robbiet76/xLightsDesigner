@@ -219,6 +219,7 @@ The native app should treat display metadata as:
 - editable
 - reviewable
 - migratable
+- living project memory that can evolve as new user or agent understanding is captured
 
 The `Getting To Know Your Display` conversation should produce:
 - proposed tag definitions
@@ -226,6 +227,8 @@ The `Getting To Know Your Display` conversation should produce:
 - candidate assignments
 
 These should remain review-first before application.
+
+Display metadata capture is not limited to the formal display-discovery conversation. If any agent hears durable display truth during design, sequencing, review, or general app conversation, the app should capture that learning into the same project-owned metadata layer. Direct user statements can become current metadata immediately. Interpretive, inferred, or high-impact changes should be presented for user confirmation before they shape future sequencing decisions.
 
 ## Acceptance Criteria
 

@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "shockwave-startradius-spinner-standard-rgb-primary-0",
-  "createdAt": "2026-04-16T18:35:27.481Z",
+  "createdAt": "2026-04-28T14:23:35.929Z",
   "effectName": "Shockwave",
   "geometryProfile": "spinner_standard",
   "modelType": "spinner",
@@ -24,27 +24,27 @@
     "motionPacing": "subtle_motion",
     "textureDensity": "compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill,startRadius_0",
     "energyLevel": "restrained",
-    "coverageLevel": "focused",
+    "coverageLevel": "sparse",
     "hierarchySuitability": "unknown",
     "geometryCoupling": "observed",
-    "stability": "medium"
+    "stability": "high"
   },
   "renderOutcomeSignals": {
     "temporalRead": "subtle_motion",
-    "densityRead": "moderate",
-    "nonBlankRatio": 0.5,
-    "temporalMotion": 0.013244,
-    "temporalColorDelta": 0.006242,
-    "temporalBrightnessDelta": 0.005609,
+    "densityRead": "sparse",
+    "nonBlankRatio": 0.120898,
+    "temporalMotion": 0.00541,
+    "temporalColorDelta": 0.004243,
+    "temporalBrightnessDelta": 0.004137,
     "clarityRead": "unknown",
     "contrastRead": "unknown"
   },
   "confidence": {
-    "level": "medium",
+    "level": "high",
     "evidenceClass": "aggregated_render",
-    "coverageStatus": "single_reference_per_geometry"
+    "coverageStatus": "multi_configuration_sampled"
   },
-  "evidenceCount": 1,
+  "evidenceCount": 6,
   "traceability": {
     "sourceArtifactIds": [
       "sequencer_unified_training_set_v1"

@@ -38,6 +38,8 @@ Primary system roadmap:
 - `runners/run-stage1-coverage-chunked-background.sh`
 - `runners/run-sequencer-training-reset-cycle.sh`
 - `runners/run-effect-training-automation-cycle.sh`
+- `runners/run-effects-usage-overnight-training.sh`
+- `runners/run-layer-composition-training.sh`
 - `runners/run-effect-parameter-screening-plan.sh`
 - `runners/run-live-outcome-harvest-cycle.sh`
 
@@ -61,12 +63,19 @@ Primary system roadmap:
 - `generators/generate-intent-gap-report.py`
 - `generators/generate-range-transition-report.py`
 - `tooling/normalize-manifest.py`
+- `tooling/apply-layer-composition-retention.mjs`
 - `tooling/build-animation-fixture.py`
 - `tooling/extract-artifact-features.sh`
 - `tooling/extract-observations.sh`
 - `tooling/query-priority-intent-map.py`
 - `tooling/select-priority-effect.py`
 - `tooling/build-unified-training-set.mjs`
+- `tooling/build-layer-composition-training-plan.mjs`
+- `tooling/build-layer-composition-deltas.mjs`
+- `tooling/build-layer-composition-priors.mjs`
+- `tooling/export-layer-composition-priors-bundle.mjs`
+- `tooling/run-layer-composition-execution-scaffold.mjs`
+- `tooling/run-layer-composition-owned-pass.mjs`
 - `tooling/harvest-effect-outcome-records.mjs`
 - `tooling/build-effect-settings-coverage-report.mjs`
 - `tooling/build-effect-training-automation-plan.mjs`
@@ -180,12 +189,86 @@ node scripts/sequencer-render-training/tooling/harvest-effect-outcome-records.mj
 ```
 
 ```bash
+bash scripts/sequencer-render-training/runners/run-effects-usage-overnight-training.sh \
+  --out-dir var/logs/sequencer-effects-usage-training-runs/manual-plan
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-effects-usage-overnight-training.sh \
+  --execute \
+  --max-packs 12
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-layer-composition-training.sh \
+  --run-type overnight
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-layer-composition-training.sh \
+  --run-type smoke \
+  --execute
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-layer-composition-training.sh \
+  --run-type smoke \
+  --execute \
+  --apply-render \
+  --max-passes 1
+```
+
+```bash
+TRAINING_API_STAGING_ROOT=/Users/robterry/Desktop/Show/_xlightsdesigner_api_training/layer-composition-smoke \
+  node scripts/sequencer-render-training/tooling/run-layer-composition-pass-runner.mjs \
+  --run-root var/logs/sequencer-layer-composition-training-runs/<run-id> \
+  --max-passes 22
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \
+  --run-root var/logs/sequencer-layer-composition-training-runs/<run-id> \
+  --out var/logs/sequencer-layer-composition-training-runs/<run-id>/layer-composition-delta-summary.json
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/build-layer-composition-priors.mjs \
+  --delta-summary var/logs/sequencer-layer-composition-training-runs/<run-id>/layer-composition-delta-summary.json \
+  --out var/logs/sequencer-layer-composition-training-runs/<run-id>/layer-composition-priors-staged.json
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/export-layer-composition-priors-bundle.mjs \
+  --priors var/logs/sequencer-layer-composition-training-runs/<run-id>/layer-composition-priors-staged.json \
+  --out apps/xlightsdesigner-ui/agent/sequence-agent/generated/layer-composition-priors-bundle.js
+```
+
+```bash
 bash scripts/sequencer-render-training/runners/run-live-outcome-harvest-cycle.sh \
   --source /path/to/project.xdproj
 ```
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-effect-settings-coverage-report.mjs
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/build-layer-composition-training-plan.mjs \
+  --run-type overnight \
+  --out var/logs/sequencer-layer-composition-training-runs/manual-plan/training-plan.json
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/apply-layer-composition-retention.mjs \
+  --run-root var/logs/sequencer-layer-composition-training-runs/<run-id> \
+  --ledger var/logs/sequencer-layer-composition-training-runs/<run-id>/retention-ledger.json
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/run-layer-composition-owned-pass.mjs \
+  --sequence /path/to/working-sequence.xsq \
+  --pass-execution var/logs/sequencer-layer-composition-training-runs/<run-id>/passes/<pass>/pass-execution.json \
+  --result var/logs/sequencer-layer-composition-training-runs/<run-id>/passes/<pass>/owned-pass-result.json
 ```
 
 ```bash

@@ -25,6 +25,187 @@ function readJson(filePath = '') {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
+function normalizeKey(value = '') {
+  return str(value).toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function normalizeTokenSet(value = '') {
+  return new Set(
+    str(value)
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .map((row) => row.trim())
+      .filter(Boolean)
+  );
+}
+
+function mergeAssignment(into = new Map(), targetId = '', patch = {}) {
+  const id = str(targetId);
+  if (!id) return;
+  const existing = into.get(id) || {
+    targetId: id,
+    tags: [],
+    semanticHints: [],
+    visualHintDefinitions: [],
+    effectAvoidances: [],
+    rolePreference: '',
+    source: ''
+  };
+  const rolePreference = str(existing.rolePreference || patch.rolePreference);
+  into.set(id, {
+    ...existing,
+    ...patch,
+    targetId: id,
+    tags: uniqueStrings([...(existing.tags || []), ...(patch.tags || [])]),
+    semanticHints: uniqueStrings([...(existing.semanticHints || []), ...(patch.semanticHints || [])]),
+    visualHintDefinitions: [...arr(existing.visualHintDefinitions), ...arr(patch.visualHintDefinitions)],
+    effectAvoidances: uniqueStrings([...(existing.effectAvoidances || []), ...(patch.effectAvoidances || [])]),
+    rolePreference,
+    source: uniqueStrings([existing.source, patch.source]).join('+')
+  });
+}
+
+function normalizeLayoutRows(layoutRows = []) {
+  return arr(layoutRows)
+    .map((row) => {
+      const id = str(row?.id || row?.name || row?.targetId);
+      return id ? {
+        ...row,
+        id,
+        name: str(row?.name || id),
+        displayAs: str(row?.displayAs || row?.type || row?.kind)
+      } : null;
+    })
+    .filter(Boolean);
+}
+
+function normalizeMemberName(member = '') {
+  return str(member?.id || member?.name || member?.targetId || member);
+}
+
+function buildGroupMembershipIndex(groupMemberships = {}) {
+  const groups = arr(groupMemberships?.data?.groups || groupMemberships?.groups);
+  const out = new Map();
+  for (const group of groups) {
+    const name = str(group?.groupName || group?.name || group?.id);
+    if (!name) continue;
+    out.set(name.toLowerCase(), {
+      direct: arr(group.directMembers).map(normalizeMemberName).filter(Boolean),
+      active: arr(group.activeMembers).map(normalizeMemberName).filter(Boolean),
+      flattened: arr(group.flattenedMembers).map(normalizeMemberName).filter(Boolean),
+      flattenedAll: arr(group.flattenedAllMembers).map(normalizeMemberName).filter(Boolean)
+    });
+  }
+  return out;
+}
+
+function buildKnownTargetIndex({ layoutRows = [], groupMemberships = {} } = {}) {
+  const rows = normalizeLayoutRows(layoutRows);
+  const byLower = new Map();
+  const byCompact = new Map();
+  for (const row of rows) {
+    byLower.set(row.name.toLowerCase(), row.name);
+    byCompact.set(normalizeKey(row.name), row.name);
+  }
+  for (const groupName of buildGroupMembershipIndex(groupMemberships).keys()) {
+    if (!byLower.has(groupName)) byLower.set(groupName, groupName);
+    byCompact.set(normalizeKey(groupName), byLower.get(groupName) || groupName);
+  }
+  return { byLower, byCompact, rows };
+}
+
+function resolveInsightTargetNames(subject = '', explicitTargets = [], indexes = {}) {
+  const candidates = uniqueStrings([...arr(explicitTargets), subject]);
+  const resolved = [];
+  for (const candidate of candidates) {
+    const text = str(candidate);
+    if (!text) continue;
+    const exact = indexes.byLower?.get(text.toLowerCase()) || indexes.byCompact?.get(normalizeKey(text));
+    if (exact) {
+      resolved.push(exact);
+      continue;
+    }
+    const candidateTokens = normalizeTokenSet(text);
+    if (!candidateTokens.size) continue;
+    for (const row of arr(indexes.rows)) {
+      const rowTokens = normalizeTokenSet(row.name);
+      const intersection = [...candidateTokens].filter((token) => rowTokens.has(token));
+      if (
+        intersection.length >= 2 ||
+        (intersection.length === candidateTokens.size && candidateTokens.size > 0) ||
+        (normalizeKey(row.name).includes(normalizeKey(text)) && normalizeKey(text).length >= 5)
+      ) {
+        resolved.push(row.name);
+      }
+    }
+  }
+  return uniqueStrings(resolved);
+}
+
+function expandedTargetsFor(targetId = '', groupIndex = new Map()) {
+  const id = str(targetId);
+  if (!id) return [];
+  const group = groupIndex.get(id.toLowerCase());
+  if (!group) return [id];
+  const members = uniqueStrings([
+    ...arr(group.flattened),
+    ...arr(group.active),
+    ...arr(group.direct)
+  ]).filter((memberId) => memberId.toLowerCase() !== id.toLowerCase());
+  return uniqueStrings([id, ...members]);
+}
+
+function rolePreferenceForInsight(insight = {}) {
+  const categoryText = str(insight?.category).toLowerCase();
+  const valueText = `${str(insight?.value)} ${str(insight?.rationale)}`.toLowerCase();
+  if (/focal/.test(categoryText)) {
+    if (/occasional|featured|highlight|accent|punctuation/.test(valueText)) return 'accent';
+    if (/primary|secondary|lead|leads?|hero|focal|center stage|focus shifts?/.test(valueText)) return 'lead';
+  }
+  if (/primary|lead|hero/.test(valueText)) return 'lead';
+  if (/tertiary|accent|highlight|spark|punctuation/.test(valueText)) return 'accent';
+  if (/secondary|support|background|framing|rhythm|texture|volume/.test(valueText)) return 'support';
+  const text = `${categoryText} ${valueText}`.toLowerCase();
+  if (/primary|lead|hero|focal/.test(text)) return 'lead';
+  if (/accent|highlight|spark|punctuation/.test(text)) return 'accent';
+  if (/background|support|secondary|tertiary|framing|rhythm|texture|volume/.test(text)) return 'support';
+  return '';
+}
+
+function loadDiscoveryAssignments(projectFile = '', { layoutRows = [], groupMemberships = {} } = {}) {
+  const projectDir = path.dirname(str(projectFile));
+  const discoveryPath = path.join(projectDir, 'layout', 'display-discovery.json');
+  if (!fs.existsSync(discoveryPath)) return [];
+  const document = readJson(discoveryPath);
+  const insights = arr(document?.insights);
+  if (!insights.length) return [];
+
+  const groupIndex = buildGroupMembershipIndex(groupMemberships);
+  const targetIndexes = buildKnownTargetIndex({ layoutRows, groupMemberships });
+  const byTarget = new Map();
+
+  for (const insight of insights) {
+    const subject = str(insight?.subject);
+    const category = str(insight?.category);
+    const value = str(insight?.value || insight?.summary || insight?.rationale);
+    const rolePreference = rolePreferenceForInsight(insight);
+    const resolvedTargets = resolveInsightTargetNames(subject, insight?.targetNames, targetIndexes);
+    const expandedTargets = uniqueStrings(resolvedTargets.flatMap((targetId) => expandedTargetsFor(targetId, groupIndex)));
+    const tags = uniqueStrings([subject, category, rolePreference].filter(Boolean));
+    const semanticHints = uniqueStrings([category, value].filter(Boolean));
+    for (const targetId of expandedTargets) {
+      mergeAssignment(byTarget, targetId, {
+        tags,
+        semanticHints,
+        rolePreference,
+        source: 'xlightsdesigner_display_discovery'
+      });
+    }
+  }
+
+  return Array.from(byTarget.values()).sort((a, b) => a.targetId.localeCompare(b.targetId));
+}
+
 function normalizeVisualHintDefinition(definition = {}) {
   const name = str(definition?.name);
   if (!name) return null;
@@ -39,11 +220,10 @@ function normalizeVisualHintDefinition(definition = {}) {
   };
 }
 
-export function loadProjectDisplayMetadataAssignments(projectFile = '') {
+export function loadProjectDisplayMetadataAssignments(projectFile = '', context = {}) {
   const projectDir = path.dirname(str(projectFile));
   const metadataPath = path.join(projectDir, 'layout', 'layout-metadata.json');
-  if (!fs.existsSync(metadataPath)) return [];
-  const document = readJson(metadataPath);
+  const document = fs.existsSync(metadataPath) ? readJson(metadataPath) : {};
   const tags = Array.isArray(document?.tags) ? document.tags : [];
   const tagById = new Map(tags.map((tag) => [str(tag?.id), tag]).filter(([id]) => id));
   const targetTags = document?.targetTags && typeof document.targetTags === 'object' ? document.targetTags : {};
@@ -60,7 +240,13 @@ export function loadProjectDisplayMetadataAssignments(projectFile = '') {
     ...Object.keys(targetTags),
     ...Object.keys(preferencesByTargetId)
   ].map(str).filter(Boolean));
-  return Array.from(targetIds)
+
+  const byTarget = new Map();
+  for (const row of loadDiscoveryAssignments(projectFile, context)) {
+    mergeAssignment(byTarget, row.targetId, row);
+  }
+
+  for (const row of Array.from(targetIds)
     .map((targetId) => {
       const tagIds = targetTags[targetId];
       const resolvedTags = Array.isArray(tagIds)
@@ -96,6 +282,9 @@ export function loadProjectDisplayMetadataAssignments(projectFile = '') {
         source: 'xlightsdesigner_project_display_metadata'
       };
     })
-    .filter(Boolean)
-    .sort((a, b) => a.targetId.localeCompare(b.targetId));
+    .filter(Boolean)) {
+    mergeAssignment(byTarget, row.targetId, row);
+  }
+
+  return Array.from(byTarget.values()).sort((a, b) => a.targetId.localeCompare(b.targetId));
 }

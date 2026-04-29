@@ -531,7 +531,13 @@ function shouldEnableModelBlendingForPlan(effectCommands = [], groupIds = []) {
   return false;
 }
 
-function buildSequenceSettingsCommand({ effectCommands = [], groupIds = [], sequenceSettings = {} } = {}) {
+function supportsOptionalCommand(capabilityCommands = null, commandName = "") {
+  if (!Array.isArray(capabilityCommands)) return true;
+  return capabilityCommands.map((row) => normText(row)).includes(normText(commandName));
+}
+
+function buildSequenceSettingsCommand({ effectCommands = [], groupIds = [], sequenceSettings = {}, capabilityCommands = null } = {}) {
+  if (!supportsOptionalCommand(capabilityCommands, "sequence.setSettings")) return null;
   const current = normalizeSequenceSettings(sequenceSettings);
   if (current.supportsModelBlending) return null;
   if (!shouldEnableModelBlendingForPlan(effectCommands, groupIds)) return null;
@@ -838,7 +844,8 @@ export function buildDesignerPlanCommands(
     sectionWindowsByName = null,
     useAllKnownSections = false,
     enableEffectTimingAlignment = true,
-    paletteContext = null
+    paletteContext = null,
+    capabilityCommands = null
   } = {}
 ) {
   const source = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
@@ -916,7 +923,8 @@ export function buildDesignerPlanCommands(
   const sequenceSettingsCommand = buildSequenceSettingsCommand({
     effectCommands,
     groupIds,
-    sequenceSettings
+    sequenceSettings,
+    capabilityCommands
   });
 
   const normalizedEffectCommands = effectCommands.map((row) => {

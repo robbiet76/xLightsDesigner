@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "pinwheel-speed-star-single-layer-rgb-primary-14",
-  "createdAt": "2026-04-16T18:35:27.480Z",
+  "createdAt": "2026-04-28T14:23:35.929Z",
   "effectName": "Pinwheel",
   "geometryProfile": "star_single_layer",
   "modelType": "star",

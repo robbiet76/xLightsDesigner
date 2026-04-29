@@ -20,6 +20,10 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+function rawText(value = "") {
+  return String(value ?? "").trim();
+}
+
 function arr(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -62,10 +66,132 @@ function normalizeComparableValue(value) {
   return String(value || "").trim();
 }
 
+function normalizePayloadColor(value = "") {
+  const text = rawText(value);
+  if (/^#[0-9a-f]{6}$/i.test(text)) return text.toUpperCase();
+  return text;
+}
+
+function parseJsonObjectString(value = "") {
+  const text = str(value);
+  if (!text || !/^\s*\{/.test(text)) return null;
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseXlightsKeyValueString(value = "") {
+  const text = str(value);
+  if (!text) return null;
+  const jsonObject = parseJsonObjectString(text);
+  if (jsonObject) return jsonObject;
+  const out = {};
+  let found = false;
+  for (const part of text.split(",")) {
+    const index = part.indexOf("=");
+    if (index <= 0) continue;
+    const key = str(part.slice(0, index));
+    if (!key) continue;
+    out[key] = normalizePayloadColor(part.slice(index + 1));
+    found = true;
+  }
+  return found ? out : null;
+}
+
+function normalizePayloadObject(value = null) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([key, rawValue]) => [str(key), normalizePayloadColor(rawValue)])
+        .filter(([key]) => key)
+    );
+  }
+  if (typeof value === "string") {
+    return parseXlightsKeyValueString(value);
+  }
+  return null;
+}
+
+function hasExpectedPayload(expected) {
+  if (expected === null || expected === undefined) return false;
+  if (typeof expected === "string") return expected.trim().length > 0;
+  if (typeof expected === "object") return Object.keys(expected).length > 0;
+  return String(expected).trim().length > 0;
+}
+
 function compareIfExpected(actual, expected) {
+  if (!hasExpectedPayload(expected)) return true;
+  const valueMatches = (key, actualValue, expectedValue) => {
+    const normalizedExpected = normalizeComparableValue(expectedValue);
+    const normalizedActual = normalizeComparableValue(actualValue);
+    if (!normalizedActual && normalizedExpected === "0") return true;
+    if (
+      str(key) === "B_CHOICE_BufferStyle" &&
+      normalizedExpected === "Per Model Default" &&
+      normalizedActual === "Default"
+    ) {
+      return true;
+    }
+    return normalizedActual === normalizedExpected;
+  };
+  if (expected && typeof expected === "object" && !Array.isArray(expected)) {
+    const actualObject = normalizePayloadObject(actual) || {};
+    const expectedObject = normalizePayloadObject(expected) || {};
+    return Object.entries(expectedObject).every(([key, expectedValue]) =>
+      valueMatches(key, actualObject[key], expectedValue)
+    );
+  }
+  const actualObject = normalizePayloadObject(actual);
+  const expectedObject = normalizePayloadObject(expected);
+  if (actualObject && expectedObject) {
+    return Object.entries(expectedObject).every(([key, expectedValue]) =>
+      valueMatches(key, actualObject[key], expectedValue)
+    );
+  }
   const normalizedExpected = normalizeComparableValue(expected);
-  if (!normalizedExpected) return true;
   return normalizeComparableValue(actual) === normalizedExpected;
+}
+
+function effectPayloadMatches(actual = null, expectedParams = {}) {
+  return {
+    settingsMatched: actual ? compareIfExpected(actual?.settings, expectedParams?.settings) : false,
+    paletteMatched: actual ? compareIfExpected(actual?.palette, expectedParams?.palette) : false
+  };
+}
+
+function selectBestEffectCandidate(effects = [], expected = {}) {
+  const candidates = arr(effects).filter((row) =>
+    String(row?.effectName || "").trim() === str(expected.effectName) &&
+    Number(row?.startMs) === Number(expected.startMs) &&
+    Number(row?.endMs) === Number(expected.endMs) &&
+    Number(row?.layerIndex) === Number(expected.layerIndex)
+  );
+  if (!candidates.length) return { actual: null, settingsMatched: false, paletteMatched: false };
+  const expectedParams = expected?.sourceStep?.params || {};
+  const scored = candidates.map((actual) => {
+    const payload = effectPayloadMatches(actual, expectedParams);
+    return {
+      actual,
+      ...payload,
+      score: (payload.settingsMatched ? 1 : 0) + (payload.paletteMatched ? 1 : 0)
+    };
+  });
+  return scored.find((row) => row.settingsMatched && row.paletteMatched) || scored.sort((a, b) => b.score - a.score)[0];
+}
+
+function containsOrderedSubsequence(actualOrder = [], expectedOrder = []) {
+  const actual = arr(actualOrder).map((row) => str(row)).filter(Boolean);
+  const expected = arr(expectedOrder).map((row) => str(row)).filter(Boolean);
+  if (!expected.length) return false;
+  let cursor = 0;
+  for (const value of actual) {
+    if (value === expected[cursor]) cursor += 1;
+    if (cursor >= expected.length) return true;
+  }
+  return false;
 }
 
 function normalizeEffectRow(params = {}) {
@@ -444,14 +570,16 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
           ? resp.data.rows
           : (Array.isArray(resp?.data?.elements) ? resp.data.elements : []);
         const actualOrder = sourceRows.map((row) => typeof row === "string" ? row : String(row?.id || row?.name || "").trim()).filter(Boolean);
-        const ok =
-          expectedOrder.length === actualOrder.length &&
-          expectedOrder.every((id, idx) => id === actualOrder[idx]);
+        const missingExpected = expectedOrder.filter((id) => !actualOrder.includes(id));
+        const ok = !missingExpected.length && containsOrderedSubsequence(actualOrder, expectedOrder);
         return {
           kind: "display-order",
           target: "master-view",
           ok,
-          detail: ok ? "display element order matched" : "display element order mismatch"
+          detail: ok ? "display element order matched" : "display element order mismatch",
+          expectedCount: expectedOrder.length,
+          actualCount: actualOrder.length,
+          missingExpected
         };
       })());
     }
@@ -714,11 +842,20 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
           Number(row?.endMs) === endMs &&
           Number(row?.layerIndex) === layerIndex
         );
+        const { actual, settingsMatched, paletteMatched } = selectBestEffectCandidate(effects, effect);
+        const payloadMatched = ok && settingsMatched && paletteMatched;
         return {
           kind: "effect",
           target: `${modelName}@${layerIndex}`,
-          ok,
-          detail: ok ? `${effectName} present` : `${effectName} missing`
+          ok: payloadMatched,
+          detail: !ok
+            ? `${effectName} missing`
+            : payloadMatched
+              ? `${effectName} present with matching payload`
+              : `${effectName} payload mismatch`,
+          effectPresent: ok,
+          settingsMatched,
+          paletteMatched
         };
       })());
       if (preservationPolicy) {
@@ -747,14 +884,7 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
         readbackChecks.push((async () => {
           const resp = await listEffects(endpoint, { modelName, layerIndex, startMs, endMs });
           const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
-          const actual = effects.find((row) =>
-            String(row?.effectName || "").trim() === effectName &&
-            Number(row?.startMs) === startMs &&
-            Number(row?.endMs) === endMs &&
-            Number(row?.layerIndex) === layerIndex
-          );
-          const settingsMatch = actual ? compareIfExpected(actual?.settings, effect.sourceStep?.params?.settings) : false;
-          const paletteMatch = actual ? compareIfExpected(actual?.palette, effect.sourceStep?.params?.palette) : false;
+          const { actual, settingsMatched: settingsMatch, paletteMatched: paletteMatch } = selectBestEffectCandidate(effects, effect);
           return {
             kind: "effect-clone",
             target: `${modelName}@${layerIndex}`,

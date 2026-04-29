@@ -78,7 +78,12 @@ private struct StubAudioExecutionService: AudioExecutionService, Sendable {
     model.updateDraftTitle("Carol Of The Bells")
     model.updateDraftArtist("Trans-Siberian Orchestra")
     model.confirmTrackInfo()
-    try await Task.sleep(for: .milliseconds(50))
+    try await xldWaitUntil {
+        if case let .track(track) = model.currentResult {
+            return track.identityState == .verified
+        }
+        return false
+    }
 
     guard case let .track(track) = model.currentResult else {
         Issue.record("Expected selected track result")

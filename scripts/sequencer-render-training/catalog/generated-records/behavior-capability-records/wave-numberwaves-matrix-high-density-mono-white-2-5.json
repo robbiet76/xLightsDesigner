@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "wave-numberwaves-matrix-high-density-mono-white-2-5",
+  "createdAt": "2026-04-28T14:23:35.931Z",
+  "effectName": "Wave",
+  "geometryProfile": "matrix_high_density",
+  "modelType": "matrix",
+  "parameterRegion": {
+    "parameterName": "numberWaves",
+    "regionKind": "single_value",
+    "valueSummary": "2.5",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "mono_white"
+  },
+  "paletteContext": {
+    "paletteMode": "mono_white"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "registry_generated",
+    "motionPacing": "",
+    "textureDensity": "registry_generated",
+    "energyLevel": "elevated",
+    "coverageLevel": "sparse",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "sparse",
+    "nonBlankRatio": 0.062012,
+    "temporalMotion": 0.11349,
+    "temporalColorDelta": 0.11349,
+    "temporalBrightnessDelta": 0.11349,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 2,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "matrix_high_density"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

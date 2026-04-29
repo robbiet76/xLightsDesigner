@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "color-wash-cycles-matrix-high-density-rgb-primary-0-5",
-  "createdAt": "2026-04-16T18:35:27.477Z",
+  "createdAt": "2026-04-28T14:23:35.928Z",
   "effectName": "Color Wash",
   "geometryProfile": "matrix_high_density",
   "modelType": "matrix",
@@ -20,31 +20,31 @@
   },
   "behaviorSignals": {
     "primaryMotion": "subtle_motion",
-    "primaryTexture": "cycles_0_5",
+    "primaryTexture": "circular_palette",
     "motionPacing": "subtle_motion",
-    "textureDensity": "cycles_0_5,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,stable_brightness,steady_wash,subtle_color_travel,subtle_motion_window,wash_fill",
+    "textureDensity": "circular_palette,decoded_fseq,matrix_fill,minimal_color_travel,partial_coverage,registry_generated,shimmer_wash,sparse_window_coverage,stable_brightness,static_window,two_axis_fade,wash_fill",
     "energyLevel": "moderate",
-    "coverageLevel": "broad",
+    "coverageLevel": "focused",
     "hierarchySuitability": "unknown",
     "geometryCoupling": "observed",
-    "stability": "medium"
+    "stability": "high"
   },
   "renderOutcomeSignals": {
     "temporalRead": "subtle_motion",
-    "densityRead": "dense",
-    "nonBlankRatio": 0.75,
-    "temporalMotion": 0.029161,
-    "temporalColorDelta": 0.04871,
-    "temporalBrightnessDelta": 0.017888,
+    "densityRead": "moderate",
+    "nonBlankRatio": 0.718086,
+    "temporalMotion": 0.047425,
+    "temporalColorDelta": 0.049869,
+    "temporalBrightnessDelta": 0.046016,
     "clarityRead": "unknown",
     "contrastRead": "unknown"
   },
   "confidence": {
-    "level": "medium",
+    "level": "high",
     "evidenceClass": "aggregated_render",
-    "coverageStatus": "single_reference_per_geometry"
+    "coverageStatus": "multi_configuration_sampled"
   },
-  "evidenceCount": 1,
+  "evidenceCount": 8,
   "traceability": {
     "sourceArtifactIds": [
       "sequencer_unified_training_set_v1"

@@ -106,6 +106,214 @@ def stddev(values):
     return math.sqrt(sum((value - avg) ** 2 for value in values) / len(values))
 
 
+def clamp01(value):
+    return max(0.0, min(1.0, float(value or 0.0)))
+
+
+def brightness_value(node):
+    return float(node.get("brightness", 0.0) or 0.0)
+
+
+def normalized_brightness(value):
+    value = float(value or 0.0)
+    return clamp01(value if value <= 1.0 else value / 255.0)
+
+
+def node_key(model_name, node):
+    return f"{model_name}:{node.get('nodeId', '')}"
+
+
+def rgb_tuple(node):
+    rgb = node.get("rgb") or {}
+    return (
+        float(rgb.get("r", 0.0) or 0.0),
+        float(rgb.get("g", 0.0) or 0.0),
+        float(rgb.get("b", 0.0) or 0.0),
+    )
+
+
+def rgb_distance(a, b):
+    ar, ag, ab = a
+    br, bg, bb = b
+    return math.sqrt(((ar - br) ** 2) + ((ag - bg) ** 2) + ((ab - bb) ** 2)) / 441.6729559300637
+
+
+def model_texture_stats(model):
+    active_nodes = sorted(model.get("activeNodes") or [], key=lambda node: (node.get("stringIndex", 0), node.get("nodeId", 0)))
+    brightness = [normalized_brightness(brightness_value(node)) for node in active_nodes]
+    rgbs = [rgb_tuple(node) for node in active_nodes]
+    adjacent_brightness_delta = [
+        abs(brightness[index] - brightness[index - 1])
+        for index in range(1, len(brightness))
+    ]
+    adjacent_color_delta = [
+        rgb_distance(rgbs[index], rgbs[index - 1])
+        for index in range(1, len(rgbs))
+    ]
+    bright_nodes = sum(1 for value in brightness if value >= 0.66)
+    dim_nodes = sum(1 for value in brightness if 0.0 < value <= 0.20)
+    return {
+        "modelName": model.get("modelName"),
+        "activeNodeRatio": float(model.get("activeNodeRatio", 0.0) or 0.0),
+        "activeNodeCount": int(model.get("activeNodeCount", 0) or 0),
+        "averageNodeBrightness": float(model.get("averageNodeBrightness", 0.0) or 0.0),
+        "brightnessStddev": stddev(brightness),
+        "brightnessRange": (max(brightness) - min(brightness)) if brightness else 0.0,
+        "brightNodeRatio": (bright_nodes / len(brightness)) if brightness else 0.0,
+        "dimNodeRatio": (dim_nodes / len(brightness)) if brightness else 0.0,
+        "adjacentBrightnessDeltaMean": mean(adjacent_brightness_delta),
+        "adjacentBrightnessDeltaMax": max(adjacent_brightness_delta, default=0.0),
+        "adjacentColorDeltaMean": mean(adjacent_color_delta),
+        "adjacentColorDeltaMax": max(adjacent_color_delta, default=0.0),
+        "edgeSoftness": 1.0 - clamp01(mean(adjacent_brightness_delta)),
+        "colorBoundarySoftness": 1.0 - clamp01(mean(adjacent_color_delta)),
+    }
+
+
+def frame_texture_stats(models):
+    model_stats = [model_texture_stats(model) for model in models]
+    active_ratios = [row["activeNodeRatio"] for row in model_stats]
+    brightness_stddevs = [row["brightnessStddev"] for row in model_stats]
+    edge_softness = [row["edgeSoftness"] for row in model_stats]
+    color_boundary_softness = [row["colorBoundarySoftness"] for row in model_stats]
+    adjacent_color_delta = [row["adjacentColorDeltaMean"] for row in model_stats]
+    return {
+        "modelTexture": model_stats,
+        "meanModelActiveNodeRatio": mean(active_ratios),
+        "modelActiveNodeRatioStddev": stddev(active_ratios),
+        "meanModelBrightnessStddev": mean(brightness_stddevs),
+        "meanEdgeSoftness": mean(edge_softness),
+        "meanColorBoundarySoftness": mean(color_boundary_softness),
+        "meanAdjacentColorDelta": mean(adjacent_color_delta),
+    }
+
+
+def frame_active_node_map(frame):
+    out = {}
+    for model in frame.get("models") or []:
+        model_name = model.get("modelName")
+        for node in model.get("activeNodes") or []:
+            out[node_key(model_name, node)] = {
+                "brightness": normalized_brightness(brightness_value(node)),
+                "rgb": rgb_tuple(node),
+            }
+    return out
+
+
+def frame_model_color_sequences(frame):
+    out = {}
+    for model in frame.get("models") or []:
+        model_name = model.get("modelName")
+        nodes = sorted(model.get("activeNodes") or [], key=lambda node: (node.get("stringIndex", 0), node.get("nodeId", 0)))
+        out[model_name] = [rgb_tuple(node) for node in nodes]
+    return out
+
+
+def color_sequence_motion_stats(window_frames):
+    if len(window_frames) < 2:
+        return {
+            "colorSequenceChangeSeries": [],
+            "colorSequenceChangeMean": 0.0,
+            "colorSequenceChangeMax": 0.0,
+        }
+    sequences = [frame_model_color_sequences(frame) for frame in window_frames]
+    changes = []
+    for index in range(1, len(sequences)):
+        prev = sequences[index - 1]
+        cur = sequences[index]
+        model_names = sorted(set(prev.keys()) & set(cur.keys()))
+        model_changes = []
+        for model_name in model_names:
+            left = prev.get(model_name) or []
+            right = cur.get(model_name) or []
+            size = min(len(left), len(right))
+            if size <= 0:
+                continue
+            model_changes.append(mean([
+                rgb_distance(left[node_index], right[node_index])
+                for node_index in range(size)
+            ]))
+        changes.append(mean(model_changes))
+    return {
+        "colorSequenceChangeSeries": changes,
+        "colorSequenceChangeMean": mean(changes),
+        "colorSequenceChangeMax": max(changes, default=0.0),
+    }
+
+
+def frame_persistence_stats(window_frames):
+    if len(window_frames) < 2:
+        return {
+            "activeNodeRetentionSeries": [],
+            "activeNodeRetentionMean": 0.0,
+            "rgbSimilarityMean": 0.0,
+            "brightnessSimilarityMean": 0.0,
+        }
+    maps = [frame_active_node_map(frame) for frame in window_frames]
+    retention = []
+    rgb_similarity = []
+    brightness_similarity = []
+    for index in range(1, len(maps)):
+        prev = maps[index - 1]
+        cur = maps[index]
+        prev_keys = set(prev.keys())
+        cur_keys = set(cur.keys())
+        union = prev_keys | cur_keys
+        intersection = prev_keys & cur_keys
+        retention.append((len(intersection) / len(union)) if union else 0.0)
+        for key in intersection:
+            rgb_similarity.append(1.0 - rgb_distance(prev[key]["rgb"], cur[key]["rgb"]))
+            brightness_similarity.append(1.0 - abs(prev[key]["brightness"] - cur[key]["brightness"]))
+    return {
+        "activeNodeRetentionSeries": retention,
+        "activeNodeRetentionMean": mean(retention),
+        "rgbSimilarityMean": mean(rgb_similarity),
+        "brightnessSimilarityMean": mean(brightness_similarity),
+    }
+
+
+def ramp_stats(frame_observations):
+    if not frame_observations:
+        return {
+            "openingBrightnessMean": 0.0,
+            "middleBrightnessMean": 0.0,
+            "closingBrightnessMean": 0.0,
+            "openingToMiddleBrightnessDelta": 0.0,
+            "middleToClosingBrightnessDelta": 0.0,
+            "openingActiveNodeMean": 0.0,
+            "closingActiveNodeMean": 0.0,
+            "openingToClosingActiveNodeDelta": 0.0,
+        }
+    n = len(frame_observations)
+    slice_size = max(1, n // 3)
+    opening = frame_observations[:slice_size]
+    middle_start = max(0, (n - slice_size) // 2)
+    middle = frame_observations[middle_start:middle_start + slice_size]
+    closing = frame_observations[-slice_size:]
+
+    def brightness(rows):
+        return mean([float(row.get("averageNodeBrightness", 0.0) or 0.0) for row in rows])
+
+    def node_count(rows):
+        return mean([float(row.get("activeNodeCount", 0.0) or 0.0) for row in rows])
+
+    opening_brightness = brightness(opening)
+    middle_brightness = brightness(middle)
+    closing_brightness = brightness(closing)
+    opening_nodes = node_count(opening)
+    closing_nodes = node_count(closing)
+    return {
+        "openingBrightnessMean": opening_brightness,
+        "middleBrightnessMean": middle_brightness,
+        "closingBrightnessMean": closing_brightness,
+        "openingToMiddleBrightnessDelta": middle_brightness - opening_brightness,
+        "middleToClosingBrightnessDelta": closing_brightness - middle_brightness,
+        "openingActiveNodeMean": opening_nodes,
+        "closingActiveNodeMean": closing_nodes,
+        "openingToClosingActiveNodeDelta": closing_nodes - opening_nodes,
+    }
+
+
 def dominant_rgb_role(rgb, threshold=16):
     if not isinstance(rgb, dict):
         return "none"
@@ -250,6 +458,7 @@ def main():
     dominant_color_series = []
     color_spreads = []
     multicolor_frames = 0
+    model_texture_series = []
 
     for frame in window["frames"]:
         families = Counter(model["displayAs"] for model in frame["models"])
@@ -294,6 +503,8 @@ def main():
             for model in frame["models"]:
                 frame_active_nodes.extend(model["activeNodes"])
         frame_color = color_stats(frame_active_nodes)
+        frame_texture = frame_texture_stats(frame["models"])
+        model_texture_series.append(frame_texture)
         dominant_color_series.append(frame_color["dominantColorRole"])
         color_spreads.append(frame_color["colorSpread"])
         if frame_color["multicolor"]:
@@ -318,6 +529,15 @@ def main():
             "activeColorRoleCount": frame_color["activeColorRoleCount"],
             "colorSpread": frame_color["colorSpread"],
             "multicolor": frame_color["multicolor"],
+            "texture": {
+                "meanModelActiveNodeRatio": frame_texture["meanModelActiveNodeRatio"],
+                "modelActiveNodeRatioStddev": frame_texture["modelActiveNodeRatioStddev"],
+                "meanModelBrightnessStddev": frame_texture["meanModelBrightnessStddev"],
+                "meanEdgeSoftness": frame_texture["meanEdgeSoftness"],
+                "meanColorBoundarySoftness": frame_texture["meanColorBoundarySoftness"],
+                "meanAdjacentColorDelta": frame_texture["meanAdjacentColorDelta"],
+            },
+            "modelTexture": frame_texture["modelTexture"],
         })
 
     centroid_motions = []
@@ -344,6 +564,15 @@ def main():
             dominant_color_transitions += 1
         previous_color = role
     temporal = temporal_stats(frame_observations, centroid_motions)
+    persistence = frame_persistence_stats(window["frames"])
+    color_motion = color_sequence_motion_stats(window["frames"])
+    ramp = ramp_stats(frame_observations)
+    mean_model_active_node_ratios = [row["meanModelActiveNodeRatio"] for row in model_texture_series]
+    model_active_node_ratio_stddevs = [row["modelActiveNodeRatioStddev"] for row in model_texture_series]
+    model_brightness_stddevs = [row["meanModelBrightnessStddev"] for row in model_texture_series]
+    edge_softness_values = [row["meanEdgeSoftness"] for row in model_texture_series]
+    color_boundary_softness_values = [row["meanColorBoundarySoftness"] for row in model_texture_series]
+    adjacent_color_delta_values = [row["meanAdjacentColorDelta"] for row in model_texture_series]
 
     observation = {
         "artifactType": "render_observation_v1",
@@ -400,6 +629,26 @@ def main():
             "transitionSharpnessMax": temporal["transitionSharpnessMax"],
             "transitionSharpnessMean": temporal["transitionSharpnessMean"],
             "motionToBrightnessCoupling": temporal["motionToBrightnessCoupling"],
+            "meanModelActiveNodeRatio": mean(mean_model_active_node_ratios),
+            "modelActiveNodeRatioStddevMean": mean(model_active_node_ratio_stddevs),
+            "meanModelBrightnessStddev": mean(model_brightness_stddevs),
+            "meanEdgeSoftness": mean(edge_softness_values),
+            "meanColorBoundarySoftness": mean(color_boundary_softness_values),
+            "meanAdjacentColorDelta": mean(adjacent_color_delta_values),
+            "activeNodeRetentionMean": persistence["activeNodeRetentionMean"],
+            "rgbSimilarityMean": persistence["rgbSimilarityMean"],
+            "brightnessSimilarityMean": persistence["brightnessSimilarityMean"],
+            "colorSequenceChangeSeries": color_motion["colorSequenceChangeSeries"],
+            "colorSequenceChangeMean": color_motion["colorSequenceChangeMean"],
+            "colorSequenceChangeMax": color_motion["colorSequenceChangeMax"],
+            "openingBrightnessMean": ramp["openingBrightnessMean"],
+            "middleBrightnessMean": ramp["middleBrightnessMean"],
+            "closingBrightnessMean": ramp["closingBrightnessMean"],
+            "openingToMiddleBrightnessDelta": ramp["openingToMiddleBrightnessDelta"],
+            "middleToClosingBrightnessDelta": ramp["middleToClosingBrightnessDelta"],
+            "openingActiveNodeMean": ramp["openingActiveNodeMean"],
+            "closingActiveNodeMean": ramp["closingActiveNodeMean"],
+            "openingToClosingActiveNodeDelta": ramp["openingToClosingActiveNodeDelta"],
         },
         "frames": frame_observations,
     }

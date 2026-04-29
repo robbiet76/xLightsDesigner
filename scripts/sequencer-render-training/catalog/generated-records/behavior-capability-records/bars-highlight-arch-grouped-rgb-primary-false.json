@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "bars-highlight-arch-grouped-rgb-primary-false",
-  "createdAt": "2026-04-16T18:35:27.477Z",
+  "createdAt": "2026-04-28T14:23:35.928Z",
   "effectName": "Bars",
   "geometryProfile": "arch_grouped",
   "modelType": "arch",
@@ -22,29 +22,29 @@
     "primaryMotion": "moderate_motion",
     "primaryTexture": "arch_pattern_fit",
     "motionPacing": "moderate_motion",
-    "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,grouped_arch_read,highlight_false,single_bar",
-    "energyLevel": "elevated",
+    "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,grouped_arch_read,highlight_false,single_bar,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion",
+    "energyLevel": "restrained",
     "coverageLevel": "broad",
     "hierarchySuitability": "unknown",
     "geometryCoupling": "observed",
-    "stability": "low"
+    "stability": "medium"
   },
   "renderOutcomeSignals": {
     "temporalRead": "moderate_motion",
     "densityRead": "dense",
-    "nonBlankRatio": 0.75,
-    "temporalMotion": 0.119983,
-    "temporalColorDelta": 0.498246,
-    "temporalBrightnessDelta": 0.020502,
+    "nonBlankRatio": 0.820577,
+    "temporalMotion": 0.015992,
+    "temporalColorDelta": 0.023266,
+    "temporalBrightnessDelta": 0.014079,
     "clarityRead": "unknown",
     "contrastRead": "unknown"
   },
   "confidence": {
-    "level": "low",
+    "level": "medium",
     "evidenceClass": "aggregated_render",
-    "coverageStatus": "single_reference_per_geometry"
+    "coverageStatus": "multi_configuration_sampled"
   },
-  "evidenceCount": 1,
+  "evidenceCount": 52,
   "traceability": {
     "sourceArtifactIds": [
       "sequencer_unified_training_set_v1"

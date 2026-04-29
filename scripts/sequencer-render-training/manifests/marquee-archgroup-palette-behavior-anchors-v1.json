@@ -1,0 +1,142 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "marquee-archgroup-palette-behavior-anchors-v1",
+  "description": "Focused Marquee behavior anchors on grouped arches for single-color and multi-color representative palette modes.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "ArchGroup",
+    "modelType": "arch",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Keeps Marquee settings mostly fixed while sampling skip size and speed anchors that should produce measurable coverage and motion deltas."
+  },
+  "samples": [
+    {
+      "sampleId": "marquee-archgroup-skip-0-anchor-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "skipSize",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "marquee_coverage", "skip_0", "continuous_bands"]
+    },
+    {
+      "sampleId": "marquee-archgroup-skip-4-anchor-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 4,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "skipSize",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "marquee_coverage", "skip_4", "segmented_bands"]
+    },
+    {
+      "sampleId": "marquee-archgroup-skip-8-anchor-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 8,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "skipSize",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "marquee_coverage", "skip_8", "sparse_bands"]
+    },
+    {
+      "sampleId": "marquee-archgroup-speed-1-anchor-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 2,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 1,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "marquee_motion", "slow_motion"]
+    },
+    {
+      "sampleId": "marquee-archgroup-speed-5-anchor-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 2,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "marquee_motion", "medium_motion"]
+    },
+    {
+      "sampleId": "marquee-archgroup-speed-9-anchor-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 2,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 9,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "trainingContext": {
+        "screenedParameterName": "speed",
+        "screeningPhase": "behavior_anchor"
+      },
+      "labelHints": ["behavior_anchor", "marquee_motion", "fast_motion"]
+    }
+  ]
+}

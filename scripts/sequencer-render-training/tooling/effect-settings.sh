@@ -84,13 +84,14 @@ color_wash_effect_settings_json() {
     --argjson eff "${effect_settings_json}" \
     --argjson shared "${shared_settings_json}" '
       {
-        E_TEXTCTRL_ColorWash_Count: (($eff.cycles // 1.0) | tostring),
-        E_SLIDER_ColorWash_VFade: (($eff.vFade // 0) | tostring),
-        E_SLIDER_ColorWash_HFade: (($eff.hFade // 0) | tostring)
+        E_TEXTCTRL_ColorWash_Cycles: (($eff.cycles // 1.0) | tostring),
+        E_SLIDER_ColorWash_Cycles: ((($eff.cycles // 1.0) * 10) | round | tostring),
+        E_CHECKBOX_ColorWash_VFade: (if ($eff.vFade // false) then "1" else "0" end),
+        E_CHECKBOX_ColorWash_HFade: (if ($eff.hFade // false) then "1" else "0" end),
+        E_CHECKBOX_ColorWash_ReverseFades: (if ($eff.reverseFades // false) then "1" else "0" end),
+        E_CHECKBOX_ColorWash_Shimmer: (if ($eff.shimmer // false) then "1" else "0" end),
+        E_CHECKBOX_ColorWash_CircularPalette: (if ($eff.circularPalette // false) then "1" else "0" end)
       }
-      + (if ($eff.reverseFades // false) then {E_CHECKBOX_ColorWash_Reverse_Fades: "1"} else {} end)
-      + (if ($eff.shimmer // false) then {E_CHECKBOX_ColorWash_Shimmer: "1"} else {} end)
-      + (if ($eff.circularPalette // false) then {E_CHECKBOX_ColorWash_CircularPalette: "1"} else {} end)
       + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
       + ($shared.settingsOverrides // {})
     '

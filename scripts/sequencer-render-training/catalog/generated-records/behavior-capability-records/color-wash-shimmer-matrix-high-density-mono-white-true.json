@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "color-wash-shimmer-matrix-high-density-mono-white-true",
-  "createdAt": "2026-04-16T18:35:27.477Z",
+  "createdAt": "2026-04-28T14:23:35.928Z",
   "effectName": "Color Wash",
   "geometryProfile": "matrix_high_density",
   "modelType": "matrix",
@@ -20,31 +20,31 @@
   },
   "behaviorSignals": {
     "primaryMotion": "moderate_motion",
-    "primaryTexture": "flat_fill",
+    "primaryTexture": "decoded_fseq",
     "motionPacing": "moderate_motion",
-    "textureDensity": "flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,shimmer_true,shimmer_wash,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill",
-    "energyLevel": "moderate",
-    "coverageLevel": "broad",
+    "textureDensity": "decoded_fseq,linear_palette,matrix_fill,minimal_color_travel,partial_coverage,registry_generated,shimmer_wash,sparse_window_coverage,stable_brightness,static_window,two_axis_fade,wash_fill",
+    "energyLevel": "elevated",
+    "coverageLevel": "focused",
     "hierarchySuitability": "unknown",
     "geometryCoupling": "observed",
-    "stability": "low"
+    "stability": "medium"
   },
   "renderOutcomeSignals": {
     "temporalRead": "moderate_motion",
-    "densityRead": "dense",
-    "nonBlankRatio": 0.75,
-    "temporalMotion": 0.047368,
-    "temporalColorDelta": 0.052632,
-    "temporalBrightnessDelta": 0.052632,
+    "densityRead": "moderate",
+    "nonBlankRatio": 0.433533,
+    "temporalMotion": 0.315919,
+    "temporalColorDelta": 0.316182,
+    "temporalBrightnessDelta": 0.316182,
     "clarityRead": "unknown",
     "contrastRead": "unknown"
   },
   "confidence": {
-    "level": "low",
+    "level": "medium",
     "evidenceClass": "aggregated_render",
-    "coverageStatus": "single_reference_per_geometry"
+    "coverageStatus": "multi_configuration_sampled"
   },
-  "evidenceCount": 1,
+  "evidenceCount": 20,
   "traceability": {
     "sourceArtifactIds": [
       "sequencer_unified_training_set_v1"

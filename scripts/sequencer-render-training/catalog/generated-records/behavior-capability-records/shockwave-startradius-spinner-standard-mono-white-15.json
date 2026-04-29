@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "shockwave-startradius-spinner-standard-mono-white-15",
+  "createdAt": "2026-04-28T14:23:35.929Z",
+  "effectName": "Shockwave",
+  "geometryProfile": "spinner_standard",
+  "modelType": "spinner",
+  "parameterRegion": {
+    "parameterName": "startRadius",
+    "regionKind": "single_value",
+    "valueSummary": "15",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "mono_white"
+  },
+  "paletteContext": {
+    "paletteMode": "mono_white"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "blended_shockwave",
+    "motionPacing": "",
+    "textureDensity": "blended_shockwave,centered_shockwave,compact_decelerating_shockwave,compact_shockwave,decelerating_shockwave,decoded_fseq,medium_width_shockwave,radial_pattern_fit,registry_generated,repeating_shockwave,scaled_shockwave,shockwave_pattern",
+    "energyLevel": "restrained",
+    "coverageLevel": "sparse",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "high"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "sparse",
+    "nonBlankRatio": 0.058458,
+    "temporalMotion": 0.002738,
+    "temporalColorDelta": 0.002738,
+    "temporalBrightnessDelta": 0.002738,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "high",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "multi_configuration_sampled"
+  },
+  "evidenceCount": 30,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "spinner_standard"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

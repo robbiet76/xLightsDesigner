@@ -61,7 +61,10 @@ test("native direct proposal writes intent and proposal artifacts from project c
     showFolder: path.dirname(sequencePath),
     snapshot: {
       audioPathInput: audioPath,
-      sequencePathInput: sequencePath
+      sequencePathInput: sequencePath,
+      inspiration: {
+        paletteSwatches: ["#ffd36a", "#1f7a4a", "#c8324a"]
+      }
     }
   });
   writeJson(path.join(appRoot, "library", "tracks", "song.json"), {
@@ -103,8 +106,34 @@ test("native direct proposal writes intent and proposal artifacts from project c
       }
     ]
   });
+  writeJson(path.join(projectDir, "artifacts", "sequence-reference-patterns", "sequence_reference_patterns_v1-test.json"), {
+    artifactType: "sequence_reference_patterns_v1",
+    artifactId: "sequence_reference_patterns_v1-test",
+    source: {
+      mode: "read_only_reference_patterns",
+      analyzedSequenceCount: 3
+    },
+    aggregate: {
+      sequenceCount: 3,
+      averageEffectsPerSequence: 1200,
+      averageActiveTargets: 32,
+      averageLayeredTargets: 9,
+      densityPerMinute: { median: 240 },
+      commonEffects: [
+        { name: "SingleStrand", count: 90 },
+        { name: "Color Wash", count: 40 }
+      ],
+      targetRoleMix: [
+        { name: "accent", count: 100 }
+      ],
+      bucketEffectPatterns: {
+        opening: [{ name: "Color Wash", count: 20 }]
+      }
+    }
+  });
 
   let capturedMetadataAssignments = [];
+  let capturedDisplayElements = [];
 
   const result = await runNativeDirectProposal(
     {
@@ -118,13 +147,25 @@ test("native direct proposal writes intent and proposal artifacts from project c
     },
     {
       getRevision: async () => ({ data: { revision: "rev-test-1" } }),
-      getModels: async () => ({ data: { models: [{ id: "MegaTree", name: "MegaTree", type: "Model" }] } }),
+      getModels: async () => ({
+        data: {
+          models: [{
+            id: "MegaTree",
+            name: "MegaTree",
+            type: "Model",
+            transform: { position: { x: 42, y: 18, z: 3 } },
+            width: 12,
+            height: 24
+          }]
+        }
+      }),
       getDisplayElements: async () => ({ data: { elements: [{ id: "MegaTree", name: "MegaTree", type: "model" }] } }),
       getEffectDefinitions: async () => ({ data: { effects: [] } }),
       buildAnalysisHandoffFromArtifact,
       buildEffectDefinitionCatalog,
       executeDirectSequenceRequestOrchestration: (input) => {
         capturedMetadataAssignments = input.metadataAssignments;
+        capturedDisplayElements = input.displayElements;
         return executeDirectSequenceRequestOrchestration(input);
       },
       writeProjectArtifacts
@@ -134,6 +175,7 @@ test("native direct proposal writes intent and proposal artifacts from project c
   assert.equal(result.ok, true);
   assert.match(result.proposalArtifactId, /^proposal_bundle_v1-/);
   assert.match(result.intentArtifactId, /^intent_handoff_v1-/);
+  assert.match(result.sequencingDesignHandoffArtifactId, /^sequencing_design_handoff_v2-/);
   assert.equal(result.metadataAssignmentCount, 1);
   assert.deepEqual(capturedMetadataAssignments, [
     {
@@ -156,22 +198,39 @@ test("native direct proposal writes intent and proposal artifacts from project c
       source: "xlightsdesigner_project_display_metadata"
     }
   ]);
-  assert.equal(result.rows.length, 2);
+  assert.equal(capturedDisplayElements[0].positionX, 42);
+  assert.equal(capturedDisplayElements[0].positionY, 18);
+  assert.equal(capturedDisplayElements[0].positionZ, 3);
+  assert.equal(result.rows.length, 3);
 
   const proposalPath = path.join(projectDir, "artifacts", "proposals", `${result.proposalArtifactId}.json`);
   const intentPath = path.join(projectDir, "artifacts", "intent-handoffs", `${result.intentArtifactId}.json`);
+  const designHandoffPath = path.join(projectDir, "artifacts", "sequencing-design-handoffs", `${result.sequencingDesignHandoffArtifactId}.json`);
   assert.equal(fs.existsSync(proposalPath), true);
   assert.equal(fs.existsSync(intentPath), true);
+  assert.equal(fs.existsSync(designHandoffPath), true);
 
   const proposal = JSON.parse(fs.readFileSync(proposalPath, "utf8"));
   const intent = JSON.parse(fs.readFileSync(intentPath, "utf8"));
+  const designHandoff = JSON.parse(fs.readFileSync(designHandoffPath, "utf8"));
   assert.equal(proposal.artifactType, "proposal_bundle_v1");
   assert.equal(intent.artifactType, "intent_handoff_v1");
+  assert.equal(designHandoff.artifactType, "sequencing_design_handoff_v2");
+  assert.equal(intent.sequencingDesignHandoff.artifactId, designHandoff.artifactId);
+  assert.equal(proposal.sequencingDesignHandoffRef, designHandoff.artifactId);
+  assert.match(designHandoff.designSummary, /Put an On effect/i);
+  assert.equal(designHandoff.propRoleAssignments[0].targetId, "MegaTree");
+  assert.equal(designHandoff.propRoleAssignments[0].role, "lead");
   assert.deepEqual(proposal.scope.sections, ["Chorus 1"]);
   assert.equal(proposal.executionPlan.timingTrackName, "User Structure");
   assert.equal(proposal.executionPlan.shouldUseFullSongStructureTrack, false);
   assert.equal(proposal.executionPlan.sectionPlans[0].sectionTimingTrackName, "User Structure");
   assert.deepEqual(intent.scope.targetIds, ["MegaTree"]);
+  assert.equal(intent.sequencingDesignHandoff.scope.targetIds[0], "MegaTree");
+  assert.equal(intent.sequencingDesignHandoff.referenceSequencePatterns.artifactId, "sequence_reference_patterns_v1-test");
+  assert.equal(intent.sequencingDesignHandoff.referenceSequencePatterns.densityPerMinute.median, 240);
+  assert.equal(intent.sequencingDesignHandoff.referenceSequencePatterns.commonEffects[0].name, "SingleStrand");
+  assert.deepEqual(intent.sequencingDesignHandoff.paletteRoles.map((row) => row.hex), ["#ffd36a", "#1f7a4a", "#c8324a"]);
   assert.equal(proposal.guidedQuestions.length, 0);
   assert.match(proposal.proposalLines.join("\n"), /On effect/i);
 });
@@ -202,6 +261,51 @@ test("native project display metadata loader includes preference-only target int
       source: "xlightsdesigner_project_display_metadata"
     }
   ]);
+});
+
+test("native project display metadata loader promotes display discovery insights to group members", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-discovery-metadata-"));
+  const projectDir = path.join(root, "project");
+  const projectFile = path.join(projectDir, "Discovery Metadata Loader Test.xdproj");
+  writeJson(projectFile, {});
+  writeJson(path.join(projectDir, "layout", "layout-metadata.json"), {
+    version: 1,
+    preferencesByTargetId: {}
+  });
+  writeJson(path.join(projectDir, "layout", "display-discovery.json"), {
+    insights: [
+      {
+        subject: "Presents",
+        category: "focal_hierarchy",
+        value: "Secondary focal family for chorus reveals.",
+        targetNames: ["Presents"]
+      }
+    ]
+  });
+
+  const assignments = loadProjectDisplayMetadataAssignments(projectFile, {
+    layoutRows: [
+      { name: "Presents", displayAs: "ModelGroup" },
+      { name: "Present-01", displayAs: "Custom" },
+      { name: "Present-02", displayAs: "Custom" }
+    ],
+    groupMemberships: {
+      data: {
+        groups: [
+          {
+            groupName: "Presents",
+            directMembers: [{ name: "Present-01" }, { name: "Present-02" }],
+            activeMembers: [{ name: "Present-01" }, { name: "Present-02" }],
+            flattenedMembers: [{ name: "Present-01" }, { name: "Present-02" }]
+          }
+        ]
+      }
+    }
+  });
+
+  assert.deepEqual(assignments.map((row) => row.targetId), ["Present-01", "Present-02", "Presents"]);
+  assert.equal(assignments.find((row) => row.targetId === "Present-01").rolePreference, "lead");
+  assert.deepEqual(assignments.find((row) => row.targetId === "Present-01").tags, ["Presents", "focal_hierarchy", "lead"]);
 });
 
 test("native direct proposal resolves app metadata tags into proposal target scope", async () => {

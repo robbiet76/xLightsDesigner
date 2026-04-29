@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "marquee-speed-single-line-horizontal-rgb-primary-9",
-  "createdAt": "2026-04-16T18:35:27.478Z",
+  "createdAt": "2026-04-28T14:23:35.928Z",
   "effectName": "Marquee",
   "geometryProfile": "single_line_horizontal",
   "modelType": "single_line",

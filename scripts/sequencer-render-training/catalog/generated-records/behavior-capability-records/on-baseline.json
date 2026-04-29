@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "on-baseline",
-  "createdAt": "2026-04-16T18:35:27.478Z",
+  "createdAt": "2026-04-28T13:43:04.502Z",
   "effectName": "On",
   "geometryProfile": "cross_geometry",
   "modelType": "mixed",

@@ -93,6 +93,12 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   assert.equal(out.comparison.renderHasProblematicGaps, true);
   assert.equal(out.comparison.renderIsLeftRightImbalanced, true);
   assert.deepEqual(out.comparison.adjacentWindowComparisons, []);
+  assert.equal(typeof out.quality.overallScore, "number");
+  assert.equal(typeof out.quality.legacyIssuePenaltyScore, "number");
+  assert.equal(typeof out.quality.dimensions.coverageScore, "number");
+  assert.equal(typeof out.quality.dimensions.designIntentScore, "number");
+  assert.equal(out.quality.dimensions.effectConfigurationScore, null);
+  assert.equal(out.quality.dimensionBands.effectConfigurationScore, "unmeasured");
 });
 
 test("buildRenderCritiqueContext uses music section energy to infer broad coverage expectation", () => {
@@ -134,6 +140,321 @@ test("buildRenderCritiqueContext uses music section energy to infer broad covera
   assert.equal(out.comparison.musicalLiftExpected, true);
   assert.equal(out.comparison.broadCoverageExpected, true);
   assert.equal(out.comparison.renderCoverageTooSparse, true);
+});
+
+test("buildRenderCritiqueContext scores effect configuration and palette from readback payload evidence", () => {
+  const out = buildRenderCritiqueContext({
+    renderObservation: {
+      macro: {
+        activeModelNames: ["MegaTree", "Roofline"],
+        activeFamilyTotals: { Tree: 1, Line: 1 },
+        leadModel: "MegaTree",
+        leadModelShare: 0.55,
+        meanSceneSpreadRatio: 0.02,
+        activeCoverageRatio: 0.2,
+        coverageGapCount: 1,
+        energyVariation: 0.4,
+        activeModelVariation: 2,
+        distinctLeadModelCount: 2
+      }
+    },
+    designSceneContext: {
+      focalCandidates: ["MegaTree"]
+    },
+    sequencingDesignHandoff: {
+      focusPlan: {
+        primaryTargets: ["MegaTree"]
+      }
+    },
+    practicalValidation: {
+      summary: {
+        effectPayloadChecks: {
+          settingsChecked: 4,
+          settingsMatched: 3,
+          settingsMatchRatio: 0.75,
+          paletteChecked: 4,
+          paletteMatched: 2,
+          paletteMatchRatio: 0.5
+        }
+      }
+    }
+  });
+
+  assert.equal(out.expected.effectPayloadChecks.settingsMatchRatio, 0.75);
+  assert.equal(out.quality.dimensions.effectConfigurationScore, 0.75);
+  assert.equal(out.quality.dimensions.paletteScore, 0.5);
+  assert.equal(out.quality.dimensionBands.effectConfigurationScore, "acceptable");
+  assert.equal(out.quality.dimensionBands.paletteScore, "weak");
+  assert.equal(out.quality.basis.settingsChecked, 4);
+  assert.equal(out.quality.basis.paletteMatched, 2);
+});
+
+test("buildRenderCritiqueContext compares render evidence to composition plan", () => {
+  const out = buildRenderCritiqueContext({
+    renderObservation: {
+      source: {
+        windowCount: 2
+      },
+      windows: [
+        {
+          label: "Intro",
+          leadModel: "Roofline",
+          activeModelNames: ["Roofline"],
+          meanSceneSpreadRatio: 0.01,
+          temporalRead: "flat",
+          startMs: 0,
+          endMs: 1000
+        },
+        {
+          label: "Chorus",
+          leadModel: "Roofline",
+          activeModelNames: ["Roofline"],
+          meanSceneSpreadRatio: 0.01,
+          temporalRead: "flat",
+          startMs: 1000,
+          endMs: 2000
+        }
+      ],
+      macro: {
+        activeModelNames: ["Roofline"],
+        activeFamilyTotals: { Line: 1 },
+        leadModel: "Roofline",
+        leadModelShare: 1,
+        meanSceneSpreadRatio: 0.01,
+        activeCoverageRatio: 0.05,
+        coverageGapCount: 4,
+        leftRightBalanceRatio: 0.1,
+        topBottomBalanceRatio: 0.1,
+        energyVariation: 0.01,
+        activeModelVariation: 0,
+        distinctLeadModelCount: 1
+      }
+    },
+    sequencingDesignHandoff: {
+      artifactId: "handoff-2",
+      focusPlan: {
+        primaryTargets: ["MegaTree"]
+      }
+    },
+    compositionPlan: {
+      artifactType: "composition_plan_v1",
+      sections: [
+        {
+          section: "Intro",
+          progressionIntent: "establish_theme",
+          focalRegion: ["MegaTree"],
+          supportRegion: ["Roofline"],
+          accentRegion: ["Snowflakes"],
+          expectedBalance: { spatialBreadth: "broad" }
+        },
+        {
+          section: "Chorus",
+          progressionIntent: "lift_or_contrast",
+          focalRegion: ["MegaTree"],
+          supportRegion: ["Roofline"],
+          accentRegion: ["Snowflakes"],
+          expectedBalance: { spatialBreadth: "broad" }
+        },
+        {
+          section: "Ending",
+          progressionIntent: "resolve",
+          focalRegion: ["MegaTree"],
+          supportRegion: ["Roofline"],
+          accentRegion: ["Snowflakes"],
+          expectedBalance: { spatialBreadth: "moderate" }
+        }
+      ],
+      targetRoles: {
+        activeTargets: ["MegaTree", "Roofline", "Snowflakes"],
+        layeredTargets: ["MegaTree"]
+      }
+    }
+  });
+
+  assert.equal(out.expected.composition.artifactType, "composition_plan_v1");
+  assert.equal(out.comparison.composition.available, true);
+  assert.deepEqual(out.comparison.composition.missingCompositionFocusTargets, ["MegaTree"]);
+  assert.deepEqual(out.comparison.composition.observedCompositionSupportTargets, ["Roofline"]);
+  assert.deepEqual(out.comparison.composition.missingCompositionLayerStackTargets, ["MegaTree"]);
+  assert.deepEqual(out.comparison.composition.underusedCompositionRegions, ["focal", "accent", "layer_stack"]);
+  assert.deepEqual(out.comparison.composition.sectionTransitionsTooSimilar, [{ fromLabel: "Intro", toLabel: "Chorus", overlapRatio: 1 }]);
+  assert.equal(out.comparison.composition.nextPassChangeBias.includes("add_or_strengthen_missing_focal_targets"), true);
+  assert.equal(out.comparison.composition.nextPassChangeBias.includes("differentiate_adjacent_section_transitions"), true);
+  assert.equal(out.comparison.composition.renderSpatialBalanceMismatch, true);
+  assert.equal(out.comparison.composition.renderProgressionTooFlat, true);
+  assert.equal(out.quality.issues.includes("composition_focus_not_observed"), true);
+  assert.equal(out.quality.issues.includes("composition_regions_underused"), true);
+  assert.equal(out.quality.issues.includes("composition_spatial_breadth_not_observed"), true);
+  assert.equal(out.quality.issues.includes("composition_progression_too_flat"), true);
+  assert.ok(out.quality.dimensions.coverageScore < 0.2);
+  assert.ok(out.quality.dimensions.compositionScore < 0.6);
+  assert.ok(out.quality.dimensions.motionProgressionScore < 0.5);
+});
+
+test("buildRenderCritiqueContext matches planned tags to observed concrete models", () => {
+  const out = buildRenderCritiqueContext({
+    renderObservation: {
+      macro: {
+        activeModelNames: ["Snowflake_Large-04", "CandyCane-01"],
+        activeFamilyTotals: { Custom: 2 },
+        leadModel: "Snowflake_Large-04",
+        leadModelShare: 0.5,
+        meanSceneSpreadRatio: 0.03,
+        activeCoverageRatio: 0.2,
+        temporalRead: "evolving",
+        energyVariation: 0.4,
+        activeModelVariation: 2
+      }
+    },
+    metadataAssignments: [
+      { targetId: "Snowflake_Large-04", tags: ["Snowflakes", "Snowflakes_Large"] },
+      { targetId: "CandyCane-01", tags: ["CandyCanes"] }
+    ],
+    compositionPlan: {
+      artifactType: "composition_plan_v1",
+      sections: [
+        {
+          section: "Intro",
+          focalRegion: ["Snowflakes"],
+          accentRegion: ["CandyCanes"],
+          expectedBalance: { spatialBreadth: "moderate" }
+        }
+      ],
+      targetRoles: {
+        activeTargets: ["Snowflakes", "CandyCanes"],
+        layeredTargets: []
+      }
+    }
+  });
+
+  assert.deepEqual(out.comparison.composition.observedCompositionFocusTargets, ["Snowflakes"]);
+  assert.deepEqual(out.comparison.composition.observedCompositionAccentTargets, ["CandyCanes"]);
+  assert.deepEqual(out.comparison.composition.missingCompositionFocusTargets, []);
+  assert.deepEqual(out.comparison.composition.missingCompositionAccentTargets, []);
+  assert.equal(out.quality.issues.includes("composition_focus_not_observed"), false);
+});
+
+test("buildRenderCritiqueContext matches design focus groups to observed member models", () => {
+  const out = buildRenderCritiqueContext({
+    renderObservation: {
+      macro: {
+        activeModelNames: ["Flood_House-01", "Snowflake_Large-01", "CandyCane-01"],
+        activeFamilyTotals: { Flood: 1, Snowflake: 1, Cane: 1 },
+        leadModel: "Flood_House-01",
+        leadModelShare: 0.46,
+        meanSceneSpreadRatio: 0.035,
+        activeCoverageRatio: 0.24,
+        temporalRead: "evolving",
+        energyVariation: 0.35,
+        activeModelVariation: 3
+      }
+    },
+    designSceneContext: {
+      focalCandidates: ["Floods", "Snowflakes"]
+    },
+    sequencingDesignHandoff: {
+      focusPlan: {
+        primaryTargets: ["Floods", "Snowflakes"],
+        secondaryTargets: ["CandyCanes"]
+      }
+    },
+    metadataAssignments: [
+      { targetId: "Flood_House-01", tags: ["Floods", "Floods House"] },
+      { targetId: "Snowflake_Large-01", tags: ["Snowflakes", "Snowflakes_Large"] },
+      { targetId: "CandyCane-01", tags: ["CandyCanes"] }
+    ]
+  });
+
+  assert.deepEqual(out.comparison.observedFocusTargets, ["Floods", "Snowflakes"]);
+  assert.deepEqual(out.comparison.missingPrimaryFocusTargets, []);
+  assert.equal(out.comparison.leadMatchesPrimaryFocus, true);
+  assert.equal(out.comparison.leadIsKnownFocalCandidate, true);
+  assert.equal(out.quality.issues.includes("design_focus_not_observed"), false);
+  assert.equal(out.quality.issues.includes("lead_model_not_expected_focal_candidate"), false);
+});
+
+test("buildRenderCritiqueContext credits common xLights group aliases from observed members", () => {
+  const out = buildRenderCritiqueContext({
+    renderObservation: {
+      macro: {
+        activeModelNames: ["GarlandGreens", "UpperGutter-01", "Icicles-01", "Flood_House-01", "Spinner-01", "Snowflake_Large-04"],
+        activeFamilyTotals: { Line: 4, Custom: 1 },
+        leadModel: "UpperGutter-01",
+        leadModelShare: 0.42,
+        meanSceneSpreadRatio: 0.04,
+        activeCoverageRatio: 0.25,
+        temporalRead: "evolving",
+        energyVariation: 0.4,
+        activeModelVariation: 5
+      }
+    },
+    compositionPlan: {
+      artifactType: "composition_plan_v1",
+      sections: [
+        {
+          section: "Chorus",
+          focalRegion: ["Gutters", "Garland", "Snowflakes_Even"],
+          backgroundRegion: ["AllModels_NoFloods"],
+          layerStackTargets: ["FrontHouse", "FrontProps", "Eaves", "Outlines"],
+          expectedBalance: { spatialBreadth: "broad" }
+        }
+      ],
+      targetRoles: {
+        activeTargets: ["AllModels_NoFloods", "Gutters", "Garland"],
+        layeredTargets: ["FrontHouse", "FrontProps", "Eaves", "Outlines"]
+      }
+    }
+  });
+
+  assert.deepEqual(out.comparison.composition.missingCompositionFocusTargets, []);
+  assert.deepEqual(out.comparison.composition.missingCompositionLayerStackTargets, []);
+  assert.equal(out.quality.issues.includes("composition_focus_not_observed"), false);
+  assert.equal(out.quality.issues.includes("composition_regions_underused"), false);
+});
+
+test("buildRenderCritiqueContext identifies weak layer stacks and dominant unplanned targets", () => {
+  const out = buildRenderCritiqueContext({
+    renderObservation: {
+      macro: {
+        activeModelNames: ["MegaTree", "GarageMatrix"],
+        activeFamilyTotals: { Tree: 1, Matrix: 1 },
+        leadModel: "GarageMatrix",
+        leadModelShare: 0.62,
+        meanSceneSpreadRatio: 0.02,
+        activeCoverageRatio: 0.14,
+        temporalRead: "flat",
+        energyVariation: 0.02,
+        activeModelVariation: 1
+      }
+    },
+    compositionPlan: {
+      artifactType: "composition_plan_v1",
+      sections: [
+        {
+          section: "Verse",
+          progressionIntent: "develop_motion",
+          focalRegion: ["MegaTree"],
+          supportRegion: ["Roofline"],
+          accentRegion: ["MiniTrees"],
+          backgroundRegion: ["Floods"],
+          layerStackTargets: ["MegaTree"],
+          expectedBalance: { spatialBreadth: "moderate" }
+        }
+      ],
+      targetRoles: {
+        activeTargets: ["MegaTree", "Roofline", "MiniTrees", "Floods"],
+        layeredTargets: ["MegaTree"]
+      }
+    }
+  });
+
+  assert.deepEqual(out.comparison.composition.observedCompositionLayerStackTargets, ["MegaTree"]);
+  assert.deepEqual(out.comparison.composition.weakCompositionLayerStackTargets, ["MegaTree"]);
+  assert.deepEqual(out.comparison.composition.dominantUnplannedTargets, ["GarageMatrix"]);
+  assert.equal(out.comparison.composition.nextPassChangeBias.includes("increase_layer_stack_observable_difference"), true);
+  assert.equal(out.comparison.composition.nextPassChangeBias.includes("reduce_unplanned_dominant_targets"), true);
+  assert.equal(out.quality.issues.includes("composition_layer_stack_not_observable"), true);
+  assert.equal(out.quality.issues.includes("composition_unplanned_target_dominates"), true);
 });
 
 test("buildRenderCritiqueContext falls back to scene focal candidates when handoff focus is missing", () => {

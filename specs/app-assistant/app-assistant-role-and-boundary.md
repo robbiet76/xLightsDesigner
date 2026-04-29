@@ -128,6 +128,7 @@ The middle normalization layer owns contract shaping.
 - `app_assistant` should maintain broad conversational continuity and user-facing preference memory.
 - `designer_dialog` should maintain and consume director-style design preferences as soft guidance.
 - Preference memory must inform conversation and proposal quality without forcing hard stylistic cloning.
+- Display metadata is living project memory, not only a formal Display Discovery artifact. Any specialist may surface durable display understanding from conversation; direct user facts may be captured as current metadata, while interpretive or high-impact updates should be routed through user confirmation.
 
 ## Non-Goals For v1
 - hidden autonomous apply without explicit user approval

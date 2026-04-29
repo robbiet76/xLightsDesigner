@@ -1,11 +1,11 @@
 {
   "artifactType": "effect_settings_coverage_report_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T01:05:22.802Z",
+  "generatedAt": "2026-04-28T14:23:35.853Z",
   "summary": {
     "effectCount": 23,
-    "screenedParameterSubsetCount": 10,
-    "registryDefinedNotScreenedCount": 8,
+    "screenedParameterSubsetCount": 18,
+    "registryDefinedNotScreenedCount": 0,
     "intentTranslatableOnlyCount": 5,
     "familyOnlyCount": 0,
     "exhaustiveSettingCoverage": false
@@ -41,14 +41,16 @@
         "3D",
         "cycles",
         "gradient",
-        "highlight"
+        "highlight",
+        "barCount",
+        "direction"
       ],
       "exhaustiveSettingCoverage": false
     },
     {
       "effectName": "Butterfly",
       "family": "motion_texture",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -66,13 +68,17 @@
         "style"
       ],
       "retainedParameterNames": [],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "colors",
+        "speed",
+        "style"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
       "effectName": "Circles",
       "family": "particle_motion",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -89,7 +95,11 @@
         "speed"
       ],
       "retainedParameterNames": [],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "count",
+        "size",
+        "speed"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -119,8 +129,10 @@
       "screenedParameterNames": [
         "circularPalette",
         "cycles",
+        "hFade",
         "reverseFades",
-        "shimmer"
+        "shimmer",
+        "vFade"
       ],
       "exhaustiveSettingCoverage": false
     },
@@ -162,7 +174,7 @@
     {
       "effectName": "Fire",
       "family": "organic_texture",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -177,13 +189,17 @@
         "location"
       ],
       "retainedParameterNames": [],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "growthCycles",
+        "height",
+        "location"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
       "effectName": "Fireworks",
       "family": "particle_motion",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -201,13 +217,17 @@
         "xLocation"
       ],
       "retainedParameterNames": [],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "count",
+        "explosions",
+        "velocity"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
       "effectName": "Lightning",
       "family": "radial_motion",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -225,7 +245,11 @@
         "width"
       ],
       "retainedParameterNames": [],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "forked",
+        "numberBolts",
+        "numberSegments"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -249,7 +273,9 @@
       "screenedParameterNames": [
         "speed",
         "stagger",
-        "thickness"
+        "thickness",
+        "bandSize",
+        "reverse"
       ],
       "exhaustiveSettingCoverage": false
     },
@@ -311,7 +337,11 @@
         "shimmer",
         "startLevel"
       ],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "endLevel",
+        "shimmer",
+        "startLevel"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -347,8 +377,13 @@
         "twist"
       ],
       "screenedParameterNames": [
+        "arms",
         "armSize",
-        "speed"
+        "rotation",
+        "speed",
+        "style",
+        "thickness",
+        "twist"
       ],
       "exhaustiveSettingCoverage": false
     },
@@ -374,7 +409,10 @@
         "dutyFactor",
         "useAllColors"
       ],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "cycles",
+        "dutyFactor"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -442,10 +480,10 @@
         "numberChases"
       ],
       "screenedParameterNames": [
+        "advances",
         "bandSize",
         "fadeType",
         "mode",
-        "advances",
         "intensity",
         "skipSize"
       ],
@@ -454,7 +492,7 @@
     {
       "effectName": "Snowflakes",
       "family": "particle_motion",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -470,7 +508,11 @@
         "type"
       ],
       "retainedParameterNames": [],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "count",
+        "speed",
+        "type"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -506,15 +548,19 @@
       "screenedParameterNames": [
         "3D",
         "blend",
+        "count",
         "grow",
-        "shrink"
+        "movement",
+        "rotation",
+        "shrink",
+        "thickness"
       ],
       "exhaustiveSettingCoverage": false
     },
     {
       "effectName": "Strobe",
       "family": "rhythmic",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -529,7 +575,11 @@
         "type"
       ],
       "retainedParameterNames": [],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "duration",
+        "numberStrobes",
+        "type"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -575,7 +625,7 @@
     {
       "effectName": "Wave",
       "family": "motion_texture",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [
         "intensity",
         "speed",
@@ -595,7 +645,11 @@
         "waveSpeed"
       ],
       "retainedParameterNames": [],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "numberWaves",
+        "type",
+        "waveSpeed"
+      ],
       "exhaustiveSettingCoverage": false
     }
   ]

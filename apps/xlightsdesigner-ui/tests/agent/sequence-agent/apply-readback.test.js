@@ -107,6 +107,228 @@ test("apply readback verifies timing, display order, and distributed effects", a
   assert.equal(verification.checks.every((row) => row.ok), true);
 });
 
+test("apply readback verifies effect settings and palette payload subsets", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 0,
+        effectName: "Color Wash",
+        startMs: 1000,
+        endMs: 2000,
+        settings: {
+          E_TEXTCTRL_ColorWash_Cycles: "4",
+          E_SLIDER_ColorWash_Cycles: 40
+        },
+        palette: {
+          C_BUTTON_Palette1: "#0b3d91",
+          C_CHECKBOX_Palette1: "1"
+        }
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async () => ({
+      data: {
+        effects: [{
+          modelName: "MegaTree",
+          layerIndex: 0,
+          startMs: 1000,
+          endMs: 2000,
+          effectName: "Color Wash",
+          settings: {
+            E_TEXTCTRL_ColorWash_Cycles: 4,
+            E_SLIDER_ColorWash_Cycles: "40",
+            E_CHECKBOX_ColorWash_CircularPalette: "1"
+          },
+          palette: {
+            C_BUTTON_Palette1: "#0b3d91",
+            C_BUTTON_Palette2: "#2a9d8f",
+            C_CHECKBOX_Palette1: 1
+          }
+        }]
+      }
+    })
+  });
+
+  const effectCheck = verification.checks.find((row) => row.kind === "effect");
+  assert.equal(effectCheck.ok, true);
+  assert.equal(effectCheck.settingsMatched, true);
+  assert.equal(effectCheck.paletteMatched, true);
+});
+
+test("apply readback parses xLights serialized settings and palette strings", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 0,
+        effectName: "Color Wash",
+        startMs: 1000,
+        endMs: 2000,
+        settings: {
+          E_TEXTCTRL_ColorWash_Cycles: "4",
+          E_SLIDER_ColorWash_Cycles: 40
+        },
+        palette: {
+          C_BUTTON_Palette1: "#0b3d91",
+          C_BUTTON_Palette2: "#2a9d8f",
+          C_SLIDER_Contrast: 0
+        }
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async () => ({
+      data: {
+        effects: [{
+          modelName: "MegaTree",
+          layerIndex: 0,
+          startMs: 1000,
+          endMs: 2000,
+          effectName: "Color Wash",
+          settings: "E_TEXTCTRL_ColorWash_Cycles=4,E_SLIDER_ColorWash_Cycles=40,E_CHECKBOX_ColorWash_CircularPalette=1",
+          palette: "C_BUTTON_Palette1=#0B3D91,C_BUTTON_Palette2=#2A9D8F,C_BUTTON_Palette3=#FFFFFF,C_SLIDER_Contrast=0"
+        }]
+      }
+    })
+  });
+
+  const effectCheck = verification.checks.find((row) => row.kind === "effect");
+  assert.equal(effectCheck.ok, true);
+  assert.equal(effectCheck.settingsMatched, true);
+  assert.equal(effectCheck.paletteMatched, true);
+});
+
+test("apply readback chooses matching payload when duplicate effects exist", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 0,
+        effectName: "Color Wash",
+        startMs: 1000,
+        endMs: 2000,
+        settings: { E_SLIDER_ColorWash_Cycles: 40 },
+        palette: {
+          C_BUTTON_Palette1: "#0b3d91",
+          C_SLIDER_Contrast: 0
+        }
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async () => ({
+      data: {
+        effects: [
+          {
+            modelName: "MegaTree",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 2000,
+            effectName: "Color Wash",
+            settings: "{\"E_SLIDER_ColorWash_Cycles\":20}={\"E_SLIDER_ColorWash_Cycles\":20}",
+            palette: "C_BUTTON_Palette1=#FFFFFF"
+          },
+          {
+            modelName: "MegaTree",
+            layerIndex: 0,
+            startMs: 1000,
+            endMs: 2000,
+            effectName: "Color Wash",
+            settings: "E_SLIDER_ColorWash_Cycles=40",
+            palette: "C_BUTTON_Palette1=#0B3D91"
+          }
+        ]
+      }
+    })
+  });
+
+  const effectCheck = verification.checks.find((row) => row.kind === "effect");
+  assert.equal(effectCheck.ok, true);
+  assert.equal(effectCheck.settingsMatched, true);
+  assert.equal(effectCheck.paletteMatched, true);
+});
+
+test("apply readback accepts xLights buffer style default normalization", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "Flood_Tree-01",
+        layerIndex: 0,
+        effectName: "SingleStrand",
+        startMs: 1000,
+        endMs: 2000,
+        settings: {
+          E_SLIDER_Skips_Advance: 16,
+          B_CHOICE_BufferStyle: "Per Model Default"
+        }
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async () => ({
+      data: {
+        effects: [{
+          modelName: "Flood_Tree-01",
+          layerIndex: 0,
+          startMs: 1000,
+          endMs: 2000,
+          effectName: "SingleStrand",
+          settings: "B_CHOICE_BufferStyle=Default,E_SLIDER_Skips_Advance=16",
+          palette: ""
+        }]
+      }
+    })
+  });
+
+  const effectCheck = verification.checks.find((row) => row.kind === "effect");
+  assert.equal(effectCheck.ok, true);
+  assert.equal(effectCheck.settingsMatched, true);
+});
+
+test("apply readback fails effect payload mismatches", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 0,
+        effectName: "Color Wash",
+        startMs: 1000,
+        endMs: 2000,
+        settings: { E_SLIDER_ColorWash_Cycles: 40 },
+        palette: { C_BUTTON_Palette1: "#0b3d91" }
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    listEffects: async () => ({
+      data: {
+        effects: [{
+          modelName: "MegaTree",
+          layerIndex: 0,
+          startMs: 1000,
+          endMs: 2000,
+          effectName: "Color Wash",
+          settings: { E_SLIDER_ColorWash_Cycles: 20 },
+          palette: { C_BUTTON_Palette1: "#ffffff" }
+        }]
+      }
+    })
+  });
+
+  const effectCheck = verification.checks.find((row) => row.kind === "effect");
+  assert.equal(effectCheck.ok, false);
+  assert.equal(effectCheck.effectPresent, true);
+  assert.equal(effectCheck.settingsMatched, false);
+  assert.equal(effectCheck.paletteMatched, false);
+});
+
 test("apply readback accepts display-order wrappers that return string ids", async () => {
   const verification = await verifyAppliedPlanReadback([
     {
@@ -129,6 +351,29 @@ test("apply readback accepts display-order wrappers that return string ids", asy
     verification.checks.map((row) => [row.kind, row.ok]),
     [["display-order", true]]
   );
+});
+
+test("apply readback accepts extra display rows when expected order remains intact", async () => {
+  const verification = await verifyAppliedPlanReadback([
+    {
+      cmd: "sequencer.setDisplayElementOrder",
+      params: {
+        orderedIds: ["Lyrics", "AllModels", "MegaTree"]
+      }
+    }
+  ], {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    getDisplayElementOrder: async () => ({
+      data: {
+        elements: ["New Timing", "Lyrics", "XD: Beat Grid", "AllModels", "MegaTree", "XD: Phrase Cues"]
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.equal(verification.checks[0].ok, true);
+  assert.equal(verification.checks[0].expectedCount, 3);
+  assert.equal(verification.checks[0].actualCount, 6);
 });
 
 test("apply readback verifies cloned effect payload against copied settings and palette", async () => {

@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "shimmer-baseline",
-  "createdAt": "2026-04-16T18:35:27.480Z",
+  "createdAt": "2026-04-28T13:43:04.503Z",
   "effectName": "Shimmer",
   "geometryProfile": "cross_geometry",
   "modelType": "mixed",

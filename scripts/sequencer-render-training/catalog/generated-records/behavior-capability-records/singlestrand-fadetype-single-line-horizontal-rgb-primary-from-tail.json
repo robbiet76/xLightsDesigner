@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "singlestrand-fadetype-single-line-horizontal-rgb-primary-from-tail",
-  "createdAt": "2026-04-16T18:35:27.482Z",
+  "createdAt": "2026-04-28T14:23:35.929Z",
   "effectName": "SingleStrand",
   "geometryProfile": "single_line_horizontal",
   "modelType": "single_line",

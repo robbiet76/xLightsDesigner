@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "shimmer-cycles-tree-flat-single-layer-rgb-primary-1",
+  "createdAt": "2026-04-28T14:23:35.929Z",
+  "effectName": "Shimmer",
+  "geometryProfile": "tree_flat_single_layer",
+  "modelType": "tree_flat",
+  "parameterRegion": {
+    "parameterName": "cycles",
+    "regionKind": "single_value",
+    "valueSummary": "1",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "paletteContext": {
+    "paletteMode": "rgb_primary"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "balanced_shimmer",
+    "motionPacing": "",
+    "textureDensity": "balanced_shimmer,decoded_fseq,dense_sampled_motion,registry_generated,sparkle_texture,tree_sparkle_fit,all_colors,heavy_shimmer,restrained_shimmer,sparse_sampled_motion",
+    "energyLevel": "restrained",
+    "coverageLevel": "focused",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "moderate",
+    "nonBlankRatio": 0.5075,
+    "temporalMotion": 0.006289,
+    "temporalColorDelta": 0.006289,
+    "temporalBrightnessDelta": 0.006289,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 5,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "tree_flat_single_layer"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

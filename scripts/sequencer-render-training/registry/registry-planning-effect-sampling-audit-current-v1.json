@@ -1,0 +1,64 @@
+{
+  "version": "1.0",
+  "description": "Audit-driven focused causal-anchor plan for current selector-ready effects after the 2026-04-28 effects-usage overnight run.",
+  "sourceAudit": "scripts/sequencer-render-training/catalog/effect-sampling-audit-v1.json",
+  "scope": "current_selector_ready_effects",
+  "plans": [
+    {
+      "planId": "pinwheel-spinner-audit-current",
+      "effect": "Pinwheel",
+      "geometryProfile": "spinner_standard",
+      "baseManifest": "scripts/sequencer-render-training/manifests/pinwheel-spinner-expanded-sweep-v1.json",
+      "parameters": ["speed", "armSize", "arms", "rotation", "style", "thickness", "twist"]
+    },
+    {
+      "planId": "shockwave-spinner-audit-current",
+      "effect": "Shockwave",
+      "geometryProfile": "spinner_standard",
+      "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "parameters": ["centerX", "centerY", "cycles", "endRadius", "startRadius", "accel", "blendEdges", "endWidth", "startWidth", "scale"]
+    },
+    {
+      "planId": "spirals-tree-flat-audit-current",
+      "effect": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/spirals-treeflat-expanded-sweep-v1.json",
+      "parameters": ["count", "movement", "rotation", "thickness", "3D", "blend", "grow", "shrink"]
+    },
+    {
+      "planId": "twinkle-spinner-audit-current",
+      "effect": "Twinkle",
+      "geometryProfile": "spinner_standard",
+      "baseManifest": "scripts/sequencer-render-training/manifests/twinkle-spinner-expanded-sweep-v1.json",
+      "parameters": ["count", "steps", "strobe", "style", "reRandomize"]
+    },
+    {
+      "planId": "colorwash-matrix-audit-current",
+      "effect": "Color Wash",
+      "geometryProfile": "matrix_high_density",
+      "baseManifest": "scripts/sequencer-render-training/manifests/colorwash-matrix-expanded-sweep-v2.json",
+      "parameters": ["hFade", "vFade", "cycles", "circularPalette", "reverseFades", "shimmer"]
+    },
+    {
+      "planId": "singlestrand-arch-audit-current",
+      "effect": "SingleStrand",
+      "geometryProfile": "arch_single",
+      "baseManifest": "scripts/sequencer-render-training/manifests/singlestrand-archsingle-expanded-sweep-v1.json",
+      "parameters": ["mode", "bandSize", "fadeType", "skipSize", "advances"]
+    },
+    {
+      "planId": "bars-archgroup-audit-current",
+      "effect": "Bars",
+      "geometryProfile": "arch_grouped",
+      "baseManifest": "scripts/sequencer-render-training/manifests/bars-archgroup-expanded-sweep-v1.json",
+      "parameters": ["barCount", "direction"]
+    },
+    {
+      "planId": "marquee-archgroup-audit-current",
+      "effect": "Marquee",
+      "geometryProfile": "arch_grouped",
+      "baseManifest": "scripts/sequencer-render-training/manifests/marquee-archgroup-expanded-sweep-v1.json",
+      "parameters": ["bandSize", "reverse"]
+    }
+  ]
+}

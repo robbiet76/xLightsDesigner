@@ -1,0 +1,51 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "butterfly-baseline",
+  "createdAt": "2026-04-28T12:57:48.207Z",
+  "effectName": "Butterfly",
+  "geometryProfile": "cross_geometry",
+  "modelType": "mixed",
+  "parameterRegion": {
+    "parameterName": "baseline",
+    "regionKind": "cluster",
+    "valueSummary": "current_baseline_capability",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {},
+  "paletteContext": {},
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "unknown",
+    "motionPacing": "",
+    "textureDensity": "",
+    "energyLevel": "unknown",
+    "coverageLevel": "unknown",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "mixed",
+    "stability": "low"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "unknown",
+    "nonBlankRatio": 0,
+    "temporalMotion": 0,
+    "temporalColorDelta": 0,
+    "temporalBrightnessDelta": 0,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "low",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "registry_defined_not_screened"
+  },
+  "evidenceCount": 0,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

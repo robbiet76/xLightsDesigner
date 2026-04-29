@@ -73,6 +73,7 @@ effect_settings_json="$(jq -c '.effectSettings // {}' <<<"${sample_json}")"
 palette_json="$(jq -c '.sharedSettings.palette // {}' <<<"${sample_json}")"
 palette_activation_mode="$(jq -r '.sharedSettings.paletteActivationMode // "explicit"' <<<"${sample_json}")"
 palette_active_slots_json="$(jq -c '.sharedSettings.paletteActiveSlots // []' <<<"${sample_json}")"
+default_palette_path="${TRAINING_DEFAULT_PALETTE_PATH:-/Users/robterry/xLights-2026.06/resources/palettes/Default.xpalette}"
 export_mode="$(jq -r '.export.mode // "model_with_render"' <<<"${sample_json}")"
 export_format="$(jq -r '.export.format // "gif"' <<<"${sample_json}")"
 start_ms="$(jq -r --argjson fixture "${fixture_json}" '(.timingWindow.startMs // $fixture.startMs)' <<<"${sample_json}")"
@@ -92,16 +93,19 @@ fi
 
 settings_json="$(settings_json_for_effect "${effect_name}" "${effect_settings_json}" "${shared_settings_json}")"
 settings_string="$(jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")' <<<"${settings_json}")"
-palette_string="$(jq -rn   --argjson palette "${palette_json}"   --arg activationMode "${palette_activation_mode}"   --argjson activeSlots "${palette_active_slots_json}" '
+palette_string="$(jq -Rn   --argjson palette "${palette_json}"   --arg activationMode "${palette_activation_mode}"   --argjson activeSlots "${palette_active_slots_json}" '
     def defaultPalette:
-      {
-        "C_BUTTON_Palette1": "#FFFFFF",
-        "C_BUTTON_Palette2": "#FF0000",
-        "C_BUTTON_Palette3": "#00FF00",
-        "C_BUTTON_Palette4": "#0000FF",
-        "C_BUTTON_Palette5": "#FFFF00",
-        "C_BUTTON_Palette6": "#000000"
-      };
+      (input
+       | split("\n")
+       | map(select((. | gsub("^\\s+|\\s+$"; "")) != "" and contains(",")))
+       | .[0]
+       | split(",")
+       | map(gsub("^\\s+|\\s+$"; ""))
+       | map(select(. != ""))
+       | .[0:8]
+       | to_entries
+       | map({key: ("C_BUTTON_Palette" + ((.key + 1) | tostring)), value: .value})
+       | from_entries);
     def normalizedPalette:
       if $activationMode == "xlights_default" then
         defaultPalette
@@ -119,7 +123,7 @@ palette_string="$(jq -rn   --argjson palette "${palette_json}"   --arg activatio
       + (reduce range(1; 7) as $i ({}; . + {("C_CHECKBOX_Palette" + ($i|tostring)): (if (activeSet | index(($i|tostring))) != null then "1" else "0" end)}))
     )
     | to_entries | map("\(.key)=\(.value)") | join(",")
-  ')"
+  ' < "${default_palette_path}")"
 
 artifact_path="${OUT_DIR}/${SAMPLE_ID}.${export_format}"
 staging_dir="${sequence_dir}"

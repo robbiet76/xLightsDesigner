@@ -79,7 +79,7 @@ private final class StubDisplayService: DisplayService, @unchecked Sendable {
     )
 
     model.loadDisplay()
-    try await Task.sleep(for: .milliseconds(80))
+    try await xldWaitUntil { model.confirmedMetadataCount == 1 }
 
     #expect(model.confirmedMetadataCount == 1)
     #expect(model.proposedMetadataCount == 0)
@@ -133,7 +133,9 @@ private final class StubDisplayService: DisplayService, @unchecked Sendable {
     )
 
     model.loadDisplay()
-    try await Task.sleep(for: .milliseconds(80))
+    try await xldWaitUntil {
+        model.screenModel.metadataRows.contains { $0.id == "target-preference::MegaTree" }
+    }
 
     let row = try #require(model.screenModel.metadataRows.first { $0.id == "target-preference::MegaTree" })
     #expect(row.category == "Target Intent")
@@ -179,7 +181,7 @@ private final class StubDisplayService: DisplayService, @unchecked Sendable {
         displayDiscoveryStore: LocalDisplayDiscoveryStateStore()
     )
     model.loadDisplay()
-    try await Task.sleep(for: .milliseconds(80))
+    try await xldWaitUntil { !model.screenModel.rows.isEmpty }
 
     model.startAddMetadata()
     model.metadataEditor.subject = "MegaTree"
@@ -191,7 +193,7 @@ private final class StubDisplayService: DisplayService, @unchecked Sendable {
     model.metadataEditor.effectAvoidancesText = "Bars"
     model.metadataEditor.targetNames = ["MegaTree"]
     model.saveMetadataEditor()
-    try await Task.sleep(for: .milliseconds(80))
+    try await xldWaitUntil { service.savedTargetPreference != nil }
 
     #expect(service.savedTargetPreference?.targetIDs == ["MegaTree"])
     #expect(service.savedTargetPreference?.rolePreference == "lead")

@@ -167,6 +167,15 @@ def generate_manifest(registry: dict, base_manifest: dict, parameter: str, out_f
             hints = list(sample.get("labelHints", []))
             hints.extend(["range_sample", parameter, f"{parameter}_{token}", "registry_generated"])
             sample["labelHints"] = sorted(set(hints))
+            sample["trainingContext"] = {
+                **sample.get("trainingContext", {}),
+                "screenedParameterName": parameter,
+                "screeningTarget": target,
+                "screeningPhase": param_registry.get("phase", "screen"),
+                "screeningPriority": param_registry.get(
+                    "practicalPriority", param_registry.get("importance", "medium")
+                ),
+            }
             out["samples"].append(sample)
 
     out_file.write_text(json.dumps(out, indent=2) + "\n")

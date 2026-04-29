@@ -1,0 +1,57 @@
+{
+  "artifactType": "behavior_capability_record_v1",
+  "artifactVersion": "1.0",
+  "recordId": "on-startlevel-matrix-high-density-mono-white-0",
+  "createdAt": "2026-04-28T14:23:35.928Z",
+  "effectName": "On",
+  "geometryProfile": "matrix_high_density",
+  "modelType": "matrix",
+  "parameterRegion": {
+    "parameterName": "startLevel",
+    "regionKind": "single_value",
+    "valueSummary": "0",
+    "interactionAssumptions": []
+  },
+  "sharedSettingsContext": {
+    "paletteMode": "mono_white"
+  },
+  "paletteContext": {
+    "paletteMode": "mono_white"
+  },
+  "behaviorSignals": {
+    "primaryMotion": "unknown",
+    "primaryTexture": "decoded_fseq",
+    "motionPacing": "",
+    "textureDensity": "decoded_fseq,high_motion_window,matrix_fill,partial_coverage,ramp_up,registry_generated,shimmer,shimmer_hold,stable_window,static_hold,steady,full_coverage",
+    "energyLevel": "elevated",
+    "coverageLevel": "broad",
+    "hierarchySuitability": "unknown",
+    "geometryCoupling": "observed",
+    "stability": "medium"
+  },
+  "renderOutcomeSignals": {
+    "temporalRead": "unknown",
+    "densityRead": "dense",
+    "nonBlankRatio": 0.775,
+    "temporalMotion": 0.178415,
+    "temporalColorDelta": 0.178415,
+    "temporalBrightnessDelta": 0.178415,
+    "clarityRead": "unknown",
+    "contrastRead": "unknown"
+  },
+  "confidence": {
+    "level": "medium",
+    "evidenceClass": "aggregated_render",
+    "coverageStatus": "single_reference_per_geometry"
+  },
+  "evidenceCount": 3,
+  "traceability": {
+    "sourceArtifactIds": [
+      "sequencer_unified_training_set_v1"
+    ],
+    "sourceGeometryProfiles": [
+      "matrix_high_density"
+    ],
+    "generatedBy": "build-behavior-capability-records.mjs"
+  }
+}

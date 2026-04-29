@@ -500,6 +500,16 @@ export async function getModelGroupMembers(endpoint, name) {
   return postCommand(endpoint, "layout.getModelGroupMembers", { name });
 }
 
+export async function getLayoutGroupMemberships(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    return normalizeOwnedCompleted(
+      "layout.getGroupMembers",
+      await readOwnedGet(endpoint, "/layout/group-members")
+    );
+  }
+  return postCommand(endpoint, "layout.getGroupMembers", {});
+}
+
 export async function getModelGeometry(endpoint, name) {
   return postCommand(endpoint, "layout.getModelGeometry", { name });
 }

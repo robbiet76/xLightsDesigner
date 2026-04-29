@@ -1,0 +1,56 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "wave-matrix-expanded-sweep-v1",
+  "description": "First focused Wave sweep on the canonical high-density matrix model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Waveform baseline using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "wave-matrix-sine-v1",
+      "effectName": "Wave",
+      "effectSettings": {
+        "type": "Sine",
+        "numberWaves": 2.5,
+        "waveSpeed": 10,
+        "direction": "Right to Left",
+        "fillColors": "Palette",
+        "waveHeight": 50
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "waveform",
+        "sine_wave"
+      ]
+    },
+    {
+      "sampleId": "wave-matrix-square-v1",
+      "effectName": "Wave",
+      "effectSettings": {
+        "type": "Square",
+        "numberWaves": 2.5,
+        "waveSpeed": 10,
+        "direction": "Left to Right",
+        "fillColors": "Palette",
+        "waveHeight": 50
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "waveform",
+        "square_wave"
+      ]
+    }
+  ]
+}

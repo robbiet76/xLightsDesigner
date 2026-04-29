@@ -1,0 +1,54 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "butterfly-matrix-expanded-sweep-v1",
+  "description": "First focused Butterfly sweep on the canonical high-density matrix model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Butterfly expansion-wave baseline using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "butterfly-matrix-geometric-v1",
+      "effectName": "Butterfly",
+      "effectSettings": {
+        "style": 3,
+        "chunks": 3,
+        "colors": "Palette",
+        "direction": "Normal",
+        "speed": 35
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "matrix_pattern",
+        "geometric_butterfly"
+      ]
+    },
+    {
+      "sampleId": "butterfly-matrix-plasma-v1",
+      "effectName": "Butterfly",
+      "effectSettings": {
+        "style": 8,
+        "chunks": 6,
+        "colors": "Rainbow",
+        "direction": "Normal",
+        "speed": 35
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "matrix_pattern",
+        "plasma_butterfly"
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import {
   getDisplayElements,
   getModels,
   getEffectDefinitions,
+  getLayoutGroupMemberships,
   getRenderedSequenceSamples,
   getRevision,
   getTimingTracks,
@@ -40,11 +41,15 @@ import { buildSequenceAgentPlan } from '../../../apps/xlightsdesigner-ui/agent/s
 import { verifyAppliedPlanReadback } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/apply-readback.js';
 import { buildPracticalSequenceValidation } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/practical-sequence-validation.js';
 import { buildSequenceAgentApplyResult } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent-runtime.js';
+import { REVIEW_APPLY_MAX_COMMANDS } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-plan-limits.js';
 import { buildDesignSceneContext } from '../../../apps/xlightsdesigner-ui/agent/designer-dialog/design-scene-context.js';
 import { buildRenderCritiqueContext } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/render-critique-context.js';
 import { buildArtifactRefs, buildHistoryEntry, buildHistorySnapshotSummary } from '../../../apps/xlightsdesigner-ui/agent/shared/history-entry.js';
 import { buildRenderObservationFromSamples, buildRenderSamplingPlan } from '../../../apps/xlightsdesigner-ui/runtime/render-observation-runtime.js';
 import { buildCurrentSequenceContextFromReadback } from '../../../apps/xlightsdesigner-ui/runtime/current-sequence-context-runtime.js';
+import {
+  assertOwnedXlightsNotBlocked
+} from '../../../apps/xlightsdesigner-ui/runtime/owned-xlights-health.js';
 import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/orchestrator.js';
 import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
 import { loadProjectDisplayMetadataAssignments } from './project-display-metadata.mjs';
@@ -258,6 +263,9 @@ export function buildReviewIntentHandoff(latestIntent = {}, proposalBundle = {})
   const proposalExecution = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === 'object' ? proposalBundle.executionPlan : {};
   const latestConstraints = latestIntent?.constraints && typeof latestIntent.constraints === 'object' ? latestIntent.constraints : {};
   const latestDirectorPreferences = latestIntent?.directorPreferences && typeof latestIntent.directorPreferences === 'object' ? latestIntent.directorPreferences : {};
+  const sequencingDesignHandoff = latestIntent?.sequencingDesignHandoff && typeof latestIntent.sequencingDesignHandoff === 'object'
+    ? latestIntent.sequencingDesignHandoff
+    : null;
   return {
     artifactType: 'intent_handoff_v1',
     artifactVersion: '1.0',
@@ -280,6 +288,7 @@ export function buildReviewIntentHandoff(latestIntent = {}, proposalBundle = {})
       colorDirection: str(latestDirectorPreferences?.colorDirection)
     },
     executionStrategy: proposalExecution,
+    sequencingDesignHandoff,
     approvalPolicy: {
       requiresExplicitApprove: true,
       elevatedRiskConfirmed: false
@@ -305,6 +314,89 @@ function normalizeDisplayElements(res = {}) {
     const name = str(row?.name || row?.id);
     return { ...row, id: str(row?.id || name), name };
   }).filter((row) => row.id || row.name);
+}
+
+function displayElementId(row = {}) {
+  return str(row?.id || row?.name || row?.modelName || row?.targetId);
+}
+
+function normalizeLayoutModelRows(models = []) {
+  return Array.isArray(models)
+    ? models
+        .map((row) => {
+          const name = str(row?.name || row?.id);
+          const position = row?.transform?.position && typeof row.transform.position === 'object'
+            ? row.transform.position
+            : {};
+          return {
+            ...row,
+            id: str(row?.id || name),
+            name,
+            type: str(row?.type || row?.displayAs || row?.kind),
+            displayAs: str(row?.displayAs || row?.type || row?.kind),
+            positionX: row?.positionX ?? row?.x ?? row?.centerX ?? position.x,
+            positionY: row?.positionY ?? row?.y ?? row?.centerY ?? position.y,
+            positionZ: row?.positionZ ?? row?.z ?? position.z
+          };
+        })
+        .filter((row) => row.id || row.name)
+    : [];
+}
+
+function mergeDisplayElementsWithLayoutModels(displayElements = [], models = []) {
+  const normalizedElements = Array.isArray(displayElements) ? displayElements : [];
+  const normalizedModels = normalizeLayoutModelRows(models);
+  const modelsById = new Map(normalizedModels.map((row) => [displayElementId(row).toLowerCase(), row]));
+  const out = [];
+  const seen = new Set();
+  for (const element of normalizedElements) {
+    const id = displayElementId(element);
+    if (!id) continue;
+    const model = modelsById.get(id.toLowerCase()) || {};
+    out.push({
+      ...model,
+      ...element,
+      id: str(element.id || model.id || id),
+      name: str(element.name || model.name || id),
+      displayAs: str(model.displayAs || element.displayAs || element.type),
+      positionX: element.positionX ?? element.x ?? element.centerX ?? model.positionX,
+      positionY: element.positionY ?? element.y ?? element.centerY ?? model.positionY,
+      positionZ: element.positionZ ?? element.z ?? model.positionZ
+    });
+    seen.add(id.toLowerCase());
+  }
+  for (const model of normalizedModels) {
+    const id = displayElementId(model);
+    if (!id || seen.has(id.toLowerCase())) continue;
+    out.push(model);
+    seen.add(id.toLowerCase());
+  }
+  return out;
+}
+
+function normalizeMemberName(member = {}) {
+  return str(member?.id || member?.name || member?.targetId || member);
+}
+
+function buildGroupsById(groupMemberships = {}) {
+  const groups = Array.isArray(groupMemberships?.data?.groups) ? groupMemberships.data.groups : [];
+  const out = {};
+  for (const group of groups) {
+    const id = str(group?.groupName || group?.name || group?.id);
+    if (!id) continue;
+    out[id] = {
+      id,
+      name: id,
+      type: 'group',
+      members: {
+        direct: (Array.isArray(group.directMembers) ? group.directMembers : []).map(normalizeMemberName).filter(Boolean),
+        active: (Array.isArray(group.activeMembers) ? group.activeMembers : []).map(normalizeMemberName).filter(Boolean),
+        flattened: (Array.isArray(group.flattenedMembers) ? group.flattenedMembers : []).map(normalizeMemberName).filter(Boolean),
+        flattenedAll: (Array.isArray(group.flattenedAllMembers) ? group.flattenedAllMembers : []).map(normalizeMemberName).filter(Boolean)
+      }
+    };
+  }
+  return out;
 }
 
 function trainedEffectDefinitions() {
@@ -399,15 +491,26 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     intentHandoff: inputs.reviewIntentHandoff
   });
   currentStage = 'load_sequence_context';
-  const [sequenceSettingsRes, displayElementsRes, revisionRes, effectCatalog] = await Promise.all([
+  const [sequenceSettingsRes, displayElementsRes, layoutModelsRes, groupMembershipsRes, revisionRes, effectCatalog] = await Promise.all([
     getSequenceSettings(endpoint),
     getDisplayElements(endpoint),
+    getModels(endpoint),
+    getLayoutGroupMemberships(endpoint).catch(() => ({ ok: false, data: { groups: [] } })),
     getRevision(endpoint),
     loadEffectCatalog(endpoint)
   ]);
+  const groupMemberships = groupMembershipsRes?.ok === false ? { data: { groups: [] } } : groupMembershipsRes;
+  const groupsById = buildGroupsById(groupMemberships);
+  const displayElements = mergeDisplayElementsWithLayoutModels(
+    normalizeDisplayElements(displayElementsRes),
+    Array.isArray(layoutModelsRes?.data?.models) ? layoutModelsRes.data.models : []
+  );
 
   currentStage = 'build_sequence_plan';
-  const metadataAssignments = loadProjectDisplayMetadataAssignments(projectFile);
+  const metadataAssignments = loadProjectDisplayMetadataAssignments(projectFile, {
+    layoutRows: Array.isArray(layoutModelsRes?.data?.models) ? layoutModelsRes.data.models : [],
+    groupMemberships
+  });
   const currentSequenceContext = await buildCurrentSequenceContextFromReadback({
     endpoint,
     sequencePath: inputs.sequencePath,
@@ -416,7 +519,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     selectedSections: inputs.reviewIntentHandoff?.scope?.sections || [],
     selectedTargets: inputs.reviewIntentHandoff?.scope?.targetIds || [],
     selectedTags: inputs.reviewIntentHandoff?.scope?.tagNames || [],
-    displayElements: normalizeDisplayElements(displayElementsRes)
+    displayElements
   }, {
     getTimingTracks,
     getTimingMarks,
@@ -432,9 +535,9 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     effectCatalog,
     sequenceSettings: sequenceSettingsRes?.data || {},
     layoutMode: '2d',
-    displayElements: normalizeDisplayElements(displayElementsRes),
-    groupIds: [],
-    groupsById: {},
+    displayElements,
+    groupIds: Object.keys(groupsById),
+    groupsById,
     submodelsById: {},
     metadataAssignments,
     timingOwnership: [],
@@ -477,14 +580,13 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     deleteEffectLayer,
     reorderEffectLayer,
     compactEffectLayers,
-    safetyOptions: { maxCommands: 200 }
+    safetyOptions: { maxCommands: REVIEW_APPLY_MAX_COMMANDS }
   });
 
   if (!applyRes?.ok) {
     currentStage = 'fallback_apply_path';
     const fallback = await applyExecutionStrategyFallback({
-      proposalBundle: inputs.proposalBundle,
-      trackRecord: inputs.trackRecord,
+      commands,
       endpoint,
       initialError: applyRes
     });
@@ -515,7 +617,11 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       sequencePath: inputs.sequencePath,
       revisionToken: str(fallback.nextRevision),
       analysisHandoff,
-      intentHandoff: inputs.intentHandoff
+      intentHandoff: inputs.intentHandoff,
+      sequencingDesignHandoff: commandsPlan?.metadata?.sequencingDesignHandoff || inputs.reviewIntentHandoff?.sequencingDesignHandoff || null,
+      compositionPlan: commandsPlan?.metadata?.effectStrategy?.compositionPlan || null,
+      musicDesignContext: commandsPlan?.metadata?.sequencingDesignHandoff?.musicDesignContext || null,
+      metadataAssignments
     });
     const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
     await persistNativeReviewArtifacts({
@@ -584,7 +690,11 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     sequencePath: inputs.sequencePath,
     revisionToken: str(applyRes?.nextRevision || ''),
     analysisHandoff,
-    intentHandoff: inputs.intentHandoff
+    intentHandoff: inputs.intentHandoff,
+    sequencingDesignHandoff: commandsPlan?.metadata?.sequencingDesignHandoff || inputs.reviewIntentHandoff?.sequencingDesignHandoff || null,
+    compositionPlan: commandsPlan?.metadata?.effectStrategy?.compositionPlan || null,
+    musicDesignContext: commandsPlan?.metadata?.sequencingDesignHandoff?.musicDesignContext || null,
+    metadataAssignments
   });
   const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
   await persistNativeReviewArtifacts({
@@ -691,7 +801,11 @@ async function buildNativeRenderFeedbackArtifacts({
   sequencePath = '',
   revisionToken = '',
   analysisHandoff = null,
-  intentHandoff = null
+  intentHandoff = null,
+  sequencingDesignHandoff = null,
+  compositionPlan = null,
+  musicDesignContext = null,
+  metadataAssignments = []
 } = {}) {
   try {
     currentStage = 'build_render_feedback';
@@ -742,8 +856,10 @@ async function buildNativeRenderFeedbackArtifacts({
     const renderCritiqueContext = buildRenderCritiqueContext({
       renderObservation,
       designSceneContext,
-      sequencingDesignHandoff: null,
-      musicDesignContext: null
+      sequencingDesignHandoff,
+      compositionPlan,
+      musicDesignContext,
+      metadataAssignments
     });
     return { renderObservation, renderCritiqueContext };
   } catch {
@@ -989,11 +1105,20 @@ export async function hydrateNativeApplyTimingContext({
   return hydrated;
 }
 
-async function applyExecutionStrategyFallback({ proposalBundle = {}, trackRecord = {}, endpoint = '', initialError = null } = {}) {
-  const commands = buildFallbackCommandsFromProposal({ proposalBundle, trackRecord });
+async function applyExecutionStrategyFallback({ commands = [], endpoint = '', initialError = null } = {}) {
   const payload = buildOwnedSequencingBatchPlan(commands);
   if (!payload) {
-    throw new Error(str(initialError?.error || 'Apply failed and fallback payload could not be built.'));
+    const unsupported = Array.isArray(initialError?.details?.unsupportedCommands)
+      ? initialError.details.unsupportedCommands.map((row) => str(row)).filter(Boolean)
+      : [];
+    const detailParts = [
+      str(initialError?.stage) ? `stage=${str(initialError.stage)}` : '',
+      Number.isFinite(Number(initialError?.details?.commandCount)) ? `commandCount=${Number(initialError.details.commandCount)}` : '',
+      Number.isFinite(Number(initialError?.details?.batchCommandCount)) ? `batchCommandCount=${Number(initialError.details.batchCommandCount)}` : '',
+      unsupported.length ? `unsupportedCommands=${unsupported.slice(0, 12).join(',')}` : ''
+    ].filter(Boolean);
+    const detailSuffix = detailParts.length ? ` (${detailParts.join('; ')})` : '';
+    throw new Error(`${str(initialError?.error || 'Apply failed and sequence-agent command payload could not be retried.')}${detailSuffix}`);
   }
   const accepted = await applySequencingBatchPlan(endpoint, payload);
   const jobId = str(accepted?.data?.jobId);
@@ -1010,106 +1135,9 @@ async function applyExecutionStrategyFallback({ proposalBundle = {}, trackRecord
   return {
     commandCount: commands.length,
     nextRevision: str(postRevision?.data?.revision || postRevision?.data?.revisionToken || ''),
-    applyPath: 'owned_batch_plan_fallback',
-    summary: str(proposalBundle?.summary || 'Applied pending work via proposal execution fallback.')
+    applyPath: 'owned_batch_plan_transport_retry',
+    summary: 'Retried the sequence-agent command plan through owned batch transport.'
   };
-}
-
-function buildFallbackCommandsFromProposal({ proposalBundle = {}, trackRecord = {} } = {}) {
-  const executionPlan = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === 'object'
-    ? proposalBundle.executionPlan
-    : {};
-  const fallbackTrackName = str(executionPlan.sectionTimingTrackName || executionPlan.timingTrackName || 'XD: Song Structure') || 'XD: Song Structure';
-  const structureTrack = Array.isArray(trackRecord?.timingTracks)
-    ? (
-        trackRecord.timingTracks.find((row) => str(row?.name) === fallbackTrackName)
-        || trackRecord.timingTracks.find((row) => str(row?.name) === 'XD: Song Structure')
-      )
-    : null;
-  const marks = Array.isArray(structureTrack?.segments)
-    ? structureTrack.segments.map((row) => ({
-        startMs: Number(row?.startMs || 0),
-        endMs: Number(row?.endMs || 0),
-        label: str(row?.label || 'Section')
-      })).filter((row) => Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs >= row.startMs)
-    : [];
-  const placements = scopedProposalPlacements(proposalBundle);
-  const effectivePlacements = placements.length
-    ? placements
-    : synthesizeFallbackPlacementsFromSectionPlans({ proposalBundle, marks });
-  const commands = [
-    {
-      id: `timing.track.create:${fallbackTrackName}`,
-      cmd: 'timing.createTrack',
-      params: { trackName: fallbackTrackName, replaceIfExists: true }
-    },
-    {
-      id: `timing.marks.insert:${fallbackTrackName}`,
-      dependsOn: [`timing.track.create:${fallbackTrackName}`],
-      cmd: 'timing.insertMarks',
-      params: { trackName: fallbackTrackName, marks }
-    }
-  ];
-  let placementIndex = 0;
-  for (const row of effectivePlacements) {
-    const targetId = str(row?.targetId);
-    const effectName = str(row?.effectName);
-    const startMs = Number(row?.startMs);
-    const endMs = Number(row?.endMs);
-    const layerIndex = Number(row?.layerIndex);
-    if (!targetId || !effectName) continue;
-    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs < startMs) continue;
-    if (!Number.isFinite(layerIndex) || layerIndex < 0) continue;
-    placementIndex += 1;
-    commands.push({
-      id: `fallback-placement-${placementIndex}`,
-      dependsOn: [`timing.marks.insert:${fallbackTrackName}`],
-      cmd: 'effects.create',
-      params: {
-        modelName: targetId,
-        layerIndex,
-        effectName,
-        startMs: Math.round(startMs),
-        endMs: Math.round(endMs),
-        settings: '',
-        palette: ''
-      }
-    });
-  }
-  return commands;
-}
-
-function synthesizeFallbackPlacementsFromSectionPlans({ proposalBundle = {}, marks = [] } = {}) {
-  const executionPlan = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === 'object'
-    ? proposalBundle.executionPlan
-    : {};
-  const sectionPlans = Array.isArray(executionPlan.sectionPlans) ? executionPlan.sectionPlans : [];
-  const scopeSections = new Set(
-    (Array.isArray(proposalBundle?.scope?.sections) ? proposalBundle.scope.sections : [])
-      .map((row) => str(row).toLowerCase())
-      .filter(Boolean)
-  );
-  const normalizedMarks = Array.isArray(marks) ? marks : [];
-  const placements = [];
-  for (const plan of sectionPlans) {
-    const section = str(plan?.section || '');
-    if (scopeSections.size && !scopeSections.has(section.toLowerCase())) continue;
-    const mark = normalizedMarks.find((row) => str(row?.label).toLowerCase() === section.toLowerCase())
-      || normalizedMarks[0]
-      || null;
-    if (!mark) continue;
-    for (const targetId of (Array.isArray(plan?.targetIds) ? plan.targetIds : []).map((row) => str(row)).filter(Boolean)) {
-      placements.push({
-        targetId,
-        effectName: 'On',
-        layerIndex: 0,
-        startMs: Number(mark.startMs || 0),
-        endMs: Number(mark.endMs || 0),
-        sourceSectionLabel: section || str(mark.label)
-      });
-    }
-  }
-  return placements;
 }
 
 function validateProposalPlacementTiming({ proposalBundle = {}, trackRecord = {}, placements = [] } = {}) {
@@ -1147,7 +1175,7 @@ function scopedProposalPlacements(proposalBundle = {}) {
 
 async function waitForOwnedJob(endpoint = '', jobId = '', attempts = 60, delayMs = 500) {
   for (let index = 0; index < attempts; index += 1) {
-    await assertOwnedXlightsNotBlocked(endpoint);
+    await assertOwnedXlightsNotBlocked(endpoint, getOwnedHealth);
     const settled = await getOwnedJob(endpoint, jobId);
     const state = str(settled?.data?.state).toLowerCase();
     if (state === 'queued' || state === 'running') {
@@ -1157,26 +1185,6 @@ async function waitForOwnedJob(endpoint = '', jobId = '', attempts = 60, delayMs
     return settled;
   }
   throw new Error(`Timed out waiting for owned xLights job ${jobId}.`);
-}
-
-function modalBlockedMessage(health = {}) {
-  const data = health?.data && typeof health.data === 'object' ? health.data : {};
-  const modalState = data?.modalState && typeof data.modalState === 'object' ? data.modalState : null;
-  if (!modalState?.blocked || modalState.observed === false) return '';
-  const titles = Array.isArray(modalState.windows)
-    ? modalState.windows
-      .filter((window) => window?.isModal)
-      .map((window) => str(window?.title || window?.className))
-      .filter(Boolean)
-    : [];
-  return `xLights is blocked by a modal${titles.length ? `: ${titles.join(', ')}` : ''}`;
-}
-
-async function assertOwnedXlightsNotBlocked(endpoint = '') {
-  const health = await getOwnedHealth(endpoint);
-  const message = modalBlockedMessage(health);
-  if (message) throw new Error(message);
-  return health;
 }
 
 function persistedArtifactWithFallback(artifact = null) {

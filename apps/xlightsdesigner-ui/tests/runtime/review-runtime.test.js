@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { executeApplyCore } from "../../runtime/review-runtime.js";
+import { REVIEW_APPLY_MAX_COMMANDS } from "../../agent/sequence-agent/sequence-plan-limits.js";
 
 test("executeApplyCore blocks invalid sequence-agent input contract", async () => {
   const state = {
@@ -196,6 +197,107 @@ test("executeApplyCore preserves XD song structure timing writes during live app
   assert.ok(state.sequenceAgentRuntime.timingTrackProvenance.key);
   assert.equal(state.sequenceAgentRuntime.timingTrackProvenance.key.trackName, "XD: Song Structure");
   assert.equal(state.sequenceAgentRuntime.timingTrackProvenance.key.coverageMode, "complete");
+});
+
+test("executeApplyCore uses full-review command limit for large single-pass plans", async () => {
+  let observedSafetyOptions = null;
+  const commands = Array.from({ length: 232 }, (_row, index) => ({
+    id: `effect-${index}`,
+    cmd: "effects.create",
+    params: {
+      modelName: `Model ${index}`,
+      layerIndex: 0,
+      effectName: "On",
+      startMs: index * 100,
+      endMs: index * 100 + 100
+    }
+  }));
+  const state = {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    draftBaseRevision: "rev-1",
+    revision: "rev-1",
+    sequenceSettings: {},
+    displayElements: [],
+    sceneGraph: { groupsById: {}, submodelsById: {} },
+    ui: { metadataSelectionIds: [], metadataSelectedTags: [] },
+    health: { capabilityCommands: [] },
+    creative: {},
+    flags: {},
+    proposed: ["Full sequence pass"],
+    sequenceAgentRuntime: {
+      timingTrackPolicies: {},
+      timingGeneratedSignatures: {},
+      timingTrackProvenance: {}
+    }
+  };
+
+  const result = await executeApplyCore({
+    state,
+    sourceLines: ["Full sequence pass"],
+    applyLabel: "proposal",
+    orchestrationRun: { id: "run-large-review-limit" },
+    intentHandoffRecord: {},
+    intentHandoff: {},
+    planHandoff: {},
+    deps: {
+      currentSequencePathForSidecar: () => "/show/Test.xsq",
+      getDesktopBackupBridge: () => null,
+      getValidHandoff: () => null,
+      buildSequenceAgentInput: () => ({ ok: true }),
+      currentLayoutMode: () => "sequencer",
+      getSelectedSections: () => [],
+      normalizeMetadataSelectionIds: (v = []) => v,
+      normalizeMetadataSelectedTags: (v = []) => v,
+      getSequenceTimingOwnershipRows: () => [],
+      getManualLockedXdTracks: () => [],
+      validateSequenceAgentContractGate: (_kind, payload) => ({ ok: true, stage: "", report: { errors: [], payload } }),
+      filteredProposed: () => ["Full sequence pass"],
+      arraysEqualOrdered: () => true,
+      validateCommandGraph: () => ({ ok: true, nodeCount: commands.length, errors: [] }),
+      buildSequenceAgentPlan: () => ({ commands, warnings: [] }),
+      emitSequenceAgentStageTelemetry: () => {},
+      evaluateSequencePlanCapabilities: () => ({ ok: true, skipped: false, requiredCapabilities: [] }),
+      isXdTimingTrack: () => false,
+      timingMarksSignature: () => "",
+      buildGlobalXdTrackPolicyKey: () => "",
+      validateAndApplyPlan: async ({ safetyOptions }) => {
+        observedSafetyOptions = safetyOptions;
+        return { ok: true, executedCount: commands.length, currentRevision: "rev-1", nextRevision: "rev-2" };
+      },
+      verifyAppliedPlanReadback: async () => ({
+        checks: [],
+        expectedMutationsPresent: true,
+        revisionAdvanced: true,
+        lockedTracksUnchanged: true
+      }),
+      buildSequenceAgentApplyResult: () => ({ verification: { revisionAdvanced: true, expectedMutationsPresent: true, lockedTracksUnchanged: true } }),
+      classifyOrchestrationFailureReason: () => "",
+      getSequenceTimingTrackPoliciesState: () => ({}),
+      getSequenceTimingGeneratedSignaturesState: () => ({}),
+      setSequenceTimingTrackPoliciesState: () => {},
+      setSequenceTimingGeneratedSignaturesState: () => {},
+      applyAcceptedProposalToDirectorProfile: () => ({}),
+      buildApplyHistoryEntry: () => ({}),
+      buildChatArtifactCard: () => ({}),
+      getTeamChatSpeakerLabel: () => "Patch",
+      buildEffectiveMetadataAssignments: () => []
+    },
+    callbacks: {
+      pushSequenceAgentContractDiagnostic: () => {},
+      markOrchestrationStage: () => {},
+      endOrchestrationRun: () => {},
+      pushDiagnostic: () => {},
+      upsertJob: () => {},
+      bumpVersion: () => {},
+      setStatusWithDiagnostics: () => {},
+      addStructuredChatMessage: () => {}
+    }
+  });
+
+  assert.equal(result.blocked, false);
+  assert.equal(observedSafetyOptions?.maxCommands, REVIEW_APPLY_MAX_COMMANDS);
+  assert.ok(commands.length > 200);
+  assert.ok(commands.length <= REVIEW_APPLY_MAX_COMMANDS);
 });
 
 test("executeApplyCore refreshes artistic goal and revision objective from practical validation", async () => {

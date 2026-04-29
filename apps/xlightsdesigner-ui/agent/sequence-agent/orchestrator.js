@@ -1,8 +1,17 @@
 import { evaluatePlanSafety } from '../safety-policy.js';
 import { validateCommandGraph } from "./command-graph.js";
+import {
+  describeOwnedModalBlock,
+  isOwnedHealthReady,
+  ownedModalStateBlocked
+} from "../../runtime/owned-xlights-health.js";
 
 function str(value = "") {
   return String(value || "").trim();
+}
+
+function rawText(value = "") {
+  return String(value ?? "").trim();
 }
 
 function norm(value = "") {
@@ -14,22 +23,38 @@ function toInt(value, fallback = -1) {
   return Number.isFinite(n) ? Math.round(n) : fallback;
 }
 
-function ownedModalStateBlocked(data = {}) {
-  const modalState = data?.modalState && typeof data.modalState === "object" ? data.modalState : null;
-  return modalState?.observed !== false && (modalState?.blocked === true || norm(modalState?.blocked) === "true");
+function normalizeXlightsColor(value = "") {
+  const text = rawText(value);
+  if (/^#[0-9a-f]{6}$/i.test(text)) return text.toUpperCase();
+  return "";
 }
 
-function describeOwnedModalBlock(data = {}) {
-  const modalState = data?.modalState && typeof data.modalState === "object" ? data.modalState : {};
-  const modalCount = Number(modalState.modalCount || 0);
-  const windows = Array.isArray(modalState.windows) ? modalState.windows : [];
-  const titles = windows
-    .map((window) => str(window?.title))
+function serializeXlightsKeyValueMap(value = null) {
+  if (typeof value === "string") return value;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+  return Object.entries(value)
+    .map(([key, rawValue]) => {
+      const safeKey = str(key);
+      if (!safeKey) return "";
+      const safeValue = normalizeXlightsColor(rawValue) || rawText(rawValue);
+      if (!safeValue) return "";
+      return `${safeKey}=${safeValue}`;
+    })
     .filter(Boolean)
-    .slice(0, 3);
-  const countText = modalCount > 0 ? ` (${modalCount})` : "";
-  const titleText = titles.length ? `: ${titles.join(", ")}` : "";
-  return `xLights modal blocked${countText}${titleText}`;
+    .join(",");
+}
+
+function serializeXlightsPalette(value = null) {
+  const serialized = serializeXlightsKeyValueMap(value);
+  if (!serialized) return "";
+  const keys = new Set(serialized.split(",").map((row) => row.split("=")[0]).filter(Boolean));
+  const defaults = [];
+  const defaultColors = ["#FFFFFF", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#000000", "#00FFFF", "#FF00FF"];
+  for (let index = 1; index <= 8; index += 1) {
+    const key = `C_BUTTON_Palette${index}`;
+    if (!keys.has(key)) defaults.push(`${key}=${defaultColors[index - 1]}`);
+  }
+  return [...serialized.split(",").filter(Boolean), ...defaults].join(",");
 }
 
 export function buildOwnedSequencingBatchPlan(commands = []) {
@@ -66,8 +91,8 @@ export function buildOwnedSequencingBatchPlan(commands = []) {
         effectName,
         startMs,
         endMs,
-        settings: params.settings ?? "",
-        palette: params.palette ?? "",
+        settings: serializeXlightsKeyValueMap(params.settings),
+        palette: serializeXlightsPalette(params.palette),
         clearExisting: false
       });
       continue;
@@ -98,6 +123,62 @@ export function buildOwnedSequencingBatchPlan(commands = []) {
   };
 }
 
+function commandTimingTrackName(command = {}) {
+  const params = command?.params && typeof command.params === "object" ? command.params : {};
+  return str(params.trackName || params.timingTrackName || command?.anchor?.trackName || command?.anchor?.timingTrackName);
+}
+
+function inferPrimaryBatchTimingTrack(commands = []) {
+  const effectAnchorTrack = (Array.isArray(commands) ? commands : [])
+    .map((command) => str(command?.cmd) === "effects.create" ? commandTimingTrackName(command) : "")
+    .find(Boolean);
+  if (effectAnchorTrack) return effectAnchorTrack;
+  const alignTrack = (Array.isArray(commands) ? commands : [])
+    .map((command) => str(command?.cmd) === "effects.alignToTiming" ? commandTimingTrackName(command) : "")
+    .find(Boolean);
+  if (alignTrack) return alignTrack;
+  return (Array.isArray(commands) ? commands : [])
+    .map((command) => {
+      const cmd = str(command?.cmd);
+      return (cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") ? commandTimingTrackName(command) : "";
+    })
+    .find(Boolean) || "";
+}
+
+function buildOwnedBatchSelection(commands = []) {
+  const rows = Array.isArray(commands) ? commands : [];
+  const fullPlan = buildOwnedSequencingBatchPlan(rows);
+  if (fullPlan) {
+    return {
+      plan: fullPlan,
+      commands: rows.filter((command) => isOwnedBatchCommand(command)),
+      commandSet: new Set(rows.filter((command) => isOwnedBatchCommand(command)))
+    };
+  }
+
+  const primaryTrack = inferPrimaryBatchTimingTrack(rows);
+  if (!primaryTrack) return { plan: null, commands: [], commandSet: new Set() };
+  const subset = rows.filter((command) => {
+    const cmd = str(command?.cmd);
+    if (cmd === "effects.create") return true;
+    if (cmd === "effects.alignToTiming") {
+      const track = commandTimingTrackName(command);
+      return !track || track === primaryTrack;
+    }
+    if (cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") {
+      return commandTimingTrackName(command) === primaryTrack;
+    }
+    return false;
+  });
+  const plan = buildOwnedSequencingBatchPlan(subset);
+  if (!plan) return { plan: null, commands: [], commandSet: new Set() };
+  return {
+    plan,
+    commands: subset,
+    commandSet: new Set(subset)
+  };
+}
+
 function isOwnedBatchCommand(command = {}) {
   const cmd = str(command?.cmd);
   return cmd === "timing.createTrack"
@@ -114,6 +195,7 @@ function directOwnedCommandKind(command = {}) {
     || cmd === "timing.insertMarks"
     || cmd === "timing.replaceMarks"
     || cmd === "sequencer.setDisplayElementOrder"
+    || cmd === "effects.alignToTiming"
     || cmd === "effects.update"
     || cmd === "effects.delete"
     || cmd === "effects.clone"
@@ -164,8 +246,8 @@ function normalizeEffectUpdateParams(params = {}) {
   if (newStartMs !== undefined) out.newStartMs = newStartMs;
   if (newEndMs !== undefined) out.newEndMs = newEndMs;
   if (str(params.newEffectName)) out.newEffectName = str(params.newEffectName);
-  if (params.settings != null) out.settings = params.settings;
-  if (params.palette != null) out.palette = params.palette;
+  if (params.settings != null) out.settings = serializeXlightsKeyValueMap(params.settings);
+  if (params.palette != null) out.palette = serializeXlightsPalette(params.palette);
   return out;
 }
 
@@ -262,17 +344,24 @@ async function executeOwnedDirectCommand({ endpoint, command, deps }) {
   const params = command?.params && typeof command.params === "object" ? command.params : {};
   const kind = directOwnedCommandKind(command);
   if (kind === "timing.createTrack") {
-    return deps.createTimingTrack(endpoint, params);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.createTimingTrack(endpoint, params), deps.getOwnedJob, deps.getOwnedHealth);
   }
   if (kind === "timing.insertMarks") {
-    return deps.insertTimingMarks(endpoint, params);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.insertTimingMarks(endpoint, params), deps.getOwnedJob, deps.getOwnedHealth);
   }
   if (kind === "timing.replaceMarks") {
-    return deps.replaceTimingMarks(endpoint, params);
+    return waitForAcceptedOwnedMutation(endpoint, await deps.replaceTimingMarks(endpoint, params), deps.getOwnedJob, deps.getOwnedHealth);
   }
   if (kind === "sequencer.setDisplayElementOrder") {
     const orderedIds = Array.isArray(params.orderedIds) ? params.orderedIds.map((value) => str(value)).filter(Boolean) : [];
     return waitForAcceptedOwnedMutation(endpoint, await deps.setDisplayElementOrder(endpoint, orderedIds), deps.getOwnedJob, deps.getOwnedHealth);
+  }
+  if (kind === "effects.alignToTiming") {
+    return {
+      ok: true,
+      skipped: true,
+      reason: "effect window already carries explicit timing; owned apply has no separate align command"
+    };
   }
   if (kind === "effects.update") {
     return waitForAcceptedOwnedMutation(endpoint, await deps.updateEffect(endpoint, normalizeEffectUpdateParams(params)), deps.getOwnedJob, deps.getOwnedHealth);
@@ -302,7 +391,8 @@ async function executeOwnedCommandPlan({
   applySequencingBatchPlan,
   getOwnedJob,
   getOwnedHealth,
-  directDeps = {}
+  directDeps = {},
+  batchCommandSet = new Set()
 }) {
   let batchExecuted = false;
   let jobId = "";
@@ -323,7 +413,7 @@ async function executeOwnedCommandPlan({
   };
 
   for (const command of commands) {
-    if (isOwnedBatchCommand(command) && ownedBatchPlan) {
+    if (ownedBatchPlan && batchCommandSet.has(command)) {
       await executeBatch();
       continue;
     }
@@ -362,15 +452,6 @@ async function waitForOwnedJob(endpoint, jobId, getOwnedJob, getOwnedHealth = nu
     await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
   throw new Error(`Timed out waiting for owned xLights job ${jobId}.`);
-}
-
-function isOwnedHealthReady(health = {}) {
-  const data = health?.data && typeof health.data === "object" ? health.data : {};
-  const state = norm(data.state || data.startupState || data.status);
-  const listenerReachable = data.listenerReachable === true;
-  const appReady = data.appReady == null ? true : data.appReady === true;
-  const startupSettled = data.startupSettled === true || state === "ready";
-  return health?.ok === true && listenerReachable && appReady && startupSettled && !ownedModalStateBlocked(data);
 }
 
 export async function validateAndApplyPlan({
@@ -415,15 +496,16 @@ export async function validateAndApplyPlan({
     };
   }
 
-  const batchCommands = (Array.isArray(commands) ? commands : []).filter((command) => isOwnedBatchCommand(command));
-  const ownedBatchPlan = batchCommands.length ? buildOwnedSequencingBatchPlan(batchCommands) : null;
+  const batchSelection = buildOwnedBatchSelection(commands);
+  const batchCommands = batchSelection.commands;
+  const ownedBatchPlan = batchSelection.plan;
   const batchRequiresPlan = batchCommands.some((command) => str(command?.cmd) === "effects.create");
   const directCommands = (Array.isArray(commands) ? commands : []).filter((command) => {
     if (!directOwnedCommandKind(command)) return false;
-    return !(ownedBatchPlan && isOwnedBatchCommand(command));
+    return !(ownedBatchPlan && batchSelection.commandSet.has(command));
   });
   const unsupportedCommands = (Array.isArray(commands) ? commands : []).filter((command) => {
-    if (isOwnedBatchCommand(command)) return false;
+    if (ownedBatchPlan && batchSelection.commandSet.has(command)) return false;
     if (directOwnedCommandKind(command)) return false;
     return true;
   });
@@ -532,7 +614,8 @@ export async function validateAndApplyPlan({
       applySequencingBatchPlan,
       getOwnedJob,
       getOwnedHealth,
-      directDeps
+      directDeps,
+      batchCommandSet: batchSelection.commandSet
     });
     const postRev = typeof getOwnedRevision === 'function'
       ? await getOwnedRevision(endpoint).catch(() => ({ data: { revision: currentRevision } }))

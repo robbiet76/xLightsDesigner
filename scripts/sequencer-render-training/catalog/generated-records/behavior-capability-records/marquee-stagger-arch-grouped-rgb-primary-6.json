@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "marquee-stagger-arch-grouped-rgb-primary-6",
-  "createdAt": "2026-04-16T18:35:27.478Z",
+  "createdAt": "2026-04-28T14:23:35.928Z",
   "effectName": "Marquee",
   "geometryProfile": "arch_grouped",
   "modelType": "arch",
@@ -27,7 +27,7 @@
     "coverageLevel": "broad",
     "hierarchySuitability": "unknown",
     "geometryCoupling": "observed",
-    "stability": "medium"
+    "stability": "high"
   },
   "renderOutcomeSignals": {
     "temporalRead": "subtle_motion",
@@ -40,9 +40,9 @@
     "contrastRead": "unknown"
   },
   "confidence": {
-    "level": "medium",
+    "level": "high",
     "evidenceClass": "aggregated_render",
-    "coverageStatus": "single_reference_per_geometry"
+    "coverageStatus": "multi_configuration_sampled"
   },
   "evidenceCount": 1,
   "traceability": {

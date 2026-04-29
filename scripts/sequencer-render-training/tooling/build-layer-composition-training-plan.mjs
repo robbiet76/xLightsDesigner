@@ -1,0 +1,1603 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const DEFAULT_MODEL_CATALOG = "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json";
+const DEFAULT_OUT = "var/logs/sequencer-layer-composition-training-runs/manual-plan/training-plan.json";
+const DEFAULT_RUN_TYPE = "overnight";
+
+export const DEFAULT_PALETTE_PROFILES = ["mono_white", "rgb_primary"];
+
+export const RUNTIME_BUDGETS = {
+  smoke: {
+    minRuntimeMinutes: 15,
+    targetRuntimeMinutes: 30,
+    maxRuntimeMinutes: 45,
+    purpose: "Validate plan shape, API readiness, render capture, and observation plumbing only."
+  },
+  focused_evening: {
+    minRuntimeMinutes: 120,
+    targetRuntimeMinutes: 180,
+    maxRuntimeMinutes: 240,
+    purpose: "Validate a new experiment family with enough samples to inspect stability."
+  },
+  overnight: {
+    minRuntimeMinutes: 480,
+    targetRuntimeMinutes: 540,
+    maxRuntimeMinutes: 600,
+    purpose: "Normal unattended learning run for meaningful composition evidence."
+  },
+  extended: {
+    minRuntimeMinutes: 600,
+    targetRuntimeMinutes: 720,
+    maxRuntimeMinutes: 900,
+    purpose: "Longer run after overnight stability has already been proven."
+  }
+};
+
+export const RENDER_SETTING_CANDIDATES = [
+  "mixMethod",
+  "mixThreshold",
+  "canvas",
+  "persistentOverlay",
+  "brightness",
+  "contrast",
+  "saturation",
+  "hue",
+  "value",
+  "blur",
+  "zoom",
+  "rotation",
+  "fadeIn",
+  "fadeOut",
+  "transition"
+];
+
+export const VERIFIED_OWNED_LAYER_RENDER_SETTINGS = [
+  "mixMethod",
+  "mixThreshold",
+  "canvas",
+  "persistentOverlay",
+  "brightness",
+  "contrast",
+  "saturation",
+  "hue",
+  "value",
+  "blur",
+  "zoom",
+  "rotation",
+  "fadeIn",
+  "fadeOut"
+];
+
+export const CURRICULUM_STAGES = [
+  {
+    stageId: "broad_composition_survey",
+    priority: 1,
+    breadthFirst: true,
+    purpose: "Answer broad composition mechanics before spending runtime on narrow detail."
+  },
+  {
+    stageId: "family_contrast_survey",
+    priority: 2,
+    breadthFirst: true,
+    purpose: "Compare learned mechanics across major geometry families."
+  },
+  {
+    stageId: "setting_sensitivity_survey",
+    priority: 3,
+    breadthFirst: false,
+    purpose: "Measure high-impact setting deltas after broad mechanics are covered."
+  },
+  {
+    stageId: "interaction_deepening",
+    priority: 4,
+    breadthFirst: false,
+    purpose: "Deepen only ambiguous, contradictory, or high-value interactions."
+  },
+  {
+    stageId: "sequence_pattern_validation",
+    priority: 5,
+    breadthFirst: false,
+    purpose: "Validate priors inside longer sequence-like plans."
+  }
+];
+
+export const ADAPTIVE_REFILL_ORDER = [
+  "uncovered_broad_composition_coverage",
+  "uncovered_geometry_family_contrast",
+  "low_confidence_broad_revalidation",
+  "contradictory_learning_confirmation",
+  "high_impact_render_setting_sensitivity",
+  "benchmark_driven_deepening",
+  "controlled_repeat_confidence_calibration"
+];
+
+export const RUNTIME_SELECTION_TIERS = [
+  "primary_setting_attribution",
+  "high_value_geometry_retest",
+  "broad_layer_composition",
+  "group_model_ordering",
+  "interaction_deepening",
+  "deferred_low_yield_retest"
+];
+
+export const DEFAULT_RETENTION_POLICY = {
+  summarizeAsYouGo: true,
+  cleanupMode: "purge_summarized_raw_artifacts",
+  checkpoints: [
+    "after_rendered_pass",
+    "after_delta_pair",
+    "after_experiment",
+    "before_adaptive_refill",
+    "at_run_completion"
+  ],
+  alwaysKeep: [
+    "training_plan",
+    "checkpoint",
+    "run_summary",
+    "composition_stack_observation",
+    "layer_delta_observation",
+    "order_permutation_observation",
+    "render_setting_delta_observation",
+    "prior_bundle",
+    "failure_summary"
+  ],
+  compactKeep: [
+    "artifact_fingerprint",
+    "small_preview",
+    "metric_summary",
+    "extractor_version",
+    "renderer_identity"
+  ],
+  purgeWhenSummarized: [
+    "raw_fseq",
+    "full_gif",
+    "decoded_frame_dump",
+    "temporary_sequence_copy",
+    "intermediate_render_export"
+  ],
+  debugRetention: {
+    failedPassRawArtifactPolicy: "keep_until_daytime_review_or_failure_classified",
+    smokeRunPolicy: "keep_short_term_for_inspection",
+    overnightPolicy: "compact_continuously"
+  },
+  diskGuardrails: {
+    enabled: true,
+    preferCleanupBeforeStop: true,
+    warningFreeDiskGb: 25,
+    stopFreeDiskGb: 10
+  }
+};
+
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function ensureDir(filePath) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+}
+
+function readOptionalJson(filePath) {
+  const resolved = path.resolve(filePath);
+  if (!fs.existsSync(resolved)) return null;
+  return readJson(resolved);
+}
+
+function stamp() {
+  return new Date().toISOString().replace(/[:.]/g, "-");
+}
+
+function model(catalog, key) {
+  const row = catalog?.canonicalModels?.[key];
+  if (!row) {
+    throw new Error(`Missing canonical model '${key}' in model catalog`);
+  }
+  return {
+    key,
+    modelName: row.modelName,
+    modelType: row.modelType,
+    geometryProfile: row.geometryProfile,
+    analyzerFamily: row.analyzerFamily
+  };
+}
+
+function paletteSettings(profile) {
+  const base = {
+    C_BUTTON_Palette1: "#FFFFFF",
+    C_BUTTON_Palette2: "#FF0000",
+    C_BUTTON_Palette3: "#00FF00",
+    C_BUTTON_Palette4: "#0000FF",
+    C_BUTTON_Palette5: "#FFFF00",
+    C_BUTTON_Palette6: "#000000",
+    C_BUTTON_Palette7: "#00FFFF",
+    C_BUTTON_Palette8: "#FF00FF"
+  };
+  if (profile === "rgb_primary") {
+    return {
+      ...base,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: true,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    };
+  }
+  return {
+    ...base,
+    C_CHECKBOX_Palette1: true,
+    C_CHECKBOX_Palette2: false,
+    C_CHECKBOX_Palette3: false,
+    C_CHECKBOX_Palette4: false,
+    C_CHECKBOX_Palette5: false,
+    C_CHECKBOX_Palette6: false,
+    C_CHECKBOX_Palette7: false,
+    C_CHECKBOX_Palette8: false
+  };
+}
+
+function placement({
+  id,
+  target,
+  targetScope,
+  effectName,
+  compositionPass,
+  layerIndex,
+  startMs = 1000,
+  endMs = 5000,
+  effectSettings = {},
+  layerSettings = {},
+  layerIntent = {}
+}) {
+  return {
+    placementId: id,
+    targetScope,
+    target: target.modelName,
+    modelType: target.modelType,
+    geometryProfile: target.geometryProfile,
+    effectName,
+    compositionPass,
+    layerIndex,
+    startMs,
+    endMs,
+    effectSettings,
+    layerSettings,
+    layerIntent
+  };
+}
+
+function manifestSample({ manifestPath, sampleId }) {
+  const manifest = readOptionalJson(manifestPath);
+  const sample = (manifest?.samples || []).find((row) => String(row.sampleId || "") === sampleId)
+    || (manifest?.samples || [])[0]
+    || null;
+  if (!sample) {
+    throw new Error(`Missing manifest sample '${sampleId}' in ${manifestPath}`);
+  }
+  return {
+    effectName: sample.effectName,
+    effectSettings: {
+      ...(sample.sharedSettings || {}),
+      ...(sample.effectSettings || {})
+    },
+    trainingSampleRef: {
+      manifestPath,
+      packId: manifest.packId || "",
+      sampleId: sample.sampleId || sampleId,
+      labelHints: sample.labelHints || []
+    }
+  };
+}
+
+function placementFromSample(options = {}) {
+  const sample = manifestSample(options.sampleRef);
+  return placement({
+    ...options,
+    effectName: sample.effectName,
+    effectSettings: sample.effectSettings,
+    layerIntent: {
+      ...(options.layerIntent || {}),
+      trainingSampleRef: sample.trainingSampleRef
+    }
+  });
+}
+
+function effectSettingVariant(basePlacement, {
+  id,
+  settingName,
+  variantValue,
+  visualProbe = "",
+  attributionRole = "single_effect_setting_ab_variant"
+} = {}) {
+  const next = {
+    ...basePlacement,
+    placementId: id,
+    effectSettings: {
+      ...(basePlacement.effectSettings || {}),
+      [settingName]: variantValue
+    },
+    layerIntent: {
+      ...(basePlacement.layerIntent || {}),
+      visualProbe: visualProbe || basePlacement.layerIntent?.visualProbe || "",
+      attributionRole,
+      effectSettingProbe: {
+        settingName,
+        baselineValue: basePlacement.effectSettings?.[settingName] ?? null,
+        variantValue
+      }
+    }
+  };
+  return next;
+}
+
+function makeGroupModelExperiment({ paletteProfile, archGroup, archSingle, spinner }) {
+  const groupFoundation = placement({
+    id: `gm-${paletteProfile}-group-foundation`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "foundation",
+    layerIndex: 0,
+    effectSettings: { barCount: 3, cycles: 5, direction: "right", gradient: true },
+    layerIntent: { blendRole: "foundation", priority: "broad" }
+  });
+  const modelFocal = placement({
+    id: `gm-${paletteProfile}-model-focal`,
+    target: archSingle,
+    targetScope: "model",
+    effectName: "Marquee",
+    compositionPass: "focal",
+    layerIndex: 0,
+    effectSettings: { speed: 5, thickness: 4, stagger: 2 },
+    layerIntent: { blendRole: "focal", priority: "specific" }
+  });
+  const modelDetail = placement({
+    id: `gm-${paletteProfile}-model-detail`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "detail",
+    layerIndex: 0,
+    effectSettings: { speed: 10, armSize: 50 },
+    layerIntent: { blendRole: "detail", priority: "specific" }
+  });
+
+  return {
+    experimentId: `group-model-interplay-${paletteProfile}`,
+    family: "group_model_interplay",
+    paletteProfile,
+    layeringTaxonomy: ["parent_submodel_overlap", "display_element_order"],
+    targetSets: [
+      { scope: "group", targets: [archGroup] },
+      { scope: "model", targets: [archSingle, spinner] }
+    ],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [archGroup.modelName, archSingle.modelName, spinner.modelName]
+      },
+      {
+        passId: "foundation_group_only",
+        compositionPass: "foundation",
+        placements: [groupFoundation],
+        displayElementOrder: [archGroup.modelName, archSingle.modelName, spinner.modelName]
+      },
+      {
+        passId: "model_only",
+        compositionPass: "focal",
+        placements: [modelFocal, modelDetail],
+        displayElementOrder: [archGroup.modelName, archSingle.modelName, spinner.modelName]
+      },
+      {
+        passId: "group_then_model",
+        compositionPass: "focal",
+        placements: [groupFoundation, modelFocal, modelDetail],
+        displayElementOrder: [archGroup.modelName, archSingle.modelName, spinner.modelName]
+      },
+      {
+        passId: "model_then_group_order_variant",
+        compositionPass: "order_variant",
+        placements: [groupFoundation, modelFocal, modelDetail],
+        displayElementOrder: [archSingle.modelName, spinner.modelName, archGroup.modelName],
+        comparisonBasePassId: "group_then_model",
+        changeType: "display_element_order"
+      }
+    ]
+  };
+}
+
+function makeSameTargetLayerExperiment({ paletteProfile, star }) {
+  const foundation = placement({
+    id: `st-${paletteProfile}-foundation`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "foundation",
+    layerIndex: 0,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "foundation" }
+  });
+  const structure = placement({
+    id: `st-${paletteProfile}-structure`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "structure",
+    layerIndex: 1,
+    effectSettings: { speed: 7, armSize: 50 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "structure" }
+  });
+  const detail = placement({
+    id: `st-${paletteProfile}-detail`,
+    target: star,
+    targetScope: "model",
+    effectName: "Shimmer",
+    compositionPass: "detail",
+    layerIndex: 2,
+    effectSettings: { cycles: 5, dutyFactor: 50 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "detail" }
+  });
+  const brightFoundation = {
+    ...foundation,
+    placementId: `st-${paletteProfile}-foundation-brightness-variant`,
+    layerSettings: { ...foundation.layerSettings, brightness: 65 }
+  };
+  const contrastFoundation = {
+    ...foundation,
+    placementId: `st-${paletteProfile}-foundation-contrast-variant`,
+    layerSettings: { ...foundation.layerSettings, contrast: 35 }
+  };
+  const canvasFoundation = {
+    ...foundation,
+    placementId: `st-${paletteProfile}-foundation-canvas-variant`,
+    layerSettings: { ...foundation.layerSettings, canvas: true }
+  };
+  const additiveStructure = {
+    ...structure,
+    placementId: `st-${paletteProfile}-structure-additive-variant`,
+    layerSettings: { ...structure.layerSettings, mixMethod: "Additive" }
+  };
+  const mixThresholdStructure = {
+    ...structure,
+    placementId: `st-${paletteProfile}-structure-mix-threshold-variant`,
+    layerSettings: { ...structure.layerSettings, mixThreshold: 45 }
+  };
+  const blurredDetail = {
+    ...detail,
+    placementId: `st-${paletteProfile}-detail-blur-variant`,
+    layerSettings: { ...detail.layerSettings, blur: 5 }
+  };
+  const persistentDetail = {
+    ...detail,
+    placementId: `st-${paletteProfile}-detail-persistent-variant`,
+    layerSettings: { ...detail.layerSettings, persistentOverlay: true }
+  };
+  const fadedDetail = {
+    ...detail,
+    placementId: `st-${paletteProfile}-detail-fade-variant`,
+    layerSettings: { ...detail.layerSettings, fadeIn: "0.75", fadeOut: "0.75" }
+  };
+  const reversedFoundation = { ...foundation, placementId: `st-${paletteProfile}-foundation-reordered`, layerIndex: 2 };
+  const reversedDetail = { ...detail, placementId: `st-${paletteProfile}-detail-reordered`, layerIndex: 0 };
+
+  return {
+    experimentId: `same-target-layer-stack-${paletteProfile}`,
+    family: "same_target_layer_stack",
+    paletteProfile,
+    layeringTaxonomy: ["same_target_layer_stack"],
+    targetSets: [{ scope: "model", targets: [star] }],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [star.modelName]
+      },
+      {
+        passId: "one_layer_foundation",
+        compositionPass: "foundation",
+        placements: [foundation],
+        displayElementOrder: [star.modelName]
+      },
+      {
+        passId: "two_layer_default",
+        compositionPass: "structure",
+        placements: [foundation, structure],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "one_layer_foundation",
+        changeType: "layer_added"
+      },
+      {
+        passId: "three_layer_default",
+        compositionPass: "detail",
+        placements: [foundation, structure, detail],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "two_layer_default",
+        changeType: "layer_added"
+      },
+      {
+        passId: "reversed_layer_order",
+        compositionPass: "order_variant",
+        placements: [reversedDetail, structure, reversedFoundation],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "three_layer_default",
+        changeType: "layer_order"
+      },
+      {
+        passId: "foundation_brightness_variant",
+        compositionPass: "render_setting_variant",
+        placements: [brightFoundation, structure, detail],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "three_layer_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "foundation_contrast_variant",
+        compositionPass: "render_setting_variant",
+        placements: [contrastFoundation, structure, detail],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "three_layer_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "foundation_canvas_variant",
+        compositionPass: "render_setting_variant",
+        placements: [canvasFoundation, structure, detail],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "three_layer_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "structure_additive_mix_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, additiveStructure, detail],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "three_layer_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "structure_mix_threshold_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, mixThresholdStructure, detail],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "three_layer_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "detail_blur_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, structure, blurredDetail],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "three_layer_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "detail_persistent_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, structure, persistentDetail],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "three_layer_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "detail_fade_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, structure, fadedDetail],
+        displayElementOrder: [star.modelName],
+        comparisonBasePassId: "three_layer_default",
+        changeType: "layer_render_setting"
+      }
+    ]
+  };
+}
+
+function makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target }) {
+  const foundation = placementFromSample({
+    id: `ss-${paletteProfile}-foundation`,
+    target,
+    targetScope: "group",
+    compositionPass: "foundation",
+    layerIndex: 0,
+    layerSettings: { mixMethod: "Normal" },
+    sampleRef: {
+      manifestPath: "scripts/sequencer-render-training/manifests/bars-archgroup-expanded-sweep-v1.json",
+      sampleId: "bars-archgroup-left-striped-v1"
+    },
+    layerIntent: { blendRole: "foundation", visualProbe: "edge_rich_base" }
+  });
+  const structure = placementFromSample({
+    id: `ss-${paletteProfile}-structure`,
+    target,
+    targetScope: "group",
+    compositionPass: "structure",
+    layerIndex: 1,
+    layerSettings: { mixMethod: "Normal" },
+    sampleRef: {
+      manifestPath: "scripts/sequencer-render-training/manifests/marquee-archgroup-palette-behavior-anchors-v1.json",
+      sampleId: "marquee-archgroup-skip-8-anchor-v1"
+    },
+    layerIntent: { blendRole: "structure", visualProbe: "sparse_edges" }
+  });
+  const detail = placementFromSample({
+    id: `ss-${paletteProfile}-detail`,
+    target,
+    targetScope: "group",
+    compositionPass: "detail",
+    layerIndex: 2,
+    layerSettings: { mixMethod: "Normal" },
+    sampleRef: {
+      manifestPath: "scripts/sequencer-render-training/manifests/marquee-archgroup-palette-behavior-anchors-v1.json",
+      sampleId: "marquee-archgroup-speed-9-anchor-v1"
+    },
+    layerIntent: { blendRole: "detail", visualProbe: "fast_sparse_motion" }
+  });
+  const canvasFoundation = {
+    ...foundation,
+    placementId: `ss-${paletteProfile}-foundation-canvas-variant`,
+    layerSettings: { ...foundation.layerSettings, canvas: true }
+  };
+  const additiveStructure = {
+    ...structure,
+    placementId: `ss-${paletteProfile}-structure-additive-variant`,
+    layerSettings: { ...structure.layerSettings, mixMethod: "Additive" }
+  };
+  const thresholdStructure = {
+    ...structure,
+    placementId: `ss-${paletteProfile}-structure-threshold-variant`,
+    layerSettings: { ...structure.layerSettings, mixThreshold: 45 }
+  };
+  const blurredStructure = {
+    ...structure,
+    placementId: `ss-${paletteProfile}-structure-blur-variant`,
+    layerSettings: { ...structure.layerSettings, blur: 6 }
+  };
+  const persistentDetail = {
+    ...detail,
+    placementId: `ss-${paletteProfile}-detail-persistent-variant`,
+    layerSettings: { ...detail.layerSettings, persistentOverlay: true }
+  };
+  const fadedStructure = {
+    ...structure,
+    placementId: `ss-${paletteProfile}-structure-fade-variant`,
+    layerSettings: { ...structure.layerSettings, fadeIn: "1.25", fadeOut: "1.25" }
+  };
+
+  return {
+    experimentId: `setting-sensitivity-edge-probe-${paletteProfile}`,
+    family: "setting_sensitivity_edge_probe",
+    paletteProfile,
+    curriculumStage: "setting_sensitivity_survey",
+    layeringTaxonomy: ["same_target_layer_stack", "render_setting_sensitivity", "edge_rich_overlap"],
+    targetSets: [{ scope: "group", targets: [target] }],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [target.modelName]
+      },
+      {
+        passId: "edge_stack_default",
+        compositionPass: "detail",
+        placements: [foundation, structure, detail],
+        displayElementOrder: [target.modelName]
+      },
+      {
+        passId: "foundation_canvas_variant",
+        compositionPass: "render_setting_variant",
+        placements: [canvasFoundation, structure, detail],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "edge_stack_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "structure_additive_mix_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, additiveStructure, detail],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "edge_stack_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "structure_mix_threshold_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, thresholdStructure, detail],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "edge_stack_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "structure_blur_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, blurredStructure, detail],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "edge_stack_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "detail_persistent_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, structure, persistentDetail],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "edge_stack_default",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "structure_fade_variant",
+        compositionPass: "render_setting_variant",
+        placements: [foundation, fadedStructure, detail],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "edge_stack_default",
+        changeType: "layer_render_setting"
+      }
+    ]
+  };
+}
+
+function makeSettingAttributionProbeExperiment({ paletteProfile, target }) {
+  const structure = placementFromSample({
+    id: `sa-${paletteProfile}-structure`,
+    target,
+    targetScope: "model",
+    compositionPass: "structure",
+    layerIndex: 0,
+    layerSettings: { mixMethod: "Normal" },
+    sampleRef: {
+      manifestPath: "scripts/sequencer-render-training/manifests/marquee-singlelinehorizontal-expanded-sweep-v1.json",
+      sampleId: "marquee-singlelinehorizontal-segmented-v1"
+    },
+    layerIntent: {
+      blendRole: "structure",
+      visualProbe: "single_line_segmented_edges",
+      attributionRole: "baseline_effect_sample"
+    }
+  });
+  const structureBandSizeEffect = effectSettingVariant(structure, {
+    id: `sa-${paletteProfile}-structure-band-size-effect`,
+    settingName: "bandSize",
+    variantValue: 7,
+    visualProbe: "single_line_band_size_change"
+  });
+  const structureSkipSizeEffect = effectSettingVariant(structure, {
+    id: `sa-${paletteProfile}-structure-skip-size-effect`,
+    settingName: "skipSize",
+    variantValue: 1,
+    visualProbe: "single_line_skip_size_change"
+  });
+  const structureThicknessEffect = effectSettingVariant(structure, {
+    id: `sa-${paletteProfile}-structure-thickness-effect`,
+    settingName: "thickness",
+    variantValue: 4,
+    visualProbe: "single_line_thickness_change"
+  });
+  const structureReverseEffect = effectSettingVariant(structure, {
+    id: `sa-${paletteProfile}-structure-reverse-effect`,
+    settingName: "reverse",
+    variantValue: true,
+    visualProbe: "single_line_reverse_motion"
+  });
+  const structureSpeedEffect = effectSettingVariant(structure, {
+    id: `sa-${paletteProfile}-structure-speed-effect`,
+    settingName: "speed",
+    variantValue: 7,
+    visualProbe: "single_line_speed_change"
+  });
+  const detail = placementFromSample({
+    id: `sa-${paletteProfile}-detail`,
+    target,
+    targetScope: "model",
+    compositionPass: "detail",
+    layerIndex: 1,
+    layerSettings: { mixMethod: "Normal" },
+    sampleRef: {
+      manifestPath: "scripts/sequencer-render-training/manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json",
+      sampleId: "twinkle-singlelinehorizontal-sparse-v1"
+    },
+    layerIntent: {
+      blendRole: "detail",
+      visualProbe: "sparse_texture_overlay",
+      attributionRole: "incremental_overlay"
+    }
+  });
+  const detailCountEffect = effectSettingVariant(detail, {
+    id: `sa-${paletteProfile}-detail-count-effect`,
+    settingName: "count",
+    variantValue: 9,
+    visualProbe: "dense_texture_count_change"
+  });
+  const detailStepsEffect = effectSettingVariant(detail, {
+    id: `sa-${paletteProfile}-detail-steps-effect`,
+    settingName: "steps",
+    variantValue: 40,
+    visualProbe: "dense_texture_steps_change"
+  });
+  const additiveDetail = {
+    ...detail,
+    placementId: `sa-${paletteProfile}-detail-additive-layer`,
+    layerSettings: { ...detail.layerSettings, mixMethod: "Additive" },
+    layerIntent: {
+      ...detail.layerIntent,
+      attributionRole: "layer_setting_ab_variant"
+    }
+  };
+  const thresholdDetail = {
+    ...detail,
+    placementId: `sa-${paletteProfile}-detail-threshold-layer`,
+    layerSettings: { ...detail.layerSettings, mixThreshold: 45 },
+    layerIntent: {
+      ...detail.layerIntent,
+      attributionRole: "layer_setting_ab_variant"
+    }
+  };
+  const blurredStructure = {
+    ...structure,
+    placementId: `sa-${paletteProfile}-structure-blur-layer`,
+    layerSettings: { ...structure.layerSettings, blur: 6 },
+    layerIntent: {
+      ...structure.layerIntent,
+      attributionRole: "layer_setting_ab_variant"
+    }
+  };
+  const fadedStructure = {
+    ...structure,
+    placementId: `sa-${paletteProfile}-structure-fade-layer`,
+    layerSettings: { ...structure.layerSettings, fadeIn: "1.25", fadeOut: "1.25" },
+    layerIntent: {
+      ...structure.layerIntent,
+      attributionRole: "layer_setting_ab_variant"
+    }
+  };
+
+  return {
+    experimentId: `setting-attribution-probe-${paletteProfile}`,
+    family: "setting_attribution_probe",
+    paletteProfile,
+    curriculumStage: "setting_sensitivity_survey",
+    designType: "ab_and_fractional_factorial",
+    layeringTaxonomy: [
+      "effect_setting_ab",
+      "layer_render_setting_ab",
+      "incremental_overlay_attribution",
+      "single_variable_change"
+    ],
+    targetSets: [{ scope: "model", targets: [target] }],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [target.modelName]
+      },
+      {
+        passId: "structure_sparse_baseline",
+        compositionPass: "structure",
+        placements: [structure],
+        displayElementOrder: [target.modelName]
+      },
+      {
+        passId: "structure_effect_band_size_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [structureBandSizeEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "effect_setting"
+      },
+      {
+        passId: "structure_effect_skip_size_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [structureSkipSizeEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "effect_setting"
+      },
+      {
+        passId: "structure_effect_thickness_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [structureThicknessEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "effect_setting"
+      },
+      {
+        passId: "structure_effect_reverse_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [structureReverseEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "effect_setting"
+      },
+      {
+        passId: "structure_effect_speed_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [structureSpeedEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "effect_setting"
+      },
+      {
+        passId: "structure_blur_layer_ab",
+        compositionPass: "render_setting_variant",
+        placements: [blurredStructure],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "structure_fade_layer_ab",
+        compositionPass: "render_setting_variant",
+        placements: [fadedStructure],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "structure_plus_sparse_detail",
+        compositionPass: "detail",
+        placements: [structure, detail],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "layer_added"
+      },
+      {
+        passId: "detail_effect_count_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [structure, detailCountEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_plus_sparse_detail",
+        changeType: "effect_setting"
+      },
+      {
+        passId: "detail_effect_steps_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [structure, detailStepsEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_plus_sparse_detail",
+        changeType: "effect_setting"
+      },
+      {
+        passId: "detail_additive_layer_ab",
+        compositionPass: "render_setting_variant",
+        placements: [structure, additiveDetail],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_plus_sparse_detail",
+        changeType: "layer_render_setting"
+      },
+      {
+        passId: "detail_mix_threshold_layer_ab",
+        compositionPass: "render_setting_variant",
+        placements: [structure, thresholdDetail],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_plus_sparse_detail",
+        changeType: "layer_render_setting"
+      }
+    ]
+  };
+}
+
+function makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target }) {
+  const structure = placement({
+    id: `lm-${paletteProfile}-${target.key}-structure`,
+    target,
+    targetScope: "model",
+    effectName: "Marquee",
+    compositionPass: "structure",
+    layerIndex: 0,
+    effectSettings: {
+      renderStyle: target.modelType === "single_line" ? "Single Line" : "Default",
+      bandSize: 3,
+      skipSize: 4,
+      thickness: 2,
+      stagger: 0,
+      speed: 5,
+      start: 0,
+      reverse: false
+    },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "structure",
+      visualProbe: "alternate_geometry_segmented_marquee",
+      attributionRole: "baseline_effect_sample",
+      retestReason: "single_line_horizontal_no_or_low_metric_movement"
+    }
+  });
+  const thicknessEffect = effectSettingVariant(structure, {
+    id: `lm-${paletteProfile}-${target.key}-structure-thickness-effect`,
+    settingName: "thickness",
+    variantValue: 4,
+    visualProbe: "alternate_geometry_thickness_change"
+  });
+  const reverseEffect = effectSettingVariant(structure, {
+    id: `lm-${paletteProfile}-${target.key}-structure-reverse-effect`,
+    settingName: "reverse",
+    variantValue: true,
+    visualProbe: "alternate_geometry_reverse_motion"
+  });
+  const speedEffect = effectSettingVariant(structure, {
+    id: `lm-${paletteProfile}-${target.key}-structure-speed-effect`,
+    settingName: "speed",
+    variantValue: 7,
+    visualProbe: "alternate_geometry_speed_positive_control"
+  });
+
+  return {
+    experimentId: `low-movement-setting-geometry-probe-${target.key}-${paletteProfile}`,
+    family: "low_movement_setting_geometry_probe",
+    paletteProfile,
+    curriculumStage: "setting_sensitivity_survey",
+    designType: "single_parameter_alternate_geometry",
+    layeringTaxonomy: [
+      "effect_setting_ab",
+      "alternate_geometry_retest",
+      "single_variable_change"
+    ],
+    targetSets: [{ scope: "model", targets: [target] }],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [target.modelName]
+      },
+      {
+        passId: "structure_sparse_baseline",
+        compositionPass: "structure",
+        placements: [structure],
+        displayElementOrder: [target.modelName]
+      },
+      {
+        passId: "structure_effect_thickness_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [thicknessEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "effect_setting"
+      },
+      {
+        passId: "structure_effect_reverse_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [reverseEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "effect_setting"
+      },
+      {
+        passId: "structure_effect_speed_ab",
+        compositionPass: "effect_setting_variant",
+        placements: [speedEffect],
+        displayElementOrder: [target.modelName],
+        comparisonBasePassId: "structure_sparse_baseline",
+        changeType: "effect_setting"
+      }
+    ]
+  };
+}
+
+function collectUnsupportedRenderSettings(supportedLayerSettings = []) {
+  const supported = new Set(supportedLayerSettings);
+  return RENDER_SETTING_CANDIDATES
+    .filter((setting) => !supported.has(setting))
+    .map((setting) => ({
+      settingName: setting,
+      status: "api_support_unverified",
+      recommendation: "Audit owned xLightsDesigner API support before execution."
+    }));
+}
+
+function normalizePriorRows(payload) {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload.flatMap(normalizePriorRows);
+  if (Array.isArray(payload.priors)) return payload.priors;
+  if (Array.isArray(payload.learnings)) return payload.learnings;
+  if (payload.learningId || payload.coverageKey) return [payload];
+  return [];
+}
+
+function durablePriorKey(prior) {
+  const learningId = String(prior?.learningId || "").trim();
+  const coverageKey = String(prior?.coverageKey || "").trim();
+  if (!learningId || !coverageKey) return "";
+  return `${coverageKey}::${learningId}`;
+}
+
+function isDurablePrior(prior) {
+  const durabilityStatus = String(prior?.durabilityStatus || prior?.status || "").trim();
+  const confidence = Number(prior?.confidence ?? prior?.evidenceSummary?.confidence ?? 0);
+  const revalidationReasons = Array.isArray(prior?.revalidationReasons) ? prior.revalidationReasons : [];
+  return (
+    ["durable", "reusable", "promoted"].includes(durabilityStatus)
+    && confidence >= 0.65
+    && revalidationReasons.length === 0
+  );
+}
+
+function buildPriorCoverage(priors = []) {
+  const durable = new Map();
+  const needsRevalidation = [];
+  for (const prior of normalizePriorRows(priors)) {
+    const key = durablePriorKey(prior);
+    if (!key) continue;
+    if (isDurablePrior(prior)) {
+      durable.set(key, prior);
+    } else {
+      needsRevalidation.push(prior);
+    }
+  }
+  return { durable, needsRevalidation };
+}
+
+function filterPassesByPriorCoverage(experiment, priorCoverage) {
+  const plannedPasses = [];
+  const skippedPasses = [];
+  for (const pass of experiment.passes || []) {
+    const seed = pass.learningSeed || {};
+    const key = `${seed.coverageKey || ""}::${seed.learningId || ""}`;
+    const durablePrior = priorCoverage.durable.get(key);
+    if (durablePrior && seed.revalidationPolicy?.skipWhenDurablePriorExists) {
+      skippedPasses.push({
+        passId: pass.passId,
+        learningId: seed.learningId,
+        coverageKey: seed.coverageKey,
+        skipReason: "durable_prior_exists",
+        priorRef: durablePrior.learningId || ""
+      });
+      continue;
+    }
+    plannedPasses.push(pass);
+  }
+  return {
+    ...experiment,
+    passes: plannedPasses,
+    skippedPasses
+  };
+}
+
+function coverageKeyForExperiment(experiment) {
+  const targetScope = (experiment.targetSets || [])
+    .map((set) => set.scope)
+    .filter(Boolean)
+    .join("+");
+  const geometryFamilies = [...new Set((experiment.targetSets || [])
+    .flatMap((set) => set.targets || [])
+    .map((target) => String(target.analyzerFamily || target.modelType || target.geometryProfile || "").trim())
+    .filter(Boolean))]
+    .sort()
+    .join("+");
+  return [
+    experiment.family,
+    experiment.paletteProfile,
+    targetScope || "unknown_scope",
+    geometryFamilies || "unknown_geometry"
+  ].join("|");
+}
+
+function learningSeedForPass(experiment, pass) {
+  const changedPlacement = (pass.placements || []).find((row) => row.placementId) || {};
+  return {
+    learningId: [
+      "layer_composition",
+      experiment.family,
+      experiment.paletteProfile,
+      pass.passId
+    ].join(":"),
+    coverageKey: coverageKeyForExperiment(experiment),
+    curriculumStage: experiment.curriculumStage,
+    revalidationPolicy: {
+      skipWhenDurablePriorExists: true,
+      validReasons: [
+        "xlights_renderer_version_changed",
+        "owned_api_layer_behavior_changed",
+        "observation_extractor_changed",
+        "canonical_fixture_geometry_changed",
+        "prior_confidence_low",
+        "conflicting_new_evidence",
+        "benchmark_gap_requires_deeper_sampling"
+      ]
+    },
+    evidenceFingerprintInputs: {
+      paletteProfile: experiment.paletteProfile,
+      family: experiment.family,
+      passId: pass.passId,
+      changeType: pass.changeType || "baseline_or_incremental",
+      targetCount: (pass.placements || []).length,
+      changedPlacementEffect: changedPlacement.effectName || "",
+      changedLayerIndex: changedPlacement.layerIndex ?? null
+    }
+  };
+}
+
+function attachLearningSeeds(experiment) {
+  const next = {
+    ...experiment,
+    curriculumStage: experiment.curriculumStage || "broad_composition_survey",
+    coverageKey: coverageKeyForExperiment(experiment)
+  };
+  next.passes = (next.passes || []).map((pass) => ({
+    ...pass,
+    learningSeed: learningSeedForPass(next, pass)
+  }));
+  return next;
+}
+
+function firstTargetKey(experiment) {
+  return String(experiment?.targetSets?.[0]?.targets?.[0]?.key || "").trim();
+}
+
+function runtimeSelectionForExperiment(experiment, runType) {
+  const targetKey = firstTargetKey(experiment);
+  const common = {
+    includeInSmokeValidation: true,
+    includeInFocusedValidation: true,
+    includeInOvernightQueue: true,
+    includeInExtendedQueue: true
+  };
+  if (experiment.family === "setting_attribution_probe") {
+    return {
+      ...common,
+      tier: "primary_setting_attribution",
+      queueRank: 10,
+      budgetWeight: 5,
+      selectionRole: "dominant_setting_sensitivity_workhorse",
+      reason: "Validated single-parameter A/B shape produces causal effect-setting and layer-setting deltas without multi-setting ambiguity."
+    };
+  }
+  if (experiment.family === "low_movement_setting_geometry_probe" && targetKey === "tree_flat") {
+    return {
+      ...common,
+      tier: "high_value_geometry_retest",
+      queueRank: 20,
+      budgetWeight: 3,
+      selectionRole: "alternate_geometry_width_direction_retest",
+      reason: "TreeFlat exposed Marquee thickness and reverse movement that did not appear on SingleLineHorizontal or ArchSingle."
+    };
+  }
+  if (experiment.family === "same_target_layer_stack") {
+    return {
+      ...common,
+      tier: "broad_layer_composition",
+      queueRank: 30,
+      budgetWeight: 2,
+      selectionRole: "same_target_layer_order_and_blend_baseline",
+      reason: "Keeps overnight learning grounded in additive layer construction and render-setting effects across stacked layers."
+    };
+  }
+  if (experiment.family === "group_model_interplay") {
+    return {
+      ...common,
+      tier: "group_model_ordering",
+      queueRank: 40,
+      budgetWeight: 2,
+      selectionRole: "group_model_overlap_and_display_order_baseline",
+      reason: "Covers broad-to-specific target interaction and display element order effects."
+    };
+  }
+  if (experiment.family === "setting_sensitivity_edge_probe") {
+    return {
+      ...common,
+      tier: "interaction_deepening",
+      queueRank: 50,
+      budgetWeight: 1,
+      selectionRole: "multi_layer_interaction_deepening",
+      reason: "Retains edge-rich grouped-arch interaction evidence, but not as the main causal setting-sensitivity path."
+    };
+  }
+  if (experiment.family === "low_movement_setting_geometry_probe" && targetKey === "arch_single") {
+    return {
+      ...common,
+      includeInOvernightQueue: false,
+      includeInExtendedQueue: false,
+      tier: "deferred_low_yield_retest",
+      queueRank: 90,
+      budgetWeight: 0,
+      selectionRole: "validation_only_low_yield_retest",
+      reason: "Smoke evidence matched SingleLineHorizontal for this Marquee retest; keep available for validation/debug, but skip normal overnight learning."
+    };
+  }
+  return {
+    ...common,
+    tier: "interaction_deepening",
+    queueRank: 60,
+    budgetWeight: 1,
+    selectionRole: "unclassified_deepening",
+    reason: "Included after higher-confidence training families."
+  };
+}
+
+function attachRuntimeSelection(experiment, runType) {
+  return {
+    ...experiment,
+    runtimeSelection: runtimeSelectionForExperiment(experiment, runType)
+  };
+}
+
+function includeExperimentForRunType(experiment, runType) {
+  const selection = experiment.runtimeSelection || runtimeSelectionForExperiment(experiment, runType);
+  if (runType === "smoke") return selection.includeInSmokeValidation;
+  if (runType === "focused_evening") return selection.includeInFocusedValidation;
+  if (runType === "extended") return selection.includeInExtendedQueue;
+  return selection.includeInOvernightQueue;
+}
+
+function sortExperimentsForRunType(experiments, runType) {
+  if (runType === "smoke" || runType === "focused_evening") return experiments;
+  return [...experiments].sort((a, b) => {
+    const aSelection = a.runtimeSelection || {};
+    const bSelection = b.runtimeSelection || {};
+    return (Number(aSelection.queueRank) || 999) - (Number(bSelection.queueRank) || 999)
+      || String(a.experimentId || "").localeCompare(String(b.experimentId || ""));
+  });
+}
+
+export function buildLayerCompositionTrainingPlan({
+  modelCatalog,
+  runId = `layer-composition-${stamp()}`,
+  paletteProfiles = DEFAULT_PALETTE_PROFILES,
+  runType = DEFAULT_RUN_TYPE,
+  maxRuntimeMinutes = null,
+  supportedLayerSettings = VERIFIED_OWNED_LAYER_RENDER_SETTINGS,
+  existingPriors = []
+} = {}) {
+  const runtimeBudget = RUNTIME_BUDGETS[runType] || RUNTIME_BUDGETS.overnight;
+  const resolvedMaxRuntimeMinutes = maxRuntimeMinutes !== null && maxRuntimeMinutes !== undefined && Number.isFinite(Number(maxRuntimeMinutes))
+    ? Number(maxRuntimeMinutes)
+    : runtimeBudget.maxRuntimeMinutes;
+  const archGroup = model(modelCatalog, "arch_group");
+  const archSingle = model(modelCatalog, "arch_single");
+  const singleLineHorizontal = model(modelCatalog, "single_line_horizontal");
+  const treeFlat = model(modelCatalog, "tree_flat");
+  const spinner = model(modelCatalog, "spinner");
+  const star = model(modelCatalog, "star_triple_layer");
+  const baseExperiments = (paletteProfile) => [
+    makeGroupModelExperiment({ paletteProfile, archGroup, archSingle, spinner }),
+    makeSameTargetLayerExperiment({ paletteProfile, star }),
+    makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target: archGroup }),
+    makeSettingAttributionProbeExperiment({ paletteProfile, target: singleLineHorizontal }),
+    makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target: archSingle }),
+    makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target: treeFlat })
+  ];
+
+  const priorCoverage = buildPriorCoverage(existingPriors);
+  const plannedExperiments = paletteProfiles.flatMap(baseExperiments)
+    .map(attachLearningSeeds)
+    .map((experiment) => attachRuntimeSelection(experiment, runType))
+    .map((experiment) => filterPassesByPriorCoverage(experiment, priorCoverage))
+    .filter((experiment) => (experiment.passes || []).length > 0);
+  const experiments = sortExperimentsForRunType(
+    plannedExperiments.filter((experiment) => includeExperimentForRunType(experiment, runType)),
+    runType
+  );
+  const runSelectionSkipCount = plannedExperiments.length - experiments.length;
+  const skippedLearningCount = plannedExperiments
+    .reduce((total, experiment) => total + (experiment.skippedPasses || []).length, 0);
+
+  return {
+    artifactType: "layer_composition_experiment_manifest_v1",
+    artifactVersion: 1,
+    runId,
+    generatedAt: new Date().toISOString(),
+    status: "dry_run_plan",
+    trainingDisplay: {
+      showDir: modelCatalog.showDir,
+      fixtureSequencePath: modelCatalog.fixtureSequencePath,
+      layoutName: modelCatalog.layoutName
+    },
+    paletteProfiles: paletteProfiles.map((profile) => ({
+      profile,
+      settings: paletteSettings(profile)
+    })),
+    experimentFamilies: [
+      "group_model_interplay",
+      "same_target_layer_stack",
+      "setting_sensitivity_edge_probe",
+      "setting_attribution_probe",
+      "low_movement_setting_geometry_probe"
+    ],
+    curriculum: {
+      strategy: "broad_to_specific",
+      activeStage: "broad_composition_survey",
+      stages: CURRICULUM_STAGES,
+      coveragePolicy: {
+        preferBroadUncoveredKeys: true,
+        skipDurableCoveredLearnings: true,
+        avoidRepeatValidationWithoutReason: true
+      },
+      adaptiveRefillPolicy: {
+        enabled: runType !== "smoke",
+        goal: "continue_until_runtime_budget_or_hard_stop",
+        refillOrder: ADAPTIVE_REFILL_ORDER,
+        earlyStopRequiresReason: true,
+        normalCompletionStatus: "runtime_budget_reached",
+        hardStopReasons: [
+          "xlights_unhealthy",
+          "repeated_render_failures",
+          "modal_state_unresolved",
+          "artifact_write_failed",
+          "no_valid_non_repeated_experiment",
+          "operator_stop_requested"
+        ]
+      },
+      runtimeSelectionPolicy: {
+        strategy: runType === "smoke" || runType === "focused_evening"
+          ? "validation_preserves_manifest_order"
+          : "prioritized_time_budget_queue",
+        tiers: RUNTIME_SELECTION_TIERS,
+        budgetWeightMeaning: "relative queue/refill emphasis, not a random sampling probability",
+        overnightEmphasis: [
+          "setting_attribution_probe",
+          "low_movement_setting_geometry_probe:tree_flat",
+          "same_target_layer_stack",
+          "group_model_interplay"
+        ],
+        overnightDeferred: [
+          {
+            family: "low_movement_setting_geometry_probe",
+            targetKey: "arch_single",
+            reason: "recent smoke evidence showed low yield for Marquee thickness/reverse on this geometry"
+          }
+        ],
+        runSelectionSkipCount
+      },
+      priorCoverageSummary: {
+        durablePriorCount: priorCoverage.durable.size,
+        revalidationCandidateCount: priorCoverage.needsRevalidation.length,
+        skippedLearningCount
+      }
+    },
+    compositionPasses: [
+      "empty_baseline",
+      "foundation",
+      "structure",
+      "focal",
+      "detail",
+      "order_variant",
+      "effect_setting_variant",
+      "render_setting_variant"
+    ],
+    renderOrderContract: {
+      sourceSpec: "specs/sequence-agent/xlights-layering-render-order-audit-2026-04-17.md",
+      physicalLayerOrderPolicy: "preserve layerIndex separately from compositionPass; do not infer topmost dominance from layer number alone",
+      displayElementOrderPolicy: "explicitly test broad-before-specific and specific-before-broad order when group/model targets overlap"
+    },
+    targetStateKnowledgeContract: {
+      goal: "produce indexed advisory evidence for sequencer planning decisions rather than append-only training logs",
+      consumptionArtifact: "sequencer_layer_composition_guidance_v1",
+      promotionArtifact: "sequencer_layer_composition_priors_bundle",
+      retrievalFacets: [
+        "compositionIntent",
+        "targetScope",
+        "modelType",
+        "geometryProfile",
+        "paletteProfile",
+        "effectName",
+        "compositionPass",
+        "layerIndex",
+        "layerBlendRole",
+        "observedOutcome",
+        "confidence",
+        "promotionState"
+      ],
+      evidenceFlow: [
+        "composition_stack_observation_v1",
+        "layer_composition_delta_summary_v1",
+        "layer_composition_priors_v1",
+        "sequencer_layer_composition_priors_bundle",
+        "sequencer_layer_composition_guidance_v1"
+      ],
+      sequencerUsePolicy: "advisory_evidence_not_recipe",
+      requiredPriorFields: [
+        "priorId",
+        "scope",
+        "conditions",
+        "observedEffects",
+        "guidance",
+        "safeguards",
+        "sourceObservationRef"
+      ]
+    },
+    experiments,
+    unsupportedRenderSettings: collectUnsupportedRenderSettings(supportedLayerSettings),
+    runType,
+    runtimeBudget: {
+      ...runtimeBudget,
+      maxRuntimeMinutes: resolvedMaxRuntimeMinutes
+    },
+    resumePolicy: {
+      checkpointAfterEachPass: true,
+      appendOnlyObservations: true,
+      preserveDurableLearningIds: true
+    },
+    retentionPolicy: {
+      ...DEFAULT_RETENTION_POLICY,
+      externalDeleteRoots: [modelCatalog.showDir].filter(Boolean)
+    },
+    promotionPolicy: {
+      promoteByDefault: false,
+      requiresSmokeRun: true,
+      requiresNonEmptyDeltas: true,
+      requiresBothPaletteProfiles: true
+    },
+    maxRuntimeMinutes: resolvedMaxRuntimeMinutes
+  };
+}
+
+function parseArgs(argv) {
+  const args = {
+    modelCatalogPath: DEFAULT_MODEL_CATALOG,
+    outPath: DEFAULT_OUT,
+    runId: "",
+    runType: DEFAULT_RUN_TYPE,
+    maxRuntimeMinutes: null,
+    priorFiles: []
+  };
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--model-catalog") {
+      args.modelCatalogPath = argv[++index];
+    } else if (arg === "--out") {
+      args.outPath = argv[++index];
+    } else if (arg === "--run-id") {
+      args.runId = argv[++index];
+    } else if (arg === "--run-type") {
+      args.runType = argv[++index];
+    } else if (arg === "--max-runtime-minutes") {
+      args.maxRuntimeMinutes = Number(argv[++index]);
+    } else if (arg === "--prior-file") {
+      args.priorFiles.push(argv[++index]);
+    } else if (arg === "--help") {
+      args.help = true;
+    } else {
+      throw new Error(`Unknown argument: ${arg}`);
+    }
+  }
+  return args;
+}
+
+function usage() {
+  return `Usage:
+  node scripts/sequencer-render-training/tooling/build-layer-composition-training-plan.mjs [options]
+
+Options:
+  --model-catalog <path>        Canonical model catalog path.
+  --out <path>                  Output training plan JSON path.
+  --run-id <id>                 Override generated run id.
+  --run-type <type>             smoke, focused_evening, overnight, or extended. Default: overnight.
+  --max-runtime-minutes <n>     Override run type max runtime metadata.
+  --prior-file <path>           Existing layer composition priors to skip durable covered learnings. Repeatable.
+  --help                        Show this help.
+`;
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help) {
+    process.stdout.write(usage());
+    return;
+  }
+  const modelCatalog = readJson(args.modelCatalogPath);
+  const existingPriors = args.priorFiles.flatMap((filePath) => normalizePriorRows(readJson(filePath)));
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: args.runId || undefined,
+    runType: args.runType,
+    maxRuntimeMinutes: args.maxRuntimeMinutes,
+    existingPriors
+  });
+  ensureDir(args.outPath);
+  fs.writeFileSync(args.outPath, `${JSON.stringify(plan, null, 2)}\n`);
+  process.stdout.write(`${args.outPath}\n`);
+}
+
+const isCli = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isCli) {
+  main().catch((error) => {
+    console.error(error.message);
+    process.exit(1);
+  });
+}

@@ -29,7 +29,13 @@ function sampleCatalog() {
   return buildEffectDefinitionCatalog([
     { effectName: "Bars", params: [] },
     { effectName: "Color Wash", params: [] },
+    { effectName: "Marquee", params: [] },
+    { effectName: "Pinwheel", params: [] },
     { effectName: "Shimmer", params: [] },
+    { effectName: "Shockwave", params: [] },
+    { effectName: "SingleStrand", params: [] },
+    { effectName: "Spirals", params: [] },
+    { effectName: "Twinkle", params: [] },
     { effectName: "On", params: [] }
   ]);
 }
@@ -222,6 +228,167 @@ test("sequence_agent builds validated command plan from handoffs", () => {
   assert.equal(out.metadata.degradedMode, false);
   assert.deepEqual(out.metadata.scope.sections, ["Chorus 1"]);
   assert.equal(out.commands.some((row) => row.cmd === "effects.alignToTiming"), true);
+});
+
+test("sequence_agent uses deterministic trained effect portfolio for full-display creation", () => {
+  const analysisHandoff = {
+    trackIdentity: { title: "Track A", artist: "Artist A" },
+    structure: {
+      sections: [
+        { label: "Intro", startMs: 0, endMs: 12000 },
+        { label: "Verse 1", startMs: 12000, endMs: 36000 },
+        { label: "Chorus 1", startMs: 36000, endMs: 56000 },
+        { label: "Outro", startMs: 56000, endMs: 70000 }
+      ]
+    },
+    briefSeed: { tone: "warm" }
+  };
+  const targetIds = [
+    "Floods House",
+    "Floods Trees",
+    "Snowflakes",
+    "MiniCanes",
+    "NorthPoleSign",
+    "Presents"
+  ];
+  const out = buildSequenceAgentPlan({
+    analysisHandoff,
+    intentHandoff: {
+      goal: "Create a complete first-pass full-display sequence with warm opening, rhythmic development, bigger chorus moments, and a resolved ending.",
+      mode: "create",
+      scope: {
+        targetIds,
+        tagNames: ["Snowflakes", "Floods House", "MiniCanes"],
+        sections: []
+      },
+      executionStrategy: {
+        passScope: "whole_sequence",
+        shouldUseFullSongStructureTrack: true,
+        sectionPlans: [
+          {
+            section: "General",
+            targetIds,
+            intentSummary: "Full display sequence with soft texture, rhythm, spiral flow, and chorus lift."
+          }
+        ]
+      },
+      sequencingDesignHandoff: {
+        artifactType: "sequencing_design_handoff_v2",
+        artifactId: "sequencing-design-test",
+        designSummary: "Full display reference-guided pass",
+        sectionDirectives: [
+          { sectionName: "Intro", energyTarget: "low", densityTarget: "sparse", sectionPurpose: "warm opening" },
+          { sectionName: "Chorus 1", energyTarget: "peak", densityTarget: "very dense", sectionPurpose: "bigger chorus lift" }
+        ],
+        paletteRoles: [
+          { name: "candle gold", hex: "#ffd36a", role: "warm highlight" },
+          { name: "evergreen", hex: "#1f7a4a", role: "support base" },
+          { name: "deep red", hex: "#c8324a", role: "accent" },
+          { name: "ice white", hex: "#dff6ff", role: "cool sparkle" }
+        ],
+        referenceSequencePatterns: {
+          artifactId: "sequence_reference_patterns_v1-test",
+          analyzedSequenceCount: 3,
+          averageEffectsPerSequence: 1200,
+          averageActiveTargets: 32,
+          averageLayeredTargets: 9,
+          densityPerMinute: { median: 240 },
+          commonEffects: [
+            { name: "SingleStrand", count: 90 },
+            { name: "Color Wash", count: 40 }
+          ]
+        }
+      }
+    },
+    sourceLines: ["General / Whole Show / create full display sequence from designer context"],
+    baseRevision: "rev-full-display",
+    effectCatalog: sampleCatalog(),
+    sequenceSettings: { durationMs: 70000, frameMs: 50 },
+    displayElements: [
+      ...["AllModels_NoMatrix_Floods", "AllModels_NoMatrix", "FrontHouse", "FrontProps", "Borders", "Eaves"].map((id) => ({ id, name: id, type: "model_group", positionX: 50, positionY: 50 })),
+      { id: "Flood_House-01", name: "Flood_House-01", type: "model", positionX: 10, positionY: 80 },
+      { id: "Flood_House-02", name: "Flood_House-02", type: "model", positionX: 90, positionY: 80 },
+      { id: "Flood_Tree-01", name: "Flood_Tree-01", type: "model", positionX: 12, positionY: 20 },
+      { id: "Flood_Tree-02", name: "Flood_Tree-02", type: "model", positionX: 88, positionY: 20 },
+      { id: "Snowflake_Large-01", name: "Snowflake_Large-01", type: "model", positionX: 20, positionY: 15 },
+      { id: "Snowflake_Small-01", name: "Snowflake_Small-01", type: "model", positionX: 80, positionY: 15 },
+      { id: "MiniCane-01", name: "MiniCane-01", type: "model", positionX: 25, positionY: 90 },
+      { id: "MiniCane-02", name: "MiniCane-02", type: "model", positionX: 75, positionY: 90 },
+      { id: "Present-01", name: "Present-01", type: "model", positionX: 40, positionY: 85 },
+      { id: "Border-01", name: "Border-01", type: "model", positionX: 95, positionY: 50 },
+      ...targetIds.map((id) => ({ id, name: id, type: "model_group", positionX: 50, positionY: 50 }))
+    ]
+  });
+
+  const effectCommands = out.commands.filter((command) => command.cmd === "effects.create");
+  const effectNames = Array.from(new Set(effectCommands.map((command) => command.params.effectName)));
+  assert.ok(effectCommands.length >= 12);
+  assert.ok(effectNames.length >= 4);
+  assert.ok(effectCommands.some((command) => command.params.layerIndex === 1));
+  assert.ok(effectCommands.every((command) => command.intent?.settingsIntent?.deterministicEffectSelection === "training_metadata_ranked_no_random"));
+  assert.ok(effectCommands.every((command) => command.intent?.compositionRole));
+  assert.ok(effectCommands.every((command) => command.intent?.targetRole));
+  assert.ok(effectCommands.every((command) => command.intent?.section));
+  assert.ok(effectCommands.every((command) => command.intent?.sourceSectionLabel));
+  assert.ok(effectCommands.some((command) => command.intent?.compositionRole === "focal"));
+  assert.ok(effectCommands.some((command) => command.intent?.compositionRole === "accent"));
+  assert.ok(effectCommands.some((command) => command.intent?.compositionRole === "layer_stack"));
+  assert.ok(effectCommands.some((command) => command.intent?.targetGranularity === "member"));
+  assert.ok(effectCommands.some((command) => command.params.modelName === "Snowflake_Large-01" || command.params.modelName === "MiniCane-01" || command.params.modelName === "Flood_House-01"));
+  assert.ok(effectCommands.some((command) => command.params.palette?.C_BUTTON_Palette1 === "#ffd36a"));
+  const canonicalPaletteSlots = {
+    C_BUTTON_Palette1: "#ffd36a",
+    C_BUTTON_Palette2: "#1f7a4a",
+    C_BUTTON_Palette3: "#c8324a",
+    C_BUTTON_Palette4: "#dff6ff",
+    C_BUTTON_Palette5: "#dff6ff",
+    C_BUTTON_Palette6: "#c8324a",
+    C_BUTTON_Palette7: "#1f7a4a",
+    C_BUTTON_Palette8: "#ffd36a"
+  };
+  const paletteSlotsFor = (command) => Object.fromEntries(
+    Object.keys(canonicalPaletteSlots).map((key) => [key, command.params.palette?.[key]])
+  );
+  assert.deepEqual(paletteSlotsFor(effectCommands[0]), canonicalPaletteSlots);
+  assert.ok(effectCommands.every((command) => JSON.stringify(paletteSlotsFor(command)) === JSON.stringify(canonicalPaletteSlots)));
+  assert.ok(new Set(effectCommands.map((command) => JSON.stringify(Object.fromEntries(
+    Object.entries(command.params.palette || {}).filter(([key]) => key.startsWith("C_CHECKBOX_Palette"))
+  )))).size > 1);
+  assert.ok(effectCommands.some((command) => command.intent?.settingsIntent?.configuredBehaviorRecordId));
+  assert.ok(effectCommands.some((command) => command.intent?.parameterPriorGuidance?.configuredBehaviorRecordId));
+  assert.ok(effectCommands.some((command) => command.intent?.parameterPriorGuidance?.priors?.some((prior) => prior.sourceRecordId)));
+  assert.ok(out.metadata.effectPlacements.some((placement) => placement.layerCompositionGuidance?.artifactType === "sequencer_layer_composition_guidance_v1"));
+  assert.ok(out.metadata.effectPlacements.some((placement) => placement.settingsIntent?.layerCompositionPriorIds?.length > 0));
+  assert.ok(out.metadata.effectPlacementCount >= 12);
+  assert.ok(out.metadata.effectPlacements.every((placement) => placement.sourceSectionLabel));
+  assert.ok(out.metadata.effectPlacements.some((placement) => placement.targetGranularity === "member"));
+  const placementQuadrants = new Set(out.metadata.effectPlacements.map((placement) => placement.targetSpatial?.quadrant).filter(Boolean));
+  assert.ok(placementQuadrants.has("top_left"));
+  assert.ok(placementQuadrants.has("top_right"));
+  assert.ok(placementQuadrants.has("bottom_left"));
+  assert.ok(placementQuadrants.has("bottom_right"));
+  assert.ok(effectCommands.some((command) => command.intent?.settingsIntent?.targetSpatial?.quadrant === "top_left"));
+  assert.equal(out.metadata.referenceSequencePatterns.artifactId, "sequence_reference_patterns_v1-test");
+  assert.equal(out.metadata.effectStrategy.visualPlanningContext.referenceEffects.includes("SingleStrand"), true);
+  assert.equal(out.metadata.effectStrategy.visualPlanningContext.paletteRows.length, 4);
+  assert.equal(out.metadata.effectStrategy.compositionPlan.artifactType, "composition_plan_v1");
+  assert.equal(out.metadata.effectStrategy.compositionPlan.source.targetScopePolicy, "selected_semantic_tags_plus_broad_display_groups");
+  assert.equal(out.metadata.effectStrategy.compositionPlan.targetRoles.activeTargets.includes("AllModels_NoMatrix_Floods"), true);
+  assert.equal(out.metadata.effectStrategy.compositionPlan.targetRoles.activeTargets.includes("Borders"), true);
+  assert.equal(out.metadata.effectStrategy.compositionPlan.targetRoles.activeTargets.includes("Eaves"), true);
+  assert.equal(out.metadata.effectStrategy.compositionPlan.targetRoles.foundation.includes("Borders"), true);
+  assert.equal(out.metadata.effectStrategy.compositionPlan.targetRoles.foundation.includes("Eaves"), true);
+  assert.ok(out.metadata.effectStrategy.compositionPlan.targetRoles.concreteTargets.length > 0);
+  assert.ok(out.metadata.effectStrategy.compositionPlan.sections.length >= 4);
+  assert.ok(out.metadata.effectStrategy.compositionPlan.totals.placementCount >= effectCommands.length);
+  const introComposition = out.metadata.effectStrategy.compositionPlan.sections.find((section) => section.section === "Intro");
+  const chorusComposition = out.metadata.effectStrategy.compositionPlan.sections.find((section) => section.section === "Chorus 1");
+  assert.ok(chorusComposition.densityMultiplier > introComposition.densityMultiplier);
+  assert.ok(chorusComposition.placementGoal > introComposition.placementGoal);
+  assert.ok(out.metadata.effectStrategy.compositionPlan.sections[0].backgroundRegion.length > 0);
+  assert.equal(typeof out.metadata.effectStrategy.compositionPlan.sections[0].expectedBalance.spatialBreadth, "string");
+  assert.equal(typeof out.metadata.effectStrategy.compositionPlan.sections[0].progressionIntent, "string");
+  assert.equal(out.metadata.effectStrategy.seedRecommendations[0].effectName, effectCommands[0].params.effectName);
 });
 
 test("sequence_agent preserves existing overlapping effects by moving new effects to an open layer", () => {
@@ -1265,6 +1432,8 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.sectionScopeKind, "timing_track_windows");
   assert.equal(out.metadata.parameterTrainingKnowledge.artifactType, "sequencer_derived_parameter_priors_bundle");
   assert.equal(out.metadata.sharedSettingTrainingKnowledge.artifactType, "sequencer_cross_effect_shared_settings_bundle");
+  assert.equal(out.metadata.trainingKnowledge.behaviorCapabilityRecordType, "behavior_capability_record_v1");
+  assert.ok(out.metadata.trainingKnowledge.behaviorCapabilityCount >= 10);
   assert.equal(out.metadata.intentEnvelope.attention.profile, "weighted");
   assert.equal(out.metadata.realizationCandidates.source.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
   assert.equal(out.metadata.candidateSelection.source.intentEnvelopeRef, out.metadata.intentEnvelope.artifactId);
@@ -3031,6 +3200,33 @@ test("sequence_agent enables model blending when layered group refinement needs 
   const settingsCommand = out.commands.find((row) => row.cmd === "sequence.setSettings");
   assert.ok(settingsCommand);
   assert.equal(settingsCommand.params.supportsModelBlending, true);
+});
+
+test("sequence_agent does not request model blending when settings writes are unavailable", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Refine a broad group bed with focal prop detail",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline", "MegaTree"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Frontline / bars",
+      "Chorus 1 / MegaTree / shimmer"
+    ],
+    baseRevision: "rev-57",
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.alignToTiming"],
+    effectCatalog: sampleCatalog(),
+    sequenceSettings: { supportsModelBlending: false },
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups()
+  });
+
+  assert.equal(out.commands.some((row) => row.cmd === "sequence.setSettings"), false);
 });
 
 test("sequence_agent falls back cleanly when effects.alignToTiming capability is unavailable", () => {

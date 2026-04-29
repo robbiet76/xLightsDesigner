@@ -45,7 +45,7 @@ final class DisplayScreenViewModel {
 
     enum MetadataStatusFilter: String, CaseIterable {
         case all = "All Statuses"
-        case confirmed = "Confirmed"
+        case confirmed = "Current"
         case proposed = "Proposed"
     }
 
@@ -157,6 +157,44 @@ final class DisplayScreenViewModel {
             selectedRowIDs = [first.id]
         }
         syncSelectedMetadata()
+    }
+
+    @discardableResult
+    func selectMetadataRow(matchingSubject rawSubject: String) -> Bool {
+        let subject = rawSubject.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !subject.isEmpty else { return false }
+        clearFilters()
+        let match = metadataRow(matchingSubject: subject)
+        guard let match else { return false }
+        selectedRowIDs = [match.id]
+        syncSelectedMetadata()
+        return true
+    }
+
+    @discardableResult
+    func selectMetadataRows(matchingSubjects rawSubjects: [String]) -> Bool {
+        let matches = rawSubjects.compactMap { metadataRow(matchingSubject: $0) }
+        let ids = Set(matches.map(\.id))
+        guard !ids.isEmpty else { return false }
+        clearFilters()
+        selectedRowIDs = ids
+        syncSelectedMetadata()
+        return true
+    }
+
+    private func metadataRow(matchingSubject rawSubject: String) -> DisplayMetadataRowModel? {
+        let subject = rawSubject.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !subject.isEmpty else { return nil }
+        let normalized = subject.lowercased()
+        return screenModel.metadataRows.first {
+            $0.subject.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == normalized
+        } ?? screenModel.metadataRows.first {
+            $0.linkedTargets.contains { target in
+                target.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == normalized
+            }
+        } ?? screenModel.metadataRows.first {
+            $0.subject.localizedCaseInsensitiveContains(subject) || subject.localizedCaseInsensitiveContains($0.subject)
+        }
     }
 
     var selectedMetadataRows: [DisplayMetadataRowModel] {
@@ -654,7 +692,7 @@ final class DisplayScreenViewModel {
                 value: bucket.definition.description.isEmpty ? "Project display label." : bucket.definition.description,
                 status: .confirmed,
                 source: .userAndAgent,
-                rationale: "Confirmed in the project display metadata store.",
+                rationale: "Current project display metadata entry; it can evolve as the conversation adds or revises understanding.",
                 linkedTargets: targets
             )
         }
@@ -702,9 +740,9 @@ final class DisplayScreenViewModel {
         var cards = [
             DisplayMetadataOverviewCardModel(
                 id: "confirmed",
-                title: "Confirmed",
+                title: "Current",
                 valueText: "\(confirmed.count)",
-                detailText: confirmed.isEmpty ? "No confirmed learnings yet." : "User-grounded entries already shaping the display understanding.",
+                detailText: confirmed.isEmpty ? "No current learnings yet." : "User-grounded entries currently shaping the display understanding.",
                 accent: confirmed.isEmpty ? .needsReview : .ready
             ),
             DisplayMetadataOverviewCardModel(

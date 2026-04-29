@@ -1,0 +1,50 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "strobe-matrix-expanded-sweep-v1",
+  "description": "First focused Strobe sweep on the canonical high-density matrix model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Strobe flash-field baseline using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "strobe-matrix-sparse-v1",
+      "effectName": "Strobe",
+      "effectSettings": {
+        "duration": 10,
+        "numberStrobes": 10,
+        "type": 1
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "flash_field",
+        "sparse_strobe"
+      ]
+    },
+    {
+      "sampleId": "strobe-matrix-dense-v1",
+      "effectName": "Strobe",
+      "effectSettings": {
+        "duration": 10,
+        "numberStrobes": 50,
+        "type": 3
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "flash_field",
+        "dense_strobe"
+      ]
+    }
+  ]
+}

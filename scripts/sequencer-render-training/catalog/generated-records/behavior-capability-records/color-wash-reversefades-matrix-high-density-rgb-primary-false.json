@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "color-wash-reversefades-matrix-high-density-rgb-primary-false",
-  "createdAt": "2026-04-16T18:35:27.477Z",
+  "createdAt": "2026-04-28T14:23:35.928Z",
   "effectName": "Color Wash",
   "geometryProfile": "matrix_high_density",
   "modelType": "matrix",
@@ -20,31 +20,31 @@
   },
   "behaviorSignals": {
     "primaryMotion": "subtle_motion",
-    "primaryTexture": "flat_fill",
+    "primaryTexture": "decoded_fseq",
     "motionPacing": "subtle_motion",
-    "textureDensity": "flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,reverseFades_false,stable_brightness,steady_wash,subtle_color_travel,subtle_motion_window,wash_fill",
-    "energyLevel": "moderate",
+    "textureDensity": "decoded_fseq,linear_palette,matrix_fill,minimal_color_travel,partial_coverage,registry_generated,sparse_window_coverage,stable_brightness,static_window,steady_wash,vertical_fade,wash_fill",
+    "energyLevel": "elevated",
     "coverageLevel": "broad",
     "hierarchySuitability": "unknown",
     "geometryCoupling": "observed",
-    "stability": "low"
+    "stability": "medium"
   },
   "renderOutcomeSignals": {
     "temporalRead": "subtle_motion",
     "densityRead": "dense",
-    "nonBlankRatio": 0.75,
-    "temporalMotion": 0.03496,
-    "temporalColorDelta": 0.077468,
-    "temporalBrightnessDelta": 0.018025,
+    "nonBlankRatio": 0.839627,
+    "temporalMotion": 0.101028,
+    "temporalColorDelta": 0.101653,
+    "temporalBrightnessDelta": 0.100779,
     "clarityRead": "unknown",
     "contrastRead": "unknown"
   },
   "confidence": {
-    "level": "low",
+    "level": "medium",
     "evidenceClass": "aggregated_render",
-    "coverageStatus": "single_reference_per_geometry"
+    "coverageStatus": "multi_configuration_sampled"
   },
-  "evidenceCount": 1,
+  "evidenceCount": 68,
   "traceability": {
     "sourceArtifactIds": [
       "sequencer_unified_training_set_v1"

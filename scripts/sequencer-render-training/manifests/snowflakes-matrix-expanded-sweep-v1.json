@@ -1,0 +1,52 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "snowflakes-matrix-expanded-sweep-v1",
+  "description": "First focused Snowflakes sweep on the canonical high-density matrix model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Snowflakes particle field baseline using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "snowflakes-matrix-driving-v1",
+      "effectName": "Snowflakes",
+      "effectSettings": {
+        "count": 15,
+        "speed": 10,
+        "type": 1,
+        "falling": "Driving"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "particle_field",
+        "driving_snow"
+      ]
+    },
+    {
+      "sampleId": "snowflakes-matrix-falling-v1",
+      "effectName": "Snowflakes",
+      "effectSettings": {
+        "count": 15,
+        "speed": 10,
+        "type": 3,
+        "falling": "Falling"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "behavior_anchor",
+        "particle_field",
+        "falling_snow"
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "artifactType": "behavior_capability_record_v1",
   "artifactVersion": "1.0",
   "recordId": "shockwave-endradius-spinner-standard-mono-white-10",
-  "createdAt": "2026-04-16T18:35:27.480Z",
+  "createdAt": "2026-04-28T14:23:35.929Z",
   "effectName": "Shockwave",
   "geometryProfile": "spinner_standard",
   "modelType": "spinner",
@@ -20,31 +20,31 @@
   },
   "behaviorSignals": {
     "primaryMotion": "static_or_near_static",
-    "primaryTexture": "compact_shockwave",
+    "primaryTexture": "blended_shockwave",
     "motionPacing": "static_or_near_static",
-    "textureDensity": "compact_shockwave,endRadius_10,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
+    "textureDensity": "blended_shockwave,centered_shockwave,compact_shockwave,decoded_fseq,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
     "energyLevel": "restrained",
     "coverageLevel": "sparse",
     "hierarchySuitability": "unknown",
     "geometryCoupling": "observed",
-    "stability": "medium"
+    "stability": "high"
   },
   "renderOutcomeSignals": {
     "temporalRead": "static_or_near_static",
     "densityRead": "sparse",
-    "nonBlankRatio": 0,
-    "temporalMotion": 0.001055,
-    "temporalColorDelta": 0.000422,
-    "temporalBrightnessDelta": 0.000422,
+    "nonBlankRatio": 0.001771,
+    "temporalMotion": 0.000197,
+    "temporalColorDelta": 0.000091,
+    "temporalBrightnessDelta": 0.000091,
     "clarityRead": "unknown",
     "contrastRead": "unknown"
   },
   "confidence": {
-    "level": "medium",
+    "level": "high",
     "evidenceClass": "aggregated_render",
-    "coverageStatus": "single_reference_per_geometry"
+    "coverageStatus": "multi_configuration_sampled"
   },
-  "evidenceCount": 1,
+  "evidenceCount": 6,
   "traceability": {
     "sourceArtifactIds": [
       "sequencer_unified_training_set_v1"

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from copy import deepcopy
 from pathlib import Path
 
@@ -20,14 +21,27 @@ EFFECT_TEMPLATE_MANIFESTS = {
     'Twinkle': 'scripts/sequencer-render-training/manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json',
 }
 
-DEFAULT_XLIGHTS_PALETTE = {
-    "C_BUTTON_Palette1": "#FFFFFF",
-    "C_BUTTON_Palette2": "#FF0000",
-    "C_BUTTON_Palette3": "#00FF00",
-    "C_BUTTON_Palette4": "#0000FF",
-    "C_BUTTON_Palette5": "#FFFF00",
-    "C_BUTTON_Palette6": "#000000",
-}
+
+def load_default_xpalette() -> dict[str, str]:
+    palette_path = Path(os.environ.get(
+        "TRAINING_DEFAULT_PALETTE_PATH",
+        "/Users/robterry/xLights-2026.06/resources/palettes/Default.xpalette",
+    ))
+    line = next(
+        (
+            row.strip()
+            for row in palette_path.read_text().splitlines()
+            if row.strip() and "," in row
+        ),
+        "",
+    )
+    colors = [color.strip() for color in line.split(",") if color.strip()]
+    if not colors:
+        raise ValueError(f"Palette file has no color slots: {palette_path}")
+    return {f"C_BUTTON_Palette{index + 1}": color for index, color in enumerate(colors[:8])}
+
+
+DEFAULT_XLIGHTS_PALETTE = load_default_xpalette()
 
 PALETTE_VARIANTS = [
     {
@@ -35,6 +49,7 @@ PALETTE_VARIANTS = [
         "profile": "mono_white",
         "activationMode": "xlights_default",
         "activeSlots": [1],
+        "palette": DEFAULT_XLIGHTS_PALETTE,
         "labelHints": ["palette_mono_white"],
     },
     {
@@ -42,6 +57,7 @@ PALETTE_VARIANTS = [
         "profile": "rgb_primary",
         "activationMode": "xlights_default",
         "activeSlots": [2, 3, 4],
+        "palette": DEFAULT_XLIGHTS_PALETTE,
         "labelHints": ["palette_rgb_primary"],
     },
 ]
@@ -143,7 +159,7 @@ def generate_registry_seed_manifest(effect: str, geometry_profile: str, target_m
         variant_sample['sharedSettings'] = {
             **deepcopy(shared_settings),
             'paletteProfile': variant['profile'],
-            'palette': deepcopy(DEFAULT_XLIGHTS_PALETTE),
+            'palette': deepcopy(variant['palette']),
             'paletteActivationMode': variant['activationMode'],
             'paletteActiveSlots': list(variant['activeSlots']),
         }
@@ -202,7 +218,7 @@ def generate_manifest(effect: str, geometry_profile: str, target_model: dict, te
             variant_sample['sharedSettings'] = {
                 **base_shared,
                 'paletteProfile': variant['profile'],
-                'palette': deepcopy(DEFAULT_XLIGHTS_PALETTE),
+                'palette': deepcopy(variant['palette']),
                 'paletteActivationMode': variant['activationMode'],
                 'paletteActiveSlots': list(variant['activeSlots']),
             }

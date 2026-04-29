@@ -67,6 +67,41 @@ test("effect compatibility emits warnings for out-of-schema settings", () => {
   assert.ok(out.warnings.some((w) => /unknown settings key/i.test(String(w))));
 });
 
+test("effect compatibility accepts generated registry-backed xLights settings", () => {
+  const catalog = buildEffectDefinitionCatalog([
+    { effectName: "Color Wash", params: [] },
+    { effectName: "Spirals", params: [] }
+  ]);
+  const out = evaluateEffectCommandCompatibility({
+    commands: [
+      {
+        cmd: "effects.create",
+        params: {
+          effectName: "Color Wash",
+          settings: {
+            E_TEXTCTRL_ColorWash_Cycles: "4",
+            E_SLIDER_ColorWash_Cycles: 40,
+            E_CHECKBOX_ColorWash_CircularPalette: "1"
+          }
+        }
+      },
+      {
+        cmd: "effects.create",
+        params: {
+          effectName: "Spirals",
+          settings: {
+            E_CHECKBOX_Spirals_Grow: "1"
+          }
+        }
+      }
+    ],
+    effectCatalog: catalog
+  });
+
+  assert.equal(out.ok, true);
+  assert.equal(out.warnings.length, 0);
+});
+
 test("effect compatibility accepts shared xlights timing and blend settings", () => {
   const out = evaluateEffectCommandCompatibility({
     commands: [{

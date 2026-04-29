@@ -354,8 +354,8 @@ export function createAutomationRuntime(deps = {}) {
       latestApply: afterLatestApply,
       latestApplyResult: historySnapshot?.applyResult || null,
       latestPracticalValidation: historySnapshot?.applyResult?.practicalValidation || null,
-      latestRenderObservation: historySnapshot?.renderObservation || null,
-      latestRenderCritiqueContext: historySnapshot?.renderCritiqueContext || null
+      latestRenderObservation: state.sequenceAgentRuntime?.renderObservation || historySnapshot?.renderObservation || null,
+      latestRenderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || historySnapshot?.renderCritiqueContext || null
     };
   }
 
@@ -856,7 +856,8 @@ export function createAutomationRuntime(deps = {}) {
                 artifactId: String(state.sequenceAgentRuntime.renderCritiqueContext.artifactId || ""),
                 artifactType: String(state.sequenceAgentRuntime.renderCritiqueContext.artifactType || ""),
                 leadMatchesPrimaryFocus: Boolean(state.sequenceAgentRuntime.renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus),
-                breadthRead: String(state.sequenceAgentRuntime.renderCritiqueContext?.observed?.breadthRead || "")
+                breadthRead: String(state.sequenceAgentRuntime.renderCritiqueContext?.observed?.breadthRead || ""),
+                quality: state.sequenceAgentRuntime.renderCritiqueContext?.quality || null
               }
             : null
       },
@@ -943,6 +944,79 @@ export function createAutomationRuntime(deps = {}) {
       }));
   }
 
+  function scoreBand(score = 0) {
+    const value = Number(score || 0);
+    return value >= 0.8 ? "strong" : value >= 0.6 ? "acceptable" : value >= 0.35 ? "weak" : "very_low";
+  }
+
+  function payloadRatio(summary = null, fieldName = "") {
+    const ratio = Number(summary?.[`${fieldName}MatchRatio`]);
+    if (Number.isFinite(ratio)) return Math.max(0, Math.min(1, ratio));
+    const checked = Number(summary?.[`${fieldName}Checked`]);
+    const matched = Number(summary?.[`${fieldName}Matched`]);
+    return Number.isFinite(checked) && checked > 0 && Number.isFinite(matched)
+      ? Math.max(0, Math.min(1, matched / checked))
+      : null;
+  }
+
+  function enrichRenderCritiqueWithPayloadScores(renderCritiqueContext = null, practicalValidation = null) {
+    const critique = renderCritiqueContext && typeof renderCritiqueContext === "object" ? renderCritiqueContext : null;
+    if (!critique?.quality || typeof critique.quality !== "object") return critique;
+    const payloadSummary = practicalValidation?.summary?.effectPayloadChecks || practicalValidation?.effectPayloadChecks || null;
+    if (!payloadSummary || typeof payloadSummary !== "object") return critique;
+    const effectConfigurationScore = payloadRatio(payloadSummary, "settings");
+    const paletteScore = payloadRatio(payloadSummary, "palette");
+    if (effectConfigurationScore == null && paletteScore == null) return critique;
+    const dimensions = {
+      ...(critique.quality.dimensions || {}),
+      effectConfigurationScore,
+      paletteScore
+    };
+    const dimensionBands = {
+      ...(critique.quality.dimensionBands || {}),
+      effectConfigurationScore: effectConfigurationScore == null ? "unmeasured" : scoreBand(effectConfigurationScore),
+      paletteScore: paletteScore == null ? "unmeasured" : scoreBand(paletteScore)
+    };
+    const basis = {
+      ...(critique.quality.basis || {}),
+      effectPayloadChecks: Number(payloadSummary.effectPayloadChecks || 0),
+      settingsChecked: Number(payloadSummary.settingsChecked || 0),
+      settingsMatched: Number(payloadSummary.settingsMatched || 0),
+      paletteChecked: Number(payloadSummary.paletteChecked || 0),
+      paletteMatched: Number(payloadSummary.paletteMatched || 0)
+    };
+    const scoreValue = (value, fallback = 0.65) => {
+      const n = Number(value);
+      return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : fallback;
+    };
+    const weightedScore =
+      scoreValue(dimensions.coverageScore, 0) * 0.16 +
+      scoreValue(dimensions.designIntentScore, 0) * 0.16 +
+      scoreValue(dimensions.compositionScore) * 0.18 +
+      scoreValue(dimensions.spatialBalanceScore, 0) * 0.1 +
+      scoreValue(dimensions.motionProgressionScore, 0) * 0.12 +
+      scoreValue(dimensions.sectionContrastScore, 0) * 0.06 +
+      scoreValue(dimensions.effectConfigurationScore) * 0.09 +
+      scoreValue(dimensions.paletteScore) * 0.08 +
+      scoreValue(critique.quality.legacyIssuePenaltyScore, 0) * 0.05;
+    const overallScore = Number(Math.max(0, Math.min(1, weightedScore)).toFixed(3));
+    return {
+      ...critique,
+      expected: {
+        ...(critique.expected || {}),
+        effectPayloadChecks: payloadSummary
+      },
+      quality: {
+        ...critique.quality,
+        overallScore,
+        band: scoreBand(overallScore),
+        dimensions,
+        dimensionBands,
+        basis
+      }
+    };
+  }
+
   function getAutomationSequencerValidationSnapshot() {
     const latestApply = Array.isArray(state.applyHistory) && state.applyHistory.length ? state.applyHistory[0] : null;
     const historySnapshot = state.ui?.reviewHistorySnapshot && typeof state.ui.reviewHistorySnapshot === "object"
@@ -952,6 +1026,11 @@ export function createAutomationRuntime(deps = {}) {
           : null);
     const latestPlanHandoff = historySnapshot?.planHandoff || getValidHandoff("plan_handoff_v1");
     const latestIntentHandoff = historySnapshot?.intentHandoff || getValidHandoff("intent_handoff_v1");
+    const latestApplyResult = historySnapshot?.applyResult || null;
+    const latestRenderCritiqueContext = enrichRenderCritiqueWithPayloadScores(
+      state.sequenceAgentRuntime?.renderCritiqueContext || historySnapshot?.renderCritiqueContext || null,
+      latestApplyResult?.practicalValidation || null
+    );
     return {
       ok: true,
       status: state.status || null,
@@ -959,12 +1038,12 @@ export function createAutomationRuntime(deps = {}) {
       sequencePathInput: state.sequencePathInput || "",
       reviewHistorySnapshotAvailable: Boolean(historySnapshot),
       latestApply,
-      latestPracticalValidation: historySnapshot?.applyResult?.practicalValidation || null,
-      latestApplyResult: historySnapshot?.applyResult || null,
+      latestPracticalValidation: latestApplyResult?.practicalValidation || null,
+      latestApplyResult,
       latestPlanHandoff,
       latestIntentHandoff,
-      latestRenderObservation: historySnapshot?.renderObservation || null,
-      latestRenderCritiqueContext: historySnapshot?.renderCritiqueContext || null,
+      latestRenderObservation: state.sequenceAgentRuntime?.renderObservation || historySnapshot?.renderObservation || null,
+      latestRenderCritiqueContext,
       latestSequenceArtisticGoal: historySnapshot?.sequenceArtisticGoal || null,
       latestSequenceRevisionObjective: historySnapshot?.sequenceRevisionObjective || null,
       latestReviewArtifacts: {
@@ -986,7 +1065,8 @@ export function createAutomationRuntime(deps = {}) {
         renderCritiqueContext: summarizeValidationArtifact(historySnapshot?.renderCritiqueContext, {
           extra: {
             leadMatchesPrimaryFocus: Boolean(historySnapshot?.renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus),
-            breadthRead: String(historySnapshot?.renderCritiqueContext?.observed?.breadthRead || "")
+            breadthRead: String(historySnapshot?.renderCritiqueContext?.observed?.breadthRead || ""),
+            quality: historySnapshot?.renderCritiqueContext?.quality || null
           }
         }),
         sequenceArtisticGoal: summarizeValidationArtifact(historySnapshot?.sequenceArtisticGoal, {
