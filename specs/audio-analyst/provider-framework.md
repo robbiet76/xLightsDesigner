@@ -1,7 +1,11 @@
 # Audio Analyst Provider Framework
 
-Status: Approved v1 policy  
+Status: Active
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-30
+
 ## Purpose
+
 Define the replaceability and extension policy for `audio_analyst` providers and capability adapters.
 
 This is a runtime/framework contract, not a single-provider implementation note.

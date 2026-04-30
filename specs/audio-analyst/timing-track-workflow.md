@@ -1,94 +1,76 @@
-# Timing Track Workflow Implementation Checklist
+# Timing Track Workflow
 
-Owner: xLightsDesigner Team  
-Status: Active, implementation in progress
+Status: Active
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-30
+Supersedes: timing-track implementation checklist
 
-Related taxonomy:
-- [timing-track-taxonomy-and-sequencing-uses.md](/Users/robterry/Projects/xLightsDesigner/specs/audio-analyst/timing-track-taxonomy-and-sequencing-uses.md)
+## Purpose
+
+Define the durable workflow for turning audio analysis output into reviewed timing tracks that downstream sequencing can trust.
+
+This document covers the review/write/readback workflow. The full timing-track family and sequencing use cases live in `timing-track-taxonomy-and-sequencing-uses.md`.
 
 ## Goal
 
-Turn current audio analysis output into a stable timing-track workflow that:
+Audio analysis should produce timing artifacts that can:
 
-1. writes generated timing tracks into xLights
-2. preserves full coverage with no gaps or overlaps
-3. captures user edits back from xLights
-4. stores `source`, `userFinal`, and `diff`
-5. becomes the sequencing substrate for later sequencer-agent work
+1. write app-owned `XD:` timing tracks into xLights
+2. preserve full coverage with no gaps or overlaps
+3. capture user edits back from xLights
+4. store generated `source`, current `userFinal`, and normalized `diff`
+5. become stable sequencing input for `sequence_agent`
 
-This phase should complete before returning to broader sequencer-agent effect training.
+## Initial Track Scope
 
-## Scope
+The first workflow slice is:
 
-Initial track scope:
+- `XD: Song Structure`
+- `XD: Phrase Cues`
 
-1. `XD: Song Structure`
-2. phrase-level track
-   - working name to finalize during implementation
-   - examples:
-     - `XD: Lyrics Phrases`
-     - `XD: Phrase Timing`
-
-Later tracks are out of scope for the first implementation slice, but explicitly in scope for the broader timing-track family:
-
-- beats
-- bars
-- chords
-- lyrics word/phoneme timing
-- energy / intensity
-- accents / hits
-- repeats / motifs
-- sparse windows / breakdowns
+Later tracks are governed by the taxonomy spec and should reuse this same review/provenance model.
 
 ## Non-Negotiable Rules
 
-All generated timing tracks must satisfy:
+All generated `XD:` timing tracks must satisfy:
 
-1. first segment starts at `0`
-2. last segment ends at song end
-3. no gaps
-4. no overlaps
-5. segments are ordered
-6. phrase segments never cross song-structure boundaries
-7. where no logical phrase exists, use unlabeled filler segments
+- first segment starts at `0`
+- last segment ends at song end
+- no gaps
+- no overlaps
+- ordered segments only
+- unlabeled filler is allowed when no logical label should exist
 
-This means even phrase-level tracks are written as complete-coverage timing tracks.
+Phrase cues have one extra rule:
+
+- phrase segments must not cross song-structure boundaries
 
 ## Track Semantics
 
-### `XD: Song Structure`
+`XD: Song Structure`:
 
 - complete coverage track
-- labels are high-level sections
-- examples:
-  - `Intro`
-  - `Verse`
-  - `Chorus`
-  - `Bridge`
-  - `Outro`
-  - `Theme`
-  - `Contrast`
-  - `Refrain`
+- labels high-level sections such as `Intro`, `Verse`, `Chorus`, `Bridge`, `Outro`, `Theme`, `Contrast`, or `Refrain`
+- drives scene scope and major transition planning
 
-### Phrase-Level Track
+`XD: Phrase Cues`:
 
 - complete coverage track
 - phrase segments are children of structure segments
 - unlabeled filler is used where no phrase should exist
-- phrase segments must not cross structure boundaries
+- drives vocal/lyric accents and phrase-scale motion
 
 ## Data Contract
 
 Every generated timing track should carry:
 
-1. `trackType`
-2. `trackName`
-3. `coverageMode`
-   - currently always `complete`
-4. `source`
-5. `userFinal`
-6. `diff`
-7. provenance metadata
+- `trackType`
+- `trackName`
+- `coverageMode`
+- `source`
+- `userFinal`
+- `diff`
+- provenance metadata
 
 Required segment shape:
 
@@ -100,194 +82,73 @@ Required segment shape:
 }
 ```
 
-Unlabeled filler shape:
+Unlabeled filler uses the same shape with an empty `label`.
 
-```json
-{
-  "startMs": 1000,
-  "endMs": 2000,
-  "label": ""
-}
-```
+## Workflow
 
-## Execution Order
+1. Normalize provider output into the timing-track segment schema.
+2. Sort and normalize segments.
+3. Insert filler where needed to preserve complete coverage.
+4. Split phrase cues at structure boundaries.
+5. Write or update only app-owned `XD:` tracks in xLights.
+6. Preserve non-`XD:` user tracks.
+7. Read app-owned tracks back from xLights after user review/edit.
+8. Store generated `source`, current `userFinal`, and normalized `diff`.
+9. Expose reviewed timing artifacts to designer and sequencer workflows.
 
-### Phase 1: Contract And Normalization
+## Diff Classification
 
-Implement the timing-track contract and normalization rules before xLights writes.
+Timing diff entries should classify:
 
-Checklist:
+- `unchanged`
+- `moved`
+- `relabeled`
+- `added_by_user`
+- `removed_from_source`
 
-- [x] define normalized timing-track schema in code
-- [x] define provenance schema for generated tracks
-- [x] define diff schema for `source -> userFinal`
-- [x] implement segment sort/normalize utility
-- [x] implement no-gap/no-overlap coverage normalizer
-- [x] implement filler insertion for uncovered ranges
-- [x] implement phrase splitting at structure boundaries
-- [x] add invariant tests for all normalization rules
+Diff behavior must preserve the original source track and user-reviewed final track.
 
-Exit criteria:
+## Validation
 
-- a malformed track can be normalized into full contiguous coverage
-- phrase output cannot overlap two structure segments
-- normalization tests pass
+The timing workflow should be validated on a small representative control set:
 
-### Phase 2: `XD: Song Structure` Write Path
+- synced-lyrics vocal
+- plain-phrase-fallback vocal
+- vocal audio-only
+- instrumental
 
-Implement the first end-to-end owned timing track.
+Validation must prove:
 
-Checklist:
+- normalized tracks are complete coverage
+- xLights writes do not create duplicate or overlapping marks
+- readback preserves user edits
+- diff output is stable and reviewable
+- sequencer handoff can consume reviewed timing tracks
 
-- [x] define ownership/naming policy for `XD:` timing tracks
-- [x] write `XD: Song Structure` into xLights
-- [x] replace/update only app-owned `XD:` structure track
-- [x] do not overwrite non-`XD:` user tracks
-- [x] validate written marks match normalized source segments
+Contract-level control-set validation is scripted in:
 
-Exit criteria:
+- `apps/xlightsdesigner-ui/eval/run-timing-track-control-validation.mjs`
 
-- one analyzed track can produce `XD: Song Structure` in xLights
-- full coverage is preserved after write
-- no duplicate or overlapping written marks
+Live xLights roundtrip validation remains required before broadening the timing-track family.
 
-### Phase 3: Readback And Provenance
+## Expansion Rule
 
-Capture user-edited timing state back from xLights.
+Do not broaden into additional timing-track types until `XD: Song Structure` and `XD: Phrase Cues` are stable through live write, review, readback, and diff validation.
 
-Checklist:
-
-- [x] read `XD: Song Structure` back from xLights
-- [x] normalize imported marks into the same internal segment schema
-- [x] store generated `source`
-- [x] store current `userFinal`
-- [x] compute normalized `diff`
-- [x] classify diff entries:
-  - [x] `unchanged`
-  - [x] `moved`
-  - [x] `relabeled`
-  - [x] `added_by_user`
-  - [x] `removed_from_source`
-
-Exit criteria:
-
-- a user can edit `XD: Song Structure` in xLights
-- readback captures those edits accurately
-- diff is persisted without losing the original source track
-
-### Phase 4: Phrase-Level Track
-
-Only after `XD: Song Structure` is stable.
-
-Checklist:
-
-- [ ] finalize phrase track name
-- [x] normalize phrase output into complete coverage
-- [x] ensure phrase segments stay inside structure segments
-- [x] write phrase track into xLights
-- [x] read phrase track back from xLights
-- [x] store `source/userFinal/diff`
-
-Exit criteria:
-
-- phrase track writes cleanly
-- phrase track readback matches edits
-- phrase boundaries never cross structure boundaries
-
-### Phase 5: Validation Harness
-
-Create a repeatable validation loop around timing tracks.
-
-Control set:
-
-1. one synced-lyrics vocal track
-2. one plain-phrase-fallback track
-3. one vocal audio-only track
-4. one instrumental track
-
-Checklist:
-
-- [x] choose the 4 control tracks
-- [x] create repeatable control-set validation artifact
-- [x] validate contract behavior for:
-  - [x] synced-lyrics vocal
-  - [x] plain-phrase-fallback vocal
-  - [x] vocal audio-only
-  - [x] instrumental
-- [ ] write timing tracks into xLights
-- [ ] review timing visually in xLights
-- [ ] edit timing manually
-- [ ] read user-final timing back in the live control set
-- [ ] verify diff correctness from live edits
-- [ ] record live findings in a repeatable validation artifact
-
-Exit criteria:
-
-- all 4 tracks complete the full loop
-- no data loss between source and user edits
-- diff is stable and reviewable
-
-Current note:
-
-- contract-level control-set validation is now scripted in:
-  - `apps/xlightsdesigner-ui/eval/run-timing-track-control-validation.mjs`
-- live xLights roundtrip validation remains the next required step
-
-### Phase 6: Timing Track Family Expansion
-
-Only after live validation of the first slice is stable.
-
-Next expansion order:
+Next approved expansion after that:
 
 1. `XD: Beats`
 2. `XD: Bars`
-3. `XD: Chords`
-4. `XD: Energy`
-5. `XD: Accents`
 
-Checklist:
+Deferred until this workflow is stable:
 
-- [ ] define `XD: Beats` contract and coverage rules
-- [ ] define `XD: Bars` contract and coverage rules
-- [ ] reuse `source/userFinal/diff` review model for rhythm tracks
-- [ ] define sequencing use cases for each new track type before implementation
-- [ ] add control-set validation for rhythm-track roundtrip
-
-Exit criteria:
-
-- timing-track implementation is understood as a family of sequencing layers, not a two-track special case
-- beats and bars are the next approved expansion after structure/phrase live validation
-
-## Recommended Initial Control Set
-
-Suggested starting set:
-
-1. synced-lyrics vocal:
-   - `02 Candy Cane Lane.mp3`
-2. plain-phrase-fallback vocal:
-   - `Christmas Vacation - Mavis Staples.mp3`
-3. vocal audio-only:
-   - `Grinch.mp3`
-4. instrumental:
-   - `Christmas Sarajevo.mp3`
-
-## Deferred Until After Timing-Track Phase
-
-Do not broaden into these until the timing-track workflow is stable:
-
-- more audio heuristic tuning
-- broad xLights visual validation across the whole corpus
-- sequencer-agent effect training
+- broader audio heuristic tuning
+- broad xLights visual validation across the corpus
+- sequence-agent effect training driven by new timing layers
 - larger multi-agent workflow changes
 
-## Definition Of Done For This Phase
+## Related Specs
 
-This timing-track phase is complete when:
-
-1. `XD: Song Structure` works end to end
-2. phrase-level track works end to end
-3. both tracks are complete-coverage with no gaps or overlaps
-4. user edits are read back and diffed against source
-5. the sequencer agent can consume these tracks as stable input
-
-At that point, return to sequencer-agent training and effect implementation work.
+- `timing-track-taxonomy-and-sequencing-uses.md`
+- `provider-framework.md`
+- `../sequence-agent/sequencing-system.md`
