@@ -18,6 +18,8 @@ Current framing:
 
 These are the current operating specs for sequencing work.
 
+- [training-knowledge-consolidation-plan-2026-04-30.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/training-knowledge-consolidation-plan-2026-04-30.md)
+- [training-knowledge-baseline-2026-04-30.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/training-knowledge-baseline-2026-04-30.md)
 - [sequencing-poc-boundary-2026-04-10.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-poc-boundary-2026-04-10.md)
 - [sequencing-feedback-loop-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-feedback-loop-v1-2026-04-13.md)
 - [preview-scene-reconstruction-architecture-2026-04-10.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/preview-scene-reconstruction-architecture-2026-04-10.md)
