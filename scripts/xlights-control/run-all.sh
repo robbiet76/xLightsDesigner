@@ -8,9 +8,9 @@ The current xLightsDesigner validation path is owned-API only. Use:
 
   node scripts/xlights/validate-owned-show-folder-flow.mjs --show-dir <show-folder>
 
-Launch the API-enabled xLights 2026.06 build first, or use:
+Launch the API-enabled xLights build first, or use:
 
-  node scripts/xlights/launch-owned-xlights.mjs --show-dir <show-folder> -o
+  node scripts/xlights/launch-owned-xlights.mjs --app <xLights.app> --show-dir <show-folder> -o
   node scripts/xlights/wait-owned-xlights.mjs
 
 The retired xlights-control suites target the legacy /xlDoAutomation listener,

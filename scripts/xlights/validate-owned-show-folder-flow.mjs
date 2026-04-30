@@ -88,7 +88,7 @@ async function request(endpoint, route, { method = 'GET', body = null, timeoutMs
     } catch (error) {
       throw new Error(
         `Unable to reach owned xLights API at ${endpoint}${route}. ` +
-        `Start the API-enabled xLights 2026.06 build with XLIGHTS_DESIGNER_ENABLED=1 and the matching XLIGHTS_DESIGNER_PORT. ` +
+        `Start the API-enabled xLights build with XLIGHTS_DESIGNER_ENABLED=1 and the matching XLIGHTS_DESIGNER_PORT. ` +
         `Cause: ${error?.message || error}`
       );
     }
