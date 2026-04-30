@@ -1,18 +1,1 @@
-{
-  "proofId": "holidayroad-live",
-  "geometryPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-holidayroad-live.json",
-  "observationPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-holidayroad-live.json",
-  "critiquePath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-critique-context-holidayroad-live.json",
-  "modelCount": 113,
-  "customModelCount": 40,
-  "sampledModelCount": 4,
-  "sampledRange": {
-    "startMs": 0,
-    "endMs": 250
-  },
-  "leadModel": "HiddenTree",
-  "activeModelCount": 4,
-  "breadthRead": "broad",
-  "temporalRead": "evolving",
-  "leadMatchesPrimaryFocus": false
-}
+{"proofId":"holidayroad-live","geometrySummaryPath":"/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-proof-summaries.json","removedFullGeometrySource":"preview-scene-geometry-holidayroad-live.json","observationPath":"/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-holidayroad-live.json","critiquePath":"/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-critique-context-holidayroad-live.json","modelCount":113,"customModelCount":40,"sampledModelCount":4,"sampledRange":{"startMs":0,"endMs":250},"leadModel":"HiddenTree","activeModelCount":4,"breadthRead":"broad","temporalRead":"evolving","leadMatchesPrimaryFocus":false}

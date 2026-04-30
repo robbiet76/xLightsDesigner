@@ -1,18 +1,1 @@
-{
-  "artifactType": "sequence_revision_gate_v1",
-  "artifactVersion": 1,
-  "source": {
-    "sequenceCritiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_section_selection.json"
-  },
-  "highestFailingLevel": "section",
-  "decision": "revise_here",
-  "nextOwner": "shared",
-  "nextRevisionLevel": "section",
-  "blockingReasons": [
-    "Section instability blocks group, model, and effect refinement."
-  ],
-  "recommendedMoves": [
-    "Clarify how the section should evolve from opening to closing instead of holding one static treatment.",
-    "Introduce a bounded section-level evolution in spread, density, or support role across the sampled window."
-  ]
-}
+{"artifactType":"sequence_revision_gate_v1","artifactVersion":1,"source":{"sequenceCritiqueRef":"/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_section_selection.json"},"highestFailingLevel":"section","decision":"revise_here","nextOwner":"shared","nextRevisionLevel":"section","blockingReasons":["Section instability blocks group, model, and effect refinement."],"recommendedMoves":["Clarify how the section should evolve from opening to closing instead of holding one static treatment.","Introduce a bounded section-level evolution in spread, density, or support role across the sampled window."]}

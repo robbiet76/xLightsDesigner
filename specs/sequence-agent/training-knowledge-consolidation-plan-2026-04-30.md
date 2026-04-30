@@ -208,6 +208,15 @@ Removed another checked-in generated layer:
 - added `scripts/sequencer-render-training/manifests/generated/` to `.gitignore`
 - cleared ignored historical run artifacts under `var/logs/`, reducing local raw run storage from roughly 2.6 GB to an empty run-log workspace
 
+### 2026-04-30 Proof Geometry Cleanup Slice
+
+Started reducing checked-in proof payloads:
+
+- replaced full real-show geometry proof dumps with `proofs/preview-scene-geometry-proof-summaries.json`
+- removed checked-in `preview-scene-geometry-desktop-show-live.json` and `preview-scene-geometry-holidayroad-live.json`
+- kept `preview-scene-geometry-render-training-live.json` because current offline proof runners still use it as their default regression geometry
+- added ignore rules so future real-show full-geometry proof dumps stay local unless deliberately promoted as minimized fixtures
+
 ### 2026-04-30 Sequence-Agent Spec Index Slice
 
 Implemented concrete spec-index cleanup:

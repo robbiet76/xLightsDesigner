@@ -1,6 +1,7 @@
 # Preview Scene Reconstruction Proofs
 
 This directory holds small, bounded proof artifacts for preview-scene reconstruction work.
+JSON proof fixtures are intentionally minified to keep the repository small; use the rebuild scripts below when a human-readable regenerated artifact is needed during investigation.
 
 Current proof:
 
@@ -17,7 +18,7 @@ Current proof:
   - Source: live xLights layout export
   - Show folder: `/Users/robterry/Desktop/Show`
   - Coverage: full real-world layout
-  - Status: exact geometry and channel mapping from xLights-owned `layout.*` APIs
+  - Status: removed as a checked-in full payload; retained as a compact summary in `preview-scene-geometry-proof-summaries.json`
   - Notes:
     - `modelCount = 113`
     - `customModelCount = 40`
@@ -247,9 +248,9 @@ Harness status:
 
 ## Real-Show Live Proof
 
-- `preview-scene-geometry-holidayroad-live.json`
+- `preview-scene-geometry-proof-summaries.json`
 - `render-observation-holidayroad-live.json`
 - `render-critique-context-holidayroad-live.json`
 - `live-render-proof-holidayroad-live.json`
 
-These artifacts were generated from the real show at `/Users/robterry/Desktop/Show/HolidayRoad/` using the owned `sequence.render-samples` API against `HolidayRoad.fseq`, then processed through the app runtime observation and critique builders.
+These artifacts were generated from the real show at `/Users/robterry/Desktop/Show/HolidayRoad/` using the owned `sequence.render-samples` API against `HolidayRoad.fseq`, then processed through the app runtime observation and critique builders. The full real-show geometry payload is no longer checked in; keep only the compact summary unless a future regression needs a minimized fixture.
