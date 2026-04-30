@@ -3,7 +3,7 @@
 Status: Active
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-04-30
-Supersedes: `local-completion-roadmap.md`
+Supersedes: dated local completion plans
 
 ## Purpose
 

@@ -10,6 +10,7 @@ Active specifications for the native xLightsDesigner app and user workflow.
 
 - `native-app.md`
 - `platform-and-services.md`
+- `project-storage.md`
 
 ## Current Rule
 

@@ -1,9 +1,9 @@
-# Product State Assessment
+# Product State Assessment - 2026-04-30
 
-Status: Active
+Status: Archived
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-04-30
-Supersedes: `product-state-assessment.md`, `product-state-assessment.md`
+Date: 2026-04-30
 
 ## Big Picture
 

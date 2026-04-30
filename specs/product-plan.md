@@ -3,7 +3,7 @@
 Status: Active
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-04-30
-Supersedes: `product-plan.md`
+Supersedes: dated product plans and implementation-phase summaries
 
 ## Purpose
 
@@ -61,11 +61,15 @@ Near-term work should favor:
 
 ## Durable References
 
-- `product-state-assessment.md`
 - `local-completion-roadmap.md`
 - `app-ui/native-app.md`
+- `app-ui/project-storage.md`
 - `designer-dialog/designer-interaction-contract.md`
 - `sequence-agent/sequencing-system.md`
 - `sequence-agent/render-training-knowledge.md`
 - `sequence-agent/xlights-api.md`
 - `sequence-agent/model-metadata.md`
+
+Recent point-in-time assessment:
+
+- `archive/product-state-assessment-2026-04-30.md`

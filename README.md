@@ -22,14 +22,14 @@ Cross-project architecture and operational documentation.
 
 ### `specs/`
 Implementation-facing specifications.
-- Flat root-level spec set with prefixed filenames by domain.
+- Durable root entry points plus domain specs under `app-ui/`, `audio-analyst/`, `designer-dialog/`, and `sequence-agent/`.
 
 ### `scripts/`
 Developer/build/validation automation.
 
 ## Repo Governance
-- Structural placement and ownership rules: `specs/repo-structure-governance.md`
-- Canonical training package architecture: `specs/xlights-sequencer-control-training-package-architecture.md`
+- Structural placement and ownership rules: `specs/spec-governance.md`
+- Canonical training package root: `training-packages/training-package-v1/README.md`
 
 ## Active Product Scope
 The current product goal is a native xLightsDesigner app that acts as the local translation layer between AI agents and a user's linked xLights show folder.

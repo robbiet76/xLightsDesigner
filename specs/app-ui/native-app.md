@@ -57,7 +57,7 @@ The app should feel like a focused production tool, not a dashboard collection o
 ## Related Specs
 
 - `../product-plan.md`
-- `../xlightsdesigner-project-storage-layout.md`
+- `project-storage.md`
 - `../sequence-agent/xlights-api.md`
 - `../sequence-agent/model-metadata.md`
 - `../sequence-agent/sequencing-system.md`

@@ -43,7 +43,7 @@
     {
       "id": "project-storage-layout",
       "type": "storage-spec",
-      "path": "specs/xlightsdesigner-project-storage-layout.md"
+      "path": "specs/app-ui/project-storage.md"
     },
     {
       "id": "production-2d-functionality-index",
