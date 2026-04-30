@@ -1,7 +1,7 @@
 {
   "artifactType": "xlights-production-2d-functionality-index-v1",
   "generatedFrom": {
-    "root": "/Users/robterry/Documents/Lights/Current/Christmas/Show",
+    "root": "local-production-2d-functionality-corpus",
     "excluded": [
       "Backup/...",
       "Props_Setup.xsq",
@@ -9,6 +9,7 @@
       "Test_Flood.xsq"
     ],
     "notes": [
+      "Original source root is machine-local and intentionally omitted from the portable training package.",
       "Static sequences are included as valid non-audio/static display sequencing examples.",
       "This corpus is intended for 2D functionality coverage, not 3D sequencing coverage.",
       "Use as a functionality corpus only, not a style corpus.",

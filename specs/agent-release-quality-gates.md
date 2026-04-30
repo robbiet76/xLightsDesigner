@@ -18,7 +18,7 @@ Define go/no-go gates for shipping agent-enabled behavior.
 - Lyrics timing only written when synced timestamps are present.
 
 3. Owned API And Contract Safety
-- Owned xLights API boots from the active local xLights runtime, currently `/Users/robterry/xLights-2026.07`.
+- Owned xLights API boots from the configured active local xLights runtime.
 - Required sequence, layout, timing, media, render-feedback, and sequencing routes pass owned validation.
 - Native apply uses the owned `sequencing.applyBatchPlan` path and fails closed when required preflight/readback fails.
 - Revision guard blocks stale apply.
@@ -46,7 +46,7 @@ Define go/no-go gates for shipping agent-enabled behavior.
 - `apps/xlightsdesigner-macos/Tests/XLightsDesignerMacOSTests/ReviewScreenViewModelTests.swift`
 - `apps/xlightsdesigner-macos/Tests/XLightsDesignerMacOSTests/XLightsSessionViewModelTests.swift`
 - `scripts/sequencer-render-training/runners/run-stage1-coverage-chunked.sh`
-- `/Users/robterry/Desktop/Show/_xlightsdesigner_api_validation/<run-id>/owned-api-validation-result.json`
+- active show folder `_xlightsdesigner_api_validation/<run-id>/owned-api-validation-result.json`
 - `docs/operations/xlightsdesigner-native-release-runbook.md`
 - `docs/operations/xlightsdesigner-native-validation-evidence-log.md`
 

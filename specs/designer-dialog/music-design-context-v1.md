@@ -1,9 +1,12 @@
 # Music Design Context v1
 
-Status: Draft
+Status: Active
 Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-30
 
-Purpose: define the designer-facing music-structure context artifact derived from audio analysis.
+## Purpose
+
+Define the designer-facing music-structure context artifact derived from audio analysis.
 
 ## 1) Role
 

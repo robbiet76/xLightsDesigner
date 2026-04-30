@@ -1,7 +1,8 @@
 # Sequencing Design Handoff V2 Spec
 
-Status: Draft
+Status: Active
 Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-30
 
 ## Purpose
 Define the internal handoff contract between `designer_dialog` and `sequence_agent` so the sequencer receives explicit, actionable sequencing direction without exposing that internal structure to the end user.
@@ -66,7 +67,9 @@ It does not require:
 That leaves too much ambiguity in the sequencer.
 
 ## Contract Shape
-Proposed internal contract:
+
+Internal contract:
+
 - `sequencing_design_handoff_v2`
 
 This can either:

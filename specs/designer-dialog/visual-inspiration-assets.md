@@ -1,13 +1,8 @@
 # Designer Visual Inspiration And Sequence Asset Generation
 
-Status: Draft
+Status: Active
 Owner: xLightsDesigner Team
-
-## User Prompt
-
-> I would like to explore adding the GPT Image 2 engine into the designer agent. Instead of only providing an overview of the song design, I would like them to do the following:
->
-> Generate an image to be displayed in the app for the active song/sequence that shouws visually the inspiration/theme for the solg as well as the color palette. This is not intended to be an image of what the display itself will look like but more of a collage of imagery and color that provides a sense of what the sequncing will achive. This will be a helpful featuer for the user as it will give them an expectation of the feel of the end product. I would like the designer to also generate a collection of image and/or video files within the theme that the sequencer will use in the sequence. We have not added the picture and video effects yet but this is where they will come into use. We can store these files with the song metadata within the xLightsDesigner app folder which the sequencer can use as needed.
+Last Reviewed: 2026-04-30
 
 ## Purpose
 
@@ -61,9 +56,9 @@ Initial resolution policy:
 - thumbnails/spritesheets: stored separately from source files so low-resolution UI display does not destroy source quality
 - if the provider only returns a smaller image, the manifest must record actual width/height and the UI must scale down rather than upscale aggressively
 
-## OpenAI API Basis
+## Provider Basis
 
-Official OpenAI docs identify GPT Image models as supporting both image generation and image editing. The Image API edits endpoint can modify an existing image from image inputs and a prompt, with optional mask guidance. The Responses API supports conversational or multi-step image work, including multi-turn image editing. OpenAI's video generation docs also support generated video jobs, video content download, thumbnails, spritesheets, and image references for guiding video generation.
+Image generation and editing should run through a configured provider adapter. Provider-specific request and response shapes stay behind that adapter, while project artifacts preserve actual provider/model/source metadata.
 
 Implementation should start with image generation only, then add video generation after the app has the storage, review, and sequencer contracts for media effects.
 
