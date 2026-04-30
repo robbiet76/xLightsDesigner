@@ -5,9 +5,6 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$repo_root"
 
 iterations=6
-canary_live_every=1
-baseline_live_every=0
-extended_live_every=2
 sleep_seconds=0
 continue_on_failure=0
 current_iteration=0
@@ -19,10 +16,6 @@ usage: bash scripts/designer-training/run-overnight-training.sh [options]
 
 options:
   --iterations N             Number of loop iterations to run. Default: 6
-  --canary-live-every N      Run one-prompt canary live suite every N iterations. Default: 1
-  --smoke-live-every N       Deprecated alias for canary cadence.
-  --baseline-live-every N    Run promoted baseline live suite every N iterations. Default: 0
-  --extended-live-every N    Run extended live suite every N iterations. Default: 2
   --sleep-seconds N          Sleep between iterations. Default: 0
   --continue-on-failure      Keep going after a failed step
   --help                     Show this help
@@ -33,14 +26,9 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --iterations)
       iterations="$2"; shift 2 ;;
-    --canary-live-every)
-      canary_live_every="$2"; shift 2 ;;
-    --smoke-live-every)
-      canary_live_every="$2"; shift 2 ;;
-    --baseline-live-every)
-      baseline_live_every="$2"; shift 2 ;;
-    --extended-live-every)
-      extended_live_every="$2"; shift 2 ;;
+    --canary-live-every|--smoke-live-every|--baseline-live-every|--extended-live-every)
+      echo "Option $1 has been removed with the retired desktop automation transport. Use scripts/native validation runners separately." >&2
+      exit 2 ;;
     --sleep-seconds)
       sleep_seconds="$2"; shift 2 ;;
     --continue-on-failure)
@@ -100,9 +88,6 @@ cat > "$summary_file" <<SUMMARY
 - repo: $repo_root
 - git head: $(git rev-parse --short HEAD)
 - iterations: $iterations
-- canary live cadence: every $canary_live_every
-- baseline live cadence: every $baseline_live_every
-- extended live cadence: every $extended_live_every
 - continue on failure: $( [[ "$continue_on_failure" -eq 1 ]] && echo true || echo false )
 
 Artifacts:
@@ -170,54 +155,6 @@ for iteration in $(seq 1 "$iterations"); do
     offline_summary="$(jq -c '.summary' "$iteration_dir/offline-eval.json" 2>/dev/null || true)"
     if [[ -n "$offline_summary" ]]; then
       echo "  - offline: $offline_summary" >> "$summary_file"
-    fi
-  fi
-
-  if [[ "$canary_live_every" -gt 0 ]] && (( iteration % canary_live_every == 0 )); then
-    if ! run_step "$iteration" "canary-live-suite" node scripts/desktop/automation.mjs run-live-design-canary-suite --payload-file apps/xlightsdesigner-ui/eval/live-design-canary-suite-v1.json; then
-      rc=$?
-      echo "  - canary live suite failed" >> "$summary_file"
-      if [[ "$rc" -eq 2 ]]; then
-        record_status "failed" "$iteration" "Canary live suite failed"
-        exit 1
-      fi
-    else
-      canary_summary="$(jq -c '(.result // .) | {ok, scenarioCount, failedScenarioCount, summary}' "$iteration_dir/canary-live-suite.json" 2>/dev/null || true)"
-      if [[ -n "$canary_summary" ]]; then
-        echo "  - canary live: $canary_summary" >> "$summary_file"
-      fi
-    fi
-  fi
-
-  if [[ "$baseline_live_every" -gt 0 ]] && (( iteration % baseline_live_every == 0 )); then
-    if ! run_step "$iteration" "baseline-live-suite" node scripts/desktop/automation.mjs run-live-design-validation-suite --payload-file apps/xlightsdesigner-ui/eval/live-design-validation-suite-v1.json; then
-      rc=$?
-      echo "  - baseline live suite failed" >> "$summary_file"
-      if [[ "$rc" -eq 2 ]]; then
-        record_status "failed" "$iteration" "Baseline live suite failed"
-        exit 1
-      fi
-    else
-      baseline_summary="$(jq -c '(.result // .) | {ok, scenarioCount, failedScenarioCount, summary}' "$iteration_dir/baseline-live-suite.json" 2>/dev/null || true)"
-      if [[ -n "$baseline_summary" ]]; then
-        echo "  - baseline live: $baseline_summary" >> "$summary_file"
-      fi
-    fi
-  fi
-
-  if [[ "$extended_live_every" -gt 0 ]] && (( iteration % extended_live_every == 0 )); then
-    if ! run_step "$iteration" "extended-live-suite" node scripts/desktop/automation.mjs run-live-design-validation-suite --payload-file apps/xlightsdesigner-ui/eval/live-design-validation-suite-extended-v1.json; then
-      rc=$?
-      echo "  - extended live suite failed" >> "$summary_file"
-      if [[ "$rc" -eq 2 ]]; then
-        record_status "failed" "$iteration" "Extended live suite failed"
-        exit 1
-      fi
-    else
-      extended_summary="$(jq -c '(.result // .) | {ok, scenarioCount, failedScenarioCount, summary}' "$iteration_dir/extended-live-suite.json" 2>/dev/null || true)"
-      if [[ -n "$extended_summary" ]]; then
-        echo "  - extended live: $extended_summary" >> "$summary_file"
-      fi
     fi
   fi
 

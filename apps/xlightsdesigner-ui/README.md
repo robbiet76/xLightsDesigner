@@ -2,10 +2,7 @@
 
 Status: Mixed, Native-First
 
-This directory is not one thing.
-It contains both:
-- active shared JS domain/runtime/agent code
-- retired renderer shell residue from the Electron app
+This directory contains shared JS domain/runtime/agent code used by tests, tooling, and native-app integration.
 
 ## Active Areas
 
@@ -15,21 +12,10 @@ Still active and shared:
 - `eval/`
 - relevant tests
 
-## Legacy Areas
-
-Retirement targets:
-- `app-ui/`
-- `app.js`
-- `index.html`
-- `dev_server.py`
-
-These are retired renderer shell surfaces from the Electron app.
-Do not deepen product-shell investment there or add new Electron compatibility fallback.
-
 ## Rules
 
 - keep adding current agent/runtime/domain work only where it is genuinely shared
-- do not treat legacy renderer shell files as the active app shell
+- do not reintroduce a standalone desktop/web product shell here
 - before deleting mixed runtime files, confirm they are not still feeding scripts or tests
 
 Primary references:

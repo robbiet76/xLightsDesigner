@@ -124,26 +124,10 @@ node apps/xlightsdesigner-ui/eval/run-live-reviewed-timing-control-suite.mjs \
   --out-dir /tmp/live-reviewed-timing-control-suite
 ```
 
-Phase 2 revision suite:
-
-```bash
-node scripts/desktop/automation.mjs \
-  --channel dev \
-  --result-file /tmp/live-revision-practical-sequence-validation-suite-v1.json \
-  run-live-revision-practical-sequence-validation-suite \
-  --payload-file apps/xlightsdesigner-ui/eval/live-revision-practical-sequence-validation-suite-v1.json
-
-node scripts/desktop/automation.mjs \
-  --channel dev \
-  --result-file /tmp/live-wholesequence-practical-validation-suite-v2.json \
-  run-live-wholesequence-practical-validation-suite \
-  --payload-file apps/xlightsdesigner-ui/eval/live-wholesequence-practical-validation-suite-v2.json
-```
-
-Native migration note:
-- `scripts/desktop/automation.mjs` now targets the native macOS automation server on `127.0.0.1:49916`.
-- The legacy Electron/file-queue transport is intentionally no longer used.
-- Some promoted live suite actions above still require native-server parity before they can run again; unsupported actions now fail fast instead of hanging on dead transport.
+Native validation note:
+- Legacy desktop automation has been removed.
+- Use `scripts/native/automation.mjs` for direct native automation actions.
+- Use dedicated native validation runners for restored live suites.
 - `run-live-practical-benchmark.mjs`
 - `run-live-reviewed-timing-control-suite.mjs`
 - `run-live-reviewed-timing-wholesequence-baseline.mjs`

@@ -15,7 +15,6 @@ function classifyArea(file) {
   if (file.startsWith('apps/xlightsdesigner-ui/tests/')) return 'ui-tests';
   if (file.startsWith('apps/xlightsdesigner-ui/eval/archive/')) return 'ui-eval-archive';
   if (file.startsWith('apps/xlightsdesigner-ui/eval/')) return 'ui-eval';
-  if (file === 'apps/xlightsdesigner-ui/app.js') return 'ui-shell';
   if (file.startsWith('apps/xlightsdesigner-ui/')) return 'ui-root';
   if (file.startsWith('apps/xlightsdesigner-desktop/tests/')) return 'desktop-tests';
   if (file.startsWith('apps/xlightsdesigner-desktop/')) return 'desktop';
@@ -23,7 +22,6 @@ function classifyArea(file) {
   if (file.startsWith('apps/xlightsdesigner-analysis-service/')) return 'analysis-service';
   if (file.startsWith('scripts/sequencer-render-training/')) return 'scripts-render-training';
   if (file.startsWith('scripts/xlights-control/')) return 'scripts-xlights-control';
-  if (file.startsWith('scripts/desktop/')) return 'scripts-desktop';
   if (file.startsWith('scripts/sequence-metadata/')) return 'scripts-sequence-metadata';
   if (file.startsWith('scripts/designer-training/')) return 'scripts-designer-training';
   if (file.startsWith('scripts/xlights/')) return 'scripts-xlights';
