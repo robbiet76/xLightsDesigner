@@ -157,7 +157,7 @@ export function createProposalGenerationRuntime(deps = {}) {
     addStructuredChatMessage = () => {},
     addChatMessage = () => {},
     getTeamChatSpeakerLabel = () => "",
-    getDesktopBridge = () => null,
+    getAppBridge = () => null,
     getOpenSequence = async () => ({}),
     isSequenceAllowedInActiveShowFolder = () => true,
     clearIgnoredExternalSequenceNote = () => {},
@@ -258,7 +258,7 @@ export function createProposalGenerationRuntime(deps = {}) {
         handledBy: proposalRole
       });
     };
-    const bridge = getDesktopBridge();
+    const bridge = getAppBridge();
     let sequenceSession = buildSequenceSession({ state });
     if (!sequenceSession.canGenerateSequence && !sequenceSession.planOnlyMode && sequenceSession.xlightsConnected) {
       try {

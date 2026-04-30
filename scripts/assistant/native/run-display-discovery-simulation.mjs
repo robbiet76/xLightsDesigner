@@ -109,7 +109,7 @@ async function waitForAssistantRoundTrip({ previousMessageCount, timeoutMs = 900
 async function callOpenAIResponses({ systemPrompt = "", userMessage = "", maxOutputTokens = 500 } = {}) {
   const cfg = getAgentConfig();
   if (!cfg.configured) {
-    throw new Error("OpenAI key is not configured in native app environment.");
+    throw new Error("OpenAI key is not configured in app environment.");
   }
   const body = {
     model: cfg.model,

@@ -28,8 +28,8 @@ test("diagnostics dashboard state summarizes counts, rows, and recent applies", 
       health: {
         lastCheckedAt: "2026-03-16T13:20:00.000Z",
         runtimeReady: true,
-        nativeFileDialogReady: true,
-        nativeBridgeApiCount: 12,
+        appFileDialogReady: true,
+        appBridgeApiCount: 12,
         xlightsVersion: "2026.10",
         compatibilityStatus: "ok",
         agentRegistryValid: true

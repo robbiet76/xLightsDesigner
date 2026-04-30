@@ -150,8 +150,8 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
           <h3>Application Health</h3>
           <div class="kv"><div class="k">Last Check</div><div>${health.lastCheckedAt || "Never"}</div></div>
           <div class="kv"><div class="k">Runtime Ready</div><div>${health.runtimeReady ? "yes" : "no"}</div></div>
-          <div class="kv"><div class="k">File Dialog Bridge</div><div>${health.nativeFileDialogReady ? "yes" : "no"}</div></div>
-          <div class="kv"><div class="k">Native Bridge APIs</div><div>${health.nativeBridgeApiCount || 0}</div></div>
+          <div class="kv"><div class="k">File Dialog Bridge</div><div>${health.appFileDialogReady ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">App Bridge APIs</div><div>${health.appBridgeApiCount || 0}</div></div>
           <div class="kv"><div class="k">xLights Version</div><div>${health.xlightsVersion || "not reported"}</div></div>
           <div class="kv"><div class="k">Compatibility</div><div>${health.compatibilityStatus || ""}</div></div>
           <div class="kv"><div class="k">Agent Provider</div><div>${health.agentProvider || "openai"}</div></div>

@@ -61,7 +61,7 @@ export function buildSettingsDashboardState({
         agentHasStoredApiKey: Boolean(state.health?.agentHasStoredApiKey),
         agentConfigured: Boolean(state.health?.agentConfigured),
         runtimeReady: Boolean(state.health?.runtimeReady),
-        nativeFileDialogReady: Boolean(state.health?.nativeFileDialogReady),
+        appFileDialogReady: Boolean(state.health?.appFileDialogReady),
         agentProvider: str(state.health?.agentProvider || "openai"),
         agentModel: str(state.health?.agentModel || "(default env model)")
       }

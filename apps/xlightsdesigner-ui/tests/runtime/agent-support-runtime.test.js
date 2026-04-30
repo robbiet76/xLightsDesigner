@@ -10,7 +10,7 @@ test('agent support runtime hydrates runtime bundle', async () => {
   const runtime = createAgentSupportRuntime({
     state,
     agentRuntime,
-    getDesktopTrainingPackageBridge: () => ({
+    getAppTrainingPackageBridge: () => ({
       readTrainingPackageAsset: async ({ relativePath }) => {
         if (relativePath === 'manifest.json') return { ok: true, data: { packageId: 'pkg', version: '1.0', modules: [] } };
         if (relativePath === 'agents/registry.json') return { ok: true, data: { version: '2', agents: [{ id: 'sequence_agent', path: 'agents/sequence.json' }] } };
@@ -35,12 +35,12 @@ test('agent support runtime saves config through bridge', async () => {
   const runtime = createAgentSupportRuntime({
     state,
     agentRuntime: emptyAgentRuntimeState(),
-    getDesktopAgentConfigBridge: () => ({
+    getAppAgentConfigBridge: () => ({
       setAgentConfig: async () => ({ ok: true }),
-      getAgentConfig: async () => ({ ok: true, model: 'gpt-x', baseUrl: 'https://api.example.com', hasStoredApiKey: true, source: 'native' })
+      getAgentConfig: async () => ({ ok: true, model: 'gpt-x', baseUrl: 'https://api.example.com', hasStoredApiKey: true, source: "app" })
     }),
-    getDesktopAgentConversationBridge: () => ({
-      getAgentHealth: async () => ({ ok: true, provider: 'openai', model: 'gpt-x', configured: true, hasStoredApiKey: true, source: 'native' })
+    getAppAgentConversationBridge: () => ({
+      getAgentHealth: async () => ({ ok: true, provider: 'openai', model: 'gpt-x', configured: true, hasStoredApiKey: true, source: "app" })
     }),
     validateTrainingAgentRegistry: () => ({ ok: true, errors: [] }),
     persist: () => { persisted += 1; },

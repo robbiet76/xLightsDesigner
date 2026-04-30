@@ -59,7 +59,7 @@ test("opening a project notifies display-context listeners after hydrating snaps
   const runtime = createProjectLifecycleRuntime({
     state,
     app: { querySelector: () => null },
-    getDesktopProjectBridge: () => ({
+    getAppProjectBridge: () => ({
       openProjectFile: async () => ({
         ok: true,
         snapshot: { marker: "snapshot" },

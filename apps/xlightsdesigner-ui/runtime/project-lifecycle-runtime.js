@@ -40,9 +40,9 @@ export function createProjectLifecycleRuntime(deps = {}) {
     render = () => {},
     persist = () => {},
     saveCurrentProjectSnapshot = () => {},
-    getDesktopProjectBridge = () => null,
-    getDesktopAppAdminBridge = () => null,
-    getDesktopStateBridge = () => null,
+    getAppProjectBridge = () => null,
+    getAppAdminBridge = () => null,
+    getAppStateBridge = () => null,
     hydrateAnalysisArtifactForCurrentMedia = async () => ({ ok: false }),
     onRefreshSequenceCatalog = async () => {},
     onRefreshMediaCatalog = async () => {},
@@ -180,9 +180,9 @@ export function createProjectLifecycleRuntime(deps = {}) {
       selectedKeyArg = "";
     }
     let selectedKey = str(selectedKeyArg);
-    const bridge = getDesktopProjectBridge();
+    const bridge = getAppProjectBridge();
     if (!bridge) {
-      setStatusWithDiagnostics("warning", "Open project requires native runtime.");
+      setStatusWithDiagnostics("warning", "Open project requires app runtime.");
       render();
       return;
     }
@@ -269,9 +269,9 @@ export function createProjectLifecycleRuntime(deps = {}) {
 
   function createNewProject() {
     syncProjectSummaryInputs();
-    const bridge = getDesktopProjectBridge();
+    const bridge = getAppProjectBridge();
     if (!bridge) {
-      setStatusWithDiagnostics("warning", "New project requires native runtime.");
+      setStatusWithDiagnostics("warning", "New project requires app runtime.");
       render();
       return;
     }
@@ -366,9 +366,9 @@ export function createProjectLifecycleRuntime(deps = {}) {
   }
 
   async function resetAppInstallState() {
-    const bridge = getDesktopAppAdminBridge();
+    const bridge = getAppAdminBridge();
     if (!bridge) {
-      setStatusWithDiagnostics("warning", "Fresh-install reset requires native runtime.");
+      setStatusWithDiagnostics("warning", "Fresh-install reset requires app runtime.");
       render();
       return;
     }
@@ -430,7 +430,7 @@ export function createProjectLifecycleRuntime(deps = {}) {
         // ignore local storage cleanup failures
       }
       try {
-        const stateBridge = getDesktopStateBridge();
+        const stateBridge = getAppStateBridge();
         if (stateBridge && typeof stateBridge.writeAppState === "function") {
           await stateBridge.writeAppState({
             localStateRaw: preservedRaw,

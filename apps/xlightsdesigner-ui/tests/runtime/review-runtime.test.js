@@ -28,7 +28,7 @@ test("executeApplyCore blocks invalid sequence-agent input contract", async () =
     planHandoff: {},
     deps: {
       currentSequencePathForSidecar: () => "/show/Test.xsq",
-      getDesktopBackupBridge: () => null,
+      getAppBackupBridge: () => null,
       getValidHandoff: () => null,
       buildSequenceAgentInput: () => ({ invalid: true }),
       currentLayoutMode: () => "sequencer",
@@ -108,7 +108,7 @@ test("executeApplyCore preserves XD song structure timing writes during live app
     planHandoff: {},
     deps: {
       currentSequencePathForSidecar: () => "/show/Test.xsq",
-      getDesktopBackupBridge: () => null,
+      getAppBackupBridge: () => null,
       getValidHandoff: (kind) => kind === "analysis_handoff_v1"
         ? { structure: { sections: [{ label: "Intro", startMs: 0, endMs: 1000 }] } }
         : {},
@@ -241,7 +241,7 @@ test("executeApplyCore uses full-review command limit for large single-pass plan
     planHandoff: {},
     deps: {
       currentSequencePathForSidecar: () => "/show/Test.xsq",
-      getDesktopBackupBridge: () => null,
+      getAppBackupBridge: () => null,
       getValidHandoff: () => null,
       buildSequenceAgentInput: () => ({ ok: true }),
       currentLayoutMode: () => "sequencer",
@@ -386,7 +386,7 @@ test("executeApplyCore refreshes artistic goal and revision objective from pract
     },
     deps: {
       currentSequencePathForSidecar: () => "/show/Test.xsq",
-      getDesktopBackupBridge: () => null,
+      getAppBackupBridge: () => null,
       getValidHandoff: (kind) => kind === "analysis_handoff_v1"
         ? { structure: { sections: [{ label: "Chorus 1", startMs: 0, endMs: 1000 }] } }
         : {},
@@ -506,7 +506,7 @@ test("executeApplyCore prefers collected post-apply render observation when avai
     planHandoff: { planId: "plan-render" },
     deps: {
       currentSequencePathForSidecar: () => "/show/Test.xsq",
-      getDesktopBackupBridge: () => null,
+      getAppBackupBridge: () => null,
       getValidHandoff: () => null,
       buildSequenceAgentInput: () => ({ ok: true }),
       currentLayoutMode: () => "2d",
@@ -686,7 +686,7 @@ test("executeApplyCore prefers render critique refresh when render observation i
     },
     deps: {
       currentSequencePathForSidecar: () => "/show/Test.xsq",
-      getDesktopBackupBridge: () => null,
+      getAppBackupBridge: () => null,
       getValidHandoff: (kind) => kind === "analysis_handoff_v1"
         ? { structure: { sections: [{ label: "Chorus 1", startMs: 0, endMs: 1000 }] } }
         : {},

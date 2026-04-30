@@ -20,7 +20,7 @@ test('analysis service runtime probes bridge health', async () => {
   let rendered = 0;
   const runtime = createAnalysisServiceRuntime({
     state,
-    getDesktopAudioAnalysisBridge: () => ({
+    getAppAudioAnalysisBridge: () => ({
       checkAudioAnalysisService: async () => ({ ok: true, reachable: true })
     }),
     persist: () => { persisted += 1; },

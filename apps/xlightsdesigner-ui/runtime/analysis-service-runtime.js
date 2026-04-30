@@ -2,8 +2,8 @@ export function createAnalysisServiceRuntime(deps = {}) {
   const {
     state,
     defaultAnalysisServiceUrl = '',
-    getDesktopAudioAnalysisBridge = () => null,
-    getDesktopTrainingPackageBridge = () => null,
+    getAppAudioAnalysisBridge = () => null,
+    getAppTrainingPackageBridge = () => null,
     dirnameRelPath = (value = '') => value,
     joinRelPath = (base = '', child = '') => `${base}/${child}`,
     isPlainObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value),
@@ -40,7 +40,7 @@ export function createAnalysisServiceRuntime(deps = {}) {
     if (!force && trainingPackageAudioBundleCache && (Date.now() - trainingPackageAudioBundleCacheAt) < CACHE_TTL_MS) {
       return trainingPackageAudioBundleCache;
     }
-    const bridge = getDesktopTrainingPackageBridge();
+    const bridge = getAppTrainingPackageBridge();
     if (!bridge) {
       const out = { ok: false, error: 'Desktop training package bridge unavailable.' };
       trainingPackageAudioBundleCache = out;
@@ -140,7 +140,7 @@ export function createAnalysisServiceRuntime(deps = {}) {
   }
 
   async function probeAnalysisServiceHealth({ quiet = true, force = false } = {}) {
-    const bridge = getDesktopAudioAnalysisBridge();
+    const bridge = getAppAudioAnalysisBridge();
     const baseUrl = normalizeAnalysisServiceBaseUrl(state.ui.analysisServiceUrlDraft);
     const commitIfChanged = (mutate) => {
       const before = JSON.stringify({

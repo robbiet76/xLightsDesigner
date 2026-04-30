@@ -43,8 +43,8 @@ export function createAudioAnalysisPipelineRuntime(deps = {}) {
     state,
     basenameOfPath = () => "",
     analyzeAudioContext,
-    getDesktopAudioAnalysisBridge = () => null,
-    getDesktopAgentConversationBridge = () => null,
+    getAppAudioAnalysisBridge = () => null,
+    getAppAgentConversationBridge = () => null,
     setAudioAnalysisProgress = () => {},
     render = () => {},
     buildAnalysisArtifactFromPipelineResult,
@@ -635,7 +635,7 @@ export function createAudioAnalysisPipelineRuntime(deps = {}) {
   }
 
   async function runSongContextResearch({ audioPath = "", sections = [], trackIdentity = null } = {}) {
-    const bridge = getDesktopAgentConversationBridge();
+    const bridge = getAppAgentConversationBridge();
     if (!bridge) return "";
     const tTitle = String(trackIdentity?.title || "").trim();
     const tArtist = String(trackIdentity?.artist || "").trim();
@@ -683,7 +683,7 @@ export function createAudioAnalysisPipelineRuntime(deps = {}) {
   }
 
   async function relabelSectionsWithLlm({ sections = [], lyrics = [], chords = [], lyricalIndices = [], trackIdentity = null, trackTitleHint = "", userManualStructureHint = null, timeSignature = "", tempoBpm = null } = {}) {
-    const bridge = getDesktopAgentConversationBridge();
+    const bridge = getAppAgentConversationBridge();
     const sec = Array.isArray(sections) ? sections : [];
     if (!bridge || !sec.length) return null;
     const targetIdx = Array.isArray(lyricalIndices) ? lyricalIndices.filter((i) => Number.isInteger(i) && i >= 0 && i < sec.length) : [];
@@ -864,7 +864,7 @@ export function createAudioAnalysisPipelineRuntime(deps = {}) {
         apiKey: String(state.ui.analysisServiceApiKeyDraft || "").trim(),
         authBearer: String(state.ui.analysisServiceAuthBearerDraft || "").trim()
       },
-      analysisBridge: getDesktopAudioAnalysisBridge(),
+      analysisBridge: getAppAudioAnalysisBridge(),
       inferLyricStanzaPlan,
       relabelSectionsWithLlm,
       audioTrackQueryFromPath,

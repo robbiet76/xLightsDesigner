@@ -34,7 +34,7 @@ export function createAudioAnalysisSessionRuntime(deps = {}) {
     buildLyricsRecoveryGuidance,
     buildAudioAnalystInput,
     executeAudioAnalystFlow,
-    getDesktopAnalysisArtifactBridge = () => null,
+    getAppAnalysisArtifactBridge = () => null,
     getProjectMetadataRoot = () => "",
     buildAudioAnalysisStubSummary,
     applyAudioAnalystFlowSuccessToState,
@@ -154,7 +154,7 @@ export function createAudioAnalysisSessionRuntime(deps = {}) {
           disableInteractivePrompts
         }),
         persistArtifact: async ({ artifact }) => {
-          const artifactBridge = getDesktopAnalysisArtifactBridge();
+          const artifactBridge = getAppAnalysisArtifactBridge();
           const projectFilePath = str(state.projectFilePath);
           const appRootPath = str(getProjectMetadataRoot());
           if (artifactBridge && projectFilePath && audioPath) {

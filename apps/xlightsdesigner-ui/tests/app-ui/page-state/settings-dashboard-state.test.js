@@ -14,7 +14,7 @@ test("settings dashboard state summarizes rollout, locks, and nicknames", () => 
         agentHasStoredApiKey: true,
         agentConfigured: true,
         runtimeReady: true,
-        nativeFileDialogReady: true,
+        appFileDialogReady: true,
         agentProvider: "openai",
         agentModel: "gpt-5"
       }

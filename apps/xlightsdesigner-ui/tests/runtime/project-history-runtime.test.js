@@ -38,7 +38,7 @@ test("project history runtime persists available artifacts for history", async (
   };
   const runtime = createProjectHistoryRuntime({
     state,
-    getDesktopProjectArtifactBridge: () => ({
+    getAppProjectArtifactBridge: () => ({
       writeProjectArtifacts: async (payload) => {
         writes.push(payload);
         return { ok: true };
@@ -77,7 +77,7 @@ test("project history runtime emits diagnostics when project artifact persistenc
   const runtime = createProjectHistoryRuntime({
     state,
     pushDiagnostic: (level, summary, detail) => diagnostics.push({ level, summary, detail }),
-    getDesktopProjectArtifactBridge: () => ({
+    getAppProjectArtifactBridge: () => ({
       writeProjectArtifacts: async () => ({ ok: false, reason: "bridge_rejected" })
     }),
     currentApplyContext: () => ({ projectKey: "proj-1", sequencePath: "/show/Test.xsq", endpoint: "" }),
@@ -123,7 +123,7 @@ test("project history runtime loads and selects history snapshots", async () => 
   ];
   const runtime = createProjectHistoryRuntime({
     state,
-    getDesktopProjectArtifactBridge: () => ({
+    getAppProjectArtifactBridge: () => ({
       readProjectArtifact: async ({ artifactId }) => ({ ok: true, artifact: { artifactId } })
     }),
     persist: () => {},

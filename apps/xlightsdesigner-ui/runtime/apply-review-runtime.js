@@ -12,7 +12,7 @@ export function createApplyReviewRuntime(deps = {}) {
     buildDesignerPlanCommandsFromLines = (lines) => lines,
     estimateImpactCount = () => 0,
     currentSequencePathForSidecar = () => "",
-    getDesktopFileStatBridge = () => null,
+    getAppFileStatBridge = () => null,
     applyEnabled = () => true,
     applyDisabledReason = () => "",
     syncLatestSequenceRevision = async () => ({ ok: true }),
@@ -61,7 +61,7 @@ export function createApplyReviewRuntime(deps = {}) {
     if (!sequencePath) {
       return { ok: false, message: "Open or create a sequence before apply." };
     }
-    const bridge = getDesktopFileStatBridge();
+    const bridge = getAppFileStatBridge();
     if (!bridge) {
       return { ok: true };
     }

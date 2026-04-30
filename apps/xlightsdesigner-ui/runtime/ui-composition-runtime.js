@@ -6,8 +6,8 @@ function str(value = "") {
 }
 
 export function buildBuildLabel({ state = {} } = {}) {
-  const buildVersion = str(state?.health?.nativeAppVersion);
-  const buildTimeIso = str(state?.health?.nativeBuildTime);
+  const buildVersion = str(state?.health?.appVersion);
+  const buildTimeIso = str(state?.health?.appBuildTime);
   const buildTimeLabel = buildTimeIso
     ? new Date(buildTimeIso).toLocaleString([], { year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
     : "";

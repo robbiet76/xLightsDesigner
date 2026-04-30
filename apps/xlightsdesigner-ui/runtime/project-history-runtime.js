@@ -5,8 +5,8 @@ function str(value = "") {
 export function createProjectHistoryRuntime(deps = {}) {
   const {
     state,
-    getDesktopProjectArtifactBridge = () => null,
-    getDesktopAgentLogBridge = () => null,
+    getAppProjectArtifactBridge = () => null,
+    getAppAgentLogBridge = () => null,
     pushDiagnostic = () => {},
     buildCurrentDesignSceneContext = () => null,
     buildCurrentMusicDesignContext = () => null,
@@ -23,10 +23,10 @@ export function createProjectHistoryRuntime(deps = {}) {
   } = deps;
 
   async function persistCurrentArtifactsForHistory({ planHandoff = null, applyResult = null, historyEntry = null } = {}) {
-    const bridge = getDesktopProjectArtifactBridge();
+    const bridge = getAppProjectArtifactBridge();
     const projectFilePath = str(state.projectFilePath);
     if (!bridge || !projectFilePath) {
-      pushDiagnostic("warning", "Project artifact persistence unavailable.", !bridge ? "native bridge missing" : "project file path missing");
+      pushDiagnostic("warning", "Project artifact persistence unavailable.", !bridge ? "app bridge missing" : "project file path missing");
       return { ok: false, reason: "unavailable" };
     }
     const context = currentApplyContext();
@@ -91,7 +91,7 @@ export function createProjectHistoryRuntime(deps = {}) {
   }
 
   async function readProjectArtifactById(artifactType = "", artifactId = "") {
-    const bridge = getDesktopProjectArtifactBridge();
+    const bridge = getAppProjectArtifactBridge();
     const projectFilePath = str(state.projectFilePath);
     if (!bridge || !projectFilePath) return null;
     const normalizedType = str(artifactType);
@@ -258,7 +258,7 @@ export function createProjectHistoryRuntime(deps = {}) {
   }
 
   async function appendDesktopApplyLog(entry) {
-    const bridge = getDesktopAgentLogBridge();
+    const bridge = getAppAgentLogBridge();
     if (!bridge) return;
     try {
       await bridge.appendAgentApplyLog({ entry });
@@ -268,7 +268,7 @@ export function createProjectHistoryRuntime(deps = {}) {
   }
 
   async function refreshApplyHistoryFromDesktop(limit = 40) {
-    const bridge = getDesktopAgentLogBridge();
+    const bridge = getAppAgentLogBridge();
     if (!bridge) return;
     const context = currentApplyContext();
     try {

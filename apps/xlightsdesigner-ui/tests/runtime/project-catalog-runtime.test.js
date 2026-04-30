@@ -13,7 +13,7 @@ test("project catalog runtime refreshes sequence catalog", async () => {
   };
   const runtime = createProjectCatalogRuntime({
     state,
-    getDesktopSequenceBridge: () => ({
+    getAppSequenceBridge: () => ({
       listSequencesInShowFolder: async () => ({
         ok: true,
         sequences: [{ path: "/show/A.xsq" }],
@@ -40,7 +40,7 @@ test("project catalog runtime refreshes media catalog and adopts exact-path matc
   const runtime = createProjectCatalogRuntime({
     state,
     supportedSequenceMediaExtensions: [".mp3"],
-    getDesktopMediaCatalogBridge: () => ({
+    getAppMediaCatalogBridge: () => ({
       listMediaFilesInFolder: async () => ({
         ok: true,
         mediaFiles: [{ path: "/media/song.mp3" }]

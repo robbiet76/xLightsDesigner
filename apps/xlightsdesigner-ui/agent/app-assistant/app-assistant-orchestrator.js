@@ -683,7 +683,7 @@ export async function executeAppAssistantConversation({
     return {
       ok: false,
       result: buildAppAssistantResult({
-        assistantMessage: "Cloud agent is available only in the native app runtime.",
+        assistantMessage: "Cloud agent is available only in the app runtime.",
         routeDecision: "general",
         handledBy: APP_ASSISTANT_ROLE,
         addressedTo,

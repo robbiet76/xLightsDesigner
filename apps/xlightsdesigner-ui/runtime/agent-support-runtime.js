@@ -23,9 +23,9 @@ export function createAgentSupportRuntime(deps = {}) {
   const {
     state,
     agentRuntime,
-    getDesktopTrainingPackageBridge = () => null,
-    getDesktopAgentConversationBridge = () => null,
-    getDesktopAgentConfigBridge = () => null,
+    getAppTrainingPackageBridge = () => null,
+    getAppAgentConversationBridge = () => null,
+    getAppAgentConfigBridge = () => null,
     validateTrainingAgentRegistry,
     isPlainObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value),
     refreshAgentRuntimeHealth = () => {},
@@ -45,7 +45,7 @@ export function createAgentSupportRuntime(deps = {}) {
     if (!force && trainingPackageAgentBundleCache && (Date.now() - trainingPackageAgentBundleCacheAt) < CACHE_TTL_MS) {
       return trainingPackageAgentBundleCache;
     }
-    const bridge = getDesktopTrainingPackageBridge();
+    const bridge = getAppTrainingPackageBridge();
     if (!bridge) {
       const out = { ok: false, error: 'Desktop training package bridge unavailable.' };
       trainingPackageAgentBundleCache = out;
@@ -169,7 +169,7 @@ export function createAgentSupportRuntime(deps = {}) {
   }
 
   async function hydrateAgentHealth() {
-    const bridge = getDesktopAgentConversationBridge();
+    const bridge = getAppAgentConversationBridge();
     if (!bridge) {
       state.health.agentProvider = '';
       state.health.agentModel = '';
@@ -193,7 +193,7 @@ export function createAgentSupportRuntime(deps = {}) {
   }
 
   async function hydrateAgentConfigDraft() {
-    const bridge = getDesktopAgentConfigBridge();
+    const bridge = getAppAgentConfigBridge();
     if (!bridge) return;
     try {
       const res = await bridge.getAgentConfig();
@@ -208,9 +208,9 @@ export function createAgentSupportRuntime(deps = {}) {
   }
 
   async function saveAgentConfig({ apiKey = '', model = '', baseUrl = '' } = {}) {
-    const bridge = getDesktopAgentConfigBridge();
+    const bridge = getAppAgentConfigBridge();
     if (!bridge) {
-      setStatusWithDiagnostics('warning', 'Cloud agent config requires native runtime.');
+      setStatusWithDiagnostics('warning', 'Cloud agent config requires app runtime.');
       render();
       return false;
     }
@@ -240,9 +240,9 @@ export function createAgentSupportRuntime(deps = {}) {
   }
 
   async function clearStoredAgentApiKey() {
-    const bridge = getDesktopAgentConfigBridge();
+    const bridge = getAppAgentConfigBridge();
     if (!bridge) {
-      setStatusWithDiagnostics('warning', 'Cloud agent config requires native runtime.');
+      setStatusWithDiagnostics('warning', 'Cloud agent config requires app runtime.');
       render();
       return false;
     }

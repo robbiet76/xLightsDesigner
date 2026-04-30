@@ -742,7 +742,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'A strong project mission document should sound like a creative north star for the show. Prefer emotional direction, atmosphere, inspiration, and cohesion over operational detail.',
     'Only include projectMissionCapture when the turn genuinely improves or changes the project-level mission.',
     'Only include phaseTransition when the user is clearly moving into a different phase of work.',
-    'Only include actionRequest for bounded app-level actions that the app assistant should surface explicitly. Use generate_sequence_proposal only after the user has explicitly approved generating a reviewable proposal from saved native design intent. Use propose_display_metadata_from_layout only when the user asks to seed Display metadata from the current layout, and use apply_display_metadata_proposals only after the user explicitly approves promoting pending Display proposals. Use update_display_target_intent only when the user has clearly approved exact xLights target IDs and the payload contains targetIds plus optional rolePreference, semanticHints, and effectAvoidances. Do not use actionRequest for direct sequencing edits or silent navigation.',
+    'Only include actionRequest for bounded app-level actions that the app assistant should surface explicitly. Use generate_sequence_proposal only after the user has explicitly approved generating a reviewable proposal from saved app design intent. Use propose_display_metadata_from_layout only when the user asks to seed Display metadata from the current layout, and use apply_display_metadata_proposals only after the user explicitly approves promoting pending Display proposals. Use update_display_target_intent only when the user has clearly approved exact xLights target IDs and the payload contains targetIds plus optional rolePreference, semanticHints, and effectAvoidances. Do not use actionRequest for direct sequencing edits or silent navigation.',
     'When display discovery is active, determine confirmed learnings from the user response and include them in displayDiscoveryCapture. Use only confirmed or clearly stated information for insights.',
     'If the user is refining or correcting existing display metadata, update the relevant insights instead of treating the turn as a brand new discovery topic.',
     'Treat a direct user statement as confirmed meaning. If the user clearly states that a prop or family is focal, supporting, background, repeating, feature-only, or otherwise semantically defined, capture it without asking the user to reconfirm the same point.',
@@ -828,7 +828,7 @@ async function callOpenAIResponses({ cfg, systemPrompt = '', userMessage = '', m
 async function runAgentConversation(payload = {}) {
   const cfg = getAgentConfig();
   if (!cfg.configured) {
-    return { ok: false, code: 'AGENT_NOT_CONFIGURED', error: 'OPENAI_API_KEY is not set in native app environment.' };
+    return { ok: false, code: 'AGENT_NOT_CONFIGURED', error: 'OPENAI_API_KEY is not set in app environment.' };
   }
   const userMessage = String(payload?.userMessage || '').trim();
   if (!userMessage) return { ok: false, code: 'AGENT_EMPTY_MESSAGE', error: 'Missing userMessage' };

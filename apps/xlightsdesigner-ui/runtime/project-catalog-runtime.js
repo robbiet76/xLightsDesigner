@@ -50,15 +50,15 @@ function scoreMediaCatalogIdentityMatch(mediaRow = {}, targetIdentity = null) {
 export function createProjectCatalogRuntime({
   state,
   supportedSequenceMediaExtensions = [],
-  getDesktopSequenceBridge = () => null,
-  getDesktopMediaCatalogBridge = () => null,
+  getAppSequenceBridge = () => null,
+  getAppMediaCatalogBridge = () => null,
   setStatus = () => {},
   setStatusWithDiagnostics = () => {},
   persist = () => {},
   render = () => {},
   saveCurrentProjectSnapshot = () => {},
   getValidHandoff = () => null,
-  getDesktopAnalysisArtifactBridge = () => null,
+  getAppAnalysisArtifactBridge = () => null,
   setAudioPathWithAgentPolicy = () => {}
 } = {}) {
   function buildResolvedTrackIdentityForMediaMatching() {
@@ -90,7 +90,7 @@ export function createProjectCatalogRuntime({
   }
 
   async function loadPersistedTrackIdentityForMediaPath(mediaFilePath = "", options = {}) {
-    const bridge = getDesktopAnalysisArtifactBridge();
+    const bridge = getAppAnalysisArtifactBridge();
     const projectFilePath = str(state.projectFilePath);
     const targetPath = str(mediaFilePath);
     const preferredProfileMode = str(options?.preferredProfileMode || "deep").toLowerCase() || "deep";
@@ -163,9 +163,9 @@ export function createProjectCatalogRuntime({
       render();
       return;
     }
-    const bridge = getDesktopSequenceBridge();
+    const bridge = getAppSequenceBridge();
     if (!bridge) {
-      if (!silent) setStatus("warning", "Sequence discovery requires native runtime.");
+      if (!silent) setStatus("warning", "Sequence discovery requires app runtime.");
       render();
       return;
     }
@@ -214,9 +214,9 @@ export function createProjectCatalogRuntime({
       render();
       return;
     }
-    const bridge = getDesktopMediaCatalogBridge();
+    const bridge = getAppMediaCatalogBridge();
     if (!bridge) {
-      if (!silent) setStatus("warning", "Media catalog requires native runtime.");
+      if (!silent) setStatus("warning", "Media catalog requires app runtime.");
       render();
       return;
     }

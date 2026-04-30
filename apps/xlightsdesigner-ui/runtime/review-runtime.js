@@ -36,7 +36,7 @@ export async function executeApplyCore({
 } = {}) {
   const {
     currentSequencePathForSidecar,
-    getDesktopBackupBridge,
+    getAppBackupBridge,
     getValidHandoff,
     buildSequenceAgentInput,
     currentLayoutMode,
@@ -93,7 +93,7 @@ export async function executeApplyCore({
 
   try {
     const sequencePath = currentSequencePathForSidecar();
-    const backupBridge = getDesktopBackupBridge();
+    const backupBridge = getAppBackupBridge();
     if (backupBridge && sequencePath) {
       const backup = await backupBridge.createSequenceBackup({ sequencePath });
       if (backup?.ok !== true) {
