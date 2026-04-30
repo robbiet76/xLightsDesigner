@@ -574,7 +574,7 @@ When user has timeline/effect selection in UI, agent references must bind to sta
 - Implementing a duplicate timeline/sequencer editor surface already provided by xLights.
 
 ## 15) Related Specs
-- `xlights-sequencer-control-agent-orchestration-architecture.md`
+- `../archive/sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md`
 - `../sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md`
 - `../sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
 

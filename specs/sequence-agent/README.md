@@ -121,8 +121,17 @@ These are still useful, but they are no longer the primary way into the current 
 These are no longer part of the active sequencing path and live under `specs/archive/sequence-agent/`.
 
 - [effect-training-automation-loop-v1-2026-04-14.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/effect-training-automation-loop-v1-2026-04-14.md)
+- [xlights-sequencer-control-acceptance-test-matrix.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-acceptance-test-matrix.md)
+- [xlights-sequencer-control-agent-orchestration-architecture.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md)
+- [xlights-sequencer-control-decision-log.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-decision-log.md)
+- [xlights-sequencer-control-functionality-corpus-initial-audit.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-functionality-corpus-initial-audit.md)
+- [xlights-sequencer-control-implementation-roadmap.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-implementation-roadmap.md)
+- [xlights-sequencer-control-integration-test-harness.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-integration-test-harness.md)
 - [xlights-sequencer-control-project-spec.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-project-spec.md)
 - [xlights-sequencer-control-api-surface-contract.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-api-surface-contract.md)
+- [xlights-sequencer-control-schemas-README.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-schemas-README.md)
+- [xlights-sequencer-control-sequence-agent-implementation-checklist.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-sequence-agent-implementation-checklist.md)
+- [xlights-sequencer-control-training-package-architecture.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-training-package-architecture.md)
 - [xlights-sequencer-control-README.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-sequencer-control-README.md)
 - [xlights-upstream-tracking-policy-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/archive/sequence-agent/xlights-upstream-tracking-policy-2026-04-13.md)
 

@@ -8,7 +8,7 @@
     {
       "id": "api-surface-contract",
       "type": "spec",
-      "path": "specs/sequence-agent/xlights-sequencer-control-api-surface-contract.md"
+      "path": "specs/archive/sequence-agent/xlights-sequencer-control-api-surface-contract.md"
     },
     {
       "id": "ui-agent-tests",
@@ -28,7 +28,7 @@
     {
       "id": "sequence-agent-checklist",
       "type": "implementation-checklist",
-      "path": "specs/sequence-agent/xlights-sequencer-control-sequence-agent-implementation-checklist.md"
+      "path": "specs/archive/sequence-agent/xlights-sequencer-control-sequence-agent-implementation-checklist.md"
     },
     {
       "id": "project-storage-layout",
@@ -38,7 +38,7 @@
     {
       "id": "functionality-corpus-initial-audit",
       "type": "corpus-audit",
-      "path": "specs/sequence-agent/xlights-sequencer-control-functionality-corpus-initial-audit.md"
+      "path": "specs/archive/sequence-agent/xlights-sequencer-control-functionality-corpus-initial-audit.md"
     },
     {
       "id": "production-2d-functionality-index",

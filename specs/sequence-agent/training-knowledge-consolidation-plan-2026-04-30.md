@@ -226,6 +226,14 @@ Removed local decoder build output from the working tree and tightened regenerat
 - updated decoder helper scripts to invoke `build-fseq-window-decoder.sh` instead of assuming a prebuilt binary
 - changed the decoder build helper default to xLights 2026.07 while preserving `XLIGHTS_ROOT` and `XLIGHTS_DEPS_ROOT` overrides
 
+### 2026-04-30 Control Spec Archive Slice
+
+Reduced active spec-root clutter:
+
+- moved superseded `xlights-sequencer-control-*` program-planning docs into `specs/archive/sequence-agent/`
+- kept current 2026.06/2026.07 API migration and compatibility specs as the active control references
+- updated training-package and designer-dialog references to point at archived paths where those historical docs are still useful
+
 ### 2026-04-30 Sequence-Agent Spec Index Slice
 
 Implemented concrete spec-index cleanup:

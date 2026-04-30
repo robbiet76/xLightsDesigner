@@ -223,7 +223,7 @@ Agent training assets must be organized into exactly three modules:
 
 ### 10.2 Source-of-truth package
 - Canonical package root: `training-packages/training-package-v1/`
-- Canonical architecture doc: `specs/sequence-agent/xlights-sequencer-control-training-package-architecture.md`
+- Canonical architecture doc: `specs/archive/sequence-agent/xlights-sequencer-control-training-package-architecture.md`
 
 ### 10.3 BYO-provider policy
 - Distributed app must support user-owned API/provider credentials.
@@ -254,7 +254,7 @@ The app must implement three explicit agent roles:
 
 ### 11.4 Handoff contract requirement
 Role-to-role handoffs must use structured payload contracts (analysis, intent, plan) as defined in:
-- `specs/sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md`
+- `specs/archive/sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md`
 
 ### 11.5 Ordered execution requirement
 For normal sequencing flow:
