@@ -177,6 +177,8 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
           <div class="kv"><div class="k">Scene Source</div><div>${health.sceneGraphSource || "unknown"}</div></div>
           <div class="kv"><div class="k">Layout Mode</div><div>${health.sceneGraphLayoutMode || "2D"}</div></div>
           <div class="kv"><div class="k">Spatial Nodes</div><div>${health.sceneGraphSpatialNodeCount || 0}</div></div>
+          <div class="kv"><div class="k">Custom Models</div><div>${health.customModelCount || 0}</div></div>
+          <div class="kv"><div class="k">Custom Submodels</div><div>${health.customModelsWithSubmodels || 0}</div></div>
           ${
             Array.isArray(health.sceneGraphWarnings) && health.sceneGraphWarnings.length
               ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(health.sceneGraphWarnings.join(" | "))}</p>`

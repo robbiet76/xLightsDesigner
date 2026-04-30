@@ -4,6 +4,7 @@ import { CROSS_EFFECT_SHARED_SETTINGS_BUNDLE } from './generated/cross-effect-sh
 import { BEHAVIOR_CAPABILITY_RECORDS_BUNDLE } from './generated/behavior-capability-records-bundle.js';
 import { LAYER_COMPOSITION_PRIORS_BUNDLE } from './generated/layer-composition-priors-bundle.js';
 import { classifyModelDisplayType } from './model-type-catalog.js';
+import { analyzeCustomModelStructure, mapClassificationToTrainingBuckets } from '../../runtime/custom-model-structure.js';
 
 function normText(value = '') {
   return String(value || '').trim();
@@ -75,26 +76,6 @@ function buildDisplayElementIndex(displayElements = []) {
   return index;
 }
 
-function mapClassificationToTrainingBuckets(classification = {}) {
-  const rawType = low(classification?.rawType);
-  const canonicalType = low(classification?.canonicalType);
-  const buckets = new Set();
-  if (canonicalType === 'single_line' || canonicalType === 'poly_line') buckets.add('single_line');
-  if (canonicalType === 'arches') buckets.add('arch');
-  if (canonicalType === 'candy_canes') buckets.add('cane');
-  if (canonicalType === 'spinner') buckets.add('spinner');
-  if (canonicalType === 'star') buckets.add('star');
-  if (canonicalType === 'matrix_horizontal' || canonicalType === 'matrix_vertical') buckets.add('matrix');
-  if (canonicalType === 'icicles') buckets.add('icicles');
-  if (canonicalType === 'tree') {
-    buckets.add('tree_360');
-    buckets.add('tree_flat');
-  }
-  if (rawType.includes('tree flat')) buckets.add('tree_flat');
-  if (rawType.includes('tree') && rawType.includes('360')) buckets.add('tree_360');
-  return [...buckets];
-}
-
 function inferModelBucketsForTargets({ targetIds = [], displayElements = [] } = {}) {
   const displayIndex = buildDisplayElementIndex(displayElements);
   const buckets = new Set();
@@ -102,7 +83,10 @@ function inferModelBucketsForTargets({ targetIds = [], displayElements = [] } = 
     const row = displayIndex.get(targetId);
     if (!row) continue;
     const classification = classifyModelDisplayType(row?.displayAs || row?.type || row?.displayType || '');
-    for (const bucket of mapClassificationToTrainingBuckets(classification)) {
+    const customStructure = classification?.canonicalType === 'custom'
+      ? analyzeCustomModelStructure(row?.attributes || row)
+      : null;
+    for (const bucket of mapClassificationToTrainingBuckets(classification, customStructure)) {
       buckets.add(bucket);
     }
   }

@@ -79,6 +79,18 @@ function classifyCustomModelStage1Candidate(record = {}) {
   const rolePreference = low(record?.user?.rolePreference);
   const trainedBuckets = arr(record?.training?.trainedModelBuckets).map((row) => norm(row)).filter(Boolean);
 
+  if (canonicalType === "custom" && trainedBuckets.length) {
+    return {
+      status: "stage1_mapped",
+      candidateBuckets: trainedBuckets,
+      confidence: Math.max(0.6, Number(record?.provenance?.confidence || 0)),
+      basis: "layout_structure",
+      reasons: [
+        `Custom model structurally maps to Stage 1 buckets: ${trainedBuckets.join(", ")}.`
+      ]
+    };
+  }
+
   if (canonicalType && canonicalType !== "custom") {
     return {
       status: trainedBuckets.length ? "stage1_mapped" : "metadata_partial",

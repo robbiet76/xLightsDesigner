@@ -1,0 +1,1243 @@
+{
+  "artifactType": "vendor_custom_model_structure_capture_v1",
+  "sourceFixture": "render-training-vendor-fixture/xlights_rgbeffects.xml",
+  "modelCount": 19,
+  "models": [
+    {
+      "modelName": "Singing Bulb 4",
+      "profile": "custom_face_like",
+      "traits": [
+        "custom_grid",
+        "sparse_custom_grid",
+        "vertical_span",
+        "face_submodels",
+        "custom_face_like"
+      ],
+      "trainingBuckets": [],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 56,
+          "height": 123,
+          "layers": 1
+        },
+        "occupancy": 0.0208,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 11,
+        "semanticCounts": {
+          "face": 4,
+          "eye": 8,
+          "mouth": 25,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [
+          "@Bulb",
+          "@Eye-Left",
+          "@Eye-Right",
+          "@EyeBlink-Left",
+          "@EyeBlink-Right",
+          "@Mouth1",
+          "@Mouth2",
+          "@Mouth3",
+          "@Mouth4",
+          "@Mouth5",
+          "@Socket"
+        ],
+        "details": [
+          {
+            "name": "@Bulb",
+            "type": "ranges",
+            "nodeCount": 41,
+            "range": "27-67"
+          },
+          {
+            "name": "@Eye-Left",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "68-77"
+          },
+          {
+            "name": "@Eye-Right",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "81-90"
+          },
+          {
+            "name": "@EyeBlink-Left",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "78-80"
+          },
+          {
+            "name": "@EyeBlink-Right",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "91-93"
+          },
+          {
+            "name": "@Mouth1",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "94-101"
+          },
+          {
+            "name": "@Mouth2",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "102-109"
+          },
+          {
+            "name": "@Mouth3",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "110-119"
+          },
+          {
+            "name": "@Mouth4",
+            "type": "ranges",
+            "nodeCount": 14,
+            "range": "120-133"
+          },
+          {
+            "name": "@Mouth5",
+            "type": "ranges",
+            "nodeCount": 20,
+            "range": "134-153"
+          },
+          {
+            "name": "@Socket",
+            "type": "ranges",
+            "nodeCount": 26,
+            "range": "1-26"
+          }
+        ]
+      }
+    },
+    {
+      "modelName": "Singing Bulb 3",
+      "profile": "custom_face_like",
+      "traits": [
+        "custom_grid",
+        "sparse_custom_grid",
+        "vertical_span",
+        "face_submodels",
+        "custom_face_like"
+      ],
+      "trainingBuckets": [],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 56,
+          "height": 123,
+          "layers": 1
+        },
+        "occupancy": 0.0208,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 11,
+        "semanticCounts": {
+          "face": 4,
+          "eye": 8,
+          "mouth": 25,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [
+          "@Bulb",
+          "@Eye-Left",
+          "@Eye-Right",
+          "@EyeBlink-Left",
+          "@EyeBlink-Right",
+          "@Mouth1",
+          "@Mouth2",
+          "@Mouth3",
+          "@Mouth4",
+          "@Mouth5",
+          "@Socket"
+        ],
+        "details": [
+          {
+            "name": "@Bulb",
+            "type": "ranges",
+            "nodeCount": 41,
+            "range": "27-67"
+          },
+          {
+            "name": "@Eye-Left",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "68-77"
+          },
+          {
+            "name": "@Eye-Right",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "81-90"
+          },
+          {
+            "name": "@EyeBlink-Left",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "78-80"
+          },
+          {
+            "name": "@EyeBlink-Right",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "91-93"
+          },
+          {
+            "name": "@Mouth1",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "94-101"
+          },
+          {
+            "name": "@Mouth2",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "102-109"
+          },
+          {
+            "name": "@Mouth3",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "110-119"
+          },
+          {
+            "name": "@Mouth4",
+            "type": "ranges",
+            "nodeCount": 14,
+            "range": "120-133"
+          },
+          {
+            "name": "@Mouth5",
+            "type": "ranges",
+            "nodeCount": 20,
+            "range": "134-153"
+          },
+          {
+            "name": "@Socket",
+            "type": "ranges",
+            "nodeCount": 26,
+            "range": "1-26"
+          }
+        ]
+      }
+    },
+    {
+      "modelName": "Singing Bulb 2",
+      "profile": "custom_face_like",
+      "traits": [
+        "custom_grid",
+        "sparse_custom_grid",
+        "vertical_span",
+        "face_submodels",
+        "custom_face_like"
+      ],
+      "trainingBuckets": [],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 56,
+          "height": 123,
+          "layers": 1
+        },
+        "occupancy": 0.0208,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 11,
+        "semanticCounts": {
+          "face": 4,
+          "eye": 8,
+          "mouth": 25,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [
+          "@Bulb",
+          "@Eye-Left",
+          "@Eye-Right",
+          "@EyeBlink-Left",
+          "@EyeBlink-Right",
+          "@Mouth1",
+          "@Mouth2",
+          "@Mouth3",
+          "@Mouth4",
+          "@Mouth5",
+          "@Socket"
+        ],
+        "details": [
+          {
+            "name": "@Bulb",
+            "type": "ranges",
+            "nodeCount": 41,
+            "range": "27-67"
+          },
+          {
+            "name": "@Eye-Left",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "68-77"
+          },
+          {
+            "name": "@Eye-Right",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "81-90"
+          },
+          {
+            "name": "@EyeBlink-Left",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "78-80"
+          },
+          {
+            "name": "@EyeBlink-Right",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "91-93"
+          },
+          {
+            "name": "@Mouth1",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "94-101"
+          },
+          {
+            "name": "@Mouth2",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "102-109"
+          },
+          {
+            "name": "@Mouth3",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "110-119"
+          },
+          {
+            "name": "@Mouth4",
+            "type": "ranges",
+            "nodeCount": 14,
+            "range": "120-133"
+          },
+          {
+            "name": "@Mouth5",
+            "type": "ranges",
+            "nodeCount": 20,
+            "range": "134-153"
+          },
+          {
+            "name": "@Socket",
+            "type": "ranges",
+            "nodeCount": 26,
+            "range": "1-26"
+          }
+        ]
+      }
+    },
+    {
+      "modelName": "Singing Bulb 1",
+      "profile": "custom_face_like",
+      "traits": [
+        "custom_grid",
+        "sparse_custom_grid",
+        "vertical_span",
+        "face_submodels",
+        "custom_face_like"
+      ],
+      "trainingBuckets": [],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 56,
+          "height": 123,
+          "layers": 1
+        },
+        "occupancy": 0.0208,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 11,
+        "semanticCounts": {
+          "face": 4,
+          "eye": 8,
+          "mouth": 25,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [
+          "@Bulb",
+          "@Eye-Left",
+          "@Eye-Right",
+          "@EyeBlink-Left",
+          "@EyeBlink-Right",
+          "@Mouth1",
+          "@Mouth2",
+          "@Mouth3",
+          "@Mouth4",
+          "@Mouth5",
+          "@Socket"
+        ],
+        "details": [
+          {
+            "name": "@Bulb",
+            "type": "ranges",
+            "nodeCount": 41,
+            "range": "27-67"
+          },
+          {
+            "name": "@Eye-Left",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "68-77"
+          },
+          {
+            "name": "@Eye-Right",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "81-90"
+          },
+          {
+            "name": "@EyeBlink-Left",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "78-80"
+          },
+          {
+            "name": "@EyeBlink-Right",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "91-93"
+          },
+          {
+            "name": "@Mouth1",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "94-101"
+          },
+          {
+            "name": "@Mouth2",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "102-109"
+          },
+          {
+            "name": "@Mouth3",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "110-119"
+          },
+          {
+            "name": "@Mouth4",
+            "type": "ranges",
+            "nodeCount": 14,
+            "range": "120-133"
+          },
+          {
+            "name": "@Mouth5",
+            "type": "ranges",
+            "nodeCount": 20,
+            "range": "134-153"
+          },
+          {
+            "name": "@Socket",
+            "type": "ranges",
+            "nodeCount": 26,
+            "range": "1-26"
+          }
+        ]
+      }
+    },
+    {
+      "modelName": "Star2",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid",
+        "layered_submodels"
+      ],
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 53,
+          "height": 74,
+          "layers": 1
+        },
+        "occupancy": 0.0459,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 3,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 3,
+          "center": 0
+        },
+        "names": [
+          "outer",
+          "middle",
+          "inner"
+        ],
+        "details": [
+          {
+            "name": "outer",
+            "type": "ranges",
+            "nodeCount": 80,
+            "range": "1-80"
+          },
+          {
+            "name": "middle",
+            "type": "ranges",
+            "nodeCount": 60,
+            "range": "81-140"
+          },
+          {
+            "name": "inner",
+            "type": "ranges",
+            "nodeCount": 40,
+            "range": "141-180"
+          }
+        ]
+      }
+    },
+    {
+      "modelName": "Star1",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid",
+        "layered_submodels"
+      ],
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 53,
+          "height": 74,
+          "layers": 1
+        },
+        "occupancy": 0.0459,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 3,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 3,
+          "center": 0
+        },
+        "names": [
+          "outer",
+          "middle",
+          "inner"
+        ],
+        "details": [
+          {
+            "name": "outer",
+            "type": "ranges",
+            "nodeCount": 80,
+            "range": "1-80"
+          },
+          {
+            "name": "middle",
+            "type": "ranges",
+            "nodeCount": 60,
+            "range": "81-140"
+          },
+          {
+            "name": "inner",
+            "type": "ranges",
+            "nodeCount": 40,
+            "range": "141-180"
+          }
+        ]
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaCane 8",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span"
+      ],
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaCane 7",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span"
+      ],
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaCane 6",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span"
+      ],
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaCane 5",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span"
+      ],
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaCane 4",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span"
+      ],
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaCane 3",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span"
+      ],
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaCane 2",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span"
+      ],
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaCane 1",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span"
+      ],
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Spinner",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid",
+        "spoke_submodels",
+        "custom_radial_submodels",
+        "ring_submodels"
+      ],
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 36,
+          "height": 52,
+          "layers": 1
+        },
+        "occupancy": 0.0454,
+        "nodeOrderContinuity": 0.0119
+      },
+      "submodels": {
+        "count": 18,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 12,
+          "ring": 5,
+          "layer": 1,
+          "center": 1
+        },
+        "names": [
+          "Spoke 1",
+          "Spoke 2",
+          "Spoke 3",
+          "Spoke 4",
+          "Spoke 5",
+          "Spoke 6",
+          "Spoke 7",
+          "Spoke 8",
+          "Spoke 9",
+          "Spoke 10",
+          "Spoke 11",
+          "Spoke 12",
+          "Circle 1",
+          "Circle 2",
+          "Circle 3",
+          "Circle 4",
+          "Circle 5 - Outer Ring",
+          "Center Node"
+        ],
+        "details": [
+          {
+            "name": "Spoke 1",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "5-1"
+          },
+          {
+            "name": "Spoke 2",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "6-10"
+          },
+          {
+            "name": "Spoke 3",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "19-15"
+          },
+          {
+            "name": "Spoke 4",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "20-24"
+          },
+          {
+            "name": "Spoke 5",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "33-29"
+          },
+          {
+            "name": "Spoke 6",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "34-38"
+          },
+          {
+            "name": "Spoke 7",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "47-43"
+          },
+          {
+            "name": "Spoke 8",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "48-52"
+          },
+          {
+            "name": "Spoke 9",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "61-57"
+          },
+          {
+            "name": "Spoke 10",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "62-66"
+          },
+          {
+            "name": "Spoke 11",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "75-71"
+          },
+          {
+            "name": "Spoke 12",
+            "type": "ranges",
+            "nodeCount": 5,
+            "range": "77-81"
+          },
+          {
+            "name": "Circle 1",
+            "type": "ranges",
+            "nodeCount": 12,
+            "range": "5,6,19,20,33,34,47,48,61,62,75,77"
+          },
+          {
+            "name": "Circle 2",
+            "type": "ranges",
+            "nodeCount": 12,
+            "range": "4,7,18,21,32,35,46,49,60,63,74,78"
+          },
+          {
+            "name": "Circle 3",
+            "type": "ranges",
+            "nodeCount": 12,
+            "range": "3,8,17,22,31,36,45,50,59,64,73,79"
+          },
+          {
+            "name": "Circle 4",
+            "type": "ranges",
+            "nodeCount": 12,
+            "range": "2,9,16,23,30,37,44,51,58,65,72,80"
+          },
+          {
+            "name": "Circle 5 - Outer Ring",
+            "type": "ranges",
+            "nodeCount": 36,
+            "range": "1,11,12,10,13,14,15,25,26,24,27,28,29,29,39,40,38,41,42,43,53,54,52,55,56,57,67,68,66,69,70,71,82,83,81,84,85"
+          },
+          {
+            "name": "Center Node",
+            "type": "ranges",
+            "nodeCount": 1,
+            "range": "76"
+          }
+        ]
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaFlake 4",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid"
+      ],
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 33,
+          "height": 32,
+          "layers": 1
+        },
+        "occupancy": 0.0455,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaFlake 3",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid"
+      ],
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 33,
+          "height": 32,
+          "layers": 1
+        },
+        "occupancy": 0.0455,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaFlake 2",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid"
+      ],
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 33,
+          "height": 32,
+          "layers": 1
+        },
+        "occupancy": 0.0455,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    },
+    {
+      "modelName": "Boscoyo ChromaFlake 1",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid"
+      ],
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 33,
+          "height": 32,
+          "layers": 1
+        },
+        "occupancy": 0.0455,
+        "nodeOrderContinuity": 0
+      },
+      "submodels": {
+        "count": 0,
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "names": [],
+        "details": []
+      }
+    }
+  ]
+}

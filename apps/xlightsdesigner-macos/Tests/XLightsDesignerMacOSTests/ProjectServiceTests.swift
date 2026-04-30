@@ -37,7 +37,7 @@ struct ProjectServiceTests {
         #expect(reopened.projectName == project.projectName)
     }
 
-    @Test func createProjectCanMigrateMetadataFromExistingProject() throws {
+    @Test func createProjectMigratesOnlyDisplayMetadataFromExistingProject() throws {
         let service = try makeService()
         let sourceName = "Native Test Project \(UUID().uuidString.prefix(6))"
         let source = try service.createProject(
@@ -53,6 +53,24 @@ struct ProjectServiceTests {
         let markerFile = sourceDir.appendingPathComponent("diagnostics/marker.txt")
         try FileManager.default.createDirectory(at: markerFile.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data("marker".utf8).write(to: markerFile)
+        let metadataFile = sourceDir.appendingPathComponent("layout/layout-metadata.json")
+        try FileManager.default.createDirectory(at: metadataFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let metadataJSON = """
+        {
+          "version": 1,
+          "tags": [
+            { "id": "tag-1", "name": "Focal", "description": "Primary display target" }
+          ],
+          "targetTags": {
+            "Tree": ["tag-1"]
+          },
+          "preferencesByTargetId": {
+            "Tree": { "rolePreference": "focal" }
+          },
+          "visualHintDefinitions": []
+        }
+        """
+        try Data(metadataJSON.utf8).write(to: metadataFile)
 
         let migratedName = "Native Test Project \(UUID().uuidString.prefix(6)) Migrated"
         let migrated = try service.createProject(
@@ -66,11 +84,14 @@ struct ProjectServiceTests {
         )
         let migratedDir = URL(fileURLWithPath: migrated.projectFilePath).deletingLastPathComponent()
         let migratedMarker = migratedDir.appendingPathComponent("diagnostics/marker.txt")
+        let migratedMetadata = migratedDir.appendingPathComponent("layout/layout-metadata.json")
 
         #expect(migrated.projectName == migratedName)
         #expect(migrated.showFolder == "/tmp/new-show")
         #expect(FileManager.default.fileExists(atPath: migrated.projectFilePath))
-        #expect(FileManager.default.fileExists(atPath: migratedMarker.path))
+        #expect(FileManager.default.fileExists(atPath: migratedMetadata.path))
+        #expect(!FileManager.default.fileExists(atPath: migratedMarker.path))
+        #expect(try String(contentsOf: migratedMetadata).contains("\"Tree\""))
         #expect(URL(fileURLWithPath: migrated.projectFilePath).lastPathComponent == "\(migratedName).xdproj")
     }
 

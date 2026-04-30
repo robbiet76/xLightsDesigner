@@ -46,6 +46,7 @@ export function createProjectLifecycleRuntime(deps = {}) {
     hydrateAnalysisArtifactForCurrentMedia = async () => ({ ok: false }),
     onRefreshSequenceCatalog = async () => {},
     onRefreshMediaCatalog = async () => {},
+    onProjectContextChanged = () => {},
     applyProjectSnapshot = () => {},
     parseProjectKey = () => ({ projectName: "", showFolder: "" }),
     loadProjectsStore = () => ({}),
@@ -118,6 +119,21 @@ export function createProjectLifecycleRuntime(deps = {}) {
       state.projectSequences = [];
       state.projectCreatedAt = "";
       state.projectUpdatedAt = "";
+      state.metadata = structuredClone(defaultState.metadata || {});
+      state.ui.metadataTargetId = "";
+      state.ui.metadataSelectionIds = [];
+      state.ui.metadataSelectedTags = [];
+      state.ui.metadataNewTag = "";
+      state.ui.metadataNewTagDescription = "";
+      state.ui.metadataFilterName = "";
+      state.ui.metadataFilterType = "";
+      state.ui.metadataFilterRole = "";
+      state.ui.metadataFilterVisualHints = "";
+      state.ui.metadataFilterEffectAvoidances = "";
+      state.ui.metadataFilterSupport = "";
+      state.ui.metadataFilterTags = "";
+      state.ui.metadataFilterMetadata = "";
+      state.ui.metadataFilterDimension = "overall";
 
       const saved = await saveProjectToCurrentFile({ saveAs: false });
       if (!saved?.ok) {
@@ -192,6 +208,7 @@ export function createProjectLifecycleRuntime(deps = {}) {
       state.projectCreatedAt = String(fileRes.project?.createdAt || state.projectCreatedAt || "");
       state.projectUpdatedAt = String(fileRes.project?.updatedAt || state.projectUpdatedAt || "");
       applyProjectSnapshot(fileRes.snapshot);
+      onProjectContextChanged({ reason: "project opened", showFolder: state.showFolder, projectName: state.projectName });
       setStatus("info", `Opened project: ${state.projectName}`);
       persist();
       render();
@@ -235,6 +252,7 @@ export function createProjectLifecycleRuntime(deps = {}) {
     state.projectCreatedAt = String(fileRes.project?.createdAt || state.projectCreatedAt || "");
     state.projectUpdatedAt = String(fileRes.project?.updatedAt || state.projectUpdatedAt || "");
     applyProjectSnapshot(fileRes.snapshot);
+    onProjectContextChanged({ reason: "project opened", showFolder: state.showFolder, projectName: state.projectName });
     setStatus("info", `Opened project: ${state.projectName}`);
     persist();
     render();

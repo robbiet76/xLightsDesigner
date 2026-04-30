@@ -20,8 +20,78 @@ export function createMetadataRuntime(deps = {}) {
     modelDisplayName,
     normalizeElementType,
     normalizeStringArray,
-    arraysEqualAsSets
+    arraysEqualAsSets,
+    getShowFolder = () => String(state?.showFolder || '').trim()
   } = deps;
+
+  function metadataObject() {
+    if (!state.metadata || typeof state.metadata !== 'object' || Array.isArray(state.metadata)) {
+      state.metadata = {};
+    }
+    if (!Array.isArray(state.metadata.assignments)) state.metadata.assignments = [];
+    if (!state.metadata.preferencesByTargetId || typeof state.metadata.preferencesByTargetId !== 'object' || Array.isArray(state.metadata.preferencesByTargetId)) {
+      state.metadata.preferencesByTargetId = {};
+    }
+    if (!Array.isArray(state.metadata.ignoredOrphanTargetIds)) state.metadata.ignoredOrphanTargetIds = [];
+    if (!state.metadata.displayBinding || typeof state.metadata.displayBinding !== 'object' || Array.isArray(state.metadata.displayBinding)) {
+      state.metadata.displayBinding = {};
+    }
+    return state.metadata;
+  }
+
+  function stableHash(value = '') {
+    let hash = 2166136261;
+    const text = String(value || '');
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, '0');
+  }
+
+  function customStructureFingerprintRows() {
+    const rows = Array.isArray(state.sceneGraph?.customModelCatalog?.models)
+      ? state.sceneGraph.customModelCatalog.models
+      : [];
+    return rows.map((row) => [
+      String(row?.targetId || ''),
+      String(row?.profile || ''),
+      String(row?.nodeCount || ''),
+      String(row?.construction?.dimensions?.width || ''),
+      String(row?.construction?.dimensions?.height || ''),
+      String(row?.construction?.dimensions?.layers || ''),
+      Array.isArray(row?.submodels?.names) ? row.submodels.names.join(',') : ''
+    ].join(':'));
+  }
+
+  function buildDisplayMetadataLayoutFingerprint(targets = buildMetadataTargets({ includeSubmodels: true })) {
+    const targetRows = targets.map((target) => [
+      String(target?.id || ''),
+      String(target?.type || ''),
+      String(target?.parentId || ''),
+      String(target?.name || '')
+    ].join(':'));
+    const payload = [...targetRows, ...customStructureFingerprintRows()].sort().join('|');
+    return payload ? stableHash(payload) : '';
+  }
+
+  function currentDisplayMetadataBindingRef() {
+    const binding = metadataObject().displayBinding || {};
+    return {
+      showFolder: String(binding.showFolder || getShowFolder() || ''),
+      layoutFingerprint: String(binding.layoutFingerprint || buildDisplayMetadataLayoutFingerprint() || ''),
+      boundAt: new Date().toISOString()
+    };
+  }
+
+  function hasMetadataPreferencePayload(value = {}) {
+    return Boolean(
+      String(value?.rolePreference || '').trim()
+      || (Array.isArray(value?.semanticHints) && value.semanticHints.length)
+      || (Array.isArray(value?.submodelHints) && value.submodelHints.length)
+      || (Array.isArray(value?.effectAvoidances) && value.effectAvoidances.length)
+    );
+  }
 
   function buildMetadataTargets({ includeSubmodels = true } = {}) {
     const byId = new Map();
@@ -98,6 +168,68 @@ export function createMetadataRuntime(deps = {}) {
     state.ui.metadataSelectionIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds, optionSet);
   }
 
+  function markDisplayMetadataPendingReconciliation(reason = 'display changed') {
+    const metadata = metadataObject();
+    const now = new Date().toISOString();
+    metadata.displayBinding = {
+      ...metadata.displayBinding,
+      showFolder: String(getShowFolder() || ''),
+      status: 'pending',
+      pendingReason: String(reason || 'display changed'),
+      layoutFingerprint: String(metadata.displayBinding.layoutFingerprint || ''),
+      lastChangedAt: now
+    };
+    state.ui.metadataTargetId = '';
+    state.ui.metadataSelectionIds = [];
+    invalidatePlanHandoff(`display metadata pending reconciliation: ${String(reason || 'display changed')}`);
+  }
+
+  function reconcileDisplayMetadataForSceneGraphChange({ reason = 'scene graph refreshed' } = {}) {
+    const metadata = metadataObject();
+    const targets = buildMetadataTargets({ includeSubmodels: true });
+    const liveIds = new Set(targets.map((target) => String(target.id || '')).filter(Boolean));
+    const ignored = new Set((metadata.ignoredOrphanTargetIds || []).map(String));
+    const assignments = Array.isArray(metadata.assignments) ? metadata.assignments : [];
+    const preferenceIds = Object.keys(metadata.preferencesByTargetId || {}).map(String).filter(Boolean);
+    const assignmentIds = assignments.map((row) => String(row?.targetId || '')).filter(Boolean);
+    const orphanTargetIds = Array.from(new Set([
+      ...assignmentIds.filter((id) => !liveIds.has(id) && !ignored.has(id)),
+      ...preferenceIds.filter((id) => !liveIds.has(id) && !ignored.has(id))
+    ])).sort((a, b) => a.localeCompare(b));
+    const activeAssignmentCount = assignmentIds.filter((id) => liveIds.has(id)).length;
+    const activePreferenceCount = preferenceIds.filter((id) => liveIds.has(id)).length;
+    const previousFingerprint = String(metadata.displayBinding?.layoutFingerprint || '');
+    const layoutFingerprint = buildDisplayMetadataLayoutFingerprint(targets);
+    const now = new Date().toISOString();
+
+    metadata.displayBinding = {
+      showFolder: String(getShowFolder() || ''),
+      layoutFingerprint,
+      previousLayoutFingerprint: previousFingerprint && previousFingerprint !== layoutFingerprint ? previousFingerprint : '',
+      status: 'reconciled',
+      pendingReason: '',
+      reconciledReason: String(reason || 'scene graph refreshed'),
+      lastReconciledAt: now,
+      lastChangedAt: String(metadata.displayBinding?.lastChangedAt || ''),
+      summary: {
+        targetCount: targets.length,
+        activeAssignmentCount,
+        activePreferenceCount,
+        orphanTargetCount: orphanTargetIds.length,
+        ignoredOrphanTargetCount: ignored.size,
+        layoutChanged: Boolean(previousFingerprint && previousFingerprint !== layoutFingerprint)
+      },
+      orphanTargetIds
+    };
+
+    ensureMetadataTargetSelection();
+    if (orphanTargetIds.length) {
+      setStatus('warning', `${orphanTargetIds.length} display metadata target${orphanTargetIds.length === 1 ? '' : 's'} need remapping after layout refresh.`);
+    }
+    invalidatePlanHandoff('display metadata reconciled against refreshed layout');
+    return metadata.displayBinding;
+  }
+
   function resolveAssignmentParentId(assignment) {
     const explicit = String(assignment?.targetParentId || '').trim();
     if (explicit) return explicit;
@@ -168,9 +300,10 @@ export function createMetadataRuntime(deps = {}) {
   }
 
   function buildEffectiveMetadataAssignments(assignments = state.metadata?.assignments || [], preferencesByTargetId = state.metadata?.preferencesByTargetId || {}) {
-    return buildRuntimeEffectiveMetadataAssignments(assignments, preferencesByTargetId, {
+    const effective = buildRuntimeEffectiveMetadataAssignments(assignments, preferencesByTargetId, {
       resolveTarget: (targetId) => getMetadataTargetById(targetId)
     });
+    return effective.filter((row) => getMetadataTargetById(row?.targetId));
   }
 
   function getMetadataTagRecords() {
@@ -327,7 +460,8 @@ export function createMetadataRuntime(deps = {}) {
       targetType,
       targetParentId,
       targetParentName,
-      tags: nextTags
+      tags: nextTags,
+      displayBinding: existing?.displayBinding || currentDisplayMetadataBindingRef()
     };
     if (idx >= 0) assignments[idx] = next; else assignments.push(next);
     state.metadata.assignments = [...assignments];
@@ -350,9 +484,13 @@ export function createMetadataRuntime(deps = {}) {
     if (!value) {
       const reduced = { ...previous };
       delete reduced.rolePreference;
-      if (Object.keys(reduced).length) next[id] = reduced; else delete next[id];
+      if (hasMetadataPreferencePayload(reduced)) next[id] = reduced; else delete next[id];
     } else {
-      next[id] = { ...previous, rolePreference: value };
+      next[id] = {
+        ...previous,
+        rolePreference: value,
+        displayBinding: previous.displayBinding || currentDisplayMetadataBindingRef()
+      };
     }
     state.metadata.preferencesByTargetId = next;
     invalidatePlanHandoff('metadata role preference changed');
@@ -373,7 +511,8 @@ export function createMetadataRuntime(deps = {}) {
     const next = { ...current };
     const reduced = { ...previous };
     if (nextValues.length) reduced.semanticHints = nextValues; else delete reduced.semanticHints;
-    if (Object.keys(reduced).length) next[id] = reduced; else delete next[id];
+    if (Object.keys(reduced).length && !reduced.displayBinding) reduced.displayBinding = currentDisplayMetadataBindingRef();
+    if (hasMetadataPreferencePayload(reduced)) next[id] = reduced; else delete next[id];
     state.metadata.preferencesByTargetId = next;
     ensurePersistedVisualHintDefinitions(nextValues);
     invalidatePlanHandoff('metadata semantic hints changed');
@@ -410,7 +549,8 @@ export function createMetadataRuntime(deps = {}) {
     const next = { ...current };
     const reduced = { ...previous };
     if (nextValues.length) reduced.submodelHints = nextValues; else delete reduced.submodelHints;
-    if (Object.keys(reduced).length) next[id] = reduced; else delete next[id];
+    if (Object.keys(reduced).length && !reduced.displayBinding) reduced.displayBinding = currentDisplayMetadataBindingRef();
+    if (hasMetadataPreferencePayload(reduced)) next[id] = reduced; else delete next[id];
     state.metadata.preferencesByTargetId = next;
     invalidatePlanHandoff('metadata submodel hints changed');
     saveMetadataAndRender(`Updated submodel hints for ${target.displayName || id}.`);
@@ -446,7 +586,8 @@ export function createMetadataRuntime(deps = {}) {
     const next = { ...current };
     const reduced = { ...previous };
     if (nextValues.length) reduced.effectAvoidances = nextValues; else delete reduced.effectAvoidances;
-    if (Object.keys(reduced).length) next[id] = reduced; else delete next[id];
+    if (Object.keys(reduced).length && !reduced.displayBinding) reduced.displayBinding = currentDisplayMetadataBindingRef();
+    if (hasMetadataPreferencePayload(reduced)) next[id] = reduced; else delete next[id];
     state.metadata.preferencesByTargetId = next;
     invalidatePlanHandoff('metadata effect avoidances changed');
     saveMetadataAndRender(`Updated effect avoidances for ${target.displayName || id}.`);
@@ -580,6 +721,9 @@ export function createMetadataRuntime(deps = {}) {
     getMetadataTargetNameById,
     setMetadataFocusedTarget,
     ensureMetadataTargetSelection,
+    markDisplayMetadataPendingReconciliation,
+    reconcileDisplayMetadataForSceneGraphChange,
+    buildDisplayMetadataLayoutFingerprint,
     getMetadataOrphans,
     getVisualHintDefinitionRecords,
     setVisualHintDefinitionRecords,

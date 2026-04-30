@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { buildNormalizedTargetMetadataRecords } from "../../apps/xlightsdesigner-ui/runtime/target-metadata-runtime.js";
+import { buildCustomModelStructureCatalog } from "../../apps/xlightsdesigner-ui/runtime/custom-model-catalog.js";
 
 function norm(value = "") {
   return String(value || "").trim();
@@ -142,6 +143,15 @@ function main() {
   const inputPath = process.argv[2] || path.join(process.env.HOME || "", "Library/Application Support/xlightsdesigner-desktop/xlightsdesigner-state.json");
   const outputPath = process.argv[3] || "/tmp/metadata-completeness-report.v1.json";
   const state = readDesktopState(inputPath);
+  const customModelCatalog = buildCustomModelStructureCatalog({
+    sceneGraph: state.sceneGraph || {},
+    source: {
+      statePath: inputPath,
+      projectName: norm(state.projectName),
+      sequencePath: norm(state.sequencePathInput),
+      sceneGraphSource: norm(state.health?.sceneGraphSource)
+    }
+  });
   const records = buildNormalizedTargetMetadataRecords({
     sceneGraph: state.sceneGraph || {},
     metadataAssignments: state.metadata?.assignments || [],
@@ -157,6 +167,7 @@ function main() {
       totalTargets: records.length,
       byTargetKind: summarizeByTargetKind(records),
       modelSlices: summarizeModelSlices(records),
+      customModelStructure: customModelCatalog.summary,
       priorityGaps: summarizePriorityGaps(records)
     },
     gapExamples: extractGapExamples(records, 40),

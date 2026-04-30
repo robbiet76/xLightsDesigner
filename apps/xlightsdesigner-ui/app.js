@@ -17,6 +17,7 @@ import {
   getMediaMetadata,
   getDisplayElementOrder,
   getModelGroupMembers,
+  getModel,
   getModels,
   getLayoutScene,
   getOpenSequence,
@@ -161,6 +162,7 @@ import {
 } from "./agent/app-assistant/app-assistant-contracts.js";
 import { buildPageStates } from "./app-ui/page-state/index.js";
 import { buildNormalizedTargetMetadataRecords } from "./runtime/target-metadata-runtime.js";
+import { buildCustomModelStructureCatalog } from "./runtime/custom-model-catalog.js";
 import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js";
 import { buildCurrentSequenceContextFromReadback } from "./runtime/current-sequence-context-runtime.js";
 import { fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
@@ -582,6 +584,19 @@ const defaultState = {
     displayElements: [],
     views: [],
     cameras: [],
+    customModelCatalog: {
+      artifactType: "custom_model_structure_catalog_v1",
+      artifactVersion: "1.0",
+      createdAt: "",
+      source: {},
+      summary: {
+        customModelCount: 0,
+        modelsWithSubmodels: 0,
+        profileCounts: {},
+        bucketCounts: {}
+      },
+      models: []
+    },
     stats: {
       modelCount: 0,
       groupCount: 0,
@@ -633,6 +648,25 @@ const defaultState = {
     assignments: [],
     preferencesByTargetId: {},
     visualHintDefinitions: [],
+    displayBinding: {
+      showFolder: "",
+      layoutFingerprint: "",
+      previousLayoutFingerprint: "",
+      status: "unknown",
+      pendingReason: "",
+      reconciledReason: "",
+      lastChangedAt: "",
+      lastReconciledAt: "",
+      summary: {
+        targetCount: 0,
+        activeAssignmentCount: 0,
+        activePreferenceCount: 0,
+        orphanTargetCount: 0,
+        ignoredOrphanTargetCount: 0,
+        layoutChanged: false
+      },
+      orphanTargetIds: []
+    },
     ignoredOrphanTargetIds: []
   },
   projectSequences: [],
@@ -883,6 +917,19 @@ if (typeof state.metadata?.preferencesByTargetId !== "object" || !state.metadata
 if (!Array.isArray(state.metadata?.visualHintDefinitions)) {
   state.metadata.visualHintDefinitions = [];
 }
+if (!state.metadata?.displayBinding || typeof state.metadata.displayBinding !== "object" || Array.isArray(state.metadata.displayBinding)) {
+  state.metadata.displayBinding = structuredClone(defaultState.metadata.displayBinding);
+} else {
+  state.metadata.displayBinding = {
+    ...structuredClone(defaultState.metadata.displayBinding),
+    ...state.metadata.displayBinding,
+    summary: {
+      ...structuredClone(defaultState.metadata.displayBinding.summary),
+      ...(isPlainObject(state.metadata.displayBinding.summary) ? state.metadata.displayBinding.summary : {})
+    },
+    orphanTargetIds: Array.isArray(state.metadata.displayBinding.orphanTargetIds) ? state.metadata.displayBinding.orphanTargetIds : []
+  };
+}
 if (!Array.isArray(state.ui?.metadataSelectedTags)) {
   state.ui.metadataSelectedTags = [];
 }
@@ -996,6 +1043,15 @@ if (!isPlainObject(state.sceneGraph)) {
   state.sceneGraph = {
     ...structuredClone(defaultState.sceneGraph),
     ...state.sceneGraph,
+    customModelCatalog: {
+      ...structuredClone(defaultState.sceneGraph.customModelCatalog),
+      ...(isPlainObject(state.sceneGraph.customModelCatalog) ? state.sceneGraph.customModelCatalog : {}),
+      summary: {
+        ...structuredClone(defaultState.sceneGraph.customModelCatalog.summary),
+        ...(isPlainObject(state.sceneGraph.customModelCatalog?.summary) ? state.sceneGraph.customModelCatalog.summary : {})
+      },
+      models: Array.isArray(state.sceneGraph.customModelCatalog?.models) ? state.sceneGraph.customModelCatalog.models : []
+    },
     stats: {
       ...structuredClone(defaultState.sceneGraph.stats),
       ...(isPlainObject(state.sceneGraph.stats) ? state.sceneGraph.stats : {})
@@ -2859,9 +2915,65 @@ function normalizeVector3(source) {
   };
 }
 
+function extractCustomModelAttributes(model = {}) {
+  const attrs = {};
+  for (const key of [
+    "DisplayAs",
+    "CustomModel",
+    "CustomModelCompressed",
+    "PixelCount",
+    "StringType",
+    "ModelChain",
+    "parm1",
+    "parm2",
+    "parm3"
+  ]) {
+    if (model?.[key] != null && String(model[key]).trim()) attrs[key] = String(model[key]);
+  }
+  return attrs;
+}
+
+function hasCustomModelStructureAttributes(model = {}) {
+  const attrs = isPlainObject(model?.attributes) ? model.attributes : {};
+  return Boolean(
+    String(attrs.CustomModel || model?.CustomModel || "").trim()
+    || String(attrs.CustomModelCompressed || model?.CustomModelCompressed || "").trim()
+  );
+}
+
+function isCustomModelRow(model = {}) {
+  return classifyModelDisplayType(model?.displayAs || model?.type || model?.displayType || model?.DisplayAs || "")?.canonicalType === "custom";
+}
+
+function normalizeModelDetailPayload(body = {}) {
+  const data = body?.data && typeof body.data === "object" ? body.data : body;
+  if (isPlainObject(data?.model)) return data.model;
+  if (Array.isArray(data?.models) && data.models.length) return data.models[0];
+  return isPlainObject(data) ? data : {};
+}
+
+function mergeModelDetailRow(summary = {}, detail = {}) {
+  const detailRow = normalizeModelDetailPayload(detail);
+  if (!Object.keys(detailRow).length) return summary;
+  return {
+    ...summary,
+    ...detailRow,
+    id: String(summary?.id || detailRow?.id || detailRow?.name || "").trim(),
+    name: String(summary?.name || detailRow?.name || summary?.id || "").trim(),
+    displayAs: String(summary?.displayAs || detailRow?.displayAs || detailRow?.DisplayAs || summary?.type || "").trim(),
+    type: String(summary?.type || detailRow?.type || detailRow?.DisplayAs || detailRow?.displayAs || "").trim(),
+    attributes: {
+      ...(isPlainObject(summary?.attributes) ? summary.attributes : {}),
+      ...(isPlainObject(detailRow?.attributes) ? detailRow.attributes : {}),
+      ...extractCustomModelAttributes(detailRow)
+    },
+    faceInfo: detailRow?.faceInfo || summary?.faceInfo || null
+  };
+}
+
 function normalizeSceneGraphModelNode(model = {}, source = "scene") {
   const id = String(model?.name || model?.id || "").trim();
-  const typeInfo = classifyModelDisplayType(model?.type || "");
+  const typeInfo = classifyModelDisplayType(model?.displayAs || model?.type || model?.displayType || model?.DisplayAs || "");
   const type = normalizeElementType(model?.type || "model") || "model";
   const transform = isPlainObject(model?.transform) ? model.transform : {};
   const dimensions = isPlainObject(model?.dimensions) ? model.dimensions : {};
@@ -2910,7 +3022,10 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
       height: toFiniteNumberOrNull(dimensions.height),
       depth: toFiniteNumberOrNull(dimensions.depth)
     },
-    attributes: isPlainObject(model?.attributes) ? model.attributes : {}
+    attributes: {
+      ...(isPlainObject(model?.attributes) ? model.attributes : {}),
+      ...extractCustomModelAttributes(model)
+    }
   };
 }
 
@@ -2950,7 +3065,12 @@ function buildSceneGraphFromData({
     .filter((row) => row.name);
   const layoutMode = inferLayoutMode({ cameras });
   const sceneModels = Array.isArray(sceneData?.models) ? sceneData.models : [];
-  const modelRows = sceneModels.length ? sceneModels : (Array.isArray(models) ? models : []);
+  const modelDetailsById = new Map((Array.isArray(models) ? models : [])
+    .map((row) => [String(row?.id || row?.name || "").trim(), row])
+    .filter(([id]) => id));
+  const modelRows = sceneModels.length
+    ? sceneModels.map((row) => mergeModelDetailRow(row, modelDetailsById.get(String(row?.id || row?.name || "").trim()) || {}))
+    : (Array.isArray(models) ? models : []);
   for (const row of modelRows) {
     const node = normalizeSceneGraphModelNode(row, sceneModels.length ? "layout.getScene" : "layout.getModels");
     if (!node.id) continue;
@@ -3032,6 +3152,18 @@ function buildSceneGraphFromData({
   const bounds = computeSceneBounds(spatialNodes);
   const depthBands = classifyDepthBands({ modelsById, groupsById, submodelsById });
   const depthPlanningEnabled = layoutMode === "3d";
+  const customModelCatalog = buildCustomModelStructureCatalog({
+    sceneGraph: {
+      modelsById,
+      groupsById,
+      submodelsById,
+      stats: {}
+    },
+    source: {
+      sceneGraphSource: source,
+      modelSource: sceneModels.length ? "layout.getScene" : "layout.getModels"
+    }
+  });
 
   return {
     loaded: true,
@@ -3043,6 +3175,7 @@ function buildSceneGraphFromData({
     displayElements,
     views,
     cameras,
+    customModelCatalog,
     stats: {
       modelCount: Object.keys(modelsById).length,
       groupCount: Object.keys(groupsById).length,
@@ -3102,6 +3235,25 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [], group
   }
 }
 
+function clearSceneGraphForDisplayChange(reason = "display changed") {
+  const message = `Scene graph cleared: ${reason}`;
+  state.models = [];
+  state.submodels = [];
+  state.sceneGraph = {
+    ...structuredClone(defaultState.sceneGraph),
+    loaded: false,
+    loadedAt: new Date().toISOString(),
+    source: reason,
+    warnings: [message]
+  };
+  state.health.sceneGraphReady = false;
+  state.health.sceneGraphSource = reason;
+  state.health.sceneGraphWarnings = [message];
+  state.health.sceneGraphSpatialNodeCount = 0;
+  state.health.sceneGraphLayoutMode = "2d";
+  metadataRuntime?.markDisplayMetadataPendingReconciliation?.(reason);
+}
+
 async function refreshEffectCatalogFromXLights() {
   const commands = Array.isArray(state.health?.capabilityCommands) ? state.health.capabilityCommands : [];
   const ownedEndpoint = String(state.endpoint || "").includes("/xlightsdesigner/api") || /:49915(?:\/|$)/.test(String(state.endpoint || ""));
@@ -3158,6 +3310,34 @@ async function fetchGroupMembershipsFromXLights(models = []) {
   return out;
 }
 
+async function hydrateCustomModelDetailsFromXLights(models = []) {
+  const rows = Array.isArray(models) ? models : [];
+  const commands = Array.isArray(state.health?.capabilityCommands) ? state.health.capabilityCommands : [];
+  if (!commands.includes("layout.getModel")) return rows;
+  const candidates = rows.filter((row) => isCustomModelRow(row) && !hasCustomModelStructureAttributes(row));
+  if (!candidates.length) return rows;
+
+  const detailByName = new Map();
+  const results = await Promise.allSettled(
+    candidates.map(async (row) => {
+      const name = String(row?.name || row?.id || "").trim();
+      if (!name) return null;
+      const detail = await getModel(state.endpoint, name);
+      return [name, detail];
+    })
+  );
+  for (const result of results) {
+    if (result.status !== "fulfilled" || !Array.isArray(result.value)) continue;
+    detailByName.set(result.value[0], result.value[1]);
+  }
+  if (!detailByName.size) return rows;
+
+  return rows.map((row) => {
+    const name = String(row?.name || row?.id || "").trim();
+    return detailByName.has(name) ? mergeModelDetailRow(row, detailByName.get(name)) : row;
+  });
+}
+
 function normalizeSubmodelSummaryFromXLights(row = {}) {
   const fullName = String(row?.fullName || row?.id || "").trim();
   const name = String(row?.name || fullName).trim();
@@ -3196,7 +3376,7 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
   const modelBody = await getModels(state.endpoint);
   const fetchedModels = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : [];
   const excludedUnassignedModels = fetchedModels.filter((row) => isModelInUnassignedPreview(row));
-  state.models = fetchedModels.filter((row) => !isModelInUnassignedPreview(row));
+  state.models = await hydrateCustomModelDetailsFromXLights(fetchedModels.filter((row) => !isModelInUnassignedPreview(row)));
   const includedModelIds = new Set(state.models.map((row) => modelStableId(row)).filter(Boolean));
   state.health.excludedUnassignedModelCount = excludedUnassignedModels.length;
   state.health.excludedUnassignedModelNames = excludedUnassignedModels
@@ -3231,6 +3411,7 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
     groupMembersById
   });
 
+  metadataRuntime.reconcileDisplayMetadataForSceneGraphChange({ reason: "layout refresh" });
   metadataRuntime.ensureMetadataTargetSelection();
 }
 
@@ -6942,6 +7123,10 @@ async function onSaveProjectSettings() {
   const previousProjectName = String(state.projectName || "").trim();
   const previousShowFolder = String(state.showFolder || "").trim();
   projectLifecycleRuntime.syncProjectSummaryInputs();
+  const nextShowFolder = String(state.showFolder || "").trim();
+  if (nextShowFolder && nextShowFolder !== previousShowFolder) {
+    clearSceneGraphForDisplayChange("show folder changed");
+  }
   const endpointInput = app.querySelector("#endpoint-input");
   const confirmModeInput = app.querySelector("#confirm-mode-input");
   const thresholdInput = app.querySelector("#threshold-input");
@@ -7097,7 +7282,11 @@ async function onBrowseShowFolder() {
     directory: true
   });
   if (!selected) return;
+  const previousShowFolder = String(state.showFolder || "").trim();
   state.showFolder = selected;
+  if (String(selected || "").trim() !== previousShowFolder) {
+    clearSceneGraphForDisplayChange("show folder changed");
+  }
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -7875,6 +8064,7 @@ projectLifecycleRuntime = createProjectLifecycleRuntime({
   onRefreshSequenceCatalog: (...args) => projectCatalogRuntime.refreshSequenceCatalog(...args),
   onRefreshMediaCatalog: (...args) => projectCatalogRuntime.refreshMediaCatalog(...args),
   applyProjectSnapshot,
+  onProjectContextChanged: () => clearSceneGraphForDisplayChange("project opened"),
   parseProjectKey: (...args) => projectSnapshotRuntime.parseProjectKey(...args),
   loadProjectsStore: (...args) => projectSnapshotRuntime.loadProjectsStore(...args),
   persistProjectsStore: (...args) => projectSnapshotRuntime.persistProjectsStore(...args),
@@ -7918,7 +8108,8 @@ metadataRuntime = createMetadataRuntime({
   modelDisplayName,
   normalizeElementType,
   normalizeStringArray,
-  arraysEqualAsSets
+  arraysEqualAsSets,
+  getShowFolder: () => state.showFolder
 });
 
 projectHistoryRuntime = createProjectHistoryRuntime({

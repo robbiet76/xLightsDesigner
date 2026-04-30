@@ -10,6 +10,14 @@ test("diagnostics dashboard state summarizes counts, rows, and recent applies", 
         diagnosticsOpen: true,
         diagnosticsFilter: "warning"
       },
+      sceneGraph: {
+        customModelCatalog: {
+          summary: {
+            customModelCount: 3,
+            modelsWithSubmodels: 2
+          }
+        }
+      },
       diagnostics: [
         { level: "warning", text: "Scene graph partial", ts: "2026-03-16T13:00:00.000Z" },
         { level: "info", text: "Connected", ts: "2026-03-16T13:01:00.000Z" }
@@ -39,4 +47,6 @@ test("diagnostics dashboard state summarizes counts, rows, and recent applies", 
   assert.equal(dashboard.data.filteredRows.length, 1);
   assert.equal(dashboard.data.recentApplies.length, 1);
   assert.equal(dashboard.data.health.buildLabel, "Build: test");
+  assert.equal(dashboard.data.health.customModelCount, 3);
+  assert.equal(dashboard.data.health.customModelsWithSubmodels, 2);
 });

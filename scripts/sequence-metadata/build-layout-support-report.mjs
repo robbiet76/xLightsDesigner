@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { classifyModelDisplayType } from "../../apps/xlightsdesigner-ui/agent/sequence-agent/model-type-catalog.js";
 import { getStage1TrainedEffectBundle } from "../../apps/xlightsdesigner-ui/agent/sequence-agent/trained-effect-knowledge.js";
+import { analyzeCustomModelStructure, mapClassificationToTrainingBuckets } from "../../apps/xlightsdesigner-ui/runtime/custom-model-structure.js";
+import { buildCustomModelStructureCatalog } from "../../apps/xlightsdesigner-ui/runtime/custom-model-catalog.js";
 
 function norm(value = "") {
   return String(value || "").trim();
@@ -14,26 +16,6 @@ function low(value = "") {
 
 function unique(values = []) {
   return [...new Set((Array.isArray(values) ? values : []).map((row) => norm(row)).filter(Boolean))];
-}
-
-function mapClassificationToTrainingBuckets(classification = {}) {
-  const rawType = low(classification?.rawType);
-  const canonicalType = low(classification?.canonicalType);
-  const buckets = new Set();
-  if (canonicalType === "single_line" || canonicalType === "poly_line") buckets.add("single_line");
-  if (canonicalType === "arches") buckets.add("arch");
-  if (canonicalType === "candy_canes") buckets.add("cane");
-  if (canonicalType === "spinner") buckets.add("spinner");
-  if (canonicalType === "star") buckets.add("star");
-  if (canonicalType === "matrix_horizontal" || canonicalType === "matrix_vertical") buckets.add("matrix");
-  if (canonicalType === "icicles") buckets.add("icicles");
-  if (canonicalType === "tree") {
-    buckets.add("tree_360");
-    buckets.add("tree_flat");
-  }
-  if (rawType.includes("tree flat")) buckets.add("tree_flat");
-  if (rawType.includes("tree") && rawType.includes("360")) buckets.add("tree_360");
-  return [...buckets];
 }
 
 function deriveRuntimeSupportState({ targetKind = "", active = true } = {}) {
@@ -107,7 +89,11 @@ function buildRecordsFromSceneState(state = {}) {
     const assignment = assignmentIndex.get(targetId) || {};
     const displayType = norm(model?.displayAs || model?.type || model?.displayType || "");
     const classification = classifyModelDisplayType(displayType);
-    const buckets = mapClassificationToTrainingBuckets(classification).filter((bucket) => trainedModelBuckets.has(bucket));
+    const childSubmodels = Object.values(submodelsById).filter((row) => norm(row?.parentId) === targetId);
+    const customStructure = classification?.canonicalType === "custom"
+      ? analyzeCustomModelStructure(model?.attributes || model || {}, { submodels: childSubmodels, faceInfo: model?.faceInfo || model?.attributes?.faceInfo || null })
+      : null;
+    const buckets = mapClassificationToTrainingBuckets(classification, customStructure).filter((bucket) => trainedModelBuckets.has(bucket));
     records.push({
       targetId,
       targetKind: "model",
@@ -121,18 +107,19 @@ function buildRecordsFromSceneState(state = {}) {
         source: "layout.getModels"
       },
       structure: {
-        geometryTraits: unique([classification?.canonicalType, classification?.category]),
+        geometryTraits: unique([classification?.canonicalType, classification?.category, ...(customStructure?.traits || [])]),
         topologyTraits: [],
         spatialTraits: [],
         groupMemberships: unique(groupMembershipIndex.get(targetId) || []),
-        submodelCount: Object.values(submodelsById).filter((row) => norm(row?.parentId) === targetId).length,
-        nodeCount: Number(model?.nodeCount || model?.membership?.nodeCount || 0),
+        submodelCount: childSubmodels.length,
+        nodeCount: Number(model?.nodeCount || customStructure?.nodeCount || model?.membership?.nodeCount || 0),
         coverageClass: "",
-        renderRisk: ""
+        renderRisk: "",
+        customStructure: customStructure || null
       },
       semantics: {
         inferredRole: "",
-        inferredSemanticTraits: [],
+        inferredSemanticTraits: unique(customStructure?.traits || []),
         inferredMotionAffinities: [],
         inferredEffectAffinities: [],
         supportState: deriveTrainingSupportState({ trainedBuckets: buckets })
@@ -155,7 +142,7 @@ function buildRecordsFromSceneState(state = {}) {
         inferredAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         sources: ["layout", "training_bundle", "metadata_assignments"],
-        confidence: buckets.length ? 1 : 0.25
+        confidence: buckets.length ? Math.max(0.6, Number(customStructure?.confidence || 1)) : Number(customStructure?.confidence || 0.25)
       },
       runtimeSupportState: deriveRuntimeSupportState({ targetKind: "model", active: true })
     });
@@ -322,6 +309,15 @@ function main() {
   const outputPath = process.argv[3] || "/tmp/layout-support-report.v1.json";
   const state = readDesktopState(inputPath);
   const records = buildRecordsFromSceneState(state);
+  const customModelCatalog = buildCustomModelStructureCatalog({
+    sceneGraph: state.sceneGraph || {},
+    source: {
+      statePath: inputPath,
+      projectName: norm(state.projectName),
+      sequencePath: norm(state.sequencePathInput),
+      sceneGraphSource: norm(state.health?.sceneGraphSource)
+    }
+  });
   const report = {
     artifactType: "layout_support_report_v1",
     artifactVersion: "1.0",
@@ -331,7 +327,10 @@ function main() {
     projectName: norm(state.projectName),
     metadataTagCount: Array.isArray(state.metadata?.tags) ? state.metadata.tags.length : 0,
     metadataAssignmentCount: Array.isArray(state.metadata?.assignments) ? state.metadata.assignments.length : 0,
-    summary: summarizeRecords(records),
+    summary: {
+      ...summarizeRecords(records),
+      customModelStructure: customModelCatalog.summary
+    },
     records
   };
   fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`);

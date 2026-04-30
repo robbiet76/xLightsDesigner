@@ -1,5 +1,6 @@
 import { classifyModelDisplayType } from "../agent/sequence-agent/model-type-catalog.js";
 import { getStage1TrainedEffectBundle } from "../agent/sequence-agent/trained-effect-knowledge.js";
+import { analyzeCustomModelStructure, mapClassificationToTrainingBuckets } from "./custom-model-structure.js";
 
 function norm(value = "") {
   return String(value || "").trim();
@@ -260,26 +261,6 @@ function buildDensityMetadata({
   };
 }
 
-function mapClassificationToTrainingBuckets(classification = {}) {
-  const rawType = low(classification?.rawType);
-  const canonicalType = low(classification?.canonicalType);
-  const buckets = new Set();
-  if (canonicalType === "single_line" || canonicalType === "poly_line") buckets.add("single_line");
-  if (canonicalType === "arches") buckets.add("arch");
-  if (canonicalType === "candy_canes") buckets.add("cane");
-  if (canonicalType === "spinner") buckets.add("spinner");
-  if (canonicalType === "star") buckets.add("star");
-  if (canonicalType === "matrix_horizontal" || canonicalType === "matrix_vertical") buckets.add("matrix");
-  if (canonicalType === "icicles") buckets.add("icicles");
-  if (canonicalType === "tree") {
-    buckets.add("tree_360");
-    buckets.add("tree_flat");
-  }
-  if (rawType.includes("tree flat")) buckets.add("tree_flat");
-  if (rawType.includes("tree") && rawType.includes("360")) buckets.add("tree_360");
-  return [...buckets];
-}
-
 function buildAssignmentIndex(assignments = []) {
   const index = new Map();
   for (const row of arr(assignments)) {
@@ -350,10 +331,11 @@ function buildSubmodelMetadata({
   return {};
 }
 
-function inferSemanticTraits({ canonicalType = "", userTags = [], semanticHints = [] } = {}) {
+function inferSemanticTraits({ canonicalType = "", userTags = [], semanticHints = [], structureTraits = [] } = {}) {
   const traits = new Set();
   const canonical = low(canonicalType);
   if (canonical) traits.add(canonical);
+  for (const trait of unique(structureTraits)) traits.add(low(trait));
   for (const tag of unique(userTags)) traits.add(low(tag));
   for (const hint of unique(semanticHints)) traits.add(low(hint));
   return [...traits];
@@ -587,15 +569,22 @@ export function buildNormalizedTargetMetadataRecords({
     const preference = preferenceIndex[targetId] && typeof preferenceIndex[targetId] === "object" ? preferenceIndex[targetId] : {};
     const displayType = norm(model?.displayAs || model?.type || model?.displayType || "");
     const classification = classifyModelDisplayType(displayType);
-    const trainedBuckets = mapClassificationToTrainingBuckets(classification).filter((bucket) => trainedModelBuckets.has(bucket));
+    const childSubmodels = Object.values(submodelsById).filter((row) => norm(row?.parentId) === targetId);
+    const customStructure = classification?.canonicalType === "custom"
+      ? analyzeCustomModelStructure(model?.attributes || model || {}, { submodels: childSubmodels, faceInfo: model?.faceInfo || model?.attributes?.faceInfo || null })
+      : null;
+    const trainedBuckets = mapClassificationToTrainingBuckets(classification, customStructure).filter((bucket) => trainedModelBuckets.has(bucket));
     const groupMemberships = unique(groupMembershipIndex.get(targetId) || []);
     const userTags = unique(assignment?.tags || []);
-    const confidence = trainedBuckets.length ? 1 : (classification?.canonicalType === "custom" ? 0.25 : 0.5);
-    const submodelCount = Object.values(submodelsById).filter((row) => norm(row?.parentId) === targetId).length;
+    const confidence = trainedBuckets.length
+      ? Math.max(0.6, Number(customStructure?.confidence || 1))
+      : (classification?.canonicalType === "custom" ? Number(customStructure?.confidence || 0.25) : 0.5);
+    const submodelCount = childSubmodels.length;
     const inferredRole = inferRole({ userTags, targetKind: "model", groupMemberships });
     const inferredSemanticTraits = inferSemanticTraits({
       canonicalType: classification?.canonicalType,
       userTags,
+      structureTraits: customStructure?.traits || [],
       semanticHints: unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])])
     });
     const submodelMetadata = buildSubmodelMetadata({
@@ -638,7 +627,8 @@ export function buildNormalizedTargetMetadataRecords({
         submodelCount,
         submodelMetadata,
         locationMetadata,
-        densityMetadata
+        densityMetadata,
+        customStructure: customStructure || null
       },
       semantics: {
         inferredRole,

@@ -57,11 +57,8 @@ struct LocalProjectService: ProjectService {
             }
             let sourceProjectFile = try resolveProjectFilePath(from: sourcePath)
             let sourceDir = URL(fileURLWithPath: sourceProjectFile).deletingLastPathComponent()
-            try FileManager.default.copyItem(at: sourceDir, to: dir)
-            let copiedSourceProjectFile = dir.appendingPathComponent(URL(fileURLWithPath: sourceProjectFile).lastPathComponent)
-            if copiedSourceProjectFile.path != fileURL.path, FileManager.default.fileExists(atPath: copiedSourceProjectFile.path) {
-                try FileManager.default.moveItem(at: copiedSourceProjectFile, to: fileURL)
-            }
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try copyDisplayMetadataIfPresent(from: sourceDir, to: dir)
         } else {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
@@ -144,6 +141,17 @@ struct LocalProjectService: ProjectService {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(doc)
         try data.write(to: url, options: .atomic)
+    }
+
+    private func copyDisplayMetadataIfPresent(from sourceDir: URL, to destinationDir: URL) throws {
+        let sourceFile = sourceDir.appendingPathComponent("layout/layout-metadata.json", isDirectory: false)
+        guard FileManager.default.fileExists(atPath: sourceFile.path) else { return }
+        let destinationFile = destinationDir.appendingPathComponent("layout/layout-metadata.json", isDirectory: false)
+        try FileManager.default.createDirectory(at: destinationFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if FileManager.default.fileExists(atPath: destinationFile.path) {
+            try FileManager.default.removeItem(at: destinationFile)
+        }
+        try FileManager.default.copyItem(at: sourceFile, to: destinationFile)
     }
 
     private func projectDocument(from project: ActiveProjectModel, projectName: String, projectFilePath: String) -> ProjectDocument {

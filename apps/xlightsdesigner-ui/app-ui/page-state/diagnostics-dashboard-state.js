@@ -86,6 +86,8 @@ export function buildDiagnosticsDashboardState({
         sceneGraphSource: str(state.health?.sceneGraphSource || "unknown"),
         sceneGraphLayoutMode: str(state.health?.sceneGraphLayoutMode || "2d").toUpperCase(),
         sceneGraphSpatialNodeCount: Number(state.health?.sceneGraphSpatialNodeCount || 0),
+        customModelCount: Number(state.sceneGraph?.customModelCatalog?.summary?.customModelCount || 0),
+        customModelsWithSubmodels: Number(state.sceneGraph?.customModelCatalog?.summary?.modelsWithSubmodels || 0),
         sceneGraphWarnings: arr(state.health?.sceneGraphWarnings).map((row) => str(row)).filter(Boolean),
         effectCatalogError: str(state.health?.effectCatalogError),
         hasSequencingApplyBatchPlan: Boolean(state.health?.hasSequencingApplyBatchPlan),

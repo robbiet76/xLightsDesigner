@@ -72,12 +72,25 @@ function buildRuntime(state, hooks = {}) {
       : [],
     normalizeMetadataTagName: normalizeTagName,
     toStoredMetadataTagRecords: (records) => Array.isArray(records) ? [...records] : [],
-    buildRuntimeEffectiveMetadataAssignments: (assignments, preferencesByTargetId, deps = {}) =>
-      assignments.map((row) => ({
-        ...row,
-        resolved: deps.resolveTarget ? deps.resolveTarget(row.targetId) : null,
-        preferences: preferencesByTargetId[row.targetId] || null
-      })),
+    buildRuntimeEffectiveMetadataAssignments: (assignments, preferencesByTargetId, deps = {}) => {
+      const byId = new Map();
+      for (const row of assignments) {
+        byId.set(row.targetId, {
+          ...row,
+          resolved: deps.resolveTarget ? deps.resolveTarget(row.targetId) : null,
+          preferences: preferencesByTargetId[row.targetId] || null
+        });
+      }
+      for (const [targetId, preferences] of Object.entries(preferencesByTargetId || {})) {
+        if (byId.has(targetId)) continue;
+        byId.set(targetId, {
+          targetId,
+          resolved: deps.resolveTarget ? deps.resolveTarget(targetId) : null,
+          preferences
+        });
+      }
+      return Array.from(byId.values());
+    },
     parseSubmodelParentId: (id) => String(id || "").split("/")[0] || "",
     modelStableId: (model) => String(model?.id || model?.name || ""),
     modelDisplayName: (model) => String(model?.name || model?.id || ""),
@@ -137,6 +150,82 @@ test("metadata runtime applies semantic hints and invalidates plan handoff", () 
 
   assert.equal(ok, true);
   assert.deepEqual(state.metadata.preferencesByTargetId.Tree.semanticHints, ["Sparkle", "Cool"]);
+  assert.equal(typeof state.metadata.preferencesByTargetId.Tree.displayBinding.layoutFingerprint, "string");
+  assert.ok(state.metadata.preferencesByTargetId.Tree.displayBinding.layoutFingerprint);
   assert.deepEqual(state.metadata.visualHintDefinitions.map((row) => row.name), ["Sparkle", "Cool"]);
   assert.equal(invalidations.at(-1), "metadata semantic hints changed");
+});
+
+test("metadata runtime stamps user-authored assignments with the display fingerprint", () => {
+  const state = buildState();
+  state.showFolder = "/show/fingerprint";
+  const runtime = buildRuntime(state);
+  const fingerprint = runtime.buildDisplayMetadataLayoutFingerprint();
+  state.metadata.displayBinding = {
+    showFolder: state.showFolder,
+    layoutFingerprint: fingerprint,
+    status: "reconciled"
+  };
+
+  const ok = runtime.upsertMetadataAssignmentTags("Tree", ["Existing"], []);
+
+  assert.equal(ok, true);
+  assert.equal(state.metadata.assignments[0].targetId, "Tree");
+  assert.equal(state.metadata.assignments[0].displayBinding.showFolder, "/show/fingerprint");
+  assert.equal(state.metadata.assignments[0].displayBinding.layoutFingerprint, fingerprint);
+});
+
+test("metadata runtime reconciles display metadata without deleting orphaned user work", () => {
+  const state = buildState();
+  state.showFolder = "/show/a";
+  state.metadata.assignments = [
+    { targetId: "Tree", tags: ["Existing"] },
+    { targetId: "Old Spinner", tags: ["Existing"] }
+  ];
+  state.metadata.preferencesByTargetId = {
+    Tree: { rolePreference: "focal" },
+    "Old Spinner": { semanticHints: ["Legacy"] }
+  };
+  state.ui.metadataTargetId = "Tree";
+  state.ui.metadataSelectionIds = ["Tree"];
+  const invalidations = [];
+  const statuses = [];
+  const runtime = buildRuntime(state, {
+    invalidatePlanHandoff: (reason) => invalidations.push(reason),
+    setStatus: (level, text) => statuses.push({ level, text })
+  });
+
+  runtime.markDisplayMetadataPendingReconciliation("show folder changed");
+
+  assert.equal(state.metadata.displayBinding.status, "pending");
+  assert.equal(state.metadata.displayBinding.pendingReason, "show folder changed");
+  assert.deepEqual(state.ui.metadataSelectionIds, []);
+
+  const binding = runtime.reconcileDisplayMetadataForSceneGraphChange({ reason: "layout refresh" });
+
+  assert.equal(binding.status, "reconciled");
+  assert.equal(binding.summary.activeAssignmentCount, 1);
+  assert.equal(binding.summary.activePreferenceCount, 1);
+  assert.deepEqual(binding.orphanTargetIds, ["Old Spinner"]);
+  assert.equal(state.metadata.assignments.length, 2);
+  assert.equal(state.metadata.preferencesByTargetId["Old Spinner"].semanticHints[0], "Legacy");
+  assert.match(statuses.at(-1)?.text || "", /need remapping/);
+  assert.equal(invalidations.at(-1), "display metadata reconciled against refreshed layout");
+});
+
+test("effective metadata excludes assignments for targets missing from the current layout", () => {
+  const state = buildState();
+  state.metadata.assignments = [
+    { targetId: "Tree", tags: ["Existing"] },
+    { targetId: "Retired", tags: ["Existing"] }
+  ];
+  state.metadata.preferencesByTargetId = {
+    Snowman: { rolePreference: "accent" },
+    Retired: { rolePreference: "focal" }
+  };
+  const runtime = buildRuntime(state);
+
+  const effective = runtime.buildEffectiveMetadataAssignments();
+
+  assert.deepEqual(effective.map((row) => row.targetId).sort(), ["Snowman", "Tree"]);
 });
