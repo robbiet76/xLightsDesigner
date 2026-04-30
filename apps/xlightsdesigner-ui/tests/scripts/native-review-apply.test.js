@@ -83,6 +83,56 @@ test("normalizeCommandsForNativeApply preserves display-order and layer edit com
   assert.deepEqual(out[2].dependsOn, ["display.order.1"]);
 });
 
+test("normalizeCommandsForNativeApply collapses exact duplicate write commands and rewires dependencies", () => {
+  const commands = [
+    {
+      id: "effect.1",
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 0,
+        effectName: "On",
+        startMs: 0,
+        endMs: 1000,
+        settings: {},
+        palette: {}
+      }
+    },
+    {
+      id: "effect.2",
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 0,
+        effectName: "On",
+        startMs: 0,
+        endMs: 1000,
+        settings: {},
+        palette: {}
+      }
+    },
+    {
+      id: "align.1",
+      dependsOn: ["effect.2"],
+      cmd: "effects.alignToTiming",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 0,
+        startMs: 0,
+        endMs: 1000,
+        timingTrackName: "XD: Song Structure",
+        mode: "nearest"
+      }
+    }
+  ];
+
+  const out = normalizeCommandsForNativeApply(commands);
+
+  assert.equal(out.length, 2);
+  assert.deepEqual(out.map((row) => row.id), ["effect.1", "align.1"]);
+  assert.deepEqual(out[1].dependsOn, ["effect.1"]);
+});
+
 test("buildNativeApplyVerification attaches practical validation from readback", async () => {
   const commands = [
     {

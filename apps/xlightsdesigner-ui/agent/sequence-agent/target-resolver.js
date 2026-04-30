@@ -141,6 +141,11 @@ export function resolveTargetSelection({
   };
 
   const intent = normalizedIntent || {};
+  const preferBroadFullYardFallback =
+    !(Array.isArray(intent?.targetIds) && intent.targetIds.length) &&
+    !(Array.isArray(intent?.tags) && intent.tags.length) &&
+    String(intent?.focusHierarchy || "").trim() === "balanced_full_yard" &&
+    Boolean(intent?.preservationConstraints?.allowGlobalRewrite);
   for (const id of intent.targetIds || []) {
     if (!byId.has(id)) continue;
     const target = byId.get(id);
@@ -189,7 +194,10 @@ export function resolveTargetSelection({
     const fallbackTargets = displayByName.size
       ? liveTargets.filter((target) => isWritableTarget(target))
       : liveTargets;
-    for (const target of fallbackTargets.slice(0, 4)) chosen.set(target.id, target);
+    const fallbackSelection = preferBroadFullYardFallback
+      ? fallbackTargets
+      : fallbackTargets.slice(0, 4);
+    for (const target of fallbackSelection) chosen.set(target.id, target);
     if (chosen.size) resolutionSource = "fallback";
   }
 

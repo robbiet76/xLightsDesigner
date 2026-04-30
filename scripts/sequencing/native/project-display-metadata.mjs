@@ -220,6 +220,68 @@ function normalizeVisualHintDefinition(definition = {}) {
   };
 }
 
+function inferBenchmarkFamilyTags(targetId = '', layoutRow = {}) {
+  const text = `${str(targetId)} ${str(layoutRow?.name)} ${str(layoutRow?.displayAs || layoutRow?.type || layoutRow?.kind)}`.toLowerCase();
+  const tags = [];
+  if (/matrix/.test(text)) tags.push('matrix');
+  if (/tree/.test(text)) tags.push('tree');
+  if (/arch/.test(text)) tags.push('arch');
+  if (/star/.test(text)) tags.push('star');
+  if (/spinner|pinwheel|wheel/.test(text)) tags.push('spinner');
+  if (/cane/.test(text)) tags.push('cane');
+  if (/icicle/.test(text)) tags.push('icicle');
+  if (/line|roof|outline|ridge/.test(text)) tags.push('line');
+  if (/snowflake/.test(text)) tags.push('snowflake');
+  if (/window/.test(text)) tags.push('window');
+  if (/flood|spot/.test(text)) tags.push('flood');
+  if (/pixel|node/.test(text)) tags.push('pixel');
+  return uniqueStrings(tags);
+}
+
+function inferBenchmarkRolePreference(targetId = '', layoutRow = {}) {
+  const text = `${str(targetId)} ${str(layoutRow?.name)} ${str(layoutRow?.displayAs || layoutRow?.type || layoutRow?.kind)}`.toLowerCase();
+  if (/matrix|tree|star|spinner|pinwheel/.test(text)) return 'lead';
+  if (/arch|cane|icicle|snowflake/.test(text)) return 'accent';
+  if (/line|roof|outline|ridge|window/.test(text)) return 'support';
+  return 'support';
+}
+
+function buildSyntheticBenchmarkAssignments({ layoutRows = [], existingAssignments = [] } = {}) {
+  const existingTargetIds = new Set(arr(existingAssignments).map((row) => str(row?.targetId).toLowerCase()).filter(Boolean));
+  const rows = normalizeLayoutRows(layoutRows);
+  const out = [];
+  for (const row of rows) {
+    const targetId = str(row?.id || row?.name);
+    if (!targetId || existingTargetIds.has(targetId.toLowerCase())) continue;
+    const displayAs = str(row?.displayAs || row?.type || row?.kind).toLowerCase();
+    if (displayAs === 'modelgroup') continue;
+    const familyTags = inferBenchmarkFamilyTags(targetId, row);
+    const rolePreference = inferBenchmarkRolePreference(targetId, row);
+    const semanticHints = uniqueStrings([
+      familyTags[0] ? `${familyTags[0]} fixture` : '',
+      `${rolePreference} benchmark fixture`,
+      'benchmark synthetic metadata'
+    ]);
+    const tags = uniqueStrings([
+      'benchmark',
+      'full display',
+      ...familyTags,
+      rolePreference,
+      ...semanticHints
+    ]);
+    out.push({
+      targetId,
+      tags,
+      semanticHints,
+      visualHintDefinitions: [],
+      effectAvoidances: [],
+      rolePreference,
+      source: 'xlightsdesigner_benchmark_synthetic_metadata'
+    });
+  }
+  return out.sort((a, b) => a.targetId.localeCompare(b.targetId));
+}
+
 export function loadProjectDisplayMetadataAssignments(projectFile = '', context = {}) {
   const projectDir = path.dirname(str(projectFile));
   const metadataPath = path.join(projectDir, 'layout', 'layout-metadata.json');
@@ -284,6 +346,15 @@ export function loadProjectDisplayMetadataAssignments(projectFile = '', context 
     })
     .filter(Boolean)) {
     mergeAssignment(byTarget, row.targetId, row);
+  }
+
+  if (context?.allowSyntheticBenchmarkMetadata) {
+    for (const row of buildSyntheticBenchmarkAssignments({
+      layoutRows: context?.layoutRows,
+      existingAssignments: Array.from(byTarget.values())
+    })) {
+      mergeAssignment(byTarget, row.targetId, row);
+    }
   }
 
   return Array.from(byTarget.values()).sort((a, b) => a.targetId.localeCompare(b.targetId));

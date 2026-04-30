@@ -1142,6 +1142,7 @@ export function buildFullDisplayPlan({
   const sectionDirectiveIndex = buildSectionDirectiveIndex(scope?.sequencingDesignHandoff);
   const placements = [];
   const compositionSections = [];
+  const seenPlacementKeys = new Set();
   const maxSections = Math.min(sectionRows.length, 12);
   const plannedSections = sectionRows.slice(0, maxSections);
   const scale = buildReferenceGuidedFullDisplayScale({
@@ -1420,6 +1421,15 @@ export function buildFullDisplayPlan({
           });
           const effectName = behaviorChoice.effectName;
           const configuredBehaviorRecommendation = behaviorChoice.configuredBehaviorRecommendation;
+          const placementKey = [
+            normText(targetRow.targetId),
+            Number(layerIndex || 0),
+            normText(effectName),
+            Number(window.startMs || 0),
+            Number(window.endMs || 0)
+          ].join("|");
+          if (seenPlacementKeys.has(placementKey)) continue;
+          seenPlacementKeys.add(placementKey);
           rowsForSection.push({
             role,
             targetRole: normText(targetRow.targetRole) || "support",

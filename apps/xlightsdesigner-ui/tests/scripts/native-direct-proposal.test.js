@@ -308,6 +308,32 @@ test("native project display metadata loader promotes display discovery insights
   assert.deepEqual(assignments.find((row) => row.targetId === "Present-01").tags, ["Presents", "focal_hierarchy", "lead"]);
 });
 
+test("native project display metadata loader can synthesize benchmark assignments for plain layout fixtures", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-benchmark-metadata-"));
+  const projectDir = path.join(root, "project");
+  const projectFile = path.join(projectDir, "Benchmark Metadata Loader Test.xdproj");
+  writeJson(projectFile, {});
+
+  const assignments = loadProjectDisplayMetadataAssignments(projectFile, {
+    allowSyntheticBenchmarkMetadata: true,
+    layoutRows: [
+      { name: "MegaTree", displayAs: "Tree" },
+      { name: "ArchLeft", displayAs: "Arch" },
+      { name: "Roofline", displayAs: "Custom" },
+      { name: "All Props", displayAs: "ModelGroup" }
+    ]
+  });
+
+  assert.deepEqual(assignments.map((row) => row.targetId), ["ArchLeft", "MegaTree", "Roofline"]);
+  assert.equal(assignments.find((row) => row.targetId === "MegaTree").rolePreference, "lead");
+  assert.equal(assignments.find((row) => row.targetId === "ArchLeft").rolePreference, "accent");
+  assert.equal(assignments.find((row) => row.targetId === "Roofline").rolePreference, "support");
+  assert.equal(assignments.every((row) => row.source === "xlightsdesigner_benchmark_synthetic_metadata"), true);
+  assert.equal(assignments.find((row) => row.targetId === "MegaTree").tags.includes("benchmark"), true);
+  assert.equal(assignments.find((row) => row.targetId === "MegaTree").tags.includes("tree"), true);
+  assert.equal(assignments.find((row) => row.targetId === "Roofline").tags.includes("line"), true);
+});
+
 test("native direct proposal resolves app metadata tags into proposal target scope", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-proposal-metadata-"));
   const appRoot = path.join(root, "app-root");

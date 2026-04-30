@@ -8,11 +8,11 @@ struct SequenceProposalGenerationResult: Sendable {
 }
 
 protocol SequenceProposalService: Sendable {
-    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String], selectedSections: [String], timingTrackName: String) async throws -> SequenceProposalGenerationResult
+    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String], selectedTargetIDs: [String], selectedSections: [String], timingTrackName: String) async throws -> SequenceProposalGenerationResult
 }
 
 struct LocalSequenceProposalService: SequenceProposalService, Sendable {
-    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String] = [], selectedSections: [String] = [], timingTrackName: String = "") async throws -> SequenceProposalGenerationResult {
+    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String] = [], selectedTargetIDs: [String] = [], selectedSections: [String] = [], timingTrackName: String = "") async throws -> SequenceProposalGenerationResult {
         var arguments = [
             AppEnvironment.nativeDirectProposalScriptPath,
             "--project-file", projectFilePath,
@@ -23,6 +23,10 @@ struct LocalSequenceProposalService: SequenceProposalService, Sendable {
         for tagName in selectedTagNames.map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) }).filter({ !$0.isEmpty }) {
             arguments.append("--selected-tag")
             arguments.append(tagName)
+        }
+        for targetID in selectedTargetIDs.map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) }).filter({ !$0.isEmpty }) {
+            arguments.append("--selected-target")
+            arguments.append(targetID)
         }
         for section in selectedSections.map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) }).filter({ !$0.isEmpty }) {
             arguments.append("--selected-section")

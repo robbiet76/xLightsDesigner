@@ -258,6 +258,15 @@ function inferSectionsFromPrompt(text = "", availableSectionNames = []) {
   return uniqueStrings(matched);
 }
 
+function isGlobalScopeRequest(text = "") {
+  return !hasNegatedGlobalRewrite(text) && hasAnyText(text, [
+    /(whole show|whole sequence|whole song|full song|entire sequence|full rewrite|global rewrite|across the song|throughout the song|full[- ]display sequence|full sequence duration|whole display|full display|entire display|complete first-pass|first-pass full-display)/,
+    /\bplan across the full sequence duration\b/,
+    /\buse the whole display\b/,
+    /\bfull-pass plan\b/
+  ]);
+}
+
 function inferFocusHierarchy({ targetIds = [], tags = [], brief = {} } = {}) {
   if (targetIds.length) return "explicit_targets";
   if (tags.some((tag) => /focal|hero|lead/i.test(tag))) return "focal_first";
@@ -330,9 +339,7 @@ export function normalizeIntent({
   metadataAssignments = []
 } = {}) {
   const goal = cleanText(promptText);
-  const globalScopeRequested =
-    !hasNegatedGlobalRewrite(goal) &&
-    hasAnyText(goal, [/(whole show|whole sequence|entire sequence|full rewrite|global rewrite|across the song|throughout the song)/]);
+  const globalScopeRequested = isGlobalScopeRequest(goal);
   const explicitSections = Array.isArray(selectedSections)
     ? selectedSections.filter((row) => {
         const text = cleanText(row);
@@ -340,7 +347,7 @@ export function normalizeIntent({
       })
     : [];
   const hasSemanticExplicitSections = explicitSections.some((row) => !looksGenericSectionLabel(row));
-  const inferredSections = globalScopeRequested || hasSemanticExplicitSections
+  const inferredSections = hasSemanticExplicitSections
     ? []
     : inferSectionsFromPrompt(goal, availableSectionNames);
   const mergedSections = uniqueStrings([...explicitSections, ...inferredSections]);
@@ -374,10 +381,9 @@ export function normalizeIntent({
     preserveDisplayOrder: true,
     allowGlobalRewrite:
       !hasExplicitScopedSelection &&
-      !hasNegatedGlobalRewrite(goal) &&
       (
         mode === "create" ||
-        hasAnyText(goal, [/(whole show|whole sequence|entire sequence|full show|full song|across the song|throughout the song|full rewrite|global rewrite)/])
+        globalScopeRequested
       ),
     keepSuccessfulMoments: !hasAnyText(goal, [/(replace everything|completely different|start over)/])
   };

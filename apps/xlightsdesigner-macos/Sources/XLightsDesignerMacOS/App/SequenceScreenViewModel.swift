@@ -219,7 +219,7 @@ final class SequenceScreenViewModel {
         refresh()
     }
 
-    func generateProposalFromDesignIntent(selectedTagNames: [String] = [], selectedSections: [String] = [], timingTrackName: String = "") {
+    func generateProposalFromDesignIntent(selectedTagNames: [String] = [], selectedTargetIDs: [String] = [], selectedSections: [String] = [], timingTrackName: String = "") {
         guard !isGeneratingProposal, let activeProject = workspace.activeProject else { return }
         let pendingWork = latestPendingWork
         let prerequisiteBlockers = Self.proposalPrerequisiteBlockers(project: activeProject, pendingWork: pendingWork)
@@ -254,6 +254,7 @@ final class SequenceScreenViewModel {
                     endpoint: AppEnvironment.xlightsOwnedAPIBaseURL,
                     prompt: prompt,
                     selectedTagNames: selectedTagNames,
+                    selectedTargetIDs: selectedTargetIDs,
                     selectedSections: selectedSections,
                     timingTrackName: timingTrackName
                 )

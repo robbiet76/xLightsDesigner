@@ -509,7 +509,8 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
   currentStage = 'build_sequence_plan';
   const metadataAssignments = loadProjectDisplayMetadataAssignments(projectFile, {
     layoutRows: Array.isArray(layoutModelsRes?.data?.models) ? layoutModelsRes.data.models : [],
-    groupMemberships
+    groupMemberships,
+    allowSyntheticBenchmarkMetadata: true
   });
   const currentSequenceContext = await buildCurrentSequenceContextFromReadback({
     endpoint,
@@ -1030,12 +1031,57 @@ function toFiniteNumber(value) {
   return Number.isFinite(num) ? num : null;
 }
 
+function stableJson(value) {
+  try {
+    if (!value || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return JSON.stringify(value.map((row) => JSON.parse(stableJson(row))));
+    const sorted = {};
+    for (const key of Object.keys(value).sort()) {
+      sorted[key] = JSON.parse(stableJson(value[key]));
+    }
+    return JSON.stringify(sorted);
+  } catch {
+    return '';
+  }
+}
+
 export function normalizeCommandsForNativeApply(commands = []) {
   const rows = Array.isArray(commands) ? commands : [];
-  const validIds = new Set(rows.map((row) => str(row?.id)).filter(Boolean));
-  return rows.map((row) => {
+  const canonicalByWriteKey = new Map();
+  const duplicateIdMap = new Map();
+  const deduped = [];
+
+  for (const row of rows) {
+    const id = str(row?.id);
+    const cmd = str(row?.cmd);
+    const params = row?.params && typeof row.params === 'object' ? row.params : {};
+    const writeKey = cmd ? `${cmd}|${stableJson(params)}` : '';
+    if (writeKey && canonicalByWriteKey.has(writeKey)) {
+      if (id) duplicateIdMap.set(id, canonicalByWriteKey.get(writeKey));
+      continue;
+    }
+    if (writeKey && id) canonicalByWriteKey.set(writeKey, id);
+    deduped.push(row);
+  }
+
+  const validIds = new Set(deduped.map((row) => str(row?.id)).filter(Boolean));
+  const resolveDependencyId = (value = '') => {
+    let current = str(value);
+    const seen = new Set();
+    while (current && duplicateIdMap.has(current) && !seen.has(current)) {
+      seen.add(current);
+      current = str(duplicateIdMap.get(current));
+    }
+    return current;
+  };
+
+  return deduped.map((row) => {
     const dependsOn = Array.isArray(row?.dependsOn)
-      ? row.dependsOn.map((value) => str(value)).filter((value) => validIds.has(value))
+      ? [...new Set(
+          row.dependsOn
+            .map((value) => resolveDependencyId(value))
+            .filter((value) => validIds.has(value))
+        )]
       : [];
     return dependsOn.length ? { ...row, dependsOn } : { ...row, dependsOn: undefined };
   });

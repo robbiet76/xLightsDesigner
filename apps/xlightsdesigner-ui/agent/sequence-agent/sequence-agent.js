@@ -478,12 +478,18 @@ function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {}, sequen
   const resolvedSequencingDesignHandoff = deriveSequencingDesignHandoff(intentHandoff, sequencingDesignHandoff);
   const goal = normText(resolvedSequencingDesignHandoff?.goal || intentHandoff?.goal);
   const executionStrategy = deriveExecutionStrategy(intentHandoff);
+  const executionStrategyTargetIds = uniqueNormTexts([
+    ...normArray(executionStrategy?.sectionPlans).flatMap((row) => normArray(row?.targetIds)),
+    ...normArray(executionStrategy?.effectPlacements).map((row) => normText(row?.targetId))
+  ]);
   const sectionNames = normArray(resolvedSequencingDesignHandoff?.scope?.sections).length
     ? normArray(resolvedSequencingDesignHandoff.scope.sections).map((row) => normText(row)).filter(Boolean)
     : deriveSectionNames({ analysisHandoff, intentHandoff, executionStrategy });
   const targetIds = normArray(resolvedSequencingDesignHandoff?.scope?.targetIds).length
     ? normArray(resolvedSequencingDesignHandoff.scope.targetIds).map((row) => normText(row)).filter(Boolean)
-    : normArray(intentHandoff?.scope?.targetIds);
+    : (normArray(intentHandoff?.scope?.targetIds).length
+        ? normArray(intentHandoff?.scope?.targetIds)
+        : executionStrategyTargetIds);
   const tagNames = normArray(resolvedSequencingDesignHandoff?.scope?.tagNames).length
     ? normArray(resolvedSequencingDesignHandoff.scope.tagNames).map((row) => normText(row)).filter(Boolean)
     : normArray(intentHandoff?.scope?.tagNames);

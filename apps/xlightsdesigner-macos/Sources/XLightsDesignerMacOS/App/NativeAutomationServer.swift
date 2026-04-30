@@ -266,6 +266,9 @@ final class NativeAutomationServer: @unchecked Sendable {
             let selectedTagNames = splitPayloadList(
                 String(payload["selectedTagNames"] as? String ?? payload["selectedTags"] as? String ?? payload["tags"] as? String ?? "")
             )
+            let selectedTargetIDs = splitPayloadList(
+                String(payload["selectedTargetIds"] as? String ?? payload["selectedTargetIDs"] as? String ?? payload["targets"] as? String ?? "")
+            )
             let selectedSections = splitPayloadList(
                 String(payload["selectedSections"] as? String ?? payload["sectionLabel"] as? String ?? payload["selectedSection"] as? String ?? "")
             )
@@ -273,6 +276,7 @@ final class NativeAutomationServer: @unchecked Sendable {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             model.sequenceScreenModel.generateProposalFromDesignIntent(
                 selectedTagNames: selectedTagNames,
+                selectedTargetIDs: selectedTargetIDs,
                 selectedSections: selectedSections,
                 timingTrackName: timingTrackName
             )

@@ -54,7 +54,9 @@ function buildUserExecutionStrategy({
   const normalizedIntentSummary = str(intentSummary) || "User-directed sequence change.";
   const normalizedEffectHints = mergeUniqueStrings(effectHints);
   const normalizedTimingTrackName = str(timingTrackName);
-  const passScope = normalizedSections.length > 1 ? "multi_section" : "single_section";
+  const passScope = normalizedSections.length > 1
+    ? "multi_section"
+    : (normalizedSections.length === 1 ? "single_section" : "whole_sequence");
   const sectionPlans = (normalizedSections.length ? normalizedSections : ["General"]).map((section) => ({
     designId,
     designRevision: Number.isInteger(Number(designRevision)) ? Number(designRevision) : 0,
@@ -70,9 +72,11 @@ function buildUserExecutionStrategy({
   }));
   return {
     passScope,
-    implementationMode: passScope === "multi_section" ? "section_pass" : "single_section_pass",
+    implementationMode: passScope === "multi_section"
+      ? "section_pass"
+      : (passScope === "single_section" ? "single_section_pass" : "whole_sequence_pass"),
     routePreference: "designer_to_sequence_agent",
-    shouldUseFullSongStructureTrack: normalizedSections.length > 0 && !normalizedTimingTrackName,
+    shouldUseFullSongStructureTrack: !normalizedTimingTrackName,
     timingTrackName: normalizedTimingTrackName,
     sectionTimingTrackName: normalizedTimingTrackName,
     sectionCount: normalizedSections.length,

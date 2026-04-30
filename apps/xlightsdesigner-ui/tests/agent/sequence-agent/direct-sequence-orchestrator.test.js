@@ -49,8 +49,11 @@ test("direct sequence orchestrator bypasses designer scaffolding and emits canon
   assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designAuthor, "user");
   assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designId, "DES-001");
   assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designRevision, 0);
+  assert.equal(result.proposalBundle.executionPlan.passScope, "whole_sequence");
+  assert.equal(result.proposalBundle.executionPlan.implementationMode, "whole_sequence_pass");
   assert.equal(result.intentHandoff.executionStrategy.sectionPlans[0].designAuthor, "user");
   assert.equal(result.intentHandoff.executionStrategy.sectionPlans[0].designRevision, 0);
+  assert.equal(result.intentHandoff.executionStrategy.passScope, "whole_sequence");
   assert.equal(result.proposalBundle.guidedQuestions.length, 0);
   assert.match(result.proposalLines[0], /General \/ Border-01 \/ apply On effect in green for 30000 ms starting at 0 ms/i);
   assert.deepEqual(validateAgentHandoff("intent_handoff_v1", result.intentHandoff), []);
@@ -338,6 +341,70 @@ test("direct sequence orchestrator allows full-song arc prompts that mention mul
   assert.equal(result.ok, true);
   assert.ok(result.proposalBundle);
   assert.ok(result.intentHandoff);
+});
+
+test("direct sequence orchestrator promotes broad full-yard scope instead of truncating to four fallback targets", () => {
+  const displayElements = [
+    { id: "ArchGroup", name: "ArchGroup", type: "model" },
+    { id: "ArchSingle", name: "ArchSingle", type: "model" },
+    { id: "ArchTripleLayer", name: "ArchTripleLayer", type: "model" },
+    { id: "CaneGroup", name: "CaneGroup", type: "model" },
+    { id: "MatrixLowDensity", name: "MatrixLowDensity", type: "model" },
+    { id: "MatrixMedDensity", name: "MatrixMedDensity", type: "model" },
+    { id: "MatrixHighDensity", name: "MatrixHighDensity", type: "model" },
+    { id: "Icicles", name: "Icicles", type: "model" }
+  ];
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-broad-full-yard",
+    sequenceRevision: "rev-1",
+    promptText: "Create a complete full-display sequence across the song with clear section progression and coordinated layers.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: displayElements,
+    submodels: [],
+    displayElements,
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: sampleAnalysis()
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.proposalBundle.executionPlan.passScope, "whole_sequence");
+  assert.equal(result.intentHandoff.scope.targetIds.length, displayElements.length);
+  assert.deepEqual(result.intentHandoff.scope.targetIds, displayElements.map((row) => row.id));
+});
+
+test("direct sequence orchestrator keeps descriptive chorus language inside broad full-sequence prompts", () => {
+  const displayElements = [
+    { id: "ArchGroup", name: "ArchGroup", type: "model" },
+    { id: "ArchSingle", name: "ArchSingle", type: "model" },
+    { id: "ArchTripleLayer", name: "ArchTripleLayer", type: "model" },
+    { id: "CaneGroup", name: "CaneGroup", type: "model" },
+    { id: "MatrixLowDensity", name: "MatrixLowDensity", type: "model" },
+    { id: "MatrixMedDensity", name: "MatrixMedDensity", type: "model" },
+    { id: "MatrixHighDensity", name: "MatrixHighDensity", type: "model" },
+    { id: "Icicles", name: "Icicles", type: "model" }
+  ];
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-benchmark-prompt",
+    sequenceRevision: "rev-1",
+    promptText: "Create a complete first-pass full-display sequence for the active song. Use the whole display with clear section progression, coordinated layers, and lighting-safe color choices. Keep polished Christmas show energy with a warm opening, rhythmic development, bigger chorus moments, and a resolved ending. Plan across the full sequence duration, not a single isolated model or effect.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: displayElements,
+    submodels: [],
+    displayElements,
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: sampleAnalysis()
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.intentHandoff.scope.sections, []);
+  assert.equal(result.proposalBundle.executionPlan.passScope, "whole_sequence");
+  assert.equal(result.intentHandoff.scope.targetIds.length, displayElements.length);
 });
 
 test("direct sequence orchestrator decomposes clear mixed effect and section clauses", () => {

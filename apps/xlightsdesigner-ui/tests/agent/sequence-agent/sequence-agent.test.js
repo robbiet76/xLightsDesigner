@@ -324,6 +324,16 @@ test("sequence_agent uses deterministic trained effect portfolio for full-displa
   const effectNames = Array.from(new Set(effectCommands.map((command) => command.params.effectName)));
   assert.ok(effectCommands.length >= 12);
   assert.ok(effectNames.length >= 4);
+  const exactEffectCommandKeys = effectCommands.map((command) => JSON.stringify({
+    modelName: command.params.modelName,
+    layerIndex: command.params.layerIndex,
+    effectName: command.params.effectName,
+    startMs: command.params.startMs,
+    endMs: command.params.endMs,
+    settings: command.params.settings,
+    palette: command.params.palette
+  }));
+  assert.equal(new Set(exactEffectCommandKeys).size, exactEffectCommandKeys.length);
   assert.ok(effectCommands.some((command) => command.params.layerIndex === 1));
   assert.ok(effectCommands.every((command) => command.intent?.settingsIntent?.deterministicEffectSelection === "training_metadata_ranked_no_random"));
   assert.ok(effectCommands.every((command) => command.intent?.compositionRole));
@@ -4758,8 +4768,102 @@ test("sequence_agent prefers synthesized effect lines over non-executable design
   });
 
   assert.equal(out.executionLines.length, 2);
-  assert.equal(out.executionLines[0], "Section 1 / AllModels / apply Color Wash effect in warm amber and gold tones for the requested duration using the current target timing");
-  assert.match(out.executionLines[1], /^Section 2 \/ Snowman \/ apply (Color Wash|Shimmer) effect in warm amber and gold tones for the requested duration using the current target timing$/);
+  assert.match(out.executionLines[0], /^Section 1 \/ AllModels(?: \+ Snowman)? \/ apply Color Wash effect in warm amber and gold tones for the requested duration using the current target timing$/);
+  assert.match(out.executionLines[1], /^Section 2 \/ Snowman(?: \+ AllModels)? \/ apply (Color Wash|Shimmer) effect in warm amber and gold tones for the requested duration using the current target timing$/);
   assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "AllModels"), true);
   assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "Snowman"), true);
+});
+
+test("sequence_agent promotes execution-strategy targets into scope for full-display direct requests", () => {
+  const targetIds = [
+    "ArchGroup",
+    "ArchSingle",
+    "ArchTripleLayer",
+    "CaneGroup",
+    "CaneSingle",
+    "CaneStickGroup",
+    "Icicles",
+    "MatrixHighDensity",
+    "MatrixLowDensity",
+    "MatrixMedDensity",
+    "SingleLineHorizontal",
+    "SingleLineSingleNode",
+    "SingleLineVertical",
+    "Spinner",
+    "StarSingle",
+    "StarTripleLayer",
+    "TreeFlat",
+    "TreeRound",
+    "TreeSpiral"
+  ];
+
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: { trackIdentity: { title: "Track A", artist: "Artist A" } },
+    intentHandoff: {
+      goal: "Create a complete first-pass full-display sequence for the active song. Use the whole display with clear section progression, coordinated layers, and lighting-safe color choices. Plan across the full sequence duration.",
+      mode: "create",
+      scope: {
+        targetIds: [],
+        tagNames: [],
+        sections: []
+      },
+      executionStrategy: {
+        passScope: "whole_sequence",
+        shouldUseFullSongStructureTrack: true,
+        sectionPlans: [
+          {
+            section: "General",
+            targetIds,
+            intentSummary: "Full display sequence with coordinated layers."
+          }
+        ],
+        effectPlacements: []
+      },
+      sequencingDesignHandoff: {
+        artifactType: "sequencing_design_handoff_v2",
+        artifactId: "sequencing-design-full-yard-test",
+        designSummary: "Full display direct request",
+        paletteRoles: [
+          { name: "base", hex: "#0b3d91", role: "base" },
+          { name: "highlight", hex: "#2a9d8f", role: "highlight" },
+          { name: "accent", hex: "#f4a261", role: "accent" },
+          { name: "accent-2", hex: "#e76f51", role: "accent" }
+        ],
+        referenceSequencePatterns: {
+          artifactId: "sequence_reference_patterns_v1-test",
+          analyzedSequenceCount: 3,
+          averageEffectsPerSequence: 1200,
+          averageActiveTargets: 32,
+          averageLayeredTargets: 9,
+          densityPerMinute: { p25: 110, median: 240 },
+          commonEffects: [
+            { name: "SingleStrand", count: 90 },
+            { name: "Color Wash", count: 40 },
+            { name: "Shockwave", count: 30 },
+            { name: "Marquee", count: 20 }
+          ]
+        }
+      }
+    },
+    sourceLines: ["General / Whole Show / create full display sequence from designer context"],
+    baseRevision: "rev-full-display-direct-request",
+    effectCatalog: sampleCatalog(),
+    sequenceSettings: { durationMs: 131520, frameMs: 50 },
+    displayElements: targetIds.map((id, index) => ({
+      id,
+      name: id,
+      type: "model",
+      positionX: (index % 5) * 20,
+      positionY: Math.floor(index / 5) * 20
+    }))
+  });
+
+  const effectCommands = out.commands.filter((command) => command.cmd === "effects.create");
+  assert.equal(out.metadata.targetIds.length, targetIds.length);
+  assert.equal(out.metadata.scope.targetIds.length, targetIds.length);
+  assert.ok(out.metadata.effectPlacementCount > 0);
+  assert.ok(out.metadata.effectStrategy.compositionPlan);
+  assert.ok(effectCommands.length >= 12);
+  assert.ok(effectCommands.some((command) => command.intent?.settingsIntent?.configuredBehaviorRecordId));
+  assert.ok(effectCommands.some((command) => command.intent?.parameterPriorGuidance?.priors?.length));
 });

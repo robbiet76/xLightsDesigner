@@ -7,6 +7,8 @@ import Observation
 final class HistoryScreenViewModel {
     private let workspace: ProjectWorkspace
     private let historyService: HistoryService
+    private var loadTask: Task<Void, Never>?
+    private var loadRevision: UInt64 = 0
 
     var searchQuery = ""
     var selectedRowID: HistoryRowModel.ID?
@@ -36,39 +38,53 @@ final class HistoryScreenViewModel {
     }
 
     func loadHistory() {
-        do {
-            let result = try historyService.loadHistory(for: workspace.activeProject)
-            let target = ProjectTargetContext.resolve(project: workspace.activeProject)
-            let selected = selectedRowID.flatMap { id in result.rows.contains(where: { $0.id == id }) ? id : nil }
-                ?? result.rows.first(where: { rowMatchesTarget($0, target: target) })?.id
-            detailsByID = result.detailsByID
-            screenModel = HistoryScreenModel(
-                header: HistoryHeaderModel(
-                    title: "History",
-                    subtitle: "Browse retrospective revisions and previously applied changes.",
-                    activeProjectName: workspace.activeProject?.projectName ?? "No Project",
-                    activeSequenceName: target.sequenceName
-                ),
-                summary: result.summary,
-                rows: result.rows,
-                selectedEvent: result.rows.isEmpty ? .none("No retrospective history exists for the current project yet.") : .none("Select a historical event to inspect details."),
-                banners: result.banners
-            )
-            selectRow(id: selected)
-        } catch {
-            screenModel = HistoryScreenModel(
-                header: HistoryHeaderModel(
-                    title: "History",
-                    subtitle: "Browse retrospective revisions and previously applied changes.",
-                    activeProjectName: workspace.activeProject?.projectName ?? "No Project",
-                    activeSequenceName: ProjectTargetContext.resolve(project: workspace.activeProject).sequenceName
-                ),
-                summary: HistorySummaryModel(totalEventCount: 0, latestEventSummary: "History could not be loaded.", latestEventTimestamp: "", groupedTypeSummaries: []),
-                rows: [],
-                selectedEvent: .error(String(error.localizedDescription)),
-                banners: [WorkflowBannerModel(id: "history-load-failed", text: String(error.localizedDescription), state: .blocked)]
-            )
-            detailsByID = [:]
+        loadTask?.cancel()
+        loadRevision &+= 1
+        let revision = loadRevision
+        let project = workspace.activeProject
+        let target = ProjectTargetContext.resolve(project: project)
+        let previousSelection = selectedRowID
+
+        loadTask = Task.detached(priority: .utility) { [historyService] in
+            do {
+                let result = try historyService.loadHistory(for: project)
+                await MainActor.run {
+                    guard revision == self.loadRevision else { return }
+                    let selected = previousSelection.flatMap { id in result.rows.contains(where: { $0.id == id }) ? id : nil }
+                        ?? result.rows.first(where: { row in self.rowMatchesTarget(row, target: target) })?.id
+                    self.detailsByID = result.detailsByID
+                    self.screenModel = HistoryScreenModel(
+                        header: HistoryHeaderModel(
+                            title: "History",
+                            subtitle: "Browse retrospective revisions and previously applied changes.",
+                            activeProjectName: project?.projectName ?? "No Project",
+                            activeSequenceName: target.sequenceName
+                        ),
+                        summary: result.summary,
+                        rows: result.rows,
+                        selectedEvent: result.rows.isEmpty ? .none("No retrospective history exists for the current project yet.") : .none("Select a historical event to inspect details."),
+                        banners: result.banners
+                    )
+                    self.selectRow(id: selected)
+                }
+            } catch {
+                await MainActor.run {
+                    guard revision == self.loadRevision else { return }
+                    self.screenModel = HistoryScreenModel(
+                        header: HistoryHeaderModel(
+                            title: "History",
+                            subtitle: "Browse retrospective revisions and previously applied changes.",
+                            activeProjectName: project?.projectName ?? "No Project",
+                            activeSequenceName: target.sequenceName
+                        ),
+                        summary: HistorySummaryModel(totalEventCount: 0, latestEventSummary: "History could not be loaded.", latestEventTimestamp: "", groupedTypeSummaries: []),
+                        rows: [],
+                        selectedEvent: .error(String(error.localizedDescription)),
+                        banners: [WorkflowBannerModel(id: "history-load-failed", text: String(error.localizedDescription), state: .blocked)]
+                    )
+                    self.detailsByID = [:]
+                }
+            }
         }
     }
 

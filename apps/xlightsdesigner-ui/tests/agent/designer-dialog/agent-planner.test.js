@@ -102,6 +102,20 @@ test('normalizeIntent does not narrow whole-song scope from a single narrative s
   assert.deepEqual(normalized.sections, []);
 });
 
+test('normalizeIntent preserves global scope for full-display full-duration benchmark prompts', () => {
+  const normalized = normalizeIntent({
+    promptText: `Goal: Create a complete first-pass full-display sequence for the active song. Use the whole display with clear section progression, coordinated layers, and lighting-safe color choices.
+Mood and style: polished Christmas show energy with a warm opening, rhythmic development, bigger chorus moments, and a resolved ending
+Target scope: Full display via project display metadata and model groups
+Constraints: Plan across the full sequence duration, not a single isolated model or effect. Apply as one batch full-pass plan before render unless a clear validation failure requires iteration.`,
+    availableSectionNames: ['Intro', 'Verse', 'Chorus', 'Bridge', 'Outro']
+  });
+
+  assert.equal(normalized.preservationConstraints.allowGlobalRewrite, true);
+  assert.deepEqual(normalized.sections, []);
+  assert.equal(normalized.focusHierarchy, 'balanced_full_yard');
+});
+
 test('normalizeIntent keeps explicit selected sections even when the prompt references another section narratively', () => {
   const normalized = normalizeIntent({
     promptText: 'Shape the Pre-Chorus like a lift that holds tension before Chorus 1 opens up.',

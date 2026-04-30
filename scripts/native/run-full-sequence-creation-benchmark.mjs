@@ -272,6 +272,27 @@ function extractSemanticTags(appSnapshot = {}) {
   return tags.sort((a, b) => b.linkedTargetCount - a.linkedTargetCount || a.name.localeCompare(b.name));
 }
 
+function extractSyntheticMetadataTags(metadataAssignments = []) {
+  const counts = new Map();
+  const assignmentCount = arr(metadataAssignments).length;
+  for (const assignment of arr(metadataAssignments)) {
+    for (const tag of arr(assignment?.tags).map((row) => str(row)).filter(Boolean)) {
+      const key = tag.toLowerCase();
+      const existing = counts.get(key) || { name: tag, count: 0 };
+      existing.count += 1;
+      counts.set(key, existing);
+    }
+  }
+  const ranked = Array.from(counts.values())
+    .filter((row) => row.count > 0)
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  const sharedAcrossAll = ranked.filter((row) => row.count === assignmentCount).map((row) => row.name);
+  if (sharedAcrossAll.includes('benchmark')) return ['benchmark'];
+  if (sharedAcrossAll.includes('full display')) return ['full display'];
+  if (sharedAcrossAll.length) return [sharedAcrossAll[0]];
+  return ranked.length ? [ranked[0].name] : [];
+}
+
 function summarizeLayoutModels(layoutPayload = {}) {
   const models = arr(layoutPayload?.data?.models);
   const isModelGroup = (row) => str(row?.displayAs || row?.type || row?.kind).toLowerCase() === 'modelgroup';
@@ -621,19 +642,20 @@ async function main() {
   await createSequenceWithRecovery(args, sequencePath);
   await nativeAction(args, 'refreshXLightsSession', {}, 90000);
 
+  const layoutPayload = await xlightsRequest(args, '/layout/models', {}, 60000);
+  const groupMembershipsPayload = await xlightsRequest(args, '/layout/group-members', {}, 60000).catch(() => ({ data: { groups: [] } }));
   const appSnapshot = await waitForNativeSnapshot(args, { label: 'post-create app snapshot', timeoutMs: 150000 });
   const semanticTags = extractSemanticTags(appSnapshot);
   const selectedTags = splitList(args.selectedTags);
-  const resolvedTags = selectedTags.length
-    ? selectedTags
-    : semanticTags.map((row) => row.name);
-  const layoutPayload = await xlightsRequest(args, '/layout/models', {}, 60000);
-  const groupMembershipsPayload = await xlightsRequest(args, '/layout/group-members', {}, 60000).catch(() => ({ data: { groups: [] } }));
   const layoutSummary = summarizeLayoutModels(layoutPayload);
   const displayMetadataAssignments = loadProjectDisplayMetadataAssignments(args.projectFile, {
     layoutRows: arr(layoutPayload?.data?.models),
-    groupMemberships: groupMembershipsPayload
+    groupMemberships: groupMembershipsPayload,
+    allowSyntheticBenchmarkMetadata: true
   });
+  const resolvedTags = selectedTags.length
+    ? selectedTags
+    : (semanticTags.length ? semanticTags.map((row) => row.name) : extractSyntheticMetadataTags(displayMetadataAssignments));
   const displayMetadataSummary = {
     assignmentCount: displayMetadataAssignments.length,
     sampleAssignments: displayMetadataAssignments.slice(0, 24).map((row) => ({
@@ -643,6 +665,10 @@ async function main() {
       source: str(row.source)
     }))
   };
+  const syntheticBenchmarkTargetIds = displayMetadataAssignments
+    .filter((row) => str(row?.source) === 'xlightsdesigner_benchmark_synthetic_metadata')
+    .map((row) => str(row?.targetId))
+    .filter(Boolean);
   const designerContext = buildDesignerContext({ args, selectedTags: resolvedTags, layoutSummary, displayMetadataSummary });
 
   logStep(`saving designer context for ${resolvedTags.length} display metadata subjects/tags and ${displayMetadataSummary.assignmentCount} metadata assignments`);
@@ -663,7 +689,8 @@ async function main() {
 
   logStep('generating full-display sequence proposal');
   const generation = await nativeAction(args, 'generateSequenceProposal', {
-    selectedTagNames: resolvedTags.join(',')
+    selectedTagNames: resolvedTags.join(','),
+    selectedTargetIds: syntheticBenchmarkTargetIds.join(',')
   }, args.timeoutMs);
   const banner = generation?.banner && typeof generation.banner === 'object' ? generation.banner : null;
   if (str(banner?.state).toLowerCase() === 'blocked') {

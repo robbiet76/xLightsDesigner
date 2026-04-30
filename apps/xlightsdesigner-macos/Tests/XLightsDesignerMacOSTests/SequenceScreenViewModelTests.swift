@@ -11,15 +11,17 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
     private(set) var prompt = ""
     private(set) var projectFilePath = ""
     private(set) var selectedTagNames: [String] = []
+    private(set) var selectedTargetIDs: [String] = []
     private(set) var selectedSections: [String] = []
     private(set) var timingTrackName = ""
     private(set) var callCount = 0
 
-    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String], selectedSections: [String], timingTrackName: String) async throws -> SequenceProposalGenerationResult {
+    func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String], selectedTargetIDs: [String], selectedSections: [String], timingTrackName: String) async throws -> SequenceProposalGenerationResult {
         callCount += 1
         self.projectFilePath = projectFilePath
         self.prompt = prompt
         self.selectedTagNames = selectedTagNames
+        self.selectedTargetIDs = selectedTargetIDs
         self.selectedSections = selectedSections
         self.timingTrackName = timingTrackName
         return SequenceProposalGenerationResult(
@@ -63,12 +65,14 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
 
     model.generateProposalFromDesignIntent(
         selectedTagNames: ["lead", "centerpiece"],
+        selectedTargetIDs: ["MegaTree", "Spinner"],
         selectedSections: ["Chorus 1"],
         timingTrackName: "User Timing"
     )
     try await xldWaitUntil { model.isGeneratingProposal == false }
 
     #expect(proposalService.selectedTagNames == ["lead", "centerpiece"])
+    #expect(proposalService.selectedTargetIDs == ["MegaTree", "Spinner"])
     #expect(proposalService.selectedSections == ["Chorus 1"])
     #expect(proposalService.timingTrackName == "User Timing")
     #expect(model.isGeneratingProposal == false)
