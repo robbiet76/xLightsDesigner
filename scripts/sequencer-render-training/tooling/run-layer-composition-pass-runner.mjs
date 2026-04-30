@@ -100,6 +100,34 @@ function copyFixtureSequence(plan = {}, passExecution = {}) {
   return target;
 }
 
+async function currentShowDirectory(endpoint, deps = {}) {
+  const response = await fetch(`${str(endpoint)}/media/current`, {
+    method: "GET",
+    headers: { Accept: "application/json" }
+  });
+  const text = await response.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error(`Invalid JSON from GET /media/current: ${text}`);
+  }
+  if (!response.ok || json?.ok === false) {
+    throw new Error(`GET /media/current failed (${response.status}): ${JSON.stringify(json)}`);
+  }
+  return str(json?.data?.showDirectory);
+}
+
+async function assertTrainingShowDirectory({ endpoint, plan } = {}) {
+  const expectedShowDir = path.resolve(str(resolvedTrainingShowDir(plan)));
+  if (!expectedShowDir) throw new Error("trainingDisplay.showDir is required");
+  const actualShowDir = path.resolve(str(await currentShowDirectory(endpoint)));
+  if (actualShowDir !== expectedShowDir) {
+    throw new Error(`xLights is open to ${actualShowDir}; expected training show ${expectedShowDir}.`);
+  }
+  return { expectedShowDir, actualShowDir };
+}
+
 function extractObservation({
   fseqPath,
   passExecution,
@@ -183,6 +211,90 @@ function updateCheckpoint(checkpointPath, patch = {}) {
   };
   writeJson(checkpointPath, next);
   return next;
+}
+
+function refreshCheckpointBundle(root, plan = {}) {
+  const checkpointsPath = path.join(root, "checkpoints.json");
+  const bundle = readJson(checkpointsPath);
+  const dedupedRows = [...new Map(arr(bundle.checkpoints)
+    .map((row) => [str(row.checkpointRef), row]))
+    .values()];
+  const checkpoints = dedupedRows.map((row) => {
+    const checkpoint = readJson(row.checkpointRef);
+    return {
+      ...row,
+      status: str(checkpoint.status || row.status),
+      observationRef: str(checkpoint.observationRef || ""),
+      renderObservationRef: str(checkpoint.renderObservationRef || ""),
+      ownedPassResultRef: str(checkpoint.ownedPassResultRef || ""),
+      failureSummaryRef: str(checkpoint.failureSummaryRef || "")
+    };
+  });
+  const refreshed = {
+    ...bundle,
+    updatedAt: new Date().toISOString(),
+    runId: str(bundle.runId || plan.runId),
+    runRoot: root,
+    checkpointCount: checkpoints.length,
+    appendedCheckpointCount: checkpoints.filter((row) => str(row.experimentId).includes("-refill-")).length,
+    checkpoints
+  };
+  writeJson(checkpointsPath, refreshed);
+  return refreshed;
+}
+
+function writeExecutionSummary({
+  root,
+  plan = {},
+  mode = "pass_runner",
+  bundle,
+  refillResults = [],
+  learningCheckpoints = [],
+  stopStatus = "",
+  stopReason = ""
+} = {}) {
+  const summaryPath = path.join(root, "execution-summary.json");
+  const checkpoints = arr(bundle?.checkpoints);
+  const completedPassCount = checkpoints.filter((row) => str(row.status) === "completed").length;
+  const failedPassCount = checkpoints.filter((row) => str(row.status) === "failed").length;
+  const pendingApplyRenderCount = checkpoints.filter((row) => str(row.status) === "pending_apply_render").length;
+  const observationCount = checkpoints.filter((row) => str(row.observationRef)).length;
+  const summary = {
+    artifactType: "layer_composition_execution_summary_v1",
+    artifactVersion: 1,
+    generatedAt: new Date().toISOString(),
+    runId: str(plan.runId || bundle?.runId),
+    runType: str(plan.runType),
+    runRoot: root,
+    planRef: path.join(root, "training-plan.json"),
+    mode,
+    status: failedPassCount > 0
+      ? "failed"
+      : pendingApplyRenderCount > 0
+        ? "partially_completed_pending_apply_render"
+        : "completed",
+    experimentCount: arr(plan.experiments).length,
+    passCount: checkpoints.length,
+    appendedPassCount: checkpoints.filter((row) => str(row.experimentId).includes("-refill-")).length,
+    pendingApplyRenderCount,
+    completedPassCount,
+    failedPassCount,
+    observationCount,
+    deltaCount: learningCheckpoints.length,
+    retentionLedgerRef: path.join(root, "retention-ledger.json"),
+    checkpointBundleRef: path.join(root, "checkpoints.json"),
+    lastStopStatus: stopStatus,
+    lastStopReason: stopReason,
+    refillAttemptCount: refillResults.length,
+    learningCheckpointCount: learningCheckpoints.length,
+    nextStep: pendingApplyRenderCount > 0
+      ? "Resume pending passes or reconcile unfinished apply/render work."
+      : failedPassCount > 0
+        ? "Inspect failed pass summaries before continuing."
+        : "Promote or consume staged priors after review."
+  };
+  writeJson(summaryPath, summary);
+  return summary;
 }
 
 function checkpointStatus(row = {}) {
@@ -331,6 +443,7 @@ export async function runLayerCompositionPasses({
   const planPath = path.join(root, "training-plan.json");
   const checkpointsPath = path.join(root, "checkpoints.json");
   const ledgerPath = path.join(root, "retention-ledger.json");
+  const passRunnerSummaryPath = path.join(root, "pass-runner-summary.json");
   const plan = readJson(planPath);
   const experimentFilter = new Set(arr(experimentIds).map(str).filter(Boolean));
   const now = deps.now || (() => Date.now());
@@ -382,7 +495,7 @@ export async function runLayerCompositionPasses({
     }
     if (pendingIndex >= pending.length) {
       if (untilRuntimeBudget && typeof deps.refillPendingPasses === "function") {
-        const checkpointSummary = typeof deps.summarizeBeforeRefill === "function"
+      const checkpointSummary = typeof deps.summarizeBeforeRefill === "function"
           ? await deps.summarizeBeforeRefill({
             runRoot: root,
             label: `before_refill_${refillResults.length + 1}`,
@@ -405,6 +518,7 @@ export async function runLayerCompositionPasses({
           stopReason = postCleanupDiskStatus.reason;
           break;
         }
+        bundle = refreshCheckpointBundle(root, plan);
         const refill = await deps.refillPendingPasses({
           runRoot: root,
           plan,
@@ -445,6 +559,7 @@ export async function runLayerCompositionPasses({
           stopReason = postCleanupDiskStatus.reason;
           break;
         }
+        bundle = refreshCheckpointBundle(root, plan);
         const refill = appendLayerCompositionAdaptiveRefill({
           runRoot: root,
           plan,
@@ -475,6 +590,13 @@ export async function runLayerCompositionPasses({
         status: "dry_run_pending_apply_render"
       });
       continue;
+    }
+    try {
+      await (deps.assertTrainingShowDir || assertTrainingShowDirectory)({ endpoint, plan, deps: deps.ownedDeps || {} });
+    } catch (error) {
+      stopStatus = "training_show_mismatch";
+      stopReason = str(error?.message || error);
+      break;
     }
     const sequencePath = copyFixtureSequence(plan, passExecution);
     const stagedBasePath = sequencePath.replace(/\.xsq$/i, "");
@@ -556,6 +678,7 @@ export async function runLayerCompositionPasses({
         externalDeleteRoots: [path.dirname(sequencePath)]
       });
       results.push({ experimentId: row.experimentId, passId: row.passId, status: "completed" });
+      bundle = refreshCheckpointBundle(root, plan);
     } catch (error) {
       stopStatus = "failed";
       stopReason = "pass_failed";
@@ -603,11 +726,13 @@ export async function runLayerCompositionPasses({
         externalDeleteRoots: [path.dirname(sequencePath)]
       });
       results.push({ experimentId: row.experimentId, passId: row.passId, status: "failed", error: str(error?.message || error) });
+      bundle = refreshCheckpointBundle(root, plan);
       break;
     }
   }
+  bundle = refreshCheckpointBundle(root, plan);
   const elapsedRuntimeMinutes = Number(((now() - startedAtMs) / 60000).toFixed(3));
-  return {
+  const summary = {
     artifactType: "layer_composition_pass_runner_summary_v1",
     artifactVersion: 1,
     generatedAt: new Date().toISOString(),
@@ -630,6 +755,18 @@ export async function runLayerCompositionPasses({
     diskGuardrailEvents,
     results
   };
+  writeJson(passRunnerSummaryPath, summary);
+  writeExecutionSummary({
+    root,
+    plan,
+    mode: untilRuntimeBudget ? "adaptive_refill" : "pass_runner",
+    bundle,
+    refillResults,
+    learningCheckpoints,
+    stopStatus,
+    stopReason
+  });
+  return summary;
 }
 
 function parseArgs(argv) {

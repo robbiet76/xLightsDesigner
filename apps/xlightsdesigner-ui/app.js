@@ -21,7 +21,6 @@ import {
   getLayoutScene,
   getOpenSequence,
   getRevision,
-  getSubmodelDetail,
   getSubmodels,
   getSystemVersion,
   getRenderedSequenceSamples,
@@ -3159,30 +3158,31 @@ async function fetchGroupMembershipsFromXLights(models = []) {
   return out;
 }
 
-async function fetchSubmodelDetailsFromXLights(submodels = []) {
-  const commands = Array.isArray(state.health?.capabilityCommands) ? state.health.capabilityCommands : [];
-  if (!commands.includes("layout.getSubmodelDetail")) {
-    return {};
-  }
-  const rows = Array.isArray(submodels) ? submodels : [];
-  if (!rows.length) return {};
-
-  const results = await Promise.allSettled(
-    rows.map(async (row) => {
-      const id = String(row?.id || "").trim();
-      if (!id) return null;
-      const body = await getSubmodelDetail(state.endpoint, id, row?.parentId || "");
-      const detail = isPlainObject(body?.data) ? body.data : {};
-      return [id, detail];
-    })
-  );
-
-  const out = {};
-  for (const row of results) {
-    if (row.status !== "fulfilled" || !Array.isArray(row.value) || row.value.length !== 2) continue;
-    out[row.value[0]] = row.value[1];
-  }
-  return out;
+function normalizeSubmodelSummaryFromXLights(row = {}) {
+  const fullName = String(row?.fullName || row?.id || "").trim();
+  const name = String(row?.name || fullName).trim();
+  const id = fullName || name;
+  const parentId = String(row?.parentName || row?.parentId || parseSubmodelParentId(id)).trim();
+  const bufferStyle = String(row?.bufferStyle || "").trim() || "Default";
+  return {
+    ...row,
+    id,
+    name,
+    parentId,
+    renderLayout: String(row?.renderLayout || row?.layout || "").trim(),
+    submodelType: String(row?.submodelType || row?.type || "").trim(),
+    bufferStyle,
+    availableBufferStyles: Array.isArray(row?.availableBufferStyles)
+      ? row.availableBufferStyles.map((v) => String(v || "").trim()).filter(Boolean)
+      : [bufferStyle],
+    membership: {
+      nodeCount: Number(row?.membership?.nodeCount || row?.nodeCount || 0),
+      nodeChannels: Array.isArray(row?.membership?.nodeChannels)
+        ? row.membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v))
+        : [],
+      nodeRefs: Array.isArray(row?.membership?.nodeRefs) ? row.membership.nodeRefs : []
+    }
+  };
 }
 
 async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false } = {}) {
@@ -3207,31 +3207,9 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
 
   try {
     const submodelBody = await getSubmodels(state.endpoint);
-    state.submodels = Array.isArray(submodelBody?.data?.submodels) ? submodelBody.data.submodels : [];
-    const submodelDetailsById = await fetchSubmodelDetailsFromXLights(state.submodels);
-    state.submodels = state.submodels.map((row) => {
-      const id = String(row?.id || "").trim();
-      const detail = isPlainObject(submodelDetailsById[id]) ? submodelDetailsById[id] : {};
-      const submodelDetail = isPlainObject(detail?.submodel) ? detail.submodel : {};
-      const membership = isPlainObject(detail?.membership) ? detail.membership : {};
-      return {
-        ...row,
-        ...submodelDetail,
-        renderLayout: String(submodelDetail?.renderLayout || row?.renderLayout || "").trim(),
-        submodelType: String(submodelDetail?.submodelType || row?.submodelType || "").trim(),
-        bufferStyle: String(submodelDetail?.bufferStyle || row?.bufferStyle || "").trim() || "Default",
-        availableBufferStyles: Array.isArray(submodelDetail?.availableBufferStyles)
-          ? submodelDetail.availableBufferStyles.map((v) => String(v || "").trim()).filter(Boolean)
-          : Array.isArray(row?.availableBufferStyles)
-            ? row.availableBufferStyles.map((v) => String(v || "").trim()).filter(Boolean)
-            : [],
-        membership: {
-          nodeCount: Number(membership?.nodeCount || 0),
-          nodeChannels: Array.isArray(membership?.nodeChannels) ? membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v)) : [],
-          nodeRefs: Array.isArray(membership?.nodeRefs) ? membership.nodeRefs : []
-        }
-      };
-    }).filter((row) => {
+    state.submodels = (Array.isArray(submodelBody?.data?.submodels) ? submodelBody.data.submodels : [])
+      .map((row) => normalizeSubmodelSummaryFromXLights(row))
+      .filter((row) => {
       const parentId = String(row?.parentId || parseSubmodelParentId(row?.id)).trim();
       return !parentId || includedModelIds.has(parentId);
     });

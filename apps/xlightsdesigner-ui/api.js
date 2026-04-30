@@ -320,6 +320,7 @@ export async function pingCapabilities(endpoint) {
           "sequence.getOpen",
           "sequence.getRevision",
           "sequence.getSettings",
+          "sequence.setSettings",
           "sequence.renderCurrent",
           "sequence.getRenderSamples",
           "sequence.open",
@@ -331,6 +332,8 @@ export async function pingCapabilities(endpoint) {
           "timing.addMarks",
           "media.getCurrent",
           "layout.getModels",
+          "layout.getSubmodels",
+          "layout.getModelNodes",
           "layout.getScene",
           "elements.getSummary",
           "effects.getWindow",
@@ -450,6 +453,13 @@ export async function createSequence(endpoint, params = {}) {
 }
 
 export async function setSequenceSettings(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    await ensureOwnedReady(endpoint, "sequence.setSettings");
+    return readOwnedPost(endpoint, "/sequence/settings", params, {
+      command: "sequence.setSettings",
+      queued: true
+    });
+  }
   return postCommand(endpoint, "sequence.setSettings", params);
 }
 
@@ -515,6 +525,12 @@ export async function getModelGeometry(endpoint, name) {
 }
 
 export async function getModelNodes(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    return normalizeOwnedCompleted(
+      "layout.getModelNodes",
+      await readOwnedGet(endpoint, "/layout/model-nodes", params)
+    );
+  }
   return postCommand(endpoint, "layout.getModelNodes", params);
 }
 
@@ -575,20 +591,12 @@ export async function setDisplayElementOrder(endpoint, orderedIds = []) {
 
 export async function getSubmodels(endpoint) {
   if (isOwnedEndpoint(endpoint)) {
-    return {
-      ok: true,
-      res: 200,
-      command: "layout.getSubmodels",
-      data: { submodels: [] }
-    };
+    return normalizeOwnedCompleted(
+      "layout.getSubmodels",
+      await readOwnedGet(endpoint, "/layout/submodels")
+    );
   }
   return postCommand(endpoint, "layout.getSubmodels", {});
-}
-
-export async function getSubmodelDetail(endpoint, name, parentId = "") {
-  const params = { name };
-  if (String(parentId || "").trim()) params.parentId = String(parentId).trim();
-  return postCommand(endpoint, "layout.getSubmodelDetail", params);
 }
 
 export async function getTimingTracks(endpoint) {

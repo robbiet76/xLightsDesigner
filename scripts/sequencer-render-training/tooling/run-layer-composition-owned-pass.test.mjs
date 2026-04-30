@@ -138,3 +138,23 @@ test("owned pass executor skips batch apply for empty control passes", async () 
   assert.equal(calls.some((row) => row.route === "/sequencing/apply-batch-plan"), false);
   assert.equal(result.steps.some((row) => row.step === "apply_batch_plan" && row.skipped), true);
 });
+
+test("owned pass executor skips display-order no-op commands with fewer than two ids", async () => {
+  const { sequence, fseq } = tempSequence();
+  const { calls, request } = makeRequestRecorder();
+  const result = await runLayerCompositionOwnedPass({
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    sequencePath: sequence,
+    passExecution: {
+      ...passExecution,
+      directCommands: [
+        { cmd: "sequencer.setDisplayElementOrder", params: { orderedIds: ["ArchTripleLayer"] } }
+      ]
+    },
+    deps: { request, pollMs: 1, timeoutMs: 1000 }
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.fseqPath, fseq);
+  assert.equal(calls.some((row) => row.route === "/elements/display-order"), false);
+});

@@ -47,6 +47,16 @@ function setupRun() {
   return { runRoot };
 }
 
+function withTrainingShowReady(deps = {}) {
+  return {
+    assertTrainingShowDir: async () => ({
+      expectedShowDir: "/tmp/render-training",
+      actualShowDir: "/tmp/render-training"
+    }),
+    ...deps
+  };
+}
+
 test("pass runner completes one pass and updates checkpoint and ledger", async () => {
   const { runRoot } = setupRun();
   const fseqPath = path.join(runRoot, "rendered.fseq");
@@ -55,7 +65,7 @@ test("pass runner completes one pass and updates checkpoint and ledger", async (
   const summary = await runLayerCompositionPasses({
     runRoot,
     maxPasses: 1,
-    deps: {
+    deps: withTrainingShowReady({
       runOwnedPass: async ({ sequencePath, passExecution }) => {
         observedSequencePath = sequencePath;
         return {
@@ -82,7 +92,7 @@ test("pass runner completes one pass and updates checkpoint and ledger", async (
         }));
         return { renderObservationPath, previewWindowPath, compositionObservationPath };
       }
-    }
+    })
   });
 
   assert.equal(summary.processedPasses, 1);
@@ -90,10 +100,15 @@ test("pass runner completes one pass and updates checkpoint and ledger", async (
   assert.equal(observedSequencePath.startsWith(path.join(runRoot, "show")), true);
   assert.equal(observedSequencePath.includes(`${path.sep}passes${path.sep}`), false);
   const checkpoints = JSON.parse(fs.readFileSync(path.join(runRoot, "checkpoints.json"), "utf8"));
+  assert.equal(checkpoints.checkpoints[0].status, "completed");
+  assert.equal(Boolean(checkpoints.checkpoints[0].observationRef), true);
   const checkpoint = JSON.parse(fs.readFileSync(checkpoints.checkpoints[0].checkpointRef, "utf8"));
   assert.equal(checkpoint.status, "completed");
   assert.equal(checkpoint.rawArtifactsSummarized, true);
   assert.equal(fs.existsSync(checkpoint.observationRef), true);
+  const executionSummary = JSON.parse(fs.readFileSync(path.join(runRoot, "execution-summary.json"), "utf8"));
+  assert.equal(executionSummary.completedPassCount, 1);
+  assert.equal(executionSummary.pendingApplyRenderCount > 0, true);
 
   const ledger = JSON.parse(fs.readFileSync(path.join(runRoot, "retention-ledger.json"), "utf8"));
   assert.equal(ledger.artifacts.some((row) => row.artifactClass === "raw_fseq" && row.purgeEligible), true);
@@ -106,16 +121,17 @@ test("pass runner records failure and stops after first failed pass", async () =
   const summary = await runLayerCompositionPasses({
     runRoot,
     maxPasses: 2,
-    deps: {
+    deps: withTrainingShowReady({
       runOwnedPass: async () => {
         throw new Error("owned unavailable");
       }
-    }
+    })
   });
 
   assert.equal(summary.processedPasses, 1);
   assert.equal(summary.results[0].status, "failed");
   const checkpoints = JSON.parse(fs.readFileSync(path.join(runRoot, "checkpoints.json"), "utf8"));
+  assert.equal(checkpoints.checkpoints[0].status, "failed");
   const checkpoint = JSON.parse(fs.readFileSync(checkpoints.checkpoints[0].checkpointRef, "utf8"));
   assert.equal(checkpoint.status, "failed");
   assert.equal(fs.existsSync(checkpoint.failureSummaryRef), true);
@@ -124,7 +140,7 @@ test("pass runner records failure and stops after first failed pass", async () =
 test("pass runner resumes from per-pass checkpoint status instead of stale bundle status", async () => {
   const { runRoot } = setupRun();
   const completed = [];
-  const deps = {
+  const deps = withTrainingShowReady({
     runOwnedPass: async ({ sequencePath, passExecution }) => {
       completed.push(passExecution.passId);
       return {
@@ -151,7 +167,7 @@ test("pass runner resumes from per-pass checkpoint status instead of stale bundl
       }));
       return { renderObservationPath, previewWindowPath, compositionObservationPath };
     }
-  };
+  });
 
   await runLayerCompositionPasses({ runRoot, maxPasses: 1, deps });
   await runLayerCompositionPasses({ runRoot, maxPasses: 1, deps });
@@ -166,7 +182,7 @@ test("pass runner can filter pending passes by experiment id", async () => {
     runRoot,
     maxPasses: 2,
     experimentIds: ["same-target-layer-stack-mono_white"],
-    deps: {
+    deps: withTrainingShowReady({
       runOwnedPass: async ({ sequencePath, passExecution }) => {
         completed.push(`${passExecution.experimentId}:${passExecution.passId}`);
         return {
@@ -193,7 +209,7 @@ test("pass runner can filter pending passes by experiment id", async () => {
         }));
         return { renderObservationPath, previewWindowPath, compositionObservationPath };
       }
-    }
+    })
   });
 
   assert.equal(summary.processedPasses, 2);
@@ -214,7 +230,7 @@ test("pass runner can use runtime-budget mode instead of fixed pass count", asyn
     untilRuntimeBudget: true,
     maxRuntimeMinutes: 10,
     experimentIds: ["same-target-layer-stack-mono_white"],
-    deps: {
+    deps: withTrainingShowReady({
       now: () => nowMs,
       runOwnedPass: async ({ sequencePath, passExecution }) => {
         completed.push(passExecution.passId);
@@ -240,7 +256,7 @@ test("pass runner can use runtime-budget mode instead of fixed pass count", asyn
         fs.writeFileSync(compositionObservationPath, JSON.stringify({ artifactType: "composition_stack_observation_v1", passId: passExecution.passId }));
         return { renderObservationPath, previewWindowPath, compositionObservationPath };
       }
-    }
+    })
   });
 
   assert.equal(summary.untilRuntimeBudget, true);
@@ -258,7 +274,7 @@ test("pass runner reports runtime budget reached before applying more work", asy
     runRoot,
     untilRuntimeBudget: true,
     maxRuntimeMinutes: 1,
-    deps: {
+    deps: withTrainingShowReady({
       now: () => {
         nowCalls += 1;
         return nowCalls === 1 ? 0 : 60000;
@@ -266,7 +282,7 @@ test("pass runner reports runtime budget reached before applying more work", asy
       runOwnedPass: async () => {
         throw new Error("should not apply after budget");
       }
-    }
+    })
   });
 
   assert.equal(summary.untilRuntimeBudget, true);
@@ -281,12 +297,12 @@ test("pass runner stops before applying work when disk guardrail is below hard s
     runRoot,
     untilRuntimeBudget: true,
     maxRuntimeMinutes: 10,
-    deps: {
+    deps: withTrainingShowReady({
       freeDiskGb: () => 5,
       runOwnedPass: async () => {
         throw new Error("should not apply below disk stop guardrail");
       }
-    }
+    })
   });
 
   assert.equal(summary.processedPasses, 0);
@@ -294,6 +310,28 @@ test("pass runner stops before applying work when disk guardrail is below hard s
   assert.equal(summary.stopReason, "free_disk_below_stop_guardrail");
   assert.equal(summary.diskGuardrailEventCount, 1);
   assert.equal(summary.diskGuardrailEvents[0].phase, "before_pass");
+});
+
+test("pass runner stops cleanly when xLights is attached to the wrong show folder", async () => {
+  const { runRoot } = setupRun();
+  const summary = await runLayerCompositionPasses({
+    runRoot,
+    maxPasses: 1,
+    deps: withTrainingShowReady({
+      assertTrainingShowDir: async () => {
+        throw new Error("xLights is open to /wrong/show; expected training show /tmp/render-training.");
+      },
+      runOwnedPass: async () => {
+        throw new Error("should not apply when training show is mismatched");
+      }
+    })
+  });
+
+  assert.equal(summary.processedPasses, 0);
+  assert.equal(summary.stopStatus, "training_show_mismatch");
+  assert.match(summary.stopReason, /expected training show/);
+  const checkpoints = JSON.parse(fs.readFileSync(path.join(runRoot, "checkpoints.json"), "utf8"));
+  assert.equal(checkpoints.checkpoints[0].status, "pending_apply_render");
 });
 
 test("pass runner requests append-only refill when budget mode exhausts pending work", async () => {
@@ -304,7 +342,7 @@ test("pass runner requests append-only refill when budget mode exhausts pending 
     runRoot,
     untilRuntimeBudget: true,
     maxRuntimeMinutes: 10,
-    deps: {
+    deps: withTrainingShowReady({
       now: () => 0,
       runOwnedPass: async ({ sequencePath, passExecution }) => {
         completed.push(`${passExecution.experimentId}:${passExecution.passId}`);
@@ -346,7 +384,7 @@ test("pass runner requests append-only refill when budget mode exhausts pending 
           mode: "adaptive_refill"
         });
       }
-    }
+    })
   });
 
   assert.equal(refillCalls, 2);
@@ -376,7 +414,7 @@ test("pass runner stages through TRAINING_API_STAGING_ROOT when provided", async
     await runLayerCompositionPasses({
       runRoot,
       maxPasses: 1,
-      deps: {
+      deps: withTrainingShowReady({
         runOwnedPass: async ({ sequencePath, passExecution }) => {
           observedSequencePath = sequencePath;
           return {
@@ -400,7 +438,7 @@ test("pass runner stages through TRAINING_API_STAGING_ROOT when provided", async
           fs.writeFileSync(compositionObservationPath, JSON.stringify({ artifactType: "composition_stack_observation_v1", passId: passExecution.passId }));
           return { renderObservationPath, previewWindowPath, compositionObservationPath };
         }
-      }
+      })
     });
   } finally {
     if (previous == null) delete process.env.TRAINING_API_STAGING_ROOT;

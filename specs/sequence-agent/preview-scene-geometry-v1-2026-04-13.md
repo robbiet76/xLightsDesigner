@@ -32,7 +32,6 @@ Specifically, the current owned xLights API surface already includes:
 - `layout.getCameras`
 - `layout.getModelGroups`
 - `layout.getSubmodels`
-- `layout.getSubmodelDetail`
 
 So v1 should aggregate and normalize those sources into one portable artifact.
 
@@ -101,7 +100,10 @@ The artifact should be built primarily from these owned xLights calls:
 ### Optional / enrichment
 - `layout.getModelGroups`
 - `layout.getSubmodels`
-- `layout.getSubmodelDetail`
+
+`layout.getSubmodels` should be treated as the active submodel source. The older
+`layout.getSubmodelDetail` command is not part of the owned `xLightsDesigner`
+surface and should not be assumed by current preview-geometry tooling.
 
 ## Top-Level Shape
 

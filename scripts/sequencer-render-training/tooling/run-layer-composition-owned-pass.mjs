@@ -128,6 +128,7 @@ async function resolveRenderedFseqPath(endpoint, sequencePath, renderResult = {}
 function commandBodies(passExecution = {}) {
   return arr(passExecution.directCommands)
     .filter((command) => str(command?.cmd) === "sequencer.setDisplayElementOrder")
+    .filter((command) => arr(command?.params?.orderedIds).map(str).filter(Boolean).length >= 2)
     .map((command) => ({
       route: "/elements/display-order",
       body: { orderedIds: JSON.stringify(arr(command?.params?.orderedIds).map(str).filter(Boolean)) }

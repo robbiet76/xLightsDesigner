@@ -69,9 +69,10 @@ Last Reviewed: 2026-04-26
 
 ## 10) WP-9 Advanced Control Validation
 - `effects.listDefinitions` and `effects.getDefinition` return stable machine-readable effect parameter contracts.
-- Transaction flow validates atomicity:
-  - `transactions.begin` + staged mutations + `transactions.rollback` leaves no persisted changes.
-  - `transactions.begin` + staged mutations + `transactions.commit` persists all changes or none.
+- Owned batch-apply flow validates deterministic multi-command sequencing apply:
+  - `sequencing.applyBatchPlan` accepts a multi-command plan without legacy transaction wrappers.
+  - owned readback confirms the expected timing/effect mutations landed after apply.
+  - stale `expectedRevision` prevents partial apply and returns a deterministic conflict payload.
 - Async job flow validates observability and cancellation:
   - long operation returns `jobId`
   - `jobs.get` reaches terminal status deterministically
