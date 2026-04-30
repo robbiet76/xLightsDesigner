@@ -1,6 +1,5 @@
 # xLights Automation API Audit for Agent Sequencing
 
-Audit date: 2026-02-26  
 xLights repo inspected: `/Users/robterry/xLights/xLights`  
 xLights commit inspected: `f3d67a91a689`
 

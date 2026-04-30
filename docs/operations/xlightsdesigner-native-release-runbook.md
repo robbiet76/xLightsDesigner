@@ -1,20 +1,20 @@
 # Native Release Validation Runbook
 
 Status: Active
-Date: 2026-04-24
 Owner: xLightsDesigner maintainers
+Last Reviewed: 2026-04-30
 
 ## Purpose
 
 Define the local evidence required before treating the native macOS app and owned xLights API path as release-quality for the current app completion workstream.
 
-This runbook replaces the retired Electron release path for current validation. The old desktop runbook remains historical only.
+This runbook replaces the retired Electron release path for current validation.
 
 ## Runtime Boundaries
 
 - Native app source: `apps/xlightsdesigner-macos`
 - Native automation server: `http://127.0.0.1:49916`
-- Owned xLights API source: `/Users/robterry/xLights-2026.06/src-ui-wx/xLightsDesigner`
+- Owned xLights API source: `/Users/robterry/xLights-2026.07/src-ui-wx/xLightsDesigner`
 - Owned xLights API endpoint: `http://127.0.0.1:49915/xlightsdesigner/api`
 - Installed `/Applications/xLights.app` is not valid for owned API validation unless it has been replaced by an API-enabled build.
 
@@ -34,7 +34,7 @@ Required result:
 
 2. Owned show-folder validation
 
-Launch the API-enabled xLights 2026.06 build opened to the linked development show folder:
+Launch the API-enabled xLights build opened to the linked development show folder:
 
 ```bash
 node scripts/xlights/launch-owned-xlights.mjs \

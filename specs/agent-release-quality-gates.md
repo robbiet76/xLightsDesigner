@@ -49,7 +49,6 @@ Define go/no-go gates for shipping agent-enabled behavior.
 - `/Users/robterry/Desktop/Show/_xlightsdesigner_api_validation/<run-id>/owned-api-validation-result.json`
 - `docs/operations/xlightsdesigner-native-release-runbook.md`
 - `docs/operations/xlightsdesigner-native-validation-evidence-log.md`
-- `docs/operations/xlightsdesigner-desktop-validation-evidence-log.md` (historical Electron path only)
 
 ## Current Interpretation
 

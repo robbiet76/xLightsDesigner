@@ -1,4 +1,8 @@
-# Working Directory Policy 2026-04-05
+# Working Directory Policy
+
+Status: Active
+Owner: xLightsDesigner maintainers
+Last Reviewed: 2026-04-30
 
 ## Purpose
 Separate canonical tracked source from generated and operational working data.
@@ -37,13 +41,9 @@ They may exist temporarily during migration, but they are not canonical roots.
 4. Root-level working directories should be treated as migration targets, not expansion points.
 5. Archive and eval data that must stay tracked should remain under the owning source tree, not under `var/`.
 
-## Immediate Changes Applied
-- Designer training logs now write to `var/logs/designer-training-runs/`.
-- `.gitignore` now ignores `logs/` and `var/` as generated roots.
+## Migration Targets
 
-## Next Migration Targets
-1. `render-training/` -> `var/render-training/` or external workspace
-2. `sequence-validation/` -> `var/sequence-validation/`
-3. `sequence-validation-show/` -> `var/sequence-validation-show/`
-4. explicit lifecycle split for `apps/xlightsdesigner-analysis-service/eval/`
-5. structural regrouping for `scripts/sequencer-render-training/`
+- `render-training/` -> `var/render-training/` or external workspace
+- `sequence-validation/` -> `var/sequence-validation/`
+- `sequence-validation-show/` -> `var/sequence-validation-show/`
+- tracked eval fixtures stay with their owning source tree only when they are small and test-owned

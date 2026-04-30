@@ -1,10 +1,9 @@
 # xLights Sequencer Control + Agent Autonomy
 
 Status: Archived
-Date: 2026-03-11
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-11
-Superseded By: `README.md`, `xlights-api.md`, `xlights-api.md`
+Superseded By: `README.md`, `xlights-api.md`
 
 ## Purpose
 Define the full target contract between xLightsDesigner and xLights before further API implementation, with explicit boundaries and autonomous-agent execution requirements.
@@ -12,7 +11,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 ## Planning Note
 - This set is archived historical context.
 - It is not the active execution spine.
-- Current execution is driven by the `2026.06` owned API migration set plus the active `sequence-agent/README.md`.
+- Current execution is driven by the active `sequence-agent/README.md` and `xlights-api.md`.
 
 ## Historical Spec Set
 - `xlights-sequencer-control-project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.
@@ -33,5 +32,5 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - Historical implementation-step artifacts (WP docs, prior wireframes, regression snapshots, gap audits, and earlier checklists) are in `specs/archive/`.
 
 ## Related Docs
-- `docs/operations/xlightsdesigner-desktop-release-runbook.md`
-- `docs/operations/xlightsdesigner-desktop-validation-evidence-log.md`
+- `docs/operations/xlightsdesigner-native-release-runbook.md`
+- `docs/operations/xlightsdesigner-native-validation-evidence-log.md`

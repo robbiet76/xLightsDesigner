@@ -1,8 +1,6 @@
 # High-Level Architecture: xLights + Local Agent + LLM
 
 Status: Draft  
-Date: 2026-02-26
-
 ## 1) Purpose
 Define a deployment and responsibility model that keeps sequencing automation local, avoids centralized hosting requirements, and makes user billing ownership explicit.
 

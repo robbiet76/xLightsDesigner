@@ -1,8 +1,13 @@
 # Architecture Docs
 
-Cross-project decision and analysis documents that inform implementation, but are not themselves implementation specs.
+Cross-project architecture documents that explain implementation decisions without serving as the primary product specs.
 
-## Key Documents
+## Current Documents
+
+- `repo-architecture.md`
+- `working-directory-policy.md`
 - `xlights-agent-high-level-architecture.md`
 - `xlights-automation-api-audit.md`
-- `docs-spec-boundary-audit-2026-03-11.md`
+- `timing-track-provenance-and-lyric-alignment.md`
+
+Historical directory audits were consolidated into `repo-architecture.md` and `working-directory-policy.md`.
