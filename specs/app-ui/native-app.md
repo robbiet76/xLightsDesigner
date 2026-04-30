@@ -30,9 +30,7 @@ The app should feel like a focused production tool, not a dashboard collection o
 
 - Project state is the root of the user experience.
 - Selecting a different show folder or layout refreshes layout, model metadata, custom model data, and current sequence context.
-- Mature display metadata is retained per project and is not deleted automatically when the show folder changes.
-- Migrating a project copies project metadata into the new project folder.
-- New projects start with blank metadata unless a user manually imports metadata.
+- Project migration, metadata retention, and app-owned storage behavior follow `project-storage.md`.
 - Review owns final apply approval and backup visibility.
 - History owns recovery and audit.
 
@@ -57,6 +55,7 @@ The app should feel like a focused production tool, not a dashboard collection o
 ## Related Specs
 
 - `../product-plan.md`
+- `platform-and-services.md`
 - `project-storage.md`
 - `../sequence-agent/xlights-api.md`
 - `../sequence-agent/model-metadata.md`

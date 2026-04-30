@@ -13,7 +13,7 @@ Define the durable platform boundary for the native app, local services, xLights
 
 The product must work as a local desktop tool for project work:
 
-- project files and display metadata live in the project folder
+- project files, display metadata, and generated artifacts follow the app-owned storage model in `project-storage.md`
 - xLights operations run through the local owned API
 - backups and render proof are created locally
 - generated training/proof artifacts remain local unless explicitly promoted or exported
@@ -42,3 +42,9 @@ Cloud services may support account management, billing, shared learning, model u
 ## Legacy Electron Boundary
 
 Electron-era specs and handler inventories are no longer current app architecture. They can be consulted only as historical parity references when a native feature appears to be missing.
+
+## Related Specs
+
+- `native-app.md`
+- `project-storage.md`
+- `../sequence-agent/xlights-api.md`
