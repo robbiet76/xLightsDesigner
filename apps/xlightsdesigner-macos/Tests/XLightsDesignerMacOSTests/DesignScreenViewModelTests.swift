@@ -95,7 +95,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     model.saveDesignIntent()
 
     let reopened = try service.openProject(filePath: project.projectFilePath)
-    let payload = reopened.snapshot["nativeDesignIntent"]?.value as? [String: Any]
+    let payload = reopened.snapshot["appDesignIntent"]?.value as? [String: Any]
     #expect(payload?["goal"] as? String == "Make the chorus feel like a clean red and white canopy.")
     #expect(payload?["targetScope"] as? String == "Mega tree, roofline, and window frames.")
     #expect((payload?["updatedAt"] as? String)?.isEmpty == false)
@@ -104,7 +104,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
 }
 
 @MainActor
-@Test func designIntentPayloadUpdatesSameNativeFields() throws {
+@Test func designIntentPayloadUpdatesSameAppFields() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-action-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     let service = LocalProjectService(projectsRootPath: root.path)
@@ -135,7 +135,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     ])
 
     let reopened = try service.openProject(filePath: project.projectFilePath)
-    let payload = reopened.snapshot["nativeDesignIntent"]?.value as? [String: Any]
+    let payload = reopened.snapshot["appDesignIntent"]?.value as? [String: Any]
     #expect(payload?["goal"] as? String == "Build a quiet verse and a wide chorus lift.")
     #expect(payload?["approvalNotes"] as? String == "Approved for sequencing draft.")
     #expect(model.intentDraft.targetScope == "House outline and mega tree.")

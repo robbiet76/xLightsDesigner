@@ -37,13 +37,13 @@ struct PendingWorkReadModel: Sendable {
     let intentGoal: String
     let intentTargetIDs: [String]
     let intentSectionCount: Int
-    let nativeDesignGoal: String
-    let nativeDesignMood: String
-    let nativeDesignConstraints: String
-    let nativeDesignTargetScope: String
-    let nativeDesignReferences: String
-    let nativeDesignApprovalNotes: String
-    let nativeDesignUpdatedAt: String
+    let appDesignGoal: String
+    let appDesignMood: String
+    let appDesignConstraints: String
+    let appDesignTargetScope: String
+    let appDesignReferences: String
+    let appDesignApprovalNotes: String
+    let appDesignUpdatedAt: String
     let directorPreferenceSummary: String
     let directorSummary: String
     let designSceneSummary: String
@@ -96,14 +96,14 @@ struct LocalPendingWorkService: PendingWorkService {
         let activeSequencePath = !liveSequencePath.isEmpty
             ? liveSequencePath
             : (preferredSequencePath.isEmpty ? (recentSequences.first ?? "") : preferredSequencePath)
-        let nativeDesignIntent = snapshot["nativeDesignIntent"] as? [String: Any] ?? [:]
-        let nativeDesignGoal = string(nativeDesignIntent["goal"])
-        let nativeDesignMood = string(nativeDesignIntent["mood"])
-        let nativeDesignConstraints = string(nativeDesignIntent["constraints"])
-        let nativeDesignTargetScope = string(nativeDesignIntent["targetScope"])
-        let nativeDesignReferences = string(nativeDesignIntent["references"])
-        let nativeDesignApprovalNotes = string(nativeDesignIntent["approvalNotes"])
-        let nativeDesignUpdatedAt = string(nativeDesignIntent["updatedAt"])
+        let appDesignIntent = snapshot["appDesignIntent"] as? [String: Any] ?? [:]
+        let appDesignGoal = string(appDesignIntent["goal"])
+        let appDesignMood = string(appDesignIntent["mood"])
+        let appDesignConstraints = string(appDesignIntent["constraints"])
+        let appDesignTargetScope = string(appDesignIntent["targetScope"])
+        let appDesignReferences = string(appDesignIntent["references"])
+        let appDesignApprovalNotes = string(appDesignIntent["approvalNotes"])
+        let appDesignUpdatedAt = string(appDesignIntent["updatedAt"])
 
         let briefSections = arrayOfStrings(latestBrief?["sections"])
         let proposalLines = arrayOfStrings(latestProposal?["proposalLines"])
@@ -157,31 +157,31 @@ struct LocalPendingWorkService: PendingWorkService {
             activeSequencePath: activeSequencePath.isEmpty ? "No active sequence path" : activeSequencePath,
             recentSequenceCount: recentSequences.count,
             audioPath: audioPath.isEmpty ? "No audio path selected" : audioPath,
-            briefSummary: string(latestBrief?["summary"], fallback: nativeDesignGoal.isEmpty ? "No creative brief available." : nativeDesignGoal),
-            briefGoalsSummary: string(latestBrief?["goalsSummary"], fallback: nativeDesignGoal.isEmpty ? "No explicit goals captured." : nativeDesignGoal),
-            briefInspirationSummary: string(latestBrief?["inspirationSummary"], fallback: nativeDesignReferences.isEmpty ? "No explicit inspiration captured." : nativeDesignReferences),
+            briefSummary: string(latestBrief?["summary"], fallback: appDesignGoal.isEmpty ? "No creative brief available." : appDesignGoal),
+            briefGoalsSummary: string(latestBrief?["goalsSummary"], fallback: appDesignGoal.isEmpty ? "No explicit goals captured." : appDesignGoal),
+            briefInspirationSummary: string(latestBrief?["inspirationSummary"], fallback: appDesignReferences.isEmpty ? "No explicit inspiration captured." : appDesignReferences),
             briefSections: briefSections,
-            moodEnergyArc: string(latestBrief?["moodEnergyArc"], fallback: nativeDesignMood.isEmpty ? "No mood/energy arc available." : nativeDesignMood),
-            narrativeCues: string(latestBrief?["narrativeCues"], fallback: nativeDesignApprovalNotes.isEmpty ? "No narrative cues available." : nativeDesignApprovalNotes),
-            visualCues: string(latestBrief?["visualCues"], fallback: nativeDesignReferences.isEmpty ? "No visual cues available." : nativeDesignReferences),
-            proposalSummary: string(latestProposal?["summary"], fallback: nativeDesignGoal.isEmpty ? "No proposal bundle available." : nativeDesignGoal),
+            moodEnergyArc: string(latestBrief?["moodEnergyArc"], fallback: appDesignMood.isEmpty ? "No mood/energy arc available." : appDesignMood),
+            narrativeCues: string(latestBrief?["narrativeCues"], fallback: appDesignApprovalNotes.isEmpty ? "No narrative cues available." : appDesignApprovalNotes),
+            visualCues: string(latestBrief?["visualCues"], fallback: appDesignReferences.isEmpty ? "No visual cues available." : appDesignReferences),
+            proposalSummary: string(latestProposal?["summary"], fallback: appDesignGoal.isEmpty ? "No proposal bundle available." : appDesignGoal),
             proposalLines: proposalLines,
             guidedQuestions: arrayOfStrings(latestProposal?["guidedQuestions"]),
             riskNotes: arrayOfStrings(latestProposal?["riskNotes"]),
             proposalLifecycleStatus: string(lifecycle?["status"], fallback: "unknown"),
             estimatedImpact: int(impact?["estimatedImpact"]),
             executionModeSummary: buildExecutionModeSummary(executionPlan: effectiveExecutionPlan),
-            constraintsSummary: buildConstraintsSummary(constraints: constraints, nativeFallback: nativeDesignConstraints),
-            intentGoal: string(latestIntent?["goal"], fallback: nativeDesignGoal.isEmpty ? "No intent handoff available." : nativeDesignGoal),
+            constraintsSummary: buildConstraintsSummary(constraints: constraints, appFallback: appDesignConstraints),
+            intentGoal: string(latestIntent?["goal"], fallback: appDesignGoal.isEmpty ? "No intent handoff available." : appDesignGoal),
             intentTargetIDs: intentTargets,
             intentSectionCount: (latestIntent?["scope"] as? [String: Any]).map { arrayOfStrings($0["sections"]).count } ?? 0,
-            nativeDesignGoal: nativeDesignGoal,
-            nativeDesignMood: nativeDesignMood,
-            nativeDesignConstraints: nativeDesignConstraints,
-            nativeDesignTargetScope: nativeDesignTargetScope,
-            nativeDesignReferences: nativeDesignReferences,
-            nativeDesignApprovalNotes: nativeDesignApprovalNotes,
-            nativeDesignUpdatedAt: nativeDesignUpdatedAt,
+            appDesignGoal: appDesignGoal,
+            appDesignMood: appDesignMood,
+            appDesignConstraints: appDesignConstraints,
+            appDesignTargetScope: appDesignTargetScope,
+            appDesignReferences: appDesignReferences,
+            appDesignApprovalNotes: appDesignApprovalNotes,
+            appDesignUpdatedAt: appDesignUpdatedAt,
             directorPreferenceSummary: buildDirectorPreferenceSummary(intentPreferences: directorPreferences, learnedPreferences: latestDirector?["preferences"] as? [String: Any]),
             directorSummary: string(latestDirector?["summary"], fallback: "No director profile available."),
             designSceneSummary: buildSceneSummary(metadata: metadata),
@@ -189,8 +189,8 @@ struct LocalPendingWorkService: PendingWorkService {
             layoutGroupCount: layoutGroupCount,
             musicSectionLabels: sectionArc,
             musicHoldMoments: holdMoments,
-            artifactTimestampSummary: timestamps.last ?? (nativeDesignUpdatedAt.isEmpty ? project.updatedAt : nativeDesignUpdatedAt),
-            translationSource: latestProposal == nil ? (nativeDesignGoal.isEmpty ? "Pending" : "Native Design Intent") : "Canonical Plan",
+            artifactTimestampSummary: timestamps.last ?? (appDesignUpdatedAt.isEmpty ? project.updatedAt : appDesignUpdatedAt),
+            translationSource: latestProposal == nil ? (appDesignGoal.isEmpty ? "Pending" : "App Design Intent") : "Canonical Plan",
             proposalSectionCount: effectiveSectionCount,
             proposalTargetCount: effectiveTargetCount,
             proposalCommandCount: effectiveCommandCount,
@@ -230,9 +230,9 @@ struct LocalPendingWorkService: PendingWorkService {
         return "\(mode), \(passScope), \(targetCount) targets, \(sectionCount) sections"
     }
 
-    private func buildConstraintsSummary(constraints: [String: Any]?, nativeFallback: String = "") -> String {
+    private func buildConstraintsSummary(constraints: [String: Any]?, appFallback: String = "") -> String {
         guard let constraints else {
-            let fallback = nativeFallback.trimmingCharacters(in: .whitespacesAndNewlines)
+            let fallback = appFallback.trimmingCharacters(in: .whitespacesAndNewlines)
             return fallback.isEmpty ? "No sequencing constraints recorded." : fallback
         }
         let tolerance = string(constraints["changeTolerance"], fallback: "unspecified")

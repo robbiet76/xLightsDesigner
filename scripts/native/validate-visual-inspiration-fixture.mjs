@@ -250,7 +250,7 @@ async function main() {
   const visual = snapshot?.pages?.design?.visualInspiration || {};
   if (!snapshot?.pages?.design || !('visualInspiration' in snapshot.pages.design)) {
     throw new Error(
-      'Native Design snapshot does not include visualInspiration. Relaunch the current xLightsDesigner native build before running this validation.'
+      'App Design snapshot does not include visualInspiration. Relaunch the current xLightsDesigner native build before running this validation.'
     );
   }
   assertEqual(visual.available, true, 'visualInspiration.available');

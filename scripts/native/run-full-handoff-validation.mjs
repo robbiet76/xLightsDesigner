@@ -374,7 +374,7 @@ function buildExtraValidationArgs(args, showDir, validation = {}) {
     if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
     return validationArgs;
   }
-  if (validation.type === 'nativeDesignChatSongGate') {
+  if (validation.type === 'appDesignChatSongGate') {
     const validationArgs = [
       'scripts/native/validate-design-chat-song-gate.mjs',
       '--native-url',

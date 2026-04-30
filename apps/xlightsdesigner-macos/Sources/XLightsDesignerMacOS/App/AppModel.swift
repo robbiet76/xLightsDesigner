@@ -274,8 +274,8 @@ final class AppModel {
             let summary = displayDiscoveryStore.summary(for: workspace.activeProject)
             return "\(summary.insights.count) insights, \(summary.unresolvedBranches.count) unresolved branches."
         case .design:
-            let nativeGoal = designScreenModel.intentDraft.goal.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !nativeGoal.isEmpty { return nativeGoal }
+            let appGoal = designScreenModel.intentDraft.goal.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !appGoal.isEmpty { return appGoal }
             let summary = designScreenModel.screenModel.proposal.proposalSummary.trimmingCharacters(in: .whitespacesAndNewlines)
             return summary.isEmpty ? "No design handoff summary yet." : summary
         case .sequencing:

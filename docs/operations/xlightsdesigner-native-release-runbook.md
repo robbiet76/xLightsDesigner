@@ -86,7 +86,7 @@ Required result:
 Use the native app to complete the smallest real workflow that exercises the current local app path:
 - open or create a project
 - confirm xLights session state
-- save native design intent
+- save app design intent
 - generate a sequence proposal
 - inspect Review preview
 - apply through the owned API

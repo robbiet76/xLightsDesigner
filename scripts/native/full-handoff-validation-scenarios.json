@@ -11,8 +11,8 @@
       "type": "nativeVisualInspirationFixture"
     },
     {
-      "name": "native-design-chat-song-gate",
-      "type": "nativeDesignChatSongGate"
+      "name": "app-design-chat-song-gate",
+      "type": "appDesignChatSongGate"
     },
     {
       "name": "native-review-explicit-edit-surface",

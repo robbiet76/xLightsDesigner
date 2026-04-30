@@ -50,7 +50,7 @@ private final class StubSequenceProposalService: SequenceProposalService, @unche
     var projectWithIntent = project
     projectWithIntent.snapshot["audioPathInput"] = AnyCodable("/tmp/show/song.mp3")
     projectWithIntent.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/Metadata Tag Proposal.xsq")
-    projectWithIntent.snapshot["nativeDesignIntent"] = AnyCodable([
+    projectWithIntent.snapshot["appDesignIntent"] = AnyCodable([
         "goal": "Make the chorus read through the lead display element."
     ])
     let workspace = ProjectWorkspace(sessionStore: SequenceTestProjectSessionStore())
@@ -95,7 +95,7 @@ private final class ProjectArtifactNotificationRecorder {
 }
 
 @MainActor
-@Test func sequenceGeneratesProposalFromNativeDesignIntent() async throws {
+@Test func sequenceGeneratesProposalFromAppDesignIntent() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-sequence-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     let projectService = LocalProjectService(projectsRootPath: root.path)
@@ -111,7 +111,7 @@ private final class ProjectArtifactNotificationRecorder {
     var projectWithIntent = project
     projectWithIntent.snapshot["audioPathInput"] = AnyCodable("/tmp/show/song.mp3")
     projectWithIntent.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/Native Test Project.xsq")
-    projectWithIntent.snapshot["nativeDesignIntent"] = AnyCodable([
+    projectWithIntent.snapshot["appDesignIntent"] = AnyCodable([
         "goal": "Make the chorus feel like a clean red and white canopy.",
         "mood": "Warm, crisp, elegant.",
         "constraints": "Keep dense sparkle off the singing faces.",
@@ -156,7 +156,7 @@ private final class ProjectArtifactNotificationRecorder {
     var projectWithIntent = project
     projectWithIntent.snapshot["audioPathInput"] = AnyCodable("/tmp/show/song.mp3")
     projectWithIntent.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/Artifact Notification.xsq")
-    projectWithIntent.snapshot["nativeDesignIntent"] = AnyCodable([
+    projectWithIntent.snapshot["appDesignIntent"] = AnyCodable([
         "goal": "Create a clean red and white chorus."
     ])
     let workspace = ProjectWorkspace(sessionStore: SequenceTestProjectSessionStore())
@@ -207,7 +207,7 @@ private final class ProjectArtifactNotificationRecorder {
         )
     )
     var projectWithIntent = project
-    projectWithIntent.snapshot["nativeDesignIntent"] = AnyCodable([
+    projectWithIntent.snapshot["appDesignIntent"] = AnyCodable([
         "goal": "Make the chorus feel like a clean red and white canopy."
     ])
     let workspace = ProjectWorkspace(sessionStore: SequenceTestProjectSessionStore())

@@ -67,7 +67,7 @@ final class DesignScreenViewModel {
         guard var activeProject = workspace.activeProject else { return }
         var draft = intentDraft
         draft.updatedAt = Self.isoNow()
-        activeProject.snapshot["nativeDesignIntent"] = AnyCodable(Self.snapshotPayload(from: draft))
+        activeProject.snapshot["appDesignIntent"] = AnyCodable(Self.snapshotPayload(from: draft))
         do {
             let saved = try projectService.saveProject(activeProject)
             workspace.setProject(saved)
@@ -304,7 +304,7 @@ final class DesignScreenViewModel {
                 identity: identity,
                 briefSummary: hasProject ? briefSummary : "No creative brief is active yet.",
                 proposalSummary: hasProject ? proposalSummary : "Proposal work remains unavailable until a project is active.",
-                readinessText: hasProject ? "Creative summary is available. Full native authoring remains a later slice." : "Blocked until project context exists."
+                readinessText: hasProject ? "Creative summary is available. Full app authoring remains a later slice." : "Blocked until project context exists."
             ),
             proposal: DesignProposalPaneModel(
                 briefTitle: "Brief",
@@ -318,8 +318,8 @@ final class DesignScreenViewModel {
                 title: "Design Intent",
                 summary: hasProject
                     ? (intentDraft.isEmpty
-                        ? "Capture native design direction before sequencing."
-                        : "Native design direction is stored with this project and can feed sequencing handoff.")
+                        ? "Capture app design direction before sequencing."
+                        : "App design direction is stored with this project and can feed sequencing handoff.")
                     : "Open or create a project before authoring design intent.",
                 canSave: hasProject && isDirty,
                 lastSavedSummary: intentDraft.updatedAt.isEmpty ? "Not saved yet." : "Last saved \(intentDraft.updatedAt)."
@@ -344,7 +344,7 @@ final class DesignScreenViewModel {
                 warnings: hasProject
                     ? (pendingWork?.riskNotes.isEmpty == false
                         ? Array((pendingWork?.riskNotes.prefix(4) ?? []).map { String($0) })
-                        : ["Full native design authoring and artifact editing are not part of this initial slice."])
+                        : ["Full app design authoring and artifact editing are not part of this initial slice."])
                     : ["No active project; downstream workflows will remain blocked."]
             ),
             banners: banners
@@ -352,7 +352,7 @@ final class DesignScreenViewModel {
     }
 
     private static func intentDraft(from project: ActiveProjectModel?) -> DesignIntentDraftModel {
-        let payload = project?.snapshot["nativeDesignIntent"]?.value as? [String: Any] ?? [:]
+        let payload = project?.snapshot["appDesignIntent"]?.value as? [String: Any] ?? [:]
         return DesignIntentDraftModel(
             goal: string(payload["goal"]),
             mood: string(payload["mood"]),

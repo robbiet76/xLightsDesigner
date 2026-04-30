@@ -207,13 +207,13 @@ function normalizePaletteRows(rows = []) {
     : [];
 }
 
-function fallbackLightingPaletteForNativeIntent(nativeDesignIntent = {}, snapshot = {}) {
+function fallbackLightingPaletteForAppIntent(appDesignIntent = {}, snapshot = {}) {
   const text = [
-    str(nativeDesignIntent?.goal),
-    str(nativeDesignIntent?.mood),
-    str(nativeDesignIntent?.targetScope),
-    str(nativeDesignIntent?.constraints),
-    str(nativeDesignIntent?.references)
+    str(appDesignIntent?.goal),
+    str(appDesignIntent?.mood),
+    str(appDesignIntent?.targetScope),
+    str(appDesignIntent?.constraints),
+    str(appDesignIntent?.references)
   ].join(' ').toLowerCase();
   if (/\b(christmas|holiday|warm|gold|candle|pine|red|green)\b/.test(text)) {
     return [
@@ -233,11 +233,11 @@ function fallbackLightingPaletteForNativeIntent(nativeDesignIntent = {}, snapsho
       ];
 }
 
-function resolveNativeDesignPaletteRows({ nativeDesignIntent = {}, snapshot = {} } = {}) {
+function resolveAppDesignPaletteRows({ appDesignIntent = {}, snapshot = {} } = {}) {
   const candidates = [
-    nativeDesignIntent?.lightingPalette,
-    nativeDesignIntent?.palette,
-    nativeDesignIntent?.paletteRoles,
+    appDesignIntent?.lightingPalette,
+    appDesignIntent?.palette,
+    appDesignIntent?.paletteRoles,
     snapshot?.visualDesignAssetPack?.palette?.lightingColors,
     snapshot?.visualDesignAssetPack?.palette?.colors,
     snapshot?.inspiration?.paletteSwatches
@@ -246,7 +246,7 @@ function resolveNativeDesignPaletteRows({ nativeDesignIntent = {}, snapshot = {}
     const normalized = normalizePaletteRows(rows);
     if (normalized.length) return normalized;
   }
-  return fallbackLightingPaletteForNativeIntent(nativeDesignIntent, snapshot);
+  return fallbackLightingPaletteForAppIntent(appDesignIntent, snapshot);
 }
 
 function buildSectionDirectivesFromExecutionPlan(executionPlan = {}) {
@@ -336,8 +336,8 @@ function buildNativeSequencingDesignHandoff({
   baseRevision = ''
 } = {}) {
   const snapshot = projectDoc?.snapshot && typeof projectDoc.snapshot === 'object' ? projectDoc.snapshot : {};
-  const nativeDesignIntent = snapshot?.nativeDesignIntent && typeof snapshot.nativeDesignIntent === 'object'
-    ? snapshot.nativeDesignIntent
+  const appDesignIntent = snapshot?.appDesignIntent && typeof snapshot.appDesignIntent === 'object'
+    ? snapshot.appDesignIntent
     : {};
   const executionPlan = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === 'object' ? proposalBundle.executionPlan : {};
   const scope = proposalBundle?.scope && typeof proposalBundle.scope === 'object'
@@ -346,24 +346,24 @@ function buildNativeSequencingDesignHandoff({
   const targetIds = normalizeArray(scope?.targetIds);
   const tagNames = normalizeArray(scope?.tagNames);
   const sections = normalizeArray(scope?.sections);
-  const goal = str(nativeDesignIntent?.goal || proposalBundle?.summary || intentHandoff?.goal || prompt);
+  const goal = str(appDesignIntent?.goal || proposalBundle?.summary || intentHandoff?.goal || prompt);
   const designSummary = [
     goal,
-    str(nativeDesignIntent?.mood),
-    str(nativeDesignIntent?.targetScope)
+    str(appDesignIntent?.mood),
+    str(appDesignIntent?.targetScope)
   ].filter(Boolean).join(' | ');
   const assignments = buildPropRoleAssignments(metadataAssignments, targetIds);
   const leadTargets = assignments.filter((row) => row.role === 'lead').map((row) => row.targetId);
   const supportTargets = assignments.filter((row) => row.role !== 'lead' && row.role !== 'accent').map((row) => row.targetId);
   const accentTargets = assignments.filter((row) => row.role === 'accent').map((row) => row.targetId);
-  const paletteRoles = resolveNativeDesignPaletteRows({ nativeDesignIntent, snapshot });
+  const paletteRoles = resolveAppDesignPaletteRows({ appDesignIntent, snapshot });
 
   return finalizeArtifact({
     artifactType: 'sequencing_design_handoff_v2',
     artifactVersion: '2.0',
     contractVersion: '2.0',
     agentRole: 'designer_dialog',
-    requestId: str(requestId) || `native-design-${Date.now()}`,
+    requestId: str(requestId) || `app-design-${Date.now()}`,
     baseRevision: str(baseRevision || intentHandoff?.baseRevision || 'unknown'),
     goal,
     designSummary,
@@ -398,19 +398,19 @@ function buildNativeSequencingDesignHandoff({
     avoidances: metadataAssignments.flatMap((row) => normalizeArray(row?.effectAvoidances)),
     executionLatitude: 'moderate',
     traceability: {
-      briefId: str(nativeDesignIntent?.artifactId || nativeDesignIntent?.updatedAt),
+      briefId: str(appDesignIntent?.artifactId || appDesignIntent?.updatedAt),
       proposalId: str(proposalBundle?.artifactId),
       directorProfileSignals: [],
-      designSceneSignals: normalizeArray(nativeDesignIntent?.targetScope),
-      musicDesignSignals: normalizeArray(nativeDesignIntent?.references)
+      designSceneSignals: normalizeArray(appDesignIntent?.targetScope),
+      musicDesignSignals: normalizeArray(appDesignIntent?.references)
     },
-    nativeDesignIntent: {
-      mood: str(nativeDesignIntent?.mood),
-      targetScope: str(nativeDesignIntent?.targetScope),
-      constraints: str(nativeDesignIntent?.constraints),
-      references: str(nativeDesignIntent?.references),
-      approvalNotes: str(nativeDesignIntent?.approvalNotes),
-      updatedAt: str(nativeDesignIntent?.updatedAt)
+    appDesignIntent: {
+      mood: str(appDesignIntent?.mood),
+      targetScope: str(appDesignIntent?.targetScope),
+      constraints: str(appDesignIntent?.constraints),
+      references: str(appDesignIntent?.references),
+      approvalNotes: str(appDesignIntent?.approvalNotes),
+      updatedAt: str(appDesignIntent?.updatedAt)
     }
   });
 }
@@ -494,7 +494,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
   const referenceSequencePatterns = loadLatestReferenceSequencePatterns(args.projectFile);
 
   const orchestration = deps.executeDirectSequenceRequestOrchestration({
-    requestId: `native-benchmark-${Date.now()}`,
+    requestId: `app-benchmark-${Date.now()}`,
     sequenceRevision: str(revision?.data?.revision || snapshot.sequencePathInput || 'unknown'),
     promptText: args.prompt,
     selectedSections: args.selectedSections,
@@ -522,7 +522,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
     intentHandoff: orchestration.intentHandoff,
     metadataAssignments,
     referenceSequencePatterns,
-    requestId: `native-benchmark-${Date.now()}`,
+    requestId: `app-benchmark-${Date.now()}`,
     baseRevision: str(revision?.data?.revision || snapshot.sequencePathInput || 'unknown')
   });
   const intentHandoff = finalizeArtifact({

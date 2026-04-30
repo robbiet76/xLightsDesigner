@@ -128,13 +128,13 @@ private func reviewPendingWork(
         intentGoal: "Make the chorus lift.",
         intentTargetIDs: ["Mega Tree", "Roofline"],
         intentSectionCount: 1,
-        nativeDesignGoal: "Make the chorus lift.",
-        nativeDesignMood: "Warm, crisp, elegant.",
-        nativeDesignConstraints: "Preserve singing faces.",
-        nativeDesignTargetScope: "Mega tree and roofline.",
-        nativeDesignReferences: "Neighborhood mission.",
-        nativeDesignApprovalNotes: "Ready to apply.",
-        nativeDesignUpdatedAt: "2026-04-23T00:00:00Z",
+        appDesignGoal: "Make the chorus lift.",
+        appDesignMood: "Warm, crisp, elegant.",
+        appDesignConstraints: "Preserve singing faces.",
+        appDesignTargetScope: "Mega tree and roofline.",
+        appDesignReferences: "Neighborhood mission.",
+        appDesignApprovalNotes: "Ready to apply.",
+        appDesignUpdatedAt: "2026-04-23T00:00:00Z",
         directorPreferenceSummary: "Focus bias toward Mega Tree, Roofline",
         directorSummary: "No director profile available.",
         designSceneSummary: "2 models, 0 groups, 0 submodels, 2D scene",
@@ -316,7 +316,7 @@ private func reviewPendingWork(
     let model = ReviewScreenViewModel(
         workspace: workspace,
         pendingWorkService: StubReviewPendingWorkService(
-            pendingWork: reviewPendingWork(translationSource: "Native Design Intent", proposalCommandCount: 0)
+            pendingWork: reviewPendingWork(translationSource: "App Design Intent", proposalCommandCount: 0)
         ),
         reviewExecutionService: StubReviewExecutionService { _, _, _ in
             Issue.record("applyPendingWork should not be called without a canonical proposal")

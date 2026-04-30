@@ -185,8 +185,8 @@ final class SequenceScreenViewModel {
         let acceptedAt = ISO8601DateFormatter().string(from: Date())
         var userFinal = (record["userFinal"] as? [String: Any]) ?? [:]
         userFinal["acceptedAt"] = acceptedAt
-        userFinal["reviewer"] = "native_app"
-        userFinal["reviewNote"] = "Accepted from native Sequence screen."
+        userFinal["reviewer"] = "xlightsdesigner_app"
+        userFinal["reviewNote"] = "Accepted from the Sequence screen."
         if let source = record["source"] as? [String: Any] {
             userFinal["marks"] = source["marks"]
             userFinal["capturedAt"] = acceptedAt
@@ -231,7 +231,7 @@ final class SequenceScreenViewModel {
             )
             return
         }
-        let prompt = Self.buildNativeDesignPrompt(project: activeProject, pendingWork: pendingWork)
+        let prompt = Self.buildAppDesignPrompt(project: activeProject, pendingWork: pendingWork)
         guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             transientBanner = WorkflowBannerModel(
                 id: "sequence-proposal-no-intent",
@@ -243,7 +243,7 @@ final class SequenceScreenViewModel {
         isGeneratingProposal = true
         transientBanner = WorkflowBannerModel(
             id: "sequence-proposal-running",
-            text: "Generating sequencing proposal from native design intent.",
+            text: "Generating sequencing proposal from app design intent.",
             state: .partial
         )
         Task {
@@ -350,14 +350,14 @@ final class SequenceScreenViewModel {
         )
     }
 
-    private static func buildNativeDesignPrompt(project: ActiveProjectModel, pendingWork: PendingWorkReadModel?) -> String {
-        let intent = project.snapshot["nativeDesignIntent"]?.value as? [String: Any] ?? [:]
-        let goal = string(intent["goal"], fallback: pendingWork?.nativeDesignGoal ?? "")
-        let mood = string(intent["mood"], fallback: pendingWork?.nativeDesignMood ?? "")
-        let targetScope = string(intent["targetScope"], fallback: pendingWork?.nativeDesignTargetScope ?? "")
-        let constraints = string(intent["constraints"], fallback: pendingWork?.nativeDesignConstraints ?? "")
-        let references = string(intent["references"], fallback: pendingWork?.nativeDesignReferences ?? "")
-        let approvalNotes = string(intent["approvalNotes"], fallback: pendingWork?.nativeDesignApprovalNotes ?? "")
+    private static func buildAppDesignPrompt(project: ActiveProjectModel, pendingWork: PendingWorkReadModel?) -> String {
+        let intent = project.snapshot["appDesignIntent"]?.value as? [String: Any] ?? [:]
+        let goal = string(intent["goal"], fallback: pendingWork?.appDesignGoal ?? "")
+        let mood = string(intent["mood"], fallback: pendingWork?.appDesignMood ?? "")
+        let targetScope = string(intent["targetScope"], fallback: pendingWork?.appDesignTargetScope ?? "")
+        let constraints = string(intent["constraints"], fallback: pendingWork?.appDesignConstraints ?? "")
+        let references = string(intent["references"], fallback: pendingWork?.appDesignReferences ?? "")
+        let approvalNotes = string(intent["approvalNotes"], fallback: pendingWork?.appDesignApprovalNotes ?? "")
         let lines = [
             goal.isEmpty ? "" : "Goal: \(goal)",
             mood.isEmpty ? "" : "Mood and style: \(mood)",
@@ -401,8 +401,8 @@ final class SequenceScreenViewModel {
             timingSummary = "No timing substrate available."
         }
         let sceneFootprint = pendingWork.map { "\($0.layoutModelCount) models, \($0.layoutGroupCount) groups." } ?? "No scene footprint available."
-        let nativeTargetScope = pendingWork?.nativeDesignTargetScope.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let nativeTargetScopeSummary = nativeTargetScope.isEmpty ? "No native target scope saved." : nativeTargetScope
+        let appTargetScope = pendingWork?.appDesignTargetScope.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let appTargetScopeSummary = appTargetScope.isEmpty ? "No app target scope saved." : appTargetScope
         let warnings = session.validationIssues.filter { $0.severity != .blocked }.map(\.message)
         let blockers = session.validationIssues.filter { $0.severity == .blocked }.map(\.message)
 
@@ -442,12 +442,12 @@ final class SequenceScreenViewModel {
                 readinessSummary: session.readinessSummary,
                 blockers: hasProject ? blockers : ["Active project required."],
                 warnings: hasProject ? warnings : ["Sequence workflow remains informational without project context."],
-                handoffSummary: pendingWork?.intentGoal ?? pendingWork?.nativeDesignGoal ?? "Sequence handoff is unavailable."
+                handoffSummary: pendingWork?.intentGoal ?? pendingWork?.appDesignGoal ?? "Sequence handoff is unavailable."
             ),
             detail: SequenceDetailPaneModel(
                 revisionSummary: hasProject ? "Project snapshot currently anchors \(pendingWork?.artifactTimestampSummary ?? project?.updatedAt ?? "unknown revision time")." : "No revision available.",
                 settingsSummary: hasProject ? "Source: \(pendingWork?.translationSource ?? "Pending"). Commands: \(pendingWork?.proposalCommandCount ?? 0). \(projectSequenceSummary)" : "No settings summary.",
-                bindingSummary: hasProject ? "\(targetSummary)\n\nNative design scope: \(nativeTargetScopeSummary)\n\nConstraints: \(pendingWork?.constraintsSummary ?? "No sequencing constraints recorded.")" : "No binding available.",
+                bindingSummary: hasProject ? "\(targetSummary)\n\nApp design scope: \(appTargetScopeSummary)\n\nConstraints: \(pendingWork?.constraintsSummary ?? "No sequencing constraints recorded.")" : "No binding available.",
                 materializationSummary: hasProject ? "Timing dependency: \(session.timingDependencySummary)\n\nExecution: \(pendingWork?.executionModeSummary ?? "No execution plan available.")" : "No materialization summary.",
                 technicalWarnings: hasProject
                     ? (["Scene footprint: \(sceneFootprint)"] + session.technicalWarnings)

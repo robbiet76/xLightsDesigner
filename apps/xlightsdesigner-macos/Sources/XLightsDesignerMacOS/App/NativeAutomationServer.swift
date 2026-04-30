@@ -813,7 +813,7 @@ final class NativeAutomationServer: @unchecked Sendable {
                     ]
                 }
             ],
-            "nativeDesignIntent": [
+            "appDesignIntent": [
                 "goal": model.designScreenModel.intentDraft.goal,
                 "mood": model.designScreenModel.intentDraft.mood,
                 "constraints": model.designScreenModel.intentDraft.constraints,

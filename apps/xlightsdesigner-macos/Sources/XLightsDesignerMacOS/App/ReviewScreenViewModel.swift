@@ -220,10 +220,10 @@ final class ReviewScreenViewModel {
         let hasRestorePoint = !lastAppliedSequencePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !lastSequenceBackupPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
-        let nativeDesignHighlights = [
-            pendingWork?.nativeDesignMood,
-            pendingWork?.nativeDesignTargetScope,
-            pendingWork?.nativeDesignConstraints
+        let appDesignHighlights = [
+            pendingWork?.appDesignMood,
+            pendingWork?.appDesignTargetScope,
+            pendingWork?.appDesignConstraints
         ].compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         let designHighlights = (pendingWork?.proposalLines.prefix(3).map { String($0) } ?? [])
         let sequenceHighlights: [String] = hasProject
@@ -253,9 +253,9 @@ final class ReviewScreenViewModel {
                 summary: hasProject ? (pendingWork?.briefSummary ?? "No design summary available.") : "No design summary available.",
                 highlights: hasProject
                     ? (designHighlights.isEmpty
-                        ? (nativeDesignHighlights.isEmpty
+                        ? (appDesignHighlights.isEmpty
                             ? [pendingWork?.moodEnergyArc ?? "Meaning-first direction", pendingWork?.narrativeCues ?? "Proposal remains reviewable", pendingWork?.visualCues ?? "Warnings stay concise"]
-                            : nativeDesignHighlights)
+                            : appDesignHighlights)
                         : Array(designHighlights))
                     : ["Project required"]
             ),
