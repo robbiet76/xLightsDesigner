@@ -3,7 +3,7 @@
 Status: Active
 Date: 2026-03-12
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-04-15
+Last Reviewed: 2026-04-30
 
 Active specifications for `sequence_agent`, xLights control, render-training, and sequencing quality architecture.
 
@@ -38,44 +38,13 @@ These are the current operating specs for sequencing work.
 - [revision-feedback-v1-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/revision-feedback-v1-2026-04-22.md)
 - [visual-behavior-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/visual-behavior-v1-2026-04-15.md)
 - [translation-intent-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/translation-intent-v1-2026-04-15.md)
-- [render-visualizer-gap-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-visualizer-gap-audit-2026-04-17.md)
-- [mature-sequence-render-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/mature-sequence-render-audit-2026-04-17.md)
-- [mature-sequence-calibration-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/mature-sequence-calibration-2026-04-22.md)
-- [production-layering-inventory-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/production-layering-inventory-2026-04-22.md)
-- [production-layering-calibration-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/production-layering-calibration-2026-04-22.md)
-- [xlights-api-release-readiness-audit-2026-04-23.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/xlights-api-release-readiness-audit-2026-04-23.md)
-- [mature-sequence-window-plan-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/mature-sequence-window-plan-v1-2026-04-17.md)
-- [composition-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/composition-observation-v1-2026-04-17.md)
-- [layering-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-observation-v1-2026-04-17.md)
-- [progression-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/progression-observation-v1-2026-04-17.md)
-- [layering-placement-groups-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-placement-groups-v1-2026-04-17.md)
-- [layering-proof-plan-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-proof-plan-v1-2026-04-17.md)
-- [layering-group-evidence-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-group-evidence-v1-2026-04-17.md)
-- [layering-render-proof-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-render-proof-v1-2026-04-17.md)
-- [xlights-layering-render-order-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-layering-render-order-audit-2026-04-17.md)
-- [offline-preview-scene-geometry-export-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/offline-preview-scene-geometry-export-v1-2026-04-17.md)
-- [sequencing-bias-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-bias-audit-2026-04-15.md)
-- [sequencer-training-reset-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md)
-- [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
-- [sequencer-training-records-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md)
-- [sequencer-training-regeneration-inventory-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-regeneration-inventory-2026-04-15.md)
-- [effect-setting-interaction-training-harness-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-setting-interaction-training-harness-v1-2026-04-15.md)
-- [sequencer-training-unattended-batch-harness-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-unattended-batch-harness-v1-2026-04-15.md)
-- [effect-training-reference-file-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-training-reference-file-v1-2026-04-15.md)
-- [sequencer-validation-matrix-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-validation-matrix-2026-04-15.md)
-- [sequencer-validation-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-validation-audit-2026-04-15.md)
-- [sequencer-control-quality-refactor-plan-2026-04-27.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-control-quality-refactor-plan-2026-04-27.md)
-- [xlights-2026-06-api-migration-plan-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md)
-- [xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md)
-- [xlights-2026-06-api-compatibility-matrix-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md)
-- [xlights-2026-06-owned-api-implementation-plan-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-owned-api-implementation-plan-2026-04-16.md)
 - [sequencer-phase3-roadmap-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-phase3-roadmap-2026-04-13.md)
-- [sequencer-unified-training-set-v1-2026-04-14.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-unified-training-set-v1-2026-04-14.md)
 
 ## Supporting Active Specs
 
 These remain active, but they are supporting material rather than the first entry point.
 
+- [sequencer-control-quality-refactor-plan-2026-04-27.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-control-quality-refactor-plan-2026-04-27.md)
 - [preview-scene-geometry-api-gap-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/preview-scene-geometry-api-gap-2026-04-13.md)
 - [sequence-session-and-live-validation-refactor-plan-2026-04-05.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-session-and-live-validation-refactor-plan-2026-04-05.md)
 - [sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md)
@@ -85,9 +54,25 @@ These remain active, but they are supporting material rather than the first entr
 - [effect-knowledge-architecture-audit-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-knowledge-architecture-audit-2026-03-22.md)
 - [effect-training-audit-2026-04-14.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-training-audit-2026-04-14.md)
 - [effect-capability-and-parameter-semantics-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md)
+- [composition-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/composition-observation-v1-2026-04-17.md)
+- [layering-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-observation-v1-2026-04-17.md)
+- [progression-observation-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/progression-observation-v1-2026-04-17.md)
+- [layering-placement-groups-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-placement-groups-v1-2026-04-17.md)
+- [layering-proof-plan-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-proof-plan-v1-2026-04-17.md)
+- [layering-group-evidence-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-group-evidence-v1-2026-04-17.md)
+- [layering-render-proof-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layering-render-proof-v1-2026-04-17.md)
+- [offline-preview-scene-geometry-export-v1-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/offline-preview-scene-geometry-export-v1-2026-04-17.md)
 - [model-metadata-ownership-and-tagging-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-ownership-and-tagging-2026-03-22.md)
 - [model-metadata-record-contract-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-record-contract-2026-03-22.md)
 - [sequencer-proof-loop-checklist-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-proof-loop-checklist-2026-04-13.md)
+- [sequencer-training-records-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md)
+- [sequencer-training-regeneration-inventory-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-regeneration-inventory-2026-04-15.md)
+- [effect-setting-interaction-training-harness-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-setting-interaction-training-harness-v1-2026-04-15.md)
+- [sequencer-training-unattended-batch-harness-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-unattended-batch-harness-v1-2026-04-15.md)
+- [effect-training-reference-file-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-training-reference-file-v1-2026-04-15.md)
+- [sequencer-validation-matrix-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-validation-matrix-2026-04-15.md)
+- [sequencer-validation-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-validation-audit-2026-04-15.md)
+- [sequencer-unified-training-set-v1-2026-04-14.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-unified-training-set-v1-2026-04-14.md)
 
 ## Foundational Control Contracts
 
@@ -97,6 +82,26 @@ These are the current control-surface and migration references for active sequen
 - [xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md)
 - [xlights-2026-06-api-compatibility-matrix-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md)
 - [xlights-2026-06-owned-api-implementation-plan-2026-04-16.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-06-owned-api-implementation-plan-2026-04-16.md)
+- [xlights-2026-07-release-api-impact-audit-2026-04-29.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-2026-07-release-api-impact-audit-2026-04-29.md)
+
+## Training Evidence And Dated Readouts
+
+These documents are evidence for the active training baseline, not independent current plans. Update `training-knowledge-baseline-2026-04-30.md` when their durable findings change.
+
+- [effects-usage-render-training-results-2026-04-28.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effects-usage-render-training-results-2026-04-28.md)
+- [layer-composition-overnight-results-2026-04-29.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/layer-composition-overnight-results-2026-04-29.md)
+- [effects-usage-render-training-overnight-plan-2026-04-27.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effects-usage-render-training-overnight-plan-2026-04-27.md)
+- [unattended-layer-composition-training-loop-2026-04-28.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/unattended-layer-composition-training-loop-2026-04-28.md)
+- [full-sequence-creation-benchmark-2026-04-27.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/full-sequence-creation-benchmark-2026-04-27.md)
+- [timing-track-section-scope-audit-2026-04-24.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/timing-track-section-scope-audit-2026-04-24.md)
+- [render-visualizer-gap-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-visualizer-gap-audit-2026-04-17.md)
+- [mature-sequence-render-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/mature-sequence-render-audit-2026-04-17.md)
+- [sequencing-bias-audit-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-bias-audit-2026-04-15.md)
+- [xlights-layering-render-order-audit-2026-04-17.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-layering-render-order-audit-2026-04-17.md)
+- [mature-sequence-calibration-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/mature-sequence-calibration-2026-04-22.md)
+- [production-layering-inventory-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/production-layering-inventory-2026-04-22.md)
+- [production-layering-calibration-2026-04-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/production-layering-calibration-2026-04-22.md)
+- [xlights-api-release-readiness-audit-2026-04-23.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/reports/xlights-api-release-readiness-audit-2026-04-23.md)
 
 ## Reference / Older Planning
 

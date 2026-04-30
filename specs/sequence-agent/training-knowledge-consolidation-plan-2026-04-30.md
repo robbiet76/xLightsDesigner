@@ -152,7 +152,7 @@ Raw evidence should not be treated as the primary knowledge layer once a run has
 3. Audit generated bundle exports for metadata/provenance coverage. **Done for current runtime bundles.**
 4. Add or update generator output metadata where missing. **Started:** derived parameter priors, cross-effect shared settings, behavior capability records, and layer-composition priors now emit explicit provenance metadata.
 5. Define which catalog files are curated source inputs and which are intermediate/generated. **Done:** `scripts/sequencer-render-training/catalog/knowledge-inventory.v1.json` classifies the catalog and `validate-training-catalog-inventory.mjs` enforces coverage.
-6. Move stale dated training plans/readouts to supporting or archive status once their durable findings are in the baseline.
+6. Move stale dated training plans/readouts to supporting or archive status once their durable findings are in the baseline. **Started:** `specs/sequence-agent/README.md` now separates canonical entry points from training evidence and dated readouts.
 7. Only then expand the next training run curriculum.
 
 ## Cleanup Progress
@@ -177,6 +177,15 @@ Implemented concrete catalog classification cleanup:
 - added a validator that requires every catalog file to be classified exactly once
 - added regression coverage for the catalog inventory
 - updated render-training docs to make the inventory and validator discoverable
+
+### 2026-04-30 Sequence-Agent Spec Index Slice
+
+Implemented concrete spec-index cleanup:
+
+- reduced the sequence-agent canonical entry-point list to current operating contracts
+- moved dated training run reports and audits into a Training Evidence section
+- kept supporting contracts available without presenting them as the first path into current work
+- updated the sequence-agent README review date to reflect the cleanup pass
 
 ## Baseline Questions To Answer
 
