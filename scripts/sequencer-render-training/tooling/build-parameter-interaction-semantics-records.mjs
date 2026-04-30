@@ -1,10 +1,10 @@
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { writeGeneratedRecordOutput } from "./generated-record-catalog.mjs";
 function str(value = "") { return String(value || "").trim(); }
 function slug(value = "") { return str(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
-const outputDir = process.argv[2] ? resolve(process.argv[2]) : resolve("scripts/sequencer-render-training/catalog/generated-records/parameter-interaction-semantics-records");
+const outputPath = process.argv[2] ? resolve(process.argv[2]) : resolve("scripts/sequencer-render-training/catalog/generated-record-packs/parameter-interaction-semantics-records.records.jsonl");
 const manifestsDir = resolve(process.argv[3] || "scripts/sequencer-render-training/manifests");
-mkdirSync(outputDir, { recursive: true });
 const files = readdirSync(manifestsDir).filter((name) => name.endsWith("-interactions-v1.json")).sort((a,b)=>a.localeCompare(b));
 const records = [];
 for (const name of files) {
@@ -57,6 +57,9 @@ for (const name of files) {
     });
   }
 }
-for (const record of records) writeFileSync(join(outputDir, `${record.recordId}.json`), `${JSON.stringify(record, null, 2)}\n`, "utf8");
-writeFileSync(join(outputDir, `index.json`), `${JSON.stringify({ artifactType: "parameter_interaction_semantics_record_index_v1", artifactVersion: "1.0", generatedAt: new Date().toISOString(), recordCount: records.length }, null, 2)}\n`, "utf8");
-console.log(JSON.stringify({ ok: true, artifactType: "parameter_interaction_semantics_record_index_v1", outputDir, recordCount: records.length }, null, 2));
+writeGeneratedRecordOutput({
+  outputPath,
+  records,
+  indexArtifactType: "parameter_interaction_semantics_record_index_v1"
+});
+console.log(JSON.stringify({ ok: true, artifactType: "parameter_interaction_semantics_record_index_v1", outputPath, recordCount: records.length }, null, 2));

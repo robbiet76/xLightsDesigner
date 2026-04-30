@@ -188,6 +188,16 @@ Implemented substantial catalog file-count reduction:
 - updated training runners and harvest defaults away from the removed loose-record catalog path
 - reduced promoted screening evidence from 2,446 loose JSON files and roughly 2.7 GB to 18 pack files plus an index at roughly 7.5 MB
 
+### 2026-04-30 Generated Semantic Record Packing Slice
+
+Implemented the second catalog file-count reduction:
+
+- replaced `catalog/generated-records/` loose semantic records with compact JSONL packs in `catalog/generated-record-packs/`
+- packed behavior capability, parameter semantics, shared-setting semantics, and parameter-interaction semantics into four files
+- kept generators compatible with loose output directories for tests and ad hoc review, while making packed catalog output the default
+- added shared generated-record catalog loading support so exporters can read either packed or loose generated records
+- reduced the durable catalog from 1,534 files to 42 files after the promoted evidence packing slice
+
 ### 2026-04-30 Sequence-Agent Spec Index Slice
 
 Implemented concrete spec-index cleanup:

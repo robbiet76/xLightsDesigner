@@ -1,20 +1,19 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { writeGeneratedRecordOutput } from "./generated-record-catalog.mjs";
 
 function str(value = "") { return String(value || "").trim(); }
 function slug(value = "") { return str(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
 
-const outputDir = process.argv[2]
+const outputPath = process.argv[2]
   ? resolve(process.argv[2])
-  : resolve("scripts/sequencer-render-training/catalog/generated-records/behavior-capability-records");
+  : resolve("scripts/sequencer-render-training/catalog/generated-record-packs/behavior-capability-records.records.jsonl");
 const unifiedPath = process.argv[3]
   ? resolve(process.argv[3])
   : resolve("scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json");
 
 const unified = JSON.parse(readFileSync(unifiedPath, "utf8"));
 const effects = Array.isArray(unified?.effects) ? unified.effects : [];
-mkdirSync(outputDir, { recursive: true });
-
 const records = [];
 for (const effect of effects) {
   const effectName = str(effect.effectName);
@@ -133,15 +132,10 @@ for (const effect of effects) {
   }
 }
 
-for (const record of records) {
-  writeFileSync(join(outputDir, `${record.recordId}.json`), `${JSON.stringify(record, null, 2)}\n`, "utf8");
-}
+writeGeneratedRecordOutput({
+  outputPath,
+  records,
+  indexArtifactType: "behavior_capability_record_index_v1"
+});
 
-writeFileSync(join(outputDir, `index.json`), `${JSON.stringify({
-  artifactType: "behavior_capability_record_index_v1",
-  artifactVersion: "1.0",
-  generatedAt: new Date().toISOString(),
-  recordCount: records.length
-}, null, 2)}\n`, "utf8");
-
-console.log(JSON.stringify({ ok: true, artifactType: "behavior_capability_record_index_v1", outputDir, recordCount: records.length }, null, 2));
+console.log(JSON.stringify({ ok: true, artifactType: "behavior_capability_record_index_v1", outputPath, recordCount: records.length }, null, 2));

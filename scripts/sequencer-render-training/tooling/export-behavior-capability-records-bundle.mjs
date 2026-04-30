@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { writeFileSync } from "node:fs";
+import { relative, resolve } from "node:path";
+import { loadGeneratedRecordCatalog } from "./generated-record-catalog.mjs";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -8,17 +9,14 @@ function str(value = "") {
 
 const inputDir = process.argv[2]
   ? resolve(process.argv[2])
-  : resolve("scripts/sequencer-render-training/catalog/generated-records/behavior-capability-records");
+  : resolve("scripts/sequencer-render-training/catalog/generated-record-packs/behavior-capability-records.records.jsonl");
 const outputPath = process.argv[3]
   ? resolve(process.argv[3])
   : resolve("apps/xlightsdesigner-ui/agent/sequence-agent/generated/behavior-capability-records-bundle.js");
 
-const files = readdirSync(inputDir)
-  .filter((fileName) => fileName.endsWith(".json") && fileName !== "index.json")
-  .sort((a, b) => a.localeCompare(b));
-
-const records = files.map((fileName) => {
-  const record = JSON.parse(readFileSync(join(inputDir, fileName), "utf8"));
+const records = loadGeneratedRecordCatalog(inputDir, { artifactType: "behavior_capability_record_v1" })
+  .sort((a, b) => str(a.recordId).localeCompare(str(b.recordId)))
+  .map((record) => {
   return {
     recordId: str(record.recordId),
     effectName: str(record.effectName),

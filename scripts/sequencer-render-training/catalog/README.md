@@ -42,6 +42,14 @@ Promoted effect-screening records are stored as compact JSONL packs in:
 
 The old one-file-per-record layout was intentionally removed because it created thousands of files and retained raw frame payloads that are not needed for durable learning. Use `pack-effect-screening-records.mjs` to rebuild the packs from loose records or mixed pack/staging inputs.
 
+## Generated Semantic Records
+
+Generated semantic records are stored as compact JSONL packs in:
+
+- `generated-record-packs/`
+
+The record generators can still write loose per-record directories when an output directory is passed for inspection or tests, but their default catalog output is packed. Use `generated-record-catalog.mjs` for tooling that needs to read either layout.
+
 ## Generated Reports
 
 Effect-training dossiers are no longer checked into the catalog. Generate them on demand with `build-effect-training-dossiers.mjs` into a run artifact directory when a detailed per-effect review is needed.

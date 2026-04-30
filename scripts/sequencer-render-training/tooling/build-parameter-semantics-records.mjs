@@ -1,5 +1,6 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { writeGeneratedRecordOutput } from "./generated-record-catalog.mjs";
 function str(value = "") { return String(value || "").trim(); }
 function slug(value = "") { return str(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
 function inferAxis(name = "") {
@@ -32,10 +33,9 @@ function upstreamSummary(meta = {}) {
   };
 }
 
-const outputDir = process.argv[2] ? resolve(process.argv[2]) : resolve("scripts/sequencer-render-training/catalog/generated-records/parameter-semantics-records");
+const outputPath = process.argv[2] ? resolve(process.argv[2]) : resolve("scripts/sequencer-render-training/catalog/generated-record-packs/parameter-semantics-records.records.jsonl");
 const unified = JSON.parse(readFileSync(resolve(process.argv[3] || "scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json"), "utf8"));
 const registry = JSON.parse(readFileSync(resolve(process.argv[4] || "scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json"), "utf8"));
-mkdirSync(outputDir, { recursive: true });
 const effects = Array.isArray(unified?.effects) ? unified.effects : [];
 const records = [];
 for (const effect of effects) {
@@ -81,8 +81,11 @@ for (const effect of effects) {
       }
     };
     records.push(record);
-    writeFileSync(join(outputDir, `${record.recordId}.json`), `${JSON.stringify(record, null, 2)}\n`, "utf8");
   }
 }
-writeFileSync(join(outputDir, `index.json`), `${JSON.stringify({ artifactType: "parameter_semantics_record_index_v1", artifactVersion: "1.0", generatedAt: new Date().toISOString(), recordCount: records.length }, null, 2)}\n`, "utf8");
-console.log(JSON.stringify({ ok: true, artifactType: "parameter_semantics_record_index_v1", outputDir, recordCount: records.length }, null, 2));
+writeGeneratedRecordOutput({
+  outputPath,
+  records,
+  indexArtifactType: "parameter_semantics_record_index_v1"
+});
+console.log(JSON.stringify({ ok: true, artifactType: "parameter_semantics_record_index_v1", outputPath, recordCount: records.length }, null, 2));

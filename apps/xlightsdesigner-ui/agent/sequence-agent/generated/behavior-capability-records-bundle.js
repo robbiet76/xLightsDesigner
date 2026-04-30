@@ -2,16 +2,16 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
   "artifactType": "sequencer_configured_behavior_capabilities_bundle",
   "artifactVersion": "1.0",
   "sourceArtifactType": "behavior_capability_record_index_v1",
-  "generatedAt": "2026-04-30T19:54:36.798Z",
+  "generatedAt": "2026-04-30T20:13:22.425Z",
   "provenance": {
     "generatedBy": "scripts/sequencer-render-training/tooling/export-behavior-capability-records-bundle.mjs",
-    "sourcePath": "scripts/sequencer-render-training/catalog/generated-records/behavior-capability-records",
+    "sourcePath": "scripts/sequencer-render-training/catalog/generated-record-packs/behavior-capability-records.records.jsonl",
     "sourceArtifactType": "behavior_capability_record_index_v1",
-    "sourceRecordCount": 1074,
+    "sourceRecordCount": 1086,
     "compactionPolicy": "runtime_bundle_contains_compact_behavior_records_without_raw_frame_payloads"
   },
   "recordType": "behavior_capability_record_v1",
-  "recordCount": 1074,
+  "recordCount": 1086,
   "effects": [
     "Bars",
     "Butterfly",
@@ -704,7 +704,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,cycles_10,grouped_arch_read,single_bar,bars_motion,behavior_anchor,decoded_fseq,fast_scroll,left_motion,multi_bar",
+        "textureDensity": "arch_pattern_fit,bar_pattern,bars_motion,behavior_anchor,decoded_fseq,fast_scroll,left_motion,multi_bar,bar_motion,cycles_10,grouped_arch_read,single_bar",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -786,7 +786,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,cycles_2,grouped_arch_read,single_bar,bars_motion,behavior_anchor,decoded_fseq,left_motion,multi_bar,slow_scroll",
+        "textureDensity": "arch_pattern_fit,bar_pattern,bars_motion,behavior_anchor,decoded_fseq,left_motion,multi_bar,slow_scroll,bar_motion,cycles_2,grouped_arch_read,single_bar",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -868,7 +868,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,cycles_5,grouped_arch_read,single_bar,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion",
+        "textureDensity": "arch_pattern_fit,bar_pattern,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion,single_bar,barcount_3,medium_bands,multi_bar",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -1032,7 +1032,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,cycles_10,grouped_arch_read,single_bar,bars_motion,behavior_anchor,decoded_fseq,fast_scroll,left_motion,multi_bar",
+        "textureDensity": "arch_pattern_fit,bar_pattern,bars_motion,behavior_anchor,decoded_fseq,fast_scroll,left_motion,multi_bar,bar_motion,cycles_10,grouped_arch_read,single_bar",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -1114,7 +1114,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,cycles_2,grouped_arch_read,single_bar,bars_motion,behavior_anchor,decoded_fseq,left_motion,multi_bar,slow_scroll",
+        "textureDensity": "arch_pattern_fit,bar_pattern,bars_motion,behavior_anchor,decoded_fseq,left_motion,multi_bar,slow_scroll,bar_motion,cycles_2,grouped_arch_read,single_bar",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -1196,7 +1196,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,cycles_5,grouped_arch_read,single_bar,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion",
+        "textureDensity": "arch_pattern_fit,bar_pattern,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion,single_bar,barcount_3,medium_bands,multi_bar",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -1852,7 +1852,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,gradient_false,grouped_arch_read,single_bar,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion",
+        "textureDensity": "arch_pattern_fit,bar_pattern,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion,single_bar,barcount_3,medium_bands,multi_bar",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -1893,7 +1893,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,gradient_true,grouped_arch_read,single_bar,bars_gradient,behavior_anchor,decoded_fseq,left_motion,multi_bar,soft_color_blend",
+        "textureDensity": "arch_pattern_fit,bar_pattern,bars_gradient,behavior_anchor,decoded_fseq,left_motion,multi_bar,soft_color_blend,expand_motion,registry_generated,single_bar,dense_bars",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -1934,7 +1934,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,gradient_false,grouped_arch_read,single_bar,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion",
+        "textureDensity": "arch_pattern_fit,bar_pattern,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion,single_bar,barcount_3,medium_bands,multi_bar",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -1975,7 +1975,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,gradient_true,grouped_arch_read,single_bar,bars_gradient,behavior_anchor,decoded_fseq,left_motion,multi_bar,soft_color_blend",
+        "textureDensity": "arch_pattern_fit,bar_pattern,bars_gradient,behavior_anchor,decoded_fseq,left_motion,multi_bar,soft_color_blend,expand_motion,registry_generated,single_bar,dense_bars",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -2016,7 +2016,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,grouped_arch_read,highlight_false,single_bar,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion",
+        "textureDensity": "arch_pattern_fit,bar_pattern,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion,single_bar,barcount_3,medium_bands,multi_bar",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -2098,7 +2098,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern_fit,bar_motion,bar_pattern,grouped_arch_read,highlight_false,single_bar,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion",
+        "textureDensity": "arch_pattern_fit,bar_pattern,barcount_1,bars_palette_repetition,behavior_anchor,decoded_fseq,large_bands,left_motion,single_bar,barcount_3,medium_bands,multi_bar",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -2163,45 +2163,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "sourceGeometryProfiles": [
           "arch_grouped"
         ]
-      }
-    },
-    {
-      "recordId": "butterfly-baseline",
-      "effectName": "Butterfly",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "unknown",
-        "primaryTexture": "unknown",
-        "motionPacing": "",
-        "textureDensity": "",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "registry_defined_not_screened"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": []
       }
     },
     {
@@ -3186,45 +3147,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "sourceGeometryProfiles": [
           "matrix_high_density"
         ]
-      }
-    },
-    {
-      "recordId": "circles-baseline",
-      "effectName": "Circles",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "unknown",
-        "primaryTexture": "unknown",
-        "motionPacing": "",
-        "textureDensity": "",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "registry_defined_not_screened"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": []
       }
     },
     {
@@ -4663,6 +4585,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       }
     },
     {
+      "recordId": "color-wash-cycles-matrix-high-density-mono-white-1",
+      "effectName": "Color Wash",
+      "geometryProfile": "matrix_high_density",
+      "modelType": "matrix",
+      "parameterRegion": {
+        "parameterName": "cycles",
+        "regionKind": "single_value",
+        "valueSummary": "1"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "moderate_motion",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "moderate_motion",
+        "textureDensity": "decoded_fseq,flat_fill,full_coverage,linear_palette,matrix_fill,minimal_color_travel,registry_generated,sparse_window_coverage,stable_brightness,static_window,steady_wash,wash_fill",
+        "energyLevel": "elevated",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "moderate_motion",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.892654,
+        "temporalMotion": 0.081336,
+        "temporalColorDelta": 0.081665,
+        "temporalBrightnessDelta": 0.081665
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 16,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "matrix_high_density"
+        ]
+      }
+    },
+    {
       "recordId": "color-wash-cycles-matrix-high-density-mono-white-1-5",
       "effectName": "Color Wash",
       "geometryProfile": "matrix_high_density",
@@ -4745,47 +4708,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       }
     },
     {
-      "recordId": "color-wash-cycles-matrix-high-density-mono-white-1",
-      "effectName": "Color Wash",
-      "geometryProfile": "matrix_high_density",
-      "modelType": "matrix",
-      "parameterRegion": {
-        "parameterName": "cycles",
-        "regionKind": "single_value",
-        "valueSummary": "1"
-      },
-      "paletteMode": "mono_white",
-      "behaviorSignals": {
-        "primaryMotion": "moderate_motion",
-        "primaryTexture": "decoded_fseq",
-        "motionPacing": "moderate_motion",
-        "textureDensity": "decoded_fseq,flat_fill,full_coverage,linear_palette,matrix_fill,minimal_color_travel,registry_generated,sparse_window_coverage,stable_brightness,static_window,steady_wash,wash_fill",
-        "energyLevel": "elevated",
-        "coverageLevel": "broad",
-        "geometryCoupling": "observed",
-        "stability": "high"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "moderate_motion",
-        "densityRead": "dense",
-        "nonBlankRatio": 0.892654,
-        "temporalMotion": 0.081336,
-        "temporalColorDelta": 0.081665,
-        "temporalBrightnessDelta": 0.081665
-      },
-      "confidence": {
-        "level": "high",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "multi_configuration_sampled"
-      },
-      "evidenceCount": 16,
-      "traceability": {
-        "sourceGeometryProfiles": [
-          "matrix_high_density"
-        ]
-      }
-    },
-    {
       "recordId": "color-wash-cycles-matrix-high-density-mono-white-2",
       "effectName": "Color Wash",
       "geometryProfile": "matrix_high_density",
@@ -4839,9 +4761,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "circular_palette",
+        "primaryTexture": "cycles_3_0",
         "motionPacing": "moderate_motion",
-        "textureDensity": "circular_palette,decoded_fseq,matrix_fill,minimal_color_travel,partial_coverage,registry_generated,shimmer_wash,sparse_window_coverage,stable_brightness,static_window,two_axis_fade,wash_fill",
+        "textureDensity": "cycles_3_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill,circular_palette",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -4880,9 +4802,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "circular_palette",
+        "primaryTexture": "cycles_4_0",
         "motionPacing": "moderate_motion",
-        "textureDensity": "circular_palette,decoded_fseq,matrix_fill,minimal_color_travel,partial_coverage,registry_generated,shimmer_wash,sparse_window_coverage,stable_brightness,static_window,two_axis_fade,wash_fill",
+        "textureDensity": "cycles_4_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,steady_wash,subtle_brightness_change,subtle_color_travel,wash_fill,circular_palette",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -4943,6 +4865,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 8,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "matrix_high_density"
+        ]
+      }
+    },
+    {
+      "recordId": "color-wash-cycles-matrix-high-density-rgb-primary-1",
+      "effectName": "Color Wash",
+      "geometryProfile": "matrix_high_density",
+      "modelType": "matrix",
+      "parameterRegion": {
+        "parameterName": "cycles",
+        "regionKind": "single_value",
+        "valueSummary": "1"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "subtle_motion",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "subtle_motion",
+        "textureDensity": "decoded_fseq,flat_fill,full_coverage,linear_palette,matrix_fill,minimal_color_travel,registry_generated,sparse_window_coverage,stable_brightness,static_window,steady_wash,wash_fill",
+        "energyLevel": "elevated",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "subtle_motion",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.887041,
+        "temporalMotion": 0.134471,
+        "temporalColorDelta": 0.137128,
+        "temporalBrightnessDelta": 0.133413
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 16,
       "traceability": {
         "sourceGeometryProfiles": [
           "matrix_high_density"
@@ -5032,47 +4995,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       }
     },
     {
-      "recordId": "color-wash-cycles-matrix-high-density-rgb-primary-1",
-      "effectName": "Color Wash",
-      "geometryProfile": "matrix_high_density",
-      "modelType": "matrix",
-      "parameterRegion": {
-        "parameterName": "cycles",
-        "regionKind": "single_value",
-        "valueSummary": "1"
-      },
-      "paletteMode": "rgb_primary",
-      "behaviorSignals": {
-        "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
-        "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,flat_fill,full_coverage,linear_palette,matrix_fill,minimal_color_travel,registry_generated,sparse_window_coverage,stable_brightness,static_window,steady_wash,wash_fill",
-        "energyLevel": "elevated",
-        "coverageLevel": "broad",
-        "geometryCoupling": "observed",
-        "stability": "high"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "subtle_motion",
-        "densityRead": "dense",
-        "nonBlankRatio": 0.887041,
-        "temporalMotion": 0.134471,
-        "temporalColorDelta": 0.137128,
-        "temporalBrightnessDelta": 0.133413
-      },
-      "confidence": {
-        "level": "high",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "multi_configuration_sampled"
-      },
-      "evidenceCount": 16,
-      "traceability": {
-        "sourceGeometryProfiles": [
-          "matrix_high_density"
-        ]
-      }
-    },
-    {
       "recordId": "color-wash-cycles-matrix-high-density-rgb-primary-2",
       "effectName": "Color Wash",
       "geometryProfile": "matrix_high_density",
@@ -5126,9 +5048,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "circular_palette",
+        "primaryTexture": "color_travel",
         "motionPacing": "moderate_motion",
-        "textureDensity": "circular_palette,decoded_fseq,matrix_fill,minimal_color_travel,partial_coverage,registry_generated,shimmer_wash,sparse_window_coverage,stable_brightness,static_window,two_axis_fade,wash_fill",
+        "textureDensity": "color_travel,cycles_3_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,stable_brightness,steady_wash,wash_fill,circular_palette",
         "energyLevel": "elevated",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -5167,9 +5089,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "circular_palette",
+        "primaryTexture": "color_travel",
         "motionPacing": "moderate_motion",
-        "textureDensity": "circular_palette,decoded_fseq,matrix_fill,minimal_color_travel,partial_coverage,registry_generated,shimmer_wash,sparse_window_coverage,stable_brightness,static_window,two_axis_fade,wash_fill",
+        "textureDensity": "color_travel,cycles_4_0,flat_fill,full_coverage,intermittent_window_coverage,linear_palette,matrix_fill,moderate_motion_window,stable_brightness,steady_wash,wash_fill,circular_palette",
         "energyLevel": "elevated",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -5849,45 +5771,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "sourceGeometryProfiles": [
           "matrix_high_density"
         ]
-      }
-    },
-    {
-      "recordId": "fire-baseline",
-      "effectName": "Fire",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "unknown",
-        "primaryTexture": "unknown",
-        "motionPacing": "",
-        "textureDensity": "",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "registry_defined_not_screened"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": []
       }
     },
     {
@@ -7036,45 +6919,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "sourceGeometryProfiles": [
           "matrix_high_density"
         ]
-      }
-    },
-    {
-      "recordId": "fireworks-baseline",
-      "effectName": "Fireworks",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "unknown",
-        "primaryTexture": "unknown",
-        "motionPacing": "",
-        "textureDensity": "",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "registry_defined_not_screened"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": []
       }
     },
     {
@@ -8305,45 +8149,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "sourceGeometryProfiles": [
           "matrix_high_density"
         ]
-      }
-    },
-    {
-      "recordId": "lightning-baseline",
-      "effectName": "Lightning",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "unknown",
-        "primaryTexture": "unknown",
-        "motionPacing": "",
-        "textureDensity": "",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "registry_defined_not_screened"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": []
       }
     },
     {
@@ -10245,9 +10050,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_1,tight_marquee,behavior_anchor,decoded_fseq,slow_motion",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,decoded_fseq,forward_motion,marquee_motion,marquee_pattern,slow_motion,tight_marquee,arch_pattern,speed_1",
         "energyLevel": "moderate",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -10327,9 +10132,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_5,tight_marquee,behavior_anchor,continuous_bands,decoded_fseq,marquee_coverage,skip_0",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,continuous_bands,decoded_fseq,forward_motion,marquee_coverage,marquee_pattern,skip_0,tight_marquee,segmented_bands,segmented_marquee,skip_4",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -10368,9 +10173,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_7,tight_marquee,decoded_fseq,registry_generated,wide_marquee,reverse_motion",
+        "textureDensity": "arch_pattern_fit,decoded_fseq,forward_motion,marquee_pattern,registry_generated,tight_marquee,wide_marquee,reverse_motion,arch_pattern,marquee_motion,speed_7",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -10409,9 +10214,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_9,tight_marquee,behavior_anchor,decoded_fseq,fast_motion",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,decoded_fseq,fast_motion,forward_motion,marquee_motion,marquee_pattern,tight_marquee,arch_pattern,speed_9",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -10450,9 +10255,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "subtle_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_1,tight_marquee,behavior_anchor,decoded_fseq,slow_motion",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,decoded_fseq,forward_motion,marquee_motion,marquee_pattern,slow_motion,tight_marquee,arch_pattern,speed_1",
         "energyLevel": "moderate",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -10532,9 +10337,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "subtle_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_5,tight_marquee,behavior_anchor,continuous_bands,decoded_fseq,marquee_coverage,skip_0",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,continuous_bands,decoded_fseq,forward_motion,marquee_coverage,marquee_pattern,skip_0,tight_marquee,segmented_bands,segmented_marquee,skip_4",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -10573,9 +10378,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "subtle_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_7,tight_marquee,decoded_fseq,registry_generated,wide_marquee,reverse_motion",
+        "textureDensity": "arch_pattern_fit,decoded_fseq,forward_motion,marquee_pattern,registry_generated,tight_marquee,wide_marquee,reverse_motion,arch_pattern,marquee_motion,speed_7",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -10614,9 +10419,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "subtle_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,speed_9,tight_marquee,behavior_anchor,decoded_fseq,fast_motion",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,decoded_fseq,fast_motion,forward_motion,marquee_motion,marquee_pattern,tight_marquee,arch_pattern,speed_9",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -11065,9 +10870,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_0,tight_marquee,behavior_anchor,continuous_bands,decoded_fseq,marquee_coverage,skip_0",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,continuous_bands,decoded_fseq,forward_motion,marquee_coverage,marquee_pattern,skip_0,tight_marquee,segmented_bands,segmented_marquee,skip_4",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -11147,9 +10952,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_4,tight_marquee,decoded_fseq,registry_generated,wide_marquee,reverse_motion",
+        "textureDensity": "arch_pattern_fit,decoded_fseq,forward_motion,marquee_pattern,registry_generated,tight_marquee,wide_marquee,reverse_motion,arch_pattern,marquee_motion,stagger_4",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -11270,9 +11075,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "subtle_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_0,tight_marquee,behavior_anchor,continuous_bands,decoded_fseq,marquee_coverage,skip_0",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,continuous_bands,decoded_fseq,forward_motion,marquee_coverage,marquee_pattern,skip_0,tight_marquee,segmented_bands,segmented_marquee,skip_4",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -11352,9 +11157,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "subtle_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,stagger_4,tight_marquee,decoded_fseq,registry_generated,wide_marquee,reverse_motion",
+        "textureDensity": "arch_pattern_fit,decoded_fseq,forward_motion,marquee_pattern,registry_generated,tight_marquee,wide_marquee,reverse_motion,arch_pattern,marquee_motion,stagger_4",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -12008,9 +11813,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "moderate_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,thickness_2,tight_marquee,behavior_anchor,continuous_bands,decoded_fseq,marquee_coverage,skip_0",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,continuous_bands,decoded_fseq,forward_motion,marquee_coverage,marquee_pattern,skip_0,tight_marquee,segmented_bands,segmented_marquee,skip_4",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -12213,9 +12018,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "subtle_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,forward_motion,marquee_motion,marquee_pattern,thickness_2,tight_marquee,behavior_anchor,continuous_bands,decoded_fseq,marquee_coverage,skip_0",
+        "textureDensity": "arch_pattern_fit,behavior_anchor,continuous_bands,decoded_fseq,forward_motion,marquee_coverage,marquee_pattern,skip_0,tight_marquee,segmented_bands,segmented_marquee,skip_4",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -12771,65 +12576,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "traceability": {
         "sourceGeometryProfiles": [
           "single_line_horizontal"
-        ]
-      }
-    },
-    {
-      "recordId": "on-baseline",
-      "effectName": "On",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "animated",
-        "primaryTexture": "static_fill",
-        "motionPacing": "animated,bold,busy,clean,directional,fill,full,partial,patterned,restrained,sparse,steady",
-        "textureDensity": "static_fill,static_hold",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "screened_parameter_subset"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": [
-          "arch_grouped",
-          "arch_multi_layer",
-          "arch_single",
-          "cane_grouped",
-          "cane_single",
-          "cane_stick_grouped",
-          "icicles_drop_pattern",
-          "matrix_high_density",
-          "matrix_low_density",
-          "matrix_medium_density",
-          "single_line_horizontal",
-          "single_line_single_node",
-          "single_line_vertical",
-          "spinner_standard",
-          "star_multi_layer",
-          "star_single_layer",
-          "tree_360_round",
-          "tree_360_spiral",
-          "tree_flat_single_layer"
         ]
       }
     },
@@ -13912,9 +13658,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "armSize_100",
         "motionPacing": "moderate_motion",
-        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,dense_pinwheel,rotating_pinwheel,depth_mode,multi_arm_pinwheel,armSize_100,pinwheel_motion",
+        "textureDensity": "armSize_100,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel,decoded_fseq,registry_generated,dense_pinwheel,rotating_pinwheel,depth_mode",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -13953,9 +13699,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "static_or_near_static",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "armSize_25",
         "motionPacing": "static_or_near_static",
-        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,dense_pinwheel,rotating_pinwheel,depth_mode,multi_arm_pinwheel,armSize_25,pinwheel_motion",
+        "textureDensity": "armSize_25,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel,decoded_fseq,registry_generated,dense_pinwheel,rotating_pinwheel,depth_mode",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -14035,9 +13781,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "armSize_75",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,dense_pinwheel,rotating_pinwheel,depth_mode,multi_arm_pinwheel,armSize_75,pinwheel_motion",
+        "textureDensity": "armSize_75,few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,spinner_pinwheel,static_pinwheel,decoded_fseq,registry_generated,dense_pinwheel,rotating_pinwheel,depth_mode",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -14734,7 +14480,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "subtle_motion",
         "primaryTexture": "decoded_fseq",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,rotating_pinwheel,multi_arm_pinwheel,dense_pinwheel,depth_mode,pinwheel_motion,speed_10",
+        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,rotating_pinwheel,multi_arm_pinwheel,dense_pinwheel,pinwheel_motion,speed_10,spinner_pinwheel",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -14814,9 +14560,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "few_arm_pinwheel",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,dense_pinwheel,rotating_pinwheel,depth_mode,multi_arm_pinwheel,pinwheel_motion,speed_14",
+        "textureDensity": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_14,spinner_pinwheel,static_pinwheel,decoded_fseq,registry_generated,dense_pinwheel,rotating_pinwheel,depth_mode",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -14855,9 +14601,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "few_arm_pinwheel",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,dense_pinwheel,rotating_pinwheel,depth_mode,multi_arm_pinwheel,pinwheel_motion,speed_18",
+        "textureDensity": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_18,spinner_pinwheel,static_pinwheel,decoded_fseq,registry_generated,dense_pinwheel,rotating_pinwheel,depth_mode",
         "energyLevel": "elevated",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -14896,9 +14642,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "few_arm_pinwheel",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,dense_pinwheel,rotating_pinwheel,depth_mode,multi_arm_pinwheel,pinwheel_motion,speed_3",
+        "textureDensity": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_3,spinner_pinwheel,static_pinwheel,decoded_fseq,registry_generated,dense_pinwheel,rotating_pinwheel,depth_mode",
         "energyLevel": "moderate",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -14937,9 +14683,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "few_arm_pinwheel",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,dense_pinwheel,rotating_pinwheel,depth_mode,multi_arm_pinwheel,pinwheel_motion,speed_7",
+        "textureDensity": "few_arm_pinwheel,pinwheel_motion,pinwheel_pattern,radial_pattern_fit,speed_7,spinner_pinwheel,static_pinwheel,decoded_fseq,registry_generated,dense_pinwheel,rotating_pinwheel,depth_mode",
         "energyLevel": "moderate",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -16244,6 +15990,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "parameterRegion": {
         "parameterName": "twist",
         "regionKind": "single_value",
+        "valueSummary": "180"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,dense_pinwheel,rotating_pinwheel,depth_mode,multi_arm_pinwheel",
+        "energyLevel": "moderate",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.810125,
+        "temporalMotion": 0.079006,
+        "temporalColorDelta": 0.079006,
+        "temporalBrightnessDelta": 0.079006
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 5,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "spinner_standard"
+        ]
+      }
+    },
+    {
+      "recordId": "pinwheel-twist-spinner-standard-mono-white-180",
+      "effectName": "Pinwheel",
+      "geometryProfile": "spinner_standard",
+      "modelType": "spinner",
+      "parameterRegion": {
+        "parameterName": "twist",
+        "regionKind": "single_value",
         "valueSummary": "-180"
       },
       "paletteMode": "mono_white",
@@ -16271,6 +16058,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 5,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "spinner_standard"
+        ]
+      }
+    },
+    {
+      "recordId": "pinwheel-twist-spinner-standard-mono-white-60",
+      "effectName": "Pinwheel",
+      "geometryProfile": "spinner_standard",
+      "modelType": "spinner",
+      "parameterRegion": {
+        "parameterName": "twist",
+        "regionKind": "single_value",
+        "valueSummary": "60"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,depth_mode,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,rotating_pinwheel,multi_arm_pinwheel,dense_pinwheel,static_pinwheel",
+        "energyLevel": "elevated",
+        "coverageLevel": "focused",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "moderate",
+        "nonBlankRatio": 0.641008,
+        "temporalMotion": 0.107923,
+        "temporalColorDelta": 0.107923,
+        "temporalBrightnessDelta": 0.107923
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 51,
       "traceability": {
         "sourceGeometryProfiles": [
           "spinner_standard"
@@ -16367,6 +16195,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "parameterRegion": {
         "parameterName": "twist",
         "regionKind": "single_value",
+        "valueSummary": "180"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,static_pinwheel,dense_pinwheel,rotating_pinwheel,depth_mode,multi_arm_pinwheel",
+        "energyLevel": "moderate",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.810125,
+        "temporalMotion": 0.079006,
+        "temporalColorDelta": 0.079006,
+        "temporalBrightnessDelta": 0.079006
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 5,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "spinner_standard"
+        ]
+      }
+    },
+    {
+      "recordId": "pinwheel-twist-spinner-standard-rgb-primary-180",
+      "effectName": "Pinwheel",
+      "geometryProfile": "spinner_standard",
+      "modelType": "spinner",
+      "parameterRegion": {
+        "parameterName": "twist",
+        "regionKind": "single_value",
         "valueSummary": "-180"
       },
       "paletteMode": "rgb_primary",
@@ -16394,6 +16263,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 5,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "spinner_standard"
+        ]
+      }
+    },
+    {
+      "recordId": "pinwheel-twist-spinner-standard-rgb-primary-60",
+      "effectName": "Pinwheel",
+      "geometryProfile": "spinner_standard",
+      "modelType": "spinner",
+      "parameterRegion": {
+        "parameterName": "twist",
+        "regionKind": "single_value",
+        "valueSummary": "60"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,depth_mode,few_arm_pinwheel,pinwheel_pattern,radial_pattern_fit,registry_generated,rotating_pinwheel,multi_arm_pinwheel,dense_pinwheel,static_pinwheel",
+        "energyLevel": "elevated",
+        "coverageLevel": "focused",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "moderate",
+        "nonBlankRatio": 0.641008,
+        "temporalMotion": 0.107923,
+        "temporalColorDelta": 0.107923,
+        "temporalBrightnessDelta": 0.107923
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 51,
       "traceability": {
         "sourceGeometryProfiles": [
           "spinner_standard"
@@ -16438,65 +16348,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "traceability": {
         "sourceGeometryProfiles": [
           "spinner_standard"
-        ]
-      }
-    },
-    {
-      "recordId": "shimmer-baseline",
-      "effectName": "Shimmer",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "animated",
-        "primaryTexture": "radial_sparkle",
-        "motionPacing": "animated,bold,busy,clean,directional,fill,full,partial,patterned,restrained,sparse,steady,texture_heavy",
-        "textureDensity": "radial_sparkle,shimmer",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "screened_parameter_subset"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": [
-          "arch_grouped",
-          "arch_multi_layer",
-          "arch_single",
-          "cane_grouped",
-          "cane_single",
-          "cane_stick_grouped",
-          "icicles_drop_pattern",
-          "matrix_high_density",
-          "matrix_low_density",
-          "matrix_medium_density",
-          "single_line_horizontal",
-          "single_line_single_node",
-          "single_line_vertical",
-          "spinner_standard",
-          "star_multi_layer",
-          "star_single_layer",
-          "tree_360_round",
-          "tree_360_spiral",
-          "tree_flat_single_layer"
         ]
       }
     },
@@ -17497,9 +17348,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "accel_0",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_shockwave",
+        "textureDensity": "accel_0,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -17519,6 +17370,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 99,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "spinner_standard"
+        ]
+      }
+    },
+    {
+      "recordId": "shockwave-accel-spinner-standard-mono-white-2",
+      "effectName": "Shockwave",
+      "geometryProfile": "spinner_standard",
+      "modelType": "spinner",
+      "parameterRegion": {
+        "parameterName": "accel",
+        "regionKind": "single_value",
+        "valueSummary": "2"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "accelerating_shockwave",
+        "motionPacing": "",
+        "textureDensity": "accelerating_shockwave,centered_shockwave,decoded_fseq,hard_edge_shockwave,large_shockwave,medium_width_shockwave,radial_pattern_fit,registry_generated,repeating_shockwave,scaled_shockwave,shockwave_pattern,surging_shockwave",
+        "energyLevel": "restrained",
+        "coverageLevel": "sparse",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "sparse",
+        "nonBlankRatio": 0.038697,
+        "temporalMotion": 0.009361,
+        "temporalColorDelta": 0.009361,
+        "temporalBrightnessDelta": 0.009361
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 31,
       "traceability": {
         "sourceGeometryProfiles": [
           "spinner_standard"
@@ -17560,6 +17452,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 31,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "spinner_standard"
+        ]
+      }
+    },
+    {
+      "recordId": "shockwave-accel-spinner-standard-mono-white-5",
+      "effectName": "Shockwave",
+      "geometryProfile": "spinner_standard",
+      "modelType": "spinner",
+      "parameterRegion": {
+        "parameterName": "accel",
+        "regionKind": "single_value",
+        "valueSummary": "5"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "subtle_motion",
+        "primaryTexture": "accel_5",
+        "motionPacing": "subtle_motion",
+        "textureDensity": "accel_5,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
+        "energyLevel": "restrained",
+        "coverageLevel": "sparse",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "subtle_motion",
+        "densityRead": "sparse",
+        "nonBlankRatio": 0.066771,
+        "temporalMotion": 0.006978,
+        "temporalColorDelta": 0.006133,
+        "temporalBrightnessDelta": 0.006133
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 6,
       "traceability": {
         "sourceGeometryProfiles": [
           "spinner_standard"
@@ -17620,9 +17553,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "accel_0",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_shockwave",
+        "textureDensity": "accel_0,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -17642,6 +17575,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 99,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "spinner_standard"
+        ]
+      }
+    },
+    {
+      "recordId": "shockwave-accel-spinner-standard-rgb-primary-2",
+      "effectName": "Shockwave",
+      "geometryProfile": "spinner_standard",
+      "modelType": "spinner",
+      "parameterRegion": {
+        "parameterName": "accel",
+        "regionKind": "single_value",
+        "valueSummary": "2"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "accelerating_shockwave",
+        "motionPacing": "",
+        "textureDensity": "accelerating_shockwave,centered_shockwave,decoded_fseq,hard_edge_shockwave,large_shockwave,medium_width_shockwave,radial_pattern_fit,registry_generated,repeating_shockwave,scaled_shockwave,shockwave_pattern,surging_shockwave",
+        "energyLevel": "restrained",
+        "coverageLevel": "sparse",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "sparse",
+        "nonBlankRatio": 0.038392,
+        "temporalMotion": 0.006699,
+        "temporalColorDelta": 0.006699,
+        "temporalBrightnessDelta": 0.006699
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 31,
       "traceability": {
         "sourceGeometryProfiles": [
           "spinner_standard"
@@ -17683,6 +17657,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 31,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "spinner_standard"
+        ]
+      }
+    },
+    {
+      "recordId": "shockwave-accel-spinner-standard-rgb-primary-5",
+      "effectName": "Shockwave",
+      "geometryProfile": "spinner_standard",
+      "modelType": "spinner",
+      "parameterRegion": {
+        "parameterName": "accel",
+        "regionKind": "single_value",
+        "valueSummary": "5"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "subtle_motion",
+        "primaryTexture": "accel_5",
+        "motionPacing": "subtle_motion",
+        "textureDensity": "accel_5,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
+        "energyLevel": "restrained",
+        "coverageLevel": "sparse",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "subtle_motion",
+        "densityRead": "sparse",
+        "nonBlankRatio": 0.057747,
+        "temporalMotion": 0.004838,
+        "temporalColorDelta": 0.003765,
+        "temporalBrightnessDelta": 0.003708
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 6,
       "traceability": {
         "sourceGeometryProfiles": [
           "spinner_standard"
@@ -17779,6 +17794,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "parameterRegion": {
         "parameterName": "accel",
         "regionKind": "single_value",
+        "valueSummary": "5"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "accelerating_shockwave",
+        "motionPacing": "",
+        "textureDensity": "accelerating_shockwave,blended_shockwave,centered_shockwave,decoded_fseq,diffuse_shockwave,interaction_sweep,large_shockwave,repeating_shockwave,scaled_shockwave,shockwave_pattern,tree_pattern_fit,wide_shockwave",
+        "energyLevel": "moderate",
+        "coverageLevel": "sparse",
+        "geometryCoupling": "observed",
+        "stability": "medium"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "sparse",
+        "nonBlankRatio": 0.148187,
+        "temporalMotion": 0.024637,
+        "temporalColorDelta": 0.024637,
+        "temporalBrightnessDelta": 0.024637
+      },
+      "confidence": {
+        "level": "medium",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "single_reference_per_geometry"
+      },
+      "evidenceCount": 1,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_360_round"
+        ]
+      }
+    },
+    {
+      "recordId": "shockwave-accel-tree-360-round-mono-white-5",
+      "effectName": "Shockwave",
+      "geometryProfile": "tree_360_round",
+      "modelType": "tree_360",
+      "parameterRegion": {
+        "parameterName": "accel",
+        "regionKind": "single_value",
         "valueSummary": "-5"
       },
       "paletteMode": "mono_white",
@@ -17847,6 +17903,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "single_reference_per_geometry"
       },
       "evidenceCount": 4,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_360_round"
+        ]
+      }
+    },
+    {
+      "recordId": "shockwave-accel-tree-360-round-rgb-primary-5",
+      "effectName": "Shockwave",
+      "geometryProfile": "tree_360_round",
+      "modelType": "tree_360",
+      "parameterRegion": {
+        "parameterName": "accel",
+        "regionKind": "single_value",
+        "valueSummary": "5"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "accelerating_shockwave",
+        "motionPacing": "",
+        "textureDensity": "accelerating_shockwave,blended_shockwave,centered_shockwave,decoded_fseq,diffuse_shockwave,interaction_sweep,large_shockwave,repeating_shockwave,scaled_shockwave,shockwave_pattern,tree_pattern_fit,wide_shockwave",
+        "energyLevel": "restrained",
+        "coverageLevel": "sparse",
+        "geometryCoupling": "observed",
+        "stability": "medium"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "sparse",
+        "nonBlankRatio": 0.146078,
+        "temporalMotion": 0.019252,
+        "temporalColorDelta": 0.019252,
+        "temporalBrightnessDelta": 0.019252
+      },
+      "confidence": {
+        "level": "medium",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "single_reference_per_geometry"
+      },
+      "evidenceCount": 1,
       "traceability": {
         "sourceGeometryProfiles": [
           "tree_360_round"
@@ -18317,9 +18414,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "centerX_75",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,offset_x_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "centerX_75,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -18440,9 +18537,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "centerX_75",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,offset_x_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "centerX_75,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -18645,9 +18742,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "centerY_25",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,offset_y_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "centerY_25,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -18768,9 +18865,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "centerY_75",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,offset_y_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "centerY_75,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -18809,9 +18906,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "centerY_25",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,offset_y_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "centerY_25,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -18932,9 +19029,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "centerY_75",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,offset_y_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "centerY_75,compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -19260,9 +19357,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "moderate_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,dense_repeating_shockwave,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,cycles_4,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -19301,9 +19398,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "moderate_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,dense_repeating_shockwave,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,cycles_5,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -19465,9 +19562,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,dense_repeating_shockwave,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,cycles_4,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -19506,9 +19603,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,dense_repeating_shockwave,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,cycles_5,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -19793,9 +19890,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "static_or_near_static",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "static_or_near_static",
-        "textureDensity": "blended_shockwave,centered_shockwave,compact_shockwave,decoded_fseq,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endRadius_10,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -19834,9 +19931,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,medium_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endRadius_25,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -19998,9 +20095,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endRadius_50,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -20121,9 +20218,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endRadius_75,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -20162,9 +20259,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "static_or_near_static",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "static_or_near_static",
-        "textureDensity": "blended_shockwave,centered_shockwave,compact_shockwave,decoded_fseq,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endRadius_10,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -20203,9 +20300,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "static_or_near_static",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "static_or_near_static",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,medium_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endRadius_25,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -20367,9 +20464,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endRadius_50,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -20490,9 +20587,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endRadius_75,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -20941,9 +21038,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,thin_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endWidth_2,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -20982,9 +21079,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,diffuse_shockwave,large_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,wide_shockwave",
+        "textureDensity": "compact_shockwave,endWidth_20,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -20993,7 +21090,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "renderOutcomeSignals": {
         "temporalRead": "subtle_motion",
         "densityRead": "sparse",
-        "nonBlankRatio": 0.192188,
+        "nonBlankRatio": 0.192187,
         "temporalMotion": 0.010265,
         "temporalColorDelta": 0.008093,
         "temporalBrightnessDelta": 0.008093
@@ -21228,9 +21325,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,thin_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,endWidth_2,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -21269,9 +21366,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,diffuse_shockwave,large_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,wide_shockwave",
+        "textureDensity": "compact_shockwave,endWidth_20,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -21843,9 +21940,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scale_false,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -21925,9 +22022,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "blended_shockwave",
+        "primaryTexture": "compact_shockwave",
         "motionPacing": "subtle_motion",
-        "textureDensity": "blended_shockwave,centered_shockwave,decoded_fseq,large_shockwave,medium_width_shockwave,neutral_shockwave,radial_pattern_fit,registry_generated,scaled_shockwave,shockwave_pattern,single_shockwave,compact_decelerating_shockwave",
+        "textureDensity": "compact_shockwave,hard_edge_shockwave,medium_width_shockwave,neutral_shockwave,offset_shockwave,radial_pattern_fit,radial_shockwave,scale_false,scaled_shockwave,shockwave_pattern,single_shockwave,spinner_fill",
         "energyLevel": "restrained",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -30125,9 +30222,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "subtle_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,chase_pattern,fragmented_pattern,mode_Chase,single_direction_chase,sparse_sampled_motion,decoded_fseq,directionality:left_to_right,registry_generated,bounce_motion,dense_sampled_motion",
+        "textureDensity": "arch_pattern_fit,chase_pattern,decoded_fseq,directionality:left_to_right,fragmented_pattern,registry_generated,sparse_sampled_motion,arch_pattern,mode_Chase,single_direction_chase,bounce_motion,dense_sampled_motion",
         "energyLevel": "moderate",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -30248,9 +30345,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "arch_pattern",
+        "primaryTexture": "arch_pattern_fit",
         "motionPacing": "subtle_motion",
-        "textureDensity": "arch_pattern,arch_pattern_fit,chase_pattern,fragmented_pattern,mode_Chase,single_direction_chase,sparse_sampled_motion,decoded_fseq,directionality:left_to_right,registry_generated,bounce_motion,dense_sampled_motion",
+        "textureDensity": "arch_pattern_fit,chase_pattern,decoded_fseq,directionality:left_to_right,fragmented_pattern,registry_generated,sparse_sampled_motion,arch_pattern,mode_Chase,single_direction_chase,bounce_motion,dense_sampled_motion",
         "energyLevel": "moderate",
         "coverageLevel": "sparse",
         "geometryCoupling": "observed",
@@ -32737,45 +32834,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       }
     },
     {
-      "recordId": "snowflakes-baseline",
-      "effectName": "Snowflakes",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "unknown",
-        "primaryTexture": "unknown",
-        "motionPacing": "",
-        "textureDensity": "",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "registry_defined_not_screened"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": []
-      }
-    },
-    {
       "recordId": "snowflakes-count-matrix-high-density-mono-white-1",
       "effectName": "Snowflakes",
       "geometryProfile": "matrix_high_density",
@@ -34182,9 +34240,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "3D_false",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral,single_spiral,dense_spirals",
+        "textureDensity": "3D_false,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit,decoded_fseq,multi_spiral",
         "energyLevel": "moderate",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -34223,9 +34281,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "3D_true",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral,single_spiral,dense_spirals",
+        "textureDensity": "3D_true,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit,decoded_fseq,multi_spiral",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -34264,9 +34322,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "3D_false",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral,single_spiral,dense_spirals",
+        "textureDensity": "3D_false,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit,decoded_fseq,multi_spiral",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -34305,9 +34363,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "subtle_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "3D_true",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral,single_spiral,dense_spirals",
+        "textureDensity": "3D_true,forward_motion,forward_rotation,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit,decoded_fseq,multi_spiral",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -34512,7 +34570,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "subtle_motion",
         "primaryTexture": "decoded_fseq",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral,single_spiral,dense_spirals",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,blend_false,medium_spiral,round_tree_pattern",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -34553,7 +34611,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "subtle_motion",
         "primaryTexture": "decoded_fseq",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,medium_spiral,multi_spiral,registry_generated,spiral_flow,spiral_pattern,tree_pattern_fit,thick_spiral,single_spiral,dense_spirals",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,medium_spiral,multi_spiral,registry_generated,spiral_flow,spiral_pattern,tree_pattern_fit,blend_true,round_tree_pattern,single_spiral",
         "energyLevel": "moderate",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -34594,7 +34652,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "subtle_motion",
         "primaryTexture": "decoded_fseq",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral,single_spiral,dense_spirals",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,blend_false,medium_spiral,round_tree_pattern",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -34635,7 +34693,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "subtle_motion",
         "primaryTexture": "decoded_fseq",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,medium_spiral,multi_spiral,registry_generated,spiral_flow,spiral_pattern,tree_pattern_fit,thick_spiral,single_spiral,dense_spirals",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,medium_spiral,multi_spiral,registry_generated,spiral_flow,spiral_pattern,tree_pattern_fit,blend_true,round_tree_pattern,single_spiral",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -35496,7 +35554,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "subtle_motion",
         "primaryTexture": "decoded_fseq",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,medium_spiral,multi_spiral,registry_generated,spiral_flow,spiral_pattern,tree_pattern_fit,single_spiral,dense_spirals,thick_spiral",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,medium_spiral,multi_spiral,registry_generated,spiral_flow,spiral_pattern,tree_pattern_fit,single_spiral,dense_spirals,grow_false",
         "energyLevel": "moderate",
         "coverageLevel": "focused",
         "geometryCoupling": "observed",
@@ -35537,7 +35595,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "high_motion",
         "primaryTexture": "decoded_fseq",
         "motionPacing": "high_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,single_spiral,dense_spirals,medium_spiral",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,single_spiral,dense_spirals,grow_true",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -35578,7 +35636,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "subtle_motion",
         "primaryTexture": "decoded_fseq",
         "motionPacing": "subtle_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,medium_spiral,multi_spiral,registry_generated,spiral_flow,spiral_pattern,tree_pattern_fit,single_spiral,dense_spirals,thick_spiral",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,medium_spiral,multi_spiral,registry_generated,spiral_flow,spiral_pattern,tree_pattern_fit,single_spiral,dense_spirals,grow_false",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -35619,7 +35677,7 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryMotion": "moderate_motion",
         "primaryTexture": "decoded_fseq",
         "motionPacing": "moderate_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,single_spiral,dense_spirals,medium_spiral",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,single_spiral,dense_spirals,grow_true",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -35642,6 +35700,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "traceability": {
         "sourceGeometryProfiles": [
           "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-movement-tree-360-round-mono-white-10",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_360_round",
+      "modelType": "tree_360",
+      "parameterRegion": {
+        "parameterName": "movement",
+        "regionKind": "single_value",
+        "valueSummary": "-10"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,interaction_sweep,medium_spiral,multi_spiral,reverse_motion,reverse_rotation,spiral_flow,spiral_pattern,tight_spirals,tree_pattern_fit",
+        "energyLevel": "moderate",
+        "coverageLevel": "focused",
+        "geometryCoupling": "observed",
+        "stability": "medium"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "moderate",
+        "nonBlankRatio": 0.624922,
+        "temporalMotion": 0.025157,
+        "temporalColorDelta": 0.025157,
+        "temporalBrightnessDelta": 0.025157
+      },
+      "confidence": {
+        "level": "medium",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 1,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_360_round"
         ]
       }
     },
@@ -35721,6 +35820,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 1,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_360_round"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-movement-tree-360-round-rgb-primary-10",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_360_round",
+      "modelType": "tree_360",
+      "parameterRegion": {
+        "parameterName": "movement",
+        "regionKind": "single_value",
+        "valueSummary": "10"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,interaction_sweep,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit,depth_shading",
+        "energyLevel": "restrained",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "medium"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.859488,
+        "temporalMotion": 0.018868,
+        "temporalColorDelta": 0.018868,
+        "temporalBrightnessDelta": 0.018868
+      },
+      "confidence": {
+        "level": "medium",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
       "traceability": {
         "sourceGeometryProfiles": [
           "tree_360_round"
@@ -35899,6 +36039,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "parameterRegion": {
         "parameterName": "movement",
         "regionKind": "single_value",
+        "valueSummary": "-15"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_rotation,multi_spiral,registry_generated,reverse_motion,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
+        "energyLevel": "moderate",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.775523,
+        "temporalMotion": 0.025157,
+        "temporalColorDelta": 0.025157,
+        "temporalBrightnessDelta": 0.025157
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-movement-tree-flat-single-layer-mono-white-15",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "modelType": "tree_flat",
+      "parameterRegion": {
+        "parameterName": "movement",
+        "regionKind": "single_value",
         "valueSummary": "15"
       },
       "paletteMode": "mono_white",
@@ -35907,6 +36088,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryTexture": "decoded_fseq",
         "motionPacing": "",
         "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
+        "energyLevel": "moderate",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.775523,
+        "temporalMotion": 0.025157,
+        "temporalColorDelta": 0.025157,
+        "temporalBrightnessDelta": 0.025157
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-movement-tree-flat-single-layer-mono-white-5",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "modelType": "tree_flat",
+      "parameterRegion": {
+        "parameterName": "movement",
+        "regionKind": "single_value",
+        "valueSummary": "-5"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_rotation,multi_spiral,registry_generated,reverse_motion,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
         "energyLevel": "moderate",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -36063,6 +36285,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "parameterRegion": {
         "parameterName": "movement",
         "regionKind": "single_value",
+        "valueSummary": "-15"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_rotation,multi_spiral,registry_generated,reverse_motion,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
+        "energyLevel": "restrained",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 1,
+        "temporalMotion": 0,
+        "temporalColorDelta": 0,
+        "temporalBrightnessDelta": 0
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-movement-tree-flat-single-layer-rgb-primary-15",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "modelType": "tree_flat",
+      "parameterRegion": {
+        "parameterName": "movement",
+        "regionKind": "single_value",
         "valueSummary": "15"
       },
       "paletteMode": "rgb_primary",
@@ -36071,6 +36334,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryTexture": "decoded_fseq",
         "motionPacing": "",
         "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
+        "energyLevel": "restrained",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 1,
+        "temporalMotion": 0,
+        "temporalColorDelta": 0,
+        "temporalBrightnessDelta": 0
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-movement-tree-flat-single-layer-rgb-primary-5",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "modelType": "tree_flat",
+      "parameterRegion": {
+        "parameterName": "movement",
+        "regionKind": "single_value",
+        "valueSummary": "-5"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_rotation,multi_spiral,registry_generated,reverse_motion,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -36134,6 +36438,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "traceability": {
         "sourceGeometryProfiles": [
           "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-rotation-tree-360-round-mono-white-20",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_360_round",
+      "modelType": "tree_360",
+      "parameterRegion": {
+        "parameterName": "rotation",
+        "regionKind": "single_value",
+        "valueSummary": "-20"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,interaction_sweep,medium_spiral,multi_spiral,reverse_motion,reverse_rotation,spiral_flow,spiral_pattern,tight_spirals,tree_pattern_fit",
+        "energyLevel": "moderate",
+        "coverageLevel": "focused",
+        "geometryCoupling": "observed",
+        "stability": "medium"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "moderate",
+        "nonBlankRatio": 0.624922,
+        "temporalMotion": 0.025157,
+        "temporalColorDelta": 0.025157,
+        "temporalBrightnessDelta": 0.025157
+      },
+      "confidence": {
+        "level": "medium",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 1,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_360_round"
         ]
       }
     },
@@ -36213,6 +36558,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 1,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_360_round"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-rotation-tree-360-round-rgb-primary-20",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_360_round",
+      "modelType": "tree_360",
+      "parameterRegion": {
+        "parameterName": "rotation",
+        "regionKind": "single_value",
+        "valueSummary": "20"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,interaction_sweep,medium_spiral,round_tree_pattern,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit,depth_shading",
+        "energyLevel": "restrained",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "medium"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.859488,
+        "temporalMotion": 0.018868,
+        "temporalColorDelta": 0.018868,
+        "temporalBrightnessDelta": 0.018868
+      },
+      "confidence": {
+        "level": "medium",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
       "traceability": {
         "sourceGeometryProfiles": [
           "tree_360_round"
@@ -36350,6 +36736,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "parameterRegion": {
         "parameterName": "rotation",
         "regionKind": "single_value",
+        "valueSummary": "-10"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_motion,multi_spiral,registry_generated,reverse_rotation,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
+        "energyLevel": "moderate",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.775523,
+        "temporalMotion": 0.025157,
+        "temporalColorDelta": 0.025157,
+        "temporalBrightnessDelta": 0.025157
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-rotation-tree-flat-single-layer-mono-white-10",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "modelType": "tree_flat",
+      "parameterRegion": {
+        "parameterName": "rotation",
+        "regionKind": "single_value",
         "valueSummary": "10"
       },
       "paletteMode": "mono_white",
@@ -36432,6 +36859,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "parameterRegion": {
         "parameterName": "rotation",
         "regionKind": "single_value",
+        "valueSummary": "-30"
+      },
+      "paletteMode": "mono_white",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_motion,multi_spiral,registry_generated,reverse_rotation,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
+        "energyLevel": "moderate",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 0.775523,
+        "temporalMotion": 0.025157,
+        "temporalColorDelta": 0.025157,
+        "temporalBrightnessDelta": 0.025157
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-rotation-tree-flat-single-layer-mono-white-30",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "modelType": "tree_flat",
+      "parameterRegion": {
+        "parameterName": "rotation",
+        "regionKind": "single_value",
         "valueSummary": "30"
       },
       "paletteMode": "mono_white",
@@ -36481,6 +36949,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "primaryTexture": "decoded_fseq",
         "motionPacing": "",
         "textureDensity": "decoded_fseq,forward_motion,multi_spiral,neutral_rotation,registry_generated,spiral_drift,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
+        "energyLevel": "restrained",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 1,
+        "temporalMotion": 0,
+        "temporalColorDelta": 0,
+        "temporalBrightnessDelta": 0
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-rotation-tree-flat-single-layer-rgb-primary-10",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "modelType": "tree_flat",
+      "parameterRegion": {
+        "parameterName": "rotation",
+        "regionKind": "single_value",
+        "valueSummary": "-10"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_motion,multi_spiral,registry_generated,reverse_rotation,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -36582,6 +37091,47 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "coverageStatus": "multi_configuration_sampled"
       },
       "evidenceCount": 46,
+      "traceability": {
+        "sourceGeometryProfiles": [
+          "tree_flat_single_layer"
+        ]
+      }
+    },
+    {
+      "recordId": "spirals-rotation-tree-flat-single-layer-rgb-primary-30",
+      "effectName": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "modelType": "tree_flat",
+      "parameterRegion": {
+        "parameterName": "rotation",
+        "regionKind": "single_value",
+        "valueSummary": "-30"
+      },
+      "paletteMode": "rgb_primary",
+      "behaviorSignals": {
+        "primaryMotion": "unknown",
+        "primaryTexture": "decoded_fseq",
+        "motionPacing": "",
+        "textureDensity": "decoded_fseq,forward_motion,multi_spiral,registry_generated,reverse_rotation,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral",
+        "energyLevel": "restrained",
+        "coverageLevel": "broad",
+        "geometryCoupling": "observed",
+        "stability": "high"
+      },
+      "renderOutcomeSignals": {
+        "temporalRead": "unknown",
+        "densityRead": "dense",
+        "nonBlankRatio": 1,
+        "temporalMotion": 0,
+        "temporalColorDelta": 0,
+        "temporalBrightnessDelta": 0
+      },
+      "confidence": {
+        "level": "high",
+        "evidenceClass": "aggregated_render",
+        "coverageStatus": "multi_configuration_sampled"
+      },
+      "evidenceCount": 2,
       "traceability": {
         "sourceGeometryProfiles": [
           "tree_flat_single_layer"
@@ -36847,9 +37397,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "mono_white",
       "behaviorSignals": {
         "primaryMotion": "high_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "forward_motion",
         "motionPacing": "high_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral,round_tree_pattern,shrink_true",
+        "textureDensity": "forward_motion,forward_rotation,medium_spiral,round_tree_pattern,shrink_true,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit,decoded_fseq,multi_spiral",
         "energyLevel": "elevated",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -36929,9 +37479,9 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
       "paletteMode": "rgb_primary",
       "behaviorSignals": {
         "primaryMotion": "moderate_motion",
-        "primaryTexture": "decoded_fseq",
+        "primaryTexture": "forward_motion",
         "motionPacing": "moderate_motion",
-        "textureDensity": "decoded_fseq,forward_motion,forward_rotation,multi_spiral,registry_generated,spiral_flow,spiral_pattern,thick_spiral,tree_pattern_fit,medium_spiral,round_tree_pattern,shrink_true",
+        "textureDensity": "forward_motion,forward_rotation,medium_spiral,round_tree_pattern,shrink_true,single_spiral,spiral_flow,spiral_motion,spiral_pattern,tree_pattern_fit,decoded_fseq,multi_spiral",
         "energyLevel": "restrained",
         "coverageLevel": "broad",
         "geometryCoupling": "observed",
@@ -37693,45 +38243,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "sourceGeometryProfiles": [
           "tree_flat_single_layer"
         ]
-      }
-    },
-    {
-      "recordId": "strobe-baseline",
-      "effectName": "Strobe",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "unknown",
-        "primaryTexture": "unknown",
-        "motionPacing": "",
-        "textureDensity": "",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "registry_defined_not_screened"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": []
       }
     },
     {
@@ -42816,45 +43327,6 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
         "sourceGeometryProfiles": [
           "tree_360_round"
         ]
-      }
-    },
-    {
-      "recordId": "wave-baseline",
-      "effectName": "Wave",
-      "geometryProfile": "cross_geometry",
-      "modelType": "mixed",
-      "parameterRegion": {
-        "parameterName": "baseline",
-        "regionKind": "cluster",
-        "valueSummary": "current_baseline_capability"
-      },
-      "paletteMode": "",
-      "behaviorSignals": {
-        "primaryMotion": "unknown",
-        "primaryTexture": "unknown",
-        "motionPacing": "",
-        "textureDensity": "",
-        "energyLevel": "unknown",
-        "coverageLevel": "unknown",
-        "geometryCoupling": "mixed",
-        "stability": "low"
-      },
-      "renderOutcomeSignals": {
-        "temporalRead": "unknown",
-        "densityRead": "unknown",
-        "nonBlankRatio": 0,
-        "temporalMotion": 0,
-        "temporalColorDelta": 0,
-        "temporalBrightnessDelta": 0
-      },
-      "confidence": {
-        "level": "low",
-        "evidenceClass": "aggregated_render",
-        "coverageStatus": "registry_defined_not_screened"
-      },
-      "evidenceCount": 0,
-      "traceability": {
-        "sourceGeometryProfiles": []
       }
     },
     {

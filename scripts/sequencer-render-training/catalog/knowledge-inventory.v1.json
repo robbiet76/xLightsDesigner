@@ -50,9 +50,9 @@
     },
     {
       "id": "generated_semantic_records",
-      "match": { "prefixes": ["generated-records/"] },
+      "match": { "prefixes": ["generated-record-packs/"] },
       "lifecycle": "generated_semantics",
-      "role": "rebuildable compact semantic records used to export runtime bundles",
+      "role": "rebuildable compact semantic record packs used to export runtime bundles",
       "runtimeConsumable": false
     },
     {

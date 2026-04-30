@@ -54,6 +54,7 @@ Primary system roadmap:
 - `catalog/sequencer-unified-training-set-v1.json`
 - `catalog/effect-family-outcomes/`
 - `catalog/effect-screening-record-packs/`
+- `catalog/generated-record-packs/`
 - `catalog/effect-settings-coverage-report-v1.json`
 - `catalog/effect-training-automation-plan-v1.json`
 - `catalog/effect-parameter-screening-plan-v1.json`
@@ -95,6 +96,7 @@ Primary system roadmap:
 - `analysis/analyze_decoded_window.py`
 - `tooling/validate-training-catalog-inventory.mjs`
 - `tooling/pack-effect-screening-records.mjs`
+- `tooling/generated-record-catalog.mjs`
 
 ## Usage
 
