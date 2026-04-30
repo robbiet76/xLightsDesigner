@@ -4,7 +4,7 @@ Status: Archived
 Date: 2026-04-13
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-04-16
-Superseded By: `xlights-2026-06-api-migration-plan-2026-04-16.md`, `xlights-2026-06-owned-api-boundary-and-audit-2026-04-16.md`
+Superseded By: `xlights-api.md`, `xlights-api.md`
 
 ## Purpose
 

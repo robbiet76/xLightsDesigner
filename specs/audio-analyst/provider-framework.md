@@ -1,8 +1,6 @@
 # Audio Analyst Provider Framework
 
 Status: Approved v1 policy  
-Date: 2026-03-12
-
 ## Purpose
 Define the replaceability and extension policy for `audio_analyst` providers and capability adapters.
 

@@ -10,8 +10,8 @@ Current capture policy:
 - Animated effects are evaluated from temporal signatures first, with representative frames kept only as supporting evidence.
 - `run-manifest.sh` now writes `screeningQuality` so collapsed sweeps are flagged instead of silently treated as usable training evidence.
 
-Primary system roadmap:
-- [render-training-system-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-system-roadmap-2026-03-19.md)
+Primary system spec:
+- [render-training-knowledge.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-knowledge.md)
 
 ## Directory Layout
 - `catalog/`: stable training catalogs and standards
@@ -370,10 +370,7 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
 - Registry planning should be geometry-profile-aware.
 - The old unified training set is now transitional and should not be treated as the long-term selector foundation.
 - The reset rebuild should follow:
-  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md`
-  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-capability-and-parameter-semantics-v1-2026-04-15.md`
-  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md`
-  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-setting-interaction-training-harness-v1-2026-04-15.md`
+  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-knowledge.md`
 - Preference learning must remain outside the rebuilt shared training records in a separate store.
 
 

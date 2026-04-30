@@ -28,14 +28,8 @@ swift run
 
 ## Primary references
 
-- `../../specs/app-ui/macos-native-information-architecture-2026-04-06.md`
-- `../../specs/app-ui/macos-native-workflow-contracts-2026-04-06.md`
-- `../../specs/app-ui/macos-native-read-models-and-page-state-contracts-2026-04-06.md`
-- `../../specs/app-ui/macos-native-shared-backend-and-service-boundaries-2026-04-06.md`
-- `../../specs/app-ui/macos-native-visual-system-2026-04-06.md`
-- `../../specs/app-ui/macos-native-design-system-components-2026-04-06.md`
-- `../../specs/app-ui/macos-native-cutover-plan-2026-04-06.md`
-- `../../specs/app-ui/native-cutover-audit-2026-04-10.md`
+- `../../specs/app-ui/native-app.md`
+- `../../specs/app-ui/platform-and-services.md`
 
 ## Current workflow surface
 

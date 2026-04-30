@@ -1,7 +1,6 @@
 # Repo Structure Governance
 
 Status: Active
-Date: 2026-03-11
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-11
 

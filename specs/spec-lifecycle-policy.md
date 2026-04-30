@@ -1,47 +1,57 @@
 # Spec Lifecycle Policy
 
 Status: Active
-Date: 2026-03-11
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-03-11
+Last Reviewed: 2026-04-30
 
 ## Purpose
-Define how specs are created, promoted, archived, and deprecated.
 
-## Required Front Matter
-All active spec docs should include:
+Define how specs are created, promoted, consolidated, archived, and deleted.
+
+## Front Matter
+
+Active specs should include:
+
 - `Status`
-- `Date`
 - `Owner`
 - `Last Reviewed`
-- `Supersedes` (optional)
-- `Superseded By` (optional)
+- `Supersedes` when replacing older specs
+- `Superseded By` only when a retained historical file remains
+
+`Date` is optional and should be used only when the document is intentionally a point-in-time assessment or evidence record.
 
 ## Naming Convention
 
-Default rule for dated implementation specs:
-- use `descriptive-kebab-case-YYYY-MM-DD.md`
+Long-lived specs use stable kebab-case filenames without dates.
 
-Reason:
-- the date in the filename makes spec age visible at a glance
-- it reduces ambiguity when multiple iterations exist for the same topic
+Allowed dated filenames:
 
-Allowed exceptions:
-- domain indexes such as `README.md`
-- stable governance documents where the filename is intentionally canonical
-- schema files and non-Markdown machine-readable contracts
+- release impact audits
+- point-in-time product assessments kept for history
+- evidence readouts that are intentionally not the durable contract
+
+Disallowed for active durable specs:
+
+- dated implementation plans
+- dated checklists
+- dated cleanup audits
+- dated migration plans once the durable decision is known
 
 ## Status Values
-- `Draft`: under active authoring; not yet authoritative.
+
+- `Draft`: under active authoring.
 - `Active`: source-of-truth for implementation decisions.
-- `Deprecated`: still readable but not used for new implementation.
-- `Archived`: historical record only (stored under `specs/archive/`).
+- `Deprecated`: readable but not used for new implementation.
+- `Archived`: historical record only.
 
 ## Promotion Rules
-- A doc becomes `Active` only when referenced by `specs/README.md` or a domain README.
-- Replaced docs must include `Superseded By` before archival.
+
+A doc becomes active only when referenced by `specs/README.md` or a domain README.
+
+When a dated or step-by-step file produces durable decisions, fold those decisions into the current domain spec and remove the old file unless it still has explicit reference value.
 
 ## Archive Rules
-- Move superseded step-by-step artifacts to `specs/archive/`.
-- Do not delete archived files unless duplicated and explicitly approved.
-- When archiving a dated spec, preserve the dated filename.
+
+Archive sparingly. The archive is not a second active spec tree.
+
+Retain archived files only when they explain current code, training-package references, or a major historical decision that is not captured elsewhere.

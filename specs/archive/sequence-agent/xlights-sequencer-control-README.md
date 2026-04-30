@@ -4,7 +4,7 @@ Status: Archived
 Date: 2026-03-11
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-11
-Superseded By: `README.md`, `xlights-2026-06-api-migration-plan-2026-04-16.md`, `xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
+Superseded By: `README.md`, `xlights-api.md`, `xlights-api.md`
 
 ## Purpose
 Define the full target contract between xLightsDesigner and xLights before further API implementation, with explicit boundaries and autonomous-agent execution requirements.
@@ -22,7 +22,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `xlights-sequencer-control-sequence-agent-implementation-checklist.md`: implementation checklist for `sequence_agent` planning/execution phases.
 - `xlights-sequencer-control-decision-log.md`: locked decisions to minimize implementation churn.
 - `xlights-sequencer-control-implementation-roadmap.md`: phase ordering and active execution sequence.
-- `../root/xlights-sequencer-control-architecture-reset-plan-2026-03-11.md`: historical architecture reset and execution gates.
+- `../README.md`: historical architecture reset and execution gates.
 - `xlights-sequencer-control-acceptance-test-matrix.md`: cross-domain acceptance tests.
 - `xlights-sequencer-control-training-package-architecture.md`: portable BYO-provider training package architecture.
 - `xlights-sequencer-control-integration-test-harness.md`: non-UI integration scripts and report contract.

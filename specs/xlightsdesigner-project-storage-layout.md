@@ -1,7 +1,6 @@
 # xLightsDesigner Project Storage Layout
 
 Status: Proposed  
-Date: 2026-03-11  
 Owner: xLightsDesigner Team
 
 ## 1) Purpose

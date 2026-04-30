@@ -1,7 +1,6 @@
 # Music Design Context v1
 
 Status: Draft
-Date: 2026-03-13
 Owner: xLightsDesigner Team
 
 Purpose: define the designer-facing music-structure context artifact derived from audio analysis.

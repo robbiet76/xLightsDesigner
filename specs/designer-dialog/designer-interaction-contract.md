@@ -1,7 +1,6 @@
 # Designer Interaction Contract: Agent + User Iterative Sequencing
 
 Status: In Progress (Sprint 0)
-Date: 2026-03-07
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-11
 
@@ -575,13 +574,11 @@ When user has timeline/effect selection in UI, agent references must bind to sta
 
 ## 15) Related Specs
 - `../archive/sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md`
-- `../sequence-agent/xlights-2026-06-api-migration-plan-2026-04-16.md`
-- `../sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
+- `../sequence-agent/xlights-api.md`
+- `../sequence-agent/xlights-api.md`
 
 ## 16) Chat-First UI Contract (Amendment)
 Status: Proposed  
-Date: 2026-03-05
-
 ### 16.1 Rationale
 - Sequencing intent is inherently high-variance and too complex for comprehensive form controls.
 - Chat is the primary interaction mode and must remain continuously available.
@@ -651,8 +648,6 @@ Date: 2026-03-05
 
 ## 18) Director vs Designer Contract (Subjective Intent Translation)
 Status: Proposed  
-Date: 2026-03-05
-
 ### 18.1 Roles
 1. User is the `Director`: can provide either precise commands or broad artistic direction.
 2. Agent is the `Designer`: responsible for translating direction into concrete, scoped sequence mutations.

@@ -1,9 +1,8 @@
 # Agent Release Quality Gates
 
 Status: Active
-Date: 2026-03-11
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-04-24
+Last Reviewed: 2026-04-30
 
 ## Purpose
 Define go/no-go gates for shipping agent-enabled behavior.
@@ -19,7 +18,7 @@ Define go/no-go gates for shipping agent-enabled behavior.
 - Lyrics timing only written when synced timestamps are present.
 
 3. Owned API And Contract Safety
-- Owned xLights API boots from `/Users/robterry/xLights-2026.06`, not `/Applications/xLights.app`.
+- Owned xLights API boots from the active local xLights runtime, currently `/Users/robterry/xLights-2026.07`.
 - Required sequence, layout, timing, media, render-feedback, and sequencing routes pass owned validation.
 - Native apply uses the owned `sequencing.applyBatchPlan` path and fails closed when required preflight/readback fails.
 - Revision guard blocks stale apply.
@@ -38,16 +37,12 @@ Define go/no-go gates for shipping agent-enabled behavior.
 - Native backup/restore and xLights session recovery paths have package test evidence.
 
 ## Evidence Inputs
-- `specs/current-app-plan-2026-04-05.md`
-- `specs/xlightsdesigner-local-completion-roadmap-2026-04-23.md`
+- `specs/product-plan.md`
+- `specs/local-completion-roadmap.md`
 - `specs/requirements-traceability-matrix.md`
-- `specs/sequence-agent/xlights-2026-06-api-compatibility-matrix-2026-04-16.md`
-- `specs/sequence-agent/xlights-2026-06-owned-api-implementation-plan-2026-04-16.md`
-- `specs/sequence-agent/sequencer-proof-loop-checklist-2026-04-13.md`
-- `specs/sequence-agent/sequencer-validation-matrix-2026-04-15.md`
-- `specs/sequence-agent/sequencer-validation-audit-2026-04-15.md`
-- `specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md`
-- `specs/sequence-agent/sequencer-training-unattended-batch-harness-v1-2026-04-15.md`
+- `specs/sequence-agent/xlights-api.md`
+- `specs/sequence-agent/render-training-knowledge.md`
+- `specs/sequence-agent/sequencing-system.md`
 - `apps/xlightsdesigner-macos/Tests/XLightsDesignerMacOSTests/ReviewScreenViewModelTests.swift`
 - `apps/xlightsdesigner-macos/Tests/XLightsDesignerMacOSTests/XLightsSessionViewModelTests.swift`
 - `scripts/sequencer-render-training/runners/run-stage1-coverage-chunked.sh`
@@ -60,11 +55,11 @@ Define go/no-go gates for shipping agent-enabled behavior.
 
 For the current local app completion workstream, a release-quality agent path requires:
 - native macOS app path, not the retired Electron package path
-- owned API validation on the active xLights 2026.06 runtime
+- owned API validation on the active xLights runtime
 - current effectmetadata import and drift detection in place
 - green native package tests for backup/restore, session recovery, proposal generation, pending work, and review apply behavior
 - green sequencer validation at the contract and retained proof-loop level
 - green stage1 training/validation on the active xLights base
 
 This document is a gate summary, not the detailed test plan.
-The detailed acceptance surfaces live in the sequence-agent validation, native app, and `2026.06` owned API specs.
+The detailed acceptance surfaces live in the sequence-agent, native app, and xLights API specs.

@@ -24,8 +24,8 @@ Purpose:
 - Write per-suite JSON reports and a summary JSON report.
 
 Inputs:
-- `ENV_FILE` (optional): defaults to `specs/archive/sequence-agent/xlights-sequencer-control-test-fixtures.example.env`
-- `MANIFEST_FILE` (optional): defaults to `specs/archive/sequence-agent/xlights-sequencer-control-test-fixtures.manifest.json`
+- `ENV_FILE` (optional): defaults to `specs/sequence-agent/xlights-sequencer-control-test-fixtures.example.env`
+- `MANIFEST_FILE` (optional): defaults to `specs/sequence-agent/xlights-sequencer-control-test-fixtures.manifest.json`
 - `OUT_DIR` (optional): defaults under `/tmp/xlights-control-reports/<timestamp>`
 - `BOOTSTRAP_FIXTURES` (optional): when `true`, runs fixture bootstrap preflight and writes `bootstrap-report.json`
 - `CURL_MAX_TIME` (optional): max seconds per request to avoid indefinite hangs (default `20`)

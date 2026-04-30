@@ -1,7 +1,6 @@
 # App Assistant Role And Boundary
 
 Status: Active
-Date: 2026-03-12
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-12
 

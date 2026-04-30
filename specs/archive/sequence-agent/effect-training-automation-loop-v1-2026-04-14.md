@@ -4,7 +4,7 @@ Status: Archived
 Date: 2026-04-14  
 Owner: xLightsDesigner Team  
 Last Reviewed: 2026-04-15
-Superseded By: `sequencer-training-reset-plan-2026-04-15.md`, `sequencer-validation-matrix-2026-04-15.md`, `sequencer-training-unattended-batch-harness-v1-2026-04-15.md`
+Superseded By: `render-training-knowledge.md`, `sequencing-system.md`, `render-training-knowledge.md`
 
 ## Status Note
 
@@ -16,8 +16,8 @@ It remains useful as historical planning context only and should not be used as 
 
 The rebuild should instead follow:
 
-- [sequencer-training-reset-plan-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-reset-plan-2026-04-15.md)
-- [sequencer-training-records-v1-2026-04-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-records-v1-2026-04-15.md)
+- [render-training-knowledge.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-knowledge.md)
+- [render-training-knowledge.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-knowledge.md)
 
 ## Purpose
 

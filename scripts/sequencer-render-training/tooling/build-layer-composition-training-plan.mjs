@@ -1461,7 +1461,7 @@ export function buildLayerCompositionTrainingPlan({
       "render_setting_variant"
     ],
     renderOrderContract: {
-      sourceSpec: "specs/sequence-agent/xlights-layering-render-order-audit-2026-04-17.md",
+      sourceSpec: "specs/sequence-agent/render-training-knowledge.md",
       physicalLayerOrderPolicy: "preserve layerIndex separately from compositionPass; do not infer topmost dominance from layer number alone",
       displayElementOrderPolicy: "explicitly test broad-before-specific and specific-before-broad order when group/model targets overlap"
     },

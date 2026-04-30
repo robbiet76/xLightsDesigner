@@ -33,5 +33,5 @@ Do not deepen product-shell investment there or add new Electron compatibility f
 - before deleting mixed runtime files, confirm they are not still feeding scripts or tests
 
 Primary references:
-- `../../specs/app-ui/native-cutover-audit-2026-04-10.md`
-- `../../specs/app-ui/electron-legacy-removal-manifest-2026-04-06.md`
+- `../../specs/app-ui/native-app.md`
+- `../../specs/app-ui/platform-and-services.md`

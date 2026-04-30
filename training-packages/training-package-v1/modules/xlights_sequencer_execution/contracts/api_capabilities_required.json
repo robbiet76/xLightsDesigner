@@ -15,7 +15,7 @@
   ],
   "requiredApiVersion": "xlightsdesigner-owned-api",
   "applyModel": "owned-batch-plan-only",
-  "sourceSpec": "specs/xlightsdesigner-local-completion-roadmap-2026-04-23.md",
+  "sourceSpec": "specs/local-completion-roadmap.md",
   "notes": [
     "Apply execution must use /xlightsdesigner/api/sequencing/apply-batch-plan with the expected revision token.",
     "Unsupported command graphs must fail closed instead of falling back to transaction or legacy automation endpoints.",

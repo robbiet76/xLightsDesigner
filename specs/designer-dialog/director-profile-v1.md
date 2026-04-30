@@ -1,7 +1,6 @@
 # Director Profile v1
 
 Status: Draft
-Date: 2026-03-13
 Owner: xLightsDesigner Team
 
 Purpose: define the user-specific preference artifact consumed by `designer_dialog` without polluting the stable design-principles corpus.

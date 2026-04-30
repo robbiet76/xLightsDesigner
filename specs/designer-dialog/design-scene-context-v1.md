@@ -1,7 +1,6 @@
 # Design Scene Context v1
 
 Status: Draft
-Date: 2026-03-13
 Owner: xLightsDesigner Team
 
 Purpose: define the designer-facing spatial/layout context artifact consumed by `designer_dialog`.
