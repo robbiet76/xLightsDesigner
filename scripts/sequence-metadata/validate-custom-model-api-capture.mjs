@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { getModel, getModels, getSubmodels } from "../../apps/xlightsdesigner-ui/api.js";
+import { getMediaStatus, getModel, getModelNodes, getModels, getSubmodels, setShowDirectory } from "../../apps/xlightsdesigner-ui/api.js";
 import { classifyModelDisplayType } from "../../apps/xlightsdesigner-ui/agent/sequence-agent/model-type-catalog.js";
 import { buildCustomModelStructureCatalog } from "../../apps/xlightsdesigner-ui/runtime/custom-model-catalog.js";
 
@@ -12,12 +12,21 @@ function norm(value = "") {
 function parseArgs(argv = process.argv.slice(2)) {
   const args = {
     endpoint: process.env.XLIGHTS_ENDPOINT || "http://127.0.0.1:49915/xlightsdesigner/api",
+    showDir: "",
+    forceShowDir: false,
+    permanentShowDir: false,
     output: ""
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--endpoint" || arg === "-e") {
       args.endpoint = argv[++index] || args.endpoint;
+    } else if (arg === "--show-dir") {
+      args.showDir = argv[++index] || "";
+    } else if (arg === "--force-show-dir") {
+      args.forceShowDir = true;
+    } else if (arg === "--permanent-show-dir") {
+      args.permanentShowDir = true;
     } else if (arg === "--output" || arg === "-o") {
       args.output = argv[++index] || "";
     } else {
@@ -93,13 +102,49 @@ function submodelRowsFrom(body = {}) {
 
 async function main() {
   const args = parseArgs();
+  let showDirectorySwitch = null;
+  if (args.showDir) {
+    showDirectorySwitch = await setShowDirectory(args.endpoint, path.resolve(args.showDir), {
+      force: args.forceShowDir,
+      permanent: args.permanentShowDir
+    });
+  }
+  let mediaStatus = null;
+  try {
+    mediaStatus = await getMediaStatus(args.endpoint);
+  } catch {
+    mediaStatus = null;
+  }
   const modelBody = await getModels(args.endpoint);
   const models = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : [];
   const customSummaries = models.filter(isCustomModel);
   const detailResults = await Promise.allSettled(customSummaries.map(async (row) => {
     const name = norm(row?.name || row?.id);
     if (!name || hasCustomGrid(row)) return [name, row, false];
-    return [name, mergeModelDetail(row, await getModel(args.endpoint, name)), true];
+    const [detailResult, nodeResult] = await Promise.allSettled([
+      getModel(args.endpoint, name),
+      getModelNodes(args.endpoint, {
+        name,
+        includeBufferCoords: true,
+        includeWorldCoords: true,
+        includeScreenCoords: false
+      })
+    ]);
+    const detail = detailResult.status === "fulfilled" ? detailResult.value : {};
+    const nodeLayout = nodeResult.status === "fulfilled" ? nodeResult.value?.data || null : null;
+    return [
+      name,
+      {
+        ...mergeModelDetail(row, detail),
+        nodeLayout,
+        attributes: {
+          ...customAttributesFrom(row),
+          ...customAttributesFrom(modelDetailPayload(detail)),
+          ...(nodeLayout ? { customNodeLayout: nodeLayout } : {})
+        }
+      },
+      true
+    ];
   }));
   const customRows = detailResults
     .filter((row) => row.status === "fulfilled" && Array.isArray(row.value))
@@ -124,7 +169,8 @@ async function main() {
         displayAs: norm(row?.displayAs || row?.DisplayAs || row?.type),
         type: norm(row?.type || row?.DisplayAs || row?.displayAs),
         attributes: customAttributesFrom(row),
-        faceInfo: row?.faceInfo || null
+        faceInfo: row?.faceInfo || null,
+        nodeLayout: row?.nodeLayout || row?.attributes?.customNodeLayout || null
       }];
     })
     .filter(([id]) => id));
@@ -142,6 +188,9 @@ async function main() {
     artifactVersion: "1.0",
     createdAt: new Date().toISOString(),
     endpoint: args.endpoint,
+    requestedShowDir: args.showDir ? path.resolve(args.showDir) : "",
+    activeShowDirectory: norm(mediaStatus?.data?.showDirectory),
+    showDirectorySwitch,
     summary: {
       modelCount: models.length,
       customSummaryCount: customSummaries.length,

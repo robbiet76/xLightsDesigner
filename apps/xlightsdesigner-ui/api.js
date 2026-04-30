@@ -331,6 +331,7 @@ export async function pingCapabilities(endpoint) {
           "timing.ensureTrack",
           "timing.addMarks",
           "media.getCurrent",
+          "media.setShowDirectory",
           "layout.getModels",
           "layout.getSubmodels",
           "layout.getModelNodes",
@@ -407,6 +408,22 @@ export async function getMediaStatus(endpoint) {
     };
   }
   return postCommand(endpoint, "media.getStatus", {});
+}
+
+export async function setShowDirectory(endpoint, showDirectory, { force = false, permanent = false } = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    await ensureOwnedReady(endpoint, "media.setShowDirectory");
+    return readOwnedPost(endpoint, "/media/show-directory", {
+      showDirectory,
+      force,
+      permanent
+    }, { command: "media.setShowDirectory" });
+  }
+  return postCommand(endpoint, "media.setShowDirectory", {
+    showDirectory,
+    force,
+    permanent
+  });
 }
 
 export async function getMediaMetadata(endpoint) {

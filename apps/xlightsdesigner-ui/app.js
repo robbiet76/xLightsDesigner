@@ -18,6 +18,7 @@ import {
   getDisplayElementOrder,
   getModelGroupMembers,
   getModel,
+  getModelNodes,
   getModels,
   getLayoutScene,
   getOpenSequence,
@@ -3022,6 +3023,7 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
       height: toFiniteNumberOrNull(dimensions.height),
       depth: toFiniteNumberOrNull(dimensions.depth)
     },
+    nodeLayout: model?.nodeLayout || model?.customNodeLayout || model?.attributes?.customNodeLayout || null,
     attributes: {
       ...(isPlainObject(model?.attributes) ? model.attributes : {}),
       ...extractCustomModelAttributes(model)
@@ -3313,7 +3315,9 @@ async function fetchGroupMembershipsFromXLights(models = []) {
 async function hydrateCustomModelDetailsFromXLights(models = []) {
   const rows = Array.isArray(models) ? models : [];
   const commands = Array.isArray(state.health?.capabilityCommands) ? state.health.capabilityCommands : [];
-  if (!commands.includes("layout.getModel")) return rows;
+  const canFetchModelDetail = commands.includes("layout.getModel");
+  const canFetchModelNodes = commands.includes("layout.getModelNodes");
+  if (!canFetchModelDetail && !canFetchModelNodes) return rows;
   const candidates = rows.filter((row) => isCustomModelRow(row) && !hasCustomModelStructureAttributes(row));
   if (!candidates.length) return rows;
 
@@ -3322,8 +3326,22 @@ async function hydrateCustomModelDetailsFromXLights(models = []) {
     candidates.map(async (row) => {
       const name = String(row?.name || row?.id || "").trim();
       if (!name) return null;
-      const detail = await getModel(state.endpoint, name);
-      return [name, detail];
+      const [detailResult, nodeResult] = await Promise.allSettled([
+        canFetchModelDetail ? getModel(state.endpoint, name) : Promise.resolve(null),
+        canFetchModelNodes ? getModelNodes(state.endpoint, {
+          name,
+          includeBufferCoords: true,
+          includeWorldCoords: true,
+          includeScreenCoords: false
+        }) : Promise.resolve(null)
+      ]);
+      return [
+        name,
+        {
+          detail: detailResult.status === "fulfilled" ? detailResult.value : null,
+          nodeLayout: nodeResult.status === "fulfilled" ? nodeResult.value?.data || null : null
+        }
+      ];
     })
   );
   for (const result of results) {
@@ -3334,7 +3352,17 @@ async function hydrateCustomModelDetailsFromXLights(models = []) {
 
   return rows.map((row) => {
     const name = String(row?.name || row?.id || "").trim();
-    return detailByName.has(name) ? mergeModelDetailRow(row, detailByName.get(name)) : row;
+    if (!detailByName.has(name)) return row;
+    const payload = detailByName.get(name) || {};
+    return {
+      ...mergeModelDetailRow(row, payload.detail),
+      nodeLayout: payload.nodeLayout || row?.nodeLayout || null,
+      attributes: {
+        ...(isPlainObject(row?.attributes) ? row.attributes : {}),
+        ...(isPlainObject(payload.detail?.attributes) ? payload.detail.attributes : {}),
+        ...(payload.nodeLayout ? { customNodeLayout: payload.nodeLayout } : {})
+      }
+    };
   });
 }
 

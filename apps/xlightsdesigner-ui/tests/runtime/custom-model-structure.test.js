@@ -68,6 +68,25 @@ test("analyzeCustomModelStructure promotes sparse radial custom grids cautiously
   assert.deepEqual(buckets.sort(), ["spinner", "star"]);
 });
 
+test("analyzeCustomModelStructure derives construction from API model nodes", () => {
+  const out = analyzeCustomModelStructure({
+    customNodeLayout: {
+      nodes: [
+        { nodeId: 1, coords: [{ buffer: { x: 1, y: 0 } }] },
+        { nodeId: 2, coords: [{ buffer: { x: 1, y: 1 } }] },
+        { nodeId: 3, coords: [{ buffer: { x: 1, y: 2 } }] },
+        { nodeId: 4, coords: [{ buffer: { x: 1, y: 3 } }] },
+        { nodeId: 5, coords: [{ buffer: { x: 1, y: 4 } }] }
+      ]
+    }
+  });
+
+  assert.equal(out.profile, "custom_linear_like");
+  assert.equal(out.construction.source, "layout.getModelNodes");
+  assert.ok(out.traits.includes("api_node_layout"));
+  assert.equal(out.nodeOrder.nodeCount, 5);
+});
+
 test("analyzeCustomModelStructure uses face submodels to identify character customs", () => {
   const source = grid([
     ["", "", 1, "", ""],

@@ -62,8 +62,10 @@ export function buildCustomModelStructureCatalog({
     if (classification?.canonicalType !== "custom") continue;
     const childSubmodels = childSubmodelsFor(targetId, submodelsById);
     const analysis = analyzeCustomModelStructure(modelAttributes(model), {
+      modelName: norm(model?.name || targetId),
       submodels: childSubmodels,
-      faceInfo: model?.faceInfo || model?.attributes?.faceInfo || null
+      faceInfo: model?.faceInfo || model?.attributes?.faceInfo || null,
+      nodeLayout: model?.nodeLayout || model?.customNodeLayout || model?.attributes?.customNodeLayout || null
     });
     models.push({
       targetId,

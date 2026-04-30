@@ -229,6 +229,25 @@ async function assertOpenShowFolder(endpoint, expectedShowDir) {
   return mediaCurrent;
 }
 
+async function setOpenShowFolder(endpoint, expectedShowDir) {
+  try {
+    return await request(endpoint, '/media/show-directory', {
+      method: 'POST',
+      body: {
+        showDirectory: expectedShowDir,
+        force: true,
+        permanent: false
+      },
+      timeoutMs: 90000
+    });
+  } catch (error) {
+    if (/404|Not Found|No route|Unsupported/i.test(String(error?.message || error))) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 async function chooseTargetModel(endpoint, requestedName) {
   const modelsPayload = await request(endpoint, '/layout/models');
   const models = Array.isArray(modelsPayload?.data?.models) ? modelsPayload.data.models : [];
@@ -293,6 +312,7 @@ async function main() {
 
   const health = await waitForReady(args.endpoint, args.readyTimeoutMs);
   await assertNoBlockingModal(args.endpoint);
+  const showDirectorySwitch = await setOpenShowFolder(args.endpoint, showDir);
   const mediaCurrent = await assertOpenShowFolder(args.endpoint, showDir);
   const layoutScene = await request(args.endpoint, '/layout/scene');
   const { model, modelsPayload } = await chooseTargetModel(args.endpoint, args.targetModel);
@@ -326,6 +346,7 @@ async function main() {
     targetModel,
     effectName: args.effectName,
     health,
+    showDirectorySwitch,
     mediaCurrent,
     layoutModelCount: Array.isArray(modelsPayload?.data?.models) ? modelsPayload.data.models.length : 0,
     layoutSceneModelCount: Array.isArray(layoutScene?.data?.models) ? layoutScene.data.models.length : 0

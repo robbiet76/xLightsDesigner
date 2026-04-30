@@ -166,6 +166,56 @@ function parseNodeRanges(value = "") {
   return unique(nodes.map((node) => String(node))).map((node) => Number(node)).filter((node) => Number.isFinite(node));
 }
 
+function numericCoord(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function coordinateFromNode(node = {}) {
+  const coords = Array.isArray(node?.coords) ? node.coords : [];
+  const coord = coords.find((row) => row?.buffer && numericCoord(row.buffer.x) !== null && numericCoord(row.buffer.y) !== null)
+    || coords.find((row) => row?.screen && numericCoord(row.screen.x) !== null && numericCoord(row.screen.y) !== null)
+    || coords.find((row) => row?.world && numericCoord(row.world.x) !== null && numericCoord(row.world.y) !== null)
+    || null;
+  if (!coord) return null;
+  if (coord.buffer) return { col: numericCoord(coord.buffer.x), row: numericCoord(coord.buffer.y), layer: 0, source: "buffer" };
+  if (coord.screen) return { col: numericCoord(coord.screen.x), row: numericCoord(coord.screen.y), layer: numericCoord(coord.screen.z) || 0, source: "screen" };
+  if (coord.world) return { col: numericCoord(coord.world.x), row: numericCoord(coord.world.y), layer: numericCoord(coord.world.z) || 0, source: "world" };
+  return null;
+}
+
+function pointsFromApiNodeLayout(layout = {}) {
+  const nodes = Array.isArray(layout?.nodes) ? layout.nodes : [];
+  if (!nodes.length) return [];
+  const rawPoints = [];
+  for (const row of nodes) {
+    const node = Number(row?.nodeId ?? row?.node ?? row?.id);
+    const coord = coordinateFromNode(row);
+    if (!Number.isFinite(node) || node <= 0 || !coord) continue;
+    rawPoints.push({
+      node,
+      row: coord.row,
+      col: coord.col,
+      layer: coord.layer,
+      coordinateSource: coord.source
+    });
+  }
+  if (!rawPoints.length) return [];
+  const rows = [...new Set(rawPoints.map((point) => point.row))].sort((a, b) => a - b);
+  const cols = [...new Set(rawPoints.map((point) => point.col))].sort((a, b) => a - b);
+  const layers = [...new Set(rawPoints.map((point) => point.layer))].sort((a, b) => a - b);
+  const rowIndex = new Map(rows.map((value, index) => [value, index]));
+  const colIndex = new Map(cols.map((value, index) => [value, index]));
+  const layerIndex = new Map(layers.map((value, index) => [value, index]));
+  return rawPoints.map((point) => ({
+    node: point.node,
+    row: rowIndex.get(point.row) ?? 0,
+    col: colIndex.get(point.col) ?? 0,
+    layer: layerIndex.get(point.layer) ?? 0,
+    coordinateSource: point.coordinateSource
+  }));
+}
+
 function submodelLineValue(submodel = {}) {
   const attrs = submodel?.attributes || {};
   const lines = [];
@@ -233,7 +283,10 @@ function analyzeSubmodelStructure(submodels = [], faceInfo = null) {
 export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   const layers = parseCustomModelGrid(attrs);
   const submodels = analyzeSubmodelStructure(options?.submodels || attrs?.submodels || [], options?.faceInfo || attrs?.faceInfo || null);
-  const points = [];
+  const nodeLayout = options?.nodeLayout || attrs?.customNodeLayout || attrs?.nodeLayout || null;
+  const modelName = low(options?.modelName || attrs?.name || attrs?.modelName || "");
+  const apiNodePoints = pointsFromApiNodeLayout(nodeLayout);
+  const points = [...apiNodePoints];
   for (let layer = 0; layer < layers.length; layer += 1) {
     const rows = layers[layer] || [];
     for (let row = 0; row < rows.length; row += 1) {
@@ -260,6 +313,7 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   }
 
   const traits = ["custom_grid"];
+  if (apiNodePoints.length) traits.push("api_node_layout");
   const buckets = new Set();
   let profile = "custom_sparse_shape";
   let confidence = 0.35;
@@ -292,6 +346,15 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   if (stats.occupancy < 0.2) traits.push("sparse_custom_grid");
   if (stats.aspectRatio >= 2) traits.push(stats.height >= stats.width ? "vertical_span" : "horizontal_span");
   if (nodeOrder.adjacentStepRatio >= 0.75) traits.push("continuous_node_path");
+  if (modelName.includes("cane")) {
+    traits.push("custom_linear_like", "linear_like", "name_hint_cane");
+    buckets.delete("spinner");
+    buckets.delete("star");
+    buckets.add("single_line");
+    buckets.add("cane");
+    profile = "custom_linear_like";
+    confidence = Math.max(confidence, 0.68);
+  }
   traits.push(...submodels.traits);
   if (submodels.traits.includes("custom_face_like")) {
     profile = "custom_face_like";
@@ -315,7 +378,7 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
     nodeOrder,
     submodels,
     construction: {
-      source: attrs?.CustomModelCompressed ? "CustomModelCompressed" : "CustomModel",
+      source: attrs?.CustomModelCompressed ? "CustomModelCompressed" : apiNodePoints.length ? "layout.getModelNodes" : "CustomModel",
       dimensions: {
         width: stats.width,
         height: stats.height,
