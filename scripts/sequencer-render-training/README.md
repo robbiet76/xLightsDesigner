@@ -44,6 +44,8 @@ Primary system roadmap:
 - `runners/run-live-outcome-harvest-cycle.sh`
 
 ## Core Catalogs
+- `catalog/README.md`
+- `catalog/knowledge-inventory.v1.json`
 - `catalog/effective-effect-parameter-registry.json`
 - `catalog/generic-layout-model-catalog.json`
 - `catalog/generic-layout-geometry-audit.json`
@@ -90,6 +92,7 @@ Primary system roadmap:
 - `tooling/build-behavior-capability-records.mjs`
 - `tooling/resolve-controlled-designer-term.py`
 - `analysis/analyze_decoded_window.py`
+- `tooling/validate-training-catalog-inventory.mjs`
 
 ## Usage
 

@@ -1,0 +1,94 @@
+{
+  "artifactType": "sequencer_render_training_catalog_inventory",
+  "artifactVersion": "1.0",
+  "lastReviewed": "2026-04-30",
+  "root": "scripts/sequencer-render-training/catalog",
+  "rules": [
+    {
+      "id": "catalog_readme",
+      "match": { "paths": ["README.md"] },
+      "lifecycle": "documentation",
+      "role": "catalog entrypoint and operating rules",
+      "runtimeConsumable": false
+    },
+    {
+      "id": "catalog_inventory",
+      "match": { "paths": ["knowledge-inventory.v1.json"] },
+      "lifecycle": "curated_source",
+      "role": "machine-readable classification for catalog files",
+      "runtimeConsumable": false
+    },
+    {
+      "id": "curated_training_standards",
+      "match": {
+        "paths": [
+          "training-standards.json",
+          "generic-layout-model-catalog.json",
+          "generic-layout-geometry-audit.json",
+          "stage1-effect-model-scope.json",
+          "effect-parameter-registry.json",
+          "effective-effect-parameter-registry.json"
+        ]
+      },
+      "lifecycle": "curated_source",
+      "role": "stable source inputs for training, normalization, and bundle generation",
+      "runtimeConsumable": false
+    },
+    {
+      "id": "promoted_effect_screening_records",
+      "match": { "prefixes": ["effect-screening-records/"] },
+      "lifecycle": "promoted_evidence",
+      "role": "durable promoted render-screening records after learning-gate approval",
+      "runtimeConsumable": false
+    },
+    {
+      "id": "generated_unified_training_set",
+      "match": { "paths": ["sequencer-unified-training-set-v1.json"] },
+      "lifecycle": "generated_catalog",
+      "role": "rebuildable consolidated training set used by runtime bundle exporters",
+      "runtimeConsumable": false
+    },
+    {
+      "id": "generated_semantic_records",
+      "match": { "prefixes": ["generated-records/"] },
+      "lifecycle": "generated_semantics",
+      "role": "rebuildable compact semantic records used to export runtime bundles",
+      "runtimeConsumable": false
+    },
+    {
+      "id": "effect_family_outcome_memory",
+      "match": { "prefixes": ["effect-family-outcomes/"] },
+      "lifecycle": "memory",
+      "role": "durable harvested effect-family outcome memory",
+      "runtimeConsumable": false
+    },
+    {
+      "id": "planning_and_review_reports",
+      "match": {
+        "paths": [
+          "effect-parameter-screening-plan-v1.json",
+          "effect-sampling-audit-v1.json",
+          "effect-settings-coverage-report-v1.json",
+          "effect-training-automation-plan-v1.json"
+        ],
+        "prefixes": ["effect-training-dossiers/"]
+      },
+      "lifecycle": "report",
+      "role": "generated planning, audit, and review outputs",
+      "runtimeConsumable": false
+    },
+    {
+      "id": "upstream_effectmetadata_snapshot",
+      "match": { "prefixes": ["upstream-effectmetadata/"] },
+      "lifecycle": "source_snapshot",
+      "role": "imported upstream xLights effectmetadata snapshots and diffs",
+      "runtimeConsumable": false
+    }
+  ],
+  "runtimeConsumptionPolicy": {
+    "allowedRuntimeSurface": "apps/xlightsdesigner-ui/agent/sequence-agent/generated/* through trained-effect-knowledge.js loader APIs",
+    "catalogFilesDirectlyRuntimeConsumable": false,
+    "rawRunLogsRuntimeConsumable": false
+  }
+}
+
