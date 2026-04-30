@@ -286,6 +286,7 @@ async function ensureXlights(args) {
 
   const launched = await run('node', [
     'scripts/xlights/launch-owned-xlights.mjs',
+    ...(process.env.XLIGHTS_APP_PATH ? ['--app', path.resolve(process.env.XLIGHTS_APP_PATH)] : []),
     '--show-dir',
     path.resolve(args.showDir),
     '--modal-policy',

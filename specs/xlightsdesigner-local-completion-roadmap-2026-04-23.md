@@ -9,7 +9,7 @@ Owner: xLightsDesigner Team
 This roadmap tracks the current route toward a locally useful xLightsDesigner app. Numbered phase labels are intentionally avoided here because this project has had many temporary planning cycles; durable docs should describe capabilities, evidence, and remaining gaps rather than preserve short-lived phase names.
 
 Validated against:
-- xLights repo: `/Users/robterry/xLights-2026.06`
+- xLights repo: `/Users/robterry/xLights-2026.07`
 - app folder: `/Users/robterry/Documents/Lights/xLightsDesigner`
 - linked development show folder: `/Users/robterry/Desktop/Show`
 - read-only completed-sequence reference root: `/Users/robterry/Documents/Lights/Current`
@@ -20,9 +20,9 @@ The linked development show folder is the xLights show folder used for validatio
 The proof created an isolated `.xsq`, applied a simple batch plan, rendered the current sequence, saved through the owned API, and produced the `.fseq` next to the isolated `.xsq`. It also confirmed the create flow no longer writes `owned-api-validation.fseq` into the global/root FSEQ folder.
 
 Automation launch requirements discovered during owned API validation:
-- launch the API-enabled xLights 2026.06 build, not `/Applications/xLights.app`
+- launch the API-enabled xLights build explicitly, not `/Applications/xLights.app`
 - use `-o` for automation launches so the pre-frame information dialog does not block API startup
-- launch with `scripts/xlights/launch-owned-xlights.mjs --show-dir <linked-show-folder> -o` so xLights opens to the same folder the app is validating
+- launch with `scripts/xlights/launch-owned-xlights.mjs --app <xLights.app> --show-dir <linked-show-folder> -o` so xLights opens to the same folder the app is validating
 - include the linked xLights show folder in `XLIGHTS_DESIGNER_TRUSTED_ROOTS` for create/save validation; the launch helper does this automatically when `--show-dir` is used
 - require `/media/current` to report the same show folder as the validation `--show-dir`; trusted roots only authorize file access and do not prove xLights is open to the linked show folder
 
