@@ -15,6 +15,25 @@ function unique(values = []) {
   return [...new Set(normArray(values).map((row) => normText(row)).filter(Boolean))];
 }
 
+function repoRelativePath(value = "") {
+  const normalized = normText(value);
+  if (!normalized) return "";
+  const relative = path.relative(process.cwd(), path.resolve(normalized));
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return normalized;
+  return relative;
+}
+
+function buildProvenance({ generatedBy, sourcePath = "", sourceArtifactType = "", sourceArtifactVersion = "", sourceRecordCount = 0 } = {}) {
+  return {
+    generatedBy,
+    sourcePath: repoRelativePath(sourcePath),
+    sourceArtifactType: normText(sourceArtifactType),
+    sourceArtifactVersion: normText(sourceArtifactVersion),
+    sourceRecordCount: Number(sourceRecordCount || 0),
+    compactionPolicy: "runtime_bundle_omits_raw_render_frames_and_project_specific_identifiers"
+  };
+}
+
 function indexRepresentativenessProfiles(effect = {}) {
   const profiles = new Map();
   for (const row of normArray(effect?.screeningLearning?.configurationRepresentativeness?.profiles)) {
@@ -77,7 +96,7 @@ function buildEffectPriorBundle(effect = {}) {
   };
 }
 
-function buildBundle(trainingSet = {}) {
+function buildBundle(trainingSet = {}, options = {}) {
   const effects = {};
   const selectorReadyEffects = [];
   for (const effect of normArray(trainingSet?.effects)) {
@@ -92,6 +111,13 @@ function buildBundle(trainingSet = {}) {
     artifactType: "sequencer_derived_parameter_priors_bundle",
     artifactVersion: "1.0",
     generatedAt: new Date().toISOString(),
+    provenance: buildProvenance({
+      generatedBy: "scripts/sequencer-render-training/tooling/export-derived-parameter-priors-bundle.mjs",
+      sourcePath: options.sourcePath,
+      sourceArtifactType: trainingSet?.artifactType,
+      sourceArtifactVersion: trainingSet?.artifactVersion,
+      sourceRecordCount: normArray(trainingSet?.effects).length
+    }),
     sourceArtifactType: normText(trainingSet?.artifactType),
     sourceArtifactVersion: normText(trainingSet?.artifactVersion),
     effectCount: Object.keys(effects).length,
@@ -121,7 +147,7 @@ function main() {
   const inputPath = path.resolve(args[inputIndex + 1]);
   const outputPath = path.resolve(args[outputIndex + 1]);
   const trainingSet = JSON.parse(fs.readFileSync(inputPath, "utf8"));
-  const bundle = buildBundle(trainingSet);
+  const bundle = buildBundle(trainingSet, { sourcePath: inputPath });
   writeJsModule(bundle, outputPath);
   process.stdout.write(`${JSON.stringify({ output: outputPath, effectCount: bundle.effectCount }, null, 2)}\n`);
 }

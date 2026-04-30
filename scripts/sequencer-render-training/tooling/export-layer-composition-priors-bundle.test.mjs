@@ -29,13 +29,18 @@ test("layer composition bundle indexes priors by sequencer retrieval facets", ()
           sceneSpreadDirectionFromBaseline: "increase",
           multicolorFrameRatioDirectionFromBaseline: "increase",
           equivalentToPass: "group_then_model"
-        }
+        },
+        sourceObservationRef: "/tmp/run-1/passes/group_then_model/composition-stack-observation.json",
+        sourcePassPlanRef: "/tmp/run-1/passes/group_then_model/pass-plan.json"
       }]
     },
-    sourcePath: "/tmp/layer-composition-priors-staged.json"
+    sourcePath: "/tmp/run-1/layer-composition-priors-staged.json",
+    sourceRunRoot: "/tmp/run-1"
   });
 
   assert.equal(bundle.artifactType, "sequencer_layer_composition_priors_bundle");
+  assert.equal(bundle.provenance.generatedBy, "scripts/sequencer-render-training/tooling/export-layer-composition-priors-bundle.mjs");
+  assert.equal(bundle.provenance.compactionPolicy, "runtime_bundle_relativizes_raw_evidence_refs_and_omits_no_raw_frame_payloads");
   assert.equal(bundle.recordCount, 1);
   assert.equal(bundle.retrievalContract.consumptionPolicy, "advisory_evidence_not_recipe");
   assert.deepEqual(bundle.indexes.byFamily.group_model_interplay, ["layer_composition:group_model_interplay:rgb_primary:group_then_model"]);
@@ -43,4 +48,8 @@ test("layer composition bundle indexes priors by sequencer retrieval facets", ()
   assert.deepEqual(bundle.indexes.byCompositionIntent.foundation_plus_model_focus, ["layer_composition:group_model_interplay:rgb_primary:group_then_model"]);
   assert.deepEqual(bundle.indexes.byOutcomeTag.scene_spread_increased, ["layer_composition:group_model_interplay:rgb_primary:group_then_model"]);
   assert.deepEqual(bundle.indexes.byOutcomeTag.order_equivalent, ["layer_composition:group_model_interplay:rgb_primary:group_then_model"]);
+  const record = bundle.records["layer_composition:group_model_interplay:rgb_primary:group_then_model"];
+  assert.equal(record.sourceObservationRef, "passes/group_then_model/composition-stack-observation.json");
+  assert.equal(record.sourcePassPlanRef, "passes/group_then_model/pass-plan.json");
+  assert.equal(JSON.stringify(bundle).includes("/tmp/run-1/passes"), false);
 });

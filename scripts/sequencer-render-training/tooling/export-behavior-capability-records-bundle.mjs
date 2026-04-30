@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -67,6 +67,13 @@ const bundle = {
   artifactVersion: "1.0",
   sourceArtifactType: "behavior_capability_record_index_v1",
   generatedAt: new Date().toISOString(),
+  provenance: {
+    generatedBy: "scripts/sequencer-render-training/tooling/export-behavior-capability-records-bundle.mjs",
+    sourcePath: relative(resolve("."), inputDir) || ".",
+    sourceArtifactType: "behavior_capability_record_index_v1",
+    sourceRecordCount: records.length,
+    compactionPolicy: "runtime_bundle_contains_compact_behavior_records_without_raw_frame_payloads"
+  },
   recordType: "behavior_capability_record_v1",
   recordCount: records.length,
   effects: [...new Set(records.map((row) => row.effectName).filter(Boolean))].sort((a, b) => a.localeCompare(b)),

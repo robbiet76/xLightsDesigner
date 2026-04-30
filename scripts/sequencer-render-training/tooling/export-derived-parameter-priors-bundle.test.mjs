@@ -14,6 +14,8 @@ const trainingSet = JSON.parse(
 test("derived parameter prior bundle includes model-type aware priors", () => {
   const bundle = buildBundle(trainingSet);
   assert.equal(bundle.artifactType, "sequencer_derived_parameter_priors_bundle");
+  assert.equal(bundle.provenance.generatedBy, "scripts/sequencer-render-training/tooling/export-derived-parameter-priors-bundle.mjs");
+  assert.equal(bundle.provenance.compactionPolicy, "runtime_bundle_omits_raw_render_frames_and_project_specific_identifiers");
   assert.ok(bundle.effectCount > 0);
   const marquee = bundle.effectsByName.Marquee;
   assert.ok(marquee);

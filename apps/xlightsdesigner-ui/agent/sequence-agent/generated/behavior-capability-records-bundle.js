@@ -2,7 +2,14 @@ export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = {
   "artifactType": "sequencer_configured_behavior_capabilities_bundle",
   "artifactVersion": "1.0",
   "sourceArtifactType": "behavior_capability_record_index_v1",
-  "generatedAt": "2026-04-28T14:23:36.263Z",
+  "generatedAt": "2026-04-30T19:54:36.798Z",
+  "provenance": {
+    "generatedBy": "scripts/sequencer-render-training/tooling/export-behavior-capability-records-bundle.mjs",
+    "sourcePath": "scripts/sequencer-render-training/catalog/generated-records/behavior-capability-records",
+    "sourceArtifactType": "behavior_capability_record_index_v1",
+    "sourceRecordCount": 1074,
+    "compactionPolicy": "runtime_bundle_contains_compact_behavior_records_without_raw_frame_payloads"
+  },
   "recordType": "behavior_capability_record_v1",
   "recordCount": 1074,
   "effects": [

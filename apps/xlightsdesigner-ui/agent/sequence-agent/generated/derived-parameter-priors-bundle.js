@@ -2,7 +2,15 @@
 export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
   "artifactType": "sequencer_derived_parameter_priors_bundle",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-28T14:23:36.348Z",
+  "generatedAt": "2026-04-30T19:55:02.839Z",
+  "provenance": {
+    "generatedBy": "scripts/sequencer-render-training/tooling/export-derived-parameter-priors-bundle.mjs",
+    "sourcePath": "scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json",
+    "sourceArtifactType": "sequencer_unified_training_set_v1",
+    "sourceArtifactVersion": "1.0",
+    "sourceRecordCount": 18,
+    "compactionPolicy": "runtime_bundle_omits_raw_render_frames_and_project_specific_identifiers"
+  },
   "sourceArtifactType": "sequencer_unified_training_set_v1",
   "sourceArtifactVersion": "1.0",
   "effectCount": 18,

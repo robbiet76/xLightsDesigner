@@ -15,7 +15,26 @@ function unique(values = []) {
   return [...new Set(normArray(values).map((row) => normText(row)).filter(Boolean))];
 }
 
-function buildBundle(trainingSet = {}) {
+function repoRelativePath(value = "") {
+  const normalized = normText(value);
+  if (!normalized) return "";
+  const relative = path.relative(process.cwd(), path.resolve(normalized));
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return normalized;
+  return relative;
+}
+
+function buildProvenance({ generatedBy, sourcePath = "", sourceArtifactType = "", sourceArtifactVersion = "", sourceRecordCount = 0 } = {}) {
+  return {
+    generatedBy,
+    sourcePath: repoRelativePath(sourcePath),
+    sourceArtifactType: normText(sourceArtifactType),
+    sourceArtifactVersion: normText(sourceArtifactVersion),
+    sourceRecordCount: Number(sourceRecordCount || 0),
+    compactionPolicy: "runtime_bundle_contains_curated_shared_setting_outcomes_only"
+  };
+}
+
+function buildBundle(trainingSet = {}, options = {}) {
   const source = trainingSet?.crossEffectSharedSettingLearning?.sharedSettingOutcomeMemory;
   const settingsByName = Object.fromEntries(
     Object.entries(source && typeof source === "object" ? source : {})
@@ -38,6 +57,13 @@ function buildBundle(trainingSet = {}) {
     artifactType: "sequencer_cross_effect_shared_settings_bundle",
     artifactVersion: "1.0",
     generatedAt: new Date().toISOString(),
+    provenance: buildProvenance({
+      generatedBy: "scripts/sequencer-render-training/tooling/export-cross-effect-shared-settings-bundle.mjs",
+      sourcePath: options.sourcePath,
+      sourceArtifactType: trainingSet?.artifactType,
+      sourceArtifactVersion: trainingSet?.artifactVersion,
+      sourceRecordCount: normArray(trainingSet?.effects).length
+    }),
     sourceArtifactType: normText(trainingSet?.artifactType),
     sourceArtifactVersion: normText(trainingSet?.artifactVersion),
     settingCount: Object.keys(settingsByName).length,
@@ -66,7 +92,7 @@ function main() {
   const inputPath = path.resolve(args[inputIndex + 1]);
   const outputPath = path.resolve(args[outputIndex + 1]);
   const trainingSet = JSON.parse(fs.readFileSync(inputPath, "utf8"));
-  const bundle = buildBundle(trainingSet);
+  const bundle = buildBundle(trainingSet, { sourcePath: inputPath });
   writeJsModule(bundle, outputPath);
   process.stdout.write(`${JSON.stringify({ output: outputPath, settingCount: bundle.settingCount }, null, 2)}\n`);
 }

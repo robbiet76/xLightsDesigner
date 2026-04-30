@@ -147,13 +147,26 @@ Raw evidence should not be treated as the primary knowledge layer once a run has
 
 ## Immediate Cleanup Sequence
 
-1. Create a training knowledge baseline from the April 28 effects run and April 29 layer-composition run.
-2. Update `specs/sequence-agent/README.md` so the baseline and this consolidation plan become canonical entry points for training work.
-3. Audit generated bundle exports for metadata/provenance coverage.
-4. Add or update generator output metadata where missing.
+1. Create a training knowledge baseline from the April 28 effects run and April 29 layer-composition run. **Done:** `training-knowledge-baseline-2026-04-30.md`.
+2. Update `specs/sequence-agent/README.md` so the baseline and this consolidation plan become canonical entry points for training work. **Done.**
+3. Audit generated bundle exports for metadata/provenance coverage. **Done for current runtime bundles.**
+4. Add or update generator output metadata where missing. **Started:** derived parameter priors, cross-effect shared settings, behavior capability records, and layer-composition priors now emit explicit provenance metadata.
 5. Define which catalog files are curated source inputs and which are intermediate/generated.
 6. Move stale dated training plans/readouts to supporting or archive status once their durable findings are in the baseline.
 7. Only then expand the next training run curriculum.
+
+## Cleanup Progress
+
+### 2026-04-30 Runtime Bundle Provenance Slice
+
+Implemented concrete generated-bundle cleanup:
+
+- added consistent provenance metadata to derived parameter priors, cross-effect shared settings, behavior capability records, and layer-composition priors exporters
+- regenerated the affected runtime bundles
+- removed machine-local absolute raw-evidence paths from checked-in layer-composition runtime records by relativizing observation and pass-plan references to the source run root
+- made source paths in checked-in generated bundle provenance repo-relative when they point inside this repository
+- added regression coverage for provenance metadata and layer-composition reference compaction
+- verified sequence-agent runtime tests still pass against the regenerated bundles
 
 ## Baseline Questions To Answer
 
@@ -190,4 +203,3 @@ This cleanup is complete when:
 - active specs no longer require reading multiple dated run reports to understand current training state
 - the next training plan can be reviewed as an incremental expansion from the baseline
 - no runtime behavior depends on raw run folders
-

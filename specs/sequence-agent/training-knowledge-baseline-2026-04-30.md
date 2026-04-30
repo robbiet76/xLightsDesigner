@@ -29,6 +29,8 @@ Generated bundles currently consumed by the sequence-agent runtime:
 
 These files are generated runtime artifacts, not the human-maintained source of truth.
 
+As of the first consolidation slice, generated runtime bundles should carry provenance metadata and should not embed machine-local absolute raw-evidence paths in runtime records.
+
 ## Effect Coverage Baseline
 
 Selector-ready derived-prior effects:
@@ -177,4 +179,3 @@ After this baseline is accepted:
 - training expansion plans should describe deltas from this baseline
 - sequence-agent README should point here for current training state
 - new training reports should update or supersede this baseline instead of creating another competing summary
-

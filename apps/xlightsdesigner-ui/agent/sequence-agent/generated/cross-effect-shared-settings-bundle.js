@@ -2,7 +2,15 @@
 export const CROSS_EFFECT_SHARED_SETTINGS_BUNDLE = {
   "artifactType": "sequencer_cross_effect_shared_settings_bundle",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-28T14:23:36.440Z",
+  "generatedAt": "2026-04-30T19:55:02.837Z",
+  "provenance": {
+    "generatedBy": "scripts/sequencer-render-training/tooling/export-cross-effect-shared-settings-bundle.mjs",
+    "sourcePath": "scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json",
+    "sourceArtifactType": "sequencer_unified_training_set_v1",
+    "sourceArtifactVersion": "1.0",
+    "sourceRecordCount": 18,
+    "compactionPolicy": "runtime_bundle_contains_curated_shared_setting_outcomes_only"
+  },
   "sourceArtifactType": "sequencer_unified_training_set_v1",
   "sourceArtifactVersion": "1.0",
   "settingCount": 0,
