@@ -39,6 +39,10 @@ Primary policy source:
 - `requirements-traceability-matrix.md`
 - `spec-lifecycle-policy.md`
 
+## Product State Assessments
+- `product-state-assessment-2026-04-24.md`
+- `product-state-assessment-2026-04-30.md`
+
 ## Domain Indexes
 - `app-assistant/README.md`
 - `app-ui/README.md`
