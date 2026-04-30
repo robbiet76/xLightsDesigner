@@ -34,6 +34,7 @@ apps/xlightsdesigner-analysis-service/eval/*.local.json
 # Render training workspace
 render-training/
 scripts/sequencer-render-training/catalog/effect-screening-records/
+scripts/sequencer-render-training/manifests/generated/
 scripts/sequencer-render-training/tooling/fseq_window_decoder
 
 # Sequence validation workspace

@@ -198,6 +198,16 @@ Implemented the second catalog file-count reduction:
 - added shared generated-record catalog loading support so exporters can read either packed or loose generated records
 - reduced the durable catalog from 1,534 files to 42 files after the promoted evidence packing slice
 
+### 2026-04-30 Generated Manifest Cleanup Slice
+
+Removed another checked-in generated layer:
+
+- deleted `scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/`
+- kept base manifests and registries as the source layer
+- kept `run-effect-parameter-screening-plan.sh` as the regeneration path for generated parameter-screening manifests
+- added `scripts/sequencer-render-training/manifests/generated/` to `.gitignore`
+- cleared ignored historical run artifacts under `var/logs/`, reducing local raw run storage from roughly 2.6 GB to an empty run-log workspace
+
 ### 2026-04-30 Sequence-Agent Spec Index Slice
 
 Implemented concrete spec-index cleanup:

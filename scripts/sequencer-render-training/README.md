@@ -43,6 +43,8 @@ Primary system roadmap:
 - `runners/run-effect-parameter-screening-plan.sh`
 - `runners/run-live-outcome-harvest-cycle.sh`
 
+Generated manifests under `manifests/generated/` are local run artifacts. They are reproducible from the checked-in base manifests and registries, and should not be committed unless they are promoted into a compact catalog layer.
+
 ## Core Catalogs
 - `catalog/README.md`
 - `catalog/knowledge-inventory.v1.json`
