@@ -80,7 +80,7 @@ const bundle = {
 
 writeFileSync(
   outputPath,
-  `export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = ${JSON.stringify(bundle, null, 2)};\n`,
+  `export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = ${JSON.stringify(bundle)};\n`,
   "utf8"
 );
 

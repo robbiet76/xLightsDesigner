@@ -60,7 +60,7 @@ const artifact = {
 
 writeFileSync(
   outputPath,
-  `export const EFFECT_PARAMETER_REGISTRY_BUNDLE = ${JSON.stringify(artifact, null, 2)};\n`,
+  `export const EFFECT_PARAMETER_REGISTRY_BUNDLE = ${JSON.stringify(artifact)};\n`,
   "utf8"
 );
 

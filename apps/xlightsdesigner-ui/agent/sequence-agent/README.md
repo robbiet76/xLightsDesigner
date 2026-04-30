@@ -15,7 +15,7 @@ Boundary:
 - canonical plan output is `plan_handoff_v1`
 
 Training integration:
-- `generated/stage1-trained-effect-bundle.js`: generated Stage 1 effect knowledge bundle consumed by the runtime
-- `trained-effect-knowledge.js`: stable loader and recommendation API in front of the generated bundle
+- `generated/*.js`: compact generated runtime bundles consumed by the runtime
+- `trained-effect-knowledge.js`: stable loader and recommendation API in front of the generated bundles
 - `sequence-design-handoff.js`: builder/normalizer for the richer internal `sequencing_design_handoff_v2` brief
-- future training refreshes should regenerate the bundle, not change runtime call sites
+- future training refreshes should regenerate compact bundles through tooling, not change runtime call sites or hand-edit generated files

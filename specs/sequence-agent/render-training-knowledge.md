@@ -16,9 +16,7 @@ Define the durable training and learned-knowledge layer for sequence generation.
 - unified training set
 - effect capability and parameter semantics
 - shared-setting and interaction semantics
-- derived parameter priors
-- layer-composition priors
-- behavior-capability records
+- compact runtime bundles for derived parameter priors, layer-composition priors, behavior-capability records, shared settings, and Stage 1 selection knowledge
 - proof summaries and retained compact fixtures
 
 ## Retention Policy
@@ -48,11 +46,12 @@ Durable artifacts should answer:
 - Generated record packs replaced thousands of loose semantic files.
 - Promoted screening records are packed into JSONL shards with an index.
 - Proof fixtures were compacted; full geometry dumps are local/generated except for the retained render-training proof input.
+- Runtime training bundles are compact generated JavaScript behind `trained-effect-knowledge.js`; exporters should not emit pretty-printed payloads.
 - Training records should be consolidated into reusable effect semantics and priors before additional broad training runs.
 
 ## Current Gaps
 
-- runtime generated bundles may still be larger than ideal
+- runtime generated bundles remain large enough to consider lazy loading or further sharding later
 - layer-composition knowledge needs broader production-display evidence
 - custom model geometry and submodel behavior must feed training cases
 - mature sequence examples need stronger extraction and calibration

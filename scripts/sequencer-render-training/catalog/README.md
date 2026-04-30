@@ -32,7 +32,7 @@ node scripts/sequencer-render-training/tooling/validate-training-catalog-invento
 
 ## Runtime Rule
 
-The checked-in runtime bundles under `apps/xlightsdesigner-ui/agent/sequence-agent/generated/` are generated artifacts. They should carry provenance and be regenerated from this catalog layer. Do not hand-edit them.
+The checked-in runtime bundles under `apps/xlightsdesigner-ui/agent/sequence-agent/generated/` are compact generated artifacts. They should carry provenance and be regenerated from this catalog layer. Do not hand-edit or pretty-print them.
 
 ## Promoted Screening Evidence
 
