@@ -6,7 +6,7 @@ import json
 import subprocess
 from pathlib import Path
 
-DECODER = Path('scripts/sequencer-render-training/tooling/fseq_window_decoder')
+ROOT_DIR = Path(__file__).resolve().parents[3]
 
 WINDOWS = [
     ('opening', 0.08),
@@ -18,8 +18,13 @@ WINDOWS = [
 
 
 def read_fseq_summary(fseq_path: Path):
+    decoder = subprocess.check_output(
+        ["bash", str(ROOT_DIR / "scripts/sequencer-render-training/tooling/build-fseq-window-decoder.sh")],
+        text=True,
+        cwd=ROOT_DIR,
+    ).strip()
     cmd = [
-        str(DECODER),
+        decoder,
         '--fseq', str(fseq_path),
         '--start-channel', '0',
         '--channel-count', '1',

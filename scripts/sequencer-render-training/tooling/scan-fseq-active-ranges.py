@@ -1,7 +1,18 @@
 #!/usr/bin/env python3
 import json
+from pathlib import Path
 import subprocess
 import sys
+
+ROOT_DIR = Path(__file__).resolve().parents[3]
+
+
+def build_decoder():
+    return subprocess.check_output(
+        ["bash", str(ROOT_DIR / "scripts/sequencer-render-training/tooling/build-fseq-window-decoder.sh")],
+        text=True,
+        cwd=ROOT_DIR,
+    ).strip()
 
 
 def main():
@@ -11,7 +22,7 @@ def main():
     fseq = sys.argv[1]
     window_start_ms = sys.argv[2]
     window_end_ms = sys.argv[3]
-    decoder = "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/fseq_window_decoder"
+    decoder = build_decoder()
     step = 2000
     for start in range(0, 50000, step):
         cmd = [

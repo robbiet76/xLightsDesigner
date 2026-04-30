@@ -217,6 +217,15 @@ Started reducing checked-in proof payloads:
 - kept `preview-scene-geometry-render-training-live.json` because current offline proof runners still use it as their default regression geometry
 - added ignore rules so future real-show full-geometry proof dumps stay local unless deliberately promoted as minimized fixtures
 
+### 2026-04-30 Decoder Build Artifact Cleanup Slice
+
+Removed local decoder build output from the working tree and tightened regeneration:
+
+- confirmed `tooling/fseq_window_decoder` is ignored build output rather than tracked source
+- removed the local binary after verifying it rebuilds
+- updated decoder helper scripts to invoke `build-fseq-window-decoder.sh` instead of assuming a prebuilt binary
+- changed the decoder build helper default to xLights 2026.07 while preserving `XLIGHTS_ROOT` and `XLIGHTS_DEPS_ROOT` overrides
+
 ### 2026-04-30 Sequence-Agent Spec Index Slice
 
 Implemented concrete spec-index cleanup:
