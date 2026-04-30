@@ -45,7 +45,7 @@ INTERACTION_RECORD_DIR="$RUN_ROOT/artifacts/parameter-interaction-semantics-reco
 LEARNINGS_SUMMARY="$RUN_ROOT/effect-training-learnings-summary.md"
 RESET_REPORT="$RUN_ROOT/sequencer-training-reset-report.json"
 HARVEST_SUMMARY="$RUN_ROOT/artifacts/harvest-summary.json"
-SCREENING_RECORDS_DIR="$ROOT_DIR/catalog/effect-screening-records"
+SCREENING_RECORDS_DIR="$ROOT_DIR/catalog/effect-screening-record-packs"
 
 printf '[training-reset] run-root=%s\n' "$RUN_ROOT"
 

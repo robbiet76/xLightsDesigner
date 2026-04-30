@@ -2,7 +2,7 @@
 export const CROSS_EFFECT_SHARED_SETTINGS_BUNDLE = {
   "artifactType": "sequencer_cross_effect_shared_settings_bundle",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-30T19:55:02.837Z",
+  "generatedAt": "2026-04-30T20:08:56.195Z",
   "provenance": {
     "generatedBy": "scripts/sequencer-render-training/tooling/export-cross-effect-shared-settings-bundle.mjs",
     "sourcePath": "scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json",

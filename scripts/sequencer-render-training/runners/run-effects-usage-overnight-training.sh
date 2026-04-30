@@ -503,7 +503,7 @@ if [[ "${PROMOTE}" == "1" ]]; then
   node "${ROOT_DIR}/tooling/build-effects-usage-learning-gate.mjs" \
     --run-root "${RUN_ROOT}" \
     --training-set "${staging_training_set}" \
-    --existing-records-dir "${ROOT_DIR}/catalog/effect-screening-records" \
+    --existing-records-dir "${ROOT_DIR}/catalog/effect-screening-record-packs" \
     --out "${learning_gate_path}" >>"${LOG_PATH}" 2>&1
   if [[ "$(jq -r '.summary.promotionReady // false' "${learning_gate_path}")" != "true" ]]; then
     echo "Promotion gate failed. See ${learning_gate_path}" >&2
@@ -513,7 +513,8 @@ if [[ "${PROMOTE}" == "1" ]]; then
   log "promotion-begin"
   promoted_record_count="0"
   refreshed_record_count="0"
-  promoted_records_dir="${ROOT_DIR}/catalog/effect-screening-records"
+  promoted_records_dir="${ROOT_DIR}/catalog/effect-screening-record-promotion-staging"
+  rm -rf "${promoted_records_dir}"
   mkdir -p "${promoted_records_dir}"
   while IFS= read -r record_path; do
     record_name="$(basename "${record_path}")"
@@ -574,6 +575,10 @@ NODE
     fi
   done < <(find "${RUN_ROOT}" -path "${staging_dir}" -prune -o -name '*.record.json' -type f -print | sort)
   log "promotion-records-complete promoted=${promoted_record_count} refreshed=${refreshed_record_count}"
+  node "${ROOT_DIR}/tooling/pack-effect-screening-records.mjs" \
+    --source "${ROOT_DIR}/catalog" \
+    --out-dir "${ROOT_DIR}/catalog/effect-screening-record-packs" >>"${LOG_PATH}" 2>&1
+  rm -rf "${promoted_records_dir}"
   node "${ROOT_DIR}/tooling/build-unified-training-set.mjs" >>"${LOG_PATH}" 2>&1
   node "${ROOT_DIR}/tooling/build-effect-settings-coverage-report.mjs" >>"${LOG_PATH}" 2>&1
   node "${ROOT_DIR}/tooling/build-behavior-capability-records.mjs" >>"${LOG_PATH}" 2>&1
@@ -603,7 +608,7 @@ else
   node "${ROOT_DIR}/tooling/build-effects-usage-learning-gate.mjs" \
     --run-root "${RUN_ROOT}" \
     --training-set "${staging_training_set}" \
-    --existing-records-dir "${ROOT_DIR}/catalog/effect-screening-records" \
+    --existing-records-dir "${ROOT_DIR}/catalog/effect-screening-record-packs" \
     --out "${learning_gate_path}" >>"${LOG_PATH}" 2>&1
   log "staging-build-complete"
 fi

@@ -2,6 +2,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
+import { loadScreeningRecordCatalog } from "./screening-record-catalog.mjs";
 
 const DEFAULT_PALETTE_MODES = ["mono_white", "rgb_primary"];
 
@@ -34,10 +35,7 @@ function listJsonFiles(dirPath) {
 }
 
 function loadScreeningRecords(recordsDirPath) {
-  return listJsonFiles(recordsDirPath)
-    .filter((filePath) => basename(filePath).endsWith(".record.json"))
-    .map((filePath) => compactScreeningRecord(readJson(filePath, null)))
-    .filter((record) => record?.recordVersion === "1.0" && normText(record?.effectName));
+  return loadScreeningRecordCatalog(recordsDirPath, { compactRecord: compactScreeningRecord });
 }
 
 function compactScreeningRecord(record = null) {
@@ -379,7 +377,7 @@ function argValue(name, fallback = "") {
 function main() {
   const registryPath = resolve(argValue("--registry", "scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json"));
   const trainingSetPath = resolve(argValue("--training-set", "scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json"));
-  const recordsDir = resolve(argValue("--records-dir", "scripts/sequencer-render-training/catalog/effect-screening-records"));
+  const recordsDir = resolve(argValue("--records-dir", "scripts/sequencer-render-training/catalog/effect-screening-record-packs"));
   const outPath = resolve(argValue("--out", "scripts/sequencer-render-training/catalog/effect-sampling-audit-v1.json"));
   const audit = buildSamplingAudit({
     registry: readJson(registryPath, {}),

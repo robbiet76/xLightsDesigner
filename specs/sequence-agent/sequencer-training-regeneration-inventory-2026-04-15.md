@@ -46,7 +46,7 @@ These are the preserved evidence inputs for regeneration:
 
 Directory:
 
-- `scripts/sequencer-render-training/catalog/effect-screening-records/`
+- `scripts/sequencer-render-training/catalog/effect-screening-record-packs/`
 
 Use:
 

@@ -178,6 +178,16 @@ Implemented concrete catalog classification cleanup:
 - added regression coverage for the catalog inventory
 - updated render-training docs to make the inventory and validator discoverable
 
+### 2026-04-30 Promoted Screening Record Packing Slice
+
+Implemented substantial catalog file-count reduction:
+
+- replaced the loose promoted effect-screening record directory with compact per-effect JSONL packs
+- added shared screening-record catalog loading support so tools can read packed records
+- updated unified-training-set, sampling-audit, learning-gate, and dossier builders to consume packed records
+- updated training runners and harvest defaults away from the removed loose-record catalog path
+- reduced promoted screening evidence from 2,446 loose JSON files and roughly 2.7 GB to 18 pack files plus an index at roughly 7.5 MB
+
 ### 2026-04-30 Sequence-Agent Spec Index Slice
 
 Implemented concrete spec-index cleanup:

@@ -2,7 +2,7 @@
 export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
   "artifactType": "sequencer_derived_parameter_priors_bundle",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-30T19:55:02.839Z",
+  "generatedAt": "2026-04-30T20:08:56.198Z",
   "provenance": {
     "generatedBy": "scripts/sequencer-render-training/tooling/export-derived-parameter-priors-bundle.mjs",
     "sourcePath": "scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json",
@@ -144,11 +144,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.01399,
               "meanTemporalBrightnessDelta": 0.01399,
               "meanNonBlankRatio": 0.16,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.020833,
+              "meanRenderedDominantColorStability": 0.166667,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.987339,
-              "meanRenderedTemporalColorTravel": 0.083938,
+              "meanRenderedGradientSmoothness": 0.164556,
+              "meanRenderedTemporalColorTravel": 0.01399,
               "temporalSignatureHints": [
                 "static_or_near_static"
               ],
@@ -174,10 +174,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.001284,
               "meanTemporalBrightnessDelta": 0.001284,
               "meanNonBlankRatio": 0.993902,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.121951,
+              "meanRenderedDominantColorStability": 0.97561,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.97561,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
@@ -258,47 +258,47 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 2
               },
               "colorDiversity": {
-                "direction": "increases",
-                "magnitude": 0.078125,
+                "direction": "decreases",
+                "magnitude": 0.328252,
                 "range": {
-                  "low": 0.421875,
-                  "high": 0.5
+                  "low": 0.411585,
+                  "high": 0.083333
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
-                "direction": "increases",
-                "magnitude": 0.061793,
+                "direction": "decreases",
+                "magnitude": 0.748657,
                 "range": {
-                  "low": 0.938207,
-                  "high": 1
+                  "low": 0.915324,
+                  "high": 0.166667
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
-                "direction": "increases",
-                "magnitude": 0.021705,
+                "direction": "decreases",
+                "magnitude": 0.011989,
                 "range": {
-                  "low": 0.019292,
-                  "high": 0.040997
+                  "low": 0.018822,
+                  "high": 0.006833
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.015446,
+                "magnitude": 0.80569,
                 "range": {
-                  "low": 0.992796,
-                  "high": 0.97735
+                  "low": 0.968582,
+                  "high": 0.162892
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
-                "direction": "increases",
-                "magnitude": 0.041392,
+                "direction": "decreases",
+                "magnitude": 0.069596,
                 "range": {
-                  "low": 0.094562,
-                  "high": 0.135954
+                  "low": 0.092255,
+                  "high": 0.022659
                 },
                 "evidencePointCount": 2
               }
@@ -312,22 +312,28 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "3D decreases coverage"
               },
               {
-                "dimension": "colorDiversity",
-                "direction": "increases",
-                "magnitude": 0.078125,
-                "summary": "3D increases colorDiversity"
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.80569,
+                "summary": "3D decreases gradientSmoothness"
               },
               {
                 "dimension": "dominantColorStability",
-                "direction": "increases",
-                "magnitude": 0.061793,
-                "summary": "3D increases dominantColorStability"
+                "direction": "decreases",
+                "magnitude": 0.748657,
+                "summary": "3D decreases dominantColorStability"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.328252,
+                "summary": "3D decreases colorDiversity"
               },
               {
                 "dimension": "colorTravel",
-                "direction": "increases",
-                "magnitude": 0.041392,
-                "summary": "3D increases colorTravel"
+                "direction": "decreases",
+                "magnitude": 0.069596,
+                "summary": "3D decreases colorTravel"
               },
               {
                 "dimension": "brightnessRhythm",
@@ -342,22 +348,16 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "3D increases motion"
               },
               {
-                "dimension": "colorBandDensity",
-                "direction": "increases",
-                "magnitude": 0.021705,
-                "summary": "3D increases colorBandDensity"
-              },
-              {
                 "dimension": "colorRhythm",
                 "direction": "increases",
                 "magnitude": 0.019536,
                 "summary": "3D increases colorRhythm"
               },
               {
-                "dimension": "gradientSmoothness",
+                "dimension": "colorBandDensity",
                 "direction": "decreases",
-                "magnitude": 0.015446,
-                "summary": "3D decreases gradientSmoothness"
+                "magnitude": 0.011989,
+                "summary": "3D decreases colorBandDensity"
               }
             ],
             "generalization": {
@@ -379,11 +379,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.03794,
               "meanTemporalBrightnessDelta": 0.03794,
               "meanNonBlankRatio": 0.16,
-              "meanRenderedColorDiversity": 0.5,
-              "meanRenderedDominantColorStability": 1,
-              "meanRenderedColorBandDensity": 0.040997,
-              "meanRenderedGradientSmoothness": 0.97735,
-              "meanRenderedTemporalColorTravel": 0.135954,
+              "meanRenderedColorDiversity": 0.083333,
+              "meanRenderedDominantColorStability": 0.166667,
+              "meanRenderedColorBandDensity": 0.006833,
+              "meanRenderedGradientSmoothness": 0.162892,
+              "meanRenderedTemporalColorTravel": 0.022659,
               "temporalSignatureHints": [
                 "static_or_near_static"
               ],
@@ -409,11 +409,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.018404,
               "meanTemporalBrightnessDelta": 0.006752,
               "meanNonBlankRatio": 0.993902,
-              "meanRenderedColorDiversity": 0.421875,
-              "meanRenderedDominantColorStability": 0.938207,
-              "meanRenderedColorBandDensity": 0.019292,
-              "meanRenderedGradientSmoothness": 0.992796,
-              "meanRenderedTemporalColorTravel": 0.094562,
+              "meanRenderedColorDiversity": 0.411585,
+              "meanRenderedDominantColorStability": 0.915324,
+              "meanRenderedColorBandDensity": 0.018822,
+              "meanRenderedGradientSmoothness": 0.968582,
+              "meanRenderedTemporalColorTravel": 0.092255,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -521,11 +521,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.010492,
               "meanTemporalBrightnessDelta": 0.010492,
               "meanNonBlankRatio": 0.6825,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.085938,
+              "meanRenderedDominantColorStability": 0.6875,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.997698,
-              "meanRenderedTemporalColorTravel": 0.015261,
+              "meanRenderedGradientSmoothness": 0.685917,
+              "meanRenderedTemporalColorTravel": 0.010492,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -546,10 +546,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.909091,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.113636,
+              "meanRenderedDominantColorStability": 0.909091,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.909091,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -574,10 +574,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.933333,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.116667,
+              "meanRenderedDominantColorStability": 0.933333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.933333,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -602,10 +602,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.75,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.09375,
+              "meanRenderedDominantColorStability": 0.75,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.75,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -626,10 +626,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.8,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.8,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -708,53 +708,59 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 5
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.040909,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.340909,
+                  "high": 0.3
                 },
                 "evidencePointCount": 5
               },
               "dominantColorStability": {
-                "direction": "increases",
-                "magnitude": 0.014151,
+                "direction": "decreases",
+                "magnitude": 0.090566,
                 "range": {
-                  "low": 0.933962,
-                  "high": 0.948113
+                  "low": 0.849056,
+                  "high": 0.75849
                 },
                 "evidencePointCount": 5
               },
               "colorBandDensity": {
                 "direction": "flat",
-                "magnitude": 0.001934,
+                "magnitude": 0.00069,
                 "range": {
-                  "low": 0.007861,
-                  "high": 0.009795
+                  "low": 0.007146,
+                  "high": 0.007836
                 },
                 "evidencePointCount": 5
               },
               "gradientSmoothness": {
-                "direction": "flat",
-                "magnitude": 0.001579,
+                "direction": "decreases",
+                "magnitude": 0.109654,
                 "range": {
-                  "low": 0.993582,
-                  "high": 0.992003
+                  "low": 0.903256,
+                  "high": 0.793602
                 },
                 "evidencePointCount": 5
               },
               "colorTravel": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.010084,
                 "range": {
-                  "low": 0.092434,
-                  "high": 0.092434
+                  "low": 0.084031,
+                  "high": 0.073947
                 },
                 "evidencePointCount": 5
               }
             },
-            "dominantDimension": "coverage",
+            "dominantDimension": "gradientSmoothness",
             "behaviorRules": [
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.109654,
+                "summary": "barCount decreases gradientSmoothness"
+              },
               {
                 "dimension": "coverage",
                 "direction": "decreases",
@@ -763,9 +769,21 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               {
                 "dimension": "dominantColorStability",
-                "direction": "increases",
-                "magnitude": 0.014151,
-                "summary": "barCount increases dominantColorStability"
+                "direction": "decreases",
+                "magnitude": 0.090566,
+                "summary": "barCount decreases dominantColorStability"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.040909,
+                "summary": "barCount decreases colorDiversity"
+              },
+              {
+                "dimension": "colorTravel",
+                "direction": "decreases",
+                "magnitude": 0.010084,
+                "summary": "barCount decreases colorTravel"
               }
             ],
             "generalization": {
@@ -787,11 +805,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.039135,
               "meanTemporalBrightnessDelta": 0.039135,
               "meanNonBlankRatio": 0.6825,
-              "meanRenderedColorDiversity": 0.511364,
-              "meanRenderedDominantColorStability": 0.946827,
-              "meanRenderedColorBandDensity": 0.038243,
-              "meanRenderedGradientSmoothness": 0.991467,
-              "meanRenderedTemporalColorTravel": 0.092901,
+              "meanRenderedColorDiversity": 0.351563,
+              "meanRenderedDominantColorStability": 0.650943,
+              "meanRenderedColorBandDensity": 0.026292,
+              "meanRenderedGradientSmoothness": 0.681633,
+              "meanRenderedTemporalColorTravel": 0.063869,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -812,11 +830,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.005696,
               "meanTemporalBrightnessDelta": 0.005696,
               "meanNonBlankRatio": 0.933333,
-              "meanRenderedColorDiversity": 0.419643,
-              "meanRenderedDominantColorStability": 0.942049,
-              "meanRenderedColorBandDensity": 0.021126,
-              "meanRenderedGradientSmoothness": 0.990892,
-              "meanRenderedTemporalColorTravel": 0.103264,
+              "meanRenderedColorDiversity": 0.391667,
+              "meanRenderedDominantColorStability": 0.879245,
+              "meanRenderedColorBandDensity": 0.019718,
+              "meanRenderedGradientSmoothness": 0.924833,
+              "meanRenderedTemporalColorTravel": 0.096379,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -840,11 +858,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.909091,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.933962,
-              "meanRenderedColorBandDensity": 0.007861,
-              "meanRenderedGradientSmoothness": 0.993582,
-              "meanRenderedTemporalColorTravel": 0.092434,
+              "meanRenderedColorDiversity": 0.340909,
+              "meanRenderedDominantColorStability": 0.849056,
+              "meanRenderedColorBandDensity": 0.007146,
+              "meanRenderedGradientSmoothness": 0.903256,
+              "meanRenderedTemporalColorTravel": 0.084031,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -868,11 +886,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.75,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.930817,
-              "meanRenderedColorBandDensity": 0.006488,
-              "meanRenderedGradientSmoothness": 0.994703,
-              "meanRenderedTemporalColorTravel": 0.097569,
+              "meanRenderedColorDiversity": 0.28125,
+              "meanRenderedDominantColorStability": 0.698113,
+              "meanRenderedColorBandDensity": 0.004866,
+              "meanRenderedGradientSmoothness": 0.746027,
+              "meanRenderedTemporalColorTravel": 0.073177,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -892,11 +910,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.8,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.948113,
-              "meanRenderedColorBandDensity": 0.009795,
-              "meanRenderedGradientSmoothness": 0.992003,
-              "meanRenderedTemporalColorTravel": 0.092434,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.75849,
+              "meanRenderedColorBandDensity": 0.007836,
+              "meanRenderedGradientSmoothness": 0.793602,
+              "meanRenderedTemporalColorTravel": 0.073947,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -995,11 +1013,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003815,
               "meanTemporalBrightnessDelta": 0.003815,
               "meanNonBlankRatio": 0.793636,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.099432,
+              "meanRenderedDominantColorStability": 0.795455,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.999277,
-              "meanRenderedTemporalColorTravel": 0.004796,
+              "meanRenderedGradientSmoothness": 0.794879,
+              "meanRenderedTemporalColorTravel": 0.003815,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -1142,11 +1160,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.014231,
               "meanTemporalBrightnessDelta": 0.014231,
               "meanNonBlankRatio": 0.793636,
-              "meanRenderedColorDiversity": 0.417857,
-              "meanRenderedDominantColorStability": 0.92938,
-              "meanRenderedColorBandDensity": 0.016482,
-              "meanRenderedGradientSmoothness": 0.993674,
-              "meanRenderedTemporalColorTravel": 0.099623,
+              "meanRenderedColorDiversity": 0.332386,
+              "meanRenderedDominantColorStability": 0.739279,
+              "meanRenderedColorBandDensity": 0.013111,
+              "meanRenderedGradientSmoothness": 0.790422,
+              "meanRenderedTemporalColorTravel": 0.079246,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -1317,27 +1335,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.026316,
               "meanTemporalBrightnessDelta": 0.026316,
               "meanNonBlankRatio": 0.875,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.0625,
+              "meanRenderedDominantColorStability": 0.5,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.5,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "cycles_10",
-                "grouped_arch_read",
-                "single_bar",
                 "bars_motion",
                 "behavior_anchor",
                 "decoded_fseq",
                 "fast_scroll",
                 "left_motion",
-                "multi_bar"
+                "multi_bar",
+                "bar_motion",
+                "cycles_10",
+                "grouped_arch_read",
+                "single_bar"
               ]
             },
             {
@@ -1347,27 +1365,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.026316,
               "meanTemporalBrightnessDelta": 0.026316,
               "meanNonBlankRatio": 0.875,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.0625,
+              "meanRenderedDominantColorStability": 0.5,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.5,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "cycles_2",
-                "grouped_arch_read",
-                "single_bar",
                 "bars_motion",
                 "behavior_anchor",
                 "decoded_fseq",
                 "left_motion",
                 "multi_bar",
-                "slow_scroll"
+                "slow_scroll",
+                "bar_motion",
+                "cycles_2",
+                "grouped_arch_read",
+                "single_bar"
               ]
             },
             {
@@ -1377,11 +1395,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.015261,
               "meanTemporalBrightnessDelta": 0.015261,
               "meanNonBlankRatio": 0.174545,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.022727,
+              "meanRenderedDominantColorStability": 0.181818,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.987339,
-              "meanRenderedTemporalColorTravel": 0.083938,
+              "meanRenderedGradientSmoothness": 0.179516,
+              "meanRenderedTemporalColorTravel": 0.015261,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -1404,27 +1422,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003096,
               "meanTemporalBrightnessDelta": 0.003096,
               "meanNonBlankRatio": 0.985294,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.117647,
+              "meanRenderedDominantColorStability": 0.941176,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.941176,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "cycles_5",
-                "grouped_arch_read",
-                "single_bar",
                 "barcount_1",
                 "bars_palette_repetition",
                 "behavior_anchor",
                 "decoded_fseq",
                 "large_bands",
-                "left_motion"
+                "left_motion",
+                "single_bar",
+                "barcount_3",
+                "medium_bands",
+                "multi_bar"
               ]
             },
             {
@@ -1543,45 +1561,45 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "decreases",
-                "magnitude": 0.375,
+                "magnitude": 0.1875,
                 "range": {
-                  "low": 0.375,
+                  "low": 0.1875,
                   "high": 0
                 },
                 "evidencePointCount": 8
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 1,
+                "magnitude": 0.5,
                 "range": {
-                  "low": 1,
+                  "low": 0.5,
                   "high": 0
                 },
                 "evidencePointCount": 8
               },
               "colorBandDensity": {
                 "direction": "decreases",
-                "magnitude": 0.019883,
+                "magnitude": 0.009942,
                 "range": {
-                  "low": 0.019883,
+                  "low": 0.009942,
                   "high": 0
                 },
                 "evidencePointCount": 8
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.983766,
+                "magnitude": 0.491883,
                 "range": {
-                  "low": 0.983766,
+                  "low": 0.491883,
                   "high": 0
                 },
                 "evidencePointCount": 8
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.030811,
+                "magnitude": 0.015406,
                 "range": {
-                  "low": 0.030811,
+                  "low": 0.015406,
                   "high": 0
                 },
                 "evidencePointCount": 8
@@ -1592,26 +1610,26 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 1,
+                "magnitude": 0.5,
                 "summary": "cycles decreases dominantColorStability"
               },
               {
                 "dimension": "gradientSmoothness",
                 "direction": "decreases",
-                "magnitude": 0.983766,
+                "magnitude": 0.491883,
                 "summary": "cycles decreases gradientSmoothness"
-              },
-              {
-                "dimension": "colorDiversity",
-                "direction": "decreases",
-                "magnitude": 0.375,
-                "summary": "cycles decreases colorDiversity"
               },
               {
                 "dimension": "colorRhythm",
                 "direction": "increases",
                 "magnitude": 0.266597,
                 "summary": "cycles increases colorRhythm"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.1875,
+                "summary": "cycles decreases colorDiversity"
               },
               {
                 "dimension": "coverage",
@@ -1628,20 +1646,20 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorTravel",
                 "direction": "decreases",
-                "magnitude": 0.030811,
+                "magnitude": 0.015406,
                 "summary": "cycles decreases colorTravel"
-              },
-              {
-                "dimension": "colorBandDensity",
-                "direction": "decreases",
-                "magnitude": 0.019883,
-                "summary": "cycles decreases colorBandDensity"
               },
               {
                 "dimension": "brightnessRhythm",
                 "direction": "increases",
                 "magnitude": 0.010664,
                 "summary": "cycles increases brightnessRhythm"
+              },
+              {
+                "dimension": "colorBandDensity",
+                "direction": "decreases",
+                "magnitude": 0.009942,
+                "summary": "cycles decreases colorBandDensity"
               }
             ],
             "generalization": {
@@ -1687,27 +1705,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.249123,
               "meanTemporalBrightnessDelta": 0.010251,
               "meanNonBlankRatio": 0.875,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 1,
-              "meanRenderedColorBandDensity": 0.018456,
-              "meanRenderedGradientSmoothness": 0.98493,
-              "meanRenderedTemporalColorTravel": 0.154056,
+              "meanRenderedColorDiversity": 0.1875,
+              "meanRenderedDominantColorStability": 0.5,
+              "meanRenderedColorBandDensity": 0.009228,
+              "meanRenderedGradientSmoothness": 0.492465,
+              "meanRenderedTemporalColorTravel": 0.077028,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "cycles_10",
-                "grouped_arch_read",
-                "single_bar",
                 "bars_motion",
                 "behavior_anchor",
                 "decoded_fseq",
                 "fast_scroll",
                 "left_motion",
-                "multi_bar"
+                "multi_bar",
+                "bar_motion",
+                "cycles_10",
+                "grouped_arch_read",
+                "single_bar"
               ]
             },
             {
@@ -1741,11 +1759,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.041389,
               "meanTemporalBrightnessDelta": 0.041389,
               "meanNonBlankRatio": 0.174545,
-              "meanRenderedColorDiversity": 0.5,
-              "meanRenderedDominantColorStability": 1,
-              "meanRenderedColorBandDensity": 0.040997,
-              "meanRenderedGradientSmoothness": 0.97735,
-              "meanRenderedTemporalColorTravel": 0.135954,
+              "meanRenderedColorDiversity": 0.090909,
+              "meanRenderedDominantColorStability": 0.181818,
+              "meanRenderedColorBandDensity": 0.007454,
+              "meanRenderedGradientSmoothness": 0.1777,
+              "meanRenderedTemporalColorTravel": 0.024719,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -1768,27 +1786,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.0946,
               "meanTemporalBrightnessDelta": 0.009288,
               "meanNonBlankRatio": 0.875,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 1,
-              "meanRenderedColorBandDensity": 0.019883,
-              "meanRenderedGradientSmoothness": 0.983766,
-              "meanRenderedTemporalColorTravel": 0.030811,
+              "meanRenderedColorDiversity": 0.1875,
+              "meanRenderedDominantColorStability": 0.5,
+              "meanRenderedColorBandDensity": 0.009942,
+              "meanRenderedGradientSmoothness": 0.491883,
+              "meanRenderedTemporalColorTravel": 0.015406,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "cycles_2",
-                "grouped_arch_read",
-                "single_bar",
                 "bars_motion",
                 "behavior_anchor",
                 "decoded_fseq",
                 "left_motion",
                 "multi_bar",
-                "slow_scroll"
+                "slow_scroll",
+                "bar_motion",
+                "cycles_2",
+                "grouped_arch_read",
+                "single_bar"
               ]
             },
             {
@@ -1798,27 +1816,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.042347,
               "meanTemporalBrightnessDelta": 0.016251,
               "meanNonBlankRatio": 0.985294,
-              "meanRenderedColorDiversity": 0.492188,
-              "meanRenderedDominantColorStability": 0.946934,
-              "meanRenderedColorBandDensity": 0.034855,
-              "meanRenderedGradientSmoothness": 0.992912,
-              "meanRenderedTemporalColorTravel": 0.076571,
+              "meanRenderedColorDiversity": 0.463235,
+              "meanRenderedDominantColorStability": 0.891232,
+              "meanRenderedColorBandDensity": 0.032805,
+              "meanRenderedGradientSmoothness": 0.934506,
+              "meanRenderedTemporalColorTravel": 0.072067,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "cycles_5",
-                "grouped_arch_read",
-                "single_bar",
                 "barcount_1",
                 "bars_palette_repetition",
                 "behavior_anchor",
                 "decoded_fseq",
                 "large_bands",
-                "left_motion"
+                "left_motion",
+                "single_bar",
+                "barcount_3",
+                "medium_bands",
+                "multi_bar"
               ]
             },
             {
@@ -2008,10 +2026,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.333333,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.041667,
+              "meanRenderedDominantColorStability": 0.333333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.333333,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -2032,10 +2050,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.75,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.09375,
+              "meanRenderedDominantColorStability": 0.75,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.75,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -2054,10 +2072,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.888889,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.111111,
+              "meanRenderedDominantColorStability": 0.888889,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.888889,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -2078,10 +2096,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.888889,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.111111,
+              "meanRenderedDominantColorStability": 0.888889,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.888889,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -2272,11 +2290,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.333333,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.880503,
+              "meanRenderedColorDiversity": 0.125,
+              "meanRenderedDominantColorStability": 0.293501,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.097569,
+              "meanRenderedGradientSmoothness": 0.333333,
+              "meanRenderedTemporalColorTravel": 0.032523,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -2296,11 +2314,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.75,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.880503,
+              "meanRenderedColorDiversity": 0.28125,
+              "meanRenderedDominantColorStability": 0.660377,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.097569,
+              "meanRenderedGradientSmoothness": 0.75,
+              "meanRenderedTemporalColorTravel": 0.073177,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -2318,11 +2336,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.888889,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.896226,
+              "meanRenderedColorDiversity": 0.333333,
+              "meanRenderedDominantColorStability": 0.796645,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.084731,
+              "meanRenderedGradientSmoothness": 0.888889,
+              "meanRenderedTemporalColorTravel": 0.075316,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -2342,11 +2360,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0,
               "meanTemporalBrightnessDelta": 0,
               "meanNonBlankRatio": 0.888889,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.884434,
+              "meanRenderedColorDiversity": 0.333333,
+              "meanRenderedDominantColorStability": 0.786163,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.09436,
+              "meanRenderedGradientSmoothness": 0.888889,
+              "meanRenderedTemporalColorTravel": 0.083875,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "arch_pattern_fit",
@@ -2447,27 +2465,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.005513,
               "meanTemporalBrightnessDelta": 0.005513,
               "meanNonBlankRatio": 0.76675,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.09375,
+              "meanRenderedDominantColorStability": 0.75,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.999156,
-              "meanRenderedTemporalColorTravel": 0.005596,
+              "meanRenderedGradientSmoothness": 0.749367,
+              "meanRenderedTemporalColorTravel": 0.004197,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "gradient_false",
-                "grouped_arch_read",
-                "single_bar",
                 "barcount_1",
                 "bars_palette_repetition",
                 "behavior_anchor",
                 "decoded_fseq",
                 "large_bands",
-                "left_motion"
+                "left_motion",
+                "single_bar",
+                "barcount_3",
+                "medium_bands",
+                "multi_bar"
               ]
             },
             {
@@ -2477,27 +2495,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004049,
               "meanTemporalBrightnessDelta": 0.004049,
               "meanNonBlankRatio": 0.980769,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.115385,
+              "meanRenderedDominantColorStability": 0.923077,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
+              "meanRenderedGradientSmoothness": 0.923077,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "gradient_true",
-                "grouped_arch_read",
-                "single_bar",
                 "bars_gradient",
                 "behavior_anchor",
                 "decoded_fseq",
                 "left_motion",
                 "multi_bar",
-                "soft_color_blend"
+                "soft_color_blend",
+                "expand_motion",
+                "registry_generated",
+                "single_bar",
+                "dense_bars"
               ]
             }
           ]
@@ -2562,46 +2580,46 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "increases",
-                "magnitude": 0.147917,
+                "magnitude": 0.202885,
                 "range": {
-                  "low": 0.383333,
-                  "high": 0.53125
+                  "low": 0.2875,
+                  "high": 0.490385
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
-                "direction": "decreases",
-                "magnitude": 0.016667,
+                "direction": "increases",
+                "magnitude": 0.148331,
                 "range": {
-                  "low": 0.945912,
-                  "high": 0.929245
+                  "low": 0.709434,
+                  "high": 0.857765
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.027406,
+                "magnitude": 0.02746,
                 "range": {
-                  "low": 0.012495,
-                  "high": 0.039901
+                  "low": 0.009372,
+                  "high": 0.036832
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "increases",
-                "magnitude": 0.005397,
+                "magnitude": 0.176418,
                 "range": {
-                  "low": 0.990519,
-                  "high": 0.995916
+                  "low": 0.742889,
+                  "high": 0.919307
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.02816,
+                "magnitude": 0.007894,
                 "range": {
-                  "low": 0.104579,
-                  "high": 0.076419
+                  "low": 0.078434,
+                  "high": 0.07054
                 },
                 "evidencePointCount": 2
               }
@@ -2617,8 +2635,20 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorDiversity",
                 "direction": "increases",
-                "magnitude": 0.147917,
+                "magnitude": 0.202885,
                 "summary": "gradient increases colorDiversity"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "increases",
+                "magnitude": 0.176418,
+                "summary": "gradient increases gradientSmoothness"
+              },
+              {
+                "dimension": "dominantColorStability",
+                "direction": "increases",
+                "magnitude": 0.148331,
+                "summary": "gradient increases dominantColorStability"
               },
               {
                 "dimension": "colorRhythm",
@@ -2627,22 +2657,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "gradient increases colorRhythm"
               },
               {
-                "dimension": "colorTravel",
-                "direction": "decreases",
-                "magnitude": 0.02816,
-                "summary": "gradient decreases colorTravel"
-              },
-              {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.027406,
+                "magnitude": 0.02746,
                 "summary": "gradient increases colorBandDensity"
-              },
-              {
-                "dimension": "dominantColorStability",
-                "direction": "decreases",
-                "magnitude": 0.016667,
-                "summary": "gradient decreases dominantColorStability"
               },
               {
                 "dimension": "motion",
@@ -2657,10 +2675,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "gradient increases brightnessRhythm"
               },
               {
-                "dimension": "gradientSmoothness",
-                "direction": "increases",
-                "magnitude": 0.005397,
-                "summary": "gradient increases gradientSmoothness"
+                "dimension": "colorTravel",
+                "direction": "decreases",
+                "magnitude": 0.007894,
+                "summary": "gradient decreases colorTravel"
               }
             ],
             "generalization": {
@@ -2682,27 +2700,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.058044,
               "meanTemporalBrightnessDelta": 0.021294,
               "meanNonBlankRatio": 0.980769,
-              "meanRenderedColorDiversity": 0.53125,
-              "meanRenderedDominantColorStability": 0.929245,
-              "meanRenderedColorBandDensity": 0.039901,
-              "meanRenderedGradientSmoothness": 0.995916,
-              "meanRenderedTemporalColorTravel": 0.076419,
+              "meanRenderedColorDiversity": 0.490385,
+              "meanRenderedDominantColorStability": 0.857765,
+              "meanRenderedColorBandDensity": 0.036832,
+              "meanRenderedGradientSmoothness": 0.919307,
+              "meanRenderedTemporalColorTravel": 0.07054,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "gradient_true",
-                "grouped_arch_read",
-                "single_bar",
                 "bars_gradient",
                 "behavior_anchor",
                 "decoded_fseq",
                 "left_motion",
                 "multi_bar",
-                "soft_color_blend"
+                "soft_color_blend",
+                "expand_motion",
+                "registry_generated",
+                "single_bar",
+                "dense_bars"
               ]
             },
             {
@@ -2712,27 +2730,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.023838,
               "meanTemporalBrightnessDelta": 0.011895,
               "meanNonBlankRatio": 0.76675,
-              "meanRenderedColorDiversity": 0.383333,
-              "meanRenderedDominantColorStability": 0.945912,
-              "meanRenderedColorBandDensity": 0.012495,
-              "meanRenderedGradientSmoothness": 0.990519,
-              "meanRenderedTemporalColorTravel": 0.104579,
+              "meanRenderedColorDiversity": 0.2875,
+              "meanRenderedDominantColorStability": 0.709434,
+              "meanRenderedColorBandDensity": 0.009372,
+              "meanRenderedGradientSmoothness": 0.742889,
+              "meanRenderedTemporalColorTravel": 0.078434,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "gradient_false",
-                "grouped_arch_read",
-                "single_bar",
                 "barcount_1",
                 "bars_palette_repetition",
                 "behavior_anchor",
                 "decoded_fseq",
                 "large_bands",
-                "left_motion"
+                "left_motion",
+                "single_bar",
+                "barcount_3",
+                "medium_bands",
+                "multi_bar"
               ]
             }
           ]
@@ -2866,27 +2884,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004241,
               "meanTemporalBrightnessDelta": 0.004241,
               "meanNonBlankRatio": 0.820577,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.100962,
+              "meanRenderedDominantColorStability": 0.807692,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.999397,
-              "meanRenderedTemporalColorTravel": 0.003997,
+              "meanRenderedGradientSmoothness": 0.807205,
+              "meanRenderedTemporalColorTravel": 0.003228,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "grouped_arch_read",
-                "highlight_false",
-                "single_bar",
                 "barcount_1",
                 "bars_palette_repetition",
                 "behavior_anchor",
                 "decoded_fseq",
                 "large_bands",
-                "left_motion"
+                "left_motion",
+                "single_bar",
+                "barcount_3",
+                "medium_bands",
+                "multi_bar"
               ]
             }
           ]
@@ -2951,45 +2969,45 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "decreases",
-                "magnitude": 0.425595,
+                "magnitude": 0.34375,
                 "range": {
-                  "low": 0.425595,
+                  "low": 0.34375,
                   "high": 0
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.94115,
+                "magnitude": 0.76016,
                 "range": {
-                  "low": 0.94115,
+                  "low": 0.76016,
                   "high": 0
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "decreases",
-                "magnitude": 0.020326,
+                "magnitude": 0.016417,
                 "range": {
-                  "low": 0.020326,
+                  "low": 0.016417,
                   "high": 0
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.992061,
+                "magnitude": 0.80128,
                 "range": {
-                  "low": 0.992061,
+                  "low": 0.80128,
                   "high": 0
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.096533,
+                "magnitude": 0.077969,
                 "range": {
-                  "low": 0.096533,
+                  "low": 0.077969,
                   "high": 0
                 },
                 "evidencePointCount": 2
@@ -3000,25 +3018,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "gradientSmoothness",
                 "direction": "decreases",
-                "magnitude": 0.992061,
+                "magnitude": 0.80128,
                 "summary": "highlight decreases gradientSmoothness"
               },
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.94115,
+                "magnitude": 0.76016,
                 "summary": "highlight decreases dominantColorStability"
               },
               {
                 "dimension": "colorDiversity",
                 "direction": "decreases",
-                "magnitude": 0.425595,
+                "magnitude": 0.34375,
                 "summary": "highlight decreases colorDiversity"
               },
               {
                 "dimension": "colorTravel",
                 "direction": "decreases",
-                "magnitude": 0.096533,
+                "magnitude": 0.077969,
                 "summary": "highlight decreases colorTravel"
               },
               {
@@ -3048,7 +3066,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorBandDensity",
                 "direction": "decreases",
-                "magnitude": 0.020326,
+                "magnitude": 0.016417,
                 "summary": "highlight decreases colorBandDensity"
               }
             ],
@@ -3095,27 +3113,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.023266,
               "meanTemporalBrightnessDelta": 0.014079,
               "meanNonBlankRatio": 0.820577,
-              "meanRenderedColorDiversity": 0.425595,
-              "meanRenderedDominantColorStability": 0.94115,
-              "meanRenderedColorBandDensity": 0.020326,
-              "meanRenderedGradientSmoothness": 0.992061,
-              "meanRenderedTemporalColorTravel": 0.096533,
+              "meanRenderedColorDiversity": 0.34375,
+              "meanRenderedDominantColorStability": 0.76016,
+              "meanRenderedColorBandDensity": 0.016417,
+              "meanRenderedGradientSmoothness": 0.80128,
+              "meanRenderedTemporalColorTravel": 0.077969,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
                 "arch_pattern_fit",
-                "bar_motion",
                 "bar_pattern",
-                "grouped_arch_read",
-                "highlight_false",
-                "single_bar",
                 "barcount_1",
                 "bars_palette_repetition",
                 "behavior_anchor",
                 "decoded_fseq",
                 "large_bands",
-                "left_motion"
+                "left_motion",
+                "single_bar",
+                "barcount_3",
+                "medium_bands",
+                "multi_bar"
               ]
             }
           ]
@@ -5689,10 +5707,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.192159,
               "meanTemporalBrightnessDelta": 0.192159,
               "meanNonBlankRatio": 0.547717,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1125,
+              "meanRenderedDominantColorStability": 0.9,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.991876,
+              "meanRenderedGradientSmoothness": 0.892689,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
@@ -5719,11 +5737,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.037344,
               "meanTemporalBrightnessDelta": 0.037344,
               "meanNonBlankRatio": 0.854502,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.119485,
+              "meanRenderedDominantColorStability": 0.955882,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.994495,
-              "meanRenderedTemporalColorTravel": 0.000592,
+              "meanRenderedGradientSmoothness": 0.95062,
+              "meanRenderedTemporalColorTravel": 0.000566,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -5804,46 +5822,46 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "decreases",
-                "magnitude": 0.021267,
+                "magnitude": 0.056618,
                 "range": {
-                  "low": 0.910156,
-                  "high": 0.888889
+                  "low": 0.856618,
+                  "high": 0.8
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "flat",
-                "magnitude": 0.001602,
+                "magnitude": 0.001244,
                 "range": {
-                  "low": 0.004808,
-                  "high": 0.00641
+                  "low": 0.004525,
+                  "high": 0.005769
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.013517,
+                "magnitude": 0.011208,
                 "range": {
-                  "low": 0.023243,
-                  "high": 0.03676
+                  "low": 0.021876,
+                  "high": 0.033084
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
-                "direction": "flat",
-                "magnitude": 0.001358,
+                "direction": "decreases",
+                "magnitude": 0.042284,
                 "range": {
-                  "low": 0.99722,
-                  "high": 0.995862
+                  "low": 0.93856,
+                  "high": 0.896276
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.110733,
+                "magnitude": 0.111961,
                 "range": {
-                  "low": 0.298759,
-                  "high": 0.188026
+                  "low": 0.281185,
+                  "high": 0.169224
                 },
                 "evidencePointCount": 2
               }
@@ -5859,7 +5877,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorTravel",
                 "direction": "decreases",
-                "magnitude": 0.110733,
+                "magnitude": 0.111961,
                 "summary": "circularPalette decreases colorTravel"
               },
               {
@@ -5883,13 +5901,19 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorDiversity",
                 "direction": "decreases",
-                "magnitude": 0.021267,
+                "magnitude": 0.056618,
                 "summary": "circularPalette decreases colorDiversity"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.042284,
+                "summary": "circularPalette decreases gradientSmoothness"
               },
               {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.013517,
+                "magnitude": 0.011208,
                 "summary": "circularPalette increases colorBandDensity"
               }
             ],
@@ -5912,11 +5936,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.179041,
               "meanTemporalBrightnessDelta": 0.17461,
               "meanNonBlankRatio": 0.532021,
-              "meanRenderedColorDiversity": 0.888889,
-              "meanRenderedDominantColorStability": 0.00641,
-              "meanRenderedColorBandDensity": 0.03676,
-              "meanRenderedGradientSmoothness": 0.995862,
-              "meanRenderedTemporalColorTravel": 0.188026,
+              "meanRenderedColorDiversity": 0.8,
+              "meanRenderedDominantColorStability": 0.005769,
+              "meanRenderedColorBandDensity": 0.033084,
+              "meanRenderedGradientSmoothness": 0.896276,
+              "meanRenderedTemporalColorTravel": 0.169224,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -5942,11 +5966,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.100364,
               "meanTemporalBrightnessDelta": 0.09949,
               "meanNonBlankRatio": 0.840556,
-              "meanRenderedColorDiversity": 0.910156,
-              "meanRenderedDominantColorStability": 0.004808,
-              "meanRenderedColorBandDensity": 0.023243,
-              "meanRenderedGradientSmoothness": 0.99722,
-              "meanRenderedTemporalColorTravel": 0.298759,
+              "meanRenderedColorDiversity": 0.856618,
+              "meanRenderedDominantColorStability": 0.004525,
+              "meanRenderedColorBandDensity": 0.021876,
+              "meanRenderedGradientSmoothness": 0.93856,
+              "meanRenderedTemporalColorTravel": 0.281185,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -6072,10 +6096,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.133963,
               "meanTemporalBrightnessDelta": 0.133963,
               "meanNonBlankRatio": 0.622431,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.108696,
+              "meanRenderedDominantColorStability": 0.869565,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.993559,
+              "meanRenderedGradientSmoothness": 0.863965,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
@@ -6102,10 +6126,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.081665,
               "meanTemporalBrightnessDelta": 0.081665,
               "meanNonBlankRatio": 0.892654,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.117188,
+              "meanRenderedDominantColorStability": 0.9375,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.996749,
+              "meanRenderedGradientSmoothness": 0.934453,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
@@ -6132,27 +6156,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.051108,
               "meanTemporalBrightnessDelta": 0.051108,
               "meanNonBlankRatio": 0.815308,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.993382,
+              "meanRenderedGradientSmoothness": 0.827819,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "circular_palette",
-                "decoded_fseq",
+                "cycles_3_0",
+                "flat_fill",
+                "full_coverage",
+                "intermittent_window_coverage",
+                "linear_palette",
                 "matrix_fill",
-                "minimal_color_travel",
-                "partial_coverage",
-                "registry_generated",
-                "shimmer_wash",
-                "sparse_window_coverage",
-                "stable_brightness",
-                "static_window",
-                "two_axis_fade",
-                "wash_fill"
+                "moderate_motion_window",
+                "steady_wash",
+                "subtle_brightness_change",
+                "subtle_color_travel",
+                "wash_fill",
+                "circular_palette"
               ]
             },
             {
@@ -6190,27 +6214,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.043807,
               "meanTemporalBrightnessDelta": 0.043807,
               "meanNonBlankRatio": 0.832764,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.107143,
+              "meanRenderedDominantColorStability": 0.857143,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.994446,
+              "meanRenderedGradientSmoothness": 0.852382,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "circular_palette",
-                "decoded_fseq",
+                "cycles_4_0",
+                "flat_fill",
+                "full_coverage",
+                "intermittent_window_coverage",
+                "linear_palette",
                 "matrix_fill",
-                "minimal_color_travel",
-                "partial_coverage",
-                "registry_generated",
-                "shimmer_wash",
-                "sparse_window_coverage",
-                "stable_brightness",
-                "static_window",
-                "two_axis_fade",
-                "wash_fill"
+                "moderate_motion_window",
+                "steady_wash",
+                "subtle_brightness_change",
+                "subtle_color_travel",
+                "wash_fill",
+                "circular_palette"
               ]
             },
             {
@@ -6220,10 +6244,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.038331,
               "meanTemporalBrightnessDelta": 0.038331,
               "meanNonBlankRatio": 0.728668,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.09375,
+              "meanRenderedDominantColorStability": 0.75,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.994446,
+              "meanRenderedGradientSmoothness": 0.745834,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
@@ -6333,10 +6357,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "decreases",
-                "magnitude": 0.645833,
+                "magnitude": 0.446429,
                 "range": {
-                  "low": 1,
-                  "high": 0.354167
+                  "low": 0.75,
+                  "high": 0.303571
                 },
                 "evidencePointCount": 7
               },
@@ -6351,28 +6375,28 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorBandDensity": {
                 "direction": "decreases",
-                "magnitude": 0.014581,
+                "magnitude": 0.010015,
                 "range": {
-                  "low": 0.023182,
-                  "high": 0.008601
+                  "low": 0.017387,
+                  "high": 0.007372
                 },
                 "evidencePointCount": 7
               },
               "gradientSmoothness": {
-                "direction": "flat",
-                "magnitude": 0.0002,
+                "direction": "increases",
+                "magnitude": 0.106678,
                 "range": {
-                  "low": 0.99726,
-                  "high": 0.99706
+                  "low": 0.747945,
+                  "high": 0.854623
                 },
                 "evidencePointCount": 7
               },
               "colorTravel": {
                 "direction": "increases",
-                "magnitude": 0.182589,
+                "magnitude": 0.175533,
                 "range": {
-                  "low": 0.177599,
-                  "high": 0.360188
+                  "low": 0.1332,
+                  "high": 0.308733
                 },
                 "evidencePointCount": 7
               }
@@ -6382,13 +6406,13 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorDiversity",
                 "direction": "decreases",
-                "magnitude": 0.645833,
+                "magnitude": 0.446429,
                 "summary": "cycles decreases colorDiversity"
               },
               {
                 "dimension": "colorTravel",
                 "direction": "increases",
-                "magnitude": 0.182589,
+                "magnitude": 0.175533,
                 "summary": "cycles increases colorTravel"
               },
               {
@@ -6396,6 +6420,12 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "increases",
                 "magnitude": 0.109516,
                 "summary": "cycles increases coverage"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "increases",
+                "magnitude": 0.106678,
+                "summary": "cycles increases gradientSmoothness"
               },
               {
                 "dimension": "colorRhythm",
@@ -6418,7 +6448,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorBandDensity",
                 "direction": "decreases",
-                "magnitude": 0.014581,
+                "magnitude": 0.010015,
                 "summary": "cycles decreases colorBandDensity"
               }
             ],
@@ -6441,11 +6471,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.150532,
               "meanTemporalBrightnessDelta": 0.144622,
               "meanNonBlankRatio": 0.609378,
-              "meanRenderedColorDiversity": 0.80625,
+              "meanRenderedColorDiversity": 0.701087,
               "meanRenderedDominantColorStability": 0,
-              "meanRenderedColorBandDensity": 0.027065,
-              "meanRenderedGradientSmoothness": 0.99673,
-              "meanRenderedTemporalColorTravel": 0.203479,
+              "meanRenderedColorBandDensity": 0.023535,
+              "meanRenderedGradientSmoothness": 0.866721,
+              "meanRenderedTemporalColorTravel": 0.176939,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -6471,11 +6501,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.137128,
               "meanTemporalBrightnessDelta": 0.133413,
               "meanNonBlankRatio": 0.887041,
-              "meanRenderedColorDiversity": 1,
+              "meanRenderedColorDiversity": 0.9375,
               "meanRenderedDominantColorStability": 0,
-              "meanRenderedColorBandDensity": 0.012915,
-              "meanRenderedGradientSmoothness": 0.998412,
-              "meanRenderedTemporalColorTravel": 0.436538,
+              "meanRenderedColorBandDensity": 0.012107,
+              "meanRenderedGradientSmoothness": 0.936012,
+              "meanRenderedTemporalColorTravel": 0.409254,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -6501,27 +6531,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.162134,
               "meanTemporalBrightnessDelta": 0.126473,
               "meanNonBlankRatio": 0.804504,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.084615,
-              "meanRenderedColorBandDensity": 0.066445,
-              "meanRenderedGradientSmoothness": 0.996655,
-              "meanRenderedTemporalColorTravel": 0.132522,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.070513,
+              "meanRenderedColorBandDensity": 0.055371,
+              "meanRenderedGradientSmoothness": 0.830546,
+              "meanRenderedTemporalColorTravel": 0.110435,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "circular_palette",
-                "decoded_fseq",
+                "color_travel",
+                "cycles_3_0",
+                "flat_fill",
+                "full_coverage",
+                "intermittent_window_coverage",
+                "linear_palette",
                 "matrix_fill",
-                "minimal_color_travel",
-                "partial_coverage",
-                "registry_generated",
-                "shimmer_wash",
-                "sparse_window_coverage",
+                "moderate_motion_window",
                 "stable_brightness",
-                "static_window",
-                "two_axis_fade",
-                "wash_fill"
+                "steady_wash",
+                "wash_fill",
+                "circular_palette"
               ]
             },
             {
@@ -6531,27 +6561,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.139393,
               "meanTemporalBrightnessDelta": 0.104561,
               "meanNonBlankRatio": 0.827602,
-              "meanRenderedColorDiversity": 0.354167,
+              "meanRenderedColorDiversity": 0.303571,
               "meanRenderedDominantColorStability": 0,
-              "meanRenderedColorBandDensity": 0.008601,
-              "meanRenderedGradientSmoothness": 0.99706,
-              "meanRenderedTemporalColorTravel": 0.360188,
+              "meanRenderedColorBandDensity": 0.007372,
+              "meanRenderedGradientSmoothness": 0.854623,
+              "meanRenderedTemporalColorTravel": 0.308733,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "circular_palette",
-                "decoded_fseq",
+                "color_travel",
+                "cycles_4_0",
+                "flat_fill",
+                "full_coverage",
+                "intermittent_window_coverage",
+                "linear_palette",
                 "matrix_fill",
-                "minimal_color_travel",
-                "partial_coverage",
-                "registry_generated",
-                "shimmer_wash",
-                "sparse_window_coverage",
+                "moderate_motion_window",
                 "stable_brightness",
-                "static_window",
-                "two_axis_fade",
-                "wash_fill"
+                "steady_wash",
+                "wash_fill",
+                "circular_palette"
               ]
             },
             {
@@ -6561,11 +6591,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.109468,
               "meanTemporalBrightnessDelta": 0.109468,
               "meanNonBlankRatio": 0.842064,
-              "meanRenderedColorDiversity": 1,
+              "meanRenderedColorDiversity": 0.952381,
               "meanRenderedDominantColorStability": 0,
-              "meanRenderedColorBandDensity": 0.022201,
-              "meanRenderedGradientSmoothness": 0.996523,
-              "meanRenderedTemporalColorTravel": 0.316547,
+              "meanRenderedColorBandDensity": 0.021143,
+              "meanRenderedGradientSmoothness": 0.949069,
+              "meanRenderedTemporalColorTravel": 0.301473,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -6617,11 +6647,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.049869,
               "meanTemporalBrightnessDelta": 0.046016,
               "meanNonBlankRatio": 0.718086,
-              "meanRenderedColorDiversity": 1,
+              "meanRenderedColorDiversity": 0.75,
               "meanRenderedDominantColorStability": 0,
-              "meanRenderedColorBandDensity": 0.023182,
-              "meanRenderedGradientSmoothness": 0.99726,
-              "meanRenderedTemporalColorTravel": 0.177599,
+              "meanRenderedColorBandDensity": 0.017387,
+              "meanRenderedGradientSmoothness": 0.747945,
+              "meanRenderedTemporalColorTravel": 0.1332,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -6747,11 +6777,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.089189,
               "meanTemporalBrightnessDelta": 0.089189,
               "meanNonBlankRatio": 0.692992,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.119792,
+              "meanRenderedDominantColorStability": 0.958333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.989151,
-              "meanRenderedTemporalColorTravel": 0.000836,
+              "meanRenderedGradientSmoothness": 0.947936,
+              "meanRenderedTemporalColorTravel": 0.000801,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -6775,10 +6805,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.052532,
               "meanTemporalBrightnessDelta": 0.052532,
               "meanNonBlankRatio": 0.902549,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.121711,
+              "meanRenderedDominantColorStability": 0.973684,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.999864,
+              "meanRenderedGradientSmoothness": 0.973552,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -6857,47 +6887,47 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 2
               },
               "colorDiversity": {
-                "direction": "increases",
-                "magnitude": 0.03093,
+                "direction": "flat",
+                "magnitude": 0.003153,
                 "range": {
-                  "low": 0.888514,
-                  "high": 0.919444
+                  "low": 0.865132,
+                  "high": 0.861979
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "flat",
-                "magnitude": 0.001825,
+                "magnitude": 0.00156,
                 "range": {
-                  "low": 0.004158,
-                  "high": 0.005983
+                  "low": 0.004049,
+                  "high": 0.005609
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.047438,
+                "magnitude": 0.044466,
                 "range": {
-                  "low": 0.000177,
-                  "high": 0.047615
+                  "low": 0.000173,
+                  "high": 0.044639
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.005489,
+                "magnitude": 0.041328,
                 "range": {
-                  "low": 0.999934,
-                  "high": 0.994445
+                  "low": 0.97362,
+                  "high": 0.932292
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.206792,
+                "magnitude": 0.207905,
                 "range": {
-                  "low": 0.387935,
-                  "high": 0.181143
+                  "low": 0.377726,
+                  "high": 0.169821
                 },
                 "evidencePointCount": 2
               }
@@ -6913,20 +6943,20 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorTravel",
                 "direction": "decreases",
-                "magnitude": 0.206792,
+                "magnitude": 0.207905,
                 "summary": "hFade decreases colorTravel"
               },
               {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.047438,
+                "magnitude": 0.044466,
                 "summary": "hFade increases colorBandDensity"
               },
               {
-                "dimension": "colorDiversity",
-                "direction": "increases",
-                "magnitude": 0.03093,
-                "summary": "hFade increases colorDiversity"
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.041328,
+                "summary": "hFade decreases gradientSmoothness"
               },
               {
                 "dimension": "motion",
@@ -6945,12 +6975,6 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "decreases",
                 "magnitude": 0.025691,
                 "summary": "hFade decreases brightnessRhythm"
-              },
-              {
-                "dimension": "gradientSmoothness",
-                "direction": "decreases",
-                "magnitude": 0.005489,
-                "summary": "hFade decreases gradientSmoothness"
               }
             ],
             "generalization": {
@@ -6972,11 +6996,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.133189,
               "meanTemporalBrightnessDelta": 0.133189,
               "meanNonBlankRatio": 0.90072,
-              "meanRenderedColorDiversity": 0.888514,
-              "meanRenderedDominantColorStability": 0.004158,
-              "meanRenderedColorBandDensity": 0.000177,
-              "meanRenderedGradientSmoothness": 0.999934,
-              "meanRenderedTemporalColorTravel": 0.387935,
+              "meanRenderedColorDiversity": 0.865132,
+              "meanRenderedDominantColorStability": 0.004049,
+              "meanRenderedColorBandDensity": 0.000173,
+              "meanRenderedGradientSmoothness": 0.97362,
+              "meanRenderedTemporalColorTravel": 0.377726,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -7000,11 +7024,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.107498,
               "meanTemporalBrightnessDelta": 0.107498,
               "meanNonBlankRatio": 0.668143,
-              "meanRenderedColorDiversity": 0.919444,
-              "meanRenderedDominantColorStability": 0.005983,
-              "meanRenderedColorBandDensity": 0.047615,
-              "meanRenderedGradientSmoothness": 0.994445,
-              "meanRenderedTemporalColorTravel": 0.181143,
+              "meanRenderedColorDiversity": 0.861979,
+              "meanRenderedDominantColorStability": 0.005609,
+              "meanRenderedColorBandDensity": 0.044639,
+              "meanRenderedGradientSmoothness": 0.932292,
+              "meanRenderedTemporalColorTravel": 0.169821,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -7128,10 +7152,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.192748,
               "meanTemporalBrightnessDelta": 0.192748,
               "meanNonBlankRatio": 0.551965,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1125,
+              "meanRenderedDominantColorStability": 0.9,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.991833,
+              "meanRenderedGradientSmoothness": 0.89265,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
@@ -7158,11 +7182,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.037171,
               "meanTemporalBrightnessDelta": 0.037171,
               "meanNonBlankRatio": 0.853253,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.119485,
+              "meanRenderedDominantColorStability": 0.955882,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.994507,
-              "meanRenderedTemporalColorTravel": 0.000592,
+              "meanRenderedGradientSmoothness": 0.950631,
+              "meanRenderedTemporalColorTravel": 0.000566,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -7243,46 +7267,46 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "decreases",
-                "magnitude": 0.021267,
+                "magnitude": 0.056618,
                 "range": {
-                  "low": 0.910156,
-                  "high": 0.888889
+                  "low": 0.856618,
+                  "high": 0.8
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "flat",
-                "magnitude": 0.001602,
+                "magnitude": 0.001244,
                 "range": {
-                  "low": 0.004808,
-                  "high": 0.00641
+                  "low": 0.004525,
+                  "high": 0.005769
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.013181,
+                "magnitude": 0.010903,
                 "range": {
-                  "low": 0.023317,
-                  "high": 0.036498
+                  "low": 0.021945,
+                  "high": 0.032848
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
-                "direction": "flat",
-                "magnitude": 0.001403,
+                "direction": "decreases",
+                "magnitude": 0.042324,
                 "range": {
-                  "low": 0.99723,
-                  "high": 0.995827
+                  "low": 0.938569,
+                  "high": 0.896245
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.114046,
+                "magnitude": 0.114973,
                 "range": {
-                  "low": 0.299486,
-                  "high": 0.18544
+                  "low": 0.281869,
+                  "high": 0.166896
                 },
                 "evidencePointCount": 2
               }
@@ -7298,7 +7322,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorTravel",
                 "direction": "decreases",
-                "magnitude": 0.114046,
+                "magnitude": 0.114973,
                 "summary": "reverseFades decreases colorTravel"
               },
               {
@@ -7322,13 +7346,19 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorDiversity",
                 "direction": "decreases",
-                "magnitude": 0.021267,
+                "magnitude": 0.056618,
                 "summary": "reverseFades decreases colorDiversity"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.042324,
+                "summary": "reverseFades decreases gradientSmoothness"
               },
               {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.013181,
+                "magnitude": 0.010903,
                 "summary": "reverseFades increases colorBandDensity"
               }
             ],
@@ -7351,11 +7381,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.173179,
               "meanTemporalBrightnessDelta": 0.170207,
               "meanNonBlankRatio": 0.53518,
-              "meanRenderedColorDiversity": 0.888889,
-              "meanRenderedDominantColorStability": 0.00641,
-              "meanRenderedColorBandDensity": 0.036498,
-              "meanRenderedGradientSmoothness": 0.995827,
-              "meanRenderedTemporalColorTravel": 0.18544,
+              "meanRenderedColorDiversity": 0.8,
+              "meanRenderedDominantColorStability": 0.005769,
+              "meanRenderedColorBandDensity": 0.032848,
+              "meanRenderedGradientSmoothness": 0.896245,
+              "meanRenderedTemporalColorTravel": 0.166896,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -7381,11 +7411,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.101653,
               "meanTemporalBrightnessDelta": 0.100779,
               "meanNonBlankRatio": 0.839627,
-              "meanRenderedColorDiversity": 0.910156,
-              "meanRenderedDominantColorStability": 0.004808,
-              "meanRenderedColorBandDensity": 0.023317,
-              "meanRenderedGradientSmoothness": 0.99723,
-              "meanRenderedTemporalColorTravel": 0.299486,
+              "meanRenderedColorDiversity": 0.856618,
+              "meanRenderedDominantColorStability": 0.004525,
+              "meanRenderedColorBandDensity": 0.021945,
+              "meanRenderedGradientSmoothness": 0.938569,
+              "meanRenderedTemporalColorTravel": 0.281869,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -7511,10 +7541,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.316182,
               "meanTemporalBrightnessDelta": 0.316182,
               "meanNonBlankRatio": 0.433533,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1125,
+              "meanRenderedDominantColorStability": 0.9,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.991876,
+              "meanRenderedGradientSmoothness": 0.892689,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [
                 "moderate_motion"
@@ -7541,11 +7571,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.000866,
               "meanTemporalBrightnessDelta": 0.000866,
               "meanNonBlankRatio": 0.888086,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.119485,
+              "meanRenderedDominantColorStability": 0.955882,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.994495,
-              "meanRenderedTemporalColorTravel": 0.000592,
+              "meanRenderedGradientSmoothness": 0.95062,
+              "meanRenderedTemporalColorTravel": 0.000566,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -7626,46 +7656,46 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "decreases",
-                "magnitude": 0.021267,
+                "magnitude": 0.056618,
                 "range": {
-                  "low": 0.910156,
-                  "high": 0.888889
+                  "low": 0.856618,
+                  "high": 0.8
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "flat",
-                "magnitude": 0.001602,
+                "magnitude": 0.001244,
                 "range": {
-                  "low": 0.004808,
-                  "high": 0.00641
+                  "low": 0.004525,
+                  "high": 0.005769
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.013148,
+                "magnitude": 0.010873,
                 "range": {
-                  "low": 0.023324,
-                  "high": 0.036472
+                  "low": 0.021952,
+                  "high": 0.032825
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
-                "direction": "flat",
-                "magnitude": 0.001372,
+                "direction": "decreases",
+                "magnitude": 0.042297,
                 "range": {
-                  "low": 0.997223,
-                  "high": 0.995851
+                  "low": 0.938563,
+                  "high": 0.896266
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.115966,
+                "magnitude": 0.116719,
                 "range": {
-                  "low": 0.299907,
-                  "high": 0.183941
+                  "low": 0.282266,
+                  "high": 0.165547
                 },
                 "evidencePointCount": 2
               }
@@ -7699,19 +7729,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorTravel",
                 "direction": "decreases",
-                "magnitude": 0.115966,
+                "magnitude": 0.116719,
                 "summary": "shimmer decreases colorTravel"
               },
               {
                 "dimension": "colorDiversity",
                 "direction": "decreases",
-                "magnitude": 0.021267,
+                "magnitude": 0.056618,
                 "summary": "shimmer decreases colorDiversity"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.042297,
+                "summary": "shimmer decreases gradientSmoothness"
               },
               {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.013148,
+                "magnitude": 0.010873,
                 "summary": "shimmer increases colorBandDensity"
               }
             ],
@@ -7734,11 +7770,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.249442,
               "meanTemporalBrightnessDelta": 0.246483,
               "meanNonBlankRatio": 0.420183,
-              "meanRenderedColorDiversity": 0.888889,
-              "meanRenderedDominantColorStability": 0.00641,
-              "meanRenderedColorBandDensity": 0.036472,
-              "meanRenderedGradientSmoothness": 0.995851,
-              "meanRenderedTemporalColorTravel": 0.183941,
+              "meanRenderedColorDiversity": 0.8,
+              "meanRenderedDominantColorStability": 0.005769,
+              "meanRenderedColorBandDensity": 0.032825,
+              "meanRenderedGradientSmoothness": 0.896266,
+              "meanRenderedTemporalColorTravel": 0.165547,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -7764,11 +7800,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.079219,
               "meanTemporalBrightnessDelta": 0.078345,
               "meanNonBlankRatio": 0.87345,
-              "meanRenderedColorDiversity": 0.910156,
-              "meanRenderedDominantColorStability": 0.004808,
-              "meanRenderedColorBandDensity": 0.023324,
-              "meanRenderedGradientSmoothness": 0.997223,
-              "meanRenderedTemporalColorTravel": 0.299907,
+              "meanRenderedColorDiversity": 0.856618,
+              "meanRenderedDominantColorStability": 0.004525,
+              "meanRenderedColorBandDensity": 0.021952,
+              "meanRenderedGradientSmoothness": 0.938563,
+              "meanRenderedTemporalColorTravel": 0.282266,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -7894,11 +7930,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.080777,
               "meanTemporalBrightnessDelta": 0.080777,
               "meanNonBlankRatio": 0.712079,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.120283,
+              "meanRenderedDominantColorStability": 0.962264,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.99496,
-              "meanRenderedTemporalColorTravel": 0.000754,
+              "meanRenderedGradientSmoothness": 0.957414,
+              "meanRenderedTemporalColorTravel": 0.000726,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -7922,10 +7958,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.060489,
               "meanTemporalBrightnessDelta": 0.060489,
               "meanNonBlankRatio": 0.903646,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.121212,
+              "meanRenderedDominantColorStability": 0.969697,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.99228,
+              "meanRenderedGradientSmoothness": 0.962211,
               "meanRenderedTemporalColorTravel": 0,
               "temporalSignatureHints": [],
               "behaviorHints": [
@@ -8005,46 +8041,46 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "decreases",
-                "magnitude": 0.014063,
+                "magnitude": 0.037307,
                 "range": {
-                  "low": 0.914063,
-                  "high": 0.9
+                  "low": 0.886364,
+                  "high": 0.849057
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "flat",
-                "magnitude": 0.000577,
+                "magnitude": 0.000418,
                 "range": {
-                  "low": 0.004808,
-                  "high": 0.005385
+                  "low": 0.004662,
+                  "high": 0.00508
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.008025,
+                "magnitude": 0.00701,
                 "range": {
-                  "low": 0.021317,
-                  "high": 0.029342
+                  "low": 0.020671,
+                  "high": 0.027681
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
-                "direction": "flat",
-                "magnitude": 0.001121,
+                "direction": "decreases",
+                "magnitude": 0.025144,
                 "range": {
-                  "low": 0.996238,
-                  "high": 0.997359
+                  "low": 0.966049,
+                  "high": 0.940905
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.222251,
+                "magnitude": 0.220453,
                 "range": {
-                  "low": 0.40997,
-                  "high": 0.187719
+                  "low": 0.397547,
+                  "high": 0.177094
                 },
                 "evidencePointCount": 2
               }
@@ -8054,7 +8090,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorTravel",
                 "direction": "decreases",
-                "magnitude": 0.222251,
+                "magnitude": 0.220453,
                 "summary": "vFade decreases colorTravel"
               },
               {
@@ -8084,13 +8120,19 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorDiversity",
                 "direction": "decreases",
-                "magnitude": 0.014063,
+                "magnitude": 0.037307,
                 "summary": "vFade decreases colorDiversity"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.025144,
+                "summary": "vFade decreases gradientSmoothness"
               },
               {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.008025,
+                "magnitude": 0.00701,
                 "summary": "vFade increases colorBandDensity"
               }
             ],
@@ -8113,11 +8155,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.142181,
               "meanTemporalBrightnessDelta": 0.142181,
               "meanNonBlankRatio": 0.899346,
-              "meanRenderedColorDiversity": 0.914063,
-              "meanRenderedDominantColorStability": 0.004808,
-              "meanRenderedColorBandDensity": 0.021317,
-              "meanRenderedGradientSmoothness": 0.996238,
-              "meanRenderedTemporalColorTravel": 0.40997,
+              "meanRenderedColorDiversity": 0.886364,
+              "meanRenderedDominantColorStability": 0.004662,
+              "meanRenderedColorBandDensity": 0.020671,
+              "meanRenderedGradientSmoothness": 0.966049,
+              "meanRenderedTemporalColorTravel": 0.397547,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -8141,11 +8183,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.104322,
               "meanTemporalBrightnessDelta": 0.104322,
               "meanNonBlankRatio": 0.69094,
-              "meanRenderedColorDiversity": 0.9,
-              "meanRenderedDominantColorStability": 0.005385,
-              "meanRenderedColorBandDensity": 0.029342,
-              "meanRenderedGradientSmoothness": 0.997359,
-              "meanRenderedTemporalColorTravel": 0.187719,
+              "meanRenderedColorDiversity": 0.849057,
+              "meanRenderedDominantColorStability": 0.00508,
+              "meanRenderedColorBandDensity": 0.027681,
+              "meanRenderedGradientSmoothness": 0.940905,
+              "meanRenderedTemporalColorTravel": 0.177094,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -13142,26 +13184,26 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.419697,
               "meanTemporalBrightnessDelta": 0.419697,
               "meanNonBlankRatio": 0.649276,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.109375,
+              "meanRenderedDominantColorStability": 0.875,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.472136,
+              "meanRenderedGradientSmoothness": 0.875,
+              "meanRenderedTemporalColorTravel": 0.413119,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "speed_7",
-                "tight_marquee",
                 "decoded_fseq",
+                "forward_motion",
+                "marquee_pattern",
                 "registry_generated",
+                "tight_marquee",
                 "wide_marquee",
-                "reverse_motion"
+                "reverse_motion",
+                "arch_pattern",
+                "marquee_motion",
+                "speed_7"
               ]
             },
             {
@@ -13171,25 +13213,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.386043,
               "meanTemporalBrightnessDelta": 0.386043,
               "meanNonBlankRatio": 0.674979,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.0625,
+              "meanRenderedDominantColorStability": 0.5,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.719455,
+              "meanRenderedGradientSmoothness": 0.5,
+              "meanRenderedTemporalColorTravel": 0.359727,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
+                "behavior_anchor",
+                "decoded_fseq",
+                "fast_motion",
                 "forward_motion",
                 "marquee_motion",
                 "marquee_pattern",
-                "speed_9",
                 "tight_marquee",
-                "behavior_anchor",
-                "decoded_fseq",
-                "fast_motion"
+                "arch_pattern",
+                "speed_9"
               ]
             },
             {
@@ -13199,27 +13241,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.184011,
               "meanTemporalBrightnessDelta": 0.184011,
               "meanNonBlankRatio": 0.6102,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.216855,
+              "meanRenderedGradientSmoothness": 0.8,
+              "meanRenderedTemporalColorTravel": 0.173484,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "speed_5",
-                "tight_marquee",
                 "behavior_anchor",
                 "continuous_bands",
                 "decoded_fseq",
+                "forward_motion",
                 "marquee_coverage",
-                "skip_0"
+                "marquee_pattern",
+                "skip_0",
+                "tight_marquee",
+                "segmented_bands",
+                "segmented_marquee",
+                "skip_4"
               ]
             },
             {
@@ -13229,25 +13271,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.065289,
               "meanTemporalBrightnessDelta": 0.065289,
               "meanNonBlankRatio": 0.674896,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.0625,
+              "meanRenderedDominantColorStability": 0.5,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.077945,
+              "meanRenderedGradientSmoothness": 0.5,
+              "meanRenderedTemporalColorTravel": 0.038973,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
+                "behavior_anchor",
+                "decoded_fseq",
                 "forward_motion",
                 "marquee_motion",
                 "marquee_pattern",
-                "speed_1",
+                "slow_motion",
                 "tight_marquee",
-                "behavior_anchor",
-                "decoded_fseq",
-                "slow_motion"
+                "arch_pattern",
+                "speed_1"
               ]
             },
             {
@@ -13339,62 +13381,50 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.1875,
+                  "high": 0.1875
                 },
                 "evidencePointCount": 5
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.389937,
+                "magnitude": 0.194968,
                 "range": {
-                  "low": 0.943396,
-                  "high": 0.553459
+                  "low": 0.471698,
+                  "high": 0.27673
                 },
                 "evidencePointCount": 5
               },
               "colorBandDensity": {
                 "direction": "flat",
-                "magnitude": 0.000029,
+                "magnitude": 0.000014,
                 "range": {
-                  "low": 0.348431,
-                  "high": 0.348402
+                  "low": 0.174215,
+                  "high": 0.174201
                 },
                 "evidencePointCount": 5
               },
               "gradientSmoothness": {
                 "direction": "flat",
-                "magnitude": 0.000024,
+                "magnitude": 0.000012,
                 "range": {
-                  "low": 0.715507,
-                  "high": 0.715531
+                  "low": 0.357754,
+                  "high": 0.357766
                 },
                 "evidencePointCount": 5
               },
               "colorTravel": {
                 "direction": "increases",
-                "magnitude": 0.370375,
+                "magnitude": 0.185187,
                 "range": {
-                  "low": 0.045002,
-                  "high": 0.415377
+                  "low": 0.022501,
+                  "high": 0.207688
                 },
                 "evidencePointCount": 5
               }
             },
-            "dominantDimension": "dominantColorStability",
+            "dominantDimension": "brightnessRhythm",
             "behaviorRules": [
-              {
-                "dimension": "dominantColorStability",
-                "direction": "decreases",
-                "magnitude": 0.389937,
-                "summary": "speed decreases dominantColorStability"
-              },
-              {
-                "dimension": "colorTravel",
-                "direction": "increases",
-                "magnitude": 0.370375,
-                "summary": "speed increases colorTravel"
-              },
               {
                 "dimension": "brightnessRhythm",
                 "direction": "increases",
@@ -13412,6 +13442,18 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "increases",
                 "magnitude": 0.316061,
                 "summary": "speed increases colorRhythm"
+              },
+              {
+                "dimension": "dominantColorStability",
+                "direction": "decreases",
+                "magnitude": 0.194968,
+                "summary": "speed decreases dominantColorStability"
+              },
+              {
+                "dimension": "colorTravel",
+                "direction": "increases",
+                "magnitude": 0.185187,
+                "summary": "speed increases colorTravel"
               }
             ],
             "generalization": {
@@ -13433,26 +13475,26 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.417237,
               "meanTemporalBrightnessDelta": 0.41536,
               "meanNonBlankRatio": 0.649276,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.719677,
-              "meanRenderedColorBandDensity": 0.363331,
-              "meanRenderedGradientSmoothness": 0.703342,
-              "meanRenderedTemporalColorTravel": 0.272588,
+              "meanRenderedColorDiversity": 0.328125,
+              "meanRenderedDominantColorStability": 0.629717,
+              "meanRenderedColorBandDensity": 0.317915,
+              "meanRenderedGradientSmoothness": 0.615424,
+              "meanRenderedTemporalColorTravel": 0.238514,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "speed_7",
-                "tight_marquee",
                 "decoded_fseq",
+                "forward_motion",
+                "marquee_pattern",
                 "registry_generated",
+                "tight_marquee",
                 "wide_marquee",
-                "reverse_motion"
+                "reverse_motion",
+                "arch_pattern",
+                "marquee_motion",
+                "speed_7"
               ]
             },
             {
@@ -13462,25 +13504,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.368646,
               "meanTemporalBrightnessDelta": 0.368646,
               "meanNonBlankRatio": 0.674979,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.553459,
-              "meanRenderedColorBandDensity": 0.348402,
-              "meanRenderedGradientSmoothness": 0.715531,
-              "meanRenderedTemporalColorTravel": 0.415377,
+              "meanRenderedColorDiversity": 0.1875,
+              "meanRenderedDominantColorStability": 0.27673,
+              "meanRenderedColorBandDensity": 0.174201,
+              "meanRenderedGradientSmoothness": 0.357766,
+              "meanRenderedTemporalColorTravel": 0.207688,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
+                "behavior_anchor",
+                "decoded_fseq",
+                "fast_motion",
                 "forward_motion",
                 "marquee_motion",
                 "marquee_pattern",
-                "speed_9",
                 "tight_marquee",
-                "behavior_anchor",
-                "decoded_fseq",
-                "fast_motion"
+                "arch_pattern",
+                "speed_9"
               ]
             },
             {
@@ -13490,27 +13532,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.178106,
               "meanTemporalBrightnessDelta": 0.177059,
               "meanNonBlankRatio": 0.6102,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.789308,
-              "meanRenderedColorBandDensity": 0.3439,
-              "meanRenderedGradientSmoothness": 0.719206,
-              "meanRenderedTemporalColorTravel": 0.193243,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.631447,
+              "meanRenderedColorBandDensity": 0.27512,
+              "meanRenderedGradientSmoothness": 0.575365,
+              "meanRenderedTemporalColorTravel": 0.154594,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "speed_5",
-                "tight_marquee",
                 "behavior_anchor",
                 "continuous_bands",
                 "decoded_fseq",
+                "forward_motion",
                 "marquee_coverage",
-                "skip_0"
+                "marquee_pattern",
+                "skip_0",
+                "tight_marquee",
+                "segmented_bands",
+                "segmented_marquee",
+                "skip_4"
               ]
             },
             {
@@ -13520,25 +13562,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.052585,
               "meanTemporalBrightnessDelta": 0.047921,
               "meanNonBlankRatio": 0.674896,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.943396,
-              "meanRenderedColorBandDensity": 0.348431,
-              "meanRenderedGradientSmoothness": 0.715507,
-              "meanRenderedTemporalColorTravel": 0.045002,
+              "meanRenderedColorDiversity": 0.1875,
+              "meanRenderedDominantColorStability": 0.471698,
+              "meanRenderedColorBandDensity": 0.174215,
+              "meanRenderedGradientSmoothness": 0.357754,
+              "meanRenderedTemporalColorTravel": 0.022501,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
+                "behavior_anchor",
+                "decoded_fseq",
                 "forward_motion",
                 "marquee_motion",
                 "marquee_pattern",
-                "speed_1",
+                "slow_motion",
                 "tight_marquee",
-                "behavior_anchor",
-                "decoded_fseq",
-                "slow_motion"
+                "arch_pattern",
+                "speed_1"
               ]
             },
             {
@@ -14113,26 +14155,26 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.419697,
               "meanTemporalBrightnessDelta": 0.419697,
               "meanNonBlankRatio": 0.649276,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.109375,
+              "meanRenderedDominantColorStability": 0.875,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.472136,
+              "meanRenderedGradientSmoothness": 0.875,
+              "meanRenderedTemporalColorTravel": 0.413119,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "stagger_4",
-                "tight_marquee",
                 "decoded_fseq",
+                "forward_motion",
+                "marquee_pattern",
                 "registry_generated",
+                "tight_marquee",
                 "wide_marquee",
-                "reverse_motion"
+                "reverse_motion",
+                "arch_pattern",
+                "marquee_motion",
+                "stagger_4"
               ]
             },
             {
@@ -14142,27 +14184,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.245351,
               "meanTemporalBrightnessDelta": 0.245351,
               "meanNonBlankRatio": 0.60725,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.107143,
+              "meanRenderedDominantColorStability": 0.857143,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.27747,
+              "meanRenderedGradientSmoothness": 0.857143,
+              "meanRenderedTemporalColorTravel": 0.237832,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "stagger_0",
-                "tight_marquee",
                 "behavior_anchor",
                 "continuous_bands",
                 "decoded_fseq",
+                "forward_motion",
                 "marquee_coverage",
-                "skip_0"
+                "marquee_pattern",
+                "skip_0",
+                "tight_marquee",
+                "segmented_bands",
+                "segmented_marquee",
+                "skip_4"
               ]
             },
             {
@@ -14302,45 +14344,45 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "decreases",
-                "magnitude": 0.375,
+                "magnitude": 0.321429,
                 "range": {
-                  "low": 0.375,
+                  "low": 0.321429,
                   "high": 0
                 },
                 "evidencePointCount": 5
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.775681,
+                "magnitude": 0.66487,
                 "range": {
-                  "low": 0.775681,
+                  "low": 0.66487,
                   "high": 0
                 },
                 "evidencePointCount": 5
               },
               "colorBandDensity": {
                 "direction": "decreases",
-                "magnitude": 0.345406,
+                "magnitude": 0.296062,
                 "range": {
-                  "low": 0.345406,
+                  "low": 0.296062,
                   "high": 0
                 },
                 "evidencePointCount": 5
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.717977,
+                "magnitude": 0.615409,
                 "range": {
-                  "low": 0.717977,
+                  "low": 0.615409,
                   "high": 0
                 },
                 "evidencePointCount": 5
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.205558,
+                "magnitude": 0.176193,
                 "range": {
-                  "low": 0.205558,
+                  "low": 0.176193,
                   "high": 0
                 },
                 "evidencePointCount": 5
@@ -14351,25 +14393,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.775681,
+                "magnitude": 0.66487,
                 "summary": "stagger decreases dominantColorStability"
               },
               {
                 "dimension": "gradientSmoothness",
                 "direction": "decreases",
-                "magnitude": 0.717977,
+                "magnitude": 0.615409,
                 "summary": "stagger decreases gradientSmoothness"
               },
               {
                 "dimension": "colorDiversity",
                 "direction": "decreases",
-                "magnitude": 0.375,
+                "magnitude": 0.321429,
                 "summary": "stagger decreases colorDiversity"
               },
               {
                 "dimension": "colorBandDensity",
                 "direction": "decreases",
-                "magnitude": 0.345406,
+                "magnitude": 0.296062,
                 "summary": "stagger decreases colorBandDensity"
               },
               {
@@ -14393,7 +14435,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorTravel",
                 "direction": "decreases",
-                "magnitude": 0.205558,
+                "magnitude": 0.176193,
                 "summary": "stagger decreases colorTravel"
               },
               {
@@ -14422,26 +14464,26 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.416007,
               "meanTemporalBrightnessDelta": 0.415353,
               "meanNonBlankRatio": 0.649276,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.719677,
-              "meanRenderedColorBandDensity": 0.363331,
-              "meanRenderedGradientSmoothness": 0.703342,
-              "meanRenderedTemporalColorTravel": 0.272588,
+              "meanRenderedColorDiversity": 0.328125,
+              "meanRenderedDominantColorStability": 0.629717,
+              "meanRenderedColorBandDensity": 0.317915,
+              "meanRenderedGradientSmoothness": 0.615424,
+              "meanRenderedTemporalColorTravel": 0.238514,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "stagger_4",
-                "tight_marquee",
                 "decoded_fseq",
+                "forward_motion",
+                "marquee_pattern",
                 "registry_generated",
+                "tight_marquee",
                 "wide_marquee",
-                "reverse_motion"
+                "reverse_motion",
+                "arch_pattern",
+                "marquee_motion",
+                "stagger_4"
               ]
             },
             {
@@ -14451,27 +14493,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.241133,
               "meanTemporalBrightnessDelta": 0.240385,
               "meanNonBlankRatio": 0.60725,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.775681,
-              "meanRenderedColorBandDensity": 0.345406,
-              "meanRenderedGradientSmoothness": 0.717977,
-              "meanRenderedTemporalColorTravel": 0.205558,
+              "meanRenderedColorDiversity": 0.321429,
+              "meanRenderedDominantColorStability": 0.66487,
+              "meanRenderedColorBandDensity": 0.296062,
+              "meanRenderedGradientSmoothness": 0.615409,
+              "meanRenderedTemporalColorTravel": 0.176193,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "stagger_0",
-                "tight_marquee",
                 "behavior_anchor",
                 "continuous_bands",
                 "decoded_fseq",
+                "forward_motion",
                 "marquee_coverage",
-                "skip_0"
+                "marquee_pattern",
+                "skip_0",
+                "tight_marquee",
+                "segmented_bands",
+                "segmented_marquee",
+                "skip_4"
               ]
             },
             {
@@ -15334,27 +15376,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.358743,
               "meanTemporalBrightnessDelta": 0.358743,
               "meanNonBlankRatio": 0.621068,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.116071,
+              "meanRenderedDominantColorStability": 0.928571,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.38229,
+              "meanRenderedGradientSmoothness": 0.928571,
+              "meanRenderedTemporalColorTravel": 0.354984,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "thickness_2",
-                "tight_marquee",
                 "behavior_anchor",
                 "continuous_bands",
                 "decoded_fseq",
+                "forward_motion",
                 "marquee_coverage",
-                "skip_0"
+                "marquee_pattern",
+                "skip_0",
+                "tight_marquee",
+                "segmented_bands",
+                "segmented_marquee",
+                "skip_4"
               ]
             },
             {
@@ -15603,27 +15645,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.356634,
               "meanTemporalBrightnessDelta": 0.35626,
               "meanNonBlankRatio": 0.621068,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.745525,
-              "meanRenderedColorBandDensity": 0.355058,
-              "meanRenderedGradientSmoothness": 0.710097,
-              "meanRenderedTemporalColorTravel": 0.241651,
+              "meanRenderedColorDiversity": 0.348214,
+              "meanRenderedDominantColorStability": 0.692273,
+              "meanRenderedColorBandDensity": 0.329696,
+              "meanRenderedGradientSmoothness": 0.659375,
+              "meanRenderedTemporalColorTravel": 0.22439,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
-                "forward_motion",
-                "marquee_motion",
-                "marquee_pattern",
-                "thickness_2",
-                "tight_marquee",
                 "behavior_anchor",
                 "continuous_bands",
                 "decoded_fseq",
+                "forward_motion",
                 "marquee_coverage",
-                "skip_0"
+                "marquee_pattern",
+                "skip_0",
+                "tight_marquee",
+                "segmented_bands",
+                "segmented_marquee",
+                "skip_4"
               ]
             },
             {
@@ -17298,11 +17340,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.111998,
               "meanTemporalBrightnessDelta": 0.111998,
               "meanNonBlankRatio": 0.624559,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.120536,
+              "meanRenderedDominantColorStability": 0.964286,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.687896,
-              "meanRenderedTemporalColorTravel": 0.116146,
+              "meanRenderedGradientSmoothness": 0.663328,
+              "meanRenderedTemporalColorTravel": 0.111998,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -17469,11 +17511,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.111998,
               "meanTemporalBrightnessDelta": 0.111998,
               "meanNonBlankRatio": 0.624559,
-              "meanRenderedColorDiversity": 0.37963,
-              "meanRenderedDominantColorStability": 0.956907,
-              "meanRenderedColorBandDensity": 0.283458,
-              "meanRenderedGradientSmoothness": 0.795165,
-              "meanRenderedTemporalColorTravel": 0.067248,
+              "meanRenderedColorDiversity": 0.366071,
+              "meanRenderedDominantColorStability": 0.922731,
+              "meanRenderedColorBandDensity": 0.273335,
+              "meanRenderedGradientSmoothness": 0.766766,
+              "meanRenderedTemporalColorTravel": 0.064847,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -17644,11 +17686,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.104685,
               "meanTemporalBrightnessDelta": 0.104685,
               "meanNonBlankRatio": 0.641906,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.123311,
+              "meanRenderedDominantColorStability": 0.986486,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.901063,
-              "meanRenderedTemporalColorTravel": 0.106119,
+              "meanRenderedGradientSmoothness": 0.888886,
+              "meanRenderedTemporalColorTravel": 0.104685,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -17939,11 +17981,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.104685,
               "meanTemporalBrightnessDelta": 0.104685,
               "meanNonBlankRatio": 0.641906,
-              "meanRenderedColorDiversity": 0.376712,
-              "meanRenderedDominantColorStability": 0.996985,
-              "meanRenderedColorBandDensity": 0.259958,
-              "meanRenderedGradientSmoothness": 0.793432,
-              "meanRenderedTemporalColorTravel": 0.063498,
+              "meanRenderedColorDiversity": 0.371622,
+              "meanRenderedDominantColorStability": 0.983512,
+              "meanRenderedColorBandDensity": 0.256445,
+              "meanRenderedGradientSmoothness": 0.78271,
+              "meanRenderedTemporalColorTravel": 0.06264,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -18129,11 +18171,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.096524,
               "meanTemporalBrightnessDelta": 0.096524,
               "meanNonBlankRatio": 0.671825,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.123016,
+              "meanRenderedDominantColorStability": 0.984127,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.939776,
-              "meanRenderedTemporalColorTravel": 0.097879,
+              "meanRenderedGradientSmoothness": 0.924859,
+              "meanRenderedTemporalColorTravel": 0.096325,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -18159,27 +18201,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.095231,
               "meanTemporalBrightnessDelta": 0.095231,
               "meanNonBlankRatio": 0.678854,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.936065,
-              "meanRenderedTemporalColorTravel": 0.104146,
+              "meanRenderedGradientSmoothness": 0.780054,
+              "meanRenderedTemporalColorTravel": 0.086788,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
+                "armSize_100",
                 "few_arm_pinwheel",
+                "pinwheel_motion",
                 "pinwheel_pattern",
                 "radial_pattern_fit",
-                "registry_generated",
+                "spinner_pinwheel",
                 "static_pinwheel",
+                "decoded_fseq",
+                "registry_generated",
                 "dense_pinwheel",
                 "rotating_pinwheel",
-                "depth_mode",
-                "multi_arm_pinwheel",
-                "armSize_100",
-                "pinwheel_motion"
+                "depth_mode"
               ]
             },
             {
@@ -18189,27 +18231,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.094025,
               "meanTemporalBrightnessDelta": 0.094025,
               "meanNonBlankRatio": 0.678854,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.936065,
-              "meanRenderedTemporalColorTravel": 0.104146,
+              "meanRenderedGradientSmoothness": 0.780054,
+              "meanRenderedTemporalColorTravel": 0.086788,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
+                "armSize_75",
                 "few_arm_pinwheel",
+                "pinwheel_motion",
                 "pinwheel_pattern",
                 "radial_pattern_fit",
-                "registry_generated",
+                "spinner_pinwheel",
                 "static_pinwheel",
+                "decoded_fseq",
+                "registry_generated",
                 "dense_pinwheel",
                 "rotating_pinwheel",
-                "depth_mode",
-                "multi_arm_pinwheel",
-                "armSize_75",
-                "pinwheel_motion"
+                "depth_mode"
               ]
             },
             {
@@ -18219,27 +18261,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.088214,
               "meanTemporalBrightnessDelta": 0.088214,
               "meanNonBlankRatio": 0.678854,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.936065,
-              "meanRenderedTemporalColorTravel": 0.104146,
+              "meanRenderedGradientSmoothness": 0.780054,
+              "meanRenderedTemporalColorTravel": 0.086788,
               "temporalSignatureHints": [
                 "static_or_near_static"
               ],
               "behaviorHints": [
-                "decoded_fseq",
+                "armSize_25",
                 "few_arm_pinwheel",
+                "pinwheel_motion",
                 "pinwheel_pattern",
                 "radial_pattern_fit",
-                "registry_generated",
+                "spinner_pinwheel",
                 "static_pinwheel",
+                "decoded_fseq",
+                "registry_generated",
                 "dense_pinwheel",
                 "rotating_pinwheel",
-                "depth_mode",
-                "multi_arm_pinwheel",
-                "armSize_25",
-                "pinwheel_motion"
+                "depth_mode"
               ]
             }
           ]
@@ -18306,8 +18348,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.3125,
+                  "high": 0.3125
                 },
                 "evidencePointCount": 4
               },
@@ -18315,8 +18357,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.881761,
-                  "high": 0.881761
+                  "low": 0.734801,
+                  "high": 0.734801
                 },
                 "evidencePointCount": 4
               },
@@ -18324,8 +18366,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.25259,
-                  "high": 0.25259
+                  "low": 0.210491,
+                  "high": 0.210491
                 },
                 "evidencePointCount": 4
               },
@@ -18333,8 +18375,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.794801,
-                  "high": 0.794801
+                  "low": 0.662334,
+                  "high": 0.662334
                 },
                 "evidencePointCount": 4
               },
@@ -18342,8 +18384,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.064756,
-                  "high": 0.064756
+                  "low": 0.053963,
+                  "high": 0.053963
                 },
                 "evidencePointCount": 4
               }
@@ -18376,11 +18418,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.096406,
               "meanTemporalBrightnessDelta": 0.096392,
               "meanNonBlankRatio": 0.671825,
-              "meanRenderedColorDiversity": 0.371976,
-              "meanRenderedDominantColorStability": 0.869091,
-              "meanRenderedColorBandDensity": 0.270514,
-              "meanRenderedGradientSmoothness": 0.784794,
-              "meanRenderedTemporalColorTravel": 0.064012,
+              "meanRenderedColorDiversity": 0.366071,
+              "meanRenderedDominantColorStability": 0.855296,
+              "meanRenderedColorBandDensity": 0.26622,
+              "meanRenderedGradientSmoothness": 0.772337,
+              "meanRenderedTemporalColorTravel": 0.062996,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -18406,11 +18448,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.093537,
               "meanTemporalBrightnessDelta": 0.089642,
               "meanNonBlankRatio": 0.678854,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.881761,
-              "meanRenderedColorBandDensity": 0.25259,
-              "meanRenderedGradientSmoothness": 0.794801,
-              "meanRenderedTemporalColorTravel": 0.064756,
+              "meanRenderedColorDiversity": 0.3125,
+              "meanRenderedDominantColorStability": 0.734801,
+              "meanRenderedColorBandDensity": 0.210491,
+              "meanRenderedGradientSmoothness": 0.662334,
+              "meanRenderedTemporalColorTravel": 0.053963,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -18436,11 +18478,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.091986,
               "meanTemporalBrightnessDelta": 0.089249,
               "meanNonBlankRatio": 0.678854,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.881761,
-              "meanRenderedColorBandDensity": 0.25259,
-              "meanRenderedGradientSmoothness": 0.794801,
-              "meanRenderedTemporalColorTravel": 0.064756,
+              "meanRenderedColorDiversity": 0.3125,
+              "meanRenderedDominantColorStability": 0.734801,
+              "meanRenderedColorBandDensity": 0.210491,
+              "meanRenderedGradientSmoothness": 0.662334,
+              "meanRenderedTemporalColorTravel": 0.053963,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -18466,11 +18508,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.088263,
               "meanTemporalBrightnessDelta": 0.087272,
               "meanNonBlankRatio": 0.678854,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.881761,
-              "meanRenderedColorBandDensity": 0.25259,
-              "meanRenderedGradientSmoothness": 0.794801,
-              "meanRenderedTemporalColorTravel": 0.064756,
+              "meanRenderedColorDiversity": 0.3125,
+              "meanRenderedDominantColorStability": 0.734801,
+              "meanRenderedColorBandDensity": 0.210491,
+              "meanRenderedGradientSmoothness": 0.662334,
+              "meanRenderedTemporalColorTravel": 0.053963,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -19007,11 +19049,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.101651,
               "meanTemporalBrightnessDelta": 0.101651,
               "meanNonBlankRatio": 0.688364,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.123853,
+              "meanRenderedDominantColorStability": 0.990826,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.924934,
-              "meanRenderedTemporalColorTravel": 0.102592,
+              "meanRenderedGradientSmoothness": 0.916448,
+              "meanRenderedTemporalColorTravel": 0.101651,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -19112,46 +19154,46 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "colorDiversity": {
                 "direction": "flat",
-                "magnitude": 0.001717,
+                "magnitude": 0.001702,
                 "range": {
                   "low": 0.370968,
-                  "high": 0.372685
+                  "high": 0.369266
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "increases",
-                "magnitude": 0.140347,
+                "magnitude": 0.132074,
                 "range": {
                   "low": 0.761412,
-                  "high": 0.901759
+                  "high": 0.893486
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.03833,
+                "magnitude": 0.035787,
                 "range": {
                   "low": 0.238798,
-                  "high": 0.277128
+                  "high": 0.274585
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.02486,
+                "magnitude": 0.032019,
                 "range": {
                   "low": 0.80519,
-                  "high": 0.78033
+                  "high": 0.773171
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "increases",
-                "magnitude": 0.016166,
+                "magnitude": 0.015545,
                 "range": {
                   "low": 0.051532,
-                  "high": 0.067698
+                  "high": 0.067077
                 },
                 "evidencePointCount": 2
               }
@@ -19161,7 +19203,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "increases",
-                "magnitude": 0.140347,
+                "magnitude": 0.132074,
                 "summary": "rotation increases dominantColorStability"
               },
               {
@@ -19173,13 +19215,13 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.03833,
+                "magnitude": 0.035787,
                 "summary": "rotation increases colorBandDensity"
               },
               {
                 "dimension": "gradientSmoothness",
                 "direction": "decreases",
-                "magnitude": 0.02486,
+                "magnitude": 0.032019,
                 "summary": "rotation decreases gradientSmoothness"
               },
               {
@@ -19203,7 +19245,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorTravel",
                 "direction": "increases",
-                "magnitude": 0.016166,
+                "magnitude": 0.015545,
                 "summary": "rotation increases colorTravel"
               }
             ],
@@ -19226,11 +19268,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.101651,
               "meanTemporalBrightnessDelta": 0.101651,
               "meanNonBlankRatio": 0.688364,
-              "meanRenderedColorDiversity": 0.372685,
-              "meanRenderedDominantColorStability": 0.901759,
-              "meanRenderedColorBandDensity": 0.277128,
-              "meanRenderedGradientSmoothness": 0.78033,
-              "meanRenderedTemporalColorTravel": 0.067698,
+              "meanRenderedColorDiversity": 0.369266,
+              "meanRenderedDominantColorStability": 0.893486,
+              "meanRenderedColorBandDensity": 0.274585,
+              "meanRenderedGradientSmoothness": 0.773171,
+              "meanRenderedTemporalColorTravel": 0.067077,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -19376,27 +19418,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.137648,
               "meanTemporalBrightnessDelta": 0.137648,
               "meanNonBlankRatio": 0.68181,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.936611,
-              "meanRenderedTemporalColorTravel": 0.161362,
+              "meanRenderedGradientSmoothness": 0.780509,
+              "meanRenderedTemporalColorTravel": 0.134468,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
                 "few_arm_pinwheel",
+                "pinwheel_motion",
                 "pinwheel_pattern",
                 "radial_pattern_fit",
-                "registry_generated",
+                "speed_18",
+                "spinner_pinwheel",
                 "static_pinwheel",
+                "decoded_fseq",
+                "registry_generated",
                 "dense_pinwheel",
                 "rotating_pinwheel",
-                "depth_mode",
-                "multi_arm_pinwheel",
-                "pinwheel_motion",
-                "speed_18"
+                "depth_mode"
               ]
             },
             {
@@ -19406,11 +19448,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.113112,
               "meanTemporalBrightnessDelta": 0.113112,
               "meanNonBlankRatio": 0.644907,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.122283,
+              "meanRenderedDominantColorStability": 0.978261,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.847442,
-              "meanRenderedTemporalColorTravel": 0.115626,
+              "meanRenderedGradientSmoothness": 0.829019,
+              "meanRenderedTemporalColorTravel": 0.113112,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -19432,27 +19474,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.110293,
               "meanTemporalBrightnessDelta": 0.110293,
               "meanNonBlankRatio": 0.687669,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.937514,
-              "meanRenderedTemporalColorTravel": 0.128273,
+              "meanRenderedGradientSmoothness": 0.781262,
+              "meanRenderedTemporalColorTravel": 0.106894,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
                 "few_arm_pinwheel",
+                "pinwheel_motion",
                 "pinwheel_pattern",
                 "radial_pattern_fit",
-                "registry_generated",
+                "speed_14",
+                "spinner_pinwheel",
                 "static_pinwheel",
+                "decoded_fseq",
+                "registry_generated",
                 "dense_pinwheel",
                 "rotating_pinwheel",
-                "depth_mode",
-                "multi_arm_pinwheel",
-                "pinwheel_motion",
-                "speed_14"
+                "depth_mode"
               ]
             },
             {
@@ -19462,11 +19504,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.087921,
               "meanTemporalBrightnessDelta": 0.087921,
               "meanNonBlankRatio": 0.686478,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.123333,
+              "meanRenderedDominantColorStability": 0.986667,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.995793,
-              "meanRenderedTemporalColorTravel": 0.088771,
+              "meanRenderedGradientSmoothness": 0.982515,
+              "meanRenderedTemporalColorTravel": 0.087587,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -19480,9 +19522,9 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "rotating_pinwheel",
                 "multi_arm_pinwheel",
                 "dense_pinwheel",
-                "depth_mode",
                 "pinwheel_motion",
-                "speed_10"
+                "speed_10",
+                "spinner_pinwheel"
               ]
             },
             {
@@ -19492,27 +19534,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.059268,
               "meanTemporalBrightnessDelta": 0.059268,
               "meanNonBlankRatio": 0.687917,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.937329,
-              "meanRenderedTemporalColorTravel": 0.066385,
+              "meanRenderedGradientSmoothness": 0.781108,
+              "meanRenderedTemporalColorTravel": 0.055321,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
                 "few_arm_pinwheel",
+                "pinwheel_motion",
                 "pinwheel_pattern",
                 "radial_pattern_fit",
-                "registry_generated",
+                "speed_7",
+                "spinner_pinwheel",
                 "static_pinwheel",
+                "decoded_fseq",
+                "registry_generated",
                 "dense_pinwheel",
                 "rotating_pinwheel",
-                "depth_mode",
-                "multi_arm_pinwheel",
-                "pinwheel_motion",
-                "speed_7"
+                "depth_mode"
               ]
             },
             {
@@ -19522,27 +19564,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.02886,
               "meanTemporalBrightnessDelta": 0.02886,
               "meanNonBlankRatio": 0.68724,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.938478,
-              "meanRenderedTemporalColorTravel": 0.029369,
+              "meanRenderedGradientSmoothness": 0.782065,
+              "meanRenderedTemporalColorTravel": 0.024474,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
                 "few_arm_pinwheel",
+                "pinwheel_motion",
                 "pinwheel_pattern",
                 "radial_pattern_fit",
-                "registry_generated",
+                "speed_3",
+                "spinner_pinwheel",
                 "static_pinwheel",
+                "decoded_fseq",
+                "registry_generated",
                 "dense_pinwheel",
                 "rotating_pinwheel",
-                "depth_mode",
-                "multi_arm_pinwheel",
-                "pinwheel_motion",
-                "speed_3"
+                "depth_mode"
               ]
             }
           ]
@@ -19609,44 +19651,44 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.3125,
+                  "high": 0.3125
                 },
                 "evidencePointCount": 6
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.100629,
+                "magnitude": 0.083858,
                 "range": {
-                  "low": 0.962264,
-                  "high": 0.861635
+                  "low": 0.801887,
+                  "high": 0.718029
                 },
                 "evidencePointCount": 6
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.007915,
+                "magnitude": 0.006595,
                 "range": {
-                  "low": 0.245274,
-                  "high": 0.253189
+                  "low": 0.204395,
+                  "high": 0.21099
                 },
                 "evidencePointCount": 6
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.006764,
+                "magnitude": 0.005636,
                 "range": {
-                  "low": 0.801837,
-                  "high": 0.795073
+                  "low": 0.668197,
+                  "high": 0.662561
                 },
                 "evidencePointCount": 6
               },
               "colorTravel": {
                 "direction": "increases",
-                "magnitude": 0.087019,
+                "magnitude": 0.072516,
                 "range": {
-                  "low": 0.018192,
-                  "high": 0.105211
+                  "low": 0.01516,
+                  "high": 0.087676
                 },
                 "evidencePointCount": 6
               }
@@ -19674,25 +19716,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.100629,
+                "magnitude": 0.083858,
                 "summary": "speed decreases dominantColorStability"
               },
               {
                 "dimension": "colorTravel",
                 "direction": "increases",
-                "magnitude": 0.087019,
+                "magnitude": 0.072516,
                 "summary": "speed increases colorTravel"
               },
               {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.007915,
+                "magnitude": 0.006595,
                 "summary": "speed increases colorBandDensity"
               },
               {
                 "dimension": "gradientSmoothness",
                 "direction": "decreases",
-                "magnitude": 0.006764,
+                "magnitude": 0.005636,
                 "summary": "speed decreases gradientSmoothness"
               },
               {
@@ -19721,11 +19763,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.135543,
               "meanTemporalBrightnessDelta": 0.135543,
               "meanNonBlankRatio": 0.68181,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.861635,
-              "meanRenderedColorBandDensity": 0.253189,
-              "meanRenderedGradientSmoothness": 0.795073,
-              "meanRenderedTemporalColorTravel": 0.105211,
+              "meanRenderedColorDiversity": 0.3125,
+              "meanRenderedDominantColorStability": 0.718029,
+              "meanRenderedColorBandDensity": 0.21099,
+              "meanRenderedGradientSmoothness": 0.662561,
+              "meanRenderedTemporalColorTravel": 0.087676,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -19751,11 +19793,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.113112,
               "meanTemporalBrightnessDelta": 0.113112,
               "meanNonBlankRatio": 0.644907,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.951083,
-              "meanRenderedColorBandDensity": 0.281356,
-              "meanRenderedGradientSmoothness": 0.785399,
-              "meanRenderedTemporalColorTravel": 0.070048,
+              "meanRenderedColorDiversity": 0.366848,
+              "meanRenderedDominantColorStability": 0.930407,
+              "meanRenderedColorBandDensity": 0.275239,
+              "meanRenderedGradientSmoothness": 0.768325,
+              "meanRenderedTemporalColorTravel": 0.068525,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -19777,11 +19819,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.108045,
               "meanTemporalBrightnessDelta": 0.108045,
               "meanNonBlankRatio": 0.687669,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.866667,
-              "meanRenderedColorBandDensity": 0.24895,
-              "meanRenderedGradientSmoothness": 0.797891,
-              "meanRenderedTemporalColorTravel": 0.08261,
+              "meanRenderedColorDiversity": 0.3125,
+              "meanRenderedDominantColorStability": 0.722222,
+              "meanRenderedColorBandDensity": 0.207458,
+              "meanRenderedGradientSmoothness": 0.664909,
+              "meanRenderedTemporalColorTravel": 0.068841,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -19807,11 +19849,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.087723,
               "meanTemporalBrightnessDelta": 0.087701,
               "meanNonBlankRatio": 0.686478,
-              "meanRenderedColorDiversity": 0.369932,
-              "meanRenderedDominantColorStability": 0.812341,
-              "meanRenderedColorBandDensity": 0.266169,
-              "meanRenderedGradientSmoothness": 0.782785,
-              "meanRenderedTemporalColorTravel": 0.06104,
+              "meanRenderedColorDiversity": 0.365,
+              "meanRenderedDominantColorStability": 0.801509,
+              "meanRenderedColorBandDensity": 0.26262,
+              "meanRenderedGradientSmoothness": 0.772348,
+              "meanRenderedTemporalColorTravel": 0.060226,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -19837,11 +19879,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.056868,
               "meanTemporalBrightnessDelta": 0.056656,
               "meanNonBlankRatio": 0.687917,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.925786,
-              "meanRenderedColorBandDensity": 0.24759,
-              "meanRenderedGradientSmoothness": 0.798684,
-              "meanRenderedTemporalColorTravel": 0.041942,
+              "meanRenderedColorDiversity": 0.3125,
+              "meanRenderedDominantColorStability": 0.771488,
+              "meanRenderedColorBandDensity": 0.206325,
+              "meanRenderedGradientSmoothness": 0.66557,
+              "meanRenderedTemporalColorTravel": 0.034952,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -19867,11 +19909,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.026459,
               "meanTemporalBrightnessDelta": 0.025964,
               "meanNonBlankRatio": 0.68724,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.962264,
-              "meanRenderedColorBandDensity": 0.245274,
-              "meanRenderedGradientSmoothness": 0.801837,
-              "meanRenderedTemporalColorTravel": 0.018192,
+              "meanRenderedColorDiversity": 0.3125,
+              "meanRenderedDominantColorStability": 0.801887,
+              "meanRenderedColorBandDensity": 0.204395,
+              "meanRenderedGradientSmoothness": 0.668197,
+              "meanRenderedTemporalColorTravel": 0.01516,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -20431,11 +20473,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.09765,
               "meanTemporalBrightnessDelta": 0.09765,
               "meanNonBlankRatio": 0.679045,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.123853,
+              "meanRenderedDominantColorStability": 0.990826,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.924934,
-              "meanRenderedTemporalColorTravel": 0.098554,
+              "meanRenderedGradientSmoothness": 0.916448,
+              "meanRenderedTemporalColorTravel": 0.09765,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -20603,11 +20645,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.09765,
               "meanTemporalBrightnessDelta": 0.09765,
               "meanNonBlankRatio": 0.679045,
-              "meanRenderedColorDiversity": 0.372685,
-              "meanRenderedDominantColorStability": 0.847543,
-              "meanRenderedColorBandDensity": 0.2748,
-              "meanRenderedGradientSmoothness": 0.782231,
-              "meanRenderedTemporalColorTravel": 0.06511,
+              "meanRenderedColorDiversity": 0.369266,
+              "meanRenderedDominantColorStability": 0.839767,
+              "meanRenderedColorBandDensity": 0.272279,
+              "meanRenderedGradientSmoothness": 0.775054,
+              "meanRenderedTemporalColorTravel": 0.064513,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -20781,11 +20823,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.089748,
               "meanTemporalBrightnessDelta": 0.089748,
               "meanNonBlankRatio": 0.232719,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.112186,
+              "meanRenderedGradientSmoothness": 0.8,
+              "meanRenderedTemporalColorTravel": 0.089748,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -20913,46 +20955,46 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 5
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "increases",
+                "magnitude": 0.075,
                 "range": {
-                  "low": 0.375,
+                  "low": 0.3,
                   "high": 0.375
                 },
                 "evidencePointCount": 5
               },
               "dominantColorStability": {
                 "direction": "increases",
-                "magnitude": 0.132076,
+                "magnitude": 0.283019,
                 "range": {
-                  "low": 0.754717,
+                  "low": 0.603774,
                   "high": 0.886793
                 },
                 "evidencePointCount": 5
               },
               "colorBandDensity": {
                 "direction": "decreases",
-                "magnitude": 0.1535,
+                "magnitude": 0.076289,
                 "range": {
-                  "low": 0.386055,
+                  "low": 0.308844,
                   "high": 0.232555
                 },
                 "evidencePointCount": 5
               },
               "gradientSmoothness": {
                 "direction": "increases",
-                "magnitude": 0.122619,
+                "magnitude": 0.259576,
                 "range": {
-                  "low": 0.684787,
+                  "low": 0.54783,
                   "high": 0.807406
                 },
                 "evidencePointCount": 5
               },
               "colorTravel": {
-                "direction": "decreases",
-                "magnitude": 0.015377,
+                "direction": "flat",
+                "magnitude": 0.002176,
                 "range": {
-                  "low": 0.066006,
+                  "low": 0.052805,
                   "high": 0.050629
                 },
                 "evidencePointCount": 5
@@ -20967,22 +21009,28 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "thickness increases coverage"
               },
               {
-                "dimension": "colorBandDensity",
-                "direction": "decreases",
-                "magnitude": 0.1535,
-                "summary": "thickness decreases colorBandDensity"
-              },
-              {
                 "dimension": "dominantColorStability",
                 "direction": "increases",
-                "magnitude": 0.132076,
+                "magnitude": 0.283019,
                 "summary": "thickness increases dominantColorStability"
               },
               {
                 "dimension": "gradientSmoothness",
                 "direction": "increases",
-                "magnitude": 0.122619,
+                "magnitude": 0.259576,
                 "summary": "thickness increases gradientSmoothness"
+              },
+              {
+                "dimension": "colorBandDensity",
+                "direction": "decreases",
+                "magnitude": 0.076289,
+                "summary": "thickness decreases colorBandDensity"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "increases",
+                "magnitude": 0.075,
+                "summary": "thickness increases colorDiversity"
               },
               {
                 "dimension": "motion",
@@ -21001,12 +21049,6 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "decreases",
                 "magnitude": 0.047913,
                 "summary": "thickness decreases brightnessRhythm"
-              },
-              {
-                "dimension": "colorTravel",
-                "direction": "decreases",
-                "magnitude": 0.015377,
-                "summary": "thickness decreases colorTravel"
               }
             ],
             "generalization": {
@@ -21080,11 +21122,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.089748,
               "meanTemporalBrightnessDelta": 0.089748,
               "meanNonBlankRatio": 0.232719,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.754717,
-              "meanRenderedColorBandDensity": 0.386055,
-              "meanRenderedGradientSmoothness": 0.684787,
-              "meanRenderedTemporalColorTravel": 0.066006,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.603774,
+              "meanRenderedColorBandDensity": 0.308844,
+              "meanRenderedGradientSmoothness": 0.54783,
+              "meanRenderedTemporalColorTravel": 0.052805,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -21233,11 +21275,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.107923,
               "meanTemporalBrightnessDelta": 0.107923,
               "meanNonBlankRatio": 0.641008,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.122549,
+              "meanRenderedDominantColorStability": 0.980392,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.857393,
-              "meanRenderedTemporalColorTravel": 0.110081,
+              "meanRenderedGradientSmoothness": 0.840581,
+              "meanRenderedTemporalColorTravel": 0.107923,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -21502,11 +21544,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.107923,
               "meanTemporalBrightnessDelta": 0.107923,
               "meanNonBlankRatio": 0.641008,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.942767,
-              "meanRenderedColorBandDensity": 0.274685,
-              "meanRenderedGradientSmoothness": 0.788065,
-              "meanRenderedTemporalColorTravel": 0.067139,
+              "meanRenderedColorDiversity": 0.367647,
+              "meanRenderedDominantColorStability": 0.924282,
+              "meanRenderedColorBandDensity": 0.269299,
+              "meanRenderedGradientSmoothness": 0.772612,
+              "meanRenderedTemporalColorTravel": 0.065822,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "decoded_fseq",
@@ -22794,11 +22836,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.009361,
               "meanTemporalBrightnessDelta": 0.009361,
               "meanNonBlankRatio": 0.038697,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.120968,
+              "meanRenderedDominantColorStability": 0.967742,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.952554,
-              "meanRenderedTemporalColorTravel": 0.009673,
+              "meanRenderedGradientSmoothness": 0.921826,
+              "meanRenderedTemporalColorTravel": 0.009361,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "accelerating_shockwave",
@@ -22822,27 +22864,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006133,
               "meanTemporalBrightnessDelta": 0.006133,
               "meanNonBlankRatio": 0.066771,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.973519,
-              "meanRenderedTemporalColorTravel": 0.004686,
+              "meanRenderedGradientSmoothness": 0.811266,
+              "meanRenderedTemporalColorTravel": 0.003905,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "accelerating_shockwave",
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "accel_5",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
+                "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "surging_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -22852,27 +22894,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004894,
               "meanTemporalBrightnessDelta": 0.004894,
               "meanNonBlankRatio": 0.066155,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.122475,
+              "meanRenderedDominantColorStability": 0.979798,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.91094,
-              "meanRenderedTemporalColorTravel": 0.004827,
+              "meanRenderedGradientSmoothness": 0.892537,
+              "meanRenderedTemporalColorTravel": 0.00473,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "accel_0",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -22910,11 +22952,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002756,
               "meanTemporalBrightnessDelta": 0.002756,
               "meanNonBlankRatio": 0.058206,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.120968,
+              "meanRenderedDominantColorStability": 0.967742,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.961046,
-              "meanRenderedTemporalColorTravel": 0.002848,
+              "meanRenderedGradientSmoothness": 0.930044,
+              "meanRenderedTemporalColorTravel": 0.002756,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "centered_shockwave",
@@ -22992,47 +23034,47 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 5
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.166667,
                 "range": {
                   "low": 1,
-                  "high": 1
+                  "high": 0.833333
                 },
                 "evidencePointCount": 5
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.124996,
+                "magnitude": 0.241242,
                 "range": {
                   "low": 0.822467,
-                  "high": 0.697471
+                  "high": 0.581225
                 },
                 "evidencePointCount": 5
               },
               "colorBandDensity": {
                 "direction": "decreases",
-                "magnitude": 0.009557,
+                "magnitude": 0.01044,
                 "range": {
                   "low": 0.014854,
-                  "high": 0.005297
+                  "high": 0.004414
                 },
                 "evidencePointCount": 5
               },
               "gradientSmoothness": {
-                "direction": "increases",
-                "magnitude": 0.033154,
+                "direction": "decreases",
+                "magnitude": 0.131736,
                 "range": {
                   "low": 0.956181,
-                  "high": 0.989335
+                  "high": 0.824445
                 },
                 "evidencePointCount": 5
               },
               "colorTravel": {
                 "direction": "flat",
-                "magnitude": 0.000066,
+                "magnitude": 0.000451,
                 "range": {
                   "low": 0.002376,
-                  "high": 0.00231
+                  "high": 0.001925
                 },
                 "evidencePointCount": 5
               }
@@ -23042,14 +23084,20 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.124996,
+                "magnitude": 0.241242,
                 "summary": "accel decreases dominantColorStability"
               },
               {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.166667,
+                "summary": "accel decreases colorDiversity"
+              },
+              {
                 "dimension": "gradientSmoothness",
-                "direction": "increases",
-                "magnitude": 0.033154,
-                "summary": "accel increases gradientSmoothness"
+                "direction": "decreases",
+                "magnitude": 0.131736,
+                "summary": "accel decreases gradientSmoothness"
               },
               {
                 "dimension": "coverage",
@@ -23060,7 +23108,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorBandDensity",
                 "direction": "decreases",
-                "magnitude": 0.009557,
+                "magnitude": 0.01044,
                 "summary": "accel decreases colorBandDensity"
               }
             ],
@@ -23083,11 +23131,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006699,
               "meanTemporalBrightnessDelta": 0.006699,
               "meanNonBlankRatio": 0.038392,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.509605,
-              "meanRenderedColorBandDensity": 0.022656,
-              "meanRenderedGradientSmoothness": 0.978851,
-              "meanRenderedTemporalColorTravel": 0.004591,
+              "meanRenderedColorDiversity": 0.967742,
+              "meanRenderedDominantColorStability": 0.493166,
+              "meanRenderedColorBandDensity": 0.021926,
+              "meanRenderedGradientSmoothness": 0.947276,
+              "meanRenderedTemporalColorTravel": 0.004443,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "accelerating_shockwave",
@@ -23111,27 +23159,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003765,
               "meanTemporalBrightnessDelta": 0.003708,
               "meanNonBlankRatio": 0.057747,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.697471,
-              "meanRenderedColorBandDensity": 0.005297,
-              "meanRenderedGradientSmoothness": 0.989335,
-              "meanRenderedTemporalColorTravel": 0.00231,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.581225,
+              "meanRenderedColorBandDensity": 0.004414,
+              "meanRenderedGradientSmoothness": 0.824445,
+              "meanRenderedTemporalColorTravel": 0.001925,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "accelerating_shockwave",
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "accel_5",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
+                "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "surging_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -23141,27 +23189,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003749,
               "meanTemporalBrightnessDelta": 0.003741,
               "meanNonBlankRatio": 0.065047,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.820184,
-              "meanRenderedColorBandDensity": 0.022307,
-              "meanRenderedGradientSmoothness": 0.961044,
-              "meanRenderedTemporalColorTravel": 0.002405,
+              "meanRenderedColorDiversity": 0.979798,
+              "meanRenderedDominantColorStability": 0.803615,
+              "meanRenderedColorBandDensity": 0.021856,
+              "meanRenderedGradientSmoothness": 0.941629,
+              "meanRenderedTemporalColorTravel": 0.002356,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "accel_0",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -23199,11 +23247,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002358,
               "meanTemporalBrightnessDelta": 0.002358,
               "meanNonBlankRatio": 0.057147,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.771617,
-              "meanRenderedColorBandDensity": 0.020252,
-              "meanRenderedGradientSmoothness": 0.983399,
-              "meanRenderedTemporalColorTravel": 0.001652,
+              "meanRenderedColorDiversity": 0.967742,
+              "meanRenderedDominantColorStability": 0.746726,
+              "meanRenderedColorBandDensity": 0.019599,
+              "meanRenderedGradientSmoothness": 0.951676,
+              "meanRenderedTemporalColorTravel": 0.001599,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "centered_shockwave",
@@ -23738,11 +23786,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.008515,
               "meanTemporalBrightnessDelta": 0.008515,
               "meanNonBlankRatio": 0.079671,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.118421,
+              "meanRenderedDominantColorStability": 0.947368,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.917655,
-              "meanRenderedTemporalColorTravel": 0.008535,
+              "meanRenderedGradientSmoothness": 0.869357,
+              "meanRenderedTemporalColorTravel": 0.008086,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -23768,11 +23816,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004481,
               "meanTemporalBrightnessDelta": 0.004481,
               "meanNonBlankRatio": 0.056893,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.122201,
+              "meanRenderedDominantColorStability": 0.977612,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.932471,
-              "meanRenderedTemporalColorTravel": 0.004459,
+              "meanRenderedGradientSmoothness": 0.911595,
+              "meanRenderedTemporalColorTravel": 0.00436,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -23852,53 +23900,71 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 2
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "increases",
+                "magnitude": 0.030244,
                 "range": {
-                  "low": 1,
-                  "high": 1
+                  "low": 0.947368,
+                  "high": 0.977612
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "increases",
-                "magnitude": 0.006067,
+                "magnitude": 0.028533,
                 "range": {
-                  "low": 0.747302,
-                  "high": 0.753369
+                  "low": 0.70797,
+                  "high": 0.736503
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.005715,
+                "magnitude": 0.006094,
                 "range": {
-                  "low": 0.016785,
-                  "high": 0.0225
+                  "low": 0.015902,
+                  "high": 0.021996
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "increases",
-                "magnitude": 0.007493,
+                "magnitude": 0.036452,
                 "range": {
-                  "low": 0.963082,
-                  "high": 0.970575
+                  "low": 0.912394,
+                  "high": 0.948846
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "flat",
-                "magnitude": 0.001887,
+                "magnitude": 0.00172,
                 "range": {
-                  "low": 0.004139,
-                  "high": 0.002252
+                  "low": 0.003921,
+                  "high": 0.002201
                 },
                 "evidencePointCount": 2
               }
             },
-            "dominantDimension": "coverage",
+            "dominantDimension": "gradientSmoothness",
             "behaviorRules": [
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "increases",
+                "magnitude": 0.036452,
+                "summary": "blendEdges increases gradientSmoothness"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "increases",
+                "magnitude": 0.030244,
+                "summary": "blendEdges increases colorDiversity"
+              },
+              {
+                "dimension": "dominantColorStability",
+                "direction": "increases",
+                "magnitude": 0.028533,
+                "summary": "blendEdges increases dominantColorStability"
+              },
               {
                 "dimension": "coverage",
                 "direction": "decreases",
@@ -23906,21 +23972,9 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "blendEdges decreases coverage"
               },
               {
-                "dimension": "gradientSmoothness",
-                "direction": "increases",
-                "magnitude": 0.007493,
-                "summary": "blendEdges increases gradientSmoothness"
-              },
-              {
-                "dimension": "dominantColorStability",
-                "direction": "increases",
-                "magnitude": 0.006067,
-                "summary": "blendEdges increases dominantColorStability"
-              },
-              {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.005715,
+                "magnitude": 0.006094,
                 "summary": "blendEdges increases colorBandDensity"
               }
             ],
@@ -23943,11 +23997,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006294,
               "meanTemporalBrightnessDelta": 0.006275,
               "meanNonBlankRatio": 0.078396,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.747302,
-              "meanRenderedColorBandDensity": 0.016785,
-              "meanRenderedGradientSmoothness": 0.963082,
-              "meanRenderedTemporalColorTravel": 0.004139,
+              "meanRenderedColorDiversity": 0.947368,
+              "meanRenderedDominantColorStability": 0.70797,
+              "meanRenderedColorBandDensity": 0.015902,
+              "meanRenderedGradientSmoothness": 0.912394,
+              "meanRenderedTemporalColorTravel": 0.003921,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -23973,11 +24027,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003395,
               "meanTemporalBrightnessDelta": 0.00339,
               "meanNonBlankRatio": 0.056058,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.753369,
-              "meanRenderedColorBandDensity": 0.0225,
-              "meanRenderedGradientSmoothness": 0.970575,
-              "meanRenderedTemporalColorTravel": 0.002252,
+              "meanRenderedColorDiversity": 0.977612,
+              "meanRenderedDominantColorStability": 0.736503,
+              "meanRenderedColorBandDensity": 0.021996,
+              "meanRenderedGradientSmoothness": 0.948846,
+              "meanRenderedTemporalColorTravel": 0.002201,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -24410,27 +24464,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006286,
               "meanTemporalBrightnessDelta": 0.006286,
               "meanNonBlankRatio": 0.134531,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.943044,
-              "meanRenderedTemporalColorTravel": 0.004913,
+              "meanRenderedGradientSmoothness": 0.78587,
+              "meanRenderedTemporalColorTravel": 0.004094,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "centerX_75",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
-                "offset_x_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -24440,11 +24494,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006112,
               "meanTemporalBrightnessDelta": 0.006112,
               "meanNonBlankRatio": 0.061486,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.121154,
+              "meanRenderedDominantColorStability": 0.969231,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.935057,
-              "meanRenderedTemporalColorTravel": 0.006177,
+              "meanRenderedGradientSmoothness": 0.906286,
+              "meanRenderedTemporalColorTravel": 0.005987,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -24470,11 +24524,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002836,
               "meanTemporalBrightnessDelta": 0.002836,
               "meanNonBlankRatio": 0.064886,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.121622,
+              "meanRenderedDominantColorStability": 0.972973,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.907134,
-              "meanRenderedTemporalColorTravel": 0.002462,
+              "meanRenderedGradientSmoothness": 0.882617,
+              "meanRenderedTemporalColorTravel": 0.002395,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -24554,47 +24608,47 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 3
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.13964,
                 "range": {
-                  "low": 1,
-                  "high": 1
+                  "low": 0.972973,
+                  "high": 0.833333
                 },
                 "evidencePointCount": 3
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.085615,
+                "magnitude": 0.189972,
                 "range": {
-                  "low": 0.849516,
-                  "high": 0.763901
+                  "low": 0.826556,
+                  "high": 0.636584
                 },
                 "evidencePointCount": 3
               },
               "colorBandDensity": {
                 "direction": "decreases",
-                "magnitude": 0.005299,
+                "magnitude": 0.008507,
                 "range": {
-                  "low": 0.029303,
-                  "high": 0.024004
+                  "low": 0.028511,
+                  "high": 0.020004
                 },
                 "evidencePointCount": 3
               },
               "gradientSmoothness": {
-                "direction": "increases",
-                "magnitude": 0.015052,
+                "direction": "decreases",
+                "magnitude": 0.121685,
                 "range": {
-                  "low": 0.961252,
-                  "high": 0.976304
+                  "low": 0.935272,
+                  "high": 0.813587
                 },
                 "evidencePointCount": 3
               },
               "colorTravel": {
                 "direction": "flat",
-                "magnitude": 0.001144,
+                "magnitude": 0.000778,
                 "range": {
-                  "low": 0.001254,
-                  "high": 0.002398
+                  "low": 0.001221,
+                  "high": 0.001999
                 },
                 "evidencePointCount": 3
               }
@@ -24604,8 +24658,20 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.085615,
+                "magnitude": 0.189972,
                 "summary": "centerX decreases dominantColorStability"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.13964,
+                "summary": "centerX decreases colorDiversity"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.121685,
+                "summary": "centerX decreases gradientSmoothness"
               },
               {
                 "dimension": "coverage",
@@ -24614,15 +24680,9 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "centerX increases coverage"
               },
               {
-                "dimension": "gradientSmoothness",
-                "direction": "increases",
-                "magnitude": 0.015052,
-                "summary": "centerX increases gradientSmoothness"
-              },
-              {
                 "dimension": "colorBandDensity",
                 "direction": "decreases",
-                "magnitude": 0.005299,
+                "magnitude": 0.008507,
                 "summary": "centerX decreases colorBandDensity"
               }
             ],
@@ -24645,27 +24705,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003922,
               "meanTemporalBrightnessDelta": 0.003801,
               "meanNonBlankRatio": 0.133802,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.763901,
-              "meanRenderedColorBandDensity": 0.024004,
-              "meanRenderedGradientSmoothness": 0.976304,
-              "meanRenderedTemporalColorTravel": 0.002398,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.636584,
+              "meanRenderedColorBandDensity": 0.020004,
+              "meanRenderedGradientSmoothness": 0.813587,
+              "meanRenderedTemporalColorTravel": 0.001999,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "centerX_75",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
-                "offset_x_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -24675,11 +24735,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004626,
               "meanTemporalBrightnessDelta": 0.00462,
               "meanNonBlankRatio": 0.060514,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.723747,
-              "meanRenderedColorBandDensity": 0.018864,
-              "meanRenderedGradientSmoothness": 0.970871,
-              "meanRenderedTemporalColorTravel": 0.00307,
+              "meanRenderedColorDiversity": 0.969231,
+              "meanRenderedDominantColorStability": 0.701478,
+              "meanRenderedColorBandDensity": 0.018283,
+              "meanRenderedGradientSmoothness": 0.940998,
+              "meanRenderedTemporalColorTravel": 0.002976,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -24705,11 +24765,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002009,
               "meanTemporalBrightnessDelta": 0.001989,
               "meanNonBlankRatio": 0.064088,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.849516,
-              "meanRenderedColorBandDensity": 0.029303,
-              "meanRenderedGradientSmoothness": 0.961252,
-              "meanRenderedTemporalColorTravel": 0.001254,
+              "meanRenderedColorDiversity": 0.972973,
+              "meanRenderedDominantColorStability": 0.826556,
+              "meanRenderedColorBandDensity": 0.028511,
+              "meanRenderedGradientSmoothness": 0.935272,
+              "meanRenderedTemporalColorTravel": 0.001221,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -25135,27 +25195,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006812,
               "meanTemporalBrightnessDelta": 0.006812,
               "meanNonBlankRatio": 0.134531,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.943044,
-              "meanRenderedTemporalColorTravel": 0.004913,
+              "meanRenderedGradientSmoothness": 0.78587,
+              "meanRenderedTemporalColorTravel": 0.004094,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "centerY_25",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
-                "offset_y_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -25165,27 +25225,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006812,
               "meanTemporalBrightnessDelta": 0.006812,
               "meanNonBlankRatio": 0.134531,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.943044,
-              "meanRenderedTemporalColorTravel": 0.004913,
+              "meanRenderedGradientSmoothness": 0.78587,
+              "meanRenderedTemporalColorTravel": 0.004094,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "centerY_75",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
-                "offset_y_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -25195,11 +25255,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006112,
               "meanTemporalBrightnessDelta": 0.006112,
               "meanNonBlankRatio": 0.061486,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.121154,
+              "meanRenderedDominantColorStability": 0.969231,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.935057,
-              "meanRenderedTemporalColorTravel": 0.006177,
+              "meanRenderedGradientSmoothness": 0.906286,
+              "meanRenderedTemporalColorTravel": 0.005987,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -25310,8 +25370,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 1,
-                  "high": 1
+                  "low": 0.833333,
+                  "high": 0.833333
                 },
                 "evidencePointCount": 4
               },
@@ -25319,8 +25379,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.763901,
-                  "high": 0.763901
+                  "low": 0.636584,
+                  "high": 0.636584
                 },
                 "evidencePointCount": 4
               },
@@ -25328,8 +25388,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.024004,
-                  "high": 0.024004
+                  "low": 0.020004,
+                  "high": 0.020004
                 },
                 "evidencePointCount": 4
               },
@@ -25337,8 +25397,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.976304,
-                  "high": 0.976304
+                  "low": 0.813587,
+                  "high": 0.813587
                 },
                 "evidencePointCount": 4
               },
@@ -25346,8 +25406,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.002398,
-                  "high": 0.002398
+                  "low": 0.001999,
+                  "high": 0.001999
                 },
                 "evidencePointCount": 4
               }
@@ -25373,27 +25433,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004105,
               "meanTemporalBrightnessDelta": 0.00398,
               "meanNonBlankRatio": 0.133802,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.763901,
-              "meanRenderedColorBandDensity": 0.024004,
-              "meanRenderedGradientSmoothness": 0.976304,
-              "meanRenderedTemporalColorTravel": 0.002398,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.636584,
+              "meanRenderedColorBandDensity": 0.020004,
+              "meanRenderedGradientSmoothness": 0.813587,
+              "meanRenderedTemporalColorTravel": 0.001999,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "centerY_25",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
-                "offset_y_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -25403,27 +25463,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004105,
               "meanTemporalBrightnessDelta": 0.00398,
               "meanNonBlankRatio": 0.133802,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.763901,
-              "meanRenderedColorBandDensity": 0.024004,
-              "meanRenderedGradientSmoothness": 0.976304,
-              "meanRenderedTemporalColorTravel": 0.002398,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.636584,
+              "meanRenderedColorBandDensity": 0.020004,
+              "meanRenderedGradientSmoothness": 0.813587,
+              "meanRenderedTemporalColorTravel": 0.001999,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "centerY_75",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
-                "offset_y_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -25433,11 +25493,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004626,
               "meanTemporalBrightnessDelta": 0.00462,
               "meanNonBlankRatio": 0.060514,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.723747,
-              "meanRenderedColorBandDensity": 0.018864,
-              "meanRenderedGradientSmoothness": 0.970871,
-              "meanRenderedTemporalColorTravel": 0.00307,
+              "meanRenderedColorDiversity": 0.969231,
+              "meanRenderedDominantColorStability": 0.701478,
+              "meanRenderedColorBandDensity": 0.018283,
+              "meanRenderedGradientSmoothness": 0.940998,
+              "meanRenderedTemporalColorTravel": 0.002976,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -25916,27 +25976,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.016676,
               "meanTemporalBrightnessDelta": 0.016676,
               "meanNonBlankRatio": 0.126758,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.943051,
-              "meanRenderedTemporalColorTravel": 0.013194,
+              "meanRenderedGradientSmoothness": 0.785876,
+              "meanRenderedTemporalColorTravel": 0.010995,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "dense_repeating_shockwave",
-                "large_shockwave",
+                "compact_shockwave",
+                "cycles_5",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
-                "compact_decelerating_shockwave"
+                "single_shockwave",
+                "spinner_fill"
               ]
             },
             {
@@ -25946,27 +26006,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.014732,
               "meanTemporalBrightnessDelta": 0.014732,
               "meanNonBlankRatio": 0.14276,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.943718,
-              "meanRenderedTemporalColorTravel": 0.010684,
+              "meanRenderedGradientSmoothness": 0.786432,
+              "meanRenderedTemporalColorTravel": 0.008903,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "dense_repeating_shockwave",
-                "large_shockwave",
+                "compact_shockwave",
+                "cycles_4",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
-                "compact_decelerating_shockwave"
+                "single_shockwave",
+                "spinner_fill"
               ]
             },
             {
@@ -25976,11 +26036,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.009769,
               "meanTemporalBrightnessDelta": 0.009769,
               "meanNonBlankRatio": 0.056141,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.117857,
+              "meanRenderedDominantColorStability": 0.942857,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.950087,
-              "meanRenderedTemporalColorTravel": 0.009417,
+              "meanRenderedGradientSmoothness": 0.895796,
+              "meanRenderedTemporalColorTravel": 0.008879,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -26006,11 +26066,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.005701,
               "meanTemporalBrightnessDelta": 0.005701,
               "meanNonBlankRatio": 0.069766,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.119141,
+              "meanRenderedDominantColorStability": 0.953125,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.936372,
-              "meanRenderedTemporalColorTravel": 0.005507,
+              "meanRenderedGradientSmoothness": 0.89248,
+              "meanRenderedTemporalColorTravel": 0.005249,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -26036,11 +26096,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002214,
               "meanTemporalBrightnessDelta": 0.002214,
               "meanNonBlankRatio": 0.06569,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.123047,
+              "meanRenderedDominantColorStability": 0.984375,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.909267,
-              "meanRenderedTemporalColorTravel": 0.00199,
+              "meanRenderedGradientSmoothness": 0.89506,
+              "meanRenderedTemporalColorTravel": 0.001959,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -26120,47 +26180,47 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 5
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.151042,
                 "range": {
-                  "low": 1,
-                  "high": 1
+                  "low": 0.984375,
+                  "high": 0.833333
                 },
                 "evidencePointCount": 5
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.477715,
+                "magnitude": 0.532855,
                 "range": {
-                  "low": 0.892198,
-                  "high": 0.414483
+                  "low": 0.878258,
+                  "high": 0.345403
                 },
                 "evidencePointCount": 5
               },
               "colorBandDensity": {
                 "direction": "decreases",
-                "magnitude": 0.01751,
+                "magnitude": 0.018266,
                 "range": {
-                  "low": 0.024328,
-                  "high": 0.006818
+                  "low": 0.023948,
+                  "high": 0.005682
                 },
                 "evidencePointCount": 5
               },
               "gradientSmoothness": {
-                "direction": "increases",
-                "magnitude": 0.016032,
+                "direction": "decreases",
+                "magnitude": 0.131703,
                 "range": {
-                  "low": 0.960414,
-                  "high": 0.976446
+                  "low": 0.945408,
+                  "high": 0.813705
                 },
                 "evidencePointCount": 5
               },
               "colorTravel": {
-                "direction": "increases",
-                "magnitude": 0.005658,
+                "direction": "flat",
+                "magnitude": 0.004561,
                 "range": {
-                  "low": 0.001025,
-                  "high": 0.006683
+                  "low": 0.001009,
+                  "high": 0.00557
                 },
                 "evidencePointCount": 5
               }
@@ -26170,8 +26230,20 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.477715,
+                "magnitude": 0.532855,
                 "summary": "cycles decreases dominantColorStability"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.151042,
+                "summary": "cycles decreases colorDiversity"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.131703,
+                "summary": "cycles decreases gradientSmoothness"
               },
               {
                 "dimension": "coverage",
@@ -26182,14 +26254,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "colorBandDensity",
                 "direction": "decreases",
-                "magnitude": 0.01751,
+                "magnitude": 0.018266,
                 "summary": "cycles decreases colorBandDensity"
-              },
-              {
-                "dimension": "gradientSmoothness",
-                "direction": "increases",
-                "magnitude": 0.016032,
-                "summary": "cycles increases gradientSmoothness"
               },
               {
                 "dimension": "motion",
@@ -26208,12 +26274,6 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "increases",
                 "magnitude": 0.009057,
                 "summary": "cycles increases brightnessRhythm"
-              },
-              {
-                "dimension": "colorTravel",
-                "direction": "increases",
-                "magnitude": 0.005658,
-                "summary": "cycles increases colorTravel"
               }
             ],
             "generalization": {
@@ -26235,27 +26295,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011077,
               "meanTemporalBrightnessDelta": 0.010698,
               "meanNonBlankRatio": 0.125716,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.414483,
-              "meanRenderedColorBandDensity": 0.006818,
-              "meanRenderedGradientSmoothness": 0.976446,
-              "meanRenderedTemporalColorTravel": 0.006683,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.345403,
+              "meanRenderedColorBandDensity": 0.005682,
+              "meanRenderedGradientSmoothness": 0.813705,
+              "meanRenderedTemporalColorTravel": 0.00557,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "dense_repeating_shockwave",
-                "large_shockwave",
+                "compact_shockwave",
+                "cycles_5",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
-                "compact_decelerating_shockwave"
+                "single_shockwave",
+                "spinner_fill"
               ]
             },
             {
@@ -26265,27 +26325,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.009479,
               "meanTemporalBrightnessDelta": 0.00902,
               "meanNonBlankRatio": 0.142552,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.509968,
-              "meanRenderedColorBandDensity": 0.025214,
-              "meanRenderedGradientSmoothness": 0.974242,
-              "meanRenderedTemporalColorTravel": 0.005372,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.424974,
+              "meanRenderedColorBandDensity": 0.021012,
+              "meanRenderedGradientSmoothness": 0.811868,
+              "meanRenderedTemporalColorTravel": 0.004477,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "dense_repeating_shockwave",
-                "large_shockwave",
+                "compact_shockwave",
+                "cycles_4",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
-                "compact_decelerating_shockwave"
+                "single_shockwave",
+                "spinner_fill"
               ]
             },
             {
@@ -26295,11 +26355,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006785,
               "meanTemporalBrightnessDelta": 0.006737,
               "meanNonBlankRatio": 0.054317,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.531142,
-              "meanRenderedColorBandDensity": 0.022779,
-              "meanRenderedGradientSmoothness": 0.97803,
-              "meanRenderedTemporalColorTravel": 0.004507,
+              "meanRenderedColorDiversity": 0.942857,
+              "meanRenderedDominantColorStability": 0.500791,
+              "meanRenderedColorBandDensity": 0.021477,
+              "meanRenderedGradientSmoothness": 0.922143,
+              "meanRenderedTemporalColorTravel": 0.00425,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -26325,11 +26385,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004263,
               "meanTemporalBrightnessDelta": 0.004248,
               "meanNonBlankRatio": 0.068584,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.774357,
-              "meanRenderedColorBandDensity": 0.018151,
-              "meanRenderedGradientSmoothness": 0.971833,
-              "meanRenderedTemporalColorTravel": 0.002793,
+              "meanRenderedColorDiversity": 0.953125,
+              "meanRenderedDominantColorStability": 0.738059,
+              "meanRenderedColorBandDensity": 0.0173,
+              "meanRenderedGradientSmoothness": 0.926278,
+              "meanRenderedTemporalColorTravel": 0.002662,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -26355,11 +26415,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.001653,
               "meanTemporalBrightnessDelta": 0.001641,
               "meanNonBlankRatio": 0.0647,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.892198,
-              "meanRenderedColorBandDensity": 0.024328,
-              "meanRenderedGradientSmoothness": 0.960414,
-              "meanRenderedTemporalColorTravel": 0.001025,
+              "meanRenderedColorDiversity": 0.984375,
+              "meanRenderedDominantColorStability": 0.878258,
+              "meanRenderedColorBandDensity": 0.023948,
+              "meanRenderedGradientSmoothness": 0.945408,
+              "meanRenderedTemporalColorTravel": 0.001009,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -26914,27 +26974,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.013993,
               "meanTemporalBrightnessDelta": 0.013993,
               "meanNonBlankRatio": 0.178021,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.913452,
-              "meanRenderedTemporalColorTravel": 0.011475,
+              "meanRenderedGradientSmoothness": 0.76121,
+              "meanRenderedTemporalColorTravel": 0.009563,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "compact_shockwave",
+                "endRadius_75",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -27000,27 +27060,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.007322,
               "meanTemporalBrightnessDelta": 0.007322,
               "meanNonBlankRatio": 0.141641,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.940252,
-              "meanRenderedTemporalColorTravel": 0.005384,
+              "meanRenderedGradientSmoothness": 0.783543,
+              "meanRenderedTemporalColorTravel": 0.004487,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "compact_shockwave",
+                "endRadius_50",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -27058,27 +27118,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002196,
               "meanTemporalBrightnessDelta": 0.002196,
               "meanNonBlankRatio": 0.088906,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.946238,
-              "meanRenderedTemporalColorTravel": 0.001394,
+              "meanRenderedGradientSmoothness": 0.788532,
+              "meanRenderedTemporalColorTravel": 0.001162,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "medium_shockwave",
+                "compact_shockwave",
+                "endRadius_25",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -27144,27 +27204,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.000091,
               "meanTemporalBrightnessDelta": 0.000091,
               "meanNonBlankRatio": 0.001771,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.041667,
+              "meanRenderedDominantColorStability": 0.333333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.000063,
+              "meanRenderedGradientSmoothness": 0.333333,
+              "meanRenderedTemporalColorTravel": 0.000021,
               "temporalSignatureHints": [
                 "static_or_near_static"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
                 "compact_shockwave",
-                "decoded_fseq",
+                "endRadius_10",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             }
           ]
@@ -27228,53 +27288,71 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 9
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "increases",
+                "magnitude": 0.5,
                 "range": {
-                  "low": 1,
-                  "high": 1
+                  "low": 0.333333,
+                  "high": 0.833333
                 },
                 "evidencePointCount": 9
               },
               "dominantColorStability": {
-                "direction": "decreases",
-                "magnitude": 0.107719,
+                "direction": "increases",
+                "magnitude": 0.349629,
                 "range": {
-                  "low": 0.878788,
-                  "high": 0.771069
+                  "low": 0.292929,
+                  "high": 0.642558
                 },
                 "evidencePointCount": 9
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.01987,
+                "magnitude": 0.016558,
                 "range": {
                   "low": 0,
-                  "high": 0.01987
+                  "high": 0.016558
                 },
                 "evidencePointCount": 9
               },
               "gradientSmoothness": {
-                "direction": "decreases",
-                "magnitude": 0.038395,
+                "direction": "increases",
+                "magnitude": 0.468004,
                 "range": {
-                  "low": 1,
-                  "high": 0.961605
+                  "low": 0.333333,
+                  "high": 0.801337
                 },
                 "evidencePointCount": 9
               },
               "colorTravel": {
-                "direction": "increases",
-                "magnitude": 0.005419,
+                "direction": "flat",
+                "magnitude": 0.004537,
                 "range": {
-                  "low": 0.000042,
-                  "high": 0.005461
+                  "low": 0.000014,
+                  "high": 0.004551
                 },
                 "evidencePointCount": 9
               }
             },
-            "dominantDimension": "coverage",
+            "dominantDimension": "colorDiversity",
             "behaviorRules": [
+              {
+                "dimension": "colorDiversity",
+                "direction": "increases",
+                "magnitude": 0.5,
+                "summary": "endRadius increases colorDiversity"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "increases",
+                "magnitude": 0.468004,
+                "summary": "endRadius increases gradientSmoothness"
+              },
+              {
+                "dimension": "dominantColorStability",
+                "direction": "increases",
+                "magnitude": 0.349629,
+                "summary": "endRadius increases dominantColorStability"
+              },
               {
                 "dimension": "coverage",
                 "direction": "increases",
@@ -27282,21 +27360,9 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "endRadius increases coverage"
               },
               {
-                "dimension": "dominantColorStability",
-                "direction": "decreases",
-                "magnitude": 0.107719,
-                "summary": "endRadius decreases dominantColorStability"
-              },
-              {
-                "dimension": "gradientSmoothness",
-                "direction": "decreases",
-                "magnitude": 0.038395,
-                "summary": "endRadius decreases gradientSmoothness"
-              },
-              {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.01987,
+                "magnitude": 0.016558,
                 "summary": "endRadius increases colorBandDensity"
               },
               {
@@ -27316,12 +27382,6 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "increases",
                 "magnitude": 0.008565,
                 "summary": "endRadius increases brightnessRhythm"
-              },
-              {
-                "dimension": "colorTravel",
-                "direction": "increases",
-                "magnitude": 0.005419,
-                "summary": "endRadius increases colorTravel"
               }
             ],
             "generalization": {
@@ -27343,27 +27403,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.008732,
               "meanTemporalBrightnessDelta": 0.00861,
               "meanNonBlankRatio": 0.168437,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.771069,
-              "meanRenderedColorBandDensity": 0.01987,
-              "meanRenderedGradientSmoothness": 0.961605,
-              "meanRenderedTemporalColorTravel": 0.005461,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.642558,
+              "meanRenderedColorBandDensity": 0.016558,
+              "meanRenderedGradientSmoothness": 0.801337,
+              "meanRenderedTemporalColorTravel": 0.004551,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "compact_shockwave",
+                "endRadius_75",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -27429,27 +27489,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004306,
               "meanTemporalBrightnessDelta": 0.004187,
               "meanNonBlankRatio": 0.140859,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.7506,
-              "meanRenderedColorBandDensity": 0.025565,
-              "meanRenderedGradientSmoothness": 0.973367,
-              "meanRenderedTemporalColorTravel": 0.002539,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.6255,
+              "meanRenderedColorBandDensity": 0.021304,
+              "meanRenderedGradientSmoothness": 0.811139,
+              "meanRenderedTemporalColorTravel": 0.002116,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "compact_shockwave",
+                "endRadius_50",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -27515,27 +27575,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.001316,
               "meanTemporalBrightnessDelta": 0.001219,
               "meanNonBlankRatio": 0.088359,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.754282,
-              "meanRenderedColorBandDensity": 0.022843,
-              "meanRenderedGradientSmoothness": 0.977519,
-              "meanRenderedTemporalColorTravel": 0.000771,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.628568,
+              "meanRenderedColorBandDensity": 0.019036,
+              "meanRenderedGradientSmoothness": 0.814599,
+              "meanRenderedTemporalColorTravel": 0.000642,
               "temporalSignatureHints": [
                 "static_or_near_static"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "medium_shockwave",
+                "compact_shockwave",
+                "endRadius_25",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -27573,27 +27633,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.000049,
               "meanTemporalBrightnessDelta": 0.000045,
               "meanNonBlankRatio": 0.001745,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.878788,
+              "meanRenderedColorDiversity": 0.333333,
+              "meanRenderedDominantColorStability": 0.292929,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.000042,
+              "meanRenderedGradientSmoothness": 0.333333,
+              "meanRenderedTemporalColorTravel": 0.000014,
               "temporalSignatureHints": [
                 "static_or_near_static"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
                 "compact_shockwave",
-                "decoded_fseq",
+                "endRadius_10",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             }
           ]
@@ -28134,10 +28194,10 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               },
               "coverage": {
                 "direction": "increases",
-                "magnitude": 0.06224,
+                "magnitude": 0.062239,
                 "range": {
                   "low": 0.129948,
-                  "high": 0.192188
+                  "high": 0.192187
                 },
                 "evidencePointCount": 7
               }
@@ -28147,7 +28207,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "coverage",
                 "direction": "increases",
-                "magnitude": 0.06224,
+                "magnitude": 0.062239,
                 "summary": "endWidth increases coverage"
               }
             ],
@@ -28169,28 +28229,28 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalMotion": 0.010265,
               "meanTemporalColorDelta": 0.008093,
               "meanTemporalBrightnessDelta": 0.008093,
-              "meanNonBlankRatio": 0.192188,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanNonBlankRatio": 0.192187,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.776311,
-              "meanRenderedTemporalColorTravel": 0.006146,
+              "meanRenderedGradientSmoothness": 0.646926,
+              "meanRenderedTemporalColorTravel": 0.005122,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "diffuse_shockwave",
-                "large_shockwave",
+                "compact_shockwave",
+                "endWidth_20",
+                "hard_edge_shockwave",
+                "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "wide_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -28200,11 +28260,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.009153,
               "meanTemporalBrightnessDelta": 0.009153,
               "meanNonBlankRatio": 0.037206,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.120833,
+              "meanRenderedDominantColorStability": 0.966667,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.960757,
-              "meanRenderedTemporalColorTravel": 0.009469,
+              "meanRenderedGradientSmoothness": 0.928732,
+              "meanRenderedTemporalColorTravel": 0.009153,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -28228,11 +28288,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.00841,
               "meanTemporalBrightnessDelta": 0.00841,
               "meanNonBlankRatio": 0.076163,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.118056,
+              "meanRenderedDominantColorStability": 0.944444,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.924536,
-              "meanRenderedTemporalColorTravel": 0.008462,
+              "meanRenderedGradientSmoothness": 0.873173,
+              "meanRenderedTemporalColorTravel": 0.007992,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -28258,27 +28318,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006617,
               "meanTemporalBrightnessDelta": 0.006617,
               "meanNonBlankRatio": 0.129948,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.965689,
-              "meanRenderedTemporalColorTravel": 0.004931,
+              "meanRenderedGradientSmoothness": 0.804741,
+              "meanRenderedTemporalColorTravel": 0.004109,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "compact_shockwave",
+                "endWidth_2",
+                "hard_edge_shockwave",
+                "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "thin_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -28316,11 +28376,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002937,
               "meanTemporalBrightnessDelta": 0.002937,
               "meanNonBlankRatio": 0.066823,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.121528,
+              "meanRenderedDominantColorStability": 0.972222,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.895714,
-              "meanRenderedTemporalColorTravel": 0.002555,
+              "meanRenderedGradientSmoothness": 0.870833,
+              "meanRenderedTemporalColorTravel": 0.002484,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -28346,11 +28406,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002758,
               "meanTemporalBrightnessDelta": 0.002758,
               "meanNonBlankRatio": 0.054271,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.120833,
+              "meanRenderedDominantColorStability": 0.966667,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.977414,
-              "meanRenderedTemporalColorTravel": 0.002853,
+              "meanRenderedGradientSmoothness": 0.944833,
+              "meanRenderedTemporalColorTravel": 0.002758,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -28431,44 +28491,44 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 1,
-                  "high": 1
+                  "low": 0.833333,
+                  "high": 0.833333
                 },
                 "evidencePointCount": 7
               },
               "dominantColorStability": {
                 "direction": "increases",
-                "magnitude": 0.024983,
+                "magnitude": 0.020819,
                 "range": {
-                  "low": 0.758164,
-                  "high": 0.783147
+                  "low": 0.631803,
+                  "high": 0.652622
                 },
                 "evidencePointCount": 7
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.020649,
+                "magnitude": 0.017207,
                 "range": {
-                  "low": 0.01663,
-                  "high": 0.037279
+                  "low": 0.013859,
+                  "high": 0.031066
                 },
                 "evidencePointCount": 7
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.091285,
+                "magnitude": 0.076071,
                 "range": {
-                  "low": 0.9847,
-                  "high": 0.893415
+                  "low": 0.820584,
+                  "high": 0.744513
                 },
                 "evidencePointCount": 7
               },
               "colorTravel": {
                 "direction": "flat",
-                "magnitude": 0.00103,
+                "magnitude": 0.000858,
                 "range": {
-                  "low": 0.0024,
-                  "high": 0.00343
+                  "low": 0.002,
+                  "high": 0.002858
                 },
                 "evidencePointCount": 7
               }
@@ -28478,7 +28538,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "gradientSmoothness",
                 "direction": "decreases",
-                "magnitude": 0.091285,
+                "magnitude": 0.076071,
                 "summary": "endWidth decreases gradientSmoothness"
               },
               {
@@ -28490,13 +28550,13 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "increases",
-                "magnitude": 0.024983,
+                "magnitude": 0.020819,
                 "summary": "endWidth increases dominantColorStability"
               },
               {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.020649,
+                "magnitude": 0.017207,
                 "summary": "endWidth increases colorBandDensity"
               }
             ],
@@ -28519,27 +28579,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.005518,
               "meanTemporalBrightnessDelta": 0.005202,
               "meanNonBlankRatio": 0.190469,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.783147,
-              "meanRenderedColorBandDensity": 0.037279,
-              "meanRenderedGradientSmoothness": 0.893415,
-              "meanRenderedTemporalColorTravel": 0.00343,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.652622,
+              "meanRenderedColorBandDensity": 0.031066,
+              "meanRenderedGradientSmoothness": 0.744513,
+              "meanRenderedTemporalColorTravel": 0.002858,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "diffuse_shockwave",
-                "large_shockwave",
+                "compact_shockwave",
+                "endWidth_20",
+                "hard_edge_shockwave",
+                "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "wide_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -28549,11 +28609,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006507,
               "meanTemporalBrightnessDelta": 0.006507,
               "meanNonBlankRatio": 0.036849,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.515946,
-              "meanRenderedColorBandDensity": 0.020057,
-              "meanRenderedGradientSmoothness": 0.983092,
-              "meanRenderedTemporalColorTravel": 0.004458,
+              "meanRenderedColorDiversity": 0.966667,
+              "meanRenderedDominantColorStability": 0.498748,
+              "meanRenderedColorBandDensity": 0.019389,
+              "meanRenderedGradientSmoothness": 0.950322,
+              "meanRenderedTemporalColorTravel": 0.00431,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -28577,11 +28637,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006208,
               "meanTemporalBrightnessDelta": 0.006196,
               "meanNonBlankRatio": 0.073602,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.744813,
-              "meanRenderedColorBandDensity": 0.014826,
-              "meanRenderedGradientSmoothness": 0.965923,
-              "meanRenderedTemporalColorTravel": 0.004089,
+              "meanRenderedColorDiversity": 0.944444,
+              "meanRenderedDominantColorStability": 0.703435,
+              "meanRenderedColorBandDensity": 0.014002,
+              "meanRenderedGradientSmoothness": 0.912261,
+              "meanRenderedTemporalColorTravel": 0.003861,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -28607,27 +28667,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004033,
               "meanTemporalBrightnessDelta": 0.00396,
               "meanNonBlankRatio": 0.12099,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.758164,
-              "meanRenderedColorBandDensity": 0.01663,
-              "meanRenderedGradientSmoothness": 0.9847,
-              "meanRenderedTemporalColorTravel": 0.0024,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.631803,
+              "meanRenderedColorBandDensity": 0.013859,
+              "meanRenderedGradientSmoothness": 0.820584,
+              "meanRenderedTemporalColorTravel": 0.002,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "compact_shockwave",
+                "endWidth_2",
+                "hard_edge_shockwave",
+                "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "thin_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -28665,11 +28725,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002341,
               "meanTemporalBrightnessDelta": 0.002341,
               "meanNonBlankRatio": 0.053177,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.767385,
-              "meanRenderedColorBandDensity": 0.018355,
-              "meanRenderedGradientSmoothness": 0.991785,
-              "meanRenderedTemporalColorTravel": 0.001635,
+              "meanRenderedColorDiversity": 0.966667,
+              "meanRenderedDominantColorStability": 0.741806,
+              "meanRenderedColorBandDensity": 0.017743,
+              "meanRenderedGradientSmoothness": 0.958725,
+              "meanRenderedTemporalColorTravel": 0.00158,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -28693,11 +28753,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002095,
               "meanTemporalBrightnessDelta": 0.002074,
               "meanNonBlankRatio": 0.066072,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.849483,
-              "meanRenderedColorBandDensity": 0.03159,
-              "meanRenderedGradientSmoothness": 0.956025,
-              "meanRenderedTemporalColorTravel": 0.001311,
+              "meanRenderedColorDiversity": 0.972222,
+              "meanRenderedDominantColorStability": 0.825886,
+              "meanRenderedColorBandDensity": 0.030713,
+              "meanRenderedGradientSmoothness": 0.929469,
+              "meanRenderedTemporalColorTravel": 0.001274,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -29298,27 +29358,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006812,
               "meanTemporalBrightnessDelta": 0.006812,
               "meanNonBlankRatio": 0.134531,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.943044,
-              "meanRenderedTemporalColorTravel": 0.004913,
+              "meanRenderedGradientSmoothness": 0.78587,
+              "meanRenderedTemporalColorTravel": 0.004094,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
+                "scale_false",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -29328,11 +29388,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.00532,
               "meanTemporalBrightnessDelta": 0.00532,
               "meanNonBlankRatio": 0.059301,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.121988,
+              "meanRenderedDominantColorStability": 0.975904,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.928852,
-              "meanRenderedTemporalColorTravel": 0.005351,
+              "meanRenderedGradientSmoothness": 0.90647,
+              "meanRenderedTemporalColorTravel": 0.005222,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -29412,70 +29472,76 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 2
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "increases",
+                "magnitude": 0.142571,
                 "range": {
-                  "low": 1,
-                  "high": 1
+                  "low": 0.833333,
+                  "high": 0.975904
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
-                "direction": "decreases",
-                "magnitude": 0.012205,
+                "direction": "increases",
+                "magnitude": 0.096999,
                 "range": {
-                  "low": 0.763901,
-                  "high": 0.751696
+                  "low": 0.636584,
+                  "high": 0.733583
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "flat",
-                "magnitude": 0.002821,
+                "magnitude": 0.000669,
                 "range": {
-                  "low": 0.024004,
-                  "high": 0.021183
+                  "low": 0.020004,
+                  "high": 0.020673
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
-                "direction": "decreases",
-                "magnitude": 0.007571,
+                "direction": "increases",
+                "magnitude": 0.131803,
                 "range": {
-                  "low": 0.976304,
-                  "high": 0.968733
+                  "low": 0.813587,
+                  "high": 0.94539
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "flat",
-                "magnitude": 0.000269,
+                "magnitude": 0.000603,
                 "range": {
-                  "low": 0.002398,
-                  "high": 0.002667
+                  "low": 0.001999,
+                  "high": 0.002602
                 },
                 "evidencePointCount": 2
               }
             },
-            "dominantDimension": "coverage",
+            "dominantDimension": "colorDiversity",
             "behaviorRules": [
+              {
+                "dimension": "colorDiversity",
+                "direction": "increases",
+                "magnitude": 0.142571,
+                "summary": "scale increases colorDiversity"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "increases",
+                "magnitude": 0.131803,
+                "summary": "scale increases gradientSmoothness"
+              },
+              {
+                "dimension": "dominantColorStability",
+                "direction": "increases",
+                "magnitude": 0.096999,
+                "summary": "scale increases dominantColorStability"
+              },
               {
                 "dimension": "coverage",
                 "direction": "decreases",
                 "magnitude": 0.07544,
                 "summary": "scale decreases coverage"
-              },
-              {
-                "dimension": "dominantColorStability",
-                "direction": "decreases",
-                "magnitude": 0.012205,
-                "summary": "scale decreases dominantColorStability"
-              },
-              {
-                "dimension": "gradientSmoothness",
-                "direction": "decreases",
-                "magnitude": 0.007571,
-                "summary": "scale decreases gradientSmoothness"
               }
             ],
             "generalization": {
@@ -29497,27 +29563,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004105,
               "meanTemporalBrightnessDelta": 0.00398,
               "meanNonBlankRatio": 0.133802,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.763901,
-              "meanRenderedColorBandDensity": 0.024004,
-              "meanRenderedGradientSmoothness": 0.976304,
-              "meanRenderedTemporalColorTravel": 0.002398,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.636584,
+              "meanRenderedColorBandDensity": 0.020004,
+              "meanRenderedGradientSmoothness": 0.813587,
+              "meanRenderedTemporalColorTravel": 0.001999,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "blended_shockwave",
-                "centered_shockwave",
-                "decoded_fseq",
-                "large_shockwave",
+                "compact_shockwave",
+                "hard_edge_shockwave",
                 "medium_width_shockwave",
                 "neutral_shockwave",
+                "offset_shockwave",
                 "radial_pattern_fit",
-                "registry_generated",
+                "radial_shockwave",
+                "scale_false",
                 "scaled_shockwave",
                 "shockwave_pattern",
                 "single_shockwave",
-                "compact_decelerating_shockwave"
+                "spinner_fill"
               ]
             },
             {
@@ -29527,11 +29593,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004033,
               "meanTemporalBrightnessDelta": 0.004029,
               "meanNonBlankRatio": 0.058362,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.751696,
-              "meanRenderedColorBandDensity": 0.021183,
-              "meanRenderedGradientSmoothness": 0.968733,
-              "meanRenderedTemporalColorTravel": 0.002667,
+              "meanRenderedColorDiversity": 0.975904,
+              "meanRenderedDominantColorStability": 0.733583,
+              "meanRenderedColorBandDensity": 0.020673,
+              "meanRenderedGradientSmoothness": 0.94539,
+              "meanRenderedTemporalColorTravel": 0.002602,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -29888,11 +29954,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.009672,
               "meanTemporalBrightnessDelta": 0.009672,
               "meanNonBlankRatio": 0.039112,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.120833,
+              "meanRenderedDominantColorStability": 0.966667,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.950459,
-              "meanRenderedTemporalColorTravel": 0.010005,
+              "meanRenderedGradientSmoothness": 0.918777,
+              "meanRenderedTemporalColorTravel": 0.009671,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -29916,11 +29982,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.008787,
               "meanTemporalBrightnessDelta": 0.008787,
               "meanNonBlankRatio": 0.083199,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.118056,
+              "meanRenderedDominantColorStability": 0.944444,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.921594,
-              "meanRenderedTemporalColorTravel": 0.00873,
+              "meanRenderedGradientSmoothness": 0.870395,
+              "meanRenderedTemporalColorTravel": 0.008245,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -29946,11 +30012,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.007005,
               "meanTemporalBrightnessDelta": 0.007005,
               "meanNonBlankRatio": 0.121745,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.945592,
-              "meanRenderedTemporalColorTravel": 0.005053,
+              "meanRenderedGradientSmoothness": 0.787994,
+              "meanRenderedTemporalColorTravel": 0.00421,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -29976,11 +30042,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.005769,
               "meanTemporalBrightnessDelta": 0.005769,
               "meanNonBlankRatio": 0.162969,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.957119,
-              "meanRenderedTemporalColorTravel": 0.003695,
+              "meanRenderedGradientSmoothness": 0.797599,
+              "meanRenderedTemporalColorTravel": 0.003079,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -30006,11 +30072,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.00391,
               "meanTemporalBrightnessDelta": 0.00391,
               "meanNonBlankRatio": 0.18474,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.900781,
-              "meanRenderedTemporalColorTravel": 0.002206,
+              "meanRenderedGradientSmoothness": 0.750651,
+              "meanRenderedTemporalColorTravel": 0.001838,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -30064,11 +30130,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002738,
               "meanTemporalBrightnessDelta": 0.002738,
               "meanNonBlankRatio": 0.058458,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.120833,
+              "meanRenderedDominantColorStability": 0.966667,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.961083,
-              "meanRenderedTemporalColorTravel": 0.002832,
+              "meanRenderedGradientSmoothness": 0.929047,
+              "meanRenderedTemporalColorTravel": 0.002738,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -30149,44 +30215,44 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 1,
-                  "high": 1
+                  "low": 0.833333,
+                  "high": 0.833333
                 },
                 "evidencePointCount": 7
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.018634,
+                "magnitude": 0.015528,
                 "range": {
-                  "low": 0.790284,
-                  "high": 0.77165
+                  "low": 0.65857,
+                  "high": 0.643042
                 },
                 "evidencePointCount": 7
               },
               "colorBandDensity": {
                 "direction": "flat",
-                "magnitude": 0.000728,
+                "magnitude": 0.000607,
                 "range": {
-                  "low": 0.019602,
-                  "high": 0.02033
+                  "low": 0.016335,
+                  "high": 0.016942
                 },
                 "evidencePointCount": 7
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.022854,
+                "magnitude": 0.019044,
                 "range": {
-                  "low": 0.978106,
-                  "high": 0.955252
+                  "low": 0.815088,
+                  "high": 0.796044
                 },
                 "evidencePointCount": 7
               },
               "colorTravel": {
                 "direction": "flat",
-                "magnitude": 0.00115,
+                "magnitude": 0.000958,
                 "range": {
-                  "low": 0.002472,
-                  "high": 0.001322
+                  "low": 0.00206,
+                  "high": 0.001102
                 },
                 "evidencePointCount": 7
               }
@@ -30202,13 +30268,13 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "gradientSmoothness",
                 "direction": "decreases",
-                "magnitude": 0.022854,
+                "magnitude": 0.019044,
                 "summary": "startRadius decreases gradientSmoothness"
               },
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.018634,
+                "magnitude": 0.015528,
                 "summary": "startRadius decreases dominantColorStability"
               }
             ],
@@ -30231,11 +30297,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006874,
               "meanTemporalBrightnessDelta": 0.006874,
               "meanNonBlankRatio": 0.038839,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.501842,
-              "meanRenderedColorBandDensity": 0.023419,
-              "meanRenderedGradientSmoothness": 0.978117,
-              "meanRenderedTemporalColorTravel": 0.004725,
+              "meanRenderedColorDiversity": 0.966667,
+              "meanRenderedDominantColorStability": 0.485114,
+              "meanRenderedColorBandDensity": 0.022638,
+              "meanRenderedGradientSmoothness": 0.945513,
+              "meanRenderedTemporalColorTravel": 0.004568,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -30259,11 +30325,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006416,
               "meanTemporalBrightnessDelta": 0.006391,
               "meanNonBlankRatio": 0.081897,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.747521,
-              "meanRenderedColorBandDensity": 0.014869,
-              "meanRenderedGradientSmoothness": 0.965055,
-              "meanRenderedTemporalColorTravel": 0.004208,
+              "meanRenderedColorDiversity": 0.944444,
+              "meanRenderedDominantColorStability": 0.705992,
+              "meanRenderedColorBandDensity": 0.014043,
+              "meanRenderedGradientSmoothness": 0.911441,
+              "meanRenderedTemporalColorTravel": 0.003975,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -30289,11 +30355,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004243,
               "meanTemporalBrightnessDelta": 0.004137,
               "meanNonBlankRatio": 0.120898,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.790284,
-              "meanRenderedColorBandDensity": 0.019602,
-              "meanRenderedGradientSmoothness": 0.978106,
-              "meanRenderedTemporalColorTravel": 0.002472,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.65857,
+              "meanRenderedColorBandDensity": 0.016335,
+              "meanRenderedGradientSmoothness": 0.815088,
+              "meanRenderedTemporalColorTravel": 0.00206,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -30319,11 +30385,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003759,
               "meanTemporalBrightnessDelta": 0.003555,
               "meanNonBlankRatio": 0.162292,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.814397,
-              "meanRenderedColorBandDensity": 0.006061,
-              "meanRenderedGradientSmoothness": 0.979423,
-              "meanRenderedTemporalColorTravel": 0.002061,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.678665,
+              "meanRenderedColorBandDensity": 0.005051,
+              "meanRenderedGradientSmoothness": 0.816186,
+              "meanRenderedTemporalColorTravel": 0.001718,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -30349,11 +30415,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002516,
               "meanTemporalBrightnessDelta": 0.002211,
               "meanNonBlankRatio": 0.175156,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.77165,
-              "meanRenderedColorBandDensity": 0.02033,
-              "meanRenderedGradientSmoothness": 0.955252,
-              "meanRenderedTemporalColorTravel": 0.001322,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.643042,
+              "meanRenderedColorBandDensity": 0.016942,
+              "meanRenderedGradientSmoothness": 0.796044,
+              "meanRenderedTemporalColorTravel": 0.001102,
               "temporalSignatureHints": [
                 "static_or_near_static"
               ],
@@ -30379,11 +30445,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002351,
               "meanTemporalBrightnessDelta": 0.002351,
               "meanNonBlankRatio": 0.057385,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.76642,
-              "meanRenderedColorBandDensity": 0.021112,
-              "meanRenderedGradientSmoothness": 0.983409,
-              "meanRenderedTemporalColorTravel": 0.001644,
+              "meanRenderedColorDiversity": 0.966667,
+              "meanRenderedDominantColorStability": 0.740872,
+              "meanRenderedColorBandDensity": 0.020408,
+              "meanRenderedGradientSmoothness": 0.950629,
+              "meanRenderedTemporalColorTravel": 0.001589,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -31002,11 +31068,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.009319,
               "meanTemporalBrightnessDelta": 0.009319,
               "meanNonBlankRatio": 0.037687,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.120833,
+              "meanRenderedDominantColorStability": 0.966667,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.959245,
-              "meanRenderedTemporalColorTravel": 0.00964,
+              "meanRenderedGradientSmoothness": 0.927271,
+              "meanRenderedTemporalColorTravel": 0.009319,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -31030,11 +31096,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.008498,
               "meanTemporalBrightnessDelta": 0.008498,
               "meanNonBlankRatio": 0.078841,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.118056,
+              "meanRenderedDominantColorStability": 0.944444,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.923777,
-              "meanRenderedTemporalColorTravel": 0.008519,
+              "meanRenderedGradientSmoothness": 0.872456,
+              "meanRenderedTemporalColorTravel": 0.008045,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -31060,11 +31126,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006564,
               "meanTemporalBrightnessDelta": 0.006564,
               "meanNonBlankRatio": 0.153724,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.900342,
-              "meanRenderedTemporalColorTravel": 0.004937,
+              "meanRenderedGradientSmoothness": 0.750285,
+              "meanRenderedTemporalColorTravel": 0.004114,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -31090,11 +31156,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006328,
               "meanTemporalBrightnessDelta": 0.006328,
               "meanNonBlankRatio": 0.206797,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.104167,
+              "meanRenderedDominantColorStability": 0.833333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.741782,
-              "meanRenderedTemporalColorTravel": 0.0049,
+              "meanRenderedGradientSmoothness": 0.618152,
+              "meanRenderedTemporalColorTravel": 0.004083,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -31120,11 +31186,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003969,
               "meanTemporalBrightnessDelta": 0.003969,
               "meanNonBlankRatio": 0.074282,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.121528,
+              "meanRenderedDominantColorStability": 0.972222,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.925584,
-              "meanRenderedTemporalColorTravel": 0.003617,
+              "meanRenderedGradientSmoothness": 0.899873,
+              "meanRenderedTemporalColorTravel": 0.003516,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -31150,11 +31216,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.002441,
               "meanTemporalBrightnessDelta": 0.002441,
               "meanNonBlankRatio": 0.05325,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.122917,
+              "meanRenderedDominantColorStability": 0.983333,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.938248,
-              "meanRenderedTemporalColorTravel": 0.002483,
+              "meanRenderedGradientSmoothness": 0.922611,
+              "meanRenderedTemporalColorTravel": 0.002441,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -31232,53 +31298,59 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 6
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.111111,
                 "range": {
-                  "low": 1,
-                  "high": 1
+                  "low": 0.944444,
+                  "high": 0.833333
                 },
                 "evidencePointCount": 6
               },
               "dominantColorStability": {
-                "direction": "increases",
-                "magnitude": 0.062006,
+                "direction": "decreases",
+                "magnitude": 0.031154,
                 "range": {
-                  "low": 0.74544,
-                  "high": 0.807446
+                  "low": 0.704026,
+                  "high": 0.672872
                 },
                 "evidencePointCount": 6
               },
               "colorBandDensity": {
                 "direction": "increases",
-                "magnitude": 0.021507,
+                "magnitude": 0.016084,
                 "range": {
-                  "low": 0.016542,
-                  "high": 0.038049
+                  "low": 0.015623,
+                  "high": 0.031707
                 },
                 "evidencePointCount": 6
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.085942,
+                "magnitude": 0.178924,
                 "range": {
-                  "low": 0.965745,
-                  "high": 0.879803
+                  "low": 0.912093,
+                  "high": 0.733169
                 },
                 "evidencePointCount": 6
               },
               "colorTravel": {
                 "direction": "flat",
-                "magnitude": 0.001482,
+                "magnitude": 0.001694,
                 "range": {
-                  "low": 0.004128,
-                  "high": 0.002646
+                  "low": 0.003899,
+                  "high": 0.002205
                 },
                 "evidencePointCount": 6
               }
             },
-            "dominantDimension": "coverage",
+            "dominantDimension": "gradientSmoothness",
             "behaviorRules": [
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.178924,
+                "summary": "startWidth decreases gradientSmoothness"
+              },
               {
                 "dimension": "coverage",
                 "direction": "increases",
@@ -31286,21 +31358,21 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "startWidth increases coverage"
               },
               {
-                "dimension": "gradientSmoothness",
+                "dimension": "colorDiversity",
                 "direction": "decreases",
-                "magnitude": 0.085942,
-                "summary": "startWidth decreases gradientSmoothness"
+                "magnitude": 0.111111,
+                "summary": "startWidth decreases colorDiversity"
               },
               {
                 "dimension": "dominantColorStability",
-                "direction": "increases",
-                "magnitude": 0.062006,
-                "summary": "startWidth increases dominantColorStability"
+                "direction": "decreases",
+                "magnitude": 0.031154,
+                "summary": "startWidth decreases dominantColorStability"
               },
               {
                 "dimension": "colorBandDensity",
                 "direction": "increases",
-                "magnitude": 0.021507,
+                "magnitude": 0.016084,
                 "summary": "startWidth increases colorBandDensity"
               }
             ],
@@ -31323,11 +31395,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.00667,
               "meanTemporalBrightnessDelta": 0.00667,
               "meanNonBlankRatio": 0.037323,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.5076,
-              "meanRenderedColorBandDensity": 0.020379,
-              "meanRenderedGradientSmoothness": 0.982257,
-              "meanRenderedTemporalColorTravel": 0.004569,
+              "meanRenderedColorDiversity": 0.966667,
+              "meanRenderedDominantColorStability": 0.49068,
+              "meanRenderedColorBandDensity": 0.0197,
+              "meanRenderedGradientSmoothness": 0.949515,
+              "meanRenderedTemporalColorTravel": 0.004417,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -31351,11 +31423,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006275,
               "meanTemporalBrightnessDelta": 0.006255,
               "meanNonBlankRatio": 0.0776,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.74544,
-              "meanRenderedColorBandDensity": 0.016542,
-              "meanRenderedGradientSmoothness": 0.965745,
-              "meanRenderedTemporalColorTravel": 0.004128,
+              "meanRenderedColorDiversity": 0.944444,
+              "meanRenderedDominantColorStability": 0.704026,
+              "meanRenderedColorBandDensity": 0.015623,
+              "meanRenderedGradientSmoothness": 0.912093,
+              "meanRenderedTemporalColorTravel": 0.003899,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -31381,11 +31453,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004341,
               "meanTemporalBrightnessDelta": 0.003995,
               "meanNonBlankRatio": 0.205729,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.807446,
-              "meanRenderedColorBandDensity": 0.038049,
-              "meanRenderedGradientSmoothness": 0.879803,
-              "meanRenderedTemporalColorTravel": 0.002646,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.672872,
+              "meanRenderedColorBandDensity": 0.031707,
+              "meanRenderedGradientSmoothness": 0.733169,
+              "meanRenderedTemporalColorTravel": 0.002205,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -31411,11 +31483,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.004201,
               "meanTemporalBrightnessDelta": 0.003959,
               "meanNonBlankRatio": 0.152539,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.791375,
-              "meanRenderedColorBandDensity": 0.021682,
-              "meanRenderedGradientSmoothness": 0.956851,
-              "meanRenderedTemporalColorTravel": 0.002461,
+              "meanRenderedColorDiversity": 0.833333,
+              "meanRenderedDominantColorStability": 0.659479,
+              "meanRenderedColorBandDensity": 0.018068,
+              "meanRenderedGradientSmoothness": 0.797376,
+              "meanRenderedTemporalColorTravel": 0.002051,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -31441,11 +31513,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003076,
               "meanTemporalBrightnessDelta": 0.003056,
               "meanNonBlankRatio": 0.073268,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.840284,
-              "meanRenderedColorBandDensity": 0.018287,
-              "meanRenderedGradientSmoothness": 0.965957,
-              "meanRenderedTemporalColorTravel": 0.001869,
+              "meanRenderedColorDiversity": 0.972222,
+              "meanRenderedDominantColorStability": 0.816942,
+              "meanRenderedColorBandDensity": 0.017779,
+              "meanRenderedGradientSmoothness": 0.939125,
+              "meanRenderedTemporalColorTravel": 0.001817,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -31471,11 +31543,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.001991,
               "meanTemporalBrightnessDelta": 0.001991,
               "meanNonBlankRatio": 0.052339,
-              "meanRenderedColorDiversity": 1,
-              "meanRenderedDominantColorStability": 0.815675,
-              "meanRenderedColorBandDensity": 0.02474,
-              "meanRenderedGradientSmoothness": 0.97464,
-              "meanRenderedTemporalColorTravel": 0.001359,
+              "meanRenderedColorDiversity": 0.983333,
+              "meanRenderedDominantColorStability": 0.80208,
+              "meanRenderedColorBandDensity": 0.024327,
+              "meanRenderedGradientSmoothness": 0.958396,
+              "meanRenderedTemporalColorTravel": 0.001336,
               "temporalSignatureHints": [],
               "behaviorHints": [
                 "blended_shockwave",
@@ -33312,11 +33384,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.014914,
               "meanTemporalBrightnessDelta": 0.014914,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.012327,
+              "meanRenderedGradientSmoothness": 0.8,
+              "meanRenderedTemporalColorTravel": 0.009862,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -33342,11 +33414,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.014914,
               "meanTemporalBrightnessDelta": 0.014914,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.012327,
+              "meanRenderedGradientSmoothness": 0.8,
+              "meanRenderedTemporalColorTravel": 0.009862,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -33372,11 +33444,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.014914,
               "meanTemporalBrightnessDelta": 0.014914,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.012327,
+              "meanRenderedGradientSmoothness": 0.8,
+              "meanRenderedTemporalColorTravel": 0.009862,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -33402,11 +33474,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.014914,
               "meanTemporalBrightnessDelta": 0.014914,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.012327,
+              "meanRenderedGradientSmoothness": 0.8,
+              "meanRenderedTemporalColorTravel": 0.009862,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -33432,11 +33504,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.014914,
               "meanTemporalBrightnessDelta": 0.014914,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.012327,
+              "meanRenderedGradientSmoothness": 0.8,
+              "meanRenderedTemporalColorTravel": 0.009862,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -33545,8 +33617,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.3,
+                  "high": 0.3
                 },
                 "evidencePointCount": 6
               },
@@ -33554,8 +33626,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.987421,
-                  "high": 0.987421
+                  "low": 0.789937,
+                  "high": 0.789937
                 },
                 "evidencePointCount": 6
               },
@@ -33563,8 +33635,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.48125,
-                  "high": 0.48125
+                  "low": 0.385,
+                  "high": 0.385
                 },
                 "evidencePointCount": 6
               },
@@ -33572,8 +33644,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.607061,
-                  "high": 0.607061
+                  "low": 0.485649,
+                  "high": 0.485649
                 },
                 "evidencePointCount": 6
               },
@@ -33581,8 +33653,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.017387,
-                  "high": 0.017387
+                  "low": 0.01391,
+                  "high": 0.01391
                 },
                 "evidencePointCount": 6
               }
@@ -33608,11 +33680,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011842,
               "meanTemporalBrightnessDelta": 0.011576,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.987421,
-              "meanRenderedColorBandDensity": 0.48125,
-              "meanRenderedGradientSmoothness": 0.607061,
-              "meanRenderedTemporalColorTravel": 0.017387,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.789937,
+              "meanRenderedColorBandDensity": 0.385,
+              "meanRenderedGradientSmoothness": 0.485649,
+              "meanRenderedTemporalColorTravel": 0.01391,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -33638,11 +33710,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011842,
               "meanTemporalBrightnessDelta": 0.011576,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.987421,
-              "meanRenderedColorBandDensity": 0.48125,
-              "meanRenderedGradientSmoothness": 0.607061,
-              "meanRenderedTemporalColorTravel": 0.017387,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.789937,
+              "meanRenderedColorBandDensity": 0.385,
+              "meanRenderedGradientSmoothness": 0.485649,
+              "meanRenderedTemporalColorTravel": 0.01391,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -33668,11 +33740,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011842,
               "meanTemporalBrightnessDelta": 0.011576,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.987421,
-              "meanRenderedColorBandDensity": 0.48125,
-              "meanRenderedGradientSmoothness": 0.607061,
-              "meanRenderedTemporalColorTravel": 0.017387,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.789937,
+              "meanRenderedColorBandDensity": 0.385,
+              "meanRenderedGradientSmoothness": 0.485649,
+              "meanRenderedTemporalColorTravel": 0.01391,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -33698,11 +33770,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011842,
               "meanTemporalBrightnessDelta": 0.011576,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.987421,
-              "meanRenderedColorBandDensity": 0.48125,
-              "meanRenderedGradientSmoothness": 0.607061,
-              "meanRenderedTemporalColorTravel": 0.017387,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.789937,
+              "meanRenderedColorBandDensity": 0.385,
+              "meanRenderedGradientSmoothness": 0.485649,
+              "meanRenderedTemporalColorTravel": 0.01391,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -33728,11 +33800,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011842,
               "meanTemporalBrightnessDelta": 0.011576,
               "meanNonBlankRatio": 0.224,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.987421,
-              "meanRenderedColorBandDensity": 0.48125,
-              "meanRenderedGradientSmoothness": 0.607061,
-              "meanRenderedTemporalColorTravel": 0.017387,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.789937,
+              "meanRenderedColorBandDensity": 0.385,
+              "meanRenderedGradientSmoothness": 0.485649,
+              "meanRenderedTemporalColorTravel": 0.01391,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -36729,11 +36801,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.061292,
               "meanTemporalBrightnessDelta": 0.061292,
               "meanNonBlankRatio": 0.473,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.109375,
+              "meanRenderedDominantColorStability": 0.875,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.898743,
-              "meanRenderedTemporalColorTravel": 0.067872,
+              "meanRenderedGradientSmoothness": 0.7864,
+              "meanRenderedTemporalColorTravel": 0.059388,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -36759,11 +36831,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.029479,
               "meanTemporalBrightnessDelta": 0.029479,
               "meanNonBlankRatio": 0.2741,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.797254,
-              "meanRenderedTemporalColorTravel": 0.033558,
+              "meanRenderedGradientSmoothness": 0.637803,
+              "meanRenderedTemporalColorTravel": 0.026846,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -36787,11 +36859,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.01767,
               "meanTemporalBrightnessDelta": 0.01767,
               "meanNonBlankRatio": 0.2741,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.796627,
-              "meanRenderedTemporalColorTravel": 0.018686,
+              "meanRenderedGradientSmoothness": 0.637302,
+              "meanRenderedTemporalColorTravel": 0.014949,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -36815,11 +36887,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.019667,
               "meanTemporalBrightnessDelta": 0.019667,
               "meanNonBlankRatio": 0.229484,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.109375,
+              "meanRenderedDominantColorStability": 0.875,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.018868,
+              "meanRenderedGradientSmoothness": 0.875,
+              "meanRenderedTemporalColorTravel": 0.016509,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -36845,11 +36917,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.017447,
               "meanTemporalBrightnessDelta": 0.017447,
               "meanNonBlankRatio": 0.2108,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.811385,
-              "meanRenderedTemporalColorTravel": 0.019245,
+              "meanRenderedGradientSmoothness": 0.649108,
+              "meanRenderedTemporalColorTravel": 0.015396,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -36993,11 +37065,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.060678,
               "meanTemporalBrightnessDelta": 0.060655,
               "meanNonBlankRatio": 0.473,
-              "meanRenderedColorDiversity": 0.642857,
-              "meanRenderedDominantColorStability": 0.809523,
-              "meanRenderedColorBandDensity": 0.278445,
-              "meanRenderedGradientSmoothness": 0.856386,
-              "meanRenderedTemporalColorTravel": 0.073703,
+              "meanRenderedColorDiversity": 0.5625,
+              "meanRenderedDominantColorStability": 0.708333,
+              "meanRenderedColorBandDensity": 0.243639,
+              "meanRenderedGradientSmoothness": 0.749338,
+              "meanRenderedTemporalColorTravel": 0.06449,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -37023,11 +37095,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.028004,
               "meanTemporalBrightnessDelta": 0.027769,
               "meanNonBlankRatio": 0.2741,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.968553,
-              "meanRenderedColorBandDensity": 0.230089,
-              "meanRenderedGradientSmoothness": 0.837026,
-              "meanRenderedTemporalColorTravel": 0.02318,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.774842,
+              "meanRenderedColorBandDensity": 0.184071,
+              "meanRenderedGradientSmoothness": 0.669621,
+              "meanRenderedTemporalColorTravel": 0.018544,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -37051,11 +37123,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.016045,
               "meanTemporalBrightnessDelta": 0.015902,
               "meanNonBlankRatio": 0.2741,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.968553,
-              "meanRenderedColorBandDensity": 0.230089,
-              "meanRenderedGradientSmoothness": 0.772997,
-              "meanRenderedTemporalColorTravel": 0.019879,
+              "meanRenderedColorDiversity": 0.3,
+              "meanRenderedDominantColorStability": 0.774842,
+              "meanRenderedColorBandDensity": 0.184071,
+              "meanRenderedGradientSmoothness": 0.618398,
+              "meanRenderedTemporalColorTravel": 0.015903,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -37079,11 +37151,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.016107,
               "meanTemporalBrightnessDelta": 0.016107,
               "meanNonBlankRatio": 0.2108,
-              "meanRenderedColorDiversity": 0.25,
-              "meanRenderedDominantColorStability": 0.986842,
-              "meanRenderedColorBandDensity": 0.232026,
-              "meanRenderedGradientSmoothness": 0.771957,
-              "meanRenderedTemporalColorTravel": 0.016085,
+              "meanRenderedColorDiversity": 0.2,
+              "meanRenderedDominantColorStability": 0.789474,
+              "meanRenderedColorBandDensity": 0.185621,
+              "meanRenderedGradientSmoothness": 0.617566,
+              "meanRenderedTemporalColorTravel": 0.012868,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -37107,11 +37179,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.017747,
               "meanTemporalBrightnessDelta": 0.017581,
               "meanNonBlankRatio": 0.229484,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.968553,
-              "meanRenderedColorBandDensity": 0.230089,
-              "meanRenderedGradientSmoothness": 0.812133,
-              "meanRenderedTemporalColorTravel": 0.026402,
+              "meanRenderedColorDiversity": 0.328125,
+              "meanRenderedDominantColorStability": 0.847484,
+              "meanRenderedColorBandDensity": 0.201328,
+              "meanRenderedGradientSmoothness": 0.710616,
+              "meanRenderedTemporalColorTravel": 0.023102,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -40407,11 +40479,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.038603,
               "meanTemporalBrightnessDelta": 0.038603,
               "meanNonBlankRatio": 0.358925,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.1,
+              "meanRenderedDominantColorStability": 0.8,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.976885,
-              "meanRenderedTemporalColorTravel": 0.044015,
+              "meanRenderedGradientSmoothness": 0.781508,
+              "meanRenderedTemporalColorTravel": 0.035212,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -40437,25 +40509,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.02561,
               "meanTemporalBrightnessDelta": 0.02561,
               "meanNonBlankRatio": 0.189225,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.12,
+              "meanRenderedDominantColorStability": 0.96,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.879049,
-              "meanRenderedTemporalColorTravel": 0.025624,
+              "meanRenderedGradientSmoothness": 0.843887,
+              "meanRenderedTemporalColorTravel": 0.024599,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
                 "chase_pattern",
-                "fragmented_pattern",
-                "mode_Chase",
-                "single_direction_chase",
-                "sparse_sampled_motion",
                 "decoded_fseq",
                 "directionality:left_to_right",
+                "fragmented_pattern",
                 "registry_generated",
+                "sparse_sampled_motion",
+                "arch_pattern",
+                "mode_Chase",
+                "single_direction_chase",
                 "bounce_motion",
                 "dense_sampled_motion"
               ]
@@ -40467,11 +40539,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.014492,
               "meanTemporalBrightnessDelta": 0.014492,
               "meanNonBlankRatio": 0.114533,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.123077,
+              "meanRenderedDominantColorStability": 0.984615,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 0.998555,
-              "meanRenderedTemporalColorTravel": 0.014307,
+              "meanRenderedGradientSmoothness": 0.983193,
+              "meanRenderedTemporalColorTravel": 0.014087,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -40617,11 +40689,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.038049,
               "meanTemporalBrightnessDelta": 0.037816,
               "meanNonBlankRatio": 0.358925,
-              "meanRenderedColorDiversity": 0.53125,
-              "meanRenderedDominantColorStability": 0.88522,
-              "meanRenderedColorBandDensity": 0.383877,
-              "meanRenderedGradientSmoothness": 0.724004,
-              "meanRenderedTemporalColorTravel": 0.052059,
+              "meanRenderedColorDiversity": 0.425,
+              "meanRenderedDominantColorStability": 0.708176,
+              "meanRenderedColorBandDensity": 0.307102,
+              "meanRenderedGradientSmoothness": 0.579203,
+              "meanRenderedTemporalColorTravel": 0.041648,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -40647,25 +40719,25 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.02506,
               "meanTemporalBrightnessDelta": 0.025007,
               "meanNonBlankRatio": 0.189225,
-              "meanRenderedColorDiversity": 0.380208,
-              "meanRenderedDominantColorStability": 0.957712,
-              "meanRenderedColorBandDensity": 0.256043,
-              "meanRenderedGradientSmoothness": 0.794079,
-              "meanRenderedTemporalColorTravel": 0.026048,
+              "meanRenderedColorDiversity": 0.365,
+              "meanRenderedDominantColorStability": 0.919404,
+              "meanRenderedColorBandDensity": 0.245801,
+              "meanRenderedGradientSmoothness": 0.762315,
+              "meanRenderedTemporalColorTravel": 0.025006,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "arch_pattern",
                 "arch_pattern_fit",
                 "chase_pattern",
-                "fragmented_pattern",
-                "mode_Chase",
-                "single_direction_chase",
-                "sparse_sampled_motion",
                 "decoded_fseq",
                 "directionality:left_to_right",
+                "fragmented_pattern",
                 "registry_generated",
+                "sparse_sampled_motion",
+                "arch_pattern",
+                "mode_Chase",
+                "single_direction_chase",
                 "bounce_motion",
                 "dense_sampled_motion"
               ]
@@ -40677,11 +40749,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.01425,
               "meanTemporalBrightnessDelta": 0.01425,
               "meanNonBlankRatio": 0.114533,
-              "meanRenderedColorDiversity": 0.384766,
-              "meanRenderedDominantColorStability": 0.981033,
-              "meanRenderedColorBandDensity": 0.475164,
-              "meanRenderedGradientSmoothness": 0.61437,
-              "meanRenderedTemporalColorTravel": 0.019554,
+              "meanRenderedColorDiversity": 0.378846,
+              "meanRenderedDominantColorStability": 0.965941,
+              "meanRenderedColorBandDensity": 0.467854,
+              "meanRenderedGradientSmoothness": 0.604918,
+              "meanRenderedTemporalColorTravel": 0.019253,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -45512,11 +45584,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.026269,
               "meanTemporalBrightnessDelta": 0.026269,
               "meanNonBlankRatio": 0.62935,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.09375,
+              "meanRenderedDominantColorStability": 0.75,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.025157,
+              "meanRenderedGradientSmoothness": 0.75,
+              "meanRenderedTemporalColorTravel": 0.018868,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -45542,11 +45614,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.020862,
               "meanTemporalBrightnessDelta": 0.020862,
               "meanNonBlankRatio": 0.787754,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.0625,
+              "meanRenderedDominantColorStability": 0.5,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.025157,
+              "meanRenderedGradientSmoothness": 0.5,
+              "meanRenderedTemporalColorTravel": 0.012578,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -45626,47 +45698,47 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 2
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.09375,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.28125,
+                  "high": 0.1875
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.159329,
+                "magnitude": 0.309749,
                 "range": {
-                  "low": 0.920335,
-                  "high": 0.761006
+                  "low": 0.690252,
+                  "high": 0.380503
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
-                "direction": "increases",
-                "magnitude": 0.007294,
+                "direction": "flat",
+                "magnitude": 0.003744,
                 "range": {
-                  "low": 0.029565,
-                  "high": 0.036859
+                  "low": 0.022174,
+                  "high": 0.01843
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.005955,
+                "magnitude": 0.246942,
                 "range": {
-                  "low": 0.97586,
-                  "high": 0.969905
+                  "low": 0.731895,
+                  "high": 0.484953
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.005551,
+                "magnitude": 0.014516,
                 "range": {
-                  "low": 0.046966,
-                  "high": 0.041415
+                  "low": 0.035224,
+                  "high": 0.020708
                 },
                 "evidencePointCount": 2
               }
@@ -45676,8 +45748,26 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.159329,
+                "magnitude": 0.309749,
                 "summary": "3D decreases dominantColorStability"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.246942,
+                "summary": "3D decreases gradientSmoothness"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.09375,
+                "summary": "3D decreases colorDiversity"
+              },
+              {
+                "dimension": "colorTravel",
+                "direction": "decreases",
+                "magnitude": 0.014516,
+                "summary": "3D decreases colorTravel"
               },
               {
                 "dimension": "colorRhythm",
@@ -45696,24 +45786,6 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "increases",
                 "magnitude": 0.007756,
                 "summary": "3D increases coverage"
-              },
-              {
-                "dimension": "colorBandDensity",
-                "direction": "increases",
-                "magnitude": 0.007294,
-                "summary": "3D increases colorBandDensity"
-              },
-              {
-                "dimension": "gradientSmoothness",
-                "direction": "decreases",
-                "magnitude": 0.005955,
-                "summary": "3D decreases gradientSmoothness"
-              },
-              {
-                "dimension": "colorTravel",
-                "direction": "decreases",
-                "magnitude": 0.005551,
-                "summary": "3D decreases colorTravel"
               }
             ],
             "generalization": {
@@ -45735,11 +45807,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011943,
               "meanTemporalBrightnessDelta": 0.011943,
               "meanNonBlankRatio": 0.867244,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.920335,
-              "meanRenderedColorBandDensity": 0.029565,
-              "meanRenderedGradientSmoothness": 0.97586,
-              "meanRenderedTemporalColorTravel": 0.046966,
+              "meanRenderedColorDiversity": 0.28125,
+              "meanRenderedDominantColorStability": 0.690252,
+              "meanRenderedColorBandDensity": 0.022174,
+              "meanRenderedGradientSmoothness": 0.731895,
+              "meanRenderedTemporalColorTravel": 0.035224,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -45765,11 +45837,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.003625,
               "meanTemporalBrightnessDelta": 0.003625,
               "meanNonBlankRatio": 0.875,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.761006,
-              "meanRenderedColorBandDensity": 0.036859,
-              "meanRenderedGradientSmoothness": 0.969905,
-              "meanRenderedTemporalColorTravel": 0.041415,
+              "meanRenderedColorDiversity": 0.1875,
+              "meanRenderedDominantColorStability": 0.380503,
+              "meanRenderedColorBandDensity": 0.01843,
+              "meanRenderedGradientSmoothness": 0.484953,
+              "meanRenderedTemporalColorTravel": 0.020708,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -45877,27 +45949,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.026613,
               "meanTemporalBrightnessDelta": 0.026613,
               "meanNonBlankRatio": 0.724306,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.12069,
+              "meanRenderedDominantColorStability": 0.965517,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.026506,
+              "meanRenderedGradientSmoothness": 0.965517,
+              "meanRenderedTemporalColorTravel": 0.025592,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
+                "3D_false",
                 "forward_motion",
                 "forward_rotation",
-                "multi_spiral",
-                "registry_generated",
-                "spiral_flow",
-                "spiral_pattern",
-                "thick_spiral",
-                "tree_pattern_fit",
                 "medium_spiral",
+                "round_tree_pattern",
                 "single_spiral",
-                "dense_spirals"
+                "spiral_flow",
+                "spiral_motion",
+                "spiral_pattern",
+                "tree_pattern_fit",
+                "decoded_fseq",
+                "multi_spiral"
               ]
             },
             {
@@ -45907,27 +45979,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.023993,
               "meanTemporalBrightnessDelta": 0.023993,
               "meanNonBlankRatio": 0.795066,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.12069,
+              "meanRenderedDominantColorStability": 0.965517,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.024259,
+              "meanRenderedGradientSmoothness": 0.965517,
+              "meanRenderedTemporalColorTravel": 0.023422,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
+                "3D_true",
                 "forward_motion",
                 "forward_rotation",
-                "multi_spiral",
-                "registry_generated",
-                "spiral_flow",
-                "spiral_pattern",
-                "thick_spiral",
-                "tree_pattern_fit",
                 "medium_spiral",
+                "round_tree_pattern",
                 "single_spiral",
-                "dense_spirals"
+                "spiral_flow",
+                "spiral_motion",
+                "spiral_pattern",
+                "tree_pattern_fit",
+                "decoded_fseq",
+                "multi_spiral"
               ]
             }
           ]
@@ -45994,8 +46066,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.362069,
+                  "high": 0.362069
                 },
                 "evidencePointCount": 2
               },
@@ -46003,26 +46075,26 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.798068,
-                  "high": 0.798068
+                  "low": 0.770548,
+                  "high": 0.770548
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "flat",
-                "magnitude": 0.000094,
+                "magnitude": 0.000091,
                 "range": {
-                  "low": 0.037237,
-                  "high": 0.037331
+                  "low": 0.035953,
+                  "high": 0.036044
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "flat",
-                "magnitude": 0.000076,
+                "magnitude": 0.000074,
                 "range": {
-                  "low": 0.969596,
-                  "high": 0.96952
+                  "low": 0.936162,
+                  "high": 0.936088
                 },
                 "evidencePointCount": 2
               },
@@ -46030,8 +46102,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.045816,
-                  "high": 0.045816
+                  "low": 0.044236,
+                  "high": 0.044236
                 },
                 "evidencePointCount": 2
               }
@@ -46057,27 +46129,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.00849,
               "meanTemporalBrightnessDelta": 0.00849,
               "meanNonBlankRatio": 0.96777,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.798068,
-              "meanRenderedColorBandDensity": 0.037331,
-              "meanRenderedGradientSmoothness": 0.96952,
-              "meanRenderedTemporalColorTravel": 0.045816,
+              "meanRenderedColorDiversity": 0.362069,
+              "meanRenderedDominantColorStability": 0.770548,
+              "meanRenderedColorBandDensity": 0.036044,
+              "meanRenderedGradientSmoothness": 0.936088,
+              "meanRenderedTemporalColorTravel": 0.044236,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
+                "3D_true",
                 "forward_motion",
                 "forward_rotation",
-                "multi_spiral",
-                "registry_generated",
-                "spiral_flow",
-                "spiral_pattern",
-                "thick_spiral",
-                "tree_pattern_fit",
                 "medium_spiral",
+                "round_tree_pattern",
                 "single_spiral",
-                "dense_spirals"
+                "spiral_flow",
+                "spiral_motion",
+                "spiral_pattern",
+                "tree_pattern_fit",
+                "decoded_fseq",
+                "multi_spiral"
               ]
             },
             {
@@ -46087,27 +46159,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.008586,
               "meanTemporalBrightnessDelta": 0.008586,
               "meanNonBlankRatio": 0.964541,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.798068,
-              "meanRenderedColorBandDensity": 0.037237,
-              "meanRenderedGradientSmoothness": 0.969596,
-              "meanRenderedTemporalColorTravel": 0.045816,
+              "meanRenderedColorDiversity": 0.362069,
+              "meanRenderedDominantColorStability": 0.770548,
+              "meanRenderedColorBandDensity": 0.035953,
+              "meanRenderedGradientSmoothness": 0.936162,
+              "meanRenderedTemporalColorTravel": 0.044236,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
+                "3D_false",
                 "forward_motion",
                 "forward_rotation",
-                "multi_spiral",
-                "registry_generated",
-                "spiral_flow",
-                "spiral_pattern",
-                "thick_spiral",
-                "tree_pattern_fit",
                 "medium_spiral",
+                "round_tree_pattern",
                 "single_spiral",
-                "dense_spirals"
+                "spiral_flow",
+                "spiral_motion",
+                "spiral_pattern",
+                "tree_pattern_fit",
+                "decoded_fseq",
+                "multi_spiral"
               ]
             }
           ]
@@ -46217,11 +46289,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.03367,
               "meanTemporalBrightnessDelta": 0.03367,
               "meanNonBlankRatio": 0.664988,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.0625,
+              "meanRenderedDominantColorStability": 0.5,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.037736,
+              "meanRenderedGradientSmoothness": 0.5,
+              "meanRenderedTemporalColorTravel": 0.018868,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -46247,11 +46319,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.023125,
               "meanTemporalBrightnessDelta": 0.023125,
               "meanNonBlankRatio": 0.690732,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.09375,
+              "meanRenderedDominantColorStability": 0.75,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.020964,
+              "meanRenderedGradientSmoothness": 0.75,
+              "meanRenderedTemporalColorTravel": 0.015723,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -46331,76 +46403,76 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 2
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.09375,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.28125,
+                  "high": 0.1875
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
-                "direction": "increases",
-                "magnitude": 0.159329,
+                "direction": "decreases",
+                "magnitude": 0.130503,
                 "range": {
-                  "low": 0.840671,
-                  "high": 1
+                  "low": 0.630503,
+                  "high": 0.5
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
-                "direction": "increases",
-                "magnitude": 0.013989,
+                "direction": "flat",
+                "magnitude": 0.000022,
                 "range": {
-                  "low": 0.027891,
-                  "high": 0.04188
+                  "low": 0.020918,
+                  "high": 0.02094
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.011422,
+                "magnitude": 0.250017,
                 "range": {
-                  "low": 0.977227,
-                  "high": 0.965805
+                  "low": 0.73292,
+                  "high": 0.482903
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "increases",
-                "magnitude": 0.042824,
+                "magnitude": 0.012694,
                 "range": {
-                  "low": 0.034872,
-                  "high": 0.077696
+                  "low": 0.026154,
+                  "high": 0.038848
                 },
                 "evidencePointCount": 2
               }
             },
-            "dominantDimension": "dominantColorStability",
+            "dominantDimension": "gradientSmoothness",
             "behaviorRules": [
               {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.250017,
+                "summary": "blend decreases gradientSmoothness"
+              },
+              {
                 "dimension": "dominantColorStability",
-                "direction": "increases",
-                "magnitude": 0.159329,
-                "summary": "blend increases dominantColorStability"
+                "direction": "decreases",
+                "magnitude": 0.130503,
+                "summary": "blend decreases dominantColorStability"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.09375,
+                "summary": "blend decreases colorDiversity"
               },
               {
                 "dimension": "colorTravel",
                 "direction": "increases",
-                "magnitude": 0.042824,
+                "magnitude": 0.012694,
                 "summary": "blend increases colorTravel"
-              },
-              {
-                "dimension": "colorBandDensity",
-                "direction": "increases",
-                "magnitude": 0.013989,
-                "summary": "blend increases colorBandDensity"
-              },
-              {
-                "dimension": "gradientSmoothness",
-                "direction": "decreases",
-                "magnitude": 0.011422,
-                "summary": "blend decreases gradientSmoothness"
               },
               {
                 "dimension": "coverage",
@@ -46440,11 +46512,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011943,
               "meanTemporalBrightnessDelta": 0.011943,
               "meanNonBlankRatio": 0.867244,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.840671,
-              "meanRenderedColorBandDensity": 0.027891,
-              "meanRenderedGradientSmoothness": 0.977227,
-              "meanRenderedTemporalColorTravel": 0.034872,
+              "meanRenderedColorDiversity": 0.28125,
+              "meanRenderedDominantColorStability": 0.630503,
+              "meanRenderedColorBandDensity": 0.020918,
+              "meanRenderedGradientSmoothness": 0.73292,
+              "meanRenderedTemporalColorTravel": 0.026154,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -46470,11 +46542,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.006723,
               "meanTemporalBrightnessDelta": 0.00671,
               "meanNonBlankRatio": 0.875,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 1,
-              "meanRenderedColorBandDensity": 0.04188,
-              "meanRenderedGradientSmoothness": 0.965805,
-              "meanRenderedTemporalColorTravel": 0.077696,
+              "meanRenderedColorDiversity": 0.1875,
+              "meanRenderedDominantColorStability": 0.5,
+              "meanRenderedColorBandDensity": 0.02094,
+              "meanRenderedGradientSmoothness": 0.482903,
+              "meanRenderedTemporalColorTravel": 0.038848,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -46582,11 +46654,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.026613,
               "meanTemporalBrightnessDelta": 0.026613,
               "meanNonBlankRatio": 0.724306,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.12069,
+              "meanRenderedDominantColorStability": 0.965517,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.026506,
+              "meanRenderedGradientSmoothness": 0.965517,
+              "meanRenderedTemporalColorTravel": 0.025592,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -46600,9 +46672,9 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "spiral_flow",
                 "spiral_pattern",
                 "tree_pattern_fit",
-                "thick_spiral",
-                "single_spiral",
-                "dense_spirals"
+                "blend_true",
+                "round_tree_pattern",
+                "single_spiral"
               ]
             },
             {
@@ -46612,11 +46684,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.024443,
               "meanTemporalBrightnessDelta": 0.024443,
               "meanNonBlankRatio": 0.795066,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.12069,
+              "meanRenderedDominantColorStability": 0.965517,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.024259,
+              "meanRenderedGradientSmoothness": 0.965517,
+              "meanRenderedTemporalColorTravel": 0.023422,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -46630,9 +46702,9 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "spiral_pattern",
                 "thick_spiral",
                 "tree_pattern_fit",
+                "blend_false",
                 "medium_spiral",
-                "single_spiral",
-                "dense_spirals"
+                "round_tree_pattern"
               ]
             }
           ]
@@ -46699,8 +46771,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.362069,
+                  "high": 0.362069
                 },
                 "evidencePointCount": 2
               },
@@ -46708,26 +46780,26 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.798068,
-                  "high": 0.798068
+                  "low": 0.770548,
+                  "high": 0.770548
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "flat",
-                "magnitude": 0.000094,
+                "magnitude": 0.000091,
                 "range": {
-                  "low": 0.037331,
-                  "high": 0.037237
+                  "low": 0.036044,
+                  "high": 0.035953
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "flat",
-                "magnitude": 0.000076,
+                "magnitude": 0.000074,
                 "range": {
-                  "low": 0.96952,
-                  "high": 0.969596
+                  "low": 0.936088,
+                  "high": 0.936162
                 },
                 "evidencePointCount": 2
               },
@@ -46735,8 +46807,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.045816,
-                  "high": 0.045816
+                  "low": 0.044236,
+                  "high": 0.044236
                 },
                 "evidencePointCount": 2
               }
@@ -46762,11 +46834,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.008704,
               "meanTemporalBrightnessDelta": 0.008703,
               "meanNonBlankRatio": 0.964541,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.798068,
-              "meanRenderedColorBandDensity": 0.037237,
-              "meanRenderedGradientSmoothness": 0.969596,
-              "meanRenderedTemporalColorTravel": 0.045816,
+              "meanRenderedColorDiversity": 0.362069,
+              "meanRenderedDominantColorStability": 0.770548,
+              "meanRenderedColorBandDensity": 0.035953,
+              "meanRenderedGradientSmoothness": 0.936162,
+              "meanRenderedTemporalColorTravel": 0.044236,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -46780,9 +46852,9 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "spiral_flow",
                 "spiral_pattern",
                 "tree_pattern_fit",
-                "thick_spiral",
-                "single_spiral",
-                "dense_spirals"
+                "blend_true",
+                "round_tree_pattern",
+                "single_spiral"
               ]
             },
             {
@@ -46792,11 +46864,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.008586,
               "meanTemporalBrightnessDelta": 0.008586,
               "meanNonBlankRatio": 0.96777,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.798068,
-              "meanRenderedColorBandDensity": 0.037331,
-              "meanRenderedGradientSmoothness": 0.96952,
-              "meanRenderedTemporalColorTravel": 0.045816,
+              "meanRenderedColorDiversity": 0.362069,
+              "meanRenderedDominantColorStability": 0.770548,
+              "meanRenderedColorBandDensity": 0.036044,
+              "meanRenderedGradientSmoothness": 0.936088,
+              "meanRenderedTemporalColorTravel": 0.044236,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -46810,9 +46882,9 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "spiral_pattern",
                 "thick_spiral",
                 "tree_pattern_fit",
+                "blend_false",
                 "medium_spiral",
-                "single_spiral",
-                "dense_spirals"
+                "round_tree_pattern"
               ]
             }
           ]
@@ -47874,11 +47946,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.112908,
               "meanTemporalBrightnessDelta": 0.112908,
               "meanNonBlankRatio": 0.787754,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.0625,
+              "meanRenderedDominantColorStability": 0.5,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.025157,
+              "meanRenderedGradientSmoothness": 0.5,
+              "meanRenderedTemporalColorTravel": 0.012578,
               "temporalSignatureHints": [
                 "high_motion"
               ],
@@ -47904,11 +47976,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.026269,
               "meanTemporalBrightnessDelta": 0.026269,
               "meanNonBlankRatio": 0.62935,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.09375,
+              "meanRenderedDominantColorStability": 0.75,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.025157,
+              "meanRenderedGradientSmoothness": 0.75,
+              "meanRenderedTemporalColorTravel": 0.018868,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -47988,47 +48060,47 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 2
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.09375,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.28125,
+                  "high": 0.1875
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.159329,
+                "magnitude": 0.309749,
                 "range": {
-                  "low": 0.920335,
-                  "high": 0.761006
+                  "low": 0.690252,
+                  "high": 0.380503
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
-                "direction": "increases",
-                "magnitude": 0.007294,
+                "direction": "flat",
+                "magnitude": 0.003744,
                 "range": {
-                  "low": 0.029565,
-                  "high": 0.036859
+                  "low": 0.022174,
+                  "high": 0.01843
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.005955,
+                "magnitude": 0.246942,
                 "range": {
-                  "low": 0.97586,
-                  "high": 0.969905
+                  "low": 0.731895,
+                  "high": 0.484953
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.005551,
+                "magnitude": 0.014516,
                 "range": {
-                  "low": 0.046966,
-                  "high": 0.041415
+                  "low": 0.035224,
+                  "high": 0.020708
                 },
                 "evidencePointCount": 2
               }
@@ -48038,14 +48110,32 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.159329,
+                "magnitude": 0.309749,
                 "summary": "grow decreases dominantColorStability"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.246942,
+                "summary": "grow decreases gradientSmoothness"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.09375,
+                "summary": "grow decreases colorDiversity"
               },
               {
                 "dimension": "motion",
                 "direction": "increases",
                 "magnitude": 0.017978,
                 "summary": "grow increases motion"
+              },
+              {
+                "dimension": "colorTravel",
+                "direction": "decreases",
+                "magnitude": 0.014516,
+                "summary": "grow decreases colorTravel"
               },
               {
                 "dimension": "colorRhythm",
@@ -48064,24 +48154,6 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "increases",
                 "magnitude": 0.007756,
                 "summary": "grow increases coverage"
-              },
-              {
-                "dimension": "colorBandDensity",
-                "direction": "increases",
-                "magnitude": 0.007294,
-                "summary": "grow increases colorBandDensity"
-              },
-              {
-                "dimension": "gradientSmoothness",
-                "direction": "decreases",
-                "magnitude": 0.005955,
-                "summary": "grow decreases gradientSmoothness"
-              },
-              {
-                "dimension": "colorTravel",
-                "direction": "decreases",
-                "magnitude": 0.005551,
-                "summary": "grow decreases colorTravel"
               }
             ],
             "generalization": {
@@ -48103,11 +48175,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.023418,
               "meanTemporalBrightnessDelta": 0.023418,
               "meanNonBlankRatio": 0.875,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.761006,
-              "meanRenderedColorBandDensity": 0.036859,
-              "meanRenderedGradientSmoothness": 0.969905,
-              "meanRenderedTemporalColorTravel": 0.041415,
+              "meanRenderedColorDiversity": 0.1875,
+              "meanRenderedDominantColorStability": 0.380503,
+              "meanRenderedColorBandDensity": 0.01843,
+              "meanRenderedGradientSmoothness": 0.484953,
+              "meanRenderedTemporalColorTravel": 0.020708,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -48133,11 +48205,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011943,
               "meanTemporalBrightnessDelta": 0.011943,
               "meanNonBlankRatio": 0.867244,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.920335,
-              "meanRenderedColorBandDensity": 0.029565,
-              "meanRenderedGradientSmoothness": 0.97586,
-              "meanRenderedTemporalColorTravel": 0.046966,
+              "meanRenderedColorDiversity": 0.28125,
+              "meanRenderedDominantColorStability": 0.690252,
+              "meanRenderedColorBandDensity": 0.022174,
+              "meanRenderedGradientSmoothness": 0.731895,
+              "meanRenderedTemporalColorTravel": 0.035224,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -48245,11 +48317,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.030341,
               "meanTemporalBrightnessDelta": 0.030341,
               "meanNonBlankRatio": 0.795066,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.12069,
+              "meanRenderedDominantColorStability": 0.965517,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.024259,
+              "meanRenderedGradientSmoothness": 0.965517,
+              "meanRenderedTemporalColorTravel": 0.023422,
               "temporalSignatureHints": [
                 "high_motion"
               ],
@@ -48265,7 +48337,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "tree_pattern_fit",
                 "single_spiral",
                 "dense_spirals",
-                "medium_spiral"
+                "grow_true"
               ]
             },
             {
@@ -48275,11 +48347,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.026613,
               "meanTemporalBrightnessDelta": 0.026613,
               "meanNonBlankRatio": 0.724306,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.12069,
+              "meanRenderedDominantColorStability": 0.965517,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.026506,
+              "meanRenderedGradientSmoothness": 0.965517,
+              "meanRenderedTemporalColorTravel": 0.025592,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -48295,7 +48367,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "tree_pattern_fit",
                 "single_spiral",
                 "dense_spirals",
-                "thick_spiral"
+                "grow_false"
               ]
             }
           ]
@@ -48362,8 +48434,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.362069,
+                  "high": 0.362069
                 },
                 "evidencePointCount": 2
               },
@@ -48371,26 +48443,26 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.798068,
-                  "high": 0.798068
+                  "low": 0.770548,
+                  "high": 0.770548
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
                 "direction": "flat",
-                "magnitude": 0.000094,
+                "magnitude": 0.000091,
                 "range": {
-                  "low": 0.037237,
-                  "high": 0.037331
+                  "low": 0.035953,
+                  "high": 0.036044
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "flat",
-                "magnitude": 0.000076,
+                "magnitude": 0.000074,
                 "range": {
-                  "low": 0.969596,
-                  "high": 0.96952
+                  "low": 0.936162,
+                  "high": 0.936088
                 },
                 "evidencePointCount": 2
               },
@@ -48398,8 +48470,8 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "flat",
                 "magnitude": 0,
                 "range": {
-                  "low": 0.045816,
-                  "high": 0.045816
+                  "low": 0.044236,
+                  "high": 0.044236
                 },
                 "evidencePointCount": 2
               }
@@ -48425,11 +48497,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.009855,
               "meanTemporalBrightnessDelta": 0.009855,
               "meanNonBlankRatio": 0.96777,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.798068,
-              "meanRenderedColorBandDensity": 0.037331,
-              "meanRenderedGradientSmoothness": 0.96952,
-              "meanRenderedTemporalColorTravel": 0.045816,
+              "meanRenderedColorDiversity": 0.362069,
+              "meanRenderedDominantColorStability": 0.770548,
+              "meanRenderedColorBandDensity": 0.036044,
+              "meanRenderedGradientSmoothness": 0.936088,
+              "meanRenderedTemporalColorTravel": 0.044236,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -48445,7 +48517,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "tree_pattern_fit",
                 "single_spiral",
                 "dense_spirals",
-                "medium_spiral"
+                "grow_true"
               ]
             },
             {
@@ -48455,11 +48527,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.008586,
               "meanTemporalBrightnessDelta": 0.008586,
               "meanNonBlankRatio": 0.964541,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.798068,
-              "meanRenderedColorBandDensity": 0.037237,
-              "meanRenderedGradientSmoothness": 0.969596,
-              "meanRenderedTemporalColorTravel": 0.045816,
+              "meanRenderedColorDiversity": 0.362069,
+              "meanRenderedDominantColorStability": 0.770548,
+              "meanRenderedColorBandDensity": 0.035953,
+              "meanRenderedGradientSmoothness": 0.936162,
+              "meanRenderedTemporalColorTravel": 0.044236,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -48475,7 +48547,7 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "tree_pattern_fit",
                 "single_spiral",
                 "dense_spirals",
-                "thick_spiral"
+                "grow_false"
               ]
             }
           ]
@@ -50405,11 +50477,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.116197,
               "meanTemporalBrightnessDelta": 0.116197,
               "meanNonBlankRatio": 0.687461,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.0625,
+              "meanRenderedDominantColorStability": 0.5,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.025157,
+              "meanRenderedGradientSmoothness": 0.5,
+              "meanRenderedTemporalColorTravel": 0.012578,
               "temporalSignatureHints": [
                 "high_motion"
               ],
@@ -50435,11 +50507,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.026269,
               "meanTemporalBrightnessDelta": 0.026269,
               "meanNonBlankRatio": 0.679496,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.09375,
+              "meanRenderedDominantColorStability": 0.75,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.025157,
+              "meanRenderedGradientSmoothness": 0.75,
+              "meanRenderedTemporalColorTravel": 0.018868,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -50519,47 +50591,47 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 2
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.09375,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.28125,
+                  "high": 0.1875
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.159329,
+                "magnitude": 0.309749,
                 "range": {
-                  "low": 0.920335,
-                  "high": 0.761006
+                  "low": 0.690252,
+                  "high": 0.380503
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
-                "direction": "increases",
-                "magnitude": 0.007294,
+                "direction": "flat",
+                "magnitude": 0.003744,
                 "range": {
-                  "low": 0.029565,
-                  "high": 0.036859
+                  "low": 0.022174,
+                  "high": 0.01843
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
                 "direction": "decreases",
-                "magnitude": 0.005955,
+                "magnitude": 0.246942,
                 "range": {
-                  "low": 0.97586,
-                  "high": 0.969905
+                  "low": 0.731895,
+                  "high": 0.484953
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
                 "direction": "decreases",
-                "magnitude": 0.005551,
+                "magnitude": 0.014516,
                 "range": {
-                  "low": 0.046966,
-                  "high": 0.041415
+                  "low": 0.035224,
+                  "high": 0.020708
                 },
                 "evidencePointCount": 2
               }
@@ -50569,14 +50641,32 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               {
                 "dimension": "dominantColorStability",
                 "direction": "decreases",
-                "magnitude": 0.159329,
+                "magnitude": 0.309749,
                 "summary": "shrink decreases dominantColorStability"
+              },
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.246942,
+                "summary": "shrink decreases gradientSmoothness"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.09375,
+                "summary": "shrink decreases colorDiversity"
               },
               {
                 "dimension": "motion",
                 "direction": "increases",
                 "magnitude": 0.015825,
                 "summary": "shrink increases motion"
+              },
+              {
+                "dimension": "colorTravel",
+                "direction": "decreases",
+                "magnitude": 0.014516,
+                "summary": "shrink decreases colorTravel"
               },
               {
                 "dimension": "colorRhythm",
@@ -50595,24 +50685,6 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "direction": "increases",
                 "magnitude": 0.007756,
                 "summary": "shrink increases coverage"
-              },
-              {
-                "dimension": "colorBandDensity",
-                "direction": "increases",
-                "magnitude": 0.007294,
-                "summary": "shrink increases colorBandDensity"
-              },
-              {
-                "dimension": "gradientSmoothness",
-                "direction": "decreases",
-                "magnitude": 0.005955,
-                "summary": "shrink decreases gradientSmoothness"
-              },
-              {
-                "dimension": "colorTravel",
-                "direction": "decreases",
-                "magnitude": 0.005551,
-                "summary": "shrink decreases colorTravel"
               }
             ],
             "generalization": {
@@ -50634,11 +50706,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.021745,
               "meanTemporalBrightnessDelta": 0.021745,
               "meanNonBlankRatio": 0.875,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.761006,
-              "meanRenderedColorBandDensity": 0.036859,
-              "meanRenderedGradientSmoothness": 0.969905,
-              "meanRenderedTemporalColorTravel": 0.041415,
+              "meanRenderedColorDiversity": 0.1875,
+              "meanRenderedDominantColorStability": 0.380503,
+              "meanRenderedColorBandDensity": 0.01843,
+              "meanRenderedGradientSmoothness": 0.484953,
+              "meanRenderedTemporalColorTravel": 0.020708,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
@@ -50664,11 +50736,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.011943,
               "meanTemporalBrightnessDelta": 0.011943,
               "meanNonBlankRatio": 0.867244,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.920335,
-              "meanRenderedColorBandDensity": 0.029565,
-              "meanRenderedGradientSmoothness": 0.97586,
-              "meanRenderedTemporalColorTravel": 0.046966,
+              "meanRenderedColorDiversity": 0.28125,
+              "meanRenderedDominantColorStability": 0.690252,
+              "meanRenderedColorBandDensity": 0.022174,
+              "meanRenderedGradientSmoothness": 0.731895,
+              "meanRenderedTemporalColorTravel": 0.035224,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -50794,27 +50866,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.08585,
               "meanTemporalBrightnessDelta": 0.08585,
               "meanNonBlankRatio": 0.767016,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.083333,
+              "meanRenderedDominantColorStability": 0.666667,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.025157,
+              "meanRenderedGradientSmoothness": 0.666667,
+              "meanRenderedTemporalColorTravel": 0.016771,
               "temporalSignatureHints": [
                 "high_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
                 "forward_motion",
                 "forward_rotation",
-                "multi_spiral",
-                "registry_generated",
-                "spiral_flow",
-                "spiral_pattern",
-                "thick_spiral",
-                "tree_pattern_fit",
                 "medium_spiral",
                 "round_tree_pattern",
-                "shrink_true"
+                "shrink_true",
+                "single_spiral",
+                "spiral_flow",
+                "spiral_motion",
+                "spiral_pattern",
+                "tree_pattern_fit",
+                "decoded_fseq",
+                "multi_spiral"
               ]
             },
             {
@@ -50824,11 +50896,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.025468,
               "meanTemporalBrightnessDelta": 0.025468,
               "meanNonBlankRatio": 0.759286,
-              "meanRenderedColorDiversity": 0.125,
-              "meanRenderedDominantColorStability": 1,
+              "meanRenderedColorDiversity": 0.122727,
+              "meanRenderedDominantColorStability": 0.981818,
               "meanRenderedColorBandDensity": 0,
-              "meanRenderedGradientSmoothness": 1,
-              "meanRenderedTemporalColorTravel": 0.025391,
+              "meanRenderedGradientSmoothness": 0.981818,
+              "meanRenderedTemporalColorTravel": 0.024929,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],
@@ -50908,53 +50980,71 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "evidencePointCount": 2
               },
               "colorDiversity": {
-                "direction": "flat",
-                "magnitude": 0,
+                "direction": "decreases",
+                "magnitude": 0.118182,
                 "range": {
-                  "low": 0.375,
-                  "high": 0.375
+                  "low": 0.368182,
+                  "high": 0.25
                 },
                 "evidencePointCount": 2
               },
               "dominantColorStability": {
                 "direction": "decreases",
-                "magnitude": 0.038435,
+                "magnitude": 0.277568,
                 "range": {
-                  "low": 0.799441,
-                  "high": 0.761006
+                  "low": 0.784905,
+                  "high": 0.507337
                 },
                 "evidencePointCount": 2
               },
               "colorBandDensity": {
-                "direction": "flat",
-                "magnitude": 0.000441,
+                "direction": "decreases",
+                "magnitude": 0.012048,
                 "range": {
-                  "low": 0.0373,
-                  "high": 0.036859
+                  "low": 0.036621,
+                  "high": 0.024573
                 },
                 "evidencePointCount": 2
               },
               "gradientSmoothness": {
-                "direction": "flat",
-                "magnitude": 0.00036,
+                "direction": "decreases",
+                "magnitude": 0.305314,
                 "range": {
-                  "low": 0.969545,
-                  "high": 0.969905
+                  "low": 0.951917,
+                  "high": 0.646603
                 },
                 "evidencePointCount": 2
               },
               "colorTravel": {
-                "direction": "flat",
-                "magnitude": 0.004564,
+                "direction": "decreases",
+                "magnitude": 0.017533,
                 "range": {
-                  "low": 0.045979,
-                  "high": 0.041415
+                  "low": 0.045143,
+                  "high": 0.02761
                 },
                 "evidencePointCount": 2
               }
             },
-            "dominantDimension": "coverage",
+            "dominantDimension": "gradientSmoothness",
             "behaviorRules": [
+              {
+                "dimension": "gradientSmoothness",
+                "direction": "decreases",
+                "magnitude": 0.305314,
+                "summary": "shrink decreases gradientSmoothness"
+              },
+              {
+                "dimension": "dominantColorStability",
+                "direction": "decreases",
+                "magnitude": 0.277568,
+                "summary": "shrink decreases dominantColorStability"
+              },
+              {
+                "dimension": "colorDiversity",
+                "direction": "decreases",
+                "magnitude": 0.118182,
+                "summary": "shrink decreases colorDiversity"
+              },
               {
                 "dimension": "coverage",
                 "direction": "decreases",
@@ -50962,10 +51052,16 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
                 "summary": "shrink decreases coverage"
               },
               {
-                "dimension": "dominantColorStability",
+                "dimension": "colorTravel",
                 "direction": "decreases",
-                "magnitude": 0.038435,
-                "summary": "shrink decreases dominantColorStability"
+                "magnitude": 0.017533,
+                "summary": "shrink decreases colorTravel"
+              },
+              {
+                "dimension": "colorBandDensity",
+                "direction": "decreases",
+                "magnitude": 0.012048,
+                "summary": "shrink decreases colorBandDensity"
               },
               {
                 "dimension": "motion",
@@ -51005,27 +51101,27 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.014497,
               "meanTemporalBrightnessDelta": 0.014497,
               "meanNonBlankRatio": 0.916667,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.761006,
-              "meanRenderedColorBandDensity": 0.036859,
-              "meanRenderedGradientSmoothness": 0.969905,
-              "meanRenderedTemporalColorTravel": 0.041415,
+              "meanRenderedColorDiversity": 0.25,
+              "meanRenderedDominantColorStability": 0.507337,
+              "meanRenderedColorBandDensity": 0.024573,
+              "meanRenderedGradientSmoothness": 0.646603,
+              "meanRenderedTemporalColorTravel": 0.02761,
               "temporalSignatureHints": [
                 "moderate_motion"
               ],
               "behaviorHints": [
-                "decoded_fseq",
                 "forward_motion",
                 "forward_rotation",
-                "multi_spiral",
-                "registry_generated",
-                "spiral_flow",
-                "spiral_pattern",
-                "thick_spiral",
-                "tree_pattern_fit",
                 "medium_spiral",
                 "round_tree_pattern",
-                "shrink_true"
+                "shrink_true",
+                "single_spiral",
+                "spiral_flow",
+                "spiral_motion",
+                "spiral_pattern",
+                "tree_pattern_fit",
+                "decoded_fseq",
+                "multi_spiral"
               ]
             },
             {
@@ -51035,11 +51131,11 @@ export const DERIVED_PARAMETER_PRIORS_BUNDLE = {
               "meanTemporalColorDelta": 0.008872,
               "meanTemporalBrightnessDelta": 0.008872,
               "meanNonBlankRatio": 0.968855,
-              "meanRenderedColorDiversity": 0.375,
-              "meanRenderedDominantColorStability": 0.799441,
-              "meanRenderedColorBandDensity": 0.0373,
-              "meanRenderedGradientSmoothness": 0.969545,
-              "meanRenderedTemporalColorTravel": 0.045979,
+              "meanRenderedColorDiversity": 0.368182,
+              "meanRenderedDominantColorStability": 0.784905,
+              "meanRenderedColorBandDensity": 0.036621,
+              "meanRenderedGradientSmoothness": 0.951917,
+              "meanRenderedTemporalColorTravel": 0.045143,
               "temporalSignatureHints": [
                 "subtle_motion"
               ],

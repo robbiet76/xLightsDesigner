@@ -35,10 +35,10 @@
       "runtimeConsumable": false
     },
     {
-      "id": "promoted_effect_screening_records",
-      "match": { "prefixes": ["effect-screening-records/"] },
+      "id": "promoted_effect_screening_record_packs",
+      "match": { "prefixes": ["effect-screening-record-packs/"] },
       "lifecycle": "promoted_evidence",
-      "role": "durable promoted render-screening records after learning-gate approval",
+      "role": "compact durable promoted render-screening record packs after learning-gate approval",
       "runtimeConsumable": false
     },
     {
@@ -70,8 +70,7 @@
           "effect-sampling-audit-v1.json",
           "effect-settings-coverage-report-v1.json",
           "effect-training-automation-plan-v1.json"
-        ],
-        "prefixes": ["effect-training-dossiers/"]
+        ]
       },
       "lifecycle": "report",
       "role": "generated planning, audit, and review outputs",
@@ -91,4 +90,3 @@
     "rawRunLogsRuntimeConsumable": false
   }
 }
-

@@ -2,6 +2,7 @@
 
 import { existsSync, readdirSync, readFileSync, writeFileSync, statSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
+import { loadScreeningRecordCatalog } from "./screening-record-catalog.mjs";
 
 function argValue(name, fallback = "") {
   const index = process.argv.indexOf(name);
@@ -79,9 +80,8 @@ function compactRecord(record = null) {
 
 function loadExistingSampleIds(existingRecordsDir) {
   const ids = new Set();
-  for (const filePath of listRecordFiles(existingRecordsDir)) {
-    const record = readJson(filePath, null);
-    const sampleId = sampleIdFromExistingRecord(filePath, record);
+  for (const record of loadScreeningRecordCatalog(existingRecordsDir)) {
+    const sampleId = sampleIdFromExistingRecord("", record);
     if (sampleId) ids.add(sampleId);
   }
   return ids;
@@ -166,7 +166,7 @@ function paletteRepresentativeClass(paletteMode = "") {
 
 const runRoot = resolve(argValue("--run-root", "."));
 const trainingSetPath = argValue("--training-set", "");
-const existingRecordsDir = resolve(argValue("--existing-records-dir", "scripts/sequencer-render-training/catalog/effect-screening-records"));
+const existingRecordsDir = resolve(argValue("--existing-records-dir", "scripts/sequencer-render-training/catalog/effect-screening-record-packs"));
 const outPath = resolve(argValue("--out", join(runRoot, "learning-gate.json")));
 
 const records = loadRecordRows(runRoot);

@@ -162,7 +162,7 @@ The planner must evaluate both sequence-file effect usage diagnostics and render
 6. Harvest render outputs into screening records and supporting reports.
 7. Rebuild the unified training set, settings coverage report, behavior capability records, derived parameter priors, and shared-setting priors in a staging area.
 8. Evaluate retrieval and selector-facing behavior against fixed cases and current benchmark gaps.
-9. Promote generated bundles only when `--promote` is supplied and acceptance gates pass. Promotion must first copy the passing run's new screening records into `scripts/sequencer-render-training/catalog/effect-screening-records/`, refuse to overwrite different existing records, and then rebuild repo-facing catalogs and generated bundles from the durable catalog.
+9. Promote generated bundles only when `--promote` is supplied and acceptance gates pass. Promotion must stage the passing run's new screening records, rebuild `scripts/sequencer-render-training/catalog/effect-screening-record-packs/`, and then rebuild repo-facing catalogs and generated bundles from the durable catalog.
 10. Write a summary that includes the benchmark input, raw run artifacts, generated record counts, changed bundle sources, eval results, and remaining gaps.
 
 ## Promotion Rules

@@ -23,5 +23,6 @@ test("build-effect-training-dossiers emits one dossier per effect with current e
   assert.equal(shockwave.effectName, "Shockwave");
   assert.ok(Array.isArray(shockwave.currentCoverage.registryParameterNames));
   assert.ok(Array.isArray(shockwave.interactionCoverage.interactionManifestNames));
-  assert.ok(Array.isArray(shockwave.evidenceIndex.screeningRecordPaths));
+  assert.ok(Array.isArray(shockwave.evidenceIndex.screeningRecordPackFiles));
+  assert.ok(shockwave.evidenceIndex.screeningRecordCount > 0);
 });

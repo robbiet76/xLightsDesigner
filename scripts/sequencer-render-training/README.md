@@ -53,6 +53,7 @@ Primary system roadmap:
 - `catalog/training-standards.json`
 - `catalog/sequencer-unified-training-set-v1.json`
 - `catalog/effect-family-outcomes/`
+- `catalog/effect-screening-record-packs/`
 - `catalog/effect-settings-coverage-report-v1.json`
 - `catalog/effect-training-automation-plan-v1.json`
 - `catalog/effect-parameter-screening-plan-v1.json`
@@ -93,6 +94,7 @@ Primary system roadmap:
 - `tooling/resolve-controlled-designer-term.py`
 - `analysis/analyze_decoded_window.py`
 - `tooling/validate-training-catalog-inventory.mjs`
+- `tooling/pack-effect-screening-records.mjs`
 
 ## Usage
 
@@ -388,3 +390,5 @@ bash scripts/sequencer-render-training/runners/run-sequencer-training-reset-cycl
 ```bash
 node scripts/sequencer-render-training/tooling/build-effect-training-dossiers.mjs
 ```
+
+Generated effect-training dossiers should be treated as run artifacts. They are not checked into the durable catalog.

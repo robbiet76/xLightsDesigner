@@ -1,0 +1,155 @@
+{
+  "artifactType": "effect_screening_record_pack_index_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-30T20:06:35.093Z",
+  "source": "scripts/sequencer-render-training/catalog/effect-screening-record-packs",
+  "compactionPolicy": "promoted_runtime_training_evidence_without_raw_frame_payloads_or_artifact_paths",
+  "recordCount": 2446,
+  "packCount": 18,
+  "packs": [
+    {
+      "effectSlug": "bars",
+      "fileName": "bars.records.jsonl",
+      "recordCount": 124,
+      "effectNames": [
+        "Bars"
+      ]
+    },
+    {
+      "effectSlug": "butterfly",
+      "fileName": "butterfly.records.jsonl",
+      "recordCount": 48,
+      "effectNames": [
+        "Butterfly"
+      ]
+    },
+    {
+      "effectSlug": "circles",
+      "fileName": "circles.records.jsonl",
+      "recordCount": 60,
+      "effectNames": [
+        "Circles"
+      ]
+    },
+    {
+      "effectSlug": "color-wash",
+      "fileName": "color-wash.records.jsonl",
+      "recordCount": 194,
+      "effectNames": [
+        "Color Wash"
+      ]
+    },
+    {
+      "effectSlug": "fire",
+      "fileName": "fire.records.jsonl",
+      "recordCount": 56,
+      "effectNames": [
+        "Fire"
+      ]
+    },
+    {
+      "effectSlug": "fireworks",
+      "fileName": "fireworks.records.jsonl",
+      "recordCount": 60,
+      "effectNames": [
+        "Fireworks"
+      ]
+    },
+    {
+      "effectSlug": "lightning",
+      "fileName": "lightning.records.jsonl",
+      "recordCount": 48,
+      "effectNames": [
+        "Lightning"
+      ]
+    },
+    {
+      "effectSlug": "marquee",
+      "fileName": "marquee.records.jsonl",
+      "recordCount": 86,
+      "effectNames": [
+        "Marquee"
+      ]
+    },
+    {
+      "effectSlug": "on",
+      "fileName": "on.records.jsonl",
+      "recordCount": 36,
+      "effectNames": [
+        "On"
+      ]
+    },
+    {
+      "effectSlug": "pinwheel",
+      "fileName": "pinwheel.records.jsonl",
+      "recordCount": 316,
+      "effectNames": [
+        "Pinwheel"
+      ]
+    },
+    {
+      "effectSlug": "shimmer",
+      "fileName": "shimmer.records.jsonl",
+      "recordCount": 120,
+      "effectNames": [
+        "Shimmer"
+      ]
+    },
+    {
+      "effectSlug": "shockwave",
+      "fileName": "shockwave.records.jsonl",
+      "recordCount": 418,
+      "effectNames": [
+        "Shockwave"
+      ]
+    },
+    {
+      "effectSlug": "singlestrand",
+      "fileName": "singlestrand.records.jsonl",
+      "recordCount": 348,
+      "effectNames": [
+        "SingleStrand"
+      ]
+    },
+    {
+      "effectSlug": "snowflakes",
+      "fileName": "snowflakes.records.jsonl",
+      "recordCount": 60,
+      "effectNames": [
+        "Snowflakes"
+      ]
+    },
+    {
+      "effectSlug": "spirals",
+      "fileName": "spirals.records.jsonl",
+      "recordCount": 152,
+      "effectNames": [
+        "Spirals"
+      ]
+    },
+    {
+      "effectSlug": "strobe",
+      "fileName": "strobe.records.jsonl",
+      "recordCount": 56,
+      "effectNames": [
+        "Strobe"
+      ]
+    },
+    {
+      "effectSlug": "twinkle",
+      "fileName": "twinkle.records.jsonl",
+      "recordCount": 204,
+      "effectNames": [
+        "Twinkle"
+      ]
+    },
+    {
+      "effectSlug": "wave",
+      "fileName": "wave.records.jsonl",
+      "recordCount": 60,
+      "effectNames": [
+        "Wave"
+      ]
+    }
+  ]
+}

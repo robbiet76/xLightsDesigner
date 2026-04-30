@@ -1,5 +1,6 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
+import { loadScreeningRecordCatalog } from "./screening-record-catalog.mjs";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -15,7 +16,7 @@ function loadJson(path) {
 
 const outputDir = process.argv[2]
   ? resolve(process.argv[2])
-  : resolve("scripts/sequencer-render-training/catalog/effect-training-dossiers");
+  : resolve("var/logs/sequencer-render-training/generated-effect-training-dossiers");
 const unifiedPath = process.argv[3]
   ? resolve(process.argv[3])
   : resolve("scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json");
@@ -40,7 +41,21 @@ try {
 }
 
 const manifestsDir = resolve("scripts/sequencer-render-training/manifests");
-const recordsDir = resolve("scripts/sequencer-render-training/catalog/effect-screening-records");
+const recordsDir = resolve("scripts/sequencer-render-training/catalog/effect-screening-record-packs");
+const screeningRecordSummaryByEffect = new Map();
+for (const record of loadScreeningRecordCatalog(recordsDir)) {
+  const effectKey = slug(record?.effectName);
+  if (!effectKey) continue;
+  if (!screeningRecordSummaryByEffect.has(effectKey)) {
+    screeningRecordSummaryByEffect.set(effectKey, {
+      count: 0,
+      packFiles: new Set()
+    });
+  }
+  const summary = screeningRecordSummaryByEffect.get(effectKey);
+  summary.count += 1;
+  summary.packFiles.add(`${effectKey}.records.jsonl`);
+}
 
 const unifiedByName = new Map((Array.isArray(unified?.effects) ? unified.effects : []).map((row) => [str(row.effectName), row]));
 const coverageByName = new Map((Array.isArray(coverage?.effects) ? coverage.effects : []).map((row) => [str(row.effectName), row]));
@@ -64,11 +79,13 @@ function listManifestsForEffect(effectName = "") {
   };
 }
 
-function listScreeningRecordsForEffect(effectName = "") {
+function screeningRecordSummaryForEffect(effectName = "") {
   const key = slug(effectName);
-  return readdirSync(recordsDir)
-    .filter((name) => name.endsWith(".record.json") && name.startsWith(key + "-"))
-    .sort((a, b) => a.localeCompare(b));
+  const summary = screeningRecordSummaryByEffect.get(key);
+  return {
+    count: Number(summary?.count || 0),
+    packFiles: [...(summary?.packFiles || [])].sort((a, b) => a.localeCompare(b))
+  };
 }
 
 mkdirSync(outputDir, { recursive: true });
@@ -80,7 +97,7 @@ for (const effectName of effectNames) {
   const registryEffect = registry?.effects?.[effectName] || {};
   const interactionEffect = interactionByName.get(effectName) || {};
   const manifests = listManifestsForEffect(effectName);
-  const screeningRecords = listScreeningRecordsForEffect(effectName);
+  const screeningRecords = screeningRecordSummaryForEffect(effectName);
 
   const artifact = {
     artifactType: "effect_training_dossier_v1",
@@ -101,7 +118,7 @@ for (const effectName of effectNames) {
       registryParameterNames: Array.isArray(coverageEffect.registryParameterNames) ? coverageEffect.registryParameterNames : [],
       retainedParameterNames: Array.isArray(coverageEffect.retainedParameterNames) ? coverageEffect.retainedParameterNames : [],
       screenedParameterNames: Array.isArray(coverageEffect.screenedParameterNames) ? coverageEffect.screenedParameterNames : [],
-      screeningRecordCount: screeningRecords.length
+      screeningRecordCount: screeningRecords.count
     },
     upstreamMetadata: {
       sourceFile: str(registryEffect.upstreamSourceFile),
@@ -138,8 +155,8 @@ for (const effectName of effectNames) {
       all: manifests.all
     },
     evidenceIndex: {
-      screeningRecords: screeningRecords,
-      screeningRecordPaths: screeningRecords.map((name) => join(recordsDir, name))
+      screeningRecordCount: screeningRecords.count,
+      screeningRecordPackFiles: screeningRecords.packFiles
     },
     currentTrainingReference: unifiedEffect
   };

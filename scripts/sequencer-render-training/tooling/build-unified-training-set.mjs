@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
-import { resolve, join } from "node:path";
+import { isAbsolute, relative, resolve, join } from "node:path";
 import { createHash } from "node:crypto";
+import { loadScreeningRecordCatalog } from "./screening-record-catalog.mjs";
 
 import { getStage1TrainedEffectBundle } from "../../../apps/xlightsdesigner-ui/agent/sequence-agent/trained-effect-knowledge.js";
 import { getEffectIntentCapability } from "../../../apps/xlightsdesigner-ui/agent/sequence-agent/effect-intent-capabilities.js";
@@ -126,6 +127,14 @@ function slug(value = "") {
   return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
+function repoRelativePath(value = "") {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  const relativePath = relative(process.cwd(), resolve(normalized));
+  if (!relativePath || relativePath.startsWith("..") || isAbsolute(relativePath)) return normalized;
+  return relativePath;
+}
+
 function loadOutcomeRecords(recordsDirPath) {
   if (!existsSync(recordsDirPath)) return [];
   return listJsonFiles(recordsDirPath)
@@ -140,16 +149,7 @@ function loadOutcomeRecords(recordsDirPath) {
 }
 
 function loadScreeningRecords(recordsDirPath) {
-  if (!existsSync(recordsDirPath)) return [];
-  return listJsonFiles(recordsDirPath)
-    .map((filePath) => {
-      try {
-        return compactScreeningRecord(JSON.parse(readFileSync(filePath, "utf8")));
-      } catch {
-        return null;
-      }
-    })
-    .filter((row) => row && row.recordVersion === "1.0" && String(row?.effectName || "").trim());
+  return loadScreeningRecordCatalog(recordsDirPath, { compactRecord: compactScreeningRecord });
 }
 
 function listJsonFiles(dirPath) {
@@ -1067,7 +1067,7 @@ function buildTrainingSet() {
     : resolve("scripts/sequencer-render-training/catalog/effect-family-outcomes");
   const screeningRecordsDirPath = process.argv[4]
     ? resolve(process.argv[4])
-    : resolve("scripts/sequencer-render-training/catalog/effect-screening-records");
+    : resolve("scripts/sequencer-render-training/catalog/effect-screening-record-packs");
   const outcomeRecords = loadOutcomeRecords(recordsDirPath);
   const screeningRecords = loadScreeningRecords(screeningRecordsDirPath);
   const effectNames = [...new Set([
@@ -1102,7 +1102,7 @@ function buildTrainingSet() {
           ? `${outcomeRecords.length} durable general-training outcome records loaded`
           : "seed priors loaded; no harvested durable outcome records yet",
         legacyHeuristicSeedSource: "sequence-agent revision-role family routing",
-        outcomeRecordDirectory: recordsDirPath
+        outcomeRecordDirectory: repoRelativePath(recordsDirPath)
       },
       screeningLearning: {
         status: screeningRecords.length ? "framework_with_screening_records" : "framework_without_screening_records",
@@ -1115,7 +1115,7 @@ function buildTrainingSet() {
         currentPopulation: screeningRecords.length
           ? `${screeningRecords.length} durable general-training screening records loaded`
           : "no harvested screening records yet",
-        screeningRecordDirectory: screeningRecordsDirPath
+        screeningRecordDirectory: repoRelativePath(screeningRecordsDirPath)
       }
     },
     boundaries: {

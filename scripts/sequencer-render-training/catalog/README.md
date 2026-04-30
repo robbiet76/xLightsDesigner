@@ -34,3 +34,14 @@ node scripts/sequencer-render-training/tooling/validate-training-catalog-invento
 
 The checked-in runtime bundles under `apps/xlightsdesigner-ui/agent/sequence-agent/generated/` are generated artifacts. They should carry provenance and be regenerated from this catalog layer. Do not hand-edit them.
 
+## Promoted Screening Evidence
+
+Promoted effect-screening records are stored as compact JSONL packs in:
+
+- `effect-screening-record-packs/`
+
+The old one-file-per-record layout was intentionally removed because it created thousands of files and retained raw frame payloads that are not needed for durable learning. Use `pack-effect-screening-records.mjs` to rebuild the packs from loose records or mixed pack/staging inputs.
+
+## Generated Reports
+
+Effect-training dossiers are no longer checked into the catalog. Generate them on demand with `build-effect-training-dossiers.mjs` into a run artifact directory when a detailed per-effect review is needed.

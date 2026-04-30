@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 
 const dossierDir = process.argv[2]
   ? resolve(process.argv[2])
-  : resolve("scripts/sequencer-render-training/catalog/effect-training-dossiers");
+  : resolve("var/logs/sequencer-render-training/generated-effect-training-dossiers");
 const outputPath = process.argv[3]
   ? resolve(process.argv[3])
   : resolve(join(dossierDir, "effect-training-learnings-summary.md"));

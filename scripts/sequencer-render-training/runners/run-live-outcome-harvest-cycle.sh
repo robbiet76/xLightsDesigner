@@ -39,7 +39,7 @@ node "${ROOT_DIR}/tooling/harvest-effect-outcome-records.mjs" \
 node "${ROOT_DIR}/tooling/build-unified-training-set.mjs" \
   "${TRAINING_SET_PATH}" \
   "${OUT_DIR}" \
-  "${ROOT_DIR}/catalog/effect-screening-records"
+  "${ROOT_DIR}/catalog/effect-screening-record-packs"
 
 node "${ROOT_DIR}/tooling/export-derived-parameter-priors-bundle.mjs" \
   --input "${TRAINING_SET_PATH}" \

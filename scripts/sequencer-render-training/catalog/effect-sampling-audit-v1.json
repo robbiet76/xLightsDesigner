@@ -1,20 +1,20 @@
 {
   "artifactType": "effect_sampling_audit_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-28T14:23:54.663Z",
+  "generatedAt": "2026-04-30T20:08:43.238Z",
   "summary": {
     "effectCount": 18,
     "parameterCount": 104,
     "statusCounts": {
-      "causal_ready": 66,
+      "causal_ready": 65,
       "missing": 16,
       "needs_anchor_completion": 4,
-      "needs_causal_anchor_confirmation": 3,
+      "needs_causal_anchor_confirmation": 4,
       "observed_flat_or_inconclusive": 12,
       "under_sampled": 3
     },
-    "nextSamplingQueueCount": 38,
-    "currentEffectQueueCount": 22,
+    "nextSamplingQueueCount": 39,
+    "currentEffectQueueCount": 23,
     "newEffectExpansionQueueCount": 16,
     "paletteModes": [
       "mono_white",
@@ -436,6 +436,25 @@
       "importance": "low",
       "practicalPriority": "",
       "stopRule": "do_not_expand_without_signal"
+    },
+    {
+      "effectName": "Spirals",
+      "parameterName": "3D",
+      "status": "needs_causal_anchor_confirmation",
+      "score": 91,
+      "recommendation": "convert interaction finding into one-parameter focused anchors",
+      "expectedAnchors": [
+        "false",
+        "true"
+      ],
+      "observedFocusedAnchors": [],
+      "missingFocusedAnchors": [
+        "false",
+        "true"
+      ],
+      "importance": "medium",
+      "practicalPriority": "medium",
+      "stopRule": "all_meaningful_options"
     },
     {
       "effectName": "SingleStrand",
@@ -977,6 +996,25 @@
       "importance": "high",
       "practicalPriority": "high",
       "stopRule": "refine_only_near_breakpoints"
+    },
+    {
+      "effectName": "Spirals",
+      "parameterName": "3D",
+      "status": "needs_causal_anchor_confirmation",
+      "score": 91,
+      "recommendation": "convert interaction finding into one-parameter focused anchors",
+      "expectedAnchors": [
+        "false",
+        "true"
+      ],
+      "observedFocusedAnchors": [],
+      "missingFocusedAnchors": [
+        "false",
+        "true"
+      ],
+      "importance": "medium",
+      "practicalPriority": "medium",
+      "stopRule": "all_meaningful_options"
     },
     {
       "effectName": "SingleStrand",
@@ -9841,8 +9879,8 @@
       "complexityClass": "complex",
       "parameterCount": 8,
       "statusCounts": {
-        "needs_causal_anchor_confirmation": 2,
-        "causal_ready": 6
+        "needs_causal_anchor_confirmation": 3,
+        "causal_ready": 5
       },
       "topSamplingNeeds": [
         {
@@ -10060,6 +10098,102 @@
           "status": "needs_causal_anchor_confirmation",
           "recommendation": "convert interaction finding into one-parameter focused anchors",
           "score": 103
+        },
+        {
+          "effectName": "Spirals",
+          "parameterName": "3D",
+          "parameterType": "boolean",
+          "importance": "medium",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "expectedAnchors": [
+            "false",
+            "true"
+          ],
+          "observedFocusedAnchors": [],
+          "missingFocusedAnchors": [
+            "false",
+            "true"
+          ],
+          "paletteSummaries": [
+            {
+              "parameterName": "3D",
+              "paletteMode": "mono_white",
+              "geometryProfile": "tree_360_round",
+              "evidenceClass": "interaction_only",
+              "sampleCount": 6,
+              "distinctAnchorCount": 2,
+              "behaviorRuleCount": 3,
+              "blankRecordShare": 0,
+              "observedAnchorValues": [
+                "false",
+                "true"
+              ],
+              "dominantDimensions": [
+                "coverage",
+                "colorRhythm",
+                "brightnessRhythm"
+              ]
+            },
+            {
+              "parameterName": "3D",
+              "paletteMode": "mono_white",
+              "geometryProfile": "tree_flat_single_layer",
+              "evidenceClass": "legacy_or_unknown",
+              "sampleCount": 58,
+              "distinctAnchorCount": 2,
+              "behaviorRuleCount": 1,
+              "blankRecordShare": 0,
+              "observedAnchorValues": [
+                "false",
+                "true"
+              ],
+              "dominantDimensions": [
+                "coverage"
+              ]
+            },
+            {
+              "parameterName": "3D",
+              "paletteMode": "rgb_primary",
+              "geometryProfile": "tree_360_round",
+              "evidenceClass": "interaction_only",
+              "sampleCount": 6,
+              "distinctAnchorCount": 2,
+              "behaviorRuleCount": 7,
+              "blankRecordShare": 0,
+              "observedAnchorValues": [
+                "false",
+                "true"
+              ],
+              "dominantDimensions": [
+                "dominantColorStability",
+                "colorRhythm",
+                "brightnessRhythm",
+                "coverage",
+                "colorBandDensity",
+                "gradientSmoothness",
+                "colorTravel"
+              ]
+            },
+            {
+              "parameterName": "3D",
+              "paletteMode": "rgb_primary",
+              "geometryProfile": "tree_flat_single_layer",
+              "evidenceClass": "legacy_or_unknown",
+              "sampleCount": 58,
+              "distinctAnchorCount": 2,
+              "behaviorRuleCount": 0,
+              "blankRecordShare": 0,
+              "observedAnchorValues": [
+                "false",
+                "true"
+              ],
+              "dominantDimensions": []
+            }
+          ],
+          "status": "needs_causal_anchor_confirmation",
+          "recommendation": "convert interaction finding into one-parameter focused anchors",
+          "score": 91
         }
       ],
       "parameters": [
@@ -10278,6 +10412,102 @@
           "status": "needs_causal_anchor_confirmation",
           "recommendation": "convert interaction finding into one-parameter focused anchors",
           "score": 103
+        },
+        {
+          "effectName": "Spirals",
+          "parameterName": "3D",
+          "parameterType": "boolean",
+          "importance": "medium",
+          "practicalPriority": "medium",
+          "stopRule": "all_meaningful_options",
+          "expectedAnchors": [
+            "false",
+            "true"
+          ],
+          "observedFocusedAnchors": [],
+          "missingFocusedAnchors": [
+            "false",
+            "true"
+          ],
+          "paletteSummaries": [
+            {
+              "parameterName": "3D",
+              "paletteMode": "mono_white",
+              "geometryProfile": "tree_360_round",
+              "evidenceClass": "interaction_only",
+              "sampleCount": 6,
+              "distinctAnchorCount": 2,
+              "behaviorRuleCount": 3,
+              "blankRecordShare": 0,
+              "observedAnchorValues": [
+                "false",
+                "true"
+              ],
+              "dominantDimensions": [
+                "coverage",
+                "colorRhythm",
+                "brightnessRhythm"
+              ]
+            },
+            {
+              "parameterName": "3D",
+              "paletteMode": "mono_white",
+              "geometryProfile": "tree_flat_single_layer",
+              "evidenceClass": "legacy_or_unknown",
+              "sampleCount": 58,
+              "distinctAnchorCount": 2,
+              "behaviorRuleCount": 1,
+              "blankRecordShare": 0,
+              "observedAnchorValues": [
+                "false",
+                "true"
+              ],
+              "dominantDimensions": [
+                "coverage"
+              ]
+            },
+            {
+              "parameterName": "3D",
+              "paletteMode": "rgb_primary",
+              "geometryProfile": "tree_360_round",
+              "evidenceClass": "interaction_only",
+              "sampleCount": 6,
+              "distinctAnchorCount": 2,
+              "behaviorRuleCount": 7,
+              "blankRecordShare": 0,
+              "observedAnchorValues": [
+                "false",
+                "true"
+              ],
+              "dominantDimensions": [
+                "dominantColorStability",
+                "colorRhythm",
+                "brightnessRhythm",
+                "coverage",
+                "colorBandDensity",
+                "gradientSmoothness",
+                "colorTravel"
+              ]
+            },
+            {
+              "parameterName": "3D",
+              "paletteMode": "rgb_primary",
+              "geometryProfile": "tree_flat_single_layer",
+              "evidenceClass": "legacy_or_unknown",
+              "sampleCount": 58,
+              "distinctAnchorCount": 2,
+              "behaviorRuleCount": 0,
+              "blankRecordShare": 0,
+              "observedAnchorValues": [
+                "false",
+                "true"
+              ],
+              "dominantDimensions": []
+            }
+          ],
+          "status": "needs_causal_anchor_confirmation",
+          "recommendation": "convert interaction finding into one-parameter focused anchors",
+          "score": 91
         },
         {
           "effectName": "Spirals",
@@ -10522,102 +10752,6 @@
           "status": "causal_ready",
           "recommendation": "retain current evidence; revisit after higher-priority gaps",
           "score": 26
-        },
-        {
-          "effectName": "Spirals",
-          "parameterName": "3D",
-          "parameterType": "boolean",
-          "importance": "medium",
-          "practicalPriority": "medium",
-          "stopRule": "all_meaningful_options",
-          "expectedAnchors": [
-            "false",
-            "true"
-          ],
-          "observedFocusedAnchors": [
-            "false",
-            "true"
-          ],
-          "missingFocusedAnchors": [],
-          "paletteSummaries": [
-            {
-              "parameterName": "3D",
-              "paletteMode": "mono_white",
-              "geometryProfile": "tree_flat_single_layer",
-              "evidenceClass": "focused_anchor",
-              "sampleCount": 58,
-              "distinctAnchorCount": 2,
-              "behaviorRuleCount": 1,
-              "blankRecordShare": 0,
-              "observedAnchorValues": [
-                "false",
-                "true"
-              ],
-              "dominantDimensions": [
-                "coverage"
-              ]
-            },
-            {
-              "parameterName": "3D",
-              "paletteMode": "mono_white",
-              "geometryProfile": "tree_360_round",
-              "evidenceClass": "interaction_only",
-              "sampleCount": 6,
-              "distinctAnchorCount": 2,
-              "behaviorRuleCount": 3,
-              "blankRecordShare": 0,
-              "observedAnchorValues": [
-                "false",
-                "true"
-              ],
-              "dominantDimensions": [
-                "coverage",
-                "colorRhythm",
-                "brightnessRhythm"
-              ]
-            },
-            {
-              "parameterName": "3D",
-              "paletteMode": "rgb_primary",
-              "geometryProfile": "tree_flat_single_layer",
-              "evidenceClass": "focused_anchor",
-              "sampleCount": 58,
-              "distinctAnchorCount": 2,
-              "behaviorRuleCount": 0,
-              "blankRecordShare": 0,
-              "observedAnchorValues": [
-                "false",
-                "true"
-              ],
-              "dominantDimensions": []
-            },
-            {
-              "parameterName": "3D",
-              "paletteMode": "rgb_primary",
-              "geometryProfile": "tree_360_round",
-              "evidenceClass": "interaction_only",
-              "sampleCount": 6,
-              "distinctAnchorCount": 2,
-              "behaviorRuleCount": 7,
-              "blankRecordShare": 0,
-              "observedAnchorValues": [
-                "false",
-                "true"
-              ],
-              "dominantDimensions": [
-                "dominantColorStability",
-                "colorRhythm",
-                "brightnessRhythm",
-                "coverage",
-                "colorBandDensity",
-                "gradientSmoothness",
-                "colorTravel"
-              ]
-            }
-          ],
-          "status": "causal_ready",
-          "recommendation": "retain current evidence; revisit after higher-priority gaps",
-          "score": 14
         },
         {
           "effectName": "Spirals",

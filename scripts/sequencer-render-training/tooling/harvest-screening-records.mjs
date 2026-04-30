@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 function parseArgs(argv = []) {
   const out = {
     source: "",
-    outDir: resolve("scripts/sequencer-render-training/catalog/effect-screening-records")
+    outDir: resolve("scripts/sequencer-render-training/catalog/effect-screening-record-promotion-staging")
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = String(argv[i] || "").trim();
