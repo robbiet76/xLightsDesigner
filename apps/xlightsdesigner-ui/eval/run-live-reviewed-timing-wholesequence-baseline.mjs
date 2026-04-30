@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { runNativeAutomation } from "./native-automation-runner.mjs";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -91,10 +92,7 @@ function runCommand(cmd, args, { cwd }) {
 }
 
 async function runAutomation(repoRoot, channel, resultPath, command, args = []) {
-  const script = path.join(repoRoot, "scripts", "desktop", "automation.mjs");
-  const commandArgs = [script, "--channel", channel, "--result-file", resultPath, command, ...args];
-  await runCommand("node", commandArgs, { cwd: repoRoot });
-  return readJson(resultPath);
+  return runNativeAutomation(repoRoot, channel, resultPath, command, args);
 }
 
 function writePayload(filePath, payload = {}) {

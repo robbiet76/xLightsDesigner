@@ -23,7 +23,7 @@ Core workflow:
 
 - `apps/`: runtime applications and services.
 - `apps/xlightsdesigner-macos/`: active native macOS SwiftUI product shell.
-- `apps/xlightsdesigner-ui/`: shared JS agent/runtime code plus retired renderer-shell residue.
+- `apps/xlightsdesigner-ui/`: shared JS agent, runtime, page-state, eval, and test modules.
 - `apps/xlightsdesigner-analysis-service/`: audio analysis service.
 - `training-packages/`: portable LLM training assets.
 - `specs/`: durable product, domain, governance, and verification specs.
@@ -55,7 +55,7 @@ The retired desktop prototype shell has been removed. Do not add new product-she
 
 ## Shared JS Runtime
 
-`apps/xlightsdesigner-ui/` remains important for shared agent/runtime code, tests, and tooling integration. It is not the active product shell.
+`apps/xlightsdesigner-ui/` remains important for shared agent/runtime/page-state code, tests, and tooling integration. It is not the active product shell.
 
 Active work there should stay focused on reusable domain/runtime behavior, especially:
 
@@ -64,6 +64,7 @@ Active work there should stay focused on reusable domain/runtime behavior, espec
 - sequence-agent planning and validation
 - xLights API integration helpers
 - render-training bundle consumption
+- native app page-state composition
 
 ## Validation
 

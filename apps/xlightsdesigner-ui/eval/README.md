@@ -3,7 +3,7 @@
 This folder contains evaluation assets for designer, sequence, timing-track, and reviewed-timing validation.
 
 Lifecycle control:
-- manifest: [`manifest.v1.json`](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/eval/manifest.v1.json)
+- manifest: `manifest.v1.json`
 - use the manifest to distinguish:
   - `active_core`
   - `active_manual`
@@ -59,8 +59,8 @@ Current policy:
 - use the smoke live pack as a checkpoint tool, not the default fast loop
 - keep the promoted live baseline pack small enough to complete reliably
 - use the extended live pack for slower alternate-sequence probes and broader cadence checks
-- the desktop automation CLI now scales the live-suite timeout with scenario count so the extended pack can complete without manual timeout overrides
-- the desktop live-suite runner now reuses `refreshFromXLights` and `analyzeAudio` work per `(sequencePath, analyzePrompt)` context instead of repeating that setup for every scenario on the same sequence
+- the native live-suite runner scales timeout with scenario count so the extended pack can complete without manual timeout overrides
+- the native live-suite runner reuses `refreshFromXLights` and `analyzeAudio` work per `(sequencePath, analyzePrompt)` context instead of repeating that setup for every scenario on the same sequence
 - use `run-live-practical-benchmark.mjs` as the current native practical gate for section-scoped sequencing while full render-feedback parity is still incomplete
 - use the revision live suite as part of the promoted Phase 2 practical gate
 - the whole-sequence slot in the practical benchmark now uses apply-level validation, not comparative design preference scoring
@@ -125,7 +125,7 @@ node apps/xlightsdesigner-ui/eval/run-live-reviewed-timing-control-suite.mjs \
 ```
 
 Native validation note:
-- Legacy desktop automation has been removed.
+- Legacy automation has been removed.
 - Use `scripts/native/automation.mjs` for direct native automation actions.
 - Use dedicated native validation runners for restored live suites.
 - `run-live-practical-benchmark.mjs`

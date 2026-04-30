@@ -26,7 +26,7 @@
       "path": "specs/sequence-agent/render-training-knowledge.md"
     },
     {
-      "id": "ui-agent-tests",
+      "id": "shared-js-agent-tests",
       "type": "test-corpus",
       "path": "apps/xlightsdesigner-ui/tests/agent"
     },

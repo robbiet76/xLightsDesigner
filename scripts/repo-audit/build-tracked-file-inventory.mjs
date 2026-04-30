@@ -9,15 +9,14 @@ const files = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' })
   .filter(Boolean);
 
 function classifyArea(file) {
-  if (file.startsWith('apps/xlightsdesigner-ui/agent/')) return 'ui-agent';
-  if (file.startsWith('apps/xlightsdesigner-ui/runtime/')) return 'ui-runtime';
-  if (file.startsWith('apps/xlightsdesigner-ui/app-ui/')) return 'ui-app-ui';
-  if (file.startsWith('apps/xlightsdesigner-ui/tests/')) return 'ui-tests';
-  if (file.startsWith('apps/xlightsdesigner-ui/eval/archive/')) return 'ui-eval-archive';
-  if (file.startsWith('apps/xlightsdesigner-ui/eval/')) return 'ui-eval';
-  if (file.startsWith('apps/xlightsdesigner-ui/')) return 'ui-root';
-  if (file.startsWith('apps/xlightsdesigner-desktop/tests/')) return 'desktop-tests';
-  if (file.startsWith('apps/xlightsdesigner-desktop/')) return 'desktop';
+  if (file.startsWith('apps/xlightsdesigner-ui/agent/')) return 'shared-js-agent';
+  if (file.startsWith('apps/xlightsdesigner-ui/runtime/')) return 'shared-js-runtime';
+  if (file.startsWith('apps/xlightsdesigner-ui/app-ui/')) return 'shared-js-page-state';
+  if (file.startsWith('apps/xlightsdesigner-ui/storage/')) return 'shared-js-storage';
+  if (file.startsWith('apps/xlightsdesigner-ui/tests/')) return 'shared-js-tests';
+  if (file.startsWith('apps/xlightsdesigner-ui/eval/archive/')) return 'shared-js-eval-archive';
+  if (file.startsWith('apps/xlightsdesigner-ui/eval/')) return 'shared-js-eval';
+  if (file.startsWith('apps/xlightsdesigner-ui/')) return 'shared-js-root';
   if (file.startsWith('apps/xlightsdesigner-analysis-service/eval/')) return 'analysis-eval';
   if (file.startsWith('apps/xlightsdesigner-analysis-service/')) return 'analysis-service';
   if (file.startsWith('scripts/sequencer-render-training/')) return 'scripts-render-training';
@@ -66,8 +65,7 @@ function classifyLifecycle(file) {
 
 function recommendAction(file, area, kind, lifecycle) {
   if (lifecycle === 'archive') return 'keep-archived';
-  if (area === 'ui-shell') return 'stabilize-and-trim';
-  if (area === 'ui-eval') return 'consolidate-entrypoints';
+  if (area === 'shared-js-eval') return 'consolidate-entrypoints';
   if (area === 'analysis-eval') return 'classify-keep-vs-archive';
   if (area === 'scripts-render-training') return 'group-by-pipeline-phase';
   if (area === 'scripts-repo-audit') return 'retain-audit-tooling';
