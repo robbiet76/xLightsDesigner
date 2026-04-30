@@ -192,8 +192,8 @@ Minimum shape:
       "promptRef": "prompt-001",
       "maskRef": "",
       "source": {
-        "provider": "openai",
-        "model": "gpt-image-1.5",
+        "provider": "configured_image_provider",
+        "model": "configured-image-model",
         "promptRef": "prompt-001"
       },
       "userRequest": "",
@@ -213,8 +213,8 @@ Minimum shape:
       "paletteRoles": ["cool base", "sparkle highlight"],
       "motionUse": "static_or_slow_pan",
       "source": {
-        "provider": "openai",
-        "model": "gpt-image-1.5",
+        "provider": "configured_image_provider",
+        "model": "configured-image-model",
         "promptRef": "prompt-001"
       }
     }
@@ -236,7 +236,7 @@ Minimum shape:
   "prompts": [
     {
       "promptId": "prompt-001",
-      "model": "gpt-image-1.5",
+      "model": "configured-image-model",
       "purpose": "inspiration_board",
       "operation": "generate",
       "inputRevisionId": "",
@@ -350,12 +350,12 @@ Required local tests:
 
 Live validation is opt-in because it incurs provider cost:
 
-- generate one inspiration board using `gpt-image-1.5`
+- generate one inspiration board using the configured image-generation provider and model
 - write files and manifest into the project app folder
 - show the board in native Design UI
 - pass the artifact reference through Designer -> Sequencer -> Review
 
-Provider access can vary by account. On 2026-04-26 the local OpenAI organization returned an organization verification requirement for the earlier `gpt-image-2` target. Current OpenAI docs identify `gpt-image-1.5` as the state-of-the-art GPT Image model; the app should target `gpt-image-1.5`, surface provider access failures clearly, and may fall back to `gpt-image-1` so the user can still generate a board while preserving model/source metadata in the manifest.
+Provider access can vary by account. The app should keep the image provider/model configurable, surface provider access failures clearly, and preserve provider/model/source metadata in the manifest.
 
 Current script:
 
@@ -374,7 +374,7 @@ The script refuses to run unless `XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1` is 
 3. Extend `sequencing_design_handoff_v2` with compact asset-pack refs, palette roles, and motif directives.
 4. Add native Design UI support for showing a stored inspiration board and palette.
 5. Add conversational board revision controls and fixture validation for edit lineage. Done: the native generator supports `revisionRequest`, loads the current board image, calls the provider edit path, appends `board-r###` lineage, and writes the revised manifest/files under the same app-owned artifact folder. The macOS Design screen exposes a revision request field, explicit revise action, revision history, and read-only prior-revision preview.
-6. Add a provider adapter for OpenAI image generation/editing with `gpt-image-1.5`, disabled unless configured. Done: adapter request/response construction and fixture tests are in `apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js`.
+6. Add a provider adapter for image generation/editing, disabled unless configured. Done: adapter request/response construction and fixture tests are in `apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js`.
 7. Add live opt-in validation that generates one board, edits it once, and stores both revisions in the project folder. Done: `scripts/native/validate-live-visual-image-generation.mjs`.
 8. Wire visual asset generation into the Designer -> Sequencer handoff path behind explicit user intent. Done: proposal generation now calls an injectable visual asset generator only when the user explicitly asks for an inspiration board/image/asset pack, then attaches compact refs to `creative_brief_v1`, `proposal_bundle_v1`, and `sequencing_design_handoff_v2`.
 9. Add native generator entry point for bridge use. Done: `scripts/designer/native/generate-visual-design-asset-pack.mjs` generates one board through the configured image provider, writes `inspiration-board.png`, and writes `visual-design-manifest.json` under the app project artifact folder.
