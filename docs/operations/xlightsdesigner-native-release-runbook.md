@@ -8,7 +8,7 @@ Last Reviewed: 2026-04-30
 
 Define the local evidence required before treating the native macOS app and owned xLights API path as release-quality for the current app completion workstream.
 
-This runbook replaces the retired Electron release path for current validation.
+This runbook defines the native validation path.
 
 ## Runtime Boundaries
 

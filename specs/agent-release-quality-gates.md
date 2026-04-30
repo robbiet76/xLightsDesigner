@@ -32,7 +32,7 @@ Define go/no-go gates for shipping agent-enabled behavior.
 
 5. Operational Readiness
 - Native desktop release runbook executed where a release build is being cut.
-- Historical Electron validation logs are not used as current release evidence.
+- Historical prototype-shell validation logs are not used as current release evidence.
 - Current validation evidence is captured in active native/runtime artifacts, not retired shell logs.
 - Native backup/restore and xLights session recovery paths have package test evidence.
 
@@ -53,7 +53,7 @@ Define go/no-go gates for shipping agent-enabled behavior.
 ## Current Interpretation
 
 For the current local app completion workstream, a release-quality agent path requires:
-- native macOS app path, not the retired Electron package path
+- native macOS app path, not a retired prototype package path
 - owned API validation on the active xLights runtime
 - current effectmetadata import and drift detection in place
 - green native package tests for backup/restore, session recovery, proposal generation, pending work, and review apply behavior

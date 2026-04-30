@@ -51,7 +51,7 @@ cd apps/xlightsdesigner-macos
 swift run
 ```
 
-The Electron desktop shell has been removed. Do not add new product-shell work to Electron-era surfaces.
+The retired desktop prototype shell has been removed. Do not add new product-shell work outside the native app.
 
 ## Shared JS Runtime
 

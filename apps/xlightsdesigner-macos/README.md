@@ -4,7 +4,7 @@ This is the native macOS app surface for xLightsDesigner.
 
 ## Purpose
 
-This app is the clean SwiftUI-native shell described in the design and cutover specs. It is intentionally separate from the Electron shell.
+This app is the clean SwiftUI-native shell described in the design and cutover specs.
 
 Current status:
 - this is the active product shell
@@ -13,7 +13,7 @@ Current status:
 ## Rules
 
 - This directory is the only place new native product-shell work should occur.
-- Do not add Electron compatibility code here.
+- Do not add retired prototype-shell compatibility code here.
 - Do not fork backend contracts or durable schemas for the native shell.
 - Do not move business logic or artifact truth into SwiftUI views.
 

@@ -3,7 +3,7 @@
 Status: Active
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-04-30
-Supersedes: `cross-platform-shell-boundary-2026-04-10.md`, `hybrid-cloud-learning-and-billing-2026-04-10.md`, Electron inventory and legacy-removal specs
+Supersedes: `cross-platform-shell-boundary-2026-04-10.md`, `hybrid-cloud-learning-and-billing-2026-04-10.md`, prototype-shell inventory and legacy-removal specs
 
 ## Purpose
 
@@ -39,9 +39,9 @@ The app consumes compact summaries and artifact references where possible.
 
 Cloud services may support account management, billing, shared learning, model upgrades, and optional sync/export. Cloud should not become required for local project safety, show-folder access, backup creation, or xLights apply.
 
-## Legacy Electron Boundary
+## Legacy Prototype Shell Boundary
 
-Electron-era specs and handler inventories are no longer current app architecture. They can be consulted only as historical parity references when a native feature appears to be missing.
+Prototype-shell specs and handler inventories are no longer current app architecture. They can be consulted only as historical parity references when a native feature appears to be missing.
 
 ## Related Specs
 

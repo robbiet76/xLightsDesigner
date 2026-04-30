@@ -14,4 +14,4 @@ Active specifications for the native xLightsDesigner app, platform boundary, and
 
 ## Current Rule
 
-The active product shell is the native macOS app under `apps/xlightsdesigner-macos/`. Electron-era implementation plans, screen-by-screen mockup packages, inventories, and cutover audits have been consolidated into the current specs above.
+The active product shell is the native macOS app under `apps/xlightsdesigner-macos/`. Prototype-shell implementation plans, screen-by-screen mockup packages, inventories, and cutover audits have been consolidated into the current specs above.

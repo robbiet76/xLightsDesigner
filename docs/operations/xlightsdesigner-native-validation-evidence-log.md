@@ -8,7 +8,7 @@ Last Reviewed: 2026-04-30
 
 Record current native macOS app and owned xLights API validation evidence.
 
-Historical Electron evidence must not be used as current release evidence.
+Historical prototype-shell evidence must not be used as current release evidence.
 
 Rows targeting `/Users/robterry/Documents/Lights/Current` predate the workspace-boundary correction. They remain as historical owned-API proofs only; current linked-show validation must target `/Users/robterry/Desktop/Show`, while app-owned project metadata stays under `/Users/robterry/Documents/Lights/xLightsDesigner`.
 
