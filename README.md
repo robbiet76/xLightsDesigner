@@ -1,105 +1,108 @@
 # xLightsDesigner
 
-Repository for the **xLights Agent Sequencer** initiative.
+xLightsDesigner is a local-first creative sequencing tool for xLights.
 
-## Structure
+The product turns user creative intent into auditable xLights sequence changes by combining project context, display metadata, audio analysis, trained effect knowledge, review/apply safety, and render validation.
 
-### `apps/`
-Runtime application code.
-- `apps/xlightsdesigner-ui/`: web UI used by desktop wrapper.
-- `apps/xlightsdesigner-macos/`: native macOS SwiftUI shell scaffold.
-- `apps/xlightsdesigner-analysis-service/`: audio analysis backend.
+## Product Shape
 
-### `training-packages/`
-Portable BYO-provider training assets.
-- Canonical package root: `training-packages/training-package-v1/`
-- Module layout: `audio_track_analysis`, `lighting_design_principles`, `xlights_sequencer_execution`.
+The active product shell is the native macOS app in `apps/xlightsdesigner-macos/`.
 
-### `docs/`
-Cross-project architecture and operational documentation.
-- `docs/architecture/`: architecture decisions and analysis for the overall initiative.
-- `docs/operations/`: release/runbook procedures and validation evidence logs.
+Core workflow:
 
-### `specs/`
-Implementation-facing specifications.
-- Durable root entry points plus domain specs under `app-ui/`, `audio-analyst/`, `designer-dialog/`, and `sequence-agent/`.
+1. Select or create a project.
+2. Bind the project to a show folder, sequence, media file, and display layout.
+3. Refresh display metadata, model metadata, custom model construction data, timing data, and sequence state.
+4. Capture creative intent through the designer workflow.
+5. Generate structured sequence plans through the sequence agent.
+6. Review commands, warnings, backups, and validation status.
+7. Apply approved changes through the owned xLights API.
+8. Render, validate, and store recoverable history.
 
-### `scripts/`
-Developer/build/validation automation.
+## Repository Structure
 
-## Repo Governance
-- Structural placement and ownership rules: `specs/spec-governance.md`
-- Canonical training package root: `training-packages/training-package-v1/README.md`
+- `apps/`: runtime applications and services.
+- `apps/xlightsdesigner-macos/`: active native macOS SwiftUI product shell.
+- `apps/xlightsdesigner-ui/`: shared JS agent/runtime code plus retired renderer-shell residue.
+- `apps/xlightsdesigner-analysis-service/`: audio analysis service.
+- `training-packages/`: portable LLM training assets.
+- `specs/`: durable product, domain, governance, and verification specs.
+- `docs/`: architecture and operational reference material.
+- `scripts/`: developer automation, generation, validation, and training tooling.
 
-## Active Product Scope
-The current product goal is a native xLightsDesigner app that acts as the local translation layer between AI agents and a user's linked xLights show folder.
+## Primary References
 
-Core workflows include:
-- project-scoped app metadata stored outside xLights show folders,
-- owned xLights API session control,
-- native design-intent authoring,
-- metadata-aware proposal generation,
-- review/apply/render validation against isolated sequence artifacts.
+- Product plan: `specs/product-plan.md`
+- Local roadmap: `specs/local-completion-roadmap.md`
+- Spec and repo governance: `specs/spec-governance.md`
+- Native app contract: `specs/app-ui/native-app.md`
+- Project storage contract: `specs/app-ui/project-storage.md`
+- xLights API contract: `specs/sequence-agent/xlights-api.md`
+- Sequencing system: `specs/sequence-agent/sequencing-system.md`
+- Render-training knowledge: `specs/sequence-agent/render-training-knowledge.md`
+- Training package root: `training-packages/training-package-v1/README.md`
+
+## Run The Native App
+
+Open `apps/xlightsdesigner-macos/Package.swift` in Xcode, or run:
+
+```bash
+cd apps/xlightsdesigner-macos
+swift run
+```
+
+The Electron desktop shell has been removed. Do not add new product-shell work to Electron-era surfaces.
+
+## Shared JS Runtime
+
+`apps/xlightsdesigner-ui/` remains important for shared agent/runtime code, tests, and tooling integration. It is not the active product shell.
+
+Active work there should stay focused on reusable domain/runtime behavior, especially:
+
+- app assistant routing
+- designer handoff logic
+- sequence-agent planning and validation
+- xLights API integration helpers
+- render-training bundle consumption
 
 ## Validation
-Run the native-to-xLights handoff validation through the wrapper below. It starts or reuses the native automation server and owned xLights API, creates isolated validation sequences under the linked development show folder, and validates metadata handoff through proposal/apply/render.
+
+Native package tests:
+
+```bash
+swift test --package-path apps/xlightsdesigner-macos
+```
+
+Native-to-xLights handoff validation:
 
 ```bash
 node scripts/native/run-full-handoff-validation.mjs
 ```
 
-For broader coverage of known development layout targets and tag-only metadata selection:
+Broader handoff matrix:
 
 ```bash
 node scripts/native/run-full-handoff-validation.mjs --matrix
 ```
 
-The default matrix is `scripts/native/full-handoff-validation-scenarios.json`. Use `--matrix-file <path>` to run another scenario set.
+Focused sequence-agent tests:
 
-## Initial UI Prototype
-`apps/xlightsdesigner-ui/` contains the initial standalone UI scaffold for xLightsDesigner development.
+```bash
+node --test apps/xlightsdesigner-ui/tests/agent/sequence-agent
+```
 
-Run locally:
-1. `cd apps/xlightsdesigner-ui`
-2. `./run-dev.sh`
-3. Open `http://localhost:8080`
+Render-training catalog and bundle tooling lives under:
 
-Live endpoint:
-- Default endpoint is `/xlightsdesigner/api` via local dev proxy (in `run-dev.sh`).
-- You can set the direct owned API endpoint on the `Project` screen (`http://127.0.0.1:49915/xlightsdesigner/api`).
-- Click `Test Connection` to call `system.getCapabilities`.
-- `Refresh` calls `sequence.getOpen` and `sequence.getRevision`.
-- Project screen `Open Sequence` calls `sequence.open` using the provided sequence path and stores recent sequence entries.
-- Project screen `Save`/`Save As` call `sequence.save` (Save As uses configured save path).
-- Project screen `Close Sequence` calls `sequence.close`; `New Session` clears current draft/session state without deleting project settings.
-- Apply uses the owned `sequencing.applyBatchPlan` path and waits for the returned job to settle.
-- `Apply to xLights` writes reviewed sequence changes through the owned xLightsDesigner API.
-- Revision is polled in the background; if external edits are detected, the draft is marked stale and apply is blocked until refresh/regenerate.
-- Design includes an optional `Open Details` drawer with section filtering and `Split by Section` draft narrowing.
-- Proposed draft rows are directly editable/removable in Design and details views, with `Add Line` for quick manual proposal shaping.
-- When stale, the status bar exposes direct recovery actions: `Rebase/Refresh`, `Regenerate`, and `Cancel Draft`.
-- Design also shows an explicit stale-recovery card with guided actions: `Refresh + Regenerate`, `Refresh Only`, and `Cancel Draft`.
-- Stale recovery also supports `Rebase Draft` to keep current proposed edits while updating to latest revision baseline.
-- History supports `Compare` against current head, `Reapply as Variant` into Design, and practical rollback draft restore flow.
-- Compact/mobile behavior includes Design tabs (`Chat`, `Intent`, `Proposed`) and a fixed bottom `Apply to xLights` action bar.
-- Diagnostics panel can be opened from header/status bar and captures warning/action-required events with optional stack/detail payloads.
-- Apply failures surface owned API job/error details in diagnostics.
-- Diagnostics panel includes filters (`All`, `Warnings`, `Action Required`) and live counts in header/footer.
-- Project settings now include apply safety controls: confirmation mode (`always`, `large-only`, `never`) and configurable large-change threshold.
-- Project/show-scoped workspace snapshots are persisted (sequence path, recents, draft context, safety settings) and can be reloaded via `Load Project Snapshot`.
-- `Reset Project Workspace` clears current project draft/session artifacts and writes a fresh default snapshot for that project key.
-- Project includes a `Project Health` card with owned API capability checks (`sequencing.applyBatchPlan`, `jobs.get`), sequence-open status, and one-click recheck.
-- Metadata includes live `layout.getModels` discovery list with refresh action for current layout context.
-- Metadata model list supports filter/search and one-click `Insert Into Draft` to create targeted proposal lines.
-- Design Intent panel supports dynamic section targeting via loaded timing-track labels and quick `Add Section Line`.
-- Section targeting now uses a timing-track dropdown plus a multi-select section picker (`All Sections` + dynamic list) so users explicitly choose one or more target sections.
-- Section picker displays section start time (from timing marks) beside each section label for easier targeting.
-- `Use As Filter` and proposal views now respect the same section picker selection model.
-- Jobs panel is available from header and tracks async job ids/status/progress with polling via `jobs.get` and cancel hook via `jobs.cancel`.
+```text
+scripts/sequencer-render-training/
+```
 
-## Desktop Shell
-The Electron desktop shell has been removed.
+## Development Rules
 
-Rules:
-- do not launch Electron for current development
-- use `apps/xlightsdesigner-macos/` for the active product shell
+- Keep one canonical app source tree.
+- Keep one canonical xLights source tree.
+- Keep one canonical desktop app state root.
+- Store xLightsDesigner metadata under the app-owned project root, not in the xLights show folder.
+- Use the owned xLights API for show-folder, layout, timing, sequence, effect, and render-feedback operations.
+- Treat generated artifacts as rebuildable unless explicitly promoted into a compact durable knowledge layer.
+- Consolidate dated implementation notes into durable specs and remove superseded files.
