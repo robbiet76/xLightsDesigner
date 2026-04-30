@@ -38,7 +38,7 @@ function parseArgs(argv = []) {
 }
 
 function agentConfigPath() {
-  return path.join(os.homedir(), "Library/Application Support/xlightsdesigner-desktop", AGENT_CONFIG_FILENAME);
+  return path.join(os.homedir(), "Library/Application Support/xLightsDesigner", AGENT_CONFIG_FILENAME);
 }
 
 function readStoredAgentConfig() {
@@ -109,7 +109,7 @@ async function waitForAssistantRoundTrip({ previousMessageCount, timeoutMs = 900
 async function callOpenAIResponses({ systemPrompt = "", userMessage = "", maxOutputTokens = 500 } = {}) {
   const cfg = getAgentConfig();
   if (!cfg.configured) {
-    throw new Error("OpenAI key is not configured in the desktop app environment.");
+    throw new Error("OpenAI key is not configured in native app environment.");
   }
   const body = {
     model: cfg.model,

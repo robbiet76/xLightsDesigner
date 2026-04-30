@@ -182,7 +182,7 @@ export function createProjectLifecycleRuntime(deps = {}) {
     let selectedKey = str(selectedKeyArg);
     const bridge = getDesktopProjectBridge();
     if (!bridge) {
-      setStatusWithDiagnostics("warning", "Open project requires desktop runtime.");
+      setStatusWithDiagnostics("warning", "Open project requires native runtime.");
       render();
       return;
     }
@@ -271,7 +271,7 @@ export function createProjectLifecycleRuntime(deps = {}) {
     syncProjectSummaryInputs();
     const bridge = getDesktopProjectBridge();
     if (!bridge) {
-      setStatusWithDiagnostics("warning", "New project requires desktop runtime.");
+      setStatusWithDiagnostics("warning", "New project requires native runtime.");
       render();
       return;
     }
@@ -368,7 +368,7 @@ export function createProjectLifecycleRuntime(deps = {}) {
   async function resetAppInstallState() {
     const bridge = getDesktopAppAdminBridge();
     if (!bridge) {
-      setStatusWithDiagnostics("warning", "Fresh-install reset requires desktop runtime.");
+      setStatusWithDiagnostics("warning", "Fresh-install reset requires native runtime.");
       render();
       return;
     }

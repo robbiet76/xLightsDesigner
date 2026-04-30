@@ -108,10 +108,11 @@ export function getDesktopBridgeHealth() {
     bridge && typeof bridge === "object"
       ? Object.keys(bridge).filter((key) => typeof bridge[key] === "function").length
       : 0;
+  const fileDialogReady = Boolean(bridge && typeof bridge.openFileDialog === "function");
   return {
     runtimeReady: Boolean(bridge),
-    desktopFileDialogReady: Boolean(bridge && typeof bridge.openFileDialog === "function"),
-    desktopBridgeApiCount: apiCount
+    nativeFileDialogReady: fileDialogReady,
+    nativeBridgeApiCount: apiCount
   };
 }
 

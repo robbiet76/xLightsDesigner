@@ -8,14 +8,18 @@ function norm(value = "") {
   return String(value || "").trim();
 }
 
-function readDesktopState(inputPath) {
+function defaultAppStatePath() {
+  return path.join(process.env.HOME || "", "Library/Application Support/xLightsDesigner/xlightsdesigner-state.json");
+}
+
+function readAppState(inputPath) {
   const raw = JSON.parse(fs.readFileSync(inputPath, "utf8"));
   return raw?.localStateRaw ? JSON.parse(raw.localStateRaw) : raw;
 }
 
 function parseArgs(argv = process.argv.slice(2)) {
   const args = {
-    input: path.join(process.env.HOME || "", "Library/Application Support/xlightsdesigner-desktop/xlightsdesigner-state.json"),
+    input: defaultAppStatePath(),
     output: "/tmp/custom-model-structure-catalog.v1.json",
     showDir: ""
   };
@@ -58,7 +62,7 @@ function main() {
         sequencePathInput: "",
         health: { sceneGraphSource: "xlights_rgbeffects.xml" }
       }
-    : readDesktopState(args.input);
+    : readAppState(args.input);
   const catalog = buildCustomModelStructureCatalog({
     sceneGraph: state.sceneGraph || {},
     source: {

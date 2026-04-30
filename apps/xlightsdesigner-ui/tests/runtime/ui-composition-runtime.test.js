@@ -7,8 +7,8 @@ test("buildBuildLabel formats version and build time", () => {
   const label = buildBuildLabel({
     state: {
       health: {
-        desktopAppVersion: "1.2.3",
-        desktopBuildTime: "2026-04-05T12:34:00Z"
+        nativeAppVersion: "1.2.3",
+        nativeBuildTime: "2026-04-05T12:34:00Z"
       }
     }
   });

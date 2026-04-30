@@ -7,7 +7,7 @@ protocol ProjectSessionStore: Sendable {
 
 struct LocalProjectSessionStore: ProjectSessionStore {
     private var stateFileURL: URL {
-        URL(fileURLWithPath: AppEnvironment.desktopStateRoot, isDirectory: true)
+        URL(fileURLWithPath: AppEnvironment.appStateRoot, isDirectory: true)
             .appendingPathComponent("native-project-session.json")
     }
 

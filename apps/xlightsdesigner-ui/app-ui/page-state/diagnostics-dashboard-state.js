@@ -63,8 +63,8 @@ export function buildDiagnosticsDashboardState({
       health: {
         lastCheckedAt: formatTime(state.health?.lastCheckedAt),
         runtimeReady: Boolean(state.health?.runtimeReady),
-        desktopFileDialogReady: Boolean(state.health?.desktopFileDialogReady),
-        desktopBridgeApiCount: Number(state.health?.desktopBridgeApiCount || 0),
+        nativeFileDialogReady: Boolean(state.health?.nativeFileDialogReady),
+        nativeBridgeApiCount: Number(state.health?.nativeBridgeApiCount || 0),
         xlightsVersion: str(state.health?.xlightsVersion || "not reported"),
         compatibilityStatus: str(state.health?.compatibilityStatus),
         agentProvider: str(state.health?.agentProvider || "openai"),

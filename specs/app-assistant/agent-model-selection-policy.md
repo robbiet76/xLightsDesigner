@@ -19,7 +19,7 @@ The app should prefer cost-conscious defaults for normal routing, conversation, 
 
 Default precedence:
 
-1. stored desktop provider setting
+1. stored native app provider setting
 2. environment override such as `OPENAI_MODEL`
 3. app fallback default
 

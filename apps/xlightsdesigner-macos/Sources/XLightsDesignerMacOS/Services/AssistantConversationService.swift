@@ -11,7 +11,7 @@ struct LocalAssistantConversationService: AssistantConversationService {
     private let maxRecentMessages = 200
     private let storageRootURL: URL
 
-    init(storageRootURL: URL = URL(fileURLWithPath: AppEnvironment.desktopStateRoot, isDirectory: true)) {
+    init(storageRootURL: URL = URL(fileURLWithPath: AppEnvironment.appStateRoot, isDirectory: true)) {
         self.storageRootURL = storageRootURL
     }
 

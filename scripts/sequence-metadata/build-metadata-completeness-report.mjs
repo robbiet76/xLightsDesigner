@@ -16,7 +16,7 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
-function readDesktopState(inputPath) {
+function readAppState(inputPath) {
   const raw = JSON.parse(fs.readFileSync(inputPath, "utf8"));
   return JSON.parse(raw.localStateRaw);
 }
@@ -139,10 +139,14 @@ function extractGapExamples(records = [], limit = 20) {
     }));
 }
 
+function defaultAppStatePath() {
+  return path.join(process.env.HOME || "", "Library/Application Support/xLightsDesigner/xlightsdesigner-state.json");
+}
+
 function main() {
-  const inputPath = process.argv[2] || path.join(process.env.HOME || "", "Library/Application Support/xlightsdesigner-desktop/xlightsdesigner-state.json");
+  const inputPath = process.argv[2] || defaultAppStatePath();
   const outputPath = process.argv[3] || "/tmp/metadata-completeness-report.v1.json";
-  const state = readDesktopState(inputPath);
+  const state = readAppState(inputPath);
   const customModelCatalog = buildCustomModelStructureCatalog({
     sceneGraph: state.sceneGraph || {},
     source: {

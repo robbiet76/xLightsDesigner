@@ -32,7 +32,7 @@ The app is not just a chat wrapper. It is a controlled workflow that turns creat
 
 - Maintain one canonical app source tree.
 - Maintain one canonical xLights source tree.
-- Maintain one canonical desktop state root.
+- Maintain one canonical app state root.
 - Prefer deletion and consolidation over compatibility layers for obsolete local development paths.
 - Do not create parallel app versions, alternate worktrees, or shadow runtime installs during initial product development.
 - Treat generated artifacts as rebuildable unless they are explicitly promoted into a durable knowledge layer.

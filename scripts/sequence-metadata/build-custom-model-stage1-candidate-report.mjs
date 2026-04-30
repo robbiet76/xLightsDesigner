@@ -19,7 +19,7 @@ function unique(values = []) {
   return [...new Set(arr(values).map((row) => norm(row)).filter(Boolean))];
 }
 
-function readDesktopState(inputPath) {
+function readAppState(inputPath) {
   const raw = JSON.parse(fs.readFileSync(inputPath, "utf8"));
   return JSON.parse(raw.localStateRaw);
 }
@@ -166,10 +166,14 @@ function summarize(records = [], candidates = []) {
   };
 }
 
+function defaultAppStatePath() {
+  return path.join(process.env.HOME || "", "Library/Application Support/xLightsDesigner/xlightsdesigner-state.json");
+}
+
 function main() {
-  const inputPath = process.argv[2] || path.join(process.env.HOME || "", "Library/Application Support/xlightsdesigner-desktop/xlightsdesigner-state.json");
+  const inputPath = process.argv[2] || defaultAppStatePath();
   const outputPath = process.argv[3] || "/tmp/custom-model-stage1-candidate-report.v1.json";
-  const state = readDesktopState(inputPath);
+  const state = readAppState(inputPath);
   const records = buildNormalizedTargetMetadataRecords({
     sceneGraph: state.sceneGraph || {},
     metadataAssignments: state.metadata?.assignments || [],

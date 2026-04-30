@@ -27,7 +27,7 @@ function parseArgs(argv = []) {
 }
 
 function agentConfigPath() {
-  return path.join(os.homedir(), 'Library/Application Support/xlightsdesigner-desktop', AGENT_CONFIG_FILENAME);
+  return path.join(os.homedir(), 'Library/Application Support/xLightsDesigner', AGENT_CONFIG_FILENAME);
 }
 
 function readStoredAgentConfig() {
@@ -828,7 +828,7 @@ async function callOpenAIResponses({ cfg, systemPrompt = '', userMessage = '', m
 async function runAgentConversation(payload = {}) {
   const cfg = getAgentConfig();
   if (!cfg.configured) {
-    return { ok: false, code: 'AGENT_NOT_CONFIGURED', error: 'OPENAI_API_KEY is not set in desktop app environment.' };
+    return { ok: false, code: 'AGENT_NOT_CONFIGURED', error: 'OPENAI_API_KEY is not set in native app environment.' };
   }
   const userMessage = String(payload?.userMessage || '').trim();
   if (!userMessage) return { ok: false, code: 'AGENT_EMPTY_MESSAGE', error: 'Missing userMessage' };

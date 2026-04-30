@@ -125,7 +125,7 @@ struct LocalSettingsService: SettingsService {
         }
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let backupURL = URL(fileURLWithPath: AppEnvironment.desktopStateRoot)
+        let backupURL = URL(fileURLWithPath: AppEnvironment.appStateRoot)
             .appendingPathComponent("backups", isDirectory: true)
             .appendingPathComponent("native-settings-backup-\(formatter.string(from: Date()).replacingOccurrences(of: ":", with: "-")).json")
         try fileManager.createDirectory(at: backupURL.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -134,13 +134,13 @@ struct LocalSettingsService: SettingsService {
     }
 
     private var agentConfigPath: String {
-        URL(fileURLWithPath: AppEnvironment.desktopStateRoot)
+        URL(fileURLWithPath: AppEnvironment.appStateRoot)
             .appendingPathComponent("xlightsdesigner-agent-config.json")
             .path
     }
 
     private var stateFilePath: String {
-        URL(fileURLWithPath: AppEnvironment.desktopStateRoot)
+        URL(fileURLWithPath: AppEnvironment.appStateRoot)
             .appendingPathComponent("xlightsdesigner-state.json")
             .path
     }
@@ -230,7 +230,7 @@ struct LocalSettingsService: SettingsService {
     private func buildPathRows() -> [SettingsPathRowModel] {
         [
             SettingsPathRowModel(id: "app-root", label: "Canonical App Root", value: AppEnvironment.canonicalAppRoot),
-            SettingsPathRowModel(id: "desktop-state", label: "Desktop State Root", value: AppEnvironment.desktopStateRoot),
+            SettingsPathRowModel(id: "app-state", label: "App State Root", value: AppEnvironment.appStateRoot),
             SettingsPathRowModel(id: "projects-root", label: "Projects Root", value: AppEnvironment.projectsRootPath),
             SettingsPathRowModel(id: "track-library", label: "Track Library", value: AppEnvironment.trackLibraryPath),
             SettingsPathRowModel(id: "repo-root", label: "Repo Root", value: AppEnvironment.repoRootPath)
@@ -244,7 +244,7 @@ enum SettingsServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingStateFile:
-            return "Desktop state file is missing."
+            return "App state file is missing."
         }
     }
 }

@@ -1,7 +1,7 @@
 # xLightsDesigner Analysis Service
 
 Cloud-first audio analysis API for xLightsDesigner.  
-The desktop app sends audio to this service and expects `beats`, `bars`, `sections`, and optional `lyrics` marks.
+The native app sends audio to this service and expects `beats`, `bars`, `sections`, and optional `lyrics` marks.
 
 Section source strategy is provider-first:
 - Fingerprint song with AudD (if configured)

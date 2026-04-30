@@ -94,7 +94,7 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
     }
 
     private func loadAgentConfig() throws -> StoredAgentConfig {
-        let fileURL = URL(fileURLWithPath: AppEnvironment.desktopStateRoot)
+        let fileURL = URL(fileURLWithPath: AppEnvironment.appStateRoot)
             .appendingPathComponent("xlightsdesigner-agent-config.json")
         let data = try Data(contentsOf: fileURL)
         return try JSONDecoder().decode(StoredAgentConfig.self, from: data)

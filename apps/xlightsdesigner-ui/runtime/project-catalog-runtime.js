@@ -165,7 +165,7 @@ export function createProjectCatalogRuntime({
     }
     const bridge = getDesktopSequenceBridge();
     if (!bridge) {
-      if (!silent) setStatus("warning", "Sequence discovery requires desktop runtime.");
+      if (!silent) setStatus("warning", "Sequence discovery requires native runtime.");
       render();
       return;
     }
@@ -216,7 +216,7 @@ export function createProjectCatalogRuntime({
     }
     const bridge = getDesktopMediaCatalogBridge();
     if (!bridge) {
-      if (!silent) setStatus("warning", "Media catalog requires desktop runtime.");
+      if (!silent) setStatus("warning", "Media catalog requires native runtime.");
       render();
       return;
     }

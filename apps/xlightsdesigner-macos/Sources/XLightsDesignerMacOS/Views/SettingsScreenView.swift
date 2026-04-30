@@ -247,10 +247,10 @@ struct SettingsScreenView: View {
     private var diagnosticsSection: some View {
         section("Diagnostics & Maintenance", subtitle: "Utility actions only.") {
             HStack {
-                Button("Reveal Desktop State Root") {
-                    model.revealPath(AppEnvironment.desktopStateRoot)
+                Button("Reveal App State Root") {
+                    model.revealPath(AppEnvironment.appStateRoot)
                 }
-                Button("Create Desktop State Backup") {
+                Button("Create App State Backup") {
                     model.createStateBackup()
                 }
                 .buttonStyle(.borderedProminent)

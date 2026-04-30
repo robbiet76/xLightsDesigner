@@ -92,7 +92,7 @@ struct LocalAssistantUserProfileStore: AssistantUserProfileStore {
     }
 
     private func storageURL() -> URL {
-        URL(fileURLWithPath: AppEnvironment.desktopStateRoot, isDirectory: true)
+        URL(fileURLWithPath: AppEnvironment.appStateRoot, isDirectory: true)
             .appendingPathComponent("assistant", isDirectory: true)
             .appendingPathComponent("profile.json", isDirectory: false)
     }

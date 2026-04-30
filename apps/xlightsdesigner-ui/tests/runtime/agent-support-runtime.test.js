@@ -37,10 +37,10 @@ test('agent support runtime saves config through bridge', async () => {
     agentRuntime: emptyAgentRuntimeState(),
     getDesktopAgentConfigBridge: () => ({
       setAgentConfig: async () => ({ ok: true }),
-      getAgentConfig: async () => ({ ok: true, model: 'gpt-x', baseUrl: 'https://api.example.com', hasStoredApiKey: true, source: 'desktop' })
+      getAgentConfig: async () => ({ ok: true, model: 'gpt-x', baseUrl: 'https://api.example.com', hasStoredApiKey: true, source: 'native' })
     }),
     getDesktopAgentConversationBridge: () => ({
-      getAgentHealth: async () => ({ ok: true, provider: 'openai', model: 'gpt-x', configured: true, hasStoredApiKey: true, source: 'desktop' })
+      getAgentHealth: async () => ({ ok: true, provider: 'openai', model: 'gpt-x', configured: true, hasStoredApiKey: true, source: 'native' })
     }),
     validateTrainingAgentRegistry: () => ({ ok: true, errors: [] }),
     persist: () => { persisted += 1; },

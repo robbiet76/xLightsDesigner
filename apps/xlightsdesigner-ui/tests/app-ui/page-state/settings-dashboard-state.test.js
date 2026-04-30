@@ -10,11 +10,11 @@ test("settings dashboard state summarizes rollout, locks, and nicknames", () => 
         planOnlyForcedByRollout: true
       },
       health: {
-        agentConfigSource: "desktop-store",
+        agentConfigSource: "native-store",
         agentHasStoredApiKey: true,
         agentConfigured: true,
         runtimeReady: true,
-        desktopFileDialogReady: true,
+        nativeFileDialogReady: true,
         agentProvider: "openai",
         agentModel: "gpt-5"
       }

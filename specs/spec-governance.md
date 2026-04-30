@@ -83,7 +83,7 @@ Current domain anchors:
 
 - Maintain one canonical app source tree.
 - Maintain one canonical xLights source tree.
-- Maintain one canonical desktop app state root.
+- Maintain one canonical app state root.
 - Modify the active implementation in place.
 - Do not create alternate app versions, duplicate worktrees, shadow installs, or parallel runtime roots during initial product development.
 - Avoid compatibility readers, fallback schemas, and dual-path runtime behavior unless the product explicitly needs migration support.

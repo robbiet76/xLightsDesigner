@@ -11,7 +11,7 @@ Its job is to preserve one coherent chat experience across setup, analysis, desi
 
 The initial runtime slice now exists:
 - session/result contracts
-- chat orchestration over the desktop conversation bridge
+- chat orchestration over the native conversation bridge
 - specialist route inference
 - main chat ownership in the UI
 

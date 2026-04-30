@@ -63,7 +63,7 @@ async function assertNativeParityAvailable(repoRoot, channel, outDir) {
     ? ` Missing owned routes: ${missing.join(", ")}.`
     : "";
   throw new Error(
-    "run-live-reviewed-timing-wholesequence-baseline.mjs still depends on removed legacy desktop automation actions." +
+    "run-live-reviewed-timing-wholesequence-baseline.mjs still depends on removed legacy automation actions." +
     capabilityMessage +
     " Do not run this baseline until native automation parity exists for reviewed-timing whole-sequence commands."
   );

@@ -26,7 +26,7 @@ export function createProjectHistoryRuntime(deps = {}) {
     const bridge = getDesktopProjectArtifactBridge();
     const projectFilePath = str(state.projectFilePath);
     if (!bridge || !projectFilePath) {
-      pushDiagnostic("warning", "Project artifact persistence unavailable.", !bridge ? "desktop bridge missing" : "project file path missing");
+      pushDiagnostic("warning", "Project artifact persistence unavailable.", !bridge ? "native bridge missing" : "project file path missing");
       return { ok: false, reason: "unavailable" };
     }
     const context = currentApplyContext();

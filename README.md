@@ -102,7 +102,7 @@ scripts/sequencer-render-training/
 
 - Keep one canonical app source tree.
 - Keep one canonical xLights source tree.
-- Keep one canonical desktop app state root.
+- Keep one canonical app state root.
 - Store xLightsDesigner metadata under the app-owned project root, not in the xLights show folder.
 - Use the owned xLights API for show-folder, layout, timing, sequence, effect, and render-feedback operations.
 - Treat generated artifacts as rebuildable unless explicitly promoted into a compact durable knowledge layer.

@@ -210,7 +210,7 @@ export function createAgentSupportRuntime(deps = {}) {
   async function saveAgentConfig({ apiKey = '', model = '', baseUrl = '' } = {}) {
     const bridge = getDesktopAgentConfigBridge();
     if (!bridge) {
-      setStatusWithDiagnostics('warning', 'Cloud agent config requires desktop runtime.');
+      setStatusWithDiagnostics('warning', 'Cloud agent config requires native runtime.');
       render();
       return false;
     }
@@ -242,7 +242,7 @@ export function createAgentSupportRuntime(deps = {}) {
   async function clearStoredAgentApiKey() {
     const bridge = getDesktopAgentConfigBridge();
     if (!bridge) {
-      setStatusWithDiagnostics('warning', 'Cloud agent config requires desktop runtime.');
+      setStatusWithDiagnostics('warning', 'Cloud agent config requires native runtime.');
       render();
       return false;
     }

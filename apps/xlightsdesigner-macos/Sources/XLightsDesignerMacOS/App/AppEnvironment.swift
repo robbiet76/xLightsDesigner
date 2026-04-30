@@ -8,8 +8,8 @@ enum AppEnvironment {
     static let trackLibraryPath = canonicalAppRoot + "/library/tracks"
     static let xlightsOwnedAPIBaseURL = environment["XLD_XLIGHTS_OWNED_API_BASE_URL"] ?? "http://127.0.0.1:49915/xlightsdesigner/api"
     static let nativeAutomationBaseURL = "http://127.0.0.1:49916"
-    static let desktopStateRoot = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Library/Application Support/xlightsdesigner-desktop", isDirectory: true)
+    static let appStateRoot = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library/Application Support/xLightsDesigner", isDirectory: true)
         .path
     static let batchAnalyzeFolderScriptPath = repoRootPath + "/scripts/audio-analysis/build-track-library-and-review.mjs"
     static let nativeAnalyzeTrackScriptPath = repoRootPath + "/scripts/audio-analysis/native/analyze-track-to-library.mjs"

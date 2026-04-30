@@ -50,7 +50,7 @@ Examples:
 
 Storage:
 
-- desktop runtime conversation store
+- native app conversation store
 
 Notes:
 
@@ -73,7 +73,7 @@ Examples:
 
 Storage:
 
-- desktop runtime user profile store
+- native app user profile store
 
 Transfer rule:
 
