@@ -14,12 +14,13 @@
     "effects.getWindow"
   ],
   "requiredApiVersion": "xlightsdesigner-owned-api",
-  "applyModel": "owned-batch-plan-only",
-  "sourceSpec": "specs/local-completion-roadmap.md",
+  "applyModel": "owned-api-command-graph",
+  "sourceSpec": "specs/sequence-agent/xlights-api.md",
   "notes": [
-    "Apply execution must use /xlightsdesigner/api/sequencing/apply-batch-plan with the expected revision token.",
+    "Create-heavy timing/effect plans should use /xlightsdesigner/api/sequencing/apply-batch-plan with the expected revision token.",
+    "Supported direct owned API commands may apply explicit effect/layer/display-order edits that are not represented by the batch endpoint.",
     "Unsupported command graphs must fail closed instead of falling back to transaction or legacy automation endpoints.",
     "Post-apply verification reads back revision state, timing marks, effects windows, and render evidence when available.",
-    "Sequence-level rendering controls are planner context only until the owned API exposes explicit sequence settings mutation."
+    "Sequence-level rendering controls are planner context unless the owned API exposes explicit sequence settings mutation."
   ]
 }

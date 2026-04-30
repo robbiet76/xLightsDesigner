@@ -19,12 +19,12 @@ Core rules:
   - do not invent layout/model/group/submodel mutation commands.
 - Emit deterministic command graphs with stable ordering and dependencies.
 - Validate command graph support before apply. No hidden mutation, no side-channel writes.
-- Apply execution is owned-batch-plan only:
+- Apply execution uses the owned xLights API command graph:
   - require a current sequence revision token,
-  - compress the reviewed command graph into an owned batch plan,
-  - call `/xlightsdesigner/api/sequencing/apply-batch-plan`,
+  - compress create-heavy timing/effect writes into an owned batch plan when possible,
+  - use direct owned API commands for supported effect/layer/display-order edits that are not batch-plan writes,
   - wait for the returned `jobs.get` result,
-  - fail closed when the command graph cannot be represented by the owned batch endpoint.
+  - fail closed when the command graph cannot be represented by supported owned API endpoints.
 - Do not rely on transactions, `/xlDoAutomation`, or legacy automation ports.
 - After apply, require readback verification:
   - revision advanced

@@ -6,9 +6,24 @@
       "path": "specs/designer-dialog/designer-interaction-contract.md"
     },
     {
-      "id": "api-surface-contract",
+      "id": "xlights-api",
       "type": "spec",
-      "path": "specs/archive/sequence-agent/xlights-sequencer-control-api-surface-contract.md"
+      "path": "specs/sequence-agent/xlights-api.md"
+    },
+    {
+      "id": "sequencing-system",
+      "type": "spec",
+      "path": "specs/sequence-agent/sequencing-system.md"
+    },
+    {
+      "id": "model-metadata",
+      "type": "spec",
+      "path": "specs/sequence-agent/model-metadata.md"
+    },
+    {
+      "id": "render-training-knowledge",
+      "type": "spec",
+      "path": "specs/sequence-agent/render-training-knowledge.md"
     },
     {
       "id": "ui-agent-tests",
@@ -26,19 +41,9 @@
       "path": "apps/xlightsdesigner-ui/agent/handoff-contracts.js"
     },
     {
-      "id": "sequence-agent-checklist",
-      "type": "implementation-checklist",
-      "path": "specs/archive/sequence-agent/xlights-sequencer-control-sequence-agent-implementation-checklist.md"
-    },
-    {
       "id": "project-storage-layout",
       "type": "storage-spec",
       "path": "specs/xlightsdesigner-project-storage-layout.md"
-    },
-    {
-      "id": "functionality-corpus-initial-audit",
-      "type": "corpus-audit",
-      "path": "specs/archive/sequence-agent/xlights-sequencer-control-functionality-corpus-initial-audit.md"
     },
     {
       "id": "production-2d-functionality-index",

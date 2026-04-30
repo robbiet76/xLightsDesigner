@@ -12,7 +12,7 @@
       "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent/orchestrator.test.js",
       "asserts": [
         "handoff-style command graph applies successfully",
-        "transaction path advances revision"
+        "owned API apply path advances revision"
       ]
     },
     {

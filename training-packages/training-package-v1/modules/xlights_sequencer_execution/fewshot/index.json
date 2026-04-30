@@ -14,7 +14,7 @@
       "focus": [
         "use current plan_handoff_v1 when scope and base revision still match",
         "preserve deterministic command ordering",
-        "apply via transaction-only flow"
+        "apply through supported owned API batch/direct command paths"
       ],
       "expectedBehavior": [
         "reuses handoff graph by default",
