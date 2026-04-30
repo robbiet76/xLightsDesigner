@@ -2,7 +2,8 @@
 
 Status: Active
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-03-12
+Last Reviewed: 2026-04-30
+Supersedes: early app assistant routing and team-chat notes
 
 ## Purpose
 Define the top-level conversational assistant that the user experiences across the entire product.

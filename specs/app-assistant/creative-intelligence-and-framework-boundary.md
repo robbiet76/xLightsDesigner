@@ -1,7 +1,8 @@
 # Creative Intelligence And Framework Boundary
 
-Status: Locked
-Owner: xLightsDesigner
+Status: Active
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-30
 
 ## Purpose
 This application is not a scripted sequence generator.
@@ -75,7 +76,7 @@ When choosing between:
 
 prefer richer context and better agent reasoning unless a hard guardrail is required for safety or correctness.
 
-## Immediate Implementation Consequence
+## Near-Term Direction
 Near-term work should prioritize:
 1. richer layout context for discovery
 2. better project memory capture from chat

@@ -1,6 +1,9 @@
 # Assistant Memory Scopes
 
-Status: Locked for native implementation
+Status: Active
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-30
+Supersedes: locked native memory scope note
 
 ## Purpose
 
@@ -29,7 +32,7 @@ If memory is not separated cleanly, the assistant will:
 - reapply project-specific conclusions too broadly
 - make the user feel misread instead of understood
 
-## Locked Memory Model
+## Memory Model
 
 The assistant memory model is split into three scopes.
 
@@ -123,7 +126,7 @@ These are either:
 
 They should not be promoted into global workflow memory by default.
 
-## Near-Term Implementation Rule
+## Near-Term Rule
 
 Until scoped creative memory exists as a separate layer:
 

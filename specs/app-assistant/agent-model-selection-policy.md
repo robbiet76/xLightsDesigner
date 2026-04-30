@@ -2,56 +2,59 @@
 
 Status: Active
 Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-30
+Supersedes: point-in-time OpenAI model selection note
 
-## Prompt Captured
+## Purpose
 
-> proceed. please confirm we are using a good model for the agents as well since OpenAI models have been updated. I think we are using gpt-4.1-mini-2025-04-14 so I'm not sure if that should be updated. I do like that it is inexpensive and we should continue to use the minimum model needed for the agents to keep cost down.
+Define durable model-selection behavior for local assistant agents without hardcoding time-sensitive provider model names into the product spec.
 
-## Decision
+## Policy
 
-Use `gpt-5.4-mini` as the default text agent model for local development and BYO-provider desktop use.
+Use the minimum capable configured model for each agent task.
 
-Reasons:
-- current OpenAI docs identify `gpt-5.5` as the flagship model for complex reasoning and coding
-- current OpenAI docs identify smaller variants such as `gpt-5.4-mini` and `gpt-5.4-nano` as the cost/latency-optimized options
-- `gpt-5.4-mini` is a better fit than the old `gpt-4.1-mini` default because it stays on the current model family while preserving the cost-conscious default
-- `gpt-5.4-mini` leaves `gpt-5.4` and `gpt-5.5` available as explicit overrides when a task needs more reasoning depth
+The app should prefer cost-conscious defaults for normal routing, conversation, display discovery, handoff drafting, and eval/simulation runs. Larger or more expensive models should be explicit escalations, not silent defaults.
 
-## Runtime Policy
+## Runtime Precedence
 
 Default precedence:
+
 1. stored desktop provider setting
-2. `OPENAI_MODEL` environment override
-3. app fallback default: `gpt-5.4-mini`
+2. environment override such as `OPENAI_MODEL`
+3. app fallback default
 
-The app must keep the model editable in provider settings. User/provider choices override the fallback default.
+The fallback default may change as provider offerings evolve. The current runtime value belongs in settings/configuration and validation evidence, not in this durable policy.
 
-## Escalation Guidance
+## Escalation Rules
 
-Stay on `gpt-5.4-mini` for:
-- normal app assistant routing
-- designer conversation and structured handoff drafting
+Escalate only when:
+
+- a validation loop repeatedly fails on the configured default
+- full-sequence planning requires broader reasoning across many artifacts
+- the agent must resolve ambiguous conflicts between sequence state, user intent, and render feedback
+- release-quality evaluation shows materially better outcomes from a larger model
+
+Escalation must be visible in diagnostics and configurable by the user/provider settings.
+
+## Agent Guidance
+
+Stay on the configured economical model for:
+
+- app assistant routing
+- normal designer conversation
+- structured handoff drafting
 - display discovery conversation
-- eval/simulation runs where cost matters
+- cost-sensitive eval/simulation runs
 
-Escalate to `gpt-5.4` or `gpt-5.5` only when:
-- a validation loop repeatedly fails on the mini model
-- a full-sequence planning turn requires large, complex reasoning across many artifacts
-- the agent must resolve ambiguous conflicts between existing sequence state, user intent, and render feedback
-- a release-quality eval shows materially better outcomes from the larger model
+Use stronger configured models for:
 
-Do not silently escalate model size. Escalation should be visible in diagnostics and should remain configurable.
+- complex full-song planning
+- hard conflict resolution
+- repeated failed validation/revision loops
+- high-value release-gate evaluations
 
 ## Image Generation
 
-The designer visual inspiration feature uses the image-generation model separately from the text agent model. The current target for generated inspiration images and themed sequence media is `gpt-image-1.5`, with prompt/revision/provider metadata recorded in the visual design asset manifest. If provider access blocks `gpt-image-1.5`, the app may fall back to `gpt-image-1` and must record the actual model used.
+Image generation uses a separate configured provider/model from text agents.
 
-## Audit Notes
-
-As of 2026-04-26:
-- the active desktop assistant fallback was `gpt-5.4`
-- display-discovery simulation default was `gpt-5.4`
-- the macOS Settings placeholder still showed stale `gpt-4.1-mini`
-- the app-level structure eval runner still defaulted to stale `gpt-4.1-mini`
-
-Those defaults should align on `gpt-5.4-mini` unless a deliberate override is configured.
+Visual inspiration and sequence media generation must record actual provider, model, prompt, revision, and source metadata in the visual design asset manifest.
