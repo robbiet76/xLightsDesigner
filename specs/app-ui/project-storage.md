@@ -97,7 +97,7 @@ Stable identifiers:
 - `contentFingerprint`: full media file content hash; canonical cross-project track identity.
 - `mediaId`: normalized media path plus file metadata; locator for a specific file instance.
 - `sequenceId`: normalized sequence path; project-local sequencing state key.
-- display/model metadata fingerprints: durable target identity for retaining user metadata when show folders or layouts change.
+- display/model metadata fingerprints: durable target identity for retaining user metadata when show folders or xLights layouts change.
 
 The model fingerprint and reconciliation contract is defined in `../sequence-agent/model-metadata.md`.
 

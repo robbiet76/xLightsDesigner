@@ -98,13 +98,19 @@ export function createMetadataRuntime(deps = {}) {
     return payload ? stableHash(payload) : '';
   }
 
+  function bindingLayoutFingerprint(binding = {}) {
+    return String(binding?.xlightsLayoutFingerprint || binding?.layoutFingerprint || '');
+  }
+
   function currentDisplayMetadataBindingRef(target = null, existingBinding = null, previousTarget = null) {
     const binding = metadataObject().displayBinding || {};
     const previousTargetId = str(previousTarget?.id || '');
     const previousTargetName = str(previousTarget?.name || previousTarget?.displayName || '');
+    const layoutFingerprint = bindingLayoutFingerprint(binding) || buildDisplayMetadataLayoutFingerprint() || '';
     return {
       showFolder: String(binding.showFolder || getShowFolder() || ''),
-      layoutFingerprint: String(binding.layoutFingerprint || buildDisplayMetadataLayoutFingerprint() || ''),
+      xlightsLayoutFingerprint: layoutFingerprint,
+      layoutFingerprint,
       targetFingerprint: String(target?.fingerprint || existingBinding?.targetFingerprint || ''),
       targetFingerprintVersion: String(target?.fingerprintVersion || existingBinding?.targetFingerprintVersion || ''),
       previousTargetId: previousTargetId && previousTargetId !== str(target?.id)
@@ -305,7 +311,8 @@ export function createMetadataRuntime(deps = {}) {
       showFolder: String(getShowFolder() || ''),
       status: 'pending',
       pendingReason: String(reason || 'display changed'),
-      layoutFingerprint: String(metadata.displayBinding.layoutFingerprint || ''),
+      xlightsLayoutFingerprint: bindingLayoutFingerprint(metadata.displayBinding),
+      layoutFingerprint: bindingLayoutFingerprint(metadata.displayBinding),
       lastChangedAt: now
     };
     state.ui.metadataTargetId = '';
@@ -377,13 +384,15 @@ export function createMetadataRuntime(deps = {}) {
     ])).sort((a, b) => a.localeCompare(b));
     const activeAssignmentCount = assignmentIds.filter((id) => liveIds.has(id)).length;
     const activePreferenceCount = preferenceIds.filter((id) => liveIds.has(id)).length;
-    const previousFingerprint = String(metadata.displayBinding?.layoutFingerprint || '');
+    const previousFingerprint = bindingLayoutFingerprint(metadata.displayBinding);
     const layoutFingerprint = buildDisplayMetadataLayoutFingerprint(targets);
     const now = new Date().toISOString();
 
     metadata.displayBinding = {
       showFolder: String(getShowFolder() || ''),
+      xlightsLayoutFingerprint: layoutFingerprint,
       layoutFingerprint,
+      previousXlightsLayoutFingerprint: previousFingerprint && previousFingerprint !== layoutFingerprint ? previousFingerprint : '',
       previousLayoutFingerprint: previousFingerprint && previousFingerprint !== layoutFingerprint ? previousFingerprint : '',
       status: 'reconciled',
       pendingReason: '',

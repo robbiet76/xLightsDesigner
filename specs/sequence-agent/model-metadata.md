@@ -9,7 +9,7 @@ Supersedes: `model-metadata-ownership-and-tagging-2026-03-22.md`, `model-metadat
 
 Define how xLightsDesigner understands display models, groups, custom models, and user-curated display metadata.
 
-This is the canonical contract for model identity, layout refresh, custom model capture, and reconciliation with project display metadata.
+This is the canonical contract for model identity, xLights layout refresh, custom model capture, and reconciliation with project display metadata.
 
 ## Ownership
 
@@ -21,11 +21,13 @@ Display metadata belongs to the xLightsDesigner project, not to the show folder 
 - Start new projects with blank metadata unless the user imports or copies metadata.
 - Let users explicitly delete metadata records when they choose.
 
-Project display metadata captures user-confirmed or agent-proposed semantic understanding. xLights-derived metadata captures structural facts from the live layout. These layers may be shown together, but they must remain distinct so refreshed layout data does not overwrite curated user knowledge.
+Project display metadata captures user-confirmed or agent-proposed semantic understanding. xLights-derived metadata captures structural facts from the live xLights Layout tab and owned layout API. These layers may be shown together, but they must remain distinct so refreshed layout data does not overwrite curated user knowledge.
+
+Use `layout` when referring to xLights' Layout tab, layout API endpoints, or structural layout facts. Use `display` when referring to the broader xLightsDesigner understanding that layers project metadata, semantic tags, custom model interpretation, and learned display knowledge on top of the xLights layout.
 
 ## Stable Identity
 
-Metadata records should attach to stable target fingerprints rather than only display names. Names remain user-visible labels, but fingerprints provide continuity when a layout is refreshed or a model is renamed.
+Metadata records should attach to stable target fingerprints rather than only display names. Names remain user-visible labels, but fingerprints provide continuity when the xLights layout is refreshed or a model is renamed.
 
 Each current display target should expose:
 
@@ -80,6 +82,8 @@ Refresh should produce a reconciliation result:
 - missing targets whose prior metadata is retained but not currently active
 - possible remap candidates when fingerprints changed but names or structure strongly suggest continuity
 - custom model construction changes that need review
+
+The app should resolve low-risk reconciliation cases on the backend whenever possible. A unique fingerprint match can remap automatically. A duplicate fingerprint may remap automatically only when stored identity fields clearly select one live candidate. Missing or ambiguous records should be retained but excluded from active sequencing context until they become safely resolvable.
 
 The app should keep retained metadata readable and importable even when a target is missing from the current display. It should not delete retained records unless the user explicitly deletes them.
 
@@ -155,7 +159,7 @@ Submodels for custom models are part of the custom model capture contract, not a
 
 ## Storage And Artifacts
 
-Project-owned metadata should live under the app project folder. Current layout refresh artifacts may be regenerated, but user-curated metadata and review state should persist with the project.
+Project-owned metadata should live under the app project folder. Current xLights layout refresh artifacts may be regenerated, but user-curated metadata and review state should persist with the project.
 
 Recommended project artifact split:
 
@@ -169,15 +173,15 @@ Large raw API payloads should stay out of durable semantic metadata unless they 
 
 ## User Experience
 
-The user should not have to rebuild mature display metadata after normal show-folder changes. The app should show when current display data no longer matches existing metadata and offer review, remap, import, or explicit deletion paths.
+The user should not have to rebuild mature display metadata after normal show-folder changes. The app should reconcile current display data automatically where risk is minimal and surface user-facing review only for records that cannot be safely matched, imported, ignored, or retained in the backend.
 
 When a show folder or layout changes, the expected experience is:
 
 1. the app refreshes layout/model/custom-model data
 2. existing metadata is matched by fingerprint
-3. unmatched current targets appear as new or needing review
+3. safely resolvable renames or duplicate-fingerprint cases are handled automatically
 4. missing prior targets remain retained, not deleted
-5. likely remaps are presented for confirmation
+5. only ambiguous or high-risk remaps are presented for confirmation
 6. user-curated tags, notes, and constraints remain intact unless explicitly edited
 
 ## Related Specs

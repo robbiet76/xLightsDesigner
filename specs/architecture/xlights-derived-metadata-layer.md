@@ -43,7 +43,7 @@ The source of truth is the live xLights layout and group structure exposed throu
 The derived layer should not be treated as project-semantic memory.
 It can be:
 - recomputed from live xLights layout
-- cached by show/layout identity if needed later
+- cached by show/xLights-layout identity if needed later
 
 It should not be mixed into project display-discovery memory.
 

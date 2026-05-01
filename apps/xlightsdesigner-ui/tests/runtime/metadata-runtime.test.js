@@ -150,6 +150,8 @@ test("metadata runtime applies semantic hints and invalidates plan handoff", () 
 
   assert.equal(ok, true);
   assert.deepEqual(state.metadata.preferencesByTargetId.Tree.semanticHints, ["Sparkle", "Cool"]);
+  assert.equal(typeof state.metadata.preferencesByTargetId.Tree.displayBinding.xlightsLayoutFingerprint, "string");
+  assert.ok(state.metadata.preferencesByTargetId.Tree.displayBinding.xlightsLayoutFingerprint);
   assert.equal(typeof state.metadata.preferencesByTargetId.Tree.displayBinding.layoutFingerprint, "string");
   assert.ok(state.metadata.preferencesByTargetId.Tree.displayBinding.layoutFingerprint);
   assert.deepEqual(state.metadata.visualHintDefinitions.map((row) => row.name), ["Sparkle", "Cool"]);
@@ -172,6 +174,7 @@ test("metadata runtime stamps user-authored assignments with the display fingerp
   assert.equal(ok, true);
   assert.equal(state.metadata.assignments[0].targetId, "Tree");
   assert.equal(state.metadata.assignments[0].displayBinding.showFolder, "/show/fingerprint");
+  assert.equal(state.metadata.assignments[0].displayBinding.xlightsLayoutFingerprint, fingerprint);
   assert.equal(state.metadata.assignments[0].displayBinding.layoutFingerprint, fingerprint);
 });
 
@@ -301,6 +304,7 @@ test("metadata runtime reconciles display metadata without deleting orphaned use
   const binding = runtime.reconcileDisplayMetadataForSceneGraphChange({ reason: "layout refresh" });
 
   assert.equal(binding.status, "reconciled");
+  assert.equal(binding.xlightsLayoutFingerprint, binding.layoutFingerprint);
   assert.equal(binding.summary.activeAssignmentCount, 1);
   assert.equal(binding.summary.activePreferenceCount, 1);
   assert.deepEqual(binding.orphanTargetIds, ["Old Spinner"]);

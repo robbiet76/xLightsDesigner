@@ -222,7 +222,7 @@ The app should treat display metadata as:
 - migratable
 - living project memory that can evolve as new user or agent understanding is captured
 
-Display metadata should attach to model fingerprints from `../sequence-agent/model-metadata.md`, not only current xLights names. When a show folder or layout changes, semantic metadata is retained and reconciled instead of being discarded.
+Display metadata should attach to model fingerprints from `../sequence-agent/model-metadata.md`, not only current xLights names. When a show folder or xLights layout changes, semantic metadata is retained and reconciled instead of being discarded.
 
 The `Getting To Know Your Display` conversation should produce:
 - proposed tag definitions

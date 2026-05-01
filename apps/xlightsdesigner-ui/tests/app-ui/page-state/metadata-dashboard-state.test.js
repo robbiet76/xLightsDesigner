@@ -224,6 +224,8 @@ test("metadata dashboard exposes reconciliation review state", () => {
   });
 
   assert.equal(dashboard.data.reconciliation.state, "needs_review");
+  assert.equal(dashboard.data.reconciliation.xlightsLayoutFingerprint, "display-fp-2");
+  assert.equal(dashboard.data.reconciliation.previousXlightsLayoutFingerprint, "display-fp-1");
   assert.equal(dashboard.data.reconciliation.summary.renamedCount, 1);
   assert.equal(dashboard.data.reconciliation.summary.orphanedCount, 1);
   assert.equal(dashboard.data.reconciliation.summary.collisionCount, 1);
