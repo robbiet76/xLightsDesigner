@@ -201,7 +201,87 @@ private final class StubDisplayService: DisplayService, @unchecked Sendable {
     #expect(service.savedTargetPreference?.effectAvoidances == ["Bars"])
 }
 
-private func displayRow(name: String, labels: [DisplayLabelDefinitionModel]) -> DisplayLayoutRowModel {
+@MainActor
+@Test func displaySelectionIncludesLinkedSubmodelFacts() async throws {
+    let label = DisplayLabelDefinitionModel(
+        id: "tag-character",
+        name: "Character Props",
+        description: "Character faces.",
+        usageCount: 1,
+        color: .purple
+    )
+    let workspace = ProjectWorkspace(sessionStore: DisplayTestProjectSessionStore())
+    workspace.setProject(ActiveProjectModel(
+        id: "project-1",
+        projectName: "Display Submodels",
+        projectFilePath: "/tmp/Display Submodels.xdproj",
+        showFolder: "/tmp/show",
+        mediaPath: "",
+        appRootPath: AppEnvironment.canonicalAppRoot,
+        createdAt: "2026-04-24T00:00:00Z",
+        updatedAt: "2026-04-24T00:00:00Z",
+        snapshot: [:]
+    ))
+    let service = StubDisplayService(result: DisplayServiceResult(
+        readiness: DisplayReadinessSummaryModel(
+            state: .needsReview,
+            totalTargets: 1,
+            readyCount: 1,
+            unresolvedCount: 0,
+            orphanCount: 0,
+            explanationText: "Ready.",
+            nextStepText: "Continue."
+        ),
+        rows: [
+            displayRow(
+                name: "Singing Face",
+                labels: [label],
+                submodelFacts: [
+                    DisplaySubmodelFactModel(
+                        id: "Singing Face/@Mouth1",
+                        name: "@Mouth1",
+                        parentId: "Singing Face",
+                        nodeCount: 12,
+                        parentNodeCount: 120,
+                        nodeCoverageRatio: 0.1,
+                        siblingCount: 1,
+                        siblingIds: ["Singing Face/@Eye-Left"],
+                        overlappingSiblingIds: [],
+                        structureHints: ["feature_mouth"]
+                    )
+                ]
+            )
+        ],
+        sourceSummary: "test",
+        banners: [],
+        labelDefinitions: [label],
+        targetPreferences: [:],
+        visualHintDefinitions: []
+    ))
+    let model = DisplayScreenViewModel(
+        workspace: workspace,
+        displayService: service,
+        displayDiscoveryStore: LocalDisplayDiscoveryStateStore()
+    )
+
+    model.loadDisplay()
+    try await xldWaitUntil { model.confirmedMetadataCount == 1 }
+
+    guard case let .selected(selection) = model.screenModel.selectedMetadata else {
+        Issue.record("Expected selected metadata")
+        return
+    }
+    #expect(selection.submodelFacts.count == 1)
+    #expect(selection.submodelFacts.first?.name == "@Mouth1")
+    #expect(selection.submodelFacts.first?.nodeCoverageSummary == "12/120 nodes (10%)")
+    #expect(selection.submodelFacts.first?.structureHints == ["feature_mouth"])
+}
+
+private func displayRow(
+    name: String,
+    labels: [DisplayLabelDefinitionModel],
+    submodelFacts: [DisplaySubmodelFactModel] = []
+) -> DisplayLayoutRowModel {
     DisplayLayoutRowModel(
         id: name,
         targetName: name,
@@ -218,6 +298,7 @@ private func displayRow(name: String, labels: [DisplayLabelDefinitionModel]) -> 
         directGroupMembers: [],
         activeGroupMembers: [],
         flattenedGroupMembers: [],
-        flattenedAllGroupMembers: []
+        flattenedAllGroupMembers: [],
+        submodelFacts: submodelFacts
     )
 }

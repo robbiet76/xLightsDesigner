@@ -198,6 +198,9 @@ struct DisplayScreenView: View {
                         if !entry.relatedLabels.isEmpty {
                             labelSection(title: "Applied Labels", labels: entry.relatedLabels)
                         }
+                        if !entry.submodelFacts.isEmpty {
+                            submodelFactsSection(entry.submodelFacts)
+                        }
                     }
                 }
             }
@@ -511,6 +514,45 @@ struct DisplayScreenView: View {
             .padding(10)
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.55))
             .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func submodelFactsSection(_ facts: [DisplaySubmodelFactModel]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Submodels")
+                .font(.subheadline)
+                .fontWeight(.medium)
+            LazyVStack(alignment: .leading, spacing: 8) {
+                ForEach(facts.prefix(8)) { fact in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(fact.name)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text(fact.nodeCoverageSummary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        HStack(spacing: 6) {
+                            compactInfoChip(label: "Siblings", value: "\(fact.siblingCount)")
+                            compactInfoChip(label: "Overlap", value: fact.overlappingSiblingIds.isEmpty ? "No" : "\(fact.overlappingSiblingIds.count)")
+                        }
+                        if !fact.structureHints.isEmpty {
+                            flowStringSection(labels: fact.structureHints, backgroundTint: Color.secondary.opacity(0.10))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.55))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
+            if facts.count > 8 {
+                Text("+ \(facts.count - 8) more submodels")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     private func compactInfoChip(label: String, value: String) -> some View {

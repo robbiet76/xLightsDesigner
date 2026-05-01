@@ -675,7 +675,21 @@ final class AppAutomationServer: @unchecked Sendable {
                 "status": entry.status.rawValue,
                 "rationale": entry.rationale,
                 "linkedTargets": entry.linkedTargets,
-                "relatedLabels": entry.relatedLabels.map { ["name": $0.name, "description": $0.description, "color": $0.color.displayName] }
+                "relatedLabels": entry.relatedLabels.map { ["name": $0.name, "description": $0.description, "color": $0.color.displayName] },
+                "submodels": entry.submodelFacts.prefix(24).map {
+                    [
+                        "id": $0.id,
+                        "name": $0.name,
+                        "parentId": $0.parentId,
+                        "nodeCount": $0.nodeCount,
+                        "parentNodeCount": $0.parentNodeCount ?? NSNull(),
+                        "nodeCoverageRatio": $0.nodeCoverageRatio ?? NSNull(),
+                        "siblingCount": $0.siblingCount,
+                        "siblingIds": $0.siblingIds,
+                        "overlappingSiblingIds": $0.overlappingSiblingIds,
+                        "structureHints": $0.structureHints
+                    ] as [String: Any]
+                }
             ]
         }
         return [

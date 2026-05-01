@@ -11,6 +11,8 @@ struct DisplayServiceArtifactTests {
             "name": "@Mouth1",
             "parentName": "Custom Target A",
             "type": "ranges",
+            "lines": "1-8",
+            "nodeCount": 8,
             "layoutGroup": "Default",
             "startChannel": 89893,
             "endChannel": 89916
@@ -35,6 +37,8 @@ struct DisplayServiceArtifactTests {
         #expect(targetSubmodels.map(\.id).contains("Custom Target A/@Mouth1"))
         #expect(targetSubmodels.map(\.parentId).allSatisfy { $0 == "Custom Target A" })
         #expect(targetSubmodels.map(\.name) == ["@Eye-Left", "@Mouth1"])
+        #expect(targetSubmodels.first { $0.name == "@Mouth1" }?.nodeCount == 8)
+        #expect(targetSubmodels.first { $0.name == "@Mouth1" }?.lines == "1-8")
     }
 
     @Test func customModelInferenceUsesFaceSubmodels() throws {
@@ -112,19 +116,22 @@ struct DisplayServiceArtifactTests {
             "fullName": "Built In Target/Left Segment",
             "name": "Left Segment",
             "parentName": "Built In Target",
-            "membership": { "nodeCount": 4, "nodes": [1, 2, 3, 4] }
+            "lines": "1-4",
+            "nodeCount": 4
           },
           {
             "fullName": "Built In Target/Right Segment",
             "name": "Right Segment",
             "parentName": "Built In Target",
-            "membership": { "nodeCount": 4, "nodes": [3, 4, 5, 6] }
+            "lines": "3-6",
+            "nodeCount": 4
           },
           {
             "fullName": "Built In Target/Outer Ring",
             "name": "Outer Ring",
             "parentName": "Built In Target",
-            "membership": { "nodeCount": 2, "nodes": [9, 10] }
+            "lines": "9-10",
+            "nodeCount": 2
           }
         ]
         """.data(using: .utf8)!)

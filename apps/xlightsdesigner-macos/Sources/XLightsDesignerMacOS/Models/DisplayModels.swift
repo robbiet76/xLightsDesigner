@@ -75,6 +75,28 @@ struct DisplayLayoutRowModel: Identifiable, Hashable, Sendable {
     let activeGroupMembers: [String]
     let flattenedGroupMembers: [String]
     let flattenedAllGroupMembers: [String]
+    var submodelFacts: [DisplaySubmodelFactModel] = []
+}
+
+struct DisplaySubmodelFactModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let name: String
+    let parentId: String
+    let nodeCount: Int
+    let parentNodeCount: Int?
+    let nodeCoverageRatio: Double?
+    let siblingCount: Int
+    let siblingIds: [String]
+    let overlappingSiblingIds: [String]
+    let structureHints: [String]
+
+    var nodeCoverageSummary: String {
+        guard let parentNodeCount, parentNodeCount > 0 else { return "\(nodeCount) nodes" }
+        if let nodeCoverageRatio {
+            return "\(nodeCount)/\(parentNodeCount) nodes (\(Int((nodeCoverageRatio * 100).rounded()))%)"
+        }
+        return "\(nodeCount)/\(parentNodeCount) nodes"
+    }
 }
 
 struct DisplayMetadataRowModel: Identifiable, Hashable, Sendable {
@@ -107,6 +129,7 @@ struct DisplayMetadataSelectionModel: Sendable {
     let rationale: String
     let linkedTargets: [String]
     let relatedLabels: [DisplayLabelDefinitionModel]
+    let submodelFacts: [DisplaySubmodelFactModel]
 }
 
 struct DisplayMetadataOverviewCardModel: Identifiable, Hashable, Sendable {

@@ -23,7 +23,7 @@ Model metadata refresh and reconciliation requirements are defined in `model-met
 
 ## Layout Metadata Notes
 
-`layout.getSubmodels` payloads may expose the full submodel identifier as `id` or `fullName`, and the parent model identifier as `parentId` or `parentName`. Consumers should normalize these aliases into a single model-index representation before attaching submodels to parent model records.
+`layout.getSubmodels` payloads may expose the full submodel identifier as `id` or `fullName`, and the parent model identifier as `parentId` or `parentName`. Consumers should normalize these aliases into a single model-index representation before attaching submodels to parent model records. Submodel membership may be returned as direct `nodeCount` and `lines` fields or as nested membership arrays; direct `lines` ranges should be treated as node membership evidence for coverage and sibling overlap when richer node arrays are not available.
 
 ## Required Capability Areas
 

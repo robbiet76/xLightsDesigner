@@ -105,7 +105,15 @@ struct XLightsDisplayService: DisplayService {
                 let groupMemberships = try await groupMembershipsTask
                 let submodelsByParent = groupSubmodelsByParent(try? await submodelsTask)
                 rows = models
-                    .map { makeRow(from: $0, groupMemberships: groupMemberships, document: metadataDocument, labelDefinitionsByID: labelDefinitionsByID) }
+                    .map {
+                        makeRow(
+                            from: $0,
+                            groupMemberships: groupMemberships,
+                            submodels: submodelsByParent[$0.name] ?? [],
+                            document: metadataDocument,
+                            labelDefinitionsByID: labelDefinitionsByID
+                        )
+                    }
                     .sorted { $0.targetName.localizedCaseInsensitiveCompare($1.targetName) == .orderedAscending }
                 let nodeLayoutsByModel = await fetchNodeLayouts(for: rows)
                 let modelIndexArtifact = try? encodeDisplayModelIndexArtifactInternal(
@@ -230,6 +238,7 @@ struct XLightsDisplayService: DisplayService {
     private func makeRow(
         from model: XLightsLayoutModel,
         groupMemberships: [String: XLightsGroupMembership],
+        submodels: [XLightsSubmodel],
         document: PersistedDisplayMetadataDocument,
         labelDefinitionsByID: [String: DisplayLabelDefinitionModel]
     ) -> DisplayLayoutRowModel {
@@ -255,7 +264,10 @@ struct XLightsDisplayService: DisplayService {
             directGroupMembers: membership?.directMembers.map(\.name) ?? [],
             activeGroupMembers: membership?.activeMembers.map(\.name) ?? [],
             flattenedGroupMembers: membership?.flattenedMembers.map(\.name) ?? [],
-            flattenedAllGroupMembers: membership?.flattenedAllMembers.map(\.name) ?? []
+            flattenedAllGroupMembers: membership?.flattenedAllMembers.map(\.name) ?? [],
+            submodelFacts: submodels.map { submodel in
+                DisplaySubmodelFactModel(submodel: submodel, allSubmodels: submodels, parentNodeCount: model.nodeCount ?? 0)
+            }
         )
     }
 
@@ -434,8 +446,26 @@ private func normalizeSubmodelNodeMembership(_ submodel: XLightsSubmodel) -> [In
         ?? submodel.membership?.nodes
         ?? submodel.nodeChannels
         ?? submodel.nodes
-        ?? []
+        ?? parseSubmodelLineMembership(submodel.lines)
     return values.sorted()
+}
+
+private func parseSubmodelLineMembership(_ lines: String?) -> [Int] {
+    guard let lines else { return [] }
+    var values: [Int] = []
+    for token in lines.components(separatedBy: CharacterSet(charactersIn: ",; ")) {
+        let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { continue }
+        let bounds = trimmed.split(separator: "-", maxSplits: 1).compactMap { Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
+        if bounds.count == 2 {
+            let lower = min(bounds[0], bounds[1])
+            let upper = max(bounds[0], bounds[1])
+            values.append(contentsOf: lower...upper)
+        } else if bounds.count == 1 {
+            values.append(bounds[0])
+        }
+    }
+    return values
 }
 
 private func intersectionCount(_ lhs: [Int], _ rhs: [Int]) -> Int {
@@ -630,6 +660,8 @@ struct XLightsSubmodel: Decodable, Sendable {
     let groupNames: [String]?
     let startChannel: Int?
     let endChannel: Int?
+    let nodeCount: Int?
+    let lines: String?
     let membership: XLightsSubmodelMembership?
     let nodeChannels: [Int]?
     let nodes: [Int]?
@@ -645,6 +677,8 @@ struct XLightsSubmodel: Decodable, Sendable {
         case groupNames
         case startChannel
         case endChannel
+        case nodeCount
+        case lines
         case membership
         case nodeChannels
         case nodes
@@ -662,6 +696,8 @@ struct XLightsSubmodel: Decodable, Sendable {
         groupNames = try container.decodeIfPresent([String].self, forKey: .groupNames)
         startChannel = try container.decodeIfPresent(Int.self, forKey: .startChannel)
         endChannel = try container.decodeIfPresent(Int.self, forKey: .endChannel)
+        nodeCount = try container.decodeIfPresent(Int.self, forKey: .nodeCount)
+        lines = try container.decodeIfPresent(String.self, forKey: .lines)
         membership = try container.decodeIfPresent(XLightsSubmodelMembership.self, forKey: .membership)
         nodeChannels = try container.decodeIfPresent([Int].self, forKey: .nodeChannels)
         nodes = try container.decodeIfPresent([Int].self, forKey: .nodes)
@@ -826,6 +862,7 @@ private struct DisplaySubmodelSummary: Encodable {
     let groupNames: [String]
     let startChannel: Int?
     let endChannel: Int?
+    let lines: String?
     let siblingCount: Int
     let siblingIds: [String]
     let overlappingSiblingIds: [String]
@@ -846,7 +883,7 @@ private struct DisplaySubmodelSummary: Encodable {
         let overlappingSiblings = siblings.filter { sibling in
             intersectionCount(nodeMembership, normalizeSubmodelNodeMembership(sibling)) > 0
         }
-        let nodeCount = submodel.membership?.nodeCount ?? (nodeMembership.isEmpty ? nil : nodeMembership.count)
+        let nodeCount = submodel.membership?.nodeCount ?? submodel.nodeCount ?? (nodeMembership.isEmpty ? nil : nodeMembership.count)
 
         id = submodel.id
         name = submodel.name
@@ -856,6 +893,7 @@ private struct DisplaySubmodelSummary: Encodable {
         groupNames = submodel.groupNames ?? []
         startChannel = submodel.startChannel
         endChannel = submodel.endChannel
+        lines = submodel.lines
         siblingCount = siblings.count
         siblingIds = siblings.compactMap { $0.id ?? $0.name }
         overlappingSiblingIds = overlappingSiblings.compactMap { $0.id ?? $0.name }
@@ -873,6 +911,24 @@ private struct DisplaySubmodelNodeCoverage: Encodable {
     let nodeCount: Int
     let parentNodeCount: Int?
     let ratio: Double?
+}
+
+private extension DisplaySubmodelFactModel {
+    init(submodel: XLightsSubmodel, allSubmodels: [XLightsSubmodel], parentNodeCount: Int?) {
+        let summary = DisplaySubmodelSummary(submodel: submodel, allSubmodels: allSubmodels, parentNodeCount: parentNodeCount)
+        self.init(
+            id: summary.id ?? summary.name ?? "",
+            name: summary.name ?? summary.id ?? "",
+            parentId: summary.parentId ?? "",
+            nodeCount: summary.nodeCoverage.nodeCount,
+            parentNodeCount: summary.nodeCoverage.parentNodeCount,
+            nodeCoverageRatio: summary.nodeCoverage.ratio,
+            siblingCount: summary.siblingCount,
+            siblingIds: summary.siblingIds,
+            overlappingSiblingIds: summary.overlappingSiblingIds,
+            structureHints: summary.structureHints
+        )
+    }
 }
 
 private struct DisplayNodeLayoutMetadata: Encodable {

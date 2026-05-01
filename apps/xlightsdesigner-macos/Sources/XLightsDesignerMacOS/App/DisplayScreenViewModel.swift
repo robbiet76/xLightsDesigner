@@ -373,6 +373,7 @@ final class DisplayScreenViewModel {
         }
         let row = selected[0]
         let relatedLabels = relatedLabels(for: row)
+        let submodelFacts = relatedSubmodelFacts(for: row)
         screenModel = DisplayScreenModel(
             header: screenModel.header,
             readinessSummary: screenModel.readinessSummary,
@@ -388,7 +389,8 @@ final class DisplayScreenViewModel {
                 status: row.status,
                 rationale: row.rationale,
                 linkedTargets: row.linkedTargets,
-                relatedLabels: relatedLabels
+                relatedLabels: relatedLabels,
+                submodelFacts: submodelFacts
             )),
             banners: screenModel.banners,
             labelDefinitions: screenModel.labelDefinitions,
@@ -981,6 +983,19 @@ final class DisplayScreenViewModel {
         let labelNames = Set(selectedLinkedTargets.flatMap(\.labelDefinitions).map(\.name))
         let related = screenModel.labelDefinitions.filter { labelNames.contains($0.name) }
         return related.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    private func relatedSubmodelFacts(for row: DisplayMetadataRowModel) -> [DisplaySubmodelFactModel] {
+        let linked = Set(row.linkedTargets)
+        return screenModel.rows
+            .filter { linked.contains($0.targetName) }
+            .flatMap(\.submodelFacts)
+            .sorted {
+                if $0.parentId.caseInsensitiveCompare($1.parentId) != .orderedSame {
+                    return $0.parentId.localizedCaseInsensitiveCompare($1.parentId) == .orderedAscending
+                }
+                return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
     }
 
     private func normalizeForMatching(_ value: String) -> String {
