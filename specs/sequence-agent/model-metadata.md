@@ -183,6 +183,8 @@ Recommended project artifact split:
 
 Large raw API payloads should stay out of durable semantic metadata unless they are compacted into a stable project artifact.
 
+On native Display refresh, `display/model-index.json` is the primary shared artifact. It should compact `layout.getModels`, `layout.getSubmodels`, model group membership, and any available `layout.getModelNodes` output into stable target records. `display/custom-models.json` is a derived projection for custom-model construction review and testing; it should be built from the same enriched target records rather than a separate custom-only capture flow.
+
 ## User Experience
 
 The user should not have to rebuild mature display metadata after normal show-folder changes. The app should reconcile current display data automatically where risk is minimal and surface user-facing review only for records that cannot be safely matched, imported, ignored, or retained in the backend.
