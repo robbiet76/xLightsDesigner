@@ -377,7 +377,7 @@ private func isCustomModelType(_ type: String) -> Bool {
     return normalized == "custom" || normalized.contains("custom")
 }
 
-private func groupSubmodelsByParent(_ submodels: [XLightsSubmodel]?) -> [String: [XLightsSubmodel]] {
+func groupSubmodelsByParent(_ submodels: [XLightsSubmodel]?) -> [String: [XLightsSubmodel]] {
     Dictionary(grouping: submodels ?? []) { submodel in
         submodel.parentId ?? parentIdFromSubmodelId(submodel.id)
     }.mapValues { rows in
@@ -448,7 +448,7 @@ private struct XLightsSubmodelsData: Decodable {
     let submodels: [XLightsSubmodel]
 }
 
-private struct XLightsSubmodel: Decodable, Sendable {
+struct XLightsSubmodel: Decodable, Sendable {
     let id: String?
     let name: String?
     let type: String?
@@ -457,6 +457,33 @@ private struct XLightsSubmodel: Decodable, Sendable {
     let groupNames: [String]?
     let startChannel: Int?
     let endChannel: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case fullName
+        case name
+        case type
+        case parentId
+        case parentName
+        case layoutGroup
+        case groupNames
+        case startChannel
+        case endChannel
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(String.self, forKey: .id)
+            ?? container.decodeIfPresent(String.self, forKey: .fullName)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        type = try container.decodeIfPresent(String.self, forKey: .type)
+        parentId = try container.decodeIfPresent(String.self, forKey: .parentId)
+            ?? container.decodeIfPresent(String.self, forKey: .parentName)
+        layoutGroup = try container.decodeIfPresent(String.self, forKey: .layoutGroup)
+        groupNames = try container.decodeIfPresent([String].self, forKey: .groupNames)
+        startChannel = try container.decodeIfPresent(Int.self, forKey: .startChannel)
+        endChannel = try container.decodeIfPresent(Int.self, forKey: .endChannel)
+    }
 }
 
 private struct XLightsLayoutModel: Decodable, Sendable {

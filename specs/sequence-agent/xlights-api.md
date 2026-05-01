@@ -21,6 +21,10 @@ When the show folder changes, consumers should refresh model metadata, custom mo
 
 Model metadata refresh and reconciliation requirements are defined in `model-metadata.md`.
 
+## Layout Metadata Notes
+
+`layout.getSubmodels` payloads may expose the full submodel identifier as `id` or `fullName`, and the parent model identifier as `parentId` or `parentName`. Consumers should normalize these aliases into a single model-index representation before attaching submodels to parent model records.
+
 ## Required Capability Areas
 
 - health and capability discovery
