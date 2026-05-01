@@ -39,6 +39,10 @@ function normalizeTokenSet(value = '') {
   );
 }
 
+function normalizeTrainingBucket(value = '') {
+  return str(value).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
 function mergeAssignment(into = new Map(), targetId = '', patch = {}) {
   const id = str(targetId);
   if (!id) return;
@@ -52,7 +56,8 @@ function mergeAssignment(into = new Map(), targetId = '', patch = {}) {
     source: ''
   };
   const rolePreference = str(existing.rolePreference || patch.rolePreference);
-  into.set(id, {
+  const trainingBuckets = uniqueStrings([...(existing.trainingBuckets || []), ...(patch.trainingBuckets || [])].map(normalizeTrainingBucket));
+  const merged = {
     ...existing,
     ...patch,
     targetId: id,
@@ -62,7 +67,10 @@ function mergeAssignment(into = new Map(), targetId = '', patch = {}) {
     effectAvoidances: uniqueStrings([...(existing.effectAvoidances || []), ...(patch.effectAvoidances || [])]),
     rolePreference,
     source: uniqueStrings([existing.source, patch.source]).join('+')
-  });
+  };
+  if (trainingBuckets.length) merged.trainingBuckets = trainingBuckets;
+  else delete merged.trainingBuckets;
+  into.set(id, merged);
 }
 
 function normalizeLayoutRows(layoutRows = []) {
@@ -342,6 +350,7 @@ function loadModelIndexCustomStructureAssignments(projectFile = '') {
         ...traits
       ]),
       semanticHints,
+      trainingBuckets,
       visualHintDefinitions: [],
       effectAvoidances: [],
       rolePreference: '',
@@ -398,6 +407,7 @@ export function loadProjectDisplayMetadataAssignments(projectFile = '', context 
         ...arr(preference?.semanticHints),
         ...arr(preference?.submodelHints)
       ]);
+      const trainingBuckets = uniqueStrings(arr(preference?.trainingBuckets).map(normalizeTrainingBucket));
       const visualHintDefinitions = semanticHints
         .map((name) => definitionIndex.get(name.toLowerCase()) || null)
         .filter((definition) => definition?.status === 'defined');
@@ -405,13 +415,15 @@ export function loadProjectDisplayMetadataAssignments(projectFile = '', context 
       const allTags = uniqueStrings([
         ...tagNames,
         rolePreference,
-        ...semanticHints
+        ...semanticHints,
+        ...trainingBuckets
       ]);
       if (!targetId || !allTags.length) return null;
       return {
         targetId,
         tags: allTags,
         semanticHints,
+        trainingBuckets,
         visualHintDefinitions,
         effectAvoidances,
         rolePreference,

@@ -49,6 +49,7 @@ struct PersistedDisplayTargetPreference: Codable, Sendable, Equatable {
     var semanticHints: [String]?
     var submodelHints: [String]?
     var effectAvoidances: [String]?
+    var trainingBuckets: [String]?
 }
 
 struct PersistedVisualHintDefinition: Codable, Sendable, Equatable {
@@ -144,14 +145,16 @@ struct LocalDisplayMetadataStore: DisplayMetadataStore {
         let normalizedAvoidances = normalizedStrings(effectAvoidances)
 
         for targetID in normalizedStrings(targetIDs) {
-            if (normalizedRole ?? "").isEmpty && normalizedHints.isEmpty && normalizedAvoidances.isEmpty {
+            let existingTrainingBuckets = document.preferencesByTargetId[targetID]?.trainingBuckets
+            if (normalizedRole ?? "").isEmpty && normalizedHints.isEmpty && normalizedAvoidances.isEmpty && (existingTrainingBuckets ?? []).isEmpty {
                 document.preferencesByTargetId.removeValue(forKey: targetID)
             } else {
                 document.preferencesByTargetId[targetID] = PersistedDisplayTargetPreference(
                     rolePreference: (normalizedRole ?? "").isEmpty ? nil : normalizedRole,
                     semanticHints: normalizedHints.isEmpty ? nil : normalizedHints,
                     submodelHints: nil,
-                    effectAvoidances: normalizedAvoidances.isEmpty ? nil : normalizedAvoidances
+                    effectAvoidances: normalizedAvoidances.isEmpty ? nil : normalizedAvoidances,
+                    trainingBuckets: existingTrainingBuckets?.isEmpty == true ? nil : existingTrainingBuckets
                 )
             }
         }

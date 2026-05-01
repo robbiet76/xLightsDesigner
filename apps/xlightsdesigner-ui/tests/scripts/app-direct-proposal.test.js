@@ -245,7 +245,8 @@ test("app project display metadata loader includes preference-only target intent
     preferencesByTargetId: {
       Roofline: {
         rolePreference: "support",
-        semanticHints: ["Outline", "Linear"]
+        semanticHints: ["Outline", "Linear"],
+        trainingBuckets: ["single line"]
       }
     }
   });
@@ -253,8 +254,9 @@ test("app project display metadata loader includes preference-only target intent
   assert.deepEqual(loadProjectDisplayMetadataAssignments(projectFile), [
     {
       targetId: "Roofline",
-      tags: ["support", "Outline", "Linear"],
+      tags: ["support", "Outline", "Linear", "single_line"],
       semanticHints: ["Outline", "Linear"],
+      trainingBuckets: ["single_line"],
       visualHintDefinitions: [],
       effectAvoidances: [],
       rolePreference: "support",
@@ -340,7 +342,7 @@ test("app project display metadata loader includes custom model structure hints"
           customStructure: {
             profile: "custom_radial_like",
             traits: ["custom_grid", "radial_like"],
-            trainingBuckets: ["spinner", "star"],
+            trainingBuckets: ["spinner"],
             construction: {
               dimensions: { width: 21, height: 21, layers: 1 },
               nodeMap: { nodeCount: 90 }
@@ -361,6 +363,7 @@ test("app project display metadata loader includes custom model structure hints"
   assert.ok(byTarget.get("CustomTargetA").semanticHints.includes("11 custom submodels captured"));
   assert.ok(byTarget.get("CustomTargetA").semanticHints.includes("153 custom model nodes mapped"));
   assert.ok(byTarget.get("CustomTargetB").tags.includes("spinner"));
+  assert.deepEqual(byTarget.get("CustomTargetB").trainingBuckets, ["spinner"]);
   assert.ok(byTarget.get("CustomTargetB").semanticHints.includes("spinner compatible custom model"));
 });
 

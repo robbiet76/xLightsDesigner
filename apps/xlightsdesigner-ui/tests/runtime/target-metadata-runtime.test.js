@@ -108,6 +108,32 @@ test("target metadata custom models use shared node layout enrichment", () => {
   assert.equal(custom?.structure?.customStructure?.construction?.nodeMap?.nodeCount, 4);
 });
 
+test("target metadata uses display metadata training buckets for custom model support", () => {
+  const records = buildNormalizedTargetMetadataRecords({
+    sceneGraph: {
+      modelsById: {
+        CustomTarget: {
+          id: "CustomTarget",
+          name: "Custom Target",
+          displayAs: "Custom",
+          attributes: { CustomModel: customModelSource() }
+        }
+      }
+    },
+    metadataPreferencesByTargetId: {
+      CustomTarget: {
+        semanticHints: ["radial prop"],
+        trainingBuckets: ["Spinner"]
+      }
+    }
+  });
+
+  const custom = records.find((row) => row.targetId === "CustomTarget");
+  assert.ok(custom?.training?.trainedModelBuckets.includes("spinner"));
+  assert.equal(custom?.training?.trainedSupportState, "trained_supported");
+  assert.deepEqual(custom?.user?.trainingBuckets, ["spinner"]);
+});
+
 test("target metadata custom fingerprints change when custom submodel construction changes", () => {
   const base = buildNormalizedTargetMetadataRecords({
     sceneGraph: {

@@ -133,6 +133,23 @@ Examples:
 - `best_for_quiet_sections`
 - `use_sparingly`
 
+### Optional Training Compatibility
+
+Custom models can be structurally clear without having a built-in xLights model type. When the user, display-discovery process, or migration has confirmed that a custom target should use training knowledge for a known prop family, the project metadata may store optional `trainingBuckets` on that target preference.
+
+Examples:
+- `spinner`
+- `star`
+- `cane`
+- `single_line`
+- `matrix`
+
+Rules:
+- `trainingBuckets` are project display metadata, not xLights-derived facts.
+- They should be user-confirmed, imported, or produced by an explicit metadata/discovery workflow.
+- Core app logic should not infer these buckets from user-defined model names.
+- Structural capture can still provide generic buckets when grounded in node layout or submodel construction.
+
 ## Optional v1.1 Domains
 
 These are useful, but should not be pushed into the first pass unless clearly helpful.

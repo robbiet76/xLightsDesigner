@@ -39,6 +39,21 @@ test("effective metadata assignments merge prefs into existing assignments", () 
   assert.deepEqual(out[0].semanticHints, ["Outline", "Linear"]);
 });
 
+test("effective metadata assignments preserve user-defined training buckets", () => {
+  const out = buildEffectiveMetadataAssignments([
+    { targetId: "CustomTarget", targetType: "model", tags: ["existing"] }
+  ], {
+    CustomTarget: {
+      semanticHints: ["Radial"],
+      trainingBuckets: ["Spinner"]
+    }
+  });
+
+  assert.equal(out.length, 1);
+  assert.deepEqual(out[0].trainingBuckets, ["spinner"]);
+  assert.ok(out[0].tags.includes("Spinner"));
+});
+
 test("effective metadata assignments attach only defined visual hint records", () => {
   const out = buildEffectiveMetadataAssignments([], {
     "Flood-01": {

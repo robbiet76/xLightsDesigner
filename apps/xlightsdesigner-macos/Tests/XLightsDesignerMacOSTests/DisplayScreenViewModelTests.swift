@@ -121,7 +121,8 @@ private final class StubDisplayService: DisplayService, @unchecked Sendable {
                 rolePreference: "lead",
                 semanticHints: ["centerpiece", "sparkle"],
                 submodelHints: nil,
-                effectAvoidances: ["Bars"]
+                effectAvoidances: ["Bars"],
+                trainingBuckets: nil
             )
         ],
         visualHintDefinitions: []

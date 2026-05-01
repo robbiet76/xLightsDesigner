@@ -184,6 +184,7 @@ export function createMetadataRuntime(deps = {}) {
       String(value?.rolePreference || '').trim()
       || (Array.isArray(value?.semanticHints) && value.semanticHints.length)
       || (Array.isArray(value?.submodelHints) && value.submodelHints.length)
+      || (Array.isArray(value?.trainingBuckets) && value.trainingBuckets.length)
       || (Array.isArray(value?.effectAvoidances) && value.effectAvoidances.length)
     );
   }

@@ -156,6 +156,10 @@ The agent needs more than the model name:
 
 The source of the custom model does not change the requirement. User-created, vendor-provided, and copied custom models all need the same understanding framework.
 
+Core custom model inference must be grounded in structure, not user-defined names. The app may classify objective traits such as face-like submodels, linear geometry, radial spoke/ring construction, node order, density, and layer/submodel organization. It should not hard-code vendor names or user model names to decide that a custom model is a cane, star, spinner, flake, character, or any other semantic prop family.
+
+When a custom model needs user/vendor-specific meaning, that meaning belongs in project display metadata. `display/metadata.json` may add semantic hints, tags, effect avoidances, role preferences, and optional `trainingBuckets` for a target. Those metadata fields are curated project knowledge and can be copied/migrated with the project. They must remain separate from the regenerated xLights-derived structural artifact.
+
 Custom model capture should include enough construction detail for testing and agent reasoning:
 
 - grid width/height or coordinate extents

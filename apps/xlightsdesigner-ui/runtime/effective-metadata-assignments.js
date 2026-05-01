@@ -9,17 +9,26 @@ function norm(value = "") {
   return normalizeMetadataTagName(value);
 }
 
+function normBucket(value = "") {
+  return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
 function buildMergedAssignment(baseAssignment = {}, preference = {}, definitionIndex = new Map()) {
   const semanticHints = Array.from(new Set([
     ...arr(preference?.semanticHints),
     ...arr(preference?.submodelHints)
   ].map(norm).filter(Boolean)));
+  const trainingBuckets = Array.from(new Set([
+    ...arr(baseAssignment?.trainingBuckets),
+    ...arr(preference?.trainingBuckets)
+  ].map(normBucket).filter(Boolean)));
   const tags = Array.from(new Set([
     ...arr(baseAssignment?.tags),
     ...(preference?.rolePreference ? [preference.rolePreference] : []),
-    ...semanticHints
+    ...semanticHints,
+    ...trainingBuckets
   ].map(norm).filter(Boolean)));
-  return {
+  const merged = {
     ...baseAssignment,
     tags,
     semanticHints,
@@ -29,6 +38,9 @@ function buildMergedAssignment(baseAssignment = {}, preference = {}, definitionI
     effectAvoidances: arr(preference?.effectAvoidances).map(norm).filter(Boolean),
     rolePreference: preference?.rolePreference ? norm(preference.rolePreference) : ""
   };
+  if (trainingBuckets.length) merged.trainingBuckets = trainingBuckets;
+  else delete merged.trainingBuckets;
+  return merged;
 }
 
 export function buildEffectiveMetadataAssignments(assignments = [], preferencesByTargetId = {}, { resolveTarget = null, visualHintDefinitions = [] } = {}) {
