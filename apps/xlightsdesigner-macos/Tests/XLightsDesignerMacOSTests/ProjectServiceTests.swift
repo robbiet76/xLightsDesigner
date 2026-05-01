@@ -84,7 +84,7 @@ struct ProjectServiceTests {
         )
         let migratedDir = URL(fileURLWithPath: migrated.projectFilePath).deletingLastPathComponent()
         let migratedMarker = migratedDir.appendingPathComponent("diagnostics/marker.txt")
-        let migratedMetadata = migratedDir.appendingPathComponent("layout/layout-metadata.json")
+        let migratedMetadata = migratedDir.appendingPathComponent("display/metadata.json")
 
         #expect(migrated.projectName == migratedName)
         #expect(migrated.showFolder == "/tmp/new-show")

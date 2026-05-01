@@ -77,7 +77,7 @@ test("app direct proposal writes intent and proposal artifacts from project cont
       }
     }
   });
-  writeJson(path.join(projectDir, "layout", "layout-metadata.json"), {
+  writeJson(path.join(projectDir, "display", "metadata.json"), {
     version: 1,
     tags: [
       {
@@ -272,7 +272,7 @@ test("app project display metadata loader promotes display discovery insights to
     version: 1,
     preferencesByTargetId: {}
   });
-  writeJson(path.join(projectDir, "layout", "display-discovery.json"), {
+  writeJson(path.join(projectDir, "display", "discovery.json"), {
     insights: [
       {
         subject: "Presents",

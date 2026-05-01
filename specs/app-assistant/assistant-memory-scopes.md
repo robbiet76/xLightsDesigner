@@ -152,8 +152,8 @@ For the current app implementation, project memory is expected to live inside th
 
 Examples:
 
-- `layout/display-discovery.json`
-- `layout/layout-metadata.json`
+- `display/discovery.json`
+- `display/metadata.json`
 
 This is intentional behavior, not an accident.
 

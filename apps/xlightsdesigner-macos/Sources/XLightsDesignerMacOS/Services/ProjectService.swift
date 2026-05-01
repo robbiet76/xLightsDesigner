@@ -144,9 +144,13 @@ struct LocalProjectService: ProjectService {
     }
 
     private func copyDisplayMetadataIfPresent(from sourceDir: URL, to destinationDir: URL) throws {
-        let sourceFile = sourceDir.appendingPathComponent("layout/layout-metadata.json", isDirectory: false)
+        let canonicalSourceFile = sourceDir.appendingPathComponent("display/metadata.json", isDirectory: false)
+        let legacySourceFile = sourceDir.appendingPathComponent("layout/layout-metadata.json", isDirectory: false)
+        let sourceFile = FileManager.default.fileExists(atPath: canonicalSourceFile.path)
+            ? canonicalSourceFile
+            : legacySourceFile
         guard FileManager.default.fileExists(atPath: sourceFile.path) else { return }
-        let destinationFile = destinationDir.appendingPathComponent("layout/layout-metadata.json", isDirectory: false)
+        let destinationFile = destinationDir.appendingPathComponent("display/metadata.json", isDirectory: false)
         try FileManager.default.createDirectory(at: destinationFile.deletingLastPathComponent(), withIntermediateDirectories: true)
         if FileManager.default.fileExists(atPath: destinationFile.path) {
             try FileManager.default.removeItem(at: destinationFile)

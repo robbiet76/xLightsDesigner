@@ -73,7 +73,7 @@ enum DisplayMetadataStoreError: LocalizedError {
 
 struct LocalDisplayMetadataStore: DisplayMetadataStore {
     func load(for project: ActiveProjectModel) throws -> PersistedDisplayMetadataDocument {
-        let fileURL = metadataFileURL(for: project)
+        let fileURL = readableMetadataFileURL(for: project)
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return PersistedDisplayMetadataDocument()
         }
@@ -188,7 +188,20 @@ struct LocalDisplayMetadataStore: DisplayMetadataStore {
 
     private func metadataFileURL(for project: ActiveProjectModel) -> URL {
         let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        return projectDir.appendingPathComponent("display/metadata.json", isDirectory: false)
+    }
+
+    private func legacyMetadataFileURL(for project: ActiveProjectModel) -> URL {
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
         return projectDir.appendingPathComponent("layout/layout-metadata.json", isDirectory: false)
+    }
+
+    private func readableMetadataFileURL(for project: ActiveProjectModel) -> URL {
+        let canonical = metadataFileURL(for: project)
+        if FileManager.default.fileExists(atPath: canonical.path) {
+            return canonical
+        }
+        return legacyMetadataFileURL(for: project)
     }
 
     private func save(_ document: PersistedDisplayMetadataDocument, for project: ActiveProjectModel) throws {

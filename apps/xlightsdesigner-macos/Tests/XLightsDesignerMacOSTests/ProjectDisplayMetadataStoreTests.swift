@@ -51,7 +51,7 @@ struct ProjectDisplayMetadataStoreTests {
         let project = try makeProject(name: "DisplayMetadataStoreD")
         let metadataURL = URL(fileURLWithPath: project.projectFilePath)
             .deletingLastPathComponent()
-            .appendingPathComponent("layout/layout-metadata.json")
+            .appendingPathComponent("display/metadata.json")
         try FileManager.default.createDirectory(at: metadataURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try """
         {
@@ -132,6 +132,19 @@ struct ProjectDisplayMetadataStoreTests {
         #expect(updated.targetTags["Tree"] == ["tag-focal"])
         #expect(updated.preferencesByTargetId["Tree"]?.rolePreference == "lead")
         #expect(updated.visualHintDefinitions.isEmpty)
+    }
+
+    @Test func storeWritesCanonicalDisplayMetadataPath() throws {
+        let project = try makeProject(name: "DisplayMetadataStoreCanonical")
+        let store = LocalDisplayMetadataStore()
+
+        try store.createOrAssignTag(project: project, targetIDs: ["Tree"], tagName: "Focal", description: "")
+
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        let canonicalURL = projectDir.appendingPathComponent("display/metadata.json")
+        let legacyURL = projectDir.appendingPathComponent("layout/layout-metadata.json")
+        #expect(FileManager.default.fileExists(atPath: canonicalURL.path))
+        #expect(!FileManager.default.fileExists(atPath: legacyURL.path))
     }
 
     @Test func storeUpdatesTargetPreferences() throws {

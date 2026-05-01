@@ -174,7 +174,9 @@ function rolePreferenceForInsight(insight = {}) {
 
 function loadDiscoveryAssignments(projectFile = '', { layoutRows = [], groupMemberships = {} } = {}) {
   const projectDir = path.dirname(str(projectFile));
-  const discoveryPath = path.join(projectDir, 'layout', 'display-discovery.json');
+  const canonicalDiscoveryPath = path.join(projectDir, 'display', 'discovery.json');
+  const legacyDiscoveryPath = path.join(projectDir, 'layout', 'display-discovery.json');
+  const discoveryPath = fs.existsSync(canonicalDiscoveryPath) ? canonicalDiscoveryPath : legacyDiscoveryPath;
   if (!fs.existsSync(discoveryPath)) return [];
   const document = readJson(discoveryPath);
   const insights = arr(document?.insights);
@@ -284,7 +286,9 @@ function buildSyntheticBenchmarkAssignments({ layoutRows = [], existingAssignmen
 
 export function loadProjectDisplayMetadataAssignments(projectFile = '', context = {}) {
   const projectDir = path.dirname(str(projectFile));
-  const metadataPath = path.join(projectDir, 'layout', 'layout-metadata.json');
+  const canonicalMetadataPath = path.join(projectDir, 'display', 'metadata.json');
+  const legacyMetadataPath = path.join(projectDir, 'layout', 'layout-metadata.json');
+  const metadataPath = fs.existsSync(canonicalMetadataPath) ? canonicalMetadataPath : legacyMetadataPath;
   const document = fs.existsSync(metadataPath) ? readJson(metadataPath) : {};
   const tags = Array.isArray(document?.tags) ? document.tags : [];
   const tagById = new Map(tags.map((tag) => [str(tag?.id), tag]).filter(([id]) => id));
