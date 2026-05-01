@@ -308,10 +308,6 @@ function buildDisplayReconciliationState({
     rows.push({ targetId: str(target?.id), displayName: str(target?.displayName || target?.name || target?.id) });
     fingerprintRows.set(fingerprint, rows);
   }
-  const collisions = Array.from(fingerprintRows.entries())
-    .filter(([, rows]) => rows.length > 1)
-    .map(([fingerprint, rows]) => ({ fingerprint, targets: rows }))
-    .sort((a, b) => a.fingerprint.localeCompare(b.fingerprint));
   const liveFingerprintById = new Map(targets.map((target) => [str(target?.id), str(target?.fingerprint)]).filter(([id]) => id));
   const records = [
     ...(Array.isArray(assignments) ? assignments : []).map((row) => ({
@@ -327,6 +323,11 @@ function buildDisplayReconciliationState({
       binding: row?.displayBinding || {}
     }))
   ].filter((row) => row.targetId);
+  const recordFingerprints = new Set(records.map((record) => bindingFingerprint(record.binding)).filter(Boolean));
+  const collisions = Array.from(fingerprintRows.entries())
+    .filter(([fingerprint, rows]) => rows.length > 1 && recordFingerprints.has(fingerprint))
+    .map(([fingerprint, rows]) => ({ fingerprint, targets: rows }))
+    .sort((a, b) => a.fingerprint.localeCompare(b.fingerprint));
   const orphanIds = new Set(Array.isArray(binding?.orphanTargetIds) ? binding.orphanTargetIds.map(str).filter(Boolean) : []);
   const matched = [];
   const renamed = [];

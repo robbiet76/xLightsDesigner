@@ -188,6 +188,39 @@ export function createMetadataRuntime(deps = {}) {
     return byFingerprint;
   }
 
+  function buildLiveFingerprintCandidateIndex(targets = buildMetadataTargets({ includeSubmodels: true })) {
+    const byFingerprint = new Map();
+    for (const target of targets) {
+      const fingerprint = str(target?.fingerprint);
+      if (!fingerprint) continue;
+      const rows = byFingerprint.get(fingerprint) || [];
+      rows.push(target);
+      byFingerprint.set(fingerprint, rows);
+    }
+    return byFingerprint;
+  }
+
+  function normalizedIdentityValues(values = []) {
+    return new Set(values.map((value) => str(value).toLowerCase()).filter(Boolean));
+  }
+
+  function resolveSafeFingerprintTarget({ fingerprint = '', currentId = '', targetName = '', existingBinding = {}, candidateIndex = new Map() } = {}) {
+    const candidates = candidateIndex.get(str(fingerprint)) || [];
+    if (candidates.length === 1) return candidates[0];
+    if (candidates.length < 2) return null;
+    const identityValues = normalizedIdentityValues([
+      currentId,
+      targetName,
+      existingBinding?.previousTargetId,
+      existingBinding?.previousTargetName
+    ]);
+    const exactMatches = candidates.filter((target) => {
+      const values = normalizedIdentityValues([target?.id, target?.name, target?.displayName]);
+      return Array.from(values).some((value) => identityValues.has(value));
+    });
+    return exactMatches.length === 1 ? exactMatches[0] : null;
+  }
+
   function displayBindingForTarget(target = null, existingBinding = null, previousTarget = null) {
     return currentDisplayMetadataBindingRef(target, existingBinding, previousTarget);
   }
@@ -286,6 +319,7 @@ export function createMetadataRuntime(deps = {}) {
     const liveIds = new Set(targets.map((target) => String(target.id || '')).filter(Boolean));
     const liveById = new Map(targets.map((target) => [String(target.id || ''), target]).filter(([id]) => id));
     const liveByFingerprint = buildLiveFingerprintIndex(targets);
+    const liveFingerprintCandidates = buildLiveFingerprintCandidateIndex(targets);
     const ignored = new Set((metadata.ignoredOrphanTargetIds || []).map(String));
     const assignments = Array.isArray(metadata.assignments) ? metadata.assignments : [];
     const remappedAssignments = assignments.map((assignment) => {
@@ -293,7 +327,15 @@ export function createMetadataRuntime(deps = {}) {
       const liveTarget = liveById.get(currentId);
       if (liveTarget) return retargetAssignment(assignment, liveTarget);
       const fingerprint = String(assignment?.displayBinding?.targetFingerprint || '').trim();
-      const fingerprintTarget = fingerprint ? liveByFingerprint.get(fingerprint) : null;
+      const fingerprintTarget = fingerprint
+        ? liveByFingerprint.get(fingerprint) || resolveSafeFingerprintTarget({
+            fingerprint,
+            currentId,
+            targetName: assignment?.targetName,
+            existingBinding: assignment?.displayBinding,
+            candidateIndex: liveFingerprintCandidates
+          })
+        : null;
       return fingerprintTarget ? retargetAssignment(assignment, fingerprintTarget) : assignment;
     });
     metadata.assignments = remappedAssignments;
@@ -302,7 +344,15 @@ export function createMetadataRuntime(deps = {}) {
       const currentId = String(targetId || '');
       const liveTarget = liveById.get(currentId);
       const fingerprint = String(preference?.displayBinding?.targetFingerprint || '').trim();
-      const fingerprintTarget = !liveTarget && fingerprint ? liveByFingerprint.get(fingerprint) : null;
+      const fingerprintTarget = !liveTarget && fingerprint
+        ? liveByFingerprint.get(fingerprint) || resolveSafeFingerprintTarget({
+            fingerprint,
+            currentId,
+            targetName: currentId,
+            existingBinding: preference?.displayBinding,
+            candidateIndex: liveFingerprintCandidates
+          })
+        : null;
       const target = liveTarget || fingerprintTarget || null;
       const nextId = target?.id || currentId;
       const changedTarget = Boolean(target && currentId && currentId !== target.id);

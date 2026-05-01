@@ -184,6 +184,12 @@ test("metadata dashboard exposes reconciliation review state", () => {
             targetName: "Retired Spinner",
             tags: ["legacy"],
             displayBinding: { targetFingerprint: "tmf1:retired" }
+          },
+          {
+            targetId: "TwinA",
+            targetName: "Twin A",
+            tags: ["duplicate"],
+            displayBinding: { targetFingerprint: "tmf1:duplicate" }
           }
         ],
         preferencesByTargetId: {
@@ -225,6 +231,37 @@ test("metadata dashboard exposes reconciliation review state", () => {
   assert.equal(dashboard.data.reconciliation.renamed[0].targetId, "RenamedFace");
   assert.equal(dashboard.data.reconciliation.orphaned[0].targetId, "RetiredSpinner");
   assert.deepEqual(dashboard.data.reconciliation.collisions[0].targets.map((row) => row.targetId), ["TwinA", "TwinB"]);
+});
+
+test("metadata dashboard ignores live fingerprint collisions unused by metadata", () => {
+  const dashboard = buildMetadataDashboardState({
+    state: {
+      submodels: [],
+      metadata: {
+        assignments: [{
+          targetId: "RenamedFace",
+          targetName: "Renamed Face",
+          tags: ["character"],
+          displayBinding: { targetFingerprint: "tmf1:face" }
+        }],
+        displayBinding: { status: "reconciled" }
+      },
+      ui: {},
+      health: {}
+    },
+    helpers: {
+      ...buildHelpers(),
+      buildMetadataTargets: () => [
+        { id: "RenamedFace", displayName: "Renamed Face", type: "model", fingerprint: "tmf1:face" },
+        { id: "TwinA", displayName: "Twin A", type: "model", fingerprint: "tmf1:duplicate" },
+        { id: "TwinB", displayName: "Twin B", type: "model", fingerprint: "tmf1:duplicate" }
+      ],
+      buildNormalizedTargetMetadataRecords: () => []
+    }
+  });
+
+  assert.equal(dashboard.data.reconciliation.summary.collisionCount, 0);
+  assert.equal(dashboard.data.reconciliation.summary.reviewNeeded, false);
 });
 
 test("metadata dashboard applies filters to target rows", () => {

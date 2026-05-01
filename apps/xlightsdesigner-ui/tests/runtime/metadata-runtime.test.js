@@ -235,6 +235,43 @@ test("metadata runtime remaps renamed targets by fingerprint during reconciliati
   assert.deepEqual(binding.orphanTargetIds, []);
 });
 
+test("metadata runtime safely resolves duplicate fingerprints when stored identity matches one candidate", () => {
+  const state = buildState();
+  state.models = [
+    { id: "FaceA", name: "Face A", type: "Prop", fingerprint: "tmf1:duplicate-face" },
+    { id: "FaceB", name: "Face B", type: "Prop", fingerprint: "tmf1:duplicate-face" }
+  ];
+  state.submodels = [];
+  state.metadata.assignments = [{
+    targetId: "OldFace",
+    targetName: "Face B",
+    tags: ["Existing"],
+    displayBinding: {
+      targetFingerprint: "tmf1:duplicate-face",
+      previousTargetName: "Face B"
+    }
+  }];
+  state.metadata.preferencesByTargetId = {
+    OldFace: {
+      semanticHints: ["Face"],
+      displayBinding: {
+        targetFingerprint: "tmf1:duplicate-face",
+        previousTargetName: "Face B"
+      }
+    }
+  };
+  const runtime = buildRuntime(state);
+
+  const binding = runtime.reconcileDisplayMetadataForSceneGraphChange({ reason: "layout refresh" });
+
+  assert.equal(state.metadata.assignments[0].targetId, "FaceB");
+  assert.equal(state.metadata.assignments[0].targetName, "Face B");
+  assert.equal(state.metadata.assignments[0].displayBinding.previousTargetId, "OldFace");
+  assert.deepEqual(state.metadata.preferencesByTargetId.FaceB.semanticHints, ["Face"]);
+  assert.equal(state.metadata.preferencesByTargetId.OldFace, undefined);
+  assert.deepEqual(binding.orphanTargetIds, []);
+});
+
 test("metadata runtime reconciles display metadata without deleting orphaned user work", () => {
   const state = buildState();
   state.showFolder = "/show/a";
