@@ -1,9 +1,12 @@
 {
   "artifactType": "custom_model_structure_catalog_v1",
   "artifactVersion": "1.0",
-  "createdAt": "2026-05-01T00:00:00.000Z",
+  "createdAt": "2026-05-01T12:02:21.842Z",
   "source": {
-    "sourceFixture": "render-training-vendor-fixture/xlights_rgbeffects.xml",
+    "statePath": "",
+    "showDir": "/Users/robterry/Projects/xLightsDesigner/render-training-vendor-fixture",
+    "projectName": "render-training-vendor-fixture",
+    "sequencePath": "",
     "sceneGraphSource": "xlights_rgbeffects.xml"
   },
   "summary": {
@@ -17,8 +20,7 @@
     "bucketCounts": {
       "spinner": 7,
       "star": 7,
-      "single_line": 8,
-      "cane": 8
+      "single_line": 8
     }
   },
   "models": [
@@ -35,13 +37,11 @@
         "custom_linear_like",
         "linear_like",
         "sparse_custom_grid",
-        "vertical_span",
-        "name_hint_cane"
+        "vertical_span"
       ],
-      "confidence": 0.68,
+      "confidence": 0.65,
       "trainingBuckets": [
-        "single_line",
-        "cane"
+        "single_line"
       ],
       "construction": {
         "source": "CustomModel",
@@ -266,13 +266,11 @@
         "custom_linear_like",
         "linear_like",
         "sparse_custom_grid",
-        "vertical_span",
-        "name_hint_cane"
+        "vertical_span"
       ],
-      "confidence": 0.68,
+      "confidence": 0.65,
       "trainingBuckets": [
-        "single_line",
-        "cane"
+        "single_line"
       ],
       "construction": {
         "source": "CustomModel",
@@ -497,13 +495,11 @@
         "custom_linear_like",
         "linear_like",
         "sparse_custom_grid",
-        "vertical_span",
-        "name_hint_cane"
+        "vertical_span"
       ],
-      "confidence": 0.68,
+      "confidence": 0.65,
       "trainingBuckets": [
-        "single_line",
-        "cane"
+        "single_line"
       ],
       "construction": {
         "source": "CustomModel",
@@ -728,13 +724,11 @@
         "custom_linear_like",
         "linear_like",
         "sparse_custom_grid",
-        "vertical_span",
-        "name_hint_cane"
+        "vertical_span"
       ],
-      "confidence": 0.68,
+      "confidence": 0.65,
       "trainingBuckets": [
-        "single_line",
-        "cane"
+        "single_line"
       ],
       "construction": {
         "source": "CustomModel",
@@ -959,13 +953,11 @@
         "custom_linear_like",
         "linear_like",
         "sparse_custom_grid",
-        "vertical_span",
-        "name_hint_cane"
+        "vertical_span"
       ],
-      "confidence": 0.68,
+      "confidence": 0.65,
       "trainingBuckets": [
-        "single_line",
-        "cane"
+        "single_line"
       ],
       "construction": {
         "source": "CustomModel",
@@ -1190,13 +1182,11 @@
         "custom_linear_like",
         "linear_like",
         "sparse_custom_grid",
-        "vertical_span",
-        "name_hint_cane"
+        "vertical_span"
       ],
-      "confidence": 0.68,
+      "confidence": 0.65,
       "trainingBuckets": [
-        "single_line",
-        "cane"
+        "single_line"
       ],
       "construction": {
         "source": "CustomModel",
@@ -1421,13 +1411,11 @@
         "custom_linear_like",
         "linear_like",
         "sparse_custom_grid",
-        "vertical_span",
-        "name_hint_cane"
+        "vertical_span"
       ],
-      "confidence": 0.68,
+      "confidence": 0.65,
       "trainingBuckets": [
-        "single_line",
-        "cane"
+        "single_line"
       ],
       "construction": {
         "source": "CustomModel",
@@ -1652,13 +1640,11 @@
         "custom_linear_like",
         "linear_like",
         "sparse_custom_grid",
-        "vertical_span",
-        "name_hint_cane"
+        "vertical_span"
       ],
-      "confidence": 0.68,
+      "confidence": 0.65,
       "trainingBuckets": [
-        "single_line",
-        "cane"
+        "single_line"
       ],
       "construction": {
         "source": "CustomModel",

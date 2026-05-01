@@ -317,8 +317,8 @@ test("app project display metadata loader includes custom model structure hints"
     artifactType: "target_metadata_index_v1",
     records: [
       {
-        targetId: "SingingBulb",
-        identity: { displayName: "Singing Bulb", canonicalType: "custom" },
+        targetId: "CustomTargetA",
+        identity: { displayName: "Custom Target A", canonicalType: "custom" },
         structure: {
           customStructure: {
             profile: "custom_face_like",
@@ -334,8 +334,8 @@ test("app project display metadata loader includes custom model structure hints"
         }
       },
       {
-        targetId: "CustomSpinner",
-        identity: { displayName: "Custom Spinner", canonicalType: "custom" },
+        targetId: "CustomTargetB",
+        identity: { displayName: "Custom Target B", canonicalType: "custom" },
         structure: {
           customStructure: {
             profile: "custom_radial_like",
@@ -355,13 +355,13 @@ test("app project display metadata loader includes custom model structure hints"
   const assignments = loadProjectDisplayMetadataAssignments(projectFile);
   const byTarget = new Map(assignments.map((row) => [row.targetId, row]));
 
-  assert.ok(byTarget.get("SingingBulb").tags.includes("custom model"));
-  assert.ok(byTarget.get("SingingBulb").tags.includes("custom_face_like"));
-  assert.ok(byTarget.get("SingingBulb").semanticHints.includes("custom face like"));
-  assert.ok(byTarget.get("SingingBulb").semanticHints.includes("11 custom submodels captured"));
-  assert.ok(byTarget.get("SingingBulb").semanticHints.includes("153 custom model nodes mapped"));
-  assert.ok(byTarget.get("CustomSpinner").tags.includes("spinner"));
-  assert.ok(byTarget.get("CustomSpinner").semanticHints.includes("spinner compatible custom model"));
+  assert.ok(byTarget.get("CustomTargetA").tags.includes("custom model"));
+  assert.ok(byTarget.get("CustomTargetA").tags.includes("custom_face_like"));
+  assert.ok(byTarget.get("CustomTargetA").semanticHints.includes("custom face like"));
+  assert.ok(byTarget.get("CustomTargetA").semanticHints.includes("11 custom submodels captured"));
+  assert.ok(byTarget.get("CustomTargetA").semanticHints.includes("153 custom model nodes mapped"));
+  assert.ok(byTarget.get("CustomTargetB").tags.includes("spinner"));
+  assert.ok(byTarget.get("CustomTargetB").semanticHints.includes("spinner compatible custom model"));
 });
 
 test("app project display metadata loader can synthesize benchmark assignments for plain display fixtures", () => {

@@ -7,18 +7,18 @@ struct DisplayServiceArtifactTests {
         let data = """
         [
           {
-            "fullName": "Singing Bulb 1/@Mouth1",
+            "fullName": "Custom Target A/@Mouth1",
             "name": "@Mouth1",
-            "parentName": "Singing Bulb 1",
+            "parentName": "Custom Target A",
             "type": "ranges",
             "layoutGroup": "Default",
             "startChannel": 89893,
             "endChannel": 89916
           },
           {
-            "fullName": "Singing Bulb 1/@Eye-Left",
+            "fullName": "Custom Target A/@Eye-Left",
             "name": "@Eye-Left",
-            "parentName": "Singing Bulb 1",
+            "parentName": "Custom Target A",
             "type": "ranges",
             "layoutGroup": "Default",
             "startChannel": 89815,
@@ -29,23 +29,23 @@ struct DisplayServiceArtifactTests {
 
         let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: data)
         let grouped = groupSubmodelsByParent(submodels)
-        let singingBulbSubmodels = grouped["Singing Bulb 1"] ?? []
+        let targetSubmodels = grouped["Custom Target A"] ?? []
 
-        #expect(singingBulbSubmodels.count == 2)
-        #expect(singingBulbSubmodels.map(\.id).contains("Singing Bulb 1/@Mouth1"))
-        #expect(singingBulbSubmodels.map(\.parentId).allSatisfy { $0 == "Singing Bulb 1" })
-        #expect(singingBulbSubmodels.map(\.name) == ["@Eye-Left", "@Mouth1"])
+        #expect(targetSubmodels.count == 2)
+        #expect(targetSubmodels.map(\.id).contains("Custom Target A/@Mouth1"))
+        #expect(targetSubmodels.map(\.parentId).allSatisfy { $0 == "Custom Target A" })
+        #expect(targetSubmodels.map(\.name) == ["@Eye-Left", "@Mouth1"])
     }
 
     @Test func customModelInferenceUsesFaceSubmodels() throws {
         let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
         [
-          { "fullName": "Singing Bulb 1/@Eye-Left", "name": "@Eye-Left", "parentName": "Singing Bulb 1" },
-          { "fullName": "Singing Bulb 1/@Mouth1", "name": "@Mouth1", "parentName": "Singing Bulb 1" }
+          { "fullName": "Custom Target A/@Eye-Left", "name": "@Eye-Left", "parentName": "Custom Target A" },
+          { "fullName": "Custom Target A/@Mouth1", "name": "@Mouth1", "parentName": "Custom Target A" }
         ]
         """.data(using: .utf8)!)
 
-        let inference = inferCustomModelStructure(row: displayArtifactRow(name: "Singing Bulb 1", width: 56, height: 123), submodels: submodels)
+        let inference = inferCustomModelStructure(row: displayArtifactRow(name: "Custom Target A", width: 56, height: 123), submodels: submodels)
 
         #expect(inference.profile == "custom_face_like")
         #expect(inference.traits.contains("face_submodels"))
@@ -53,41 +53,41 @@ struct DisplayServiceArtifactTests {
         #expect(inference.trainingBuckets.isEmpty)
     }
 
-    @Test func customModelInferenceUsesVendorNameHints() {
-        let cane = inferCustomModelStructure(row: displayArtifactRow(name: "Boscoyo ChromaCane 1", width: 42, height: 90), submodels: [])
-        let spinner = inferCustomModelStructure(row: displayArtifactRow(name: "Spinner", width: 85, height: 85), submodels: [])
-        let star = inferCustomModelStructure(row: displayArtifactRow(name: "Star1", width: 85, height: 85), submodels: [])
+    @Test func customModelInferenceUsesGeometryWithoutNameHints() {
+        let linear = inferCustomModelStructure(row: displayArtifactRow(name: "Custom Target Linear", width: 42, height: 90), submodels: [])
+        let nameOnlyA = inferCustomModelStructure(row: displayArtifactRow(name: "Custom Target Round A", width: 85, height: 85), submodels: [])
+        let nameOnlyB = inferCustomModelStructure(row: displayArtifactRow(name: "Custom Target Round B", width: 85, height: 85), submodels: [])
 
-        #expect(cane.profile == "custom_linear_like")
-        #expect(cane.trainingBuckets.contains("cane"))
-        #expect(spinner.profile == "custom_radial_like")
-        #expect(spinner.trainingBuckets.contains("spinner"))
-        #expect(!spinner.trainingBuckets.contains("star"))
-        #expect(star.profile == "custom_radial_like")
-        #expect(star.trainingBuckets == ["star"])
+        #expect(linear.profile == "custom_linear_like")
+        #expect(linear.trainingBuckets == ["single_line"])
+        #expect(!linear.traits.contains { $0.hasPrefix("name_hint_") })
+        #expect(nameOnlyA.profile == "custom_model")
+        #expect(nameOnlyA.trainingBuckets.isEmpty)
+        #expect(nameOnlyB.profile == "custom_model")
+        #expect(nameOnlyB.trainingBuckets.isEmpty)
     }
 
     @Test func customModelInferenceUsesRadialSubmodelsWithoutStarBucket() throws {
         let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
         [
-          { "fullName": "Vendor Prop/Spoke 1", "name": "Spoke 1", "parentName": "Vendor Prop" },
-          { "fullName": "Vendor Prop/Spoke 2", "name": "Spoke 2", "parentName": "Vendor Prop" },
-          { "fullName": "Vendor Prop/Spoke 3", "name": "Spoke 3", "parentName": "Vendor Prop" },
-          { "fullName": "Vendor Prop/Spoke 4", "name": "Spoke 4", "parentName": "Vendor Prop" }
+          { "fullName": "Custom Target B/Spoke 1", "name": "Spoke 1", "parentName": "Custom Target B" },
+          { "fullName": "Custom Target B/Spoke 2", "name": "Spoke 2", "parentName": "Custom Target B" },
+          { "fullName": "Custom Target B/Spoke 3", "name": "Spoke 3", "parentName": "Custom Target B" },
+          { "fullName": "Custom Target B/Spoke 4", "name": "Spoke 4", "parentName": "Custom Target B" }
         ]
         """.data(using: .utf8)!)
-        let inference = inferCustomModelStructure(row: displayArtifactRow(name: "Vendor Prop", width: 85, height: 85), submodels: submodels)
+        let inference = inferCustomModelStructure(row: displayArtifactRow(name: "Custom Target B", width: 85, height: 85), submodels: submodels)
 
         #expect(inference.profile == "custom_radial_like")
         #expect(inference.trainingBuckets == ["spinner"])
     }
 
     @Test func modelIndexArtifactEmbedsCustomStructureAndSubmodels() throws {
-        let row = displayArtifactRow(name: "Singing Bulb 1", width: 56, height: 123, submodelCount: 2)
+        let row = displayArtifactRow(name: "Custom Target A", width: 56, height: 123, submodelCount: 2)
         let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
         [
-          { "fullName": "Singing Bulb 1/@Eye-Left", "name": "@Eye-Left", "parentName": "Singing Bulb 1" },
-          { "fullName": "Singing Bulb 1/@Mouth1", "name": "@Mouth1", "parentName": "Singing Bulb 1" }
+          { "fullName": "Custom Target A/@Eye-Left", "name": "@Eye-Left", "parentName": "Custom Target A" },
+          { "fullName": "Custom Target A/@Mouth1", "name": "@Mouth1", "parentName": "Custom Target A" }
         ]
         """.data(using: .utf8)!)
         let artifactData = try encodeDisplayModelIndexArtifact(
@@ -103,7 +103,7 @@ struct DisplayServiceArtifactTests {
         let customSubmodels = customStructure?["submodels"] as? [String: Any]
 
         #expect(artifact?["artifactType"] as? String == "target_metadata_index_v1")
-        #expect(records?.first?["targetId"] as? String == "Singing Bulb 1")
+        #expect(records?.first?["targetId"] as? String == "Custom Target A")
         #expect(customStructure?["profile"] as? String == "custom_face_like")
         #expect((customSubmodels?["capturedCount"] as? Int) == 2)
         #expect(structure?["customModel"] == nil)

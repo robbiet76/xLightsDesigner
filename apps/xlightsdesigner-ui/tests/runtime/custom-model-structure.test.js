@@ -46,7 +46,7 @@ test("analyzeCustomModelStructure promotes elongated custom grids as linear-like
 
   assert.equal(out.profile, "custom_linear_like");
   assert.ok(out.traits.includes("continuous_node_path"));
-  assert.deepEqual(buckets.sort(), ["cane", "single_line"]);
+  assert.deepEqual(buckets.sort(), ["single_line"]);
 });
 
 test("analyzeCustomModelStructure promotes sparse radial custom grids cautiously", () => {
@@ -161,38 +161,36 @@ test("vendor custom model structure capture preserves submodel construction sign
     new URL("../fixtures/vendor-custom-model-structure-capture.json", import.meta.url),
     "utf8"
   ));
-  const byName = new Map(capture.models.map((row) => [row.modelName, row]));
 
   assert.equal(capture.artifactType, "custom_model_structure_catalog_v1");
   assert.equal(capture.summary.customModelCount, 19);
 
-  const bulb = byName.get("Singing Bulb 1");
-  assert.equal(bulb.profile, "custom_face_like");
-  assert.equal(bulb.submodels.count, 11);
-  assert.ok(bulb.submodels.names.includes("@Eye-Left"));
-  assert.ok(bulb.submodels.names.includes("@Mouth5"));
-  assert.deepEqual(bulb.trainingBuckets, []);
-  assert.equal(bulb.construction.nodeMap.nodeCount, bulb.nodeOrder.nodeCount);
-  assert.equal(bulb.construction.nodeMap.firstNodes[0].coordinateSource, "grid");
+  const faceLike = capture.models.find((row) => row.profile === "custom_face_like" && row.submodels.count >= 2);
+  assert.ok(faceLike);
+  assert.deepEqual(faceLike.trainingBuckets, []);
+  assert.equal(faceLike.construction.nodeMap.nodeCount, faceLike.nodeOrder.nodeCount);
+  assert.equal(faceLike.construction.nodeMap.firstNodes[0].coordinateSource, "grid");
 
-  const spinner = byName.get("Spinner");
-  assert.equal(spinner.profile, "custom_radial_like");
-  assert.ok(spinner.submodels.names.includes("Spoke 1"));
-  assert.ok(spinner.submodels.names.includes("Circle 5 - Outer Ring"));
-  assert.ok(spinner.submodels.names.includes("Center Node"));
+  const radialWithSubmodels = capture.models.find((row) =>
+    row.profile === "custom_radial_like"
+    && row.traits.includes("custom_radial_submodels")
+    && row.submodels.count >= 4
+  );
+  assert.ok(radialWithSubmodels);
+  assert.ok(radialWithSubmodels.trainingBuckets.includes("spinner"));
 
-  const star = byName.get("Star1");
-  assert.equal(star.profile, "custom_radial_like");
-  assert.deepEqual(star.submodels.names, ["outer", "middle", "inner"]);
+  const layered = capture.models.find((row) => row.traits.includes("layered_submodels"));
+  assert.ok(layered);
+  assert.ok(layered.submodels.count >= 2);
 });
 
 test("buildCustomModelStructureCatalog captures all custom models from a scene graph", () => {
   const catalog = buildCustomModelStructureCatalog({
     sceneGraph: {
       modelsById: {
-        CustomFace: {
-          id: "CustomFace",
-          name: "CustomFace",
+        CustomTargetA: {
+          id: "CustomTargetA",
+          name: "Custom Target A",
           displayAs: "Custom",
           attributes: {
             CustomModel: grid([
@@ -209,8 +207,8 @@ test("buildCustomModelStructureCatalog captures all custom models from a scene g
         }
       },
       submodelsById: {
-        "CustomFace/@Eye": { id: "CustomFace/@Eye", name: "@Eye", parentId: "CustomFace", type: "ranges", line0: "2-3" },
-        "CustomFace/@Mouth": { id: "CustomFace/@Mouth", name: "@Mouth", parentId: "CustomFace", type: "ranges", line0: "4" }
+        "CustomTargetA/@Eye": { id: "CustomTargetA/@Eye", name: "@Eye", parentId: "CustomTargetA", type: "ranges", line0: "2-3" },
+        "CustomTargetA/@Mouth": { id: "CustomTargetA/@Mouth", name: "@Mouth", parentId: "CustomTargetA", type: "ranges", line0: "4" }
       }
     },
     createdAt: "2026-04-30T00:00:00.000Z"
@@ -219,7 +217,7 @@ test("buildCustomModelStructureCatalog captures all custom models from a scene g
   assert.equal(catalog.artifactType, "custom_model_structure_catalog_v1");
   assert.equal(catalog.summary.customModelCount, 1);
   assert.equal(catalog.summary.modelsWithSubmodels, 1);
-  assert.equal(catalog.models[0].modelName, "CustomFace");
+  assert.equal(catalog.models[0].modelName, "Custom Target A");
   assert.match(catalog.models[0].fingerprint, /^cmf1:[0-9a-f]{8}$/);
   assert.equal(catalog.models[0].fingerprintVersion, "custom-model-fingerprint-v1");
   assert.equal(catalog.models[0].profile, "custom_face_like");
@@ -228,9 +226,9 @@ test("buildCustomModelStructureCatalog captures all custom models from a scene g
 test("buildCustomModelStructureCatalog fingerprints include custom submodel construction", () => {
   const baseSceneGraph = {
     modelsById: {
-      CustomFace: {
-        id: "CustomFace",
-        name: "CustomFace",
+      CustomTargetA: {
+        id: "CustomTargetA",
+        name: "Custom Target A",
         displayAs: "Custom",
         attributes: {
           CustomModel: grid([
@@ -242,14 +240,14 @@ test("buildCustomModelStructureCatalog fingerprints include custom submodel cons
       }
     },
     submodelsById: {
-      "CustomFace/@Eye": { id: "CustomFace/@Eye", name: "@Eye", parentId: "CustomFace", type: "ranges", line0: "2-3" }
+      "CustomTargetA/@Eye": { id: "CustomTargetA/@Eye", name: "@Eye", parentId: "CustomTargetA", type: "ranges", line0: "2-3" }
     }
   };
   const changedSceneGraph = {
     ...baseSceneGraph,
     submodelsById: {
       ...baseSceneGraph.submodelsById,
-      "CustomFace/@Mouth": { id: "CustomFace/@Mouth", name: "@Mouth", parentId: "CustomFace", type: "ranges", line0: "4" }
+      "CustomTargetA/@Mouth": { id: "CustomTargetA/@Mouth", name: "@Mouth", parentId: "CustomTargetA", type: "ranges", line0: "4" }
     }
   };
 
@@ -262,9 +260,9 @@ test("buildCustomModelStructureCatalog fingerprints include custom submodel cons
 test("buildCustomModelStructureCatalog fingerprints survive model renames", () => {
   const baseSceneGraph = {
     modelsById: {
-      CustomFace: {
-        id: "CustomFace",
-        name: "CustomFace",
+      CustomTargetA: {
+        id: "CustomTargetA",
+        name: "Custom Target A",
         displayAs: "Custom",
         attributes: {
           CustomModel: grid([
@@ -278,10 +276,10 @@ test("buildCustomModelStructureCatalog fingerprints survive model renames", () =
   };
   const renamedSceneGraph = {
     modelsById: {
-      RenamedFace: {
-        ...baseSceneGraph.modelsById.CustomFace,
-        id: "RenamedFace",
-        name: "Renamed Face"
+      RenamedTargetA: {
+        ...baseSceneGraph.modelsById.CustomTargetA,
+        id: "RenamedTargetA",
+        name: "Renamed Target A"
       }
     }
   };
@@ -293,9 +291,9 @@ test("buildCustomModelStructureCatalog fingerprints survive model renames", () =
 });
 
 test("parseXmlAttributes decodes quoted XML attributes", () => {
-  const attrs = parseXmlAttributes(`name="Singing &quot;Bulb&quot;" DisplayAs='Custom' CustomModel="1,2&amp;3"`);
+  const attrs = parseXmlAttributes(`name="Custom &quot;Target&quot;" DisplayAs='Custom' CustomModel="1,2&amp;3"`);
 
-  assert.equal(attrs.name, `Singing "Bulb"`);
+  assert.equal(attrs.name, `Custom "Target"`);
   assert.equal(attrs.DisplayAs, "Custom");
   assert.equal(attrs.CustomModel, "1,2&3");
 });
@@ -304,7 +302,7 @@ test("parseXLightsRgbEffectsCustomModelSceneGraph extracts custom models and sub
   const xml = `
     <xrgb>
       <models>
-        <model name="Singing Bulb" DisplayAs="Custom" CustomModel="1,-1,2;3,-1,4">
+        <model name="Custom Target A" DisplayAs="Custom" CustomModel="1,-1,2;3,-1,4">
           <faceInfo mouth="enabled" eyes="enabled" />
           <subModel name="@Eye-Left" type="ranges" line0="1" />
           <subModel name="@Mouth1" type="ranges" line0="3-4" />
@@ -318,8 +316,8 @@ test("parseXLightsRgbEffectsCustomModelSceneGraph extracts custom models and sub
 
   assert.equal(Object.keys(sceneGraph.modelsById).length, 2);
   assert.equal(Object.keys(sceneGraph.submodelsById).length, 2);
-  assert.equal(sceneGraph.modelsById["Singing Bulb"].attributes.CustomModel, "1,-1,2;3,-1,4");
-  assert.equal(sceneGraph.submodelsById["Singing Bulb/@Mouth1"].line0, "3-4");
+  assert.equal(sceneGraph.modelsById["Custom Target A"].attributes.CustomModel, "1,-1,2;3,-1,4");
+  assert.equal(sceneGraph.submodelsById["Custom Target A/@Mouth1"].line0, "3-4");
   assert.equal(catalog.summary.customModelCount, 1);
   assert.equal(catalog.models[0].profile, "custom_face_like");
 });

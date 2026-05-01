@@ -437,7 +437,6 @@ struct DisplayCustomModelInference: Equatable {
 }
 
 func inferCustomModelStructure(row: DisplayLayoutRowModel, submodels: [XLightsSubmodel]) -> DisplayCustomModelInference {
-    let modelName = row.targetName.lowercased()
     let semanticCounts = customSubmodelSemanticCounts(submodels)
     var traits = ["custom_model"]
     var buckets: [String] = []
@@ -457,26 +456,8 @@ func inferCustomModelStructure(row: DisplayLayoutRowModel, submodels: [XLightsSu
     if aspectRatio >= 2 {
         profile = "custom_linear_like"
         traits.append(contentsOf: ["custom_linear_like", "linear_like"])
-        buckets.append(contentsOf: ["single_line", "cane"])
+        buckets.append("single_line")
         confidence = max(confidence, 0.6)
-    }
-    if modelName.contains("cane") {
-        profile = "custom_linear_like"
-        traits.append(contentsOf: ["custom_linear_like", "linear_like", "name_hint_cane"])
-        buckets.append(contentsOf: ["single_line", "cane"])
-        confidence = max(confidence, 0.68)
-    }
-    if modelName.contains("spinner") {
-        profile = "custom_radial_like"
-        traits.append(contentsOf: ["custom_radial_like", "radial_like", "name_hint_spinner"])
-        buckets.append("spinner")
-        confidence = max(confidence, 0.62)
-    }
-    if modelName.contains("star") || modelName.contains("flake") {
-        profile = "custom_radial_like"
-        traits.append(contentsOf: ["custom_radial_like", "radial_like", "name_hint_star"])
-        buckets.append("star")
-        confidence = max(confidence, 0.62)
     }
     if semanticCounts.spoke >= 4 || semanticCounts.ring >= 2 {
         profile = "custom_radial_like"

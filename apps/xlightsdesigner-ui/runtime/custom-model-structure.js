@@ -348,7 +348,6 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   const layers = parseCustomModelGrid(attrs);
   const submodels = analyzeSubmodelStructure(options?.submodels || attrs?.submodels || [], options?.faceInfo || attrs?.faceInfo || null);
   const nodeLayout = options?.nodeLayout || attrs?.customNodeLayout || attrs?.nodeLayout || null;
-  const modelName = low(options?.modelName || attrs?.name || attrs?.modelName || "");
   const apiNodePoints = pointsFromApiNodeLayout(nodeLayout);
   const apiNodeLayoutAnalysis = analyzeModelNodeLayout(nodeLayout);
   const gridPoints = [];
@@ -392,7 +391,6 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   } else if ((stats.aspectRatio >= 2 && stats.occupancy >= 0.05) || Math.min(stats.width, stats.height) <= 3) {
     traits.push("custom_linear_like", "linear_like");
     buckets.add("single_line");
-    buckets.add("cane");
     profile = "custom_linear_like";
     confidence = 0.65;
   } else if (
@@ -412,15 +410,6 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   if (stats.occupancy < 0.2) traits.push("sparse_custom_grid");
   if (stats.aspectRatio >= 2) traits.push(stats.height >= stats.width ? "vertical_span" : "horizontal_span");
   if (nodeOrder.adjacentStepRatio >= 0.75) traits.push("continuous_node_path");
-  if (modelName.includes("cane")) {
-    traits.push("custom_linear_like", "linear_like", "name_hint_cane");
-    buckets.delete("spinner");
-    buckets.delete("star");
-    buckets.add("single_line");
-    buckets.add("cane");
-    profile = "custom_linear_like";
-    confidence = Math.max(confidence, 0.68);
-  }
   traits.push(...submodels.traits);
   if (submodels.traits.includes("custom_face_like")) {
     profile = "custom_face_like";
