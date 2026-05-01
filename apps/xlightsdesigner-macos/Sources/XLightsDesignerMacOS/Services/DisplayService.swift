@@ -105,6 +105,14 @@ struct XLightsDisplayService: DisplayService {
                 rows = models
                     .map { makeRow(from: $0, groupMemberships: groupMemberships, document: metadataDocument, labelDefinitionsByID: labelDefinitionsByID) }
                     .sorted { $0.targetName.localizedCaseInsensitiveCompare($1.targetName) == .orderedAscending }
+                if let project, let artifactData = try? encodeModelIndexArtifact(rows: rows, sourceSummary: "xLights owned API") {
+                    try? metadataStore.writeRefreshArtifacts(
+                        project: project,
+                        targetMetadata: artifactData,
+                        customModelCatalog: nil,
+                        reconciliation: nil
+                    )
+                }
                 taggedCount = rows.filter { !$0.labelDefinitions.isEmpty }.count
                 unresolvedCount = rows.count - taggedCount
 
@@ -243,6 +251,25 @@ struct XLightsDisplayService: DisplayService {
         )
     }
 
+    private func encodeModelIndexArtifact(rows: [DisplayLayoutRowModel], sourceSummary: String) throws -> Data {
+        let artifact = DisplayModelIndexArtifact(
+            artifactType: "target_metadata_index_v1",
+            artifactVersion: "1.0",
+            createdAt: ISO8601DateFormatter().string(from: Date()),
+            source: DisplayModelIndexSource(source: sourceSummary),
+            summary: DisplayModelIndexSummary(
+                targetCount: rows.count,
+                modelCount: rows.filter { !$0.targetType.localizedCaseInsensitiveContains("modelgroup") }.count,
+                groupCount: rows.filter { $0.targetType.localizedCaseInsensitiveContains("modelgroup") }.count,
+                submodelCount: rows.reduce(0) { $0 + $1.submodelCount }
+            ),
+            records: rows.map(DisplayModelIndexRecord.init(row:))
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(artifact)
+    }
+
     private func fetchHealth() async throws -> XLightsHealth {
         let url = URL(string: AppEnvironment.xlightsOwnedAPIBaseURL + "/health")!
         let (data, _) = try await URLSession.shared.data(from: url)
@@ -322,4 +349,77 @@ private struct XLightsLayoutModel: Decodable {
     let width: Double?
     let height: Double?
     let depth: Double?
+}
+
+private struct DisplayModelIndexArtifact: Encodable {
+    let artifactType: String
+    let artifactVersion: String
+    let createdAt: String
+    let source: DisplayModelIndexSource
+    let summary: DisplayModelIndexSummary
+    let records: [DisplayModelIndexRecord]
+}
+
+private struct DisplayModelIndexSource: Encodable {
+    let source: String
+}
+
+private struct DisplayModelIndexSummary: Encodable {
+    let targetCount: Int
+    let modelCount: Int
+    let groupCount: Int
+    let submodelCount: Int
+}
+
+private struct DisplayModelIndexRecord: Encodable {
+    let targetId: String
+    let targetKind: String
+    let identity: DisplayModelIndexIdentity
+    let structure: DisplayModelIndexStructure
+
+    init(row: DisplayLayoutRowModel) {
+        let lowerType = row.targetType.lowercased()
+        targetId = row.targetName
+        targetKind = lowerType.contains("modelgroup") ? "group" : "model"
+        identity = DisplayModelIndexIdentity(
+            displayName: row.targetName,
+            rawType: row.targetType,
+            canonicalType: row.targetType
+        )
+        structure = DisplayModelIndexStructure(
+            nodeCount: row.nodeCount,
+            positionX: row.positionX,
+            positionY: row.positionY,
+            positionZ: row.positionZ,
+            width: row.width,
+            height: row.height,
+            depth: row.depth,
+            submodelCount: row.submodelCount,
+            directGroupMembers: row.directGroupMembers,
+            activeGroupMembers: row.activeGroupMembers,
+            flattenedGroupMembers: row.flattenedGroupMembers,
+            flattenedAllGroupMembers: row.flattenedAllGroupMembers
+        )
+    }
+}
+
+private struct DisplayModelIndexIdentity: Encodable {
+    let displayName: String
+    let rawType: String
+    let canonicalType: String
+}
+
+private struct DisplayModelIndexStructure: Encodable {
+    let nodeCount: Int
+    let positionX: Double
+    let positionY: Double
+    let positionZ: Double
+    let width: Double
+    let height: Double
+    let depth: Double
+    let submodelCount: Int
+    let directGroupMembers: [String]
+    let activeGroupMembers: [String]
+    let flattenedGroupMembers: [String]
+    let flattenedAllGroupMembers: [String]
 }

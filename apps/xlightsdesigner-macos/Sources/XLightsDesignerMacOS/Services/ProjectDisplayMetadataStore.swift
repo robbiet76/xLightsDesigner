@@ -2,6 +2,7 @@ import Foundation
 
 protocol DisplayMetadataStore: Sendable {
     func load(for project: ActiveProjectModel) throws -> PersistedDisplayMetadataDocument
+    func writeRefreshArtifacts(project: ActiveProjectModel, targetMetadata: Data?, customModelCatalog: Data?, reconciliation: Data?) throws
     func createOrAssignTag(project: ActiveProjectModel, targetIDs: [String], tagName: String, description: String) throws
     func removeTag(project: ActiveProjectModel, targetIDs: [String], tagID: String) throws
     func updateTargetPreference(project: ActiveProjectModel, targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) throws
@@ -81,6 +82,18 @@ struct LocalDisplayMetadataStore: DisplayMetadataStore {
         var document = try JSONDecoder().decode(PersistedDisplayMetadataDocument.self, from: data)
         document.tags.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         return document
+    }
+
+    func writeRefreshArtifacts(project: ActiveProjectModel, targetMetadata: Data?, customModelCatalog: Data?, reconciliation: Data?) throws {
+        if let targetMetadata {
+            try writeArtifactData(targetMetadata, to: modelIndexFileURL(for: project))
+        }
+        if let customModelCatalog {
+            try writeArtifactData(customModelCatalog, to: customModelsFileURL(for: project))
+        }
+        if let reconciliation {
+            try writeArtifactData(reconciliation, to: reconciliationFileURL(for: project))
+        }
     }
 
     func createOrAssignTag(project: ActiveProjectModel, targetIDs: [String], tagName: String, description: String) throws {
@@ -191,6 +204,21 @@ struct LocalDisplayMetadataStore: DisplayMetadataStore {
         return projectDir.appendingPathComponent("display/metadata.json", isDirectory: false)
     }
 
+    private func modelIndexFileURL(for project: ActiveProjectModel) -> URL {
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        return projectDir.appendingPathComponent("display/model-index.json", isDirectory: false)
+    }
+
+    private func customModelsFileURL(for project: ActiveProjectModel) -> URL {
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        return projectDir.appendingPathComponent("display/custom-models.json", isDirectory: false)
+    }
+
+    private func reconciliationFileURL(for project: ActiveProjectModel) -> URL {
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        return projectDir.appendingPathComponent("display/reconciliation.json", isDirectory: false)
+    }
+
     private func legacyMetadataFileURL(for project: ActiveProjectModel) -> URL {
         let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
         return projectDir.appendingPathComponent("layout/layout-metadata.json", isDirectory: false)
@@ -212,6 +240,11 @@ struct LocalDisplayMetadataStore: DisplayMetadataStore {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(normalized)
+        try data.write(to: fileURL, options: .atomic)
+    }
+
+    private func writeArtifactData(_ data: Data, to fileURL: URL) throws {
+        try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try data.write(to: fileURL, options: .atomic)
     }
 

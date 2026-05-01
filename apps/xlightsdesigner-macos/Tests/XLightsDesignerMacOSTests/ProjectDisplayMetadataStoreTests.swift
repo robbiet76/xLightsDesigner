@@ -147,6 +147,30 @@ struct ProjectDisplayMetadataStoreTests {
         #expect(!FileManager.default.fileExists(atPath: legacyURL.path))
     }
 
+    @Test func storeWritesRefreshArtifactsToCanonicalDisplayPaths() throws {
+        let project = try makeProject(name: "DisplayMetadataStoreArtifacts")
+        let store = LocalDisplayMetadataStore()
+
+        try store.writeRefreshArtifacts(
+            project: project,
+            targetMetadata: #"{"artifactType":"target_metadata_index_v1"}"#.data(using: .utf8),
+            customModelCatalog: #"{"artifactType":"custom_model_structure_catalog_v1"}"#.data(using: .utf8),
+            reconciliation: #"{"status":"reconciled"}"#.data(using: .utf8)
+        )
+
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        let modelIndexURL = projectDir.appendingPathComponent("display/model-index.json")
+        let customModelsURL = projectDir.appendingPathComponent("display/custom-models.json")
+        let reconciliationURL = projectDir.appendingPathComponent("display/reconciliation.json")
+
+        #expect(FileManager.default.fileExists(atPath: modelIndexURL.path))
+        #expect(FileManager.default.fileExists(atPath: customModelsURL.path))
+        #expect(FileManager.default.fileExists(atPath: reconciliationURL.path))
+        #expect(try String(contentsOf: modelIndexURL).contains("target_metadata_index_v1"))
+        #expect(try String(contentsOf: customModelsURL).contains("custom_model_structure_catalog_v1"))
+        #expect(try String(contentsOf: reconciliationURL).contains("reconciled"))
+    }
+
     @Test func storeUpdatesTargetPreferences() throws {
         let project = try makeProject(name: "DisplayMetadataStoreE")
         let store = LocalDisplayMetadataStore()
