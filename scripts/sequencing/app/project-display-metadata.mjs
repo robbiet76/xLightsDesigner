@@ -296,7 +296,7 @@ function loadModelIndexCustomStructureAssignments(projectFile = '') {
   const document = readJson(modelIndexPath);
   const rows = arr(document?.records)
     .map((record) => {
-      const customStructure = record?.structure?.customStructure || record?.structure?.customModel || null;
+      const customStructure = record?.structure?.customStructure || null;
       if (!customStructure || typeof customStructure !== 'object') return null;
       return {
         targetId: str(record?.targetId || record?.identity?.displayName),

@@ -182,7 +182,7 @@ Recommended project artifact split:
 
 Large raw API payloads should stay out of durable semantic metadata unless they are compacted into a stable project artifact.
 
-On Display refresh, `display/model-index.json` is the primary shared artifact. It should compact `layout.getModels`, `layout.getSubmodels`, model group membership, any available `layout.getModelNodes` output, and custom-model-specific interpretation into stable target records. Separate filtered custom-model project artifacts should not be written or read as part of normal app behavior; if a custom-only collection is useful for diagnostics, tests, or training exports, it should be derived from `model-index.json` at export time.
+On Display refresh, `display/model-index.json` is the primary shared artifact. It should compact `layout.getModels`, `layout.getSubmodels`, model group membership, any available `layout.getModelNodes` output, and custom-model-specific interpretation into stable target records. Custom-specific interpretation belongs under each record's `structure.customStructure`. Separate filtered custom-model project artifacts should not be written or read as part of normal app behavior; if a custom-only collection is useful for diagnostics, tests, or training exports, it should be derived from `model-index.json` at export time.
 
 ## User Experience
 

@@ -563,8 +563,8 @@ private struct DisplayModelIndexRecord: Encodable {
             flattenedAllGroupMembers: row.flattenedAllGroupMembers,
             submodels: submodels.map(DisplaySubmodelSummary.init(submodel:)),
             nodeLayout: nodeLayout.map(DisplayNodeLayoutMetadata.init(layout:)),
-            customModel: isCustomModelType(row.targetType)
-                ? DisplayCustomModelMetadata(row: row, nodeLayout: nodeLayout, submodels: submodels)
+            customStructure: isCustomModelType(row.targetType)
+                ? DisplayCustomModelStructure(row: row, nodeLayout: nodeLayout, submodels: submodels)
                 : nil
         )
     }
@@ -591,7 +591,7 @@ private struct DisplayModelIndexStructure: Encodable {
     let flattenedAllGroupMembers: [String]
     let submodels: [DisplaySubmodelSummary]
     let nodeLayout: DisplayNodeLayoutMetadata?
-    let customModel: DisplayCustomModelMetadata?
+    let customStructure: DisplayCustomModelStructure?
 }
 
 private struct DisplaySubmodelSummary: Encodable {
@@ -703,15 +703,37 @@ private struct DisplayNodeLayoutSample: Encodable {
     }
 }
 
-private struct DisplayCustomModelMetadata: Encodable {
+private struct DisplayCustomModelStructure: Encodable {
+    let profile: String
+    let nodeCount: Int
+    let traits: [String]
+    let trainingBuckets: [String]
+    let construction: DisplayCustomModelConstruction
     let source: String
     let submodels: DisplayCustomModelSubmodels
     let customModelParsed: Bool?
 
     init(row: DisplayLayoutRowModel, nodeLayout: XLightsModelNodeLayout?, submodels: [XLightsSubmodel]) {
+        profile = "custom_model"
+        nodeCount = row.nodeCount
+        traits = ["custom_model"]
+        trainingBuckets = []
         source = nodeLayout == nil ? "layout.getModels" : "layout.getModelNodes"
+        construction = DisplayCustomModelConstruction(row: row, nodeLayout: nodeLayout)
         self.submodels = DisplayCustomModelSubmodels(row: row, submodels: submodels)
         customModelParsed = nodeLayout?.source?.customModelParsed
+    }
+}
+
+private struct DisplayCustomModelConstruction: Encodable {
+    let source: String
+    let nodeMap: DisplayNodeLayoutMetadata?
+    let submodelsCaptured: Int
+
+    init(row: DisplayLayoutRowModel, nodeLayout: XLightsModelNodeLayout?) {
+        source = nodeLayout == nil ? "layout.getModels" : "layout.getModelNodes"
+        nodeMap = nodeLayout.map(DisplayNodeLayoutMetadata.init(layout:))
+        submodelsCaptured = row.submodelCount
     }
 }
 
