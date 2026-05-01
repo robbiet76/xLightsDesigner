@@ -396,6 +396,109 @@ private func submodelSortName(_ submodel: XLightsSubmodel) -> String {
     submodel.name ?? submodel.id ?? ""
 }
 
+struct DisplayCustomModelInference: Equatable {
+    let profile: String
+    let traits: [String]
+    let trainingBuckets: [String]
+    let confidence: Double
+}
+
+func inferCustomModelStructure(row: DisplayLayoutRowModel, submodels: [XLightsSubmodel]) -> DisplayCustomModelInference {
+    let modelName = row.targetName.lowercased()
+    let semanticCounts = customSubmodelSemanticCounts(submodels)
+    var traits = ["custom_model"]
+    var buckets: [String] = []
+    var profile = "custom_model"
+    var confidence = 0.35
+
+    if row.nodeCount > 0 {
+        traits.append("custom_grid")
+    }
+
+    let width = max(0, row.width)
+    let height = max(0, row.height)
+    let minDimension = min(width, height)
+    let maxDimension = max(width, height)
+    let aspectRatio = minDimension > 0 ? maxDimension / minDimension : 0
+
+    if aspectRatio >= 2 {
+        profile = "custom_linear_like"
+        traits.append(contentsOf: ["custom_linear_like", "linear_like"])
+        buckets.append(contentsOf: ["single_line", "cane"])
+        confidence = max(confidence, 0.6)
+    }
+    if modelName.contains("cane") {
+        profile = "custom_linear_like"
+        traits.append(contentsOf: ["custom_linear_like", "linear_like", "name_hint_cane"])
+        buckets.append(contentsOf: ["single_line", "cane"])
+        confidence = max(confidence, 0.68)
+    }
+    if modelName.contains("spinner") || modelName.contains("star") || modelName.contains("flake") {
+        profile = "custom_radial_like"
+        traits.append(contentsOf: ["custom_radial_like", "radial_like"])
+        buckets.append(contentsOf: ["spinner", "star"])
+        confidence = max(confidence, 0.62)
+    }
+    if semanticCounts.spoke >= 4 || semanticCounts.ring >= 2 {
+        profile = "custom_radial_like"
+        traits.append(contentsOf: ["spoke_submodels", "ring_submodels", "custom_radial_submodels", "custom_radial_like", "radial_like"])
+        buckets.append(contentsOf: ["spinner", "star"])
+        confidence = max(confidence, 0.65)
+    }
+    if semanticCounts.layer >= 2 {
+        traits.append("layered_submodels")
+    }
+    if semanticCounts.eye > 0 && semanticCounts.mouth > 0 {
+        profile = "custom_face_like"
+        traits.append(contentsOf: ["face_submodels", "custom_face_like"])
+        buckets.removeAll()
+        confidence = max(confidence, 0.7)
+    }
+
+    return DisplayCustomModelInference(
+        profile: profile,
+        traits: uniqueStrings(traits),
+        trainingBuckets: uniqueStrings(buckets),
+        confidence: confidence
+    )
+}
+
+private func customSubmodelSemanticCounts(_ submodels: [XLightsSubmodel]) -> (eye: Int, mouth: Int, spoke: Int, ring: Int, layer: Int) {
+    var counts = (eye: 0, mouth: 0, spoke: 0, ring: 0, layer: 0)
+    for submodel in submodels {
+        let name = (submodel.name ?? submodel.id ?? "").lowercased()
+        if name.contains("eye") || name.contains("blink") {
+            counts.eye += 1
+        }
+        if name.contains("mouth") || name.contains("phoneme") || name.contains("viseme") {
+            counts.mouth += 1
+        }
+        if name.contains("spoke") || name.contains("arm") {
+            counts.spoke += 1
+        }
+        if name.contains("circle") || name.contains("ring") {
+            counts.ring += 1
+        }
+        if name.contains("outer") || name.contains("middle") || name.contains("inner") || name.contains("layer") {
+            counts.layer += 1
+        }
+    }
+    return counts
+}
+
+private func uniqueStrings(_ values: [String]) -> [String] {
+    var seen = Set<String>()
+    var result: [String] = []
+    for value in values {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { continue }
+        let key = trimmed.lowercased()
+        guard seen.insert(key).inserted else { continue }
+        result.append(trimmed)
+    }
+    return result
+}
+
 private struct XLightsHealthResponse: Decodable {
     let data: XLightsHealth
 }
@@ -739,16 +842,19 @@ private struct DisplayCustomModelStructure: Encodable {
     let source: String
     let submodels: DisplayCustomModelSubmodels
     let customModelParsed: Bool?
+    let confidence: Double
 
     init(row: DisplayLayoutRowModel, nodeLayout: XLightsModelNodeLayout?, submodels: [XLightsSubmodel]) {
-        profile = "custom_model"
+        let inference = inferCustomModelStructure(row: row, submodels: submodels)
+        profile = inference.profile
         nodeCount = row.nodeCount
-        traits = ["custom_model"]
-        trainingBuckets = []
+        traits = inference.traits
+        trainingBuckets = inference.trainingBuckets
         source = nodeLayout == nil ? "layout.getModels" : "layout.getModelNodes"
         construction = DisplayCustomModelConstruction(row: row, nodeLayout: nodeLayout)
         self.submodels = DisplayCustomModelSubmodels(row: row, submodels: submodels)
         customModelParsed = nodeLayout?.source?.customModelParsed
+        confidence = inference.confidence
     }
 }
 
