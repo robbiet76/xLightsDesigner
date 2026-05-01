@@ -24,7 +24,7 @@ protocol DisplayDiscoveryStateStore: Sendable {
 
 struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
     func load(for project: ActiveProjectModel) throws -> DisplayDiscoveryDocument {
-        let fileURL = storageURL(for: project)
+        let fileURL = readableStorageURL(for: project)
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return DisplayDiscoveryDocument()
         }
@@ -210,7 +210,20 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
 
     private func storageURL(for project: ActiveProjectModel) -> URL {
         let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        return projectDir.appendingPathComponent("display/discovery.json", isDirectory: false)
+    }
+
+    private func legacyStorageURL(for project: ActiveProjectModel) -> URL {
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
         return projectDir.appendingPathComponent("layout/display-discovery.json", isDirectory: false)
+    }
+
+    private func readableStorageURL(for project: ActiveProjectModel) -> URL {
+        let canonical = storageURL(for: project)
+        if FileManager.default.fileExists(atPath: canonical.path) {
+            return canonical
+        }
+        return legacyStorageURL(for: project)
     }
 
     private func save(_ document: DisplayDiscoveryDocument, for project: ActiveProjectModel) throws {

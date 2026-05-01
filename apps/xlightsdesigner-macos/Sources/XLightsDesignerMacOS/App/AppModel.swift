@@ -449,8 +449,8 @@ final class AppModel {
             designScreenModel.generateVisualInspiration()
         case "generate_sequence_proposal":
             sequenceScreenModel.generateProposalFromDesignIntent()
-        case "propose_display_metadata_from_layout":
-            displayScreenModel.proposeMetadataFromLayout()
+        case "propose_display_metadata_from_display":
+            displayScreenModel.proposeMetadataFromDisplay()
         case "apply_display_metadata_proposals":
             do {
                 try await displayScreenModel.promoteDiscoveryProposals()

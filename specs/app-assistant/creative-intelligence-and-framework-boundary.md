@@ -17,7 +17,7 @@ Put structure, state, tools, and guardrails in the application layer.
 ## Application Responsibilities
 The app must own:
 - project state and storage
-- layout metadata storage and editing surfaces
+- display metadata storage and editing surfaces
 - xLights session control
 - validation harness and observability
 - scoped memory and persistence
@@ -32,7 +32,7 @@ The app must not try to hardcode the creative reasoning itself.
 The agent team must own:
 - pattern recognition over imperfect names and metadata
 - semantic interpretation of models, props, and families
-- layout discovery questioning
+- display discovery questioning
 - creative design reasoning
 - sequencing reasoning
 - adapting to user feedback and working style
@@ -44,7 +44,7 @@ Do not build large rule engines for creative interpretation when richer grounded
 A small amount of code may prepare or package context, but code should not replace the model's ability to reason.
 
 ## Discovery Rule
-During layout discovery:
+During display discovery:
 - provide the model with rich raw context
 - encourage it to infer likely families, repeated props, focal candidates, and structural patterns
 - require it to phrase uncertain inferences as hypotheses

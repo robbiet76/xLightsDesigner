@@ -10,7 +10,7 @@ Contents:
 - repo-managed Stage 1 render-training bundle consumption for trained effect choice defaults
 
 Boundary:
-- reads layout metadata as planner context
+- reads display metadata as planner context
 - mutates sequence-layer state only
 - canonical plan output is `plan_handoff_v1`
 

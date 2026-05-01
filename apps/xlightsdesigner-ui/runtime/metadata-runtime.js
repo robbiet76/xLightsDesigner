@@ -328,9 +328,9 @@ export function createMetadataRuntime(deps = {}) {
 
     ensureMetadataTargetSelection();
     if (orphanTargetIds.length) {
-      setStatus('warning', `${orphanTargetIds.length} display metadata target${orphanTargetIds.length === 1 ? '' : 's'} need remapping after layout refresh.`);
+      setStatus('warning', `${orphanTargetIds.length} display metadata target${orphanTargetIds.length === 1 ? '' : 's'} need remapping after display refresh.`);
     }
-    invalidatePlanHandoff('display metadata reconciled against refreshed layout');
+    invalidatePlanHandoff('display metadata reconciled against refreshed display');
     return metadata.displayBinding;
   }
 
@@ -717,7 +717,7 @@ export function createMetadataRuntime(deps = {}) {
   function bulkSetMetadataRolePreference(rolePreference = '') {
     const selectedIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds);
     if (!selectedIds.length) {
-      setStatus('warning', 'Select one or more layout targets first.');
+      setStatus('warning', 'Select one or more display targets first.');
       return render();
     }
     let touched = 0;
@@ -729,7 +729,7 @@ export function createMetadataRuntime(deps = {}) {
     const selectedIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds);
     const nextValue = String(value || '').trim();
     if (!selectedIds.length) {
-      setStatus('warning', 'Select one or more layout targets first.');
+      setStatus('warning', 'Select one or more display targets first.');
       return render();
     }
     if (!nextValue) {
@@ -745,7 +745,7 @@ export function createMetadataRuntime(deps = {}) {
     const selectedIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds);
     const nextValue = String(value || '').trim();
     if (!selectedIds.length) {
-      setStatus('warning', 'Select one or more layout targets first.');
+      setStatus('warning', 'Select one or more display targets first.');
       return render();
     }
     if (!nextValue) {

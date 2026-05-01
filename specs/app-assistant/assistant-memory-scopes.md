@@ -94,7 +94,7 @@ Examples:
 
 - display-discovery transcript
 - display-discovery candidate props
-- confirmed layout/tagging conclusions
+- confirmed display/tagging conclusions
 - project-specific design conventions
 - project-specific sequencing conventions
 

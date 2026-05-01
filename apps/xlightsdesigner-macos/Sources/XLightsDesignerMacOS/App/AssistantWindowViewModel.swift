@@ -267,7 +267,7 @@ final class AssistantWindowViewModel {
             )
         }
         if shouldKickOffDisplayDiscovery(context: context) {
-            let observation = "I can already see your layout, and I’m starting with a broad review of the display structure so we can build useful metadata through conversation."
+            let observation = "I can already see your display, and I’m starting with a broad review of the display structure so we can build useful metadata through conversation."
             return AssistantMessageModel(
                 id: UUID().uuidString,
                 role: .assistant,

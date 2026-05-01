@@ -84,7 +84,7 @@ Supported intent verbs:
 Proposal quality depends on:
 
 - project and sequence context
-- current show folder and layout metadata
+- current show folder and display metadata
 - display/model metadata and semantic tags
 - custom model understanding when relevant
 - audio analysis and timing tracks when available

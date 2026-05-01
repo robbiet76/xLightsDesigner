@@ -3,7 +3,7 @@ import Testing
 @testable import XLightsDesignerMacOS
 
 @MainActor
-@Test func assistantActionCanSeedDisplayMetadataFromLayout() async throws {
+@Test func assistantActionCanSeedDisplayMetadataFromDisplay() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-assistant-action-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     let projectService = LocalProjectService(projectsRootPath: root.path)
@@ -48,9 +48,9 @@ import Testing
     )
 
     await model.applyAssistantActionRequest(AssistantActionRequestResult(
-        actionType: "propose_display_metadata_from_layout",
+        actionType: "propose_display_metadata_from_display",
         payload: [:],
-        reason: "User asked to seed display metadata from the layout."
+        reason: "User asked to seed display metadata from the display."
     ))
 
     let summary = LocalDisplayDiscoveryStateStore().summary(for: project)

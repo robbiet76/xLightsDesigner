@@ -180,7 +180,7 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
 
   const candidateSummary = candidates.length
     ? candidates.map((row) => `${row.name} (${row.type || "unknown type"}: ${row.reason || "candidate prop"})`).join("; ")
-    : "No specific candidate props were identified from current layout names.";
+    : "No specific candidate props were identified from current display names.";
   const familySummary = families.length
     ? families.map((row) => `${row.name} (${row.count || "?"} ${row.type || "model"} models${row.examples ? `; examples: ${row.examples}` : ""}${row.confidence ? `; confidence ${row.confidence}` : ""}${row.totalNodeCount ? `; total nodes ${row.totalNodeCount}` : ""})`).join("; ")
     : "No repeated model families were identified.";
@@ -202,7 +202,7 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
 
   return [
     "Display-discovery mode is available for this conversation.",
-    "When layout metadata is thin, do not jump straight to final design directions.",
+    "When display metadata is thin, do not jump straight to final design directions.",
     "Start a natural conversation that helps the user teach you how their display is organized and what matters most.",
     "Before responding, analyze the raw model list for broad structural branches such as named props, major structures, repeated support families, architectural/background layers, and visually dominant clusters.",
     "Use the structural xlightsLayout context to form hypotheses about likely foreground, background, left/right balance, visually dominant props, repeated support families, and mirrored sets.",

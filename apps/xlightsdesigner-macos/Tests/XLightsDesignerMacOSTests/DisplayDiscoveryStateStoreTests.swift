@@ -73,6 +73,8 @@ struct DisplayDiscoveryStateStoreTests {
         )
 
         let summary = store.summary(for: project)
+        let discoveryURL = projectDir.appendingPathComponent("display/discovery.json", isDirectory: false)
+        #expect(FileManager.default.fileExists(atPath: discoveryURL.path))
         #expect(summary.status == .inProgress)
         #expect(summary.transcriptCount == 2)
         #expect(summary.candidateProps.map(\.name) == ["Snowman"])
@@ -83,7 +85,7 @@ struct DisplayDiscoveryStateStoreTests {
         #expect(summary.proposedTags.count == 1)
     }
 
-    @Test func upsertsLayoutSeedTagProposals() throws {
+    @Test func upsertsDisplaySeedTagProposals() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let projectDir = root.appendingPathComponent("Test Project", isDirectory: true)

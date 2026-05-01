@@ -60,7 +60,7 @@ final class DisplayScreenViewModel {
     var screenModel = DisplayScreenModel(
         header: DisplayHeaderModel(
             title: "Display",
-            subtitle: "Create and maintain project display metadata grounded in the active xLights layout.",
+            subtitle: "Create and maintain project display metadata grounded in the active xLights display.",
             activeProjectName: "No Project",
             sourceSummary: ""
         ),
@@ -312,7 +312,7 @@ final class DisplayScreenViewModel {
             screenModel = DisplayScreenModel(
                 header: DisplayHeaderModel(
                     title: "Display",
-                    subtitle: "Review and manage the display metadata the agents are learning from your layout.",
+                    subtitle: "Review and manage the display metadata the agents are learning from your display.",
                     activeProjectName: workspace.activeProject?.projectName ?? "No Project",
                     sourceSummary: result.sourceSummary
                 ),
@@ -331,7 +331,7 @@ final class DisplayScreenViewModel {
             screenModel = DisplayScreenModel(
                 header: DisplayHeaderModel(
                     title: "Display",
-                    subtitle: "Review and manage the display metadata the agents are learning from your layout.",
+                    subtitle: "Review and manage the display metadata the agents are learning from your display.",
                     activeProjectName: workspace.activeProject?.projectName ?? "No Project",
                     sourceSummary: "xLights owned API"
                 ),
@@ -400,7 +400,7 @@ final class DisplayScreenViewModel {
         showDiscoveryProposalSheet = true
     }
 
-    func proposeMetadataFromLayout() {
+    func proposeMetadataFromDisplay() {
         let proposals = buildBaselineTagProposals(from: screenModel.rows)
         guard !proposals.isEmpty else {
             errorMessage = "No obvious xLights groups were found to seed display metadata proposals."
@@ -482,7 +482,7 @@ final class DisplayScreenViewModel {
         }
         let resolvedTargets = inferLinkedTargets(for: subject, explicitTargets: selectedTargets, from: screenModel.rows)
         guard resolvedTargets.count == selectedTargets.count else {
-            errorMessage = "One or more selected linked targets are not available in the current xLights layout."
+            errorMessage = "One or more selected linked targets are not available in the current xLights display."
             return
         }
 
@@ -840,7 +840,7 @@ final class DisplayScreenViewModel {
             return ("Architectural framing layer for structure, outlines, and beat support.", 6)
         }
         if name.contains("front") || name.contains("upper") || name.contains("lower") || name.contains("house") {
-            return ("Spatial grouping that helps agents reason about layout placement and coverage.", 5)
+            return ("Spatial grouping that helps agents reason about display placement and coverage.", 5)
         }
         if type.contains("group"), row.activeGroupMembers.count >= 4 || row.directGroupMembers.count >= 4 {
             return ("xLights model group available for coordinated sequencing decisions.", 3)

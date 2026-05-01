@@ -18,7 +18,7 @@ The app is not just a chat wrapper. It is a controlled workflow that turns creat
 ## Core Workflow
 
 1. The user selects or creates a project.
-2. The project is bound to a show folder, sequence, media file, and display layout.
+2. The project is bound to a show folder, sequence, media file, and display.
 3. The app refreshes display metadata, model metadata, custom model construction data, timing data, and current sequence state.
 4. Audio analysis creates reusable timing and music-context artifacts.
 5. Designer conversation captures user intent, display understanding, style preferences, and constraints.
@@ -45,7 +45,7 @@ The app is not just a chat wrapper. It is a controlled workflow that turns creat
 - Audio analyst: music analysis, timing tracks, and audio context.
 - Designer dialog: user intent, display understanding, creative direction, and sequencing handoff.
 - Sequence agent: effect selection, timing placement, target resolution, layer planning, revision planning, and xLights command generation.
-- xLights owned API: show folder control, layout discovery, timing, effects, sequence lifecycle, render feedback, and validation.
+- xLights owned API: show folder control, display discovery through xLights layout endpoints, timing, effects, sequence lifecycle, render feedback, and validation.
 - Training and knowledge layer: compact effect semantics, render proof evidence, training records, and learned priors.
 
 ## Current Execution Focus
@@ -54,7 +54,7 @@ The highest-value work is improving full-display sequencing quality while keepin
 
 Near-term work should favor:
 
-- custom model and display metadata capture that refreshes when the selected layout/show folder changes
+- custom model and display metadata capture that refreshes when the selected display/show folder changes
 - effect and layer composition learning from render proof
 - real sequence benchmarks and user-review feedback loops
 - app reliability around project state, backups, apply, render, restore, and history

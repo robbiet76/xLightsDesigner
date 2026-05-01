@@ -1313,7 +1313,7 @@ export function buildPracticalSequenceValidation({
         ...metadataCoverage.xlightsDerivedStructuralTargetIds.map((targetId) => ({
           kind: "xlights_structural_metadata",
           target: targetId,
-          detail: "Observed target is covered by xLights-derived structural layout metadata."
+          detail: "Observed target is covered by xLights-derived structural display metadata."
         })),
         ...metadataCoverage.pendingOnlyVisualHintTargetIds.map((targetId) => ({
           kind: "pending_visual_hint_definition",

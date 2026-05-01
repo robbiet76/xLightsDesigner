@@ -494,7 +494,7 @@ function buildProvenanceDetail({
   return {
     canonicalType: {
       source: "derived_layout",
-      detail: canonicalType ? `Derived from layout/model display type as ${canonicalType}.` : "Canonical type not inferred."
+      detail: canonicalType ? `Derived from display/model type as ${canonicalType}.` : "Canonical type not inferred."
     },
     supportState: {
       source: trainedBuckets.length ? "training_bundle" : "runtime_only",
@@ -506,13 +506,13 @@ function buildProvenanceDetail({
       source: userTags.length ? "metadata_tags" : "derived_layout",
       detail: userTags.length
         ? `Role inferred from current metadata tags: ${userTags.join(", ")}.`
-        : "Role inferred from structure/layout context."
+        : "Role inferred from structure/display context."
     },
     inferredSemanticTraits: {
       source: userTags.length ? "derived_plus_tags" : "derived_layout",
       detail: userTags.length
-        ? `Traits inferred from layout facts plus metadata tags: ${userTags.join(", ")}.`
-        : "Traits inferred from layout facts and target identity."
+        ? `Traits inferred from display facts plus metadata tags: ${userTags.join(", ")}.`
+        : "Traits inferred from display facts and target identity."
     },
     rolePreference: {
       source: preference?.rolePreference ? "user_override" : "auto",

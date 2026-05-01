@@ -258,8 +258,8 @@ struct DisplayScreenView: View {
                 Button("Add Metadata") {
                     model.startAddMetadata()
                 }
-                Button("Propose From Layout") {
-                    model.proposeMetadataFromLayout()
+                Button("Propose From Display") {
+                    model.proposeMetadataFromDisplay()
                 }
                 .disabled(model.screenModel.rows.isEmpty)
                 if !model.discoveryProposals.isEmpty {
@@ -402,7 +402,7 @@ struct DisplayScreenView: View {
             Text("Review Proposed Metadata")
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text("These proposals came from display discovery or the live xLights layout. Applying them promotes the reviewed metadata into the active display label store and maps it to the linked xLights models.")
+            Text("These proposals came from display discovery or the live xLights display. Applying them promotes the reviewed metadata into the active display label store and maps it to the linked xLights models.")
                 .foregroundStyle(.secondary)
             List(model.discoveryProposals) { proposal in
                 VStack(alignment: .leading, spacing: 6) {

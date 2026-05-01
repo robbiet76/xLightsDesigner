@@ -123,7 +123,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <div><strong>Revision</strong><p>${escapeHtml(String(state.currentSequenceRevision || "unknown"))}</p></div>
           <div><strong>Type</strong><p>${escapeHtml(String(seqSettings.sequenceType || "Media"))}</p></div>
           <div><strong>Model Blending</strong><p>${seqSettings.supportsModelBlending ? "Enabled" : "Disabled"}</p></div>
-          <div><strong>Layout Mode</strong><p>${escapeHtml(String(stats.layoutMode || "2d").toUpperCase())}</p></div>
+          <div><strong>Display Mode</strong><p>${escapeHtml(String(stats.layoutMode || "2d").toUpperCase())}</p></div>
           <div><strong>Display Elements</strong><p>${escapeHtml(String(state.sceneGraph?.displayElements?.length || 0))}</p></div>
           <div><strong>Groups</strong><p>${escapeHtml(String(stats.groupCount || 0))}</p></div>
           <div><strong>Submodels</strong><p>${escapeHtml(String(stats.submodelCount || 0))}</p></div>
@@ -316,7 +316,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
         summary: "Set the project context: project file, show folder, media path, and active sequence."
       },
       metadata: {
-        summary: "Confirm the layout details that help the app understand props, groups, and submodels before sequencing."
+        summary: "Confirm the display details that help the app understand props, groups, and submodels before sequencing."
       },
       audio: {
         summary: "Analyze the song and capture the timing and structure the rest of the workflow will use."
@@ -605,7 +605,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <div class="dashboard-panel">
             <div class="artifact-kicker">Audio + Scene</div>
             <p>${escapeHtml(String(analysisArtifact?.trackIdentity?.title || "Unknown audio"))}</p>
-            <p>${escapeHtml(String(sceneContext?.layoutMode || "unknown"))} layout context</p>
+            <p>${escapeHtml(String(sceneContext?.layoutMode || "unknown"))} display context</p>
             <p>${focalCandidates.length ? `Focal: ${escapeHtml(focalCandidates.join(", "))}` : "No focal candidates loaded."}</p>
             <p>${sectionArc.length ? `Arc: ${escapeHtml(sectionArc.join(" -> "))}` : "No section arc loaded."}</p>
           </div>
@@ -1018,7 +1018,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
         </div>
         <p class="artifact-body">${escapeHtml(String(state.sequenceMediaFile || state.audioPathInput || "No media attached"))}</p>
         <p class="banner">Display elements: ${displayElements.length} | groups: ${groupCount} | submodels: ${submodelCount}</p>
-        <p class="banner">Layout mode: ${escapeHtml(String(state.sceneGraph?.stats?.layoutMode || "2d").toUpperCase())}</p>
+        <p class="banner">Display mode: ${escapeHtml(String(state.sceneGraph?.stats?.layoutMode || "2d").toUpperCase())}</p>
         ${buildArtifactInspectActions("sequence-context")}
       </section>
     `;
@@ -1498,7 +1498,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <div class="dashboard-panel">
               <div class="artifact-kicker">Applied Context</div>
               <p>${escapeHtml(String(lastAppliedSnapshot.audioTitle || "Unknown audio"))}</p>
-              <p>${escapeHtml(String(lastAppliedSnapshot.layoutMode || "unknown"))} layout context</p>
+              <p>${escapeHtml(String(lastAppliedSnapshot.layoutMode || "unknown"))} display context</p>
             </div>
           </div>
         </section>
@@ -1872,7 +1872,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <div class="dashboard-panel">
                   <div class="artifact-kicker">Audio + Scene</div>
                   <p>${escapeHtml(String(selected.audioTitle || "Unknown audio"))}</p>
-                  <p>${escapeHtml(String(selected.layoutMode || "unknown"))} layout context</p>
+                  <p>${escapeHtml(String(selected.layoutMode || "unknown"))} display context</p>
                   <p>${escapeHtml(String(selected.musicSummary || "No applied music context summary."))}</p>
                 </div>
                 <div class="dashboard-panel">
@@ -1936,7 +1936,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
         <div class="metadata-panel">
           <div class="metadata-panel-header">
             <div>
-              <div class="artifact-kicker">Layout</div>
+              <div class="artifact-kicker">Display</div>
               <h3>${view === "guided" ? "Guided Update" : "Grid View"}</h3>
             </div>
             <div class="row">

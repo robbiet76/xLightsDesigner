@@ -228,7 +228,7 @@ test("practical sequence validation treats semantic tag targets as covered by me
   assert.equal(artifact.failures.metadata.some((row) => row.target === "CandyCanes"), false);
 });
 
-test("practical sequence validation separates layout-derived support targets from missing intent metadata", () => {
+test("practical sequence validation separates display-derived support targets from missing intent metadata", () => {
   const artifact = buildPracticalSequenceValidation({
     planHandoff: {
       planId: "plan-layout-support",
@@ -272,7 +272,7 @@ test("practical sequence validation separates layout-derived support targets fro
   assert.equal(artifact.failures.metadata.some((row) => row.kind === "layout_derived_support_target" && row.target === "Train_Caboose"), true);
 });
 
-test("practical sequence validation treats xLights structural layout targets as derived metadata", () => {
+test("practical sequence validation treats xLights structural display targets as derived metadata", () => {
   const artifact = buildPracticalSequenceValidation({
     planHandoff: {
       planId: "plan-structural-layout",

@@ -288,8 +288,8 @@ final class AppAutomationServer: @unchecked Sendable {
                     "state": $0.state.rawValue
                 ] } ?? NSNull()
             ])
-        case "proposeDisplayMetadataFromLayout":
-            model.displayScreenModel.proposeMetadataFromLayout()
+        case "proposeDisplayMetadataFromDisplay":
+            model.displayScreenModel.proposeMetadataFromDisplay()
             await model.displayScreenModel.reloadDisplay()
             return .json(200, body: [
                 "ok": true,

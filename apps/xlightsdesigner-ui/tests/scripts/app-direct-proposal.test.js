@@ -308,7 +308,7 @@ test("app project display metadata loader promotes display discovery insights to
   assert.deepEqual(assignments.find((row) => row.targetId === "Present-01").tags, ["Presents", "focal_hierarchy", "lead"]);
 });
 
-test("app project display metadata loader can synthesize benchmark assignments for plain layout fixtures", () => {
+test("app project display metadata loader can synthesize benchmark assignments for plain display fixtures", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-benchmark-metadata-"));
   const projectDir = path.join(root, "project");
   const projectFile = path.join(projectDir, "Benchmark Metadata Loader Test.xdproj");

@@ -54,7 +54,7 @@ function buildHelpers() {
           confidence: 0.25,
           updatedAt: "2026-03-22T10:00:00.000Z",
           fields: {
-            canonicalType: { source: "derived_layout", detail: "Derived from layout/model display type as custom." },
+            canonicalType: { source: "derived_layout", detail: "Derived from display/model type as custom." },
             rolePreference: { source: "user_override", detail: "User override set to support." },
             semanticHints: { source: "user_override", detail: "User prop hints: face, hat." }
           }

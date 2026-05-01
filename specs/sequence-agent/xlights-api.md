@@ -11,7 +11,7 @@ Define the durable owned xLights API boundary used by xLightsDesigner.
 
 ## Role
 
-The API is the only supported path for app-driven xLights state access and sequence mutation. It should expose stable, testable operations for project workflow, layout discovery, timing, sequence lifecycle, effects, render feedback, and validation.
+The API is the only supported path for app-driven xLights state access and sequence mutation. It should expose stable, testable operations for project workflow, display discovery, timing, sequence lifecycle, effects, render feedback, and validation.
 
 ## Show Folder Switching
 
@@ -41,7 +41,7 @@ Model metadata refresh and reconciliation requirements are defined in `model-met
 - Keep mutation endpoints reviewable and auditable.
 - Preserve existing sequence content unless replacement is explicit in the command plan.
 - Make render proof and validation machine-readable.
-- Keep layout discovery read-only.
+- Keep display discovery through xLights layout endpoints read-only.
 - Keep generated or training-specific behavior out of the API surface unless it is needed for product workflow.
 - Expose enough structured layout data for the app to avoid primary direct layout-file parsing.
 

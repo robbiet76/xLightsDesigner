@@ -65,7 +65,7 @@ function buildMetadataProgressSummary(targetsSummary = {}) {
   const partial = Number(targetsSummary?.metadataPartialModels || 0);
   const needed = Number(targetsSummary?.metadataNeededModels || 0);
   const total = ready + partial + needed;
-  if (!total) return "Layout metadata has not been analyzed yet.";
+  if (!total) return "Display metadata has not been analyzed yet.";
   return `${ready} ready, ${partial} partial, ${needed} still need attention.`;
 }
 
@@ -467,7 +467,7 @@ export function buildMetadataDashboardState({
     contract: "metadata_dashboard_state_v1",
     version: "1.0",
     page: "metadata",
-    title: "Layout",
+    title: "Display",
     summary: `Targets: ${modelOptions.length} total (${submodelCount} submodels)`,
     status: "active",
     readiness: {

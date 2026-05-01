@@ -23,7 +23,7 @@ enum WorkflowID: String, CaseIterable, Identifiable {
         case .project:
             return "Establish active project context and confirm referenced paths."
         case .display:
-            return "Manage learned display metadata grounded in the xLights layout."
+            return "Manage learned display metadata grounded in the xLights display."
         case .audio:
             return "Run standalone audio analysis and browse the shared track library."
         case .design:

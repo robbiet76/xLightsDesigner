@@ -27,7 +27,7 @@ Project display metadata captures user-confirmed or agent-proposed semantic unde
 
 Metadata records should attach to stable target fingerprints rather than only display names. Names remain user-visible labels, but fingerprints provide continuity when a layout is refreshed or a model is renamed.
 
-Each current layout target should expose:
+Each current display target should expose:
 
 - `targetId`: app/API identifier used for sequencing references.
 - `displayName`: current xLights-visible name.
@@ -70,7 +70,7 @@ When the selected show folder or layout changes, the app should refresh:
 - custom model layout/construction data
 - sequence-visible targets
 
-Refresh should reconcile current layout data with existing project metadata without destroying curated fields.
+Refresh should reconcile current display data with existing project metadata without destroying curated fields.
 
 Refresh should produce a reconciliation result:
 
@@ -81,7 +81,7 @@ Refresh should produce a reconciliation result:
 - possible remap candidates when fingerprints changed but names or structure strongly suggest continuity
 - custom model construction changes that need review
 
-The app should keep retained metadata readable and importable even when a target is missing from the current layout. It should not delete retained records unless the user explicitly deletes them.
+The app should keep retained metadata readable and importable even when a target is missing from the current display. It should not delete retained records unless the user explicitly deletes them.
 
 ## API Capture Rule
 
@@ -169,7 +169,7 @@ Large raw API payloads should stay out of durable semantic metadata unless they 
 
 ## User Experience
 
-The user should not have to rebuild mature display metadata after normal show-folder changes. The app should show when current layout data no longer matches existing metadata and offer review, remap, import, or explicit deletion paths.
+The user should not have to rebuild mature display metadata after normal show-folder changes. The app should show when current display data no longer matches existing metadata and offer review, remap, import, or explicit deletion paths.
 
 When a show folder or layout changes, the expected experience is:
 

@@ -10,13 +10,13 @@ Define the first broad, durable metadata set captured through the `Getting To Kn
 This metadata exists to support:
 - design decisions
 - sequencing decisions
-- layout understanding
+- display understanding
 - project-to-project migration
 
 Model identity, refresh behavior, custom model capture, and retention rules are defined in `../sequence-agent/model-metadata.md`. This spec defines the semantic display metadata layer that sits on top of that structural model contract.
 
 It does not replace:
-- live xLights layout state
+- live xLights display state
 - music/timing context
 - current sequence state
 - human review
@@ -27,8 +27,8 @@ Display metadata is advisory context.
 It is not the sole decision source.
 
 The designer and sequencer may use it to guide choices, but they must still consider:
-- live layout structure
-- derived xLights layout signals such as position and scale
+- live display structure
+- derived xLights display signals such as position and scale
 - current musical context
 - sequence state
 - user direction

@@ -47,11 +47,11 @@ The designer agent should reduce that burden by leading a short discovery conver
 The conversation should be preferred when all of the following are true:
 
 1. live layout is available
-2. project-level layout metadata is thin or empty
-3. the user is asking for broad design help, layout guidance, tag help, or initial display understanding
+2. project-level display metadata is thin or empty
+3. the user is asking for broad design help, display guidance, tag help, or initial display understanding
 
 Examples:
-- “help me tag the layout”
+- “help me tag the display”
 - “what metadata should we add?”
 - “how should we start with this display?”
 - broad design kickoff when no real semantic tags exist yet
@@ -67,7 +67,7 @@ The discovery conversation should use:
 - xLights coordinate metadata when available
 - node count / inferred visual-weight signals when available
 - existing project-level tags and descriptions
-- currently selected layout target if any
+- currently selected display target if any
 
 It may also use:
 - current track / sequence context
@@ -188,7 +188,7 @@ This workflow will later sit on top of:
 1. layout analysis context
 2. guided discovery question generation
 3. reviewable metadata proposal generation
-4. apply/revise loop in the app `Layout` workflow
+4. apply/revise loop in the app `Display` workflow
 
 ## Acceptance Criteria
 

@@ -162,7 +162,7 @@ export function buildAppShell({ state, screenContent, helpers }) {
           </div>
           <div class="nav-links">
             ${navButton("project", "Project")}
-            ${navButton("metadata", "Layout")}
+            ${navButton("metadata", "Display")}
             ${navButton("audio", "Audio")}
             ${navButton("design", "Design")}
             ${navButton("sequence", "Sequence")}

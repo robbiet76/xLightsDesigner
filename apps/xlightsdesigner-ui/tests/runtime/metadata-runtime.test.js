@@ -268,10 +268,10 @@ test("metadata runtime reconciles display metadata without deleting orphaned use
   assert.equal(state.metadata.assignments.length, 2);
   assert.equal(state.metadata.preferencesByTargetId["Old Spinner"].semanticHints[0], "Legacy");
   assert.match(statuses.at(-1)?.text || "", /need remapping/);
-  assert.equal(invalidations.at(-1), "display metadata reconciled against refreshed layout");
+  assert.equal(invalidations.at(-1), "display metadata reconciled against refreshed display");
 });
 
-test("effective metadata excludes assignments for targets missing from the current layout", () => {
+test("effective metadata excludes assignments for targets missing from the current display", () => {
   const state = buildState();
   state.metadata.assignments = [
     { targetId: "Tree", tags: ["Existing"] },

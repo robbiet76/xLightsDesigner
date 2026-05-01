@@ -186,7 +186,7 @@ final class ReviewScreenViewModel {
     private func friendlyFailureText(_ error: Error) -> String {
         let message = String(error.localizedDescription)
         if message.localizedCaseInsensitiveContains("Requested element was not found in the current sequence") {
-            return "Pending review artifacts no longer match the active sequence/layout. Rebuild the proposal before apply."
+            return "Pending review artifacts no longer match the active sequence/display. Rebuild the proposal before apply."
         }
         return message
     }
