@@ -50,6 +50,51 @@ test("target metadata records include stable fingerprints for models groups and 
   assert.equal(byId.get("CustomFace")?.structure?.customStructure?.submodels?.count, 1);
 });
 
+test("target metadata includes shared submodel relationship metadata", () => {
+  const records = buildNormalizedTargetMetadataRecords({
+    sceneGraph: {
+      modelsById: {
+        MegaTree: {
+          id: "MegaTree",
+          name: "MegaTree",
+          displayAs: "Tree 360",
+          nodeCount: 10
+        }
+      },
+      submodelsById: {
+        "MegaTree/Left": {
+          id: "MegaTree/Left",
+          name: "Left Segment",
+          parentId: "MegaTree",
+          type: "ranges",
+          membership: { nodeCount: 4, nodeChannels: [1, 2, 3, 4] }
+        },
+        "MegaTree/Right": {
+          id: "MegaTree/Right",
+          name: "Right Segment",
+          parentId: "MegaTree",
+          type: "ranges",
+          membership: { nodeCount: 4, nodeChannels: [4, 5, 6, 7] }
+        }
+      }
+    }
+  });
+
+  const left = records.find((row) => row.targetId === "MegaTree/Left");
+  const metadata = left?.structure?.submodelMetadata;
+
+  assert.equal(left?.targetKind, "submodel");
+  assert.equal(metadata?.parentId, "MegaTree");
+  assert.equal(metadata?.siblingCount, 1);
+  assert.deepEqual(metadata?.siblingIds, ["MegaTree/Right"]);
+  assert.deepEqual(metadata?.overlappingSiblingIds, ["MegaTree/Right"]);
+  assert.equal(metadata?.overlapsSibling, true);
+  assert.equal(metadata?.nodeCoverage?.nodeCount, 4);
+  assert.equal(metadata?.nodeCoverage?.parentNodeCount, 10);
+  assert.equal(metadata?.nodeCoverage?.ratio, 0.4);
+  assert.ok(metadata?.structureHints.includes("segment_region"));
+});
+
 test("target metadata records include node layout metadata for built in models", () => {
   const records = buildNormalizedTargetMetadataRecords({
     sceneGraph: {

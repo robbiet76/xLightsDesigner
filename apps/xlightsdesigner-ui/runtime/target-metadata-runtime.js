@@ -388,7 +388,8 @@ function buildSubmodelMetadata({
   submodelCount = 0,
   memberCount = 0,
   modelMemberCount = 0,
-  submodelMemberCount = 0
+  submodelMemberCount = 0,
+  relationshipMetadata = null
 } = {}) {
   if (targetKind === "model") {
     return {
@@ -408,10 +409,79 @@ function buildSubmodelMetadata({
     return {
       parentId: norm(parentId),
       parentName: norm(parentName),
-      nodeCount: Number(memberCount) || 0
+      nodeCount: Number(memberCount) || 0,
+      ...(relationshipMetadata && typeof relationshipMetadata === "object" ? relationshipMetadata : {})
     };
   }
   return {};
+}
+
+function normalizeNodeMembership(submodel = {}) {
+  const raw = submodel?.membership?.nodeChannels
+    || submodel?.membership?.nodes
+    || submodel?.nodeChannels
+    || submodel?.nodes
+    || [];
+  return arr(raw)
+    .map((row) => Number(row))
+    .filter((row) => Number.isFinite(row))
+    .sort((a, b) => a - b);
+}
+
+function intersectionCount(left = [], right = []) {
+  if (!left.length || !right.length) return 0;
+  const rightSet = new Set(right);
+  return left.filter((row) => rightSet.has(row)).length;
+}
+
+function classifySubmodelStructureHints(submodel = {}) {
+  const text = low(`${submodel?.name || ""} ${submodel?.id || ""} ${submodel?.type || ""} ${submodel?.renderPolicy?.submodelType || ""}`);
+  const hints = [];
+  if (/\beye|blink/.test(text)) hints.push("feature_eye");
+  if (/\bmouth|phoneme|viseme/.test(text)) hints.push("feature_mouth");
+  if (/\bspoke|arm|ray/.test(text)) hints.push("radial_spoke");
+  if (/\bring|circle/.test(text)) hints.push("radial_ring");
+  if (/\boutline|border|edge/.test(text)) hints.push("outline_region");
+  if (/\bsegment|section|zone|part/.test(text)) hints.push("segment_region");
+  if (/\blayer|inner|middle|outer/.test(text)) hints.push("layer_region");
+  return unique(hints);
+}
+
+function buildSubmodelRelationshipMetadata({
+  submodel = {},
+  allSubmodels = {},
+  parentNode = null
+} = {}) {
+  const targetId = norm(submodel?.id || submodel?.name);
+  const parentId = norm(submodel?.parentId);
+  const siblings = Object.values(allSubmodels || {})
+    .filter((row) => norm(row?.parentId) === parentId && norm(row?.id || row?.name) !== targetId)
+    .sort((a, b) => norm(a?.id || a?.name).localeCompare(norm(b?.id || b?.name)));
+  const nodeMembership = normalizeNodeMembership(submodel);
+  const overlappingSiblingIds = [];
+  for (const sibling of siblings) {
+    const siblingMembership = normalizeNodeMembership(sibling);
+    if (intersectionCount(nodeMembership, siblingMembership) > 0) {
+      overlappingSiblingIds.push(norm(sibling?.id || sibling?.name));
+    }
+  }
+  const parentNodeCount = Number(parentNode?.nodeCount || parentNode?.membership?.nodeCount || 0);
+  const nodeCount = Number(submodel?.membership?.nodeCount || submodel?.nodeCount || nodeMembership.length || 0);
+  const nodeCoverageRatio = parentNodeCount > 0 && nodeCount > 0
+    ? safeFixed(nodeCount / parentNodeCount, 4)
+    : null;
+  return {
+    siblingCount: siblings.length,
+    siblingIds: siblings.map((row) => norm(row?.id || row?.name)).filter(Boolean),
+    overlappingSiblingIds,
+    overlapsSibling: overlappingSiblingIds.length > 0,
+    nodeCoverage: {
+      nodeCount,
+      parentNodeCount: parentNodeCount || null,
+      ratio: nodeCoverageRatio
+    },
+    structureHints: classifySubmodelStructureHints(submodel)
+  };
 }
 
 function inferSemanticTraits({ canonicalType = "", userTags = [], semanticHints = [], structureTraits = [] } = {}) {
@@ -885,11 +955,17 @@ export function buildNormalizedTargetMetadataRecords({
     const inferredSemanticTraits = unique(["submodel", ...userTags, ...unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])])]);
     const nodeCount = Number(submodel?.membership?.nodeCount || 0);
     const parentNode = modelsById[parentId] || groupsById[parentId] || null;
+    const relationshipMetadata = buildSubmodelRelationshipMetadata({
+      submodel,
+      allSubmodels: submodelsById,
+      parentNode
+    });
     const submodelMetadata = buildSubmodelMetadata({
       targetKind: "submodel",
       parentId,
       parentName: parentId,
-      memberCount: nodeCount
+      memberCount: nodeCount,
+      relationshipMetadata
     });
     const locationMetadata = buildLocationMetadata({
       targetKind: "submodel",
