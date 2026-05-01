@@ -18,6 +18,24 @@ function unique(values = []) {
   return [...new Set(arr(values).map((row) => norm(row)).filter(Boolean))];
 }
 
+function stableHash(value = "") {
+  let hash = 2166136261;
+  const text = String(value || "");
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
 function toFiniteOrNull(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
@@ -259,6 +277,64 @@ function buildDensityMetadata({
       span: safeFixed(linearSpan)
     }
   };
+}
+
+function buildTargetFingerprint({
+  targetId = "",
+  targetKind = "",
+  displayName = "",
+  canonicalType = "",
+  parentId = "",
+  model = null,
+  group = null,
+  submodel = null,
+  customStructure = null
+} = {}) {
+  const attrs = model?.attributes || {};
+  const payload = {
+    targetId: norm(targetId),
+    targetKind: norm(targetKind),
+    displayName: norm(displayName),
+    canonicalType: norm(canonicalType),
+    parentId: norm(parentId),
+    nodeCount: Number(model?.nodeCount || submodel?.membership?.nodeCount || group?.membership?.nodeCount || 0),
+    dimensions: model?.dimensions || null,
+    custom: customStructure
+      ? {
+          profile: norm(customStructure?.profile),
+          nodeCount: Number(customStructure?.nodeCount || 0),
+          construction: customStructure?.construction || null,
+          submodels: Array.isArray(customStructure?.submodels?.details)
+            ? customStructure.submodels.details.map((row) => ({
+                name: norm(row?.name),
+                type: norm(row?.type),
+                nodeCount: Number(row?.nodeCount || 0),
+                range: norm(row?.range)
+              }))
+            : []
+        }
+      : null,
+    groupMembers: Array.isArray(group?.members?.flattened)
+      ? group.members.flattened.map((row) => norm(row?.id || row?.name)).filter(Boolean).sort()
+      : [],
+    submodel: submodel
+      ? {
+          type: norm(submodel?.renderPolicy?.submodelType || submodel?.submodelType || submodel?.type),
+          nodeCount: Number(submodel?.membership?.nodeCount || submodel?.nodeCount || 0),
+          lines: norm(submodel?.lines || submodel?.attributes?.lines || submodel?.line0)
+        }
+      : null,
+    structuralAttrs: {
+      DisplayAs: norm(attrs.DisplayAs || model?.displayAs || model?.type),
+      StringType: norm(attrs.StringType),
+      ModelChain: norm(attrs.ModelChain),
+      PixelCount: norm(attrs.PixelCount),
+      parm1: norm(attrs.parm1),
+      parm2: norm(attrs.parm2),
+      parm3: norm(attrs.parm3)
+    }
+  };
+  return `tmf1:${stableHash(stableJson(payload))}`;
 }
 
 function buildAssignmentIndex(assignments = []) {
@@ -620,7 +696,16 @@ export function buildNormalizedTargetMetadataRecords({
         rawType: displayType,
         canonicalType: norm(classification?.canonicalType),
         parentId: "",
-        parentName: ""
+        parentName: "",
+        fingerprint: buildTargetFingerprint({
+          targetId,
+          targetKind: "model",
+          displayName: norm(model?.name || targetId),
+          canonicalType: norm(classification?.canonicalType),
+          model,
+          customStructure
+        }),
+        fingerprintVersion: "target-metadata-fingerprint-v1"
       },
       structure: {
         groupMemberships,
@@ -718,7 +803,15 @@ export function buildNormalizedTargetMetadataRecords({
         rawType: "group",
         canonicalType: "model_group",
         parentId: "",
-        parentName: ""
+        parentName: "",
+        fingerprint: buildTargetFingerprint({
+          targetId,
+          targetKind: "group",
+          displayName: norm(group?.name || targetId),
+          canonicalType: "model_group",
+          group
+        }),
+        fingerprintVersion: "target-metadata-fingerprint-v1"
       },
       structure: {
         groupMemberships: [],
@@ -814,7 +907,16 @@ export function buildNormalizedTargetMetadataRecords({
         rawType: "SubModel",
         canonicalType: "submodel",
         parentId,
-        parentName: parentId
+        parentName: parentId,
+        fingerprint: buildTargetFingerprint({
+          targetId,
+          targetKind: "submodel",
+          displayName: parentId ? `${parentId} / ${norm(submodel?.name || targetId)}` : norm(submodel?.name || targetId),
+          canonicalType: "submodel",
+          parentId,
+          submodel
+        }),
+        fingerprintVersion: "target-metadata-fingerprint-v1"
       },
       structure: {
         groupMemberships: unique(groupMembershipIndex.get(targetId) || []),

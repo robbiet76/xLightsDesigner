@@ -520,6 +520,25 @@ export async function getModels(endpoint) {
 }
 
 export async function getModel(endpoint, name) {
+  if (isOwnedEndpoint(endpoint)) {
+    const requested = String(name || "").trim().toLowerCase();
+    const models = await getModels(endpoint);
+    const rows = Array.isArray(models?.data?.models) ? models.data.models : [];
+    const found = rows.find((row) => {
+      const id = String(row?.id || row?.name || "").trim().toLowerCase();
+      const modelName = String(row?.name || row?.id || "").trim().toLowerCase();
+      return requested && (id === requested || modelName === requested);
+    });
+    if (!found) {
+      throw new Error("layout.getModel failed (MODEL_NOT_FOUND): Model not found.");
+    }
+    return {
+      ok: true,
+      res: 200,
+      command: "layout.getModel",
+      data: { model: found }
+    };
+  }
   return postCommand(endpoint, "layout.getModel", { name });
 }
 

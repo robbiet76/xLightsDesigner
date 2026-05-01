@@ -13,6 +13,24 @@ function valuesOf(value = {}) {
   return value && typeof value === "object" && !Array.isArray(value) ? Object.values(value) : [];
 }
 
+function stableHash(value = "") {
+  let hash = 2166136261;
+  const text = String(value || "");
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
 function modelAttributes(model = {}) {
   return model?.attributes && typeof model.attributes === "object"
     ? model.attributes
@@ -45,6 +63,30 @@ function summarizeProfiles(models = []) {
   };
 }
 
+export function buildCustomModelFingerprint(model = {}, analysis = {}) {
+  const payload = {
+    targetId: norm(model?.id || model?.name),
+    modelName: norm(model?.name || model?.id),
+    rawType: norm(model?.displayAs || model?.type || model?.displayType || ""),
+    profile: norm(analysis?.profile),
+    nodeCount: Number(analysis?.nodeCount || model?.nodeCount || 0),
+    construction: {
+      source: norm(analysis?.construction?.source),
+      dimensions: analysis?.construction?.dimensions || null,
+      occupancy: analysis?.construction?.occupancy ?? null
+    },
+    submodels: Array.isArray(analysis?.submodels?.details)
+      ? analysis.submodels.details.map((row) => ({
+          name: norm(row?.name),
+          type: norm(row?.type),
+          nodeCount: Number(row?.nodeCount || 0),
+          range: norm(row?.range)
+        }))
+      : []
+  };
+  return `cmf1:${stableHash(stableJson(payload))}`;
+}
+
 export function buildCustomModelStructureCatalog({
   sceneGraph = {},
   source = {},
@@ -67,8 +109,11 @@ export function buildCustomModelStructureCatalog({
       faceInfo: model?.faceInfo || model?.attributes?.faceInfo || null,
       nodeLayout: model?.nodeLayout || model?.customNodeLayout || model?.attributes?.customNodeLayout || null
     });
+    const fingerprint = buildCustomModelFingerprint(model, analysis);
     models.push({
       targetId,
+      fingerprint,
+      fingerprintVersion: "custom-model-fingerprint-v1",
       modelName: norm(model?.name || targetId),
       rawType: displayType,
       canonicalType: "custom",

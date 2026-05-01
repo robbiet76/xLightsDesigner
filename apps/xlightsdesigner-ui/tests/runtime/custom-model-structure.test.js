@@ -179,7 +179,43 @@ test("buildCustomModelStructureCatalog captures all custom models from a scene g
   assert.equal(catalog.summary.customModelCount, 1);
   assert.equal(catalog.summary.modelsWithSubmodels, 1);
   assert.equal(catalog.models[0].modelName, "CustomFace");
+  assert.match(catalog.models[0].fingerprint, /^cmf1:[0-9a-f]{8}$/);
+  assert.equal(catalog.models[0].fingerprintVersion, "custom-model-fingerprint-v1");
   assert.equal(catalog.models[0].profile, "custom_face_like");
+});
+
+test("buildCustomModelStructureCatalog fingerprints include custom submodel construction", () => {
+  const baseSceneGraph = {
+    modelsById: {
+      CustomFace: {
+        id: "CustomFace",
+        name: "CustomFace",
+        displayAs: "Custom",
+        attributes: {
+          CustomModel: grid([
+            ["", 1, ""],
+            [2, "", 3],
+            ["", 4, ""]
+          ])
+        }
+      }
+    },
+    submodelsById: {
+      "CustomFace/@Eye": { id: "CustomFace/@Eye", name: "@Eye", parentId: "CustomFace", type: "ranges", line0: "2-3" }
+    }
+  };
+  const changedSceneGraph = {
+    ...baseSceneGraph,
+    submodelsById: {
+      ...baseSceneGraph.submodelsById,
+      "CustomFace/@Mouth": { id: "CustomFace/@Mouth", name: "@Mouth", parentId: "CustomFace", type: "ranges", line0: "4" }
+    }
+  };
+
+  const base = buildCustomModelStructureCatalog({ sceneGraph: baseSceneGraph });
+  const changed = buildCustomModelStructureCatalog({ sceneGraph: changedSceneGraph });
+
+  assert.notEqual(base.models[0].fingerprint, changed.models[0].fingerprint);
 });
 
 test("parseXmlAttributes decodes quoted XML attributes", () => {

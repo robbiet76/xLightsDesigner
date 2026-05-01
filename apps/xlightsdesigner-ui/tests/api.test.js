@@ -12,6 +12,7 @@ import {
   getRenderedSequenceSamples,
   openSequence,
   getLayoutScene,
+  getModel,
   getTimingMarks,
   listEffects
 } from "../api.js";
@@ -309,6 +310,55 @@ test("getLayoutScene uses owned route and preserves scene payload", async () => 
     assert.equal(body.data.models.length, 1);
     assert.equal(body.data.models[0].name, "Snowman");
     assert.equal(body.data.models[0].transform.position.z, 3);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("getModel resolves owned model summaries by model name", async () => {
+  const calls = [];
+  const originalFetch = global.fetch;
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    return jsonResponse({
+      ok: true,
+      statusCode: 200,
+      data: {
+        models: [
+          { id: "MegaTree", name: "MegaTree", displayAs: "Tree 360", nodeCount: 800 },
+          { id: "Snowman", name: "Snowman", displayAs: "Custom", nodeCount: 120 }
+        ]
+      }
+    });
+  };
+  try {
+    const body = await getModel("http://127.0.0.1:49915/xlightsdesigner/api", "Snowman");
+    assert.equal(calls[0], "http://127.0.0.1:49915/xlightsdesigner/api/layout/models");
+    assert.equal(body.command, "layout.getModel");
+    assert.equal(body.data.model.name, "Snowman");
+    assert.equal(body.data.model.nodeCount, 120);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("getModel reports owned missing models without legacy command fallback", async () => {
+  const calls = [];
+  const originalFetch = global.fetch;
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    return jsonResponse({
+      ok: true,
+      statusCode: 200,
+      data: { models: [{ id: "MegaTree", name: "MegaTree" }] }
+    });
+  };
+  try {
+    await assert.rejects(
+      () => getModel("http://127.0.0.1:49915/xlightsdesigner/api", "Snowman"),
+      /layout\.getModel failed \(MODEL_NOT_FOUND\): Model not found\./
+    );
+    assert.deepEqual(calls, ["http://127.0.0.1:49915/xlightsdesigner/api/layout/models"]);
   } finally {
     global.fetch = originalFetch;
   }
