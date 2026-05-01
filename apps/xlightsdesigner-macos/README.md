@@ -29,7 +29,8 @@ swift run
 ## Primary references
 
 - `../../specs/app-ui/app-workspace.md`
-- `../../specs/app-ui/platform-and-services.md`
+- `../../specs/platforms/platform-and-services.md`
+- `../../specs/platforms/macos-app.md`
 
 ## Current workflow surface
 

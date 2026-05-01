@@ -23,4 +23,4 @@ Active shared surfaces:
 
 Primary references:
 - `../../specs/app-ui/app-workspace.md`
-- `../../specs/app-ui/platform-and-services.md`
+- `../../specs/platforms/platform-and-services.md`

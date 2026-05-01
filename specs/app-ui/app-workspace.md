@@ -7,11 +7,13 @@ Supersedes: dated macOS app screen, migration, cutover, and workflow specs under
 
 ## Purpose
 
-Define the durable app experience for xLightsDesigner.
+Define the durable app experience for xLightsDesigner independent of a specific operating system.
 
 ## Product Shape
 
-The macOS app is the user's primary workspace. It owns project selection, show-folder binding, sequence selection, workflow navigation, review/apply, history, settings, and orchestration of local services.
+The app is the user's primary workspace. It owns project selection, show-folder binding, sequence selection, workflow navigation, review/apply, history, settings, and orchestration of local services.
+
+The current implementation is the macOS SwiftUI app. Platform-specific behavior is defined separately under `../platforms/`.
 
 The app should feel like a focused production tool, not a dashboard collection or marketing shell. Screens should be dense enough for repeated work, clear enough for review, and conservative around destructive changes.
 
@@ -55,7 +57,7 @@ The app should feel like a focused production tool, not a dashboard collection o
 ## Related Specs
 
 - `../product-plan.md`
-- `platform-and-services.md`
+- `../platforms/platform-and-services.md`
 - `project-storage.md`
 - `../sequence-agent/xlights-api.md`
 - `../sequence-agent/model-metadata.md`

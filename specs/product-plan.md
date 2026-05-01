@@ -39,7 +39,8 @@ The app is not just a chat wrapper. It is a controlled workflow that turns creat
 
 ## Current Product Components
 
-- macOS app: project shell, workflow screens, review/apply, history, settings, and local service orchestration.
+- App workspace: project shell, workflow screens, review/apply, history, settings, and local service orchestration.
+- macOS app implementation: current SwiftUI product surface and platform integration.
 - App assistant: routed conversational shell that helps users operate the product without owning specialist domain logic.
 - Audio analyst: music analysis, timing tracks, and audio context.
 - Designer dialog: user intent, display understanding, creative direction, and sequencing handoff.
@@ -64,6 +65,8 @@ Near-term work should favor:
 - `local-completion-roadmap.md`
 - `app-ui/app-workspace.md`
 - `app-ui/project-storage.md`
+- `platforms/platform-and-services.md`
+- `platforms/macos-app.md`
 - `designer-dialog/designer-interaction-contract.md`
 - `sequence-agent/sequencing-system.md`
 - `sequence-agent/render-training-knowledge.md`

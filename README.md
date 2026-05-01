@@ -37,6 +37,8 @@ Core workflow:
 - Spec and repo governance: `specs/spec-governance.md`
 - App contract: `specs/app-ui/app-workspace.md`
 - Project storage contract: `specs/app-ui/project-storage.md`
+- Platform boundary: `specs/platforms/platform-and-services.md`
+- macOS app boundary: `specs/platforms/macos-app.md`
 - xLights API contract: `specs/sequence-agent/xlights-api.md`
 - Sequencing system: `specs/sequence-agent/sequencing-system.md`
 - Render-training knowledge: `specs/sequence-agent/render-training-knowledge.md`
