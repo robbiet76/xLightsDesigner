@@ -228,7 +228,9 @@ test("metadata runtime remaps renamed targets by fingerprint during reconciliati
   assert.equal(state.metadata.assignments[0].targetId, "RenamedFace");
   assert.equal(state.metadata.assignments[0].targetName, "Renamed Face");
   assert.equal(state.metadata.assignments[0].displayBinding.targetFingerprint, originalFingerprint);
+  assert.equal(state.metadata.assignments[0].displayBinding.previousTargetId, "CustomFace");
   assert.deepEqual(state.metadata.preferencesByTargetId.RenamedFace.semanticHints, ["Face"]);
+  assert.equal(state.metadata.preferencesByTargetId.RenamedFace.displayBinding.previousTargetId, "CustomFace");
   assert.equal(state.metadata.preferencesByTargetId.CustomFace, undefined);
   assert.deepEqual(binding.orphanTargetIds, []);
 });

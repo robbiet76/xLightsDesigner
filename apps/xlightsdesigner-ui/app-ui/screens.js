@@ -1931,6 +1931,38 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const data = dashboard?.data || {};
     const view = String(data.metadataView || "guided") === "grid" ? "grid" : "guided";
     const activeTargetName = String(data.activeTarget?.displayName || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const reconciliation = data.reconciliation || {};
+    const reconciliationSummary = reconciliation.summary || {};
+    const reconciliationTone = reconciliationSummary.reviewNeeded ? "warning" : "ready";
+    const renamedRows = Array.isArray(reconciliation.renamed) ? reconciliation.renamed.slice(0, 4) : [];
+    const orphanRows = Array.isArray(reconciliation.orphaned) ? reconciliation.orphaned.slice(0, 4) : [];
+    const collisionRows = Array.isArray(reconciliation.collisions) ? reconciliation.collisions.slice(0, 3) : [];
+    const reconciliationStateLabel = String(reconciliation.state || "unknown")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    const reconciliationDetails = [
+      ...renamedRows.map((row) => `Renamed: ${String(row.previousTargetName || row.previousTargetId || "previous target")} -> ${String(row.targetName || row.targetId || "current target")}`),
+      ...orphanRows.map((row) => `Missing: ${String(row.targetName || row.targetId || "target")}`),
+      ...collisionRows.map((row) => `Review duplicate fingerprint: ${(Array.isArray(row.targets) ? row.targets : []).map((target) => String(target.displayName || target.targetId || "")).filter(Boolean).join(", ")}`)
+    ].filter(Boolean);
+    const reconciliationCard = `
+      <section class="card metadata-progress-card">
+        <div class="metadata-panel-header">
+          <div>
+            <div class="artifact-kicker">Display Reconciliation</div>
+            <h4>${reconciliationSummary.reviewNeeded ? "Review current display mapping" : "Display mapping is current"}</h4>
+          </div>
+          <span class="status-chip status-chip-${reconciliationTone}">${escapeHtml(reconciliationStateLabel)}</span>
+        </div>
+        <div class="artifact-chip-row">
+          <span class="artifact-chip">${escapeHtml(String(reconciliationSummary.matchedCount || 0))} matched</span>
+          <span class="artifact-chip">${escapeHtml(String(reconciliationSummary.renamedCount || 0))} renamed</span>
+          <span class="artifact-chip">${escapeHtml(String(reconciliationSummary.orphanedCount || 0))} missing</span>
+          <span class="artifact-chip">${escapeHtml(String(reconciliationSummary.collisionCount || 0))} review</span>
+        </div>
+        ${reconciliationDetails.length ? `<ul>${reconciliationDetails.map((row) => `<li>${escapeHtml(row)}</li>`).join("")}</ul>` : `<p class="metadata-helper-copy">No display remapping action is needed.</p>`}
+      </section>
+    `;
     return renderWorkspaceFrame("metadata", `
       <div class="screen-grid metadata-workspace">
         <div class="metadata-panel">
@@ -1950,12 +1982,14 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <section class="card metadata-progress-card">
             <h4>${String(data.progressSummary || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
           </section>
+          ${reconciliationCard}
           `
               : `
           <section class="card metadata-progress-card">
             <h4>${String(data.progressSummary || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
             <p class="metadata-helper-copy">Use the grid to choose any target manually.</p>
           </section>
+          ${reconciliationCard}
           <section class="card metadata-bulk-card">
             <div class="metadata-bulk-header">
               <strong>${Number(data.selectedCount || 0)} selected</strong>

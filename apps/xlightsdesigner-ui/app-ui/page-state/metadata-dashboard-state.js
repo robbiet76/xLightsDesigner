@@ -287,6 +287,125 @@ function buildGuidedTargetOrder({ modelOptions = [], normalizedRecords = [], rec
   return [...unique, ...remaining];
 }
 
+function bindingFingerprint(binding = {}) {
+  return str(binding?.targetFingerprint || binding?.fingerprint);
+}
+
+function buildDisplayReconciliationState({
+  metadata = {},
+  metadataTargets = [],
+  assignments = [],
+  preferencesByTargetId = {}
+} = {}) {
+  const binding = metadata?.displayBinding && typeof metadata.displayBinding === "object" ? metadata.displayBinding : {};
+  const targets = Array.isArray(metadataTargets) ? metadataTargets : [];
+  const liveIds = new Set(targets.map((target) => str(target?.id)).filter(Boolean));
+  const fingerprintRows = new Map();
+  for (const target of targets) {
+    const fingerprint = str(target?.fingerprint);
+    if (!fingerprint) continue;
+    const rows = fingerprintRows.get(fingerprint) || [];
+    rows.push({ targetId: str(target?.id), displayName: str(target?.displayName || target?.name || target?.id) });
+    fingerprintRows.set(fingerprint, rows);
+  }
+  const collisions = Array.from(fingerprintRows.entries())
+    .filter(([, rows]) => rows.length > 1)
+    .map(([fingerprint, rows]) => ({ fingerprint, targets: rows }))
+    .sort((a, b) => a.fingerprint.localeCompare(b.fingerprint));
+  const liveFingerprintById = new Map(targets.map((target) => [str(target?.id), str(target?.fingerprint)]).filter(([id]) => id));
+  const records = [
+    ...(Array.isArray(assignments) ? assignments : []).map((row) => ({
+      kind: "assignment",
+      targetId: str(row?.targetId),
+      targetName: str(row?.targetName || row?.targetId),
+      binding: row?.displayBinding || {}
+    })),
+    ...Object.entries(preferencesByTargetId || {}).map(([targetId, row]) => ({
+      kind: "preference",
+      targetId: str(targetId),
+      targetName: str(targetId),
+      binding: row?.displayBinding || {}
+    }))
+  ].filter((row) => row.targetId);
+  const orphanIds = new Set(Array.isArray(binding?.orphanTargetIds) ? binding.orphanTargetIds.map(str).filter(Boolean) : []);
+  const matched = [];
+  const renamed = [];
+  const orphaned = [];
+  const seenMatchKeys = new Set();
+  const seenRenameKeys = new Set();
+  const seenOrphanIds = new Set(orphanIds);
+  for (const record of records) {
+    const live = liveIds.has(record.targetId);
+    const previousTargetId = str(record?.binding?.previousTargetId);
+    const previousTargetName = str(record?.binding?.previousTargetName || previousTargetId);
+    const targetFingerprint = bindingFingerprint(record.binding);
+    const liveFingerprint = liveFingerprintById.get(record.targetId) || "";
+    if (previousTargetId && previousTargetId !== record.targetId) {
+      const key = `${previousTargetId}->${record.targetId}`;
+      if (!seenRenameKeys.has(key)) {
+        seenRenameKeys.add(key);
+        renamed.push({
+          previousTargetId,
+          previousTargetName,
+          targetId: record.targetId,
+          targetName: record.targetName,
+          fingerprint: targetFingerprint
+        });
+      }
+    }
+    if (!live) {
+      seenOrphanIds.add(record.targetId);
+      continue;
+    }
+    if (!previousTargetId && (!targetFingerprint || !liveFingerprint || targetFingerprint === liveFingerprint)) {
+      const key = `${record.targetId}:${targetFingerprint}`;
+      if (!seenMatchKeys.has(key)) {
+        seenMatchKeys.add(key);
+        matched.push({
+          targetId: record.targetId,
+          targetName: record.targetName,
+          fingerprint: targetFingerprint
+        });
+      }
+    }
+  }
+  for (const targetId of seenOrphanIds) {
+    orphaned.push({ targetId, targetName: targetId });
+  }
+  orphaned.sort((a, b) => a.targetName.localeCompare(b.targetName));
+  renamed.sort((a, b) => a.targetName.localeCompare(b.targetName));
+  matched.sort((a, b) => a.targetName.localeCompare(b.targetName));
+  const reviewNeeded = orphaned.length > 0 || collisions.length > 0 || str(binding?.status) === "pending";
+  const state = reviewNeeded
+    ? "needs_review"
+    : renamed.length
+      ? "renamed"
+      : matched.length
+        ? "matched"
+        : str(binding?.status || "unknown") || "unknown";
+  return {
+    status: str(binding?.status || ""),
+    state,
+    showFolder: str(binding?.showFolder),
+    layoutFingerprint: str(binding?.layoutFingerprint),
+    previousLayoutFingerprint: str(binding?.previousLayoutFingerprint),
+    lastReconciledAt: str(binding?.lastReconciledAt),
+    reconciledReason: str(binding?.reconciledReason),
+    pendingReason: str(binding?.pendingReason),
+    summary: {
+      matchedCount: matched.length,
+      renamedCount: renamed.length,
+      orphanedCount: orphaned.length,
+      collisionCount: collisions.length,
+      reviewNeeded
+    },
+    matched,
+    renamed,
+    orphaned,
+    collisions
+  };
+}
+
 export function buildMetadataDashboardState({
   state = {},
   helpers = {}
@@ -310,6 +429,12 @@ export function buildMetadataDashboardState({
   const preferencesByTargetId = state.metadata?.preferencesByTargetId && typeof state.metadata.preferencesByTargetId === "object"
     ? state.metadata.preferencesByTargetId
     : {};
+  const reconciliation = buildDisplayReconciliationState({
+    metadata: state.metadata || {},
+    metadataTargets,
+    assignments,
+    preferencesByTargetId
+  });
   const nameFilter = String(state.ui?.metadataFilterName || "");
   const typeFilter = String(state.ui?.metadataFilterType || "");
   const roleFilter = String(state.ui?.metadataFilterRole || "");
@@ -485,6 +610,7 @@ export function buildMetadataDashboardState({
       hasVisibleTargets,
       hasSelectedTargets,
       activeTargetId,
+      reconciliation,
       metadataView: str(state.ui?.metadataView || "guided") === "grid" ? "grid" : "guided",
       callToAction,
       primaryRecommendation,

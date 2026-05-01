@@ -6,8 +6,8 @@ import { buildMetadataDashboardState } from "../../../app-ui/page-state/metadata
 function buildHelpers() {
   return {
     buildMetadataTargets: () => [
-      { id: "Snowman", displayName: "Snowman", type: "model" },
-      { id: "SpiralTrees", displayName: "SpiralTrees", type: "model" }
+      { id: "Snowman", displayName: "Snowman", type: "model", fingerprint: "tmf1:snowman" },
+      { id: "SpiralTrees", displayName: "SpiralTrees", type: "model", fingerprint: "tmf1:spiral" }
     ],
     buildNormalizedTargetMetadataRecords: () => [
       {
@@ -113,7 +113,11 @@ test("metadata dashboard summarizes tag and target state", () => {
     state: {
       submodels: [],
       metadata: {
-        assignments: [{ targetId: "Snowman", tags: ["character"] }]
+        assignments: [{
+          targetId: "Snowman",
+          tags: ["character"],
+          displayBinding: { targetFingerprint: "tmf1:snowman" }
+        }]
       },
       ui: {
         metadataSelectionIds: ["Snowman"],
@@ -135,6 +139,9 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.total, 2);
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.highPriority, 1);
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.items[0].type, "prop_hints");
+  assert.equal(dashboard.data.reconciliation.state, "matched");
+  assert.equal(dashboard.data.reconciliation.summary.matchedCount, 1);
+  assert.equal(dashboard.data.reconciliation.summary.reviewNeeded, false);
   assert.equal(dashboard.data.rows[0].canonicalType, "custom");
   assert.equal(dashboard.data.rows[0].rolePreference, "support");
   assert.equal(dashboard.data.rows[0].visualHints.join(","), "face,hat");
@@ -154,6 +161,70 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.match(dashboard.data.activeTarget.summaryText, /Location: left, mid, front \| x 10.5, y 2.1, z 0.4\./);
   assert.equal(dashboard.data.activeTarget.densityMetadata.label, "medium");
   assert.match(dashboard.data.activeTarget.summaryText, /Visual Weight: medium \| 1.234 nodes per area \| 48 nodes\./);
+});
+
+test("metadata dashboard exposes reconciliation review state", () => {
+  const dashboard = buildMetadataDashboardState({
+    state: {
+      submodels: [],
+      metadata: {
+        assignments: [
+          {
+            targetId: "RenamedFace",
+            targetName: "Renamed Face",
+            tags: ["character"],
+            displayBinding: {
+              targetFingerprint: "tmf1:face",
+              previousTargetId: "CustomFace",
+              previousTargetName: "Custom Face"
+            }
+          },
+          {
+            targetId: "RetiredSpinner",
+            targetName: "Retired Spinner",
+            tags: ["legacy"],
+            displayBinding: { targetFingerprint: "tmf1:retired" }
+          }
+        ],
+        preferencesByTargetId: {
+          RenamedFace: {
+            semanticHints: ["Face"],
+            displayBinding: {
+              targetFingerprint: "tmf1:face",
+              previousTargetId: "CustomFace",
+              previousTargetName: "Custom Face"
+            }
+          }
+        },
+        displayBinding: {
+          status: "reconciled",
+          orphanTargetIds: ["RetiredSpinner"],
+          layoutFingerprint: "display-fp-2",
+          previousLayoutFingerprint: "display-fp-1"
+        }
+      },
+      ui: {},
+      health: {}
+    },
+    helpers: {
+      ...buildHelpers(),
+      buildMetadataTargets: () => [
+        { id: "RenamedFace", displayName: "Renamed Face", type: "model", fingerprint: "tmf1:face" },
+        { id: "TwinA", displayName: "Twin A", type: "model", fingerprint: "tmf1:duplicate" },
+        { id: "TwinB", displayName: "Twin B", type: "model", fingerprint: "tmf1:duplicate" }
+      ],
+      buildNormalizedTargetMetadataRecords: () => []
+    }
+  });
+
+  assert.equal(dashboard.data.reconciliation.state, "needs_review");
+  assert.equal(dashboard.data.reconciliation.summary.renamedCount, 1);
+  assert.equal(dashboard.data.reconciliation.summary.orphanedCount, 1);
+  assert.equal(dashboard.data.reconciliation.summary.collisionCount, 1);
+  assert.equal(dashboard.data.reconciliation.renamed[0].previousTargetId, "CustomFace");
+  assert.equal(dashboard.data.reconciliation.renamed[0].targetId, "RenamedFace");
+  assert.equal(dashboard.data.reconciliation.orphaned[0].targetId, "RetiredSpinner");
+  assert.deepEqual(dashboard.data.reconciliation.collisions[0].targets.map((row) => row.targetId), ["TwinA", "TwinB"]);
 });
 
 test("metadata dashboard applies filters to target rows", () => {

@@ -27,6 +27,10 @@ export function createMetadataRuntime(deps = {}) {
     getShowFolder = () => String(state?.showFolder || '').trim()
   } = deps;
 
+  function str(value = '') {
+    return String(value || '').trim();
+  }
+
   function metadataObject() {
     if (!state.metadata || typeof state.metadata !== 'object' || Array.isArray(state.metadata)) {
       state.metadata = {};
@@ -94,13 +98,21 @@ export function createMetadataRuntime(deps = {}) {
     return payload ? stableHash(payload) : '';
   }
 
-  function currentDisplayMetadataBindingRef(target = null, existingBinding = null) {
+  function currentDisplayMetadataBindingRef(target = null, existingBinding = null, previousTarget = null) {
     const binding = metadataObject().displayBinding || {};
+    const previousTargetId = str(previousTarget?.id || '');
+    const previousTargetName = str(previousTarget?.name || previousTarget?.displayName || '');
     return {
       showFolder: String(binding.showFolder || getShowFolder() || ''),
       layoutFingerprint: String(binding.layoutFingerprint || buildDisplayMetadataLayoutFingerprint() || ''),
       targetFingerprint: String(target?.fingerprint || existingBinding?.targetFingerprint || ''),
       targetFingerprintVersion: String(target?.fingerprintVersion || existingBinding?.targetFingerprintVersion || ''),
+      previousTargetId: previousTargetId && previousTargetId !== str(target?.id)
+        ? previousTargetId
+        : String(existingBinding?.previousTargetId || ''),
+      previousTargetName: previousTargetId && previousTargetId !== str(target?.id)
+        ? previousTargetName
+        : String(existingBinding?.previousTargetName || ''),
       previousTargetFingerprint: existingBinding?.targetFingerprint && target?.fingerprint && existingBinding.targetFingerprint !== target.fingerprint
         ? String(existingBinding.targetFingerprint)
         : String(existingBinding?.previousTargetFingerprint || ''),
@@ -176,12 +188,17 @@ export function createMetadataRuntime(deps = {}) {
     return byFingerprint;
   }
 
-  function displayBindingForTarget(target = null, existingBinding = null) {
-    return currentDisplayMetadataBindingRef(target, existingBinding);
+  function displayBindingForTarget(target = null, existingBinding = null, previousTarget = null) {
+    return currentDisplayMetadataBindingRef(target, existingBinding, previousTarget);
   }
 
   function retargetAssignment(assignment = {}, target = null) {
     if (!target) return assignment;
+    const previousTarget = {
+      id: str(assignment?.targetId),
+      name: str(assignment?.targetName)
+    };
+    const changedTarget = previousTarget.id && previousTarget.id !== str(target.id);
     const targetType = target?.type || (String(target.id || '').includes('/') ? 'submodel' : 'model');
     const targetParentId = targetType === 'submodel' ? (target?.parentId || parseSubmodelParentId(target.id)) : '';
     return {
@@ -191,7 +208,7 @@ export function createMetadataRuntime(deps = {}) {
       targetType,
       targetParentId,
       targetParentName: targetParentId ? getMetadataTargetNameById(targetParentId) : '',
-      displayBinding: displayBindingForTarget(target, assignment?.displayBinding)
+      displayBinding: displayBindingForTarget(target, assignment?.displayBinding, changedTarget ? previousTarget : null)
     };
   }
 
@@ -288,8 +305,16 @@ export function createMetadataRuntime(deps = {}) {
       const fingerprintTarget = !liveTarget && fingerprint ? liveByFingerprint.get(fingerprint) : null;
       const target = liveTarget || fingerprintTarget || null;
       const nextId = target?.id || currentId;
+      const changedTarget = Boolean(target && currentId && currentId !== target.id);
       const nextPreference = target
-        ? { ...preference, displayBinding: displayBindingForTarget(target, preference?.displayBinding) }
+        ? {
+            ...preference,
+            displayBinding: displayBindingForTarget(
+              target,
+              preference?.displayBinding,
+              changedTarget ? { id: currentId, name: currentId } : null
+            )
+          }
         : preference;
       nextPreferencesByTargetId[nextId] = mergePreferenceRecords(nextPreferencesByTargetId[nextId] || {}, nextPreference);
     }
