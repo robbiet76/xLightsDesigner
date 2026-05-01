@@ -45,6 +45,8 @@ Durable artifacts should answer:
 
 Custom models should not be trained by forcing them into built-in model classes. Their construction is user-defined and effectively unbounded, so most custom models will not cleanly match a star, spinner, cane, matrix, tree, or line training profile.
 
+Custom model learning is primarily local, per user installation, and per project/display. Centralized training can provide general effect behavior, parameter priors, conservative probe recipes, and interpretation rules, but it cannot pre-train reliable knowledge for every user's custom props. The app must assume that each installation may contain custom model structures it has never seen before.
+
 The app should learn custom model behavior in layers:
 
 1. Capture objective structure from the current display:
@@ -69,7 +71,7 @@ The app should learn custom model behavior in layers:
    - reusable only for similar structure and metadata context
    - never promoted solely because of the model name
 
-This means custom model support starts from general effect knowledge and runtime validation, then becomes more confident per display as the app observes how effects render on that target. Mature project metadata helps the agent choose what to try. Render evidence teaches the app what actually works.
+This means custom model support starts from general effect knowledge and runtime validation, then becomes more confident per display as the app observes how effects render on that target. Mature project metadata helps the agent choose what to try. Render evidence teaches the app what actually works for that user's installation.
 
 Custom model learning should answer practical questions:
 
@@ -80,7 +82,9 @@ Custom model learning should answer practical questions:
 - which settings are too dense, too sparse, too fast, or visually confusing
 - whether the target is reliable as a lead, support, accent, or texture surface
 
-The durable training layer may eventually aggregate anonymized structural patterns across projects, but project-local evidence should remain valid on its own. A custom model that only exists in one display can still become useful through that display's metadata, render probes, and accepted sequence history.
+The durable shared training layer may eventually aggregate anonymized structural patterns across projects, but project-local evidence should remain valid on its own and should not depend on centralized promotion. A custom model that only exists in one display can still become useful through that display's metadata, render probes, and accepted sequence history.
+
+Local custom-model learning should be stored with the project or user installation, not only in the central training package. It should survive normal project reopen and show-folder refresh, and should be portable when the user explicitly migrates or copies the project. Local learning should remain advisory and reviewable because users may intentionally change props, layouts, wiring, or metadata.
 
 ## Current Learnings
 
