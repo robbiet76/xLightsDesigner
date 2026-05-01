@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { buildCandidateSelectionV1 } from "../../../agent/sequence-agent/candidate-selection.js";
+import { buildCandidateSelectionContext } from "../../../agent/sequence-agent/candidate-selection-context.js";
 
 test("candidate selection penalizes oscillation back to the previous pass shape", () => {
   const out = buildCandidateSelectionV1({
@@ -173,4 +174,71 @@ test("candidate selection prefers candidates aligned to structured mismatch bias
   assert.equal(out.selectionContext.changeBias.progression.temporalVariation, "increase");
   assert.equal(out.selectionContext.changeBias.layering.density, "reduce");
   assert.equal(out.selectionContext.changeBias.preservation.existingEffects, "preserve_unless_explicit_replace");
+});
+
+test("candidate selection context builds advisory submodel probe plan from render evidence", () => {
+  const context = buildCandidateSelectionContext({
+    requestId: "req-submodel",
+    phase: "review",
+    sequenceRevision: "rev-1",
+    renderValidationEvidence: {
+      renderObservationRef: "render-1",
+      submodelEvidence: [
+        {
+          targetId: "Singing Face/@Mouth1",
+          parentId: "Singing Face",
+          siblingCount: 10,
+          siblingIds: ["Singing Face/@Mouth2"],
+          overlappingSiblingIds: [],
+          nodeCoverage: { nodeCount: 8, parentNodeCount: 143, ratio: 0.0559 },
+          structureHints: ["feature_mouth"]
+        },
+        {
+          targetId: "Spinner/Spoke 1",
+          parentId: "Spinner",
+          siblingCount: 11,
+          siblingIds: ["Spinner/Spoke 2"],
+          overlappingSiblingIds: ["Spinner/Center"],
+          nodeCoverage: { nodeCount: 7, parentNodeCount: 85, ratio: 0.0824 },
+          structureHints: ["radial_spoke"]
+        }
+      ]
+    }
+  });
+
+  assert.equal(context.submodelProbePlan.strategy, "submodel_first_with_parent_control");
+  assert.deepEqual(context.submodelProbePlan.parentTargetIds, ["Singing Face", "Spinner"]);
+  assert.deepEqual(context.submodelProbePlan.recommendedSubmodelTargetIds, ["Singing Face/@Mouth1", "Spinner/Spoke 1"]);
+  assert.deepEqual(context.submodelProbePlan.siblingPairProbeIds, ["Spinner/Center + Spinner/Spoke 1"]);
+  assert.ok(context.submodelProbePlan.reasons.includes("feature_submodels_present"));
+  assert.ok(context.seed.includes("submodel:submodel_first_with_parent_control"));
+
+  const out = buildCandidateSelectionV1({
+    intentEnvelope: {
+      artifactId: "intent-submodel",
+      novelty: { explorationPressure: "medium", reuseTolerance: "medium" }
+    },
+    realizationCandidates: {
+      artifactId: "candidates-submodel",
+      candidates: [
+        {
+          candidateId: "candidate-a",
+          fitSignals: { overallFit: "high" },
+          revisionSignals: { revisionScore: 0.7 },
+          noveltySignals: { noveltyScore: 0.5 },
+          riskSignals: {
+            attentionConflictRisk: "medium",
+            layeringConflictRisk: "medium",
+            complexityRisk: "medium",
+            renderUncertainty: "medium"
+          }
+        }
+      ]
+    },
+    selectionContext: context,
+    selectionSeed: context.seed
+  });
+
+  assert.equal(out.selectionContext.submodelProbePlan.strategy, "submodel_first_with_parent_control");
+  assert.deepEqual(out.selectionContext.submodelProbePlan.recommendedSubmodelTargetIds, ["Singing Face/@Mouth1", "Spinner/Spoke 1"]);
 });

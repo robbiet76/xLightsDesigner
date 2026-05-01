@@ -198,6 +198,15 @@ export function buildCandidateSelectionV1({
           explorationEnabled: Boolean(selectionContext.explorationEnabled),
           unresolvedSignals: arr(selectionContext.unresolvedSignals).map((row) => str(row)).filter(Boolean),
           retryPressureSignals: arr(selectionContext.retryPressureSignals).map((row) => str(row)).filter(Boolean),
+          submodelProbePlan: selectionContext.submodelProbePlan && typeof selectionContext.submodelProbePlan === 'object'
+            ? {
+                strategy: str(selectionContext.submodelProbePlan.strategy),
+                parentTargetIds: arr(selectionContext.submodelProbePlan.parentTargetIds).map((row) => str(row)).filter(Boolean).slice(0, 12),
+                recommendedSubmodelTargetIds: arr(selectionContext.submodelProbePlan.recommendedSubmodelTargetIds).map((row) => str(row)).filter(Boolean).slice(0, 24),
+                siblingPairProbeIds: arr(selectionContext.submodelProbePlan.siblingPairProbeIds).map((row) => str(row)).filter(Boolean).slice(0, 12),
+                reasons: arr(selectionContext.submodelProbePlan.reasons).map((row) => str(row)).filter(Boolean).slice(0, 8)
+              }
+            : null,
           changeBias: selectionContext.changeBias && typeof selectionContext.changeBias === 'object'
             ? {
                 composition: selectionContext.changeBias.composition && typeof selectionContext.changeBias.composition === 'object'

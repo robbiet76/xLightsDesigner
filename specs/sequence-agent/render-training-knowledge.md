@@ -86,6 +86,8 @@ Submodels are important across all model types and should be learned consistentl
 
 Render validation evidence should carry a compact, bounded submodel context for selected parent or submodel targets. This evidence is not a replacement for the full scene graph; it preserves the target id, parent id, sibling count/ids, overlap ids, node coverage, and structure hints needed by the next proposal/revision pass. Keeping this context with the evidence lets later probes reason about why a render did or did not work on a target without copying the entire display model into every artifact.
 
+Candidate selection may derive an advisory submodel probe plan from this evidence. The probe plan should recommend parent controls, submodel-first checks, and sibling-pair checks when the target has feature submodels, small coverage regions, overlapping sibling submodels, or many sibling regions. This plan is guidance for runtime probing and review; it should not silently rewrite user-requested targets.
+
 Model and submodel learning should answer practical questions:
 
 - which effects produce readable coverage on this target
