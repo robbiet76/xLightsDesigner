@@ -1,3 +1,5 @@
+import { buildNormalizedTargetMetadataRecords as buildDefaultNormalizedTargetMetadataRecords } from './target-metadata-runtime.js';
+
 export function createMetadataRuntime(deps = {}) {
   const {
     state,
@@ -21,6 +23,7 @@ export function createMetadataRuntime(deps = {}) {
     normalizeElementType,
     normalizeStringArray,
     arraysEqualAsSets,
+    buildNormalizedTargetMetadataRecords = buildDefaultNormalizedTargetMetadataRecords,
     getShowFolder = () => String(state?.showFolder || '').trim()
   } = deps;
 
@@ -49,38 +52,60 @@ export function createMetadataRuntime(deps = {}) {
     return (hash >>> 0).toString(16).padStart(8, '0');
   }
 
+  function buildStructuralTargetRecords() {
+    try {
+      return buildNormalizedTargetMetadataRecords({
+        sceneGraph: state.sceneGraph || {},
+        metadataAssignments: [],
+        metadataPreferencesByTargetId: {}
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  function buildStructuralTargetIndex() {
+    const records = buildStructuralTargetRecords();
+    return new Map(records.map((row) => [String(row?.targetId || ''), row]).filter(([id]) => id));
+  }
+
   function customStructureFingerprintRows() {
     const rows = Array.isArray(state.sceneGraph?.customModelCatalog?.models)
       ? state.sceneGraph.customModelCatalog.models
       : [];
-    return rows.map((row) => [
-      String(row?.targetId || ''),
+    return rows.map((row) => String(row?.fingerprint || [
       String(row?.profile || ''),
       String(row?.nodeCount || ''),
       String(row?.construction?.dimensions?.width || ''),
       String(row?.construction?.dimensions?.height || ''),
       String(row?.construction?.dimensions?.layers || ''),
       Array.isArray(row?.submodels?.names) ? row.submodels.names.join(',') : ''
-    ].join(':'));
+    ].join(':')));
   }
 
   function buildDisplayMetadataLayoutFingerprint(targets = buildMetadataTargets({ includeSubmodels: true })) {
     const targetRows = targets.map((target) => [
-      String(target?.id || ''),
       String(target?.type || ''),
-      String(target?.parentId || ''),
-      String(target?.name || '')
+      String(target?.parentFingerprint || target?.parentId || ''),
+      String(target?.fingerprint || target?.id || ''),
+      target?.fingerprint ? '' : String(target?.name || '')
     ].join(':'));
     const payload = [...targetRows, ...customStructureFingerprintRows()].sort().join('|');
     return payload ? stableHash(payload) : '';
   }
 
-  function currentDisplayMetadataBindingRef() {
+  function currentDisplayMetadataBindingRef(target = null, existingBinding = null) {
     const binding = metadataObject().displayBinding || {};
     return {
       showFolder: String(binding.showFolder || getShowFolder() || ''),
       layoutFingerprint: String(binding.layoutFingerprint || buildDisplayMetadataLayoutFingerprint() || ''),
-      boundAt: new Date().toISOString()
+      targetFingerprint: String(target?.fingerprint || existingBinding?.targetFingerprint || ''),
+      targetFingerprintVersion: String(target?.fingerprintVersion || existingBinding?.targetFingerprintVersion || ''),
+      previousTargetFingerprint: existingBinding?.targetFingerprint && target?.fingerprint && existingBinding.targetFingerprint !== target.fingerprint
+        ? String(existingBinding.targetFingerprint)
+        : String(existingBinding?.previousTargetFingerprint || ''),
+      boundAt: String(existingBinding?.boundAt || new Date().toISOString()),
+      lastBoundAt: new Date().toISOString()
     };
   }
 
@@ -95,15 +120,19 @@ export function createMetadataRuntime(deps = {}) {
 
   function buildMetadataTargets({ includeSubmodels = true } = {}) {
     const byId = new Map();
+    const structuralIndex = buildStructuralTargetIndex();
     (state.models || []).forEach((model) => {
       const id = modelStableId(model);
       if (!id) return;
+      const structural = structuralIndex.get(id);
       byId.set(id, {
         id,
         name: String(model?.name || id),
         displayName: modelDisplayName(model),
         type: normalizeElementType(model?.type) || 'model',
         parentId: '',
+        fingerprint: String(structural?.identity?.fingerprint || model?.identity?.fingerprint || model?.fingerprint || ''),
+        fingerprintVersion: String(structural?.identity?.fingerprintVersion || model?.identity?.fingerprintVersion || model?.fingerprintVersion || ''),
         source: 'models'
       });
     });
@@ -114,16 +143,66 @@ export function createMetadataRuntime(deps = {}) {
       const parentId = String(submodel?.parentId || parseSubmodelParentId(id)).trim();
       const rawName = String(submodel?.name || id);
       const displayName = parentId ? `${parentId} / ${rawName}` : rawName;
+      const structural = structuralIndex.get(id);
+      const parentStructural = structuralIndex.get(parentId);
       byId.set(id, {
         id,
         name: rawName,
         displayName,
         type: 'submodel',
         parentId,
+        fingerprint: String(structural?.identity?.fingerprint || submodel?.identity?.fingerprint || submodel?.fingerprint || ''),
+        fingerprintVersion: String(structural?.identity?.fingerprintVersion || submodel?.identity?.fingerprintVersion || submodel?.fingerprintVersion || ''),
+        parentFingerprint: String(parentStructural?.identity?.fingerprint || ''),
         source: 'submodels'
       });
     });
     return Array.from(byId.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }
+
+  function buildLiveFingerprintIndex(targets = buildMetadataTargets({ includeSubmodels: true })) {
+    const byFingerprint = new Map();
+    const collisions = new Set();
+    for (const target of targets) {
+      const fingerprint = String(target?.fingerprint || '').trim();
+      if (!fingerprint) continue;
+      if (byFingerprint.has(fingerprint)) {
+        collisions.add(fingerprint);
+        continue;
+      }
+      byFingerprint.set(fingerprint, target);
+    }
+    for (const fingerprint of collisions) byFingerprint.delete(fingerprint);
+    return byFingerprint;
+  }
+
+  function displayBindingForTarget(target = null, existingBinding = null) {
+    return currentDisplayMetadataBindingRef(target, existingBinding);
+  }
+
+  function retargetAssignment(assignment = {}, target = null) {
+    if (!target) return assignment;
+    const targetType = target?.type || (String(target.id || '').includes('/') ? 'submodel' : 'model');
+    const targetParentId = targetType === 'submodel' ? (target?.parentId || parseSubmodelParentId(target.id)) : '';
+    return {
+      ...assignment,
+      targetId: target.id,
+      targetName: target?.displayName || getMetadataTargetNameById(target.id),
+      targetType,
+      targetParentId,
+      targetParentName: targetParentId ? getMetadataTargetNameById(targetParentId) : '',
+      displayBinding: displayBindingForTarget(target, assignment?.displayBinding)
+    };
+  }
+
+  function mergePreferenceRecords(existing = {}, incoming = {}) {
+    const merged = { ...existing, ...incoming };
+    for (const key of ['semanticHints', 'submodelHints', 'effectAvoidances']) {
+      const values = normalizeStringArray([...(existing?.[key] || []), ...(incoming?.[key] || [])]);
+      if (values.length) merged[key] = values; else delete merged[key];
+    }
+    if (!String(merged.rolePreference || '').trim()) delete merged.rolePreference;
+    return merged;
   }
 
   function getMetadataTargetById(id) {
@@ -188,10 +267,35 @@ export function createMetadataRuntime(deps = {}) {
     const metadata = metadataObject();
     const targets = buildMetadataTargets({ includeSubmodels: true });
     const liveIds = new Set(targets.map((target) => String(target.id || '')).filter(Boolean));
+    const liveById = new Map(targets.map((target) => [String(target.id || ''), target]).filter(([id]) => id));
+    const liveByFingerprint = buildLiveFingerprintIndex(targets);
     const ignored = new Set((metadata.ignoredOrphanTargetIds || []).map(String));
     const assignments = Array.isArray(metadata.assignments) ? metadata.assignments : [];
+    const remappedAssignments = assignments.map((assignment) => {
+      const currentId = String(assignment?.targetId || '');
+      const liveTarget = liveById.get(currentId);
+      if (liveTarget) return retargetAssignment(assignment, liveTarget);
+      const fingerprint = String(assignment?.displayBinding?.targetFingerprint || '').trim();
+      const fingerprintTarget = fingerprint ? liveByFingerprint.get(fingerprint) : null;
+      return fingerprintTarget ? retargetAssignment(assignment, fingerprintTarget) : assignment;
+    });
+    metadata.assignments = remappedAssignments;
+    const nextPreferencesByTargetId = {};
+    for (const [targetId, preference] of Object.entries(metadata.preferencesByTargetId || {})) {
+      const currentId = String(targetId || '');
+      const liveTarget = liveById.get(currentId);
+      const fingerprint = String(preference?.displayBinding?.targetFingerprint || '').trim();
+      const fingerprintTarget = !liveTarget && fingerprint ? liveByFingerprint.get(fingerprint) : null;
+      const target = liveTarget || fingerprintTarget || null;
+      const nextId = target?.id || currentId;
+      const nextPreference = target
+        ? { ...preference, displayBinding: displayBindingForTarget(target, preference?.displayBinding) }
+        : preference;
+      nextPreferencesByTargetId[nextId] = mergePreferenceRecords(nextPreferencesByTargetId[nextId] || {}, nextPreference);
+    }
+    metadata.preferencesByTargetId = nextPreferencesByTargetId;
     const preferenceIds = Object.keys(metadata.preferencesByTargetId || {}).map(String).filter(Boolean);
-    const assignmentIds = assignments.map((row) => String(row?.targetId || '')).filter(Boolean);
+    const assignmentIds = remappedAssignments.map((row) => String(row?.targetId || '')).filter(Boolean);
     const orphanTargetIds = Array.from(new Set([
       ...assignmentIds.filter((id) => !liveIds.has(id) && !ignored.has(id)),
       ...preferenceIds.filter((id) => !liveIds.has(id) && !ignored.has(id))
@@ -461,7 +565,7 @@ export function createMetadataRuntime(deps = {}) {
       targetParentId,
       targetParentName,
       tags: nextTags,
-      displayBinding: existing?.displayBinding || currentDisplayMetadataBindingRef()
+      displayBinding: displayBindingForTarget(target, existing?.displayBinding)
     };
     if (idx >= 0) assignments[idx] = next; else assignments.push(next);
     state.metadata.assignments = [...assignments];
@@ -489,7 +593,7 @@ export function createMetadataRuntime(deps = {}) {
       next[id] = {
         ...previous,
         rolePreference: value,
-        displayBinding: previous.displayBinding || currentDisplayMetadataBindingRef()
+        displayBinding: displayBindingForTarget(target, previous.displayBinding)
       };
     }
     state.metadata.preferencesByTargetId = next;
@@ -511,7 +615,7 @@ export function createMetadataRuntime(deps = {}) {
     const next = { ...current };
     const reduced = { ...previous };
     if (nextValues.length) reduced.semanticHints = nextValues; else delete reduced.semanticHints;
-    if (Object.keys(reduced).length && !reduced.displayBinding) reduced.displayBinding = currentDisplayMetadataBindingRef();
+    if (Object.keys(reduced).length) reduced.displayBinding = displayBindingForTarget(target, reduced.displayBinding);
     if (hasMetadataPreferencePayload(reduced)) next[id] = reduced; else delete next[id];
     state.metadata.preferencesByTargetId = next;
     ensurePersistedVisualHintDefinitions(nextValues);
@@ -549,7 +653,7 @@ export function createMetadataRuntime(deps = {}) {
     const next = { ...current };
     const reduced = { ...previous };
     if (nextValues.length) reduced.submodelHints = nextValues; else delete reduced.submodelHints;
-    if (Object.keys(reduced).length && !reduced.displayBinding) reduced.displayBinding = currentDisplayMetadataBindingRef();
+    if (Object.keys(reduced).length) reduced.displayBinding = displayBindingForTarget(target, reduced.displayBinding);
     if (hasMetadataPreferencePayload(reduced)) next[id] = reduced; else delete next[id];
     state.metadata.preferencesByTargetId = next;
     invalidatePlanHandoff('metadata submodel hints changed');
@@ -586,7 +690,7 @@ export function createMetadataRuntime(deps = {}) {
     const next = { ...current };
     const reduced = { ...previous };
     if (nextValues.length) reduced.effectAvoidances = nextValues; else delete reduced.effectAvoidances;
-    if (Object.keys(reduced).length && !reduced.displayBinding) reduced.displayBinding = currentDisplayMetadataBindingRef();
+    if (Object.keys(reduced).length) reduced.displayBinding = displayBindingForTarget(target, reduced.displayBinding);
     if (hasMetadataPreferencePayload(reduced)) next[id] = reduced; else delete next[id];
     state.metadata.preferencesByTargetId = next;
     invalidatePlanHandoff('metadata effect avoidances changed');
@@ -699,7 +803,7 @@ export function createMetadataRuntime(deps = {}) {
   }
 
   function remapMetadataOrphan(fromTargetId, toTargetId) {
-    const to = String(toTargetId || '').trim().toLowerCase();
+    const to = String(toTargetId || '').trim();
     if (!to) {
       setStatus('warning', 'Select a replacement target for remap.');
       return render();

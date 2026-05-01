@@ -175,6 +175,64 @@ test("metadata runtime stamps user-authored assignments with the display fingerp
   assert.equal(state.metadata.assignments[0].displayBinding.layoutFingerprint, fingerprint);
 });
 
+test("metadata runtime stamps user-authored assignments with target fingerprints", () => {
+  const state = buildState();
+  state.sceneGraph = {
+    modelsById: {
+      Tree: { id: "Tree", name: "Tree", displayAs: "Tree 360", attributes: { DisplayAs: "Tree 360", parm1: "16" } }
+    }
+  };
+  const runtime = buildRuntime(state);
+
+  const ok = runtime.upsertMetadataAssignmentTags("Tree", ["Existing"], []);
+
+  assert.equal(ok, true);
+  assert.match(state.metadata.assignments[0].displayBinding.targetFingerprint, /^tmf1:[0-9a-f]{8}$/);
+  assert.equal(state.metadata.assignments[0].displayBinding.targetFingerprintVersion, "target-metadata-fingerprint-v1");
+});
+
+test("metadata runtime remaps renamed targets by fingerprint during reconciliation", () => {
+  const state = buildState();
+  state.models = [{ id: "CustomFace", name: "Custom Face", type: "Prop" }];
+  state.submodels = [];
+  state.sceneGraph = {
+    modelsById: {
+      CustomFace: {
+        id: "CustomFace",
+        name: "Custom Face",
+        displayAs: "Custom",
+        attributes: { CustomModel: ",1,;2,,3;,4," }
+      }
+    }
+  };
+  const runtime = buildRuntime(state);
+
+  assert.equal(runtime.upsertMetadataAssignmentTags("CustomFace", ["Existing"], []), true);
+  assert.equal(runtime.updateMetadataTargetSemanticHints("CustomFace", "Face"), true);
+  const originalFingerprint = state.metadata.assignments[0].displayBinding.targetFingerprint;
+
+  state.models = [{ id: "RenamedFace", name: "Renamed Face", type: "Prop" }];
+  state.sceneGraph = {
+    modelsById: {
+      RenamedFace: {
+        id: "RenamedFace",
+        name: "Renamed Face",
+        displayAs: "Custom",
+        attributes: { CustomModel: ",1,;2,,3;,4," }
+      }
+    }
+  };
+
+  const binding = runtime.reconcileDisplayMetadataForSceneGraphChange({ reason: "layout refresh" });
+
+  assert.equal(state.metadata.assignments[0].targetId, "RenamedFace");
+  assert.equal(state.metadata.assignments[0].targetName, "Renamed Face");
+  assert.equal(state.metadata.assignments[0].displayBinding.targetFingerprint, originalFingerprint);
+  assert.deepEqual(state.metadata.preferencesByTargetId.RenamedFace.semanticHints, ["Face"]);
+  assert.equal(state.metadata.preferencesByTargetId.CustomFace, undefined);
+  assert.deepEqual(binding.orphanTargetIds, []);
+});
+
 test("metadata runtime reconciles display metadata without deleting orphaned user work", () => {
   const state = buildState();
   state.showFolder = "/show/a";

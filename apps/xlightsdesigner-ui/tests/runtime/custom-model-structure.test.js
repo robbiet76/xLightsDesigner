@@ -218,6 +218,39 @@ test("buildCustomModelStructureCatalog fingerprints include custom submodel cons
   assert.notEqual(base.models[0].fingerprint, changed.models[0].fingerprint);
 });
 
+test("buildCustomModelStructureCatalog fingerprints survive model renames", () => {
+  const baseSceneGraph = {
+    modelsById: {
+      CustomFace: {
+        id: "CustomFace",
+        name: "CustomFace",
+        displayAs: "Custom",
+        attributes: {
+          CustomModel: grid([
+            ["", 1, ""],
+            [2, "", 3],
+            ["", 4, ""]
+          ])
+        }
+      }
+    }
+  };
+  const renamedSceneGraph = {
+    modelsById: {
+      RenamedFace: {
+        ...baseSceneGraph.modelsById.CustomFace,
+        id: "RenamedFace",
+        name: "Renamed Face"
+      }
+    }
+  };
+
+  const base = buildCustomModelStructureCatalog({ sceneGraph: baseSceneGraph });
+  const renamed = buildCustomModelStructureCatalog({ sceneGraph: renamedSceneGraph });
+
+  assert.equal(base.models[0].fingerprint, renamed.models[0].fingerprint);
+});
+
 test("parseXmlAttributes decodes quoted XML attributes", () => {
   const attrs = parseXmlAttributes(`name="Singing &quot;Bulb&quot;" DisplayAs='Custom' CustomModel="1,2&amp;3"`);
 

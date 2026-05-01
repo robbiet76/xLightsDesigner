@@ -292,11 +292,8 @@ function buildTargetFingerprint({
 } = {}) {
   const attrs = model?.attributes || {};
   const payload = {
-    targetId: norm(targetId),
     targetKind: norm(targetKind),
-    displayName: norm(displayName),
     canonicalType: norm(canonicalType),
-    parentId: norm(parentId),
     nodeCount: Number(model?.nodeCount || submodel?.membership?.nodeCount || group?.membership?.nodeCount || 0),
     dimensions: model?.dimensions || null,
     custom: customStructure

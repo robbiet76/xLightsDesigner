@@ -65,8 +65,6 @@ function summarizeProfiles(models = []) {
 
 export function buildCustomModelFingerprint(model = {}, analysis = {}) {
   const payload = {
-    targetId: norm(model?.id || model?.name),
-    modelName: norm(model?.name || model?.id),
     rawType: norm(model?.displayAs || model?.type || model?.displayType || ""),
     profile: norm(analysis?.profile),
     nodeCount: Number(analysis?.nodeCount || model?.nodeCount || 0),

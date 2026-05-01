@@ -85,3 +85,32 @@ test("target metadata custom fingerprints change when custom submodel constructi
 
   assert.notEqual(base.find((row) => row.targetId === "CustomFace")?.identity?.fingerprint, changed.find((row) => row.targetId === "CustomFace")?.identity?.fingerprint);
 });
+
+test("target metadata fingerprints survive model renames", () => {
+  const base = buildNormalizedTargetMetadataRecords({
+    sceneGraph: {
+      modelsById: {
+        CustomFace: {
+          id: "CustomFace",
+          name: "CustomFace",
+          displayAs: "Custom",
+          attributes: { CustomModel: customModelSource() }
+        }
+      }
+    }
+  });
+  const renamed = buildNormalizedTargetMetadataRecords({
+    sceneGraph: {
+      modelsById: {
+        RenamedFace: {
+          id: "RenamedFace",
+          name: "Renamed Face",
+          displayAs: "Custom",
+          attributes: { CustomModel: customModelSource() }
+        }
+      }
+    }
+  });
+
+  assert.equal(base[0]?.identity?.fingerprint, renamed[0]?.identity?.fingerprint);
+});
