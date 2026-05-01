@@ -41,6 +41,47 @@ Durable artifacts should answer:
 5. Regenerate derived bundles from promoted records.
 6. Update this document when durable learning changes.
 
+## Custom Model Learning Strategy
+
+Custom models should not be trained by forcing them into built-in model classes. Their construction is user-defined and effectively unbounded, so most custom models will not cleanly match a star, spinner, cane, matrix, tree, or line training profile.
+
+The app should learn custom model behavior in layers:
+
+1. Capture objective structure from the current display:
+   - node layout and coordinate extents
+   - node order/path continuity
+   - density, aspect, sparsity, and populated regions
+   - submodel definitions and node membership
+   - preview/render geometry when available
+2. Capture semantic project metadata:
+   - what the user says the target represents
+   - broad role such as focal, support, accent, or background
+   - broad use hints such as character, radial, outline, lyric, slow movement, or sparse accent
+   - effect avoidances and special handling
+3. Run effect probes against the actual custom target when useful:
+   - start with low-risk effects and conservative settings
+   - render short validation windows
+   - observe coverage, motion, color spread, readability, flicker, and blank-node behavior
+   - compare outcomes against the requested intent and metadata
+4. Promote learned behavior as custom-structure evidence:
+   - keyed by stable target fingerprint and compact structural features
+   - scoped to effect family, parameter region, and observed outcome
+   - reusable only for similar structure and metadata context
+   - never promoted solely because of the model name
+
+This means custom model support starts from general effect knowledge and runtime validation, then becomes more confident per display as the app observes how effects render on that target. Mature project metadata helps the agent choose what to try. Render evidence teaches the app what actually works.
+
+Custom model learning should answer practical questions:
+
+- which effects produce readable coverage on this target
+- which effects leave important regions blank
+- whether motion reads directionally or as noisy sparkle
+- whether submodels should be targeted instead of the full parent
+- which settings are too dense, too sparse, too fast, or visually confusing
+- whether the target is reliable as a lead, support, accent, or texture surface
+
+The durable training layer may eventually aggregate anonymized structural patterns across projects, but project-local evidence should remain valid on its own. A custom model that only exists in one display can still become useful through that display's metadata, render probes, and accepted sequence history.
+
 ## Current Learnings
 
 - Generated record packs replaced thousands of loose semantic files.
