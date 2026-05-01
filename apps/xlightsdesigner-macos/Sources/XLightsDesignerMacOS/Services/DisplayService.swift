@@ -108,7 +108,7 @@ struct XLightsDisplayService: DisplayService {
                     .map { makeRow(from: $0, groupMemberships: groupMemberships, document: metadataDocument, labelDefinitionsByID: labelDefinitionsByID) }
                     .sorted { $0.targetName.localizedCaseInsensitiveCompare($1.targetName) == .orderedAscending }
                 let nodeLayoutsByModel = await fetchNodeLayouts(for: rows)
-                let modelIndexArtifact = try? encodeModelIndexArtifact(
+                let modelIndexArtifact = try? encodeDisplayModelIndexArtifactInternal(
                     rows: rows,
                     nodeLayoutsByModel: nodeLayoutsByModel,
                     submodelsByParent: submodelsByParent,
@@ -259,34 +259,67 @@ struct XLightsDisplayService: DisplayService {
         )
     }
 
+}
+
+func encodeDisplayModelIndexArtifact(
+    rows: [DisplayLayoutRowModel],
+    submodelsByParent: [String: [XLightsSubmodel]],
+    sourceSummary: String,
+    createdAt: String = ISO8601DateFormatter().string(from: Date())
+) throws -> Data {
+    try encodeDisplayModelIndexArtifactInternal(
+        rows: rows,
+        nodeLayoutsByModel: [:],
+        submodelsByParent: submodelsByParent,
+        sourceSummary: sourceSummary,
+        createdAt: createdAt
+    )
+}
+
+private func encodeDisplayModelIndexArtifactInternal(
+    rows: [DisplayLayoutRowModel],
+    nodeLayoutsByModel: [String: XLightsModelNodeLayout],
+    submodelsByParent: [String: [XLightsSubmodel]],
+    sourceSummary: String,
+    createdAt: String = ISO8601DateFormatter().string(from: Date())
+) throws -> Data {
+    let artifact = DisplayModelIndexArtifact(
+        artifactType: "target_metadata_index_v1",
+        artifactVersion: "1.0",
+        createdAt: createdAt,
+        source: DisplayModelIndexSource(source: sourceSummary),
+        summary: DisplayModelIndexSummary(
+            targetCount: rows.count,
+            modelCount: rows.filter { !$0.targetType.localizedCaseInsensitiveContains("modelgroup") }.count,
+            groupCount: rows.filter { $0.targetType.localizedCaseInsensitiveContains("modelgroup") }.count,
+            submodelCount: rows.reduce(0) { $0 + $1.submodelCount }
+        ),
+        records: rows.map {
+            DisplayModelIndexRecord(
+                row: $0,
+                nodeLayout: nodeLayoutsByModel[$0.targetName],
+                submodels: submodelsByParent[$0.targetName] ?? []
+            )
+        }
+    )
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    return try encoder.encode(artifact)
+}
+
+extension XLightsDisplayService {
     private func encodeModelIndexArtifact(
         rows: [DisplayLayoutRowModel],
         nodeLayoutsByModel: [String: XLightsModelNodeLayout],
         submodelsByParent: [String: [XLightsSubmodel]],
         sourceSummary: String
     ) throws -> Data {
-        let artifact = DisplayModelIndexArtifact(
-            artifactType: "target_metadata_index_v1",
-            artifactVersion: "1.0",
-            createdAt: ISO8601DateFormatter().string(from: Date()),
-            source: DisplayModelIndexSource(source: sourceSummary),
-            summary: DisplayModelIndexSummary(
-                targetCount: rows.count,
-                modelCount: rows.filter { !$0.targetType.localizedCaseInsensitiveContains("modelgroup") }.count,
-                groupCount: rows.filter { $0.targetType.localizedCaseInsensitiveContains("modelgroup") }.count,
-                submodelCount: rows.reduce(0) { $0 + $1.submodelCount }
-            ),
-            records: rows.map {
-                DisplayModelIndexRecord(
-                    row: $0,
-                    nodeLayout: nodeLayoutsByModel[$0.targetName],
-                    submodels: submodelsByParent[$0.targetName] ?? []
-                )
-            }
+        try encodeDisplayModelIndexArtifactInternal(
+            rows: rows,
+            nodeLayoutsByModel: nodeLayoutsByModel,
+            submodelsByParent: submodelsByParent,
+            sourceSummary: sourceSummary
         )
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        return try encoder.encode(artifact)
     }
 
     private func fetchHealth() async throws -> XLightsHealth {
