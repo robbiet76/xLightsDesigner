@@ -19,6 +19,8 @@ Clean show-folder switching is basic product functionality. The API must allow t
 
 When the show folder changes, consumers should refresh model metadata, custom model construction data, display element order, sequence context, timing context, and render validation state.
 
+Model metadata refresh and reconciliation requirements are defined in `model-metadata.md`.
+
 ## Required Capability Areas
 
 - health and capability discovery
@@ -41,6 +43,7 @@ When the show folder changes, consumers should refresh model metadata, custom mo
 - Make render proof and validation machine-readable.
 - Keep layout discovery read-only.
 - Keep generated or training-specific behavior out of the API surface unless it is needed for product workflow.
+- Expose enough structured layout data for the app to avoid primary direct layout-file parsing.
 
 ## Version Policy
 

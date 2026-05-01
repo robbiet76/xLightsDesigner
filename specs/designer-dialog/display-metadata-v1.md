@@ -13,6 +13,8 @@ This metadata exists to support:
 - layout understanding
 - project-to-project migration
 
+Model identity, refresh behavior, custom model capture, and retention rules are defined in `../sequence-agent/model-metadata.md`. This spec defines the semantic display metadata layer that sits on top of that structural model contract.
+
 It does not replace:
 - live xLights layout state
 - music/timing context
@@ -219,6 +221,8 @@ The app should treat display metadata as:
 - reviewable
 - migratable
 - living project memory that can evolve as new user or agent understanding is captured
+
+Display metadata should attach to model fingerprints from `../sequence-agent/model-metadata.md`, not only current xLights names. When a show folder or layout changes, semantic metadata is retained and reconciled instead of being discarded.
 
 The `Getting To Know Your Display` conversation should produce:
 - proposed tag definitions

@@ -78,3 +78,5 @@ Other workflows can use it.
 ## Boundary
 Do not store semantic claims like focal/support/background in this derived layer.
 Those belong in project display metadata.
+
+Model identity, custom model capture, and reconciliation between derived layout data and project display metadata are governed by `../sequence-agent/model-metadata.md`.

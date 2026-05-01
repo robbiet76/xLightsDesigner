@@ -99,6 +99,8 @@ Stable identifiers:
 - `sequenceId`: normalized sequence path; project-local sequencing state key.
 - display/model metadata fingerprints: durable target identity for retaining user metadata when show folders or layouts change.
 
+The model fingerprint and reconciliation contract is defined in `../sequence-agent/model-metadata.md`.
+
 ## Project Migration
 
 Creating a new project from an existing project should copy the project metadata into the new project folder.
