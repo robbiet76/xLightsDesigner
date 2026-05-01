@@ -1,6 +1,6 @@
 import { classifyModelDisplayType } from "../agent/sequence-agent/model-type-catalog.js";
 import { getStage1TrainedEffectBundle } from "../agent/sequence-agent/trained-effect-knowledge.js";
-import { analyzeCustomModelStructure, mapClassificationToTrainingBuckets } from "./custom-model-structure.js";
+import { analyzeCustomModelStructure, analyzeModelNodeLayout, mapClassificationToTrainingBuckets } from "./custom-model-structure.js";
 
 function norm(value = "") {
   return String(value || "").trim();
@@ -288,7 +288,8 @@ function buildTargetFingerprint({
   model = null,
   group = null,
   submodel = null,
-  customStructure = null
+  customStructure = null,
+  nodeLayoutMetadata = null
 } = {}) {
   const attrs = model?.attributes || {};
   const payload = {
@@ -309,6 +310,15 @@ function buildTargetFingerprint({
                 range: norm(row?.range)
               }))
             : []
+        }
+      : null,
+    nodeLayout: nodeLayoutMetadata
+      ? {
+          source: norm(nodeLayoutMetadata?.source),
+          nodeCount: Number(nodeLayoutMetadata?.nodeMap?.nodeCount || nodeLayoutMetadata?.nodeOrder?.nodeCount || 0),
+          dimensions: nodeLayoutMetadata?.dimensions || null,
+          occupancy: nodeLayoutMetadata?.occupancy ?? null,
+          nodeOrderContinuity: nodeLayoutMetadata?.nodeOrderContinuity ?? null
         }
       : null,
     groupMembers: Array.isArray(group?.members?.flattened)
@@ -643,8 +653,13 @@ export function buildNormalizedTargetMetadataRecords({
     const displayType = norm(model?.displayAs || model?.type || model?.displayType || "");
     const classification = classifyModelDisplayType(displayType);
     const childSubmodels = Object.values(submodelsById).filter((row) => norm(row?.parentId) === targetId);
+    const nodeLayoutMetadata = analyzeModelNodeLayout(model?.nodeLayout || model?.customNodeLayout || model?.attributes?.customNodeLayout || model?.attributes?.nodeLayout || null);
     const customStructure = classification?.canonicalType === "custom"
-      ? analyzeCustomModelStructure(model?.attributes || model || {}, { submodels: childSubmodels, faceInfo: model?.faceInfo || model?.attributes?.faceInfo || null })
+      ? analyzeCustomModelStructure(model?.attributes || model || {}, {
+          submodels: childSubmodels,
+          faceInfo: model?.faceInfo || model?.attributes?.faceInfo || null,
+          nodeLayout: model?.nodeLayout || model?.customNodeLayout || model?.attributes?.customNodeLayout || model?.attributes?.nodeLayout || null
+        })
       : null;
     const trainedBuckets = mapClassificationToTrainingBuckets(classification, customStructure).filter((bucket) => trainedModelBuckets.has(bucket));
     const groupMemberships = unique(groupMembershipIndex.get(targetId) || []);
@@ -700,7 +715,8 @@ export function buildNormalizedTargetMetadataRecords({
           displayName: norm(model?.name || targetId),
           canonicalType: norm(classification?.canonicalType),
           model,
-          customStructure
+          customStructure,
+          nodeLayoutMetadata
         }),
         fingerprintVersion: "target-metadata-fingerprint-v1"
       },
@@ -710,6 +726,7 @@ export function buildNormalizedTargetMetadataRecords({
         submodelMetadata,
         locationMetadata,
         densityMetadata,
+        nodeLayoutMetadata,
         customStructure: customStructure || null
       },
       semantics: {

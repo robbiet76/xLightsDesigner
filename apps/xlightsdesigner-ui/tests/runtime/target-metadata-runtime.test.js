@@ -50,6 +50,64 @@ test("target metadata records include stable fingerprints for models groups and 
   assert.equal(byId.get("CustomFace")?.structure?.customStructure?.submodels?.count, 1);
 });
 
+test("target metadata records include node layout metadata for built in models", () => {
+  const records = buildNormalizedTargetMetadataRecords({
+    sceneGraph: {
+      modelsById: {
+        MegaTree: {
+          id: "MegaTree",
+          name: "MegaTree",
+          displayAs: "Tree 360",
+          nodeLayout: {
+            nodes: [
+              { nodeId: 1, coords: [{ buffer: { x: 0, y: 0 } }] },
+              { nodeId: 2, coords: [{ buffer: { x: 0, y: 1 } }] },
+              { nodeId: 3, coords: [{ buffer: { x: 0, y: 2 } }] }
+            ]
+          }
+        }
+      }
+    }
+  });
+
+  const tree = records.find((row) => row.targetId === "MegaTree");
+  assert.equal(tree?.identity?.canonicalType, "tree");
+  assert.equal(tree?.structure?.nodeLayoutMetadata?.source, "layout.getModelNodes");
+  assert.equal(tree?.structure?.nodeLayoutMetadata?.nodeMap?.nodeCount, 3);
+  assert.equal(tree?.structure?.nodeLayoutMetadata?.dimensions?.height, 3);
+  assert.equal(tree?.structure?.customStructure, null);
+});
+
+test("target metadata custom models use shared node layout enrichment", () => {
+  const records = buildNormalizedTargetMetadataRecords({
+    sceneGraph: {
+      modelsById: {
+        CustomFace: {
+          id: "CustomFace",
+          name: "CustomFace",
+          displayAs: "Custom",
+          attributes: { CustomModel: customModelSource() },
+          nodeLayout: {
+            data: {
+              nodes: [
+                { nodeId: 1, coords: [{ buffer: { x: 0, y: 0 } }] },
+                { nodeId: 2, coords: [{ buffer: { x: 0, y: 1 } }] },
+                { nodeId: 3, coords: [{ buffer: { x: 0, y: 2 } }] },
+                { nodeId: 4, coords: [{ buffer: { x: 0, y: 3 } }] }
+              ]
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const custom = records.find((row) => row.targetId === "CustomFace");
+  assert.equal(custom?.structure?.nodeLayoutMetadata?.nodeMap?.nodeCount, 4);
+  assert.equal(custom?.structure?.customStructure?.construction?.source, "layout.getModelNodes");
+  assert.equal(custom?.structure?.customStructure?.construction?.nodeMap?.nodeCount, 4);
+});
+
 test("target metadata custom fingerprints change when custom submodel construction changes", () => {
   const base = buildNormalizedTargetMetadataRecords({
     sceneGraph: {

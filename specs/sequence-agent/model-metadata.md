@@ -132,7 +132,19 @@ Each submodel record should support:
 
 ## Custom Models
 
-Custom models must be handled as first-class display elements. The agent needs more than the model name:
+Custom models must be handled as first-class display elements within the same target metadata framework used for built-in models. They should not have a parallel metadata flow. The shared model flow should capture structural facts, node layout enrichment, fingerprints, display metadata, recommendations, and sequencing support for every model type. Custom models then add specialized interpretation on top of those shared facts because their xLights type is otherwise too generic.
+
+Node layout capture is a general model enrichment, not a custom-only feature. When `layout.getModelNodes` is available, the app should compact it into reusable node layout metadata for any model type:
+
+- node-to-position mapping
+- node order/path continuity
+- coordinate source coverage
+- dimensions and layer count
+- bounded node-map samples for tests and training artifacts
+
+For built-in models, node layout metadata improves geometry, fingerprints, and effect suitability. For custom models, the same node layout metadata is also used to infer the custom construction profile.
+
+The agent needs more than the model name:
 
 - layout grid or coordinate construction
 - node order

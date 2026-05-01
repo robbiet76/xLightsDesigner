@@ -261,6 +261,25 @@ function nodeMapSummary(points = [], { sampleSize = 24 } = {}) {
   };
 }
 
+export function analyzeModelNodeLayout(nodeLayout = null) {
+  const points = pointsFromApiNodeLayout(nodeLayout);
+  const stats = pointStats(points);
+  if (!stats) return null;
+  const nodeOrder = nodeOrderStats(points);
+  return {
+    source: "layout.getModelNodes",
+    dimensions: {
+      width: stats.width,
+      height: stats.height,
+      layers: stats.layers || 1
+    },
+    occupancy: Number(stats.occupancy.toFixed(4)),
+    nodeOrderContinuity: Number(nodeOrder.adjacentStepRatio.toFixed(4)),
+    nodeOrder,
+    nodeMap: nodeMapSummary(points)
+  };
+}
+
 function submodelLineValue(submodel = {}) {
   const attrs = submodel?.attributes || {};
   const lines = [];
@@ -331,6 +350,7 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   const nodeLayout = options?.nodeLayout || attrs?.customNodeLayout || attrs?.nodeLayout || null;
   const modelName = low(options?.modelName || attrs?.name || attrs?.modelName || "");
   const apiNodePoints = pointsFromApiNodeLayout(nodeLayout);
+  const apiNodeLayoutAnalysis = analyzeModelNodeLayout(nodeLayout);
   const gridPoints = [];
   for (let layer = 0; layer < layers.length; layer += 1) {
     const rows = layers[layer] || [];
@@ -432,7 +452,7 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
       },
       occupancy: Number(stats.occupancy.toFixed(4)),
       nodeOrderContinuity: Number(nodeOrder.adjacentStepRatio.toFixed(4)),
-      nodeMap: nodeMapSummary(points)
+      nodeMap: apiNodeLayoutAnalysis?.nodeMap || nodeMapSummary(points)
     }
   };
 }
