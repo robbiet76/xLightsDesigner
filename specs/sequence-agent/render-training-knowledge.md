@@ -47,7 +47,9 @@ Custom models should not be trained by forcing them into built-in model classes.
 
 Custom model learning is primarily local, per user installation, and per project/display. Centralized training can provide general effect behavior, parameter priors, conservative probe recipes, and interpretation rules, but it cannot pre-train reliable knowledge for every user's custom props. The app must assume that each installation may contain custom model structures it has never seen before.
 
-The app should learn custom model behavior in layers:
+The submodel framework must be shared across all model types. Submodels on built-in models, imported models, and custom models should use the same target identity, metadata, render evidence, and learning pipeline. Custom models should only receive extra attention because submodels are more often the primary sequencing surface, not because they use a separate submodel system.
+
+The app should learn model and submodel behavior in layers:
 
 1. Capture objective structure from the current display:
    - node layout and coordinate extents
@@ -60,20 +62,20 @@ The app should learn custom model behavior in layers:
    - broad role such as focal, support, accent, or background
    - broad use hints such as character, radial, outline, lyric, slow movement, or sparse accent
    - effect avoidances and special handling
-3. Run effect probes against the actual custom target when useful:
+3. Run effect probes against the actual target when useful:
    - start with low-risk effects and conservative settings
-   - render short validation windows on both the parent custom model and important submodels
+   - render short validation windows on both parent models and important submodels
    - observe coverage, motion, color spread, readability, flicker, and blank-node behavior
    - compare outcomes against the requested intent and metadata
-4. Promote learned behavior as custom-structure evidence:
+4. Promote learned behavior as target/submodel structure evidence:
    - keyed by stable target fingerprint and compact structural features
    - scoped to parent or submodel target, effect family, parameter region, and observed outcome
    - reusable only for similar structure and metadata context
    - never promoted solely because of the model name
 
-This means custom model support starts from general effect knowledge and runtime validation, then becomes more confident per display as the app observes how effects render on that target. Mature project metadata helps the agent choose what to try. Render evidence teaches the app what actually works for that user's installation.
+This means model and submodel support starts from general effect knowledge and runtime validation, then becomes more confident per display as the app observes how effects render on each target. Mature project metadata helps the agent choose what to try. Render evidence teaches the app what actually works for that user's installation.
 
-Submodels are usually the primary sequencing surface for custom models. The parent custom model is still important for identity, fingerprinting, whole-prop fills, and fallback targeting, but most useful sequencing decisions often happen at the submodel level. Custom learning must therefore model:
+Submodels are important across all model types and should be learned consistently. The parent model is still important for identity, fingerprinting, whole-prop fills, and fallback targeting, but many useful sequencing decisions happen at the submodel level. Custom models raise the priority of this work because their useful visual regions are often defined primarily by submodels. The shared learning framework must therefore model:
 
 - submodel purpose and relationship to the parent
 - submodel node coverage, density, and visual region
@@ -82,7 +84,7 @@ Submodels are usually the primary sequencing surface for custom models. The pare
 - effect behavior when applied to a single submodel versus the parent
 - effect behavior when multiple sibling submodels are layered or sequenced in succession
 
-Custom model learning should answer practical questions:
+Model and submodel learning should answer practical questions:
 
 - which effects produce readable coverage on this target
 - which effects leave important regions blank

@@ -128,7 +128,11 @@ Each submodel record should support:
 - stable submodel fingerprint when possible
 - node or range membership summary
 - render geometry or bounds when available
+- sibling relationships and overlap/adjacency when inferable
+- semantic structure hints when inferable from names or shape
 - sequencing constraints when applicable
+
+Submodels are first-class sequencing targets for every model type, not a custom-model-only concept. The app should use the same identity, fingerprinting, metadata, targeting, render evidence, and review framework for submodels regardless of whether the parent is custom, built-in, or imported. Parent model targeting remains useful for whole-prop fills and fallback behavior, but submodel-level sequencing should be supported consistently across the display.
 
 ## Custom Models
 
@@ -171,7 +175,7 @@ Custom model capture should include enough construction detail for testing and a
 - preview/render geometry
 - source/provenance fields when the API exposes them
 
-Submodels for custom models are part of the custom model capture contract, not a separate optional enhancement. They are often the primary sequencing surface for custom models, so capture should preserve enough information to reason about each submodel as a first-class target: membership, node coverage, sibling relationships, overlap, semantic structure hints, and parent context. Whole-parent custom model targeting remains useful, but custom model understanding should assume submodel-level sequencing will often be the normal case.
+Custom models use the same submodel framework as every other parent model. They should not have a parallel submodel representation. Submodels are often even more critical for custom models because many custom props are primarily sequenced through their submodel regions, so custom model capture should be especially careful to preserve parent context, membership, node coverage, sibling relationships, overlap, and semantic structure hints.
 
 ## Storage And Artifacts
 
