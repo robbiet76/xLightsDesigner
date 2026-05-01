@@ -56,11 +56,30 @@ struct DisplayServiceArtifactTests {
     @Test func customModelInferenceUsesVendorNameHints() {
         let cane = inferCustomModelStructure(row: displayArtifactRow(name: "Boscoyo ChromaCane 1", width: 42, height: 90), submodels: [])
         let spinner = inferCustomModelStructure(row: displayArtifactRow(name: "Spinner", width: 85, height: 85), submodels: [])
+        let star = inferCustomModelStructure(row: displayArtifactRow(name: "Star1", width: 85, height: 85), submodels: [])
 
         #expect(cane.profile == "custom_linear_like")
         #expect(cane.trainingBuckets.contains("cane"))
         #expect(spinner.profile == "custom_radial_like")
         #expect(spinner.trainingBuckets.contains("spinner"))
+        #expect(!spinner.trainingBuckets.contains("star"))
+        #expect(star.profile == "custom_radial_like")
+        #expect(star.trainingBuckets == ["star"])
+    }
+
+    @Test func customModelInferenceUsesRadialSubmodelsWithoutStarBucket() throws {
+        let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
+        [
+          { "fullName": "Vendor Prop/Spoke 1", "name": "Spoke 1", "parentName": "Vendor Prop" },
+          { "fullName": "Vendor Prop/Spoke 2", "name": "Spoke 2", "parentName": "Vendor Prop" },
+          { "fullName": "Vendor Prop/Spoke 3", "name": "Spoke 3", "parentName": "Vendor Prop" },
+          { "fullName": "Vendor Prop/Spoke 4", "name": "Spoke 4", "parentName": "Vendor Prop" }
+        ]
+        """.data(using: .utf8)!)
+        let inference = inferCustomModelStructure(row: displayArtifactRow(name: "Vendor Prop", width: 85, height: 85), submodels: submodels)
+
+        #expect(inference.profile == "custom_radial_like")
+        #expect(inference.trainingBuckets == ["spinner"])
     }
 
     @Test func modelIndexArtifactEmbedsCustomStructureAndSubmodels() throws {

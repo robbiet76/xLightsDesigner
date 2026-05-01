@@ -466,16 +466,22 @@ func inferCustomModelStructure(row: DisplayLayoutRowModel, submodels: [XLightsSu
         buckets.append(contentsOf: ["single_line", "cane"])
         confidence = max(confidence, 0.68)
     }
-    if modelName.contains("spinner") || modelName.contains("star") || modelName.contains("flake") {
+    if modelName.contains("spinner") {
         profile = "custom_radial_like"
-        traits.append(contentsOf: ["custom_radial_like", "radial_like"])
-        buckets.append(contentsOf: ["spinner", "star"])
+        traits.append(contentsOf: ["custom_radial_like", "radial_like", "name_hint_spinner"])
+        buckets.append("spinner")
+        confidence = max(confidence, 0.62)
+    }
+    if modelName.contains("star") || modelName.contains("flake") {
+        profile = "custom_radial_like"
+        traits.append(contentsOf: ["custom_radial_like", "radial_like", "name_hint_star"])
+        buckets.append("star")
         confidence = max(confidence, 0.62)
     }
     if semanticCounts.spoke >= 4 || semanticCounts.ring >= 2 {
         profile = "custom_radial_like"
         traits.append(contentsOf: ["spoke_submodels", "ring_submodels", "custom_radial_submodels", "custom_radial_like", "radial_like"])
-        buckets.append(contentsOf: ["spinner", "star"])
+        buckets.append("spinner")
         confidence = max(confidence, 0.65)
     }
     if semanticCounts.layer >= 2 {
