@@ -73,10 +73,13 @@ function pointStats(points = []) {
   if (!points.length) return null;
   const rows = points.map((point) => point.row);
   const cols = points.map((point) => point.col);
+  const layers = points.map((point) => point.layer);
   const minRow = Math.min(...rows);
   const maxRow = Math.max(...rows);
   const minCol = Math.min(...cols);
   const maxCol = Math.max(...cols);
+  const minLayer = Math.min(...layers);
+  const maxLayer = Math.max(...layers);
   const width = maxCol - minCol + 1;
   const height = maxRow - minRow + 1;
   const area = width * height;
@@ -101,8 +104,11 @@ function pointStats(points = []) {
     maxRow,
     minCol,
     maxCol,
+    minLayer,
+    maxLayer,
     width,
     height,
+    layers: maxLayer - minLayer + 1,
     area,
     nodeCount: new Set(points.map((point) => point.node)).size,
     activeCellCount: points.length,
@@ -185,7 +191,15 @@ function coordinateFromNode(node = {}) {
 }
 
 function pointsFromApiNodeLayout(layout = {}) {
-  const nodes = Array.isArray(layout?.nodes) ? layout.nodes : [];
+  const nodes = Array.isArray(layout?.nodes)
+    ? layout.nodes
+    : Array.isArray(layout?.modelNodes)
+      ? layout.modelNodes
+      : Array.isArray(layout?.data?.nodes)
+        ? layout.data.nodes
+        : Array.isArray(layout?.data?.modelNodes)
+          ? layout.data.modelNodes
+          : [];
   if (!nodes.length) return [];
   const rawPoints = [];
   for (const row of nodes) {
@@ -214,6 +228,37 @@ function pointsFromApiNodeLayout(layout = {}) {
     layer: layerIndex.get(point.layer) ?? 0,
     coordinateSource: point.coordinateSource
   }));
+}
+
+function pointCoordinateSourceCounts(points = []) {
+  const counts = {};
+  for (const point of points) {
+    const source = norm(point?.coordinateSource || "grid") || "grid";
+    counts[source] = Number(counts[source] || 0) + 1;
+  }
+  return counts;
+}
+
+function nodeMapSummary(points = [], { sampleSize = 24 } = {}) {
+  const byNode = new Map();
+  for (const point of points) {
+    if (!Number.isFinite(point?.node) || byNode.has(point.node)) continue;
+    byNode.set(point.node, {
+      node: point.node,
+      row: point.row,
+      col: point.col,
+      layer: point.layer,
+      coordinateSource: norm(point.coordinateSource || "grid") || "grid"
+    });
+  }
+  const ordered = [...byNode.values()].sort((a, b) => a.node - b.node);
+  const sampled = ordered.slice(0, sampleSize);
+  return {
+    nodeCount: ordered.length,
+    sampleSize: sampled.length,
+    firstNodes: sampled,
+    coordinateSourceCounts: pointCoordinateSourceCounts(ordered)
+  };
 }
 
 function submodelLineValue(submodel = {}) {
@@ -286,17 +331,18 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   const nodeLayout = options?.nodeLayout || attrs?.customNodeLayout || attrs?.nodeLayout || null;
   const modelName = low(options?.modelName || attrs?.name || attrs?.modelName || "");
   const apiNodePoints = pointsFromApiNodeLayout(nodeLayout);
-  const points = [...apiNodePoints];
+  const gridPoints = [];
   for (let layer = 0; layer < layers.length; layer += 1) {
     const rows = layers[layer] || [];
     for (let row = 0; row < rows.length; row += 1) {
       const cols = rows[row] || [];
       for (let col = 0; col < cols.length; col += 1) {
         const node = Number(cols[col]);
-        if (Number.isFinite(node) && node > 0) points.push({ layer, row, col, node });
+        if (Number.isFinite(node) && node > 0) gridPoints.push({ layer, row, col, node, coordinateSource: "grid" });
       }
     }
   }
+  const points = apiNodePoints.length ? apiNodePoints : gridPoints;
 
   const directPixelCount = toPositive(attrs?.PixelCount);
   const stats = pointStats(points);
@@ -378,14 +424,15 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
     nodeOrder,
     submodels,
     construction: {
-      source: attrs?.CustomModelCompressed ? "CustomModelCompressed" : apiNodePoints.length ? "layout.getModelNodes" : "CustomModel",
+      source: apiNodePoints.length ? "layout.getModelNodes" : attrs?.CustomModelCompressed ? "CustomModelCompressed" : "CustomModel",
       dimensions: {
         width: stats.width,
         height: stats.height,
-        layers: layers.length || 1
+        layers: stats.layers || layers.length || 1
       },
       occupancy: Number(stats.occupancy.toFixed(4)),
-      nodeOrderContinuity: Number(nodeOrder.adjacentStepRatio.toFixed(4))
+      nodeOrderContinuity: Number(nodeOrder.adjacentStepRatio.toFixed(4)),
+      nodeMap: nodeMapSummary(points)
     }
   };
 }

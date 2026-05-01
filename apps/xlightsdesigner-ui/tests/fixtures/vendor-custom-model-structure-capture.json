@@ -1,888 +1,44 @@
 {
-  "artifactType": "vendor_custom_model_structure_capture_v1",
-  "sourceFixture": "render-training-vendor-fixture/xlights_rgbeffects.xml",
-  "modelCount": 19,
+  "artifactType": "custom_model_structure_catalog_v1",
+  "artifactVersion": "1.0",
+  "createdAt": "2026-05-01T00:00:00.000Z",
+  "source": {
+    "sourceFixture": "render-training-vendor-fixture/xlights_rgbeffects.xml",
+    "sceneGraphSource": "xlights_rgbeffects.xml"
+  },
+  "summary": {
+    "customModelCount": 19,
+    "modelsWithSubmodels": 7,
+    "profileCounts": {
+      "custom_face_like": 4,
+      "custom_radial_like": 7,
+      "custom_linear_like": 8
+    },
+    "bucketCounts": {
+      "spinner": 7,
+      "star": 7,
+      "single_line": 8,
+      "cane": 8
+    }
+  },
   "models": [
     {
-      "modelName": "Singing Bulb 4",
-      "profile": "custom_face_like",
-      "traits": [
-        "custom_grid",
-        "sparse_custom_grid",
-        "vertical_span",
-        "face_submodels",
-        "custom_face_like"
-      ],
-      "trainingBuckets": [],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 56,
-          "height": 123,
-          "layers": 1
-        },
-        "occupancy": 0.0208,
-        "nodeOrderContinuity": 0
-      },
-      "submodels": {
-        "count": 11,
-        "semanticCounts": {
-          "face": 4,
-          "eye": 8,
-          "mouth": 25,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [
-          "@Bulb",
-          "@Eye-Left",
-          "@Eye-Right",
-          "@EyeBlink-Left",
-          "@EyeBlink-Right",
-          "@Mouth1",
-          "@Mouth2",
-          "@Mouth3",
-          "@Mouth4",
-          "@Mouth5",
-          "@Socket"
-        ],
-        "details": [
-          {
-            "name": "@Bulb",
-            "type": "ranges",
-            "nodeCount": 41,
-            "range": "27-67"
-          },
-          {
-            "name": "@Eye-Left",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "68-77"
-          },
-          {
-            "name": "@Eye-Right",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "81-90"
-          },
-          {
-            "name": "@EyeBlink-Left",
-            "type": "ranges",
-            "nodeCount": 3,
-            "range": "78-80"
-          },
-          {
-            "name": "@EyeBlink-Right",
-            "type": "ranges",
-            "nodeCount": 3,
-            "range": "91-93"
-          },
-          {
-            "name": "@Mouth1",
-            "type": "ranges",
-            "nodeCount": 8,
-            "range": "94-101"
-          },
-          {
-            "name": "@Mouth2",
-            "type": "ranges",
-            "nodeCount": 8,
-            "range": "102-109"
-          },
-          {
-            "name": "@Mouth3",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "110-119"
-          },
-          {
-            "name": "@Mouth4",
-            "type": "ranges",
-            "nodeCount": 14,
-            "range": "120-133"
-          },
-          {
-            "name": "@Mouth5",
-            "type": "ranges",
-            "nodeCount": 20,
-            "range": "134-153"
-          },
-          {
-            "name": "@Socket",
-            "type": "ranges",
-            "nodeCount": 26,
-            "range": "1-26"
-          }
-        ]
-      }
-    },
-    {
-      "modelName": "Singing Bulb 3",
-      "profile": "custom_face_like",
-      "traits": [
-        "custom_grid",
-        "sparse_custom_grid",
-        "vertical_span",
-        "face_submodels",
-        "custom_face_like"
-      ],
-      "trainingBuckets": [],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 56,
-          "height": 123,
-          "layers": 1
-        },
-        "occupancy": 0.0208,
-        "nodeOrderContinuity": 0
-      },
-      "submodels": {
-        "count": 11,
-        "semanticCounts": {
-          "face": 4,
-          "eye": 8,
-          "mouth": 25,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [
-          "@Bulb",
-          "@Eye-Left",
-          "@Eye-Right",
-          "@EyeBlink-Left",
-          "@EyeBlink-Right",
-          "@Mouth1",
-          "@Mouth2",
-          "@Mouth3",
-          "@Mouth4",
-          "@Mouth5",
-          "@Socket"
-        ],
-        "details": [
-          {
-            "name": "@Bulb",
-            "type": "ranges",
-            "nodeCount": 41,
-            "range": "27-67"
-          },
-          {
-            "name": "@Eye-Left",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "68-77"
-          },
-          {
-            "name": "@Eye-Right",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "81-90"
-          },
-          {
-            "name": "@EyeBlink-Left",
-            "type": "ranges",
-            "nodeCount": 3,
-            "range": "78-80"
-          },
-          {
-            "name": "@EyeBlink-Right",
-            "type": "ranges",
-            "nodeCount": 3,
-            "range": "91-93"
-          },
-          {
-            "name": "@Mouth1",
-            "type": "ranges",
-            "nodeCount": 8,
-            "range": "94-101"
-          },
-          {
-            "name": "@Mouth2",
-            "type": "ranges",
-            "nodeCount": 8,
-            "range": "102-109"
-          },
-          {
-            "name": "@Mouth3",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "110-119"
-          },
-          {
-            "name": "@Mouth4",
-            "type": "ranges",
-            "nodeCount": 14,
-            "range": "120-133"
-          },
-          {
-            "name": "@Mouth5",
-            "type": "ranges",
-            "nodeCount": 20,
-            "range": "134-153"
-          },
-          {
-            "name": "@Socket",
-            "type": "ranges",
-            "nodeCount": 26,
-            "range": "1-26"
-          }
-        ]
-      }
-    },
-    {
-      "modelName": "Singing Bulb 2",
-      "profile": "custom_face_like",
-      "traits": [
-        "custom_grid",
-        "sparse_custom_grid",
-        "vertical_span",
-        "face_submodels",
-        "custom_face_like"
-      ],
-      "trainingBuckets": [],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 56,
-          "height": 123,
-          "layers": 1
-        },
-        "occupancy": 0.0208,
-        "nodeOrderContinuity": 0
-      },
-      "submodels": {
-        "count": 11,
-        "semanticCounts": {
-          "face": 4,
-          "eye": 8,
-          "mouth": 25,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [
-          "@Bulb",
-          "@Eye-Left",
-          "@Eye-Right",
-          "@EyeBlink-Left",
-          "@EyeBlink-Right",
-          "@Mouth1",
-          "@Mouth2",
-          "@Mouth3",
-          "@Mouth4",
-          "@Mouth5",
-          "@Socket"
-        ],
-        "details": [
-          {
-            "name": "@Bulb",
-            "type": "ranges",
-            "nodeCount": 41,
-            "range": "27-67"
-          },
-          {
-            "name": "@Eye-Left",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "68-77"
-          },
-          {
-            "name": "@Eye-Right",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "81-90"
-          },
-          {
-            "name": "@EyeBlink-Left",
-            "type": "ranges",
-            "nodeCount": 3,
-            "range": "78-80"
-          },
-          {
-            "name": "@EyeBlink-Right",
-            "type": "ranges",
-            "nodeCount": 3,
-            "range": "91-93"
-          },
-          {
-            "name": "@Mouth1",
-            "type": "ranges",
-            "nodeCount": 8,
-            "range": "94-101"
-          },
-          {
-            "name": "@Mouth2",
-            "type": "ranges",
-            "nodeCount": 8,
-            "range": "102-109"
-          },
-          {
-            "name": "@Mouth3",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "110-119"
-          },
-          {
-            "name": "@Mouth4",
-            "type": "ranges",
-            "nodeCount": 14,
-            "range": "120-133"
-          },
-          {
-            "name": "@Mouth5",
-            "type": "ranges",
-            "nodeCount": 20,
-            "range": "134-153"
-          },
-          {
-            "name": "@Socket",
-            "type": "ranges",
-            "nodeCount": 26,
-            "range": "1-26"
-          }
-        ]
-      }
-    },
-    {
-      "modelName": "Singing Bulb 1",
-      "profile": "custom_face_like",
-      "traits": [
-        "custom_grid",
-        "sparse_custom_grid",
-        "vertical_span",
-        "face_submodels",
-        "custom_face_like"
-      ],
-      "trainingBuckets": [],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 56,
-          "height": 123,
-          "layers": 1
-        },
-        "occupancy": 0.0208,
-        "nodeOrderContinuity": 0
-      },
-      "submodels": {
-        "count": 11,
-        "semanticCounts": {
-          "face": 4,
-          "eye": 8,
-          "mouth": 25,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [
-          "@Bulb",
-          "@Eye-Left",
-          "@Eye-Right",
-          "@EyeBlink-Left",
-          "@EyeBlink-Right",
-          "@Mouth1",
-          "@Mouth2",
-          "@Mouth3",
-          "@Mouth4",
-          "@Mouth5",
-          "@Socket"
-        ],
-        "details": [
-          {
-            "name": "@Bulb",
-            "type": "ranges",
-            "nodeCount": 41,
-            "range": "27-67"
-          },
-          {
-            "name": "@Eye-Left",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "68-77"
-          },
-          {
-            "name": "@Eye-Right",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "81-90"
-          },
-          {
-            "name": "@EyeBlink-Left",
-            "type": "ranges",
-            "nodeCount": 3,
-            "range": "78-80"
-          },
-          {
-            "name": "@EyeBlink-Right",
-            "type": "ranges",
-            "nodeCount": 3,
-            "range": "91-93"
-          },
-          {
-            "name": "@Mouth1",
-            "type": "ranges",
-            "nodeCount": 8,
-            "range": "94-101"
-          },
-          {
-            "name": "@Mouth2",
-            "type": "ranges",
-            "nodeCount": 8,
-            "range": "102-109"
-          },
-          {
-            "name": "@Mouth3",
-            "type": "ranges",
-            "nodeCount": 10,
-            "range": "110-119"
-          },
-          {
-            "name": "@Mouth4",
-            "type": "ranges",
-            "nodeCount": 14,
-            "range": "120-133"
-          },
-          {
-            "name": "@Mouth5",
-            "type": "ranges",
-            "nodeCount": 20,
-            "range": "134-153"
-          },
-          {
-            "name": "@Socket",
-            "type": "ranges",
-            "nodeCount": 26,
-            "range": "1-26"
-          }
-        ]
-      }
-    },
-    {
-      "modelName": "Star2",
-      "profile": "custom_radial_like",
-      "traits": [
-        "custom_grid",
-        "custom_radial_like",
-        "radial_like",
-        "sparse_custom_grid",
-        "layered_submodels"
-      ],
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 53,
-          "height": 74,
-          "layers": 1
-        },
-        "occupancy": 0.0459,
-        "nodeOrderContinuity": 0
-      },
-      "submodels": {
-        "count": 3,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 3,
-          "center": 0
-        },
-        "names": [
-          "outer",
-          "middle",
-          "inner"
-        ],
-        "details": [
-          {
-            "name": "outer",
-            "type": "ranges",
-            "nodeCount": 80,
-            "range": "1-80"
-          },
-          {
-            "name": "middle",
-            "type": "ranges",
-            "nodeCount": 60,
-            "range": "81-140"
-          },
-          {
-            "name": "inner",
-            "type": "ranges",
-            "nodeCount": 40,
-            "range": "141-180"
-          }
-        ]
-      }
-    },
-    {
-      "modelName": "Star1",
-      "profile": "custom_radial_like",
-      "traits": [
-        "custom_grid",
-        "custom_radial_like",
-        "radial_like",
-        "sparse_custom_grid",
-        "layered_submodels"
-      ],
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 53,
-          "height": 74,
-          "layers": 1
-        },
-        "occupancy": 0.0459,
-        "nodeOrderContinuity": 0
-      },
-      "submodels": {
-        "count": 3,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 3,
-          "center": 0
-        },
-        "names": [
-          "outer",
-          "middle",
-          "inner"
-        ],
-        "details": [
-          {
-            "name": "outer",
-            "type": "ranges",
-            "nodeCount": 80,
-            "range": "1-80"
-          },
-          {
-            "name": "middle",
-            "type": "ranges",
-            "nodeCount": 60,
-            "range": "81-140"
-          },
-          {
-            "name": "inner",
-            "type": "ranges",
-            "nodeCount": 40,
-            "range": "141-180"
-          }
-        ]
-      }
-    },
-    {
-      "modelName": "Boscoyo ChromaCane 8",
-      "profile": "custom_linear_like",
-      "traits": [
-        "custom_grid",
-        "custom_linear_like",
-        "linear_like",
-        "sparse_custom_grid",
-        "vertical_span"
-      ],
-      "trainingBuckets": [
-        "single_line",
-        "cane"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 21,
-          "height": 47,
-          "layers": 1
-        },
-        "occupancy": 0.1003,
-        "nodeOrderContinuity": 0.1224
-      },
-      "submodels": {
-        "count": 0,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [],
-        "details": []
-      }
-    },
-    {
-      "modelName": "Boscoyo ChromaCane 7",
-      "profile": "custom_linear_like",
-      "traits": [
-        "custom_grid",
-        "custom_linear_like",
-        "linear_like",
-        "sparse_custom_grid",
-        "vertical_span"
-      ],
-      "trainingBuckets": [
-        "single_line",
-        "cane"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 21,
-          "height": 47,
-          "layers": 1
-        },
-        "occupancy": 0.1003,
-        "nodeOrderContinuity": 0.1224
-      },
-      "submodels": {
-        "count": 0,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [],
-        "details": []
-      }
-    },
-    {
-      "modelName": "Boscoyo ChromaCane 6",
-      "profile": "custom_linear_like",
-      "traits": [
-        "custom_grid",
-        "custom_linear_like",
-        "linear_like",
-        "sparse_custom_grid",
-        "vertical_span"
-      ],
-      "trainingBuckets": [
-        "single_line",
-        "cane"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 21,
-          "height": 47,
-          "layers": 1
-        },
-        "occupancy": 0.1003,
-        "nodeOrderContinuity": 0.1224
-      },
-      "submodels": {
-        "count": 0,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [],
-        "details": []
-      }
-    },
-    {
-      "modelName": "Boscoyo ChromaCane 5",
-      "profile": "custom_linear_like",
-      "traits": [
-        "custom_grid",
-        "custom_linear_like",
-        "linear_like",
-        "sparse_custom_grid",
-        "vertical_span"
-      ],
-      "trainingBuckets": [
-        "single_line",
-        "cane"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 21,
-          "height": 47,
-          "layers": 1
-        },
-        "occupancy": 0.1003,
-        "nodeOrderContinuity": 0.1224
-      },
-      "submodels": {
-        "count": 0,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [],
-        "details": []
-      }
-    },
-    {
-      "modelName": "Boscoyo ChromaCane 4",
-      "profile": "custom_linear_like",
-      "traits": [
-        "custom_grid",
-        "custom_linear_like",
-        "linear_like",
-        "sparse_custom_grid",
-        "vertical_span"
-      ],
-      "trainingBuckets": [
-        "single_line",
-        "cane"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 21,
-          "height": 47,
-          "layers": 1
-        },
-        "occupancy": 0.1003,
-        "nodeOrderContinuity": 0.1224
-      },
-      "submodels": {
-        "count": 0,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [],
-        "details": []
-      }
-    },
-    {
-      "modelName": "Boscoyo ChromaCane 3",
-      "profile": "custom_linear_like",
-      "traits": [
-        "custom_grid",
-        "custom_linear_like",
-        "linear_like",
-        "sparse_custom_grid",
-        "vertical_span"
-      ],
-      "trainingBuckets": [
-        "single_line",
-        "cane"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 21,
-          "height": 47,
-          "layers": 1
-        },
-        "occupancy": 0.1003,
-        "nodeOrderContinuity": 0.1224
-      },
-      "submodels": {
-        "count": 0,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [],
-        "details": []
-      }
-    },
-    {
-      "modelName": "Boscoyo ChromaCane 2",
-      "profile": "custom_linear_like",
-      "traits": [
-        "custom_grid",
-        "custom_linear_like",
-        "linear_like",
-        "sparse_custom_grid",
-        "vertical_span"
-      ],
-      "trainingBuckets": [
-        "single_line",
-        "cane"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 21,
-          "height": 47,
-          "layers": 1
-        },
-        "occupancy": 0.1003,
-        "nodeOrderContinuity": 0.1224
-      },
-      "submodels": {
-        "count": 0,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [],
-        "details": []
-      }
-    },
-    {
+      "targetId": "Boscoyo ChromaCane 1",
+      "fingerprint": "cmf1:04a7a513",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
       "modelName": "Boscoyo ChromaCane 1",
+      "rawType": "Custom",
+      "canonicalType": "custom",
       "profile": "custom_linear_like",
       "traits": [
         "custom_grid",
         "custom_linear_like",
         "linear_like",
         "sparse_custom_grid",
-        "vertical_span"
+        "vertical_span",
+        "name_hint_cane"
       ],
+      "confidence": 0.68,
       "trainingBuckets": [
         "single_line",
         "cane"
@@ -895,10 +51,194 @@
           "layers": 1
         },
         "occupancy": 0.1003,
-        "nodeOrderContinuity": 0.1224
+        "nodeOrderContinuity": 0.1224,
+        "nodeMap": {
+          "nodeCount": 99,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 46,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 46,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 44,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 44,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 42,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 42,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 40,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 40,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 38,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 38,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 36,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 36,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 34,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 34,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 32,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 32,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 30,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 30,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 28,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 28,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 26,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 26,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 24,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 24,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 99
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 99,
+        "adjacentStepRatio": 0.12244897959183673,
+        "medianStepDistance": 2,
+        "maxStepDistance": 3.162
       },
       "submodels": {
         "count": 0,
+        "names": [],
         "semanticCounts": {
           "face": 0,
           "eye": 0,
@@ -909,12 +249,3786 @@
           "layer": 0,
           "center": 0
         },
-        "names": [],
+        "traits": [],
         "details": []
       }
     },
     {
+      "targetId": "Boscoyo ChromaCane 2",
+      "fingerprint": "cmf1:04a7a513",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaCane 2",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span",
+        "name_hint_cane"
+      ],
+      "confidence": 0.68,
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224,
+        "nodeMap": {
+          "nodeCount": 99,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 46,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 46,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 44,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 44,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 42,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 42,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 40,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 40,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 38,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 38,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 36,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 36,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 34,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 34,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 32,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 32,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 30,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 30,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 28,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 28,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 26,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 26,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 24,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 24,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 99
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 99,
+        "adjacentStepRatio": 0.12244897959183673,
+        "medianStepDistance": 2,
+        "maxStepDistance": 3.162
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaCane 3",
+      "fingerprint": "cmf1:04a7a513",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaCane 3",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span",
+        "name_hint_cane"
+      ],
+      "confidence": 0.68,
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224,
+        "nodeMap": {
+          "nodeCount": 99,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 46,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 46,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 44,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 44,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 42,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 42,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 40,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 40,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 38,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 38,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 36,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 36,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 34,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 34,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 32,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 32,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 30,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 30,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 28,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 28,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 26,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 26,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 24,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 24,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 99
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 99,
+        "adjacentStepRatio": 0.12244897959183673,
+        "medianStepDistance": 2,
+        "maxStepDistance": 3.162
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaCane 4",
+      "fingerprint": "cmf1:04a7a513",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaCane 4",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span",
+        "name_hint_cane"
+      ],
+      "confidence": 0.68,
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224,
+        "nodeMap": {
+          "nodeCount": 99,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 46,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 46,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 44,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 44,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 42,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 42,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 40,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 40,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 38,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 38,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 36,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 36,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 34,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 34,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 32,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 32,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 30,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 30,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 28,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 28,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 26,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 26,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 24,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 24,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 99
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 99,
+        "adjacentStepRatio": 0.12244897959183673,
+        "medianStepDistance": 2,
+        "maxStepDistance": 3.162
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaCane 5",
+      "fingerprint": "cmf1:04a7a513",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaCane 5",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span",
+        "name_hint_cane"
+      ],
+      "confidence": 0.68,
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224,
+        "nodeMap": {
+          "nodeCount": 99,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 46,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 46,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 44,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 44,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 42,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 42,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 40,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 40,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 38,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 38,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 36,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 36,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 34,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 34,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 32,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 32,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 30,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 30,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 28,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 28,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 26,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 26,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 24,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 24,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 99
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 99,
+        "adjacentStepRatio": 0.12244897959183673,
+        "medianStepDistance": 2,
+        "maxStepDistance": 3.162
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaCane 6",
+      "fingerprint": "cmf1:04a7a513",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaCane 6",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span",
+        "name_hint_cane"
+      ],
+      "confidence": 0.68,
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224,
+        "nodeMap": {
+          "nodeCount": 99,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 46,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 46,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 44,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 44,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 42,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 42,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 40,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 40,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 38,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 38,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 36,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 36,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 34,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 34,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 32,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 32,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 30,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 30,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 28,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 28,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 26,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 26,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 24,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 24,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 99
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 99,
+        "adjacentStepRatio": 0.12244897959183673,
+        "medianStepDistance": 2,
+        "maxStepDistance": 3.162
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaCane 7",
+      "fingerprint": "cmf1:04a7a513",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaCane 7",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span",
+        "name_hint_cane"
+      ],
+      "confidence": 0.68,
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224,
+        "nodeMap": {
+          "nodeCount": 99,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 46,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 46,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 44,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 44,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 42,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 42,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 40,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 40,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 38,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 38,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 36,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 36,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 34,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 34,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 32,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 32,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 30,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 30,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 28,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 28,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 26,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 26,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 24,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 24,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 99
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 99,
+        "adjacentStepRatio": 0.12244897959183673,
+        "medianStepDistance": 2,
+        "maxStepDistance": 3.162
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaCane 8",
+      "fingerprint": "cmf1:04a7a513",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaCane 8",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_linear_like",
+      "traits": [
+        "custom_grid",
+        "custom_linear_like",
+        "linear_like",
+        "sparse_custom_grid",
+        "vertical_span",
+        "name_hint_cane"
+      ],
+      "confidence": 0.68,
+      "trainingBuckets": [
+        "single_line",
+        "cane"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 21,
+          "height": 47,
+          "layers": 1
+        },
+        "occupancy": 0.1003,
+        "nodeOrderContinuity": 0.1224,
+        "nodeMap": {
+          "nodeCount": 99,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 46,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 46,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 44,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 44,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 42,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 42,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 40,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 40,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 38,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 38,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 36,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 36,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 34,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 34,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 32,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 32,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 30,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 30,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 28,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 28,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 26,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 26,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 24,
+              "col": 18,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 24,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 99
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 99,
+        "adjacentStepRatio": 0.12244897959183673,
+        "medianStepDistance": 2,
+        "maxStepDistance": 3.162
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaFlake 1",
+      "fingerprint": "cmf1:963c3b18",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaFlake 1",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid"
+      ],
+      "confidence": 0.6,
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 33,
+          "height": 32,
+          "layers": 1
+        },
+        "occupancy": 0.0455,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 48,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 18,
+              "col": 19,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 22,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 26,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 30,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 30,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 26,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 23,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 20,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 16,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 17,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 18,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 19,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 15,
+              "col": 34,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 11,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 12,
+              "col": 28,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 13,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 13,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 10,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 7,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 5,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 1,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 1,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 4,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 8,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 48
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 48,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 4.123,
+        "maxStepDistance": 5
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaFlake 2",
+      "fingerprint": "cmf1:963c3b18",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaFlake 2",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid"
+      ],
+      "confidence": 0.6,
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 33,
+          "height": 32,
+          "layers": 1
+        },
+        "occupancy": 0.0455,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 48,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 18,
+              "col": 19,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 22,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 26,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 30,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 30,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 26,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 23,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 20,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 16,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 17,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 18,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 19,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 15,
+              "col": 34,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 11,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 12,
+              "col": 28,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 13,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 13,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 10,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 7,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 5,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 1,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 1,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 4,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 8,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 48
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 48,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 4.123,
+        "maxStepDistance": 5
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaFlake 3",
+      "fingerprint": "cmf1:963c3b18",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaFlake 3",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid"
+      ],
+      "confidence": 0.6,
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 33,
+          "height": 32,
+          "layers": 1
+        },
+        "occupancy": 0.0455,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 48,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 18,
+              "col": 19,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 22,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 26,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 30,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 30,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 26,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 23,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 20,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 16,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 17,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 18,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 19,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 15,
+              "col": 34,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 11,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 12,
+              "col": 28,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 13,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 13,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 10,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 7,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 5,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 1,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 1,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 4,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 8,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 48
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 48,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 4.123,
+        "maxStepDistance": 5
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Boscoyo ChromaFlake 4",
+      "fingerprint": "cmf1:963c3b18",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Boscoyo ChromaFlake 4",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_radial_like",
+      "traits": [
+        "custom_grid",
+        "custom_radial_like",
+        "radial_like",
+        "sparse_custom_grid"
+      ],
+      "confidence": 0.6,
+      "trainingBuckets": [
+        "spinner",
+        "star"
+      ],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 33,
+          "height": 32,
+          "layers": 1
+        },
+        "occupancy": 0.0455,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 48,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 18,
+              "col": 19,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 22,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 26,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 30,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 30,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 26,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 23,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 20,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 16,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 17,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 18,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 19,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 15,
+              "col": 34,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 11,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 12,
+              "col": 28,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 13,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 13,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 10,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 7,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 5,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 1,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 1,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 4,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 8,
+              "col": 20,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 48
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 48,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 4.123,
+        "maxStepDistance": 5
+      },
+      "submodels": {
+        "count": 0,
+        "names": [],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [],
+        "details": []
+      }
+    },
+    {
+      "targetId": "Singing Bulb 1",
+      "fingerprint": "cmf1:4138dee1",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Singing Bulb 1",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_face_like",
+      "traits": [
+        "custom_grid",
+        "sparse_custom_grid",
+        "vertical_span",
+        "face_submodels",
+        "custom_face_like"
+      ],
+      "confidence": 0.7,
+      "trainingBuckets": [],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 56,
+          "height": 123,
+          "layers": 1
+        },
+        "occupancy": 0.0208,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 143,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 122,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 125,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 127,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 125,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 122,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 117,
+              "col": 46,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 119,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 120,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 122,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 118,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 116,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 115,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 113,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 112,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 110,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 108,
+              "col": 47,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 100,
+              "col": 46,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 102,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 103,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 105,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 106,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 107,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 109,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 100,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 143
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 143,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 5.657,
+        "maxStepDistance": 56.009
+      },
+      "submodels": {
+        "count": 11,
+        "names": [
+          "@Bulb",
+          "@Eye-Left",
+          "@Eye-Right",
+          "@EyeBlink-Left",
+          "@EyeBlink-Right",
+          "@Mouth1",
+          "@Mouth2",
+          "@Mouth3",
+          "@Mouth4",
+          "@Mouth5",
+          "@Socket"
+        ],
+        "semanticCounts": {
+          "face": 4,
+          "eye": 8,
+          "mouth": 25,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [
+          "face_submodels",
+          "custom_face_like"
+        ],
+        "details": [
+          {
+            "name": "@Bulb",
+            "type": "ranges",
+            "nodeCount": 41,
+            "range": "27-67"
+          },
+          {
+            "name": "@Eye-Left",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "68-77"
+          },
+          {
+            "name": "@Eye-Right",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "81-90"
+          },
+          {
+            "name": "@EyeBlink-Left",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "78-80"
+          },
+          {
+            "name": "@EyeBlink-Right",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "91-93"
+          },
+          {
+            "name": "@Mouth1",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "94-101"
+          },
+          {
+            "name": "@Mouth2",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "102-109"
+          },
+          {
+            "name": "@Mouth3",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "110-119"
+          },
+          {
+            "name": "@Mouth4",
+            "type": "ranges",
+            "nodeCount": 14,
+            "range": "120-133"
+          },
+          {
+            "name": "@Mouth5",
+            "type": "ranges",
+            "nodeCount": 20,
+            "range": "134-153"
+          },
+          {
+            "name": "@Socket",
+            "type": "ranges",
+            "nodeCount": 26,
+            "range": "1-26"
+          }
+        ]
+      }
+    },
+    {
+      "targetId": "Singing Bulb 2",
+      "fingerprint": "cmf1:4138dee1",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Singing Bulb 2",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_face_like",
+      "traits": [
+        "custom_grid",
+        "sparse_custom_grid",
+        "vertical_span",
+        "face_submodels",
+        "custom_face_like"
+      ],
+      "confidence": 0.7,
+      "trainingBuckets": [],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 56,
+          "height": 123,
+          "layers": 1
+        },
+        "occupancy": 0.0208,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 143,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 122,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 125,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 127,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 125,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 122,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 117,
+              "col": 46,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 119,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 120,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 122,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 118,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 116,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 115,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 113,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 112,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 110,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 108,
+              "col": 47,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 100,
+              "col": 46,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 102,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 103,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 105,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 106,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 107,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 109,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 100,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 143
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 143,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 5.657,
+        "maxStepDistance": 56.009
+      },
+      "submodels": {
+        "count": 11,
+        "names": [
+          "@Bulb",
+          "@Eye-Left",
+          "@Eye-Right",
+          "@EyeBlink-Left",
+          "@EyeBlink-Right",
+          "@Mouth1",
+          "@Mouth2",
+          "@Mouth3",
+          "@Mouth4",
+          "@Mouth5",
+          "@Socket"
+        ],
+        "semanticCounts": {
+          "face": 4,
+          "eye": 8,
+          "mouth": 25,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [
+          "face_submodels",
+          "custom_face_like"
+        ],
+        "details": [
+          {
+            "name": "@Bulb",
+            "type": "ranges",
+            "nodeCount": 41,
+            "range": "27-67"
+          },
+          {
+            "name": "@Eye-Left",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "68-77"
+          },
+          {
+            "name": "@Eye-Right",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "81-90"
+          },
+          {
+            "name": "@EyeBlink-Left",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "78-80"
+          },
+          {
+            "name": "@EyeBlink-Right",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "91-93"
+          },
+          {
+            "name": "@Mouth1",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "94-101"
+          },
+          {
+            "name": "@Mouth2",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "102-109"
+          },
+          {
+            "name": "@Mouth3",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "110-119"
+          },
+          {
+            "name": "@Mouth4",
+            "type": "ranges",
+            "nodeCount": 14,
+            "range": "120-133"
+          },
+          {
+            "name": "@Mouth5",
+            "type": "ranges",
+            "nodeCount": 20,
+            "range": "134-153"
+          },
+          {
+            "name": "@Socket",
+            "type": "ranges",
+            "nodeCount": 26,
+            "range": "1-26"
+          }
+        ]
+      }
+    },
+    {
+      "targetId": "Singing Bulb 3",
+      "fingerprint": "cmf1:4138dee1",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Singing Bulb 3",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_face_like",
+      "traits": [
+        "custom_grid",
+        "sparse_custom_grid",
+        "vertical_span",
+        "face_submodels",
+        "custom_face_like"
+      ],
+      "confidence": 0.7,
+      "trainingBuckets": [],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 56,
+          "height": 123,
+          "layers": 1
+        },
+        "occupancy": 0.0208,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 143,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 122,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 125,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 127,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 125,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 122,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 117,
+              "col": 46,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 119,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 120,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 122,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 118,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 116,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 115,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 113,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 112,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 110,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 108,
+              "col": 47,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 100,
+              "col": 46,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 102,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 103,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 105,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 106,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 107,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 109,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 100,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 143
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 143,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 5.657,
+        "maxStepDistance": 56.009
+      },
+      "submodels": {
+        "count": 11,
+        "names": [
+          "@Bulb",
+          "@Eye-Left",
+          "@Eye-Right",
+          "@EyeBlink-Left",
+          "@EyeBlink-Right",
+          "@Mouth1",
+          "@Mouth2",
+          "@Mouth3",
+          "@Mouth4",
+          "@Mouth5",
+          "@Socket"
+        ],
+        "semanticCounts": {
+          "face": 4,
+          "eye": 8,
+          "mouth": 25,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [
+          "face_submodels",
+          "custom_face_like"
+        ],
+        "details": [
+          {
+            "name": "@Bulb",
+            "type": "ranges",
+            "nodeCount": 41,
+            "range": "27-67"
+          },
+          {
+            "name": "@Eye-Left",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "68-77"
+          },
+          {
+            "name": "@Eye-Right",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "81-90"
+          },
+          {
+            "name": "@EyeBlink-Left",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "78-80"
+          },
+          {
+            "name": "@EyeBlink-Right",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "91-93"
+          },
+          {
+            "name": "@Mouth1",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "94-101"
+          },
+          {
+            "name": "@Mouth2",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "102-109"
+          },
+          {
+            "name": "@Mouth3",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "110-119"
+          },
+          {
+            "name": "@Mouth4",
+            "type": "ranges",
+            "nodeCount": 14,
+            "range": "120-133"
+          },
+          {
+            "name": "@Mouth5",
+            "type": "ranges",
+            "nodeCount": 20,
+            "range": "134-153"
+          },
+          {
+            "name": "@Socket",
+            "type": "ranges",
+            "nodeCount": 26,
+            "range": "1-26"
+          }
+        ]
+      }
+    },
+    {
+      "targetId": "Singing Bulb 4",
+      "fingerprint": "cmf1:4138dee1",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Singing Bulb 4",
+      "rawType": "Custom",
+      "canonicalType": "custom",
+      "profile": "custom_face_like",
+      "traits": [
+        "custom_grid",
+        "sparse_custom_grid",
+        "vertical_span",
+        "face_submodels",
+        "custom_face_like"
+      ],
+      "confidence": 0.7,
+      "trainingBuckets": [],
+      "construction": {
+        "source": "CustomModel",
+        "dimensions": {
+          "width": 56,
+          "height": 123,
+          "layers": 1
+        },
+        "occupancy": 0.0208,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 143,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 122,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 125,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 127,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 125,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 122,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 117,
+              "col": 46,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 119,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 120,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 122,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 118,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 116,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 115,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 113,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 112,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 110,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 108,
+              "col": 47,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 100,
+              "col": 46,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 102,
+              "col": 41,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 103,
+              "col": 36,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 105,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 106,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 107,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 109,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 100,
+              "col": 16,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 143
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 143,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 5.657,
+        "maxStepDistance": 56.009
+      },
+      "submodels": {
+        "count": 11,
+        "names": [
+          "@Bulb",
+          "@Eye-Left",
+          "@Eye-Right",
+          "@EyeBlink-Left",
+          "@EyeBlink-Right",
+          "@Mouth1",
+          "@Mouth2",
+          "@Mouth3",
+          "@Mouth4",
+          "@Mouth5",
+          "@Socket"
+        ],
+        "semanticCounts": {
+          "face": 4,
+          "eye": 8,
+          "mouth": 25,
+          "outline": 0,
+          "spoke": 0,
+          "ring": 0,
+          "layer": 0,
+          "center": 0
+        },
+        "traits": [
+          "face_submodels",
+          "custom_face_like"
+        ],
+        "details": [
+          {
+            "name": "@Bulb",
+            "type": "ranges",
+            "nodeCount": 41,
+            "range": "27-67"
+          },
+          {
+            "name": "@Eye-Left",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "68-77"
+          },
+          {
+            "name": "@Eye-Right",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "81-90"
+          },
+          {
+            "name": "@EyeBlink-Left",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "78-80"
+          },
+          {
+            "name": "@EyeBlink-Right",
+            "type": "ranges",
+            "nodeCount": 3,
+            "range": "91-93"
+          },
+          {
+            "name": "@Mouth1",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "94-101"
+          },
+          {
+            "name": "@Mouth2",
+            "type": "ranges",
+            "nodeCount": 8,
+            "range": "102-109"
+          },
+          {
+            "name": "@Mouth3",
+            "type": "ranges",
+            "nodeCount": 10,
+            "range": "110-119"
+          },
+          {
+            "name": "@Mouth4",
+            "type": "ranges",
+            "nodeCount": 14,
+            "range": "120-133"
+          },
+          {
+            "name": "@Mouth5",
+            "type": "ranges",
+            "nodeCount": 20,
+            "range": "134-153"
+          },
+          {
+            "name": "@Socket",
+            "type": "ranges",
+            "nodeCount": 26,
+            "range": "1-26"
+          }
+        ]
+      }
+    },
+    {
+      "targetId": "Spinner",
+      "fingerprint": "cmf1:33acbeb3",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
       "modelName": "Spinner",
+      "rawType": "Custom",
+      "canonicalType": "custom",
       "profile": "custom_radial_like",
       "traits": [
         "custom_grid",
@@ -925,6 +4039,7 @@
         "custom_radial_submodels",
         "ring_submodels"
       ],
+      "confidence": 0.6,
       "trainingBuckets": [
         "spinner",
         "star"
@@ -937,20 +4052,193 @@
           "layers": 1
         },
         "occupancy": 0.0454,
-        "nodeOrderContinuity": 0.0119
+        "nodeOrderContinuity": 0.0119,
+        "nodeMap": {
+          "nodeCount": 85,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 55,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 50,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 45,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 40,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 35,
+              "col": 21,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 34,
+              "col": 22,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 38,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 42,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 47,
+              "col": 28,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 51,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 54,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 53,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 49,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 46,
+              "col": 34,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 42,
+              "col": 35,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 40,
+              "col": 33,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 37,
+              "col": 30,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 34,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 32,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 29,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 29,
+              "col": 28,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 29,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 29,
+              "col": 34,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 29,
+              "col": 38,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 85
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 85,
+        "adjacentStepRatio": 0.011904761904761904,
+        "medianStepDistance": 4.243,
+        "maxStepDistance": 10.198
       },
       "submodels": {
         "count": 18,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 12,
-          "ring": 5,
-          "layer": 1,
-          "center": 1
-        },
         "names": [
           "Spoke 1",
           "Spoke 2",
@@ -970,6 +4258,21 @@
           "Circle 4",
           "Circle 5 - Outer Ring",
           "Center Node"
+        ],
+        "semanticCounts": {
+          "face": 0,
+          "eye": 0,
+          "mouth": 0,
+          "outline": 0,
+          "spoke": 12,
+          "ring": 5,
+          "layer": 1,
+          "center": 1
+        },
+        "traits": [
+          "spoke_submodels",
+          "custom_radial_submodels",
+          "ring_submodels"
         ],
         "details": [
           {
@@ -1084,14 +4387,21 @@
       }
     },
     {
-      "modelName": "Boscoyo ChromaFlake 4",
+      "targetId": "Star1",
+      "fingerprint": "cmf1:07436637",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Star1",
+      "rawType": "Custom",
+      "canonicalType": "custom",
       "profile": "custom_radial_like",
       "traits": [
         "custom_grid",
         "custom_radial_like",
         "radial_like",
-        "sparse_custom_grid"
+        "sparse_custom_grid",
+        "layered_submodels"
       ],
+      "confidence": 0.6,
       "trainingBuckets": [
         "spinner",
         "star"
@@ -1099,15 +4409,203 @@
       "construction": {
         "source": "CustomModel",
         "dimensions": {
-          "width": 33,
-          "height": 32,
+          "width": 53,
+          "height": 74,
           "layers": 1
         },
-        "occupancy": 0.0455,
-        "nodeOrderContinuity": 0
+        "occupancy": 0.0459,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 180,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 45,
+              "col": 54,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 45,
+              "col": 51,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 45,
+              "col": 49,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 45,
+              "col": 47,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 45,
+              "col": 44,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 45,
+              "col": 42,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 45,
+              "col": 39,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 45,
+              "col": 37,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 45,
+              "col": 34,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 42,
+              "col": 33,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 38,
+              "col": 33,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 35,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 32,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 29,
+              "col": 30,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 25,
+              "col": 30,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 22,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 19,
+              "col": 28,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 22,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 25,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 29,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 32,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 35,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 38,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 42,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 180
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 180,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 3.162,
+        "maxStepDistance": 4.243
       },
       "submodels": {
-        "count": 0,
+        "count": 3,
+        "names": [
+          "outer",
+          "middle",
+          "inner"
+        ],
         "semanticCounts": {
           "face": 0,
           "eye": 0,
@@ -1115,22 +4613,50 @@
           "outline": 0,
           "spoke": 0,
           "ring": 0,
-          "layer": 0,
+          "layer": 3,
           "center": 0
         },
-        "names": [],
-        "details": []
+        "traits": [
+          "layered_submodels"
+        ],
+        "details": [
+          {
+            "name": "outer",
+            "type": "ranges",
+            "nodeCount": 80,
+            "range": "1-80"
+          },
+          {
+            "name": "middle",
+            "type": "ranges",
+            "nodeCount": 60,
+            "range": "81-140"
+          },
+          {
+            "name": "inner",
+            "type": "ranges",
+            "nodeCount": 40,
+            "range": "141-180"
+          }
+        ]
       }
     },
     {
-      "modelName": "Boscoyo ChromaFlake 3",
+      "targetId": "Star2",
+      "fingerprint": "cmf1:07436637",
+      "fingerprintVersion": "custom-model-fingerprint-v1",
+      "modelName": "Star2",
+      "rawType": "Custom",
+      "canonicalType": "custom",
       "profile": "custom_radial_like",
       "traits": [
         "custom_grid",
         "custom_radial_like",
         "radial_like",
-        "sparse_custom_grid"
+        "sparse_custom_grid",
+        "layered_submodels"
       ],
+      "confidence": 0.6,
       "trainingBuckets": [
         "spinner",
         "star"
@@ -1138,15 +4664,203 @@
       "construction": {
         "source": "CustomModel",
         "dimensions": {
-          "width": 33,
-          "height": 32,
+          "width": 53,
+          "height": 74,
           "layers": 1
         },
-        "occupancy": 0.0455,
-        "nodeOrderContinuity": 0
+        "occupancy": 0.0459,
+        "nodeOrderContinuity": 0,
+        "nodeMap": {
+          "nodeCount": 180,
+          "sampleSize": 24,
+          "firstNodes": [
+            {
+              "node": 1,
+              "row": 45,
+              "col": 54,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 2,
+              "row": 45,
+              "col": 51,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 3,
+              "row": 45,
+              "col": 49,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 4,
+              "row": 45,
+              "col": 47,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 5,
+              "row": 45,
+              "col": 44,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 6,
+              "row": 45,
+              "col": 42,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 7,
+              "row": 45,
+              "col": 39,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 8,
+              "row": 45,
+              "col": 37,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 9,
+              "row": 45,
+              "col": 34,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 10,
+              "row": 42,
+              "col": 33,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 11,
+              "row": 38,
+              "col": 33,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 12,
+              "row": 35,
+              "col": 32,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 13,
+              "row": 32,
+              "col": 31,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 14,
+              "row": 29,
+              "col": 30,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 15,
+              "row": 25,
+              "col": 30,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 16,
+              "row": 22,
+              "col": 29,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 17,
+              "row": 19,
+              "col": 28,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 18,
+              "row": 22,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 19,
+              "row": 25,
+              "col": 27,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 20,
+              "row": 29,
+              "col": 26,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 21,
+              "row": 32,
+              "col": 25,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 22,
+              "row": 35,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 23,
+              "row": 38,
+              "col": 24,
+              "layer": 0,
+              "coordinateSource": "grid"
+            },
+            {
+              "node": 24,
+              "row": 42,
+              "col": 23,
+              "layer": 0,
+              "coordinateSource": "grid"
+            }
+          ],
+          "coordinateSourceCounts": {
+            "grid": 180
+          }
+        }
+      },
+      "nodeOrder": {
+        "nodeCount": 180,
+        "adjacentStepRatio": 0,
+        "medianStepDistance": 3.162,
+        "maxStepDistance": 4.243
       },
       "submodels": {
-        "count": 0,
+        "count": 3,
+        "names": [
+          "outer",
+          "middle",
+          "inner"
+        ],
         "semanticCounts": {
           "face": 0,
           "eye": 0,
@@ -1154,89 +4868,32 @@
           "outline": 0,
           "spoke": 0,
           "ring": 0,
-          "layer": 0,
+          "layer": 3,
           "center": 0
         },
-        "names": [],
-        "details": []
-      }
-    },
-    {
-      "modelName": "Boscoyo ChromaFlake 2",
-      "profile": "custom_radial_like",
-      "traits": [
-        "custom_grid",
-        "custom_radial_like",
-        "radial_like",
-        "sparse_custom_grid"
-      ],
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 33,
-          "height": 32,
-          "layers": 1
-        },
-        "occupancy": 0.0455,
-        "nodeOrderContinuity": 0
-      },
-      "submodels": {
-        "count": 0,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [],
-        "details": []
-      }
-    },
-    {
-      "modelName": "Boscoyo ChromaFlake 1",
-      "profile": "custom_radial_like",
-      "traits": [
-        "custom_grid",
-        "custom_radial_like",
-        "radial_like",
-        "sparse_custom_grid"
-      ],
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
-      "construction": {
-        "source": "CustomModel",
-        "dimensions": {
-          "width": 33,
-          "height": 32,
-          "layers": 1
-        },
-        "occupancy": 0.0455,
-        "nodeOrderContinuity": 0
-      },
-      "submodels": {
-        "count": 0,
-        "semanticCounts": {
-          "face": 0,
-          "eye": 0,
-          "mouth": 0,
-          "outline": 0,
-          "spoke": 0,
-          "ring": 0,
-          "layer": 0,
-          "center": 0
-        },
-        "names": [],
-        "details": []
+        "traits": [
+          "layered_submodels"
+        ],
+        "details": [
+          {
+            "name": "outer",
+            "type": "ranges",
+            "nodeCount": 80,
+            "range": "1-80"
+          },
+          {
+            "name": "middle",
+            "type": "ranges",
+            "nodeCount": 60,
+            "range": "81-140"
+          },
+          {
+            "name": "inner",
+            "type": "ranges",
+            "nodeCount": 40,
+            "range": "141-180"
+          }
+        ]
       }
     }
   ]

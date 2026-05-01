@@ -85,6 +85,42 @@ test("analyzeCustomModelStructure derives construction from API model nodes", ()
   assert.equal(out.construction.source, "layout.getModelNodes");
   assert.ok(out.traits.includes("api_node_layout"));
   assert.equal(out.nodeOrder.nodeCount, 5);
+  assert.equal(out.construction.nodeMap.nodeCount, 5);
+  assert.equal(out.construction.nodeMap.coordinateSourceCounts.buffer, 5);
+  assert.deepEqual(out.construction.nodeMap.firstNodes[0], {
+    node: 1,
+    row: 0,
+    col: 0,
+    layer: 0,
+    coordinateSource: "buffer"
+  });
+});
+
+test("analyzeCustomModelStructure prefers API node layout when CustomModel grid is also present", () => {
+  const out = analyzeCustomModelStructure({
+    CustomModel: grid([
+      [1, 2, 3, 4],
+      [5, 6, 7, 8],
+      [9, 10, 11, 12],
+      [13, 14, 15, 16]
+    ]),
+    customNodeLayout: {
+      data: {
+        modelNodes: [
+          { nodeId: 1, coords: [{ buffer: { x: 0, y: 0 } }] },
+          { nodeId: 2, coords: [{ buffer: { x: 0, y: 1 } }] },
+          { nodeId: 3, coords: [{ buffer: { x: 0, y: 2 } }] },
+          { nodeId: 4, coords: [{ buffer: { x: 0, y: 3 } }] }
+        ]
+      }
+    }
+  });
+
+  assert.equal(out.construction.source, "layout.getModelNodes");
+  assert.equal(out.nodeCount, 4);
+  assert.equal(out.construction.dimensions.width, 1);
+  assert.equal(out.construction.dimensions.height, 4);
+  assert.equal(out.construction.nodeMap.nodeCount, 4);
 });
 
 test("analyzeCustomModelStructure uses face submodels to identify character customs", () => {
@@ -127,12 +163,17 @@ test("vendor custom model structure capture preserves submodel construction sign
   ));
   const byName = new Map(capture.models.map((row) => [row.modelName, row]));
 
+  assert.equal(capture.artifactType, "custom_model_structure_catalog_v1");
+  assert.equal(capture.summary.customModelCount, 19);
+
   const bulb = byName.get("Singing Bulb 1");
   assert.equal(bulb.profile, "custom_face_like");
   assert.equal(bulb.submodels.count, 11);
   assert.ok(bulb.submodels.names.includes("@Eye-Left"));
   assert.ok(bulb.submodels.names.includes("@Mouth5"));
   assert.deepEqual(bulb.trainingBuckets, []);
+  assert.equal(bulb.construction.nodeMap.nodeCount, bulb.nodeOrder.nodeCount);
+  assert.equal(bulb.construction.nodeMap.firstNodes[0].coordinateSource, "grid");
 
   const spinner = byName.get("Spinner");
   assert.equal(spinner.profile, "custom_radial_like");
