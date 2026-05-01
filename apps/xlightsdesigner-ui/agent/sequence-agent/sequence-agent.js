@@ -606,7 +606,29 @@ function sanitizeRenderValidationEvidence(evidence = null) {
     sequenceCritiqueRef: normText(evidence?.sequenceCritiqueRef) || null,
     scopeLevel: normText(evidence?.scopeLevel) || null,
     sectionNames: normArray(evidence?.sectionNames).map((row) => normText(row)).filter(Boolean),
-    targetIds: normArray(evidence?.targetIds).map((row) => normText(row)).filter(Boolean)
+    targetIds: normArray(evidence?.targetIds).map((row) => normText(row)).filter(Boolean),
+    submodelEvidence: normArray(evidence?.submodelEvidence)
+      .map((row) => {
+        const targetId = normText(row?.targetId);
+        if (!targetId) return null;
+        return {
+          targetId,
+          parentId: normText(row?.parentId),
+          name: normText(row?.name),
+          siblingCount: Number(row?.siblingCount || 0),
+          siblingIds: normArray(row?.siblingIds).map((id) => normText(id)).filter(Boolean).slice(0, 16),
+          overlappingSiblingIds: normArray(row?.overlappingSiblingIds).map((id) => normText(id)).filter(Boolean).slice(0, 16),
+          overlapsSibling: Boolean(row?.overlapsSibling),
+          nodeCoverage: {
+            nodeCount: Number(row?.nodeCoverage?.nodeCount || 0),
+            parentNodeCount: Number.isFinite(Number(row?.nodeCoverage?.parentNodeCount)) ? Number(row.nodeCoverage.parentNodeCount) : null,
+            ratio: Number.isFinite(Number(row?.nodeCoverage?.ratio)) ? Number(row.nodeCoverage.ratio) : null
+          },
+          structureHints: normArray(row?.structureHints).map((hint) => normText(hint)).filter(Boolean).slice(0, 12)
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 24)
   };
 }
 

@@ -423,7 +423,8 @@ export async function executeApplyCore({
       renderObservation,
       renderCritiqueContext,
       sectionNames: getSelectedSections(),
-      targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || [])
+      targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+      submodelsById: state.sceneGraph?.submodelsById || {}
     });
     state.sequenceAgentRuntime.renderValidationEvidence = nextRenderValidationEvidence;
     if (planHandoff && typeof planHandoff === "object") {

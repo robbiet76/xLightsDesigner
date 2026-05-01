@@ -1618,7 +1618,20 @@ test("sequence_agent plan metadata carries render validation evidence refs", () 
       sequenceCritiqueRef: "/tmp/sequence-critique.json",
       scopeLevel: "section_window",
       sectionNames: ["Chorus 1"],
-      targetIds: ["MegaTree"]
+      targetIds: ["MegaTree"],
+      submodelEvidence: [
+        {
+          targetId: "MegaTree/Left",
+          parentId: "MegaTree",
+          name: "Left",
+          siblingCount: 1,
+          siblingIds: ["MegaTree/Right"],
+          overlappingSiblingIds: [],
+          overlapsSibling: false,
+          nodeCoverage: { nodeCount: 50, parentNodeCount: 100, ratio: 0.5 },
+          structureHints: ["segment_region"]
+        }
+      ]
     }
   });
 
@@ -1630,7 +1643,20 @@ test("sequence_agent plan metadata carries render validation evidence refs", () 
     sequenceCritiqueRef: "/tmp/sequence-critique.json",
     scopeLevel: "section_window",
     sectionNames: ["Chorus 1"],
-    targetIds: ["MegaTree"]
+    targetIds: ["MegaTree"],
+    submodelEvidence: [
+      {
+        targetId: "MegaTree/Left",
+        parentId: "MegaTree",
+        name: "Left",
+        siblingCount: 1,
+        siblingIds: ["MegaTree/Right"],
+        overlappingSiblingIds: [],
+        overlapsSibling: false,
+        nodeCoverage: { nodeCount: 50, parentNodeCount: 100, ratio: 0.5 },
+        structureHints: ["segment_region"]
+      }
+    ]
   });
 });
 

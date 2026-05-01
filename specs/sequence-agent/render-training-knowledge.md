@@ -84,6 +84,8 @@ Submodels are important across all model types and should be learned consistentl
 - effect behavior when applied to a single submodel versus the parent
 - effect behavior when multiple sibling submodels are layered or sequenced in succession
 
+Render validation evidence should carry a compact, bounded submodel context for selected parent or submodel targets. This evidence is not a replacement for the full scene graph; it preserves the target id, parent id, sibling count/ids, overlap ids, node coverage, and structure hints needed by the next proposal/revision pass. Keeping this context with the evidence lets later probes reason about why a render did or did not work on a target without copying the entire display model into every artifact.
+
 Model and submodel learning should answer practical questions:
 
 - which effects produce readable coverage on this target

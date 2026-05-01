@@ -33,6 +33,55 @@ test("buildRenderValidationEvidence preserves prior derived refs and refreshes l
     renderCritiqueContextRef: "sequence_render_critique_context_v1-2",
     scopeLevel: "section_window",
     sectionNames: ["Chorus 1"],
-    targetIds: ["Roofline"]
+    targetIds: ["Roofline"],
+    submodelEvidence: []
+  });
+});
+
+test("buildRenderValidationEvidence carries bounded selected submodel relationship context", () => {
+  const out = buildRenderValidationEvidence({
+    sectionNames: ["Chorus 1"],
+    targetIds: ["MegaTree"],
+    submodelsById: {
+      "MegaTree/Left": {
+        id: "MegaTree/Left",
+        name: "Left",
+        parentId: "MegaTree",
+        siblingCount: 1,
+        siblingIds: ["MegaTree/Right"],
+        overlappingSiblingIds: ["MegaTree/Right"],
+        overlapsSibling: true,
+        nodeCoverage: { nodeCount: 40, parentNodeCount: 100, ratio: 0.4 },
+        structureHints: ["segment_region"]
+      },
+      "MegaTree/Right": {
+        id: "MegaTree/Right",
+        name: "Right",
+        parentId: "MegaTree",
+        siblingCount: 1,
+        siblingIds: ["MegaTree/Left"],
+        nodeCoverage: { nodeCount: 40, parentNodeCount: 100, ratio: 0.4 },
+        structureHints: ["segment_region"]
+      },
+      "Matrix/Top": {
+        id: "Matrix/Top",
+        name: "Top",
+        parentId: "Matrix",
+        siblingCount: 0
+      }
+    }
+  });
+
+  assert.equal(out.submodelEvidence.length, 2);
+  assert.deepEqual(out.submodelEvidence[0], {
+    targetId: "MegaTree/Left",
+    parentId: "MegaTree",
+    name: "Left",
+    siblingCount: 1,
+    siblingIds: ["MegaTree/Right"],
+    overlappingSiblingIds: ["MegaTree/Right"],
+    overlapsSibling: true,
+    nodeCoverage: { nodeCount: 40, parentNodeCount: 100, ratio: 0.4 },
+    structureHints: ["segment_region"]
   });
 });
