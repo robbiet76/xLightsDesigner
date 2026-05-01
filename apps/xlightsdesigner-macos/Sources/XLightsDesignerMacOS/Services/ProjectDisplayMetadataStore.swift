@@ -2,7 +2,7 @@ import Foundation
 
 protocol DisplayMetadataStore: Sendable {
     func load(for project: ActiveProjectModel) throws -> PersistedDisplayMetadataDocument
-    func writeRefreshArtifacts(project: ActiveProjectModel, targetMetadata: Data?, customModelCatalog: Data?, reconciliation: Data?) throws
+    func writeRefreshArtifacts(project: ActiveProjectModel, targetMetadata: Data?, reconciliation: Data?) throws
     func createOrAssignTag(project: ActiveProjectModel, targetIDs: [String], tagName: String, description: String) throws
     func removeTag(project: ActiveProjectModel, targetIDs: [String], tagID: String) throws
     func updateTargetPreference(project: ActiveProjectModel, targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) throws
@@ -84,12 +84,9 @@ struct LocalDisplayMetadataStore: DisplayMetadataStore {
         return document
     }
 
-    func writeRefreshArtifacts(project: ActiveProjectModel, targetMetadata: Data?, customModelCatalog: Data?, reconciliation: Data?) throws {
+    func writeRefreshArtifacts(project: ActiveProjectModel, targetMetadata: Data?, reconciliation: Data?) throws {
         if let targetMetadata {
             try writeArtifactData(targetMetadata, to: modelIndexFileURL(for: project))
-        }
-        if let customModelCatalog {
-            try writeArtifactData(customModelCatalog, to: customModelsFileURL(for: project))
         }
         if let reconciliation {
             try writeArtifactData(reconciliation, to: reconciliationFileURL(for: project))
@@ -207,11 +204,6 @@ struct LocalDisplayMetadataStore: DisplayMetadataStore {
     private func modelIndexFileURL(for project: ActiveProjectModel) -> URL {
         let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
         return projectDir.appendingPathComponent("display/model-index.json", isDirectory: false)
-    }
-
-    private func customModelsFileURL(for project: ActiveProjectModel) -> URL {
-        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
-        return projectDir.appendingPathComponent("display/custom-models.json", isDirectory: false)
     }
 
     private func reconciliationFileURL(for project: ActiveProjectModel) -> URL {

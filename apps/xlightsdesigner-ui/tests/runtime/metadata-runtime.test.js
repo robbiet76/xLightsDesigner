@@ -303,7 +303,9 @@ test("metadata runtime persists display refresh artifacts when project file is a
   assert.equal(writes[0].targetMetadata.artifactType, "target_metadata_index_v1");
   assert.equal(writes[0].targetMetadata.summary.targetCount, 1);
   assert.equal(writes[0].targetMetadata.summary.customModelCount, 1);
-  assert.equal(writes[0].customModelCatalog.summary.customModelCount, 1);
+  assert.equal(writes[0].customModelCatalog, undefined);
+  assert.ok(writes[0].targetMetadata.records[0].structure.customStructure.profile.startsWith("custom_"));
+  assert.equal(writes[0].targetMetadata.records[0].structure.customStructure.construction.nodeMap.nodeCount, 4);
   assert.equal(writes[0].reconciliation.status, "reconciled");
 });
 

@@ -289,12 +289,29 @@ function displayTextForProfile(profile = '') {
   return value ? `custom ${value}` : 'custom model';
 }
 
-function loadCustomModelStructureAssignments(projectFile = '') {
+function loadModelIndexCustomStructureAssignments(projectFile = '') {
   const projectDir = path.dirname(str(projectFile));
-  const customModelsPath = path.join(projectDir, 'display', 'custom-models.json');
-  if (!fs.existsSync(customModelsPath)) return [];
-  const document = readJson(customModelsPath);
-  const rows = arr(document?.models);
+  const modelIndexPath = path.join(projectDir, 'display', 'model-index.json');
+  if (!fs.existsSync(modelIndexPath)) return [];
+  const document = readJson(modelIndexPath);
+  const rows = arr(document?.records)
+    .map((record) => {
+      const customStructure = record?.structure?.customStructure || record?.structure?.customModel || null;
+      if (!customStructure || typeof customStructure !== 'object') return null;
+      return {
+        targetId: str(record?.targetId || record?.identity?.displayName),
+        modelName: str(record?.identity?.displayName || record?.targetId),
+        profile: str(customStructure?.profile || record?.identity?.canonicalType),
+        traits: arr(customStructure?.traits),
+        trainingBuckets: arr(customStructure?.trainingBuckets),
+        construction: customStructure?.construction || {
+          nodeMap: record?.structure?.nodeLayoutMetadata || record?.structure?.nodeLayout || null
+        },
+        nodeOrder: customStructure?.nodeOrder,
+        submodels: customStructure?.submodels
+      };
+    })
+    .filter(Boolean);
   const out = [];
   for (const row of rows) {
     const targetId = str(row?.targetId || row?.modelName);
@@ -358,7 +375,7 @@ export function loadProjectDisplayMetadataAssignments(projectFile = '', context 
   ].map(str).filter(Boolean));
 
   const byTarget = new Map();
-  for (const row of loadCustomModelStructureAssignments(projectFile)) {
+  for (const row of loadModelIndexCustomStructureAssignments(projectFile)) {
     mergeAssignment(byTarget, row.targetId, row);
   }
   for (const row of loadDiscoveryAssignments(projectFile, context)) {

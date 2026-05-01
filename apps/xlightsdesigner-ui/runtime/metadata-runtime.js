@@ -129,13 +129,12 @@ export function createMetadataRuntime(deps = {}) {
     };
   }
 
-  function persistCurrentDisplayRefreshArtifacts({ targetMetadata = null, customModelCatalog = null, reconciliation = null } = {}) {
+  function persistCurrentDisplayRefreshArtifacts({ targetMetadata = null, reconciliation = null } = {}) {
     const projectFilePath = String(getProjectFilePath() || '').trim();
     if (!projectFilePath) return { ok: false, skipped: true, reason: 'missing projectFilePath' };
     return persistDisplayRefreshArtifacts({
       projectFilePath,
       targetMetadata,
-      customModelCatalog,
       reconciliation
     });
   }
@@ -375,7 +374,7 @@ export function createMetadataRuntime(deps = {}) {
 
   function reconcileDisplayMetadataForSceneGraphChange({ reason = 'scene graph refreshed' } = {}) {
     const metadata = metadataObject();
-    const customModelCatalog = refreshCustomModelStructureCatalog();
+    refreshCustomModelStructureCatalog();
     const targets = buildMetadataTargets({ includeSubmodels: true });
     const liveIds = new Set(targets.map((target) => String(target.id || '')).filter(Boolean));
     const liveById = new Map(targets.map((target) => [String(target.id || ''), target]).filter(([id]) => id));
@@ -467,7 +466,6 @@ export function createMetadataRuntime(deps = {}) {
     const targetMetadata = buildTargetMetadataRefreshArtifact();
     persistCurrentDisplayRefreshArtifacts({
       targetMetadata,
-      customModelCatalog,
       reconciliation: metadata.displayBinding
     });
 

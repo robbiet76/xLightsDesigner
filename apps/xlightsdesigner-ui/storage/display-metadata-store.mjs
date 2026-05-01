@@ -34,7 +34,6 @@ export function buildDisplayMetadataPaths(projectFilePath = "") {
     displayDir,
     metadataPath: displayDir ? path.join(displayDir, "metadata.json") : "",
     modelIndexPath: displayDir ? path.join(displayDir, "model-index.json") : "",
-    customModelsPath: displayDir ? path.join(displayDir, "custom-models.json") : "",
     reconciliationPath: displayDir ? path.join(displayDir, "reconciliation.json") : "",
     discoveryPath: displayDir ? path.join(displayDir, "discovery.json") : "",
     legacyMetadataPath: legacyLayoutDir ? path.join(legacyLayoutDir, "layout-metadata.json") : ""
@@ -89,7 +88,6 @@ export function writeDisplayMetadataDocument({ projectFilePath = "", document = 
 export function writeDisplayRefreshArtifacts({
   projectFilePath = "",
   targetMetadata = null,
-  customModelCatalog = null,
   reconciliation = null
 } = {}) {
   const paths = buildDisplayMetadataPaths(projectFilePath);
@@ -99,10 +97,6 @@ export function writeDisplayRefreshArtifacts({
   if (targetMetadata && typeof targetMetadata === "object" && !Array.isArray(targetMetadata)) {
     writeJson(paths.modelIndexPath, targetMetadata);
     rows.push({ kind: "model-index", path: paths.modelIndexPath });
-  }
-  if (customModelCatalog && typeof customModelCatalog === "object" && !Array.isArray(customModelCatalog)) {
-    writeJson(paths.customModelsPath, customModelCatalog);
-    rows.push({ kind: "custom-models", path: paths.customModelsPath });
   }
   if (reconciliation && typeof reconciliation === "object" && !Array.isArray(reconciliation)) {
     writeJson(paths.reconciliationPath, reconciliation);
@@ -119,7 +113,6 @@ export function readDisplayRefreshArtifact({ projectFilePath = "", kind = "" } =
   const paths = buildDisplayMetadataPaths(projectFilePath);
   const byKind = {
     "model-index": paths.modelIndexPath,
-    "custom-models": paths.customModelsPath,
     reconciliation: paths.reconciliationPath,
     discovery: paths.discoveryPath
   };

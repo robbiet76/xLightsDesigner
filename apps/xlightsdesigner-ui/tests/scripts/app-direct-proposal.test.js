@@ -313,33 +313,41 @@ test("app project display metadata loader includes custom model structure hints"
   const projectDir = path.join(root, "project");
   const projectFile = path.join(projectDir, "Custom Metadata.xdproj");
   writeJson(projectFile, { projectName: "Custom Metadata", showFolder: path.join(root, "show") });
-  writeJson(path.join(projectDir, "display", "custom-models.json"), {
-    artifactType: "custom_model_structure_catalog_v1",
-    models: [
+  writeJson(path.join(projectDir, "display", "model-index.json"), {
+    artifactType: "target_metadata_index_v1",
+    records: [
       {
         targetId: "SingingBulb",
-        modelName: "Singing Bulb",
-        profile: "custom_face_like",
-        traits: ["custom_grid", "face_submodels", "custom_face_like"],
-        trainingBuckets: [],
-        construction: {
-          dimensions: { width: 56, height: 123, layers: 1 },
-          nodeMap: { nodeCount: 153 }
-        },
-        nodeOrder: { nodeCount: 153 },
-        submodels: { count: 11 }
+        identity: { displayName: "Singing Bulb", canonicalType: "custom" },
+        structure: {
+          customStructure: {
+            profile: "custom_face_like",
+            traits: ["custom_grid", "face_submodels", "custom_face_like"],
+            trainingBuckets: [],
+            construction: {
+              dimensions: { width: 56, height: 123, layers: 1 },
+              nodeMap: { nodeCount: 153 }
+            },
+            nodeOrder: { nodeCount: 153 },
+            submodels: { count: 11 }
+          }
+        }
       },
       {
         targetId: "CustomSpinner",
-        modelName: "Custom Spinner",
-        profile: "custom_radial_like",
-        traits: ["custom_grid", "radial_like"],
-        trainingBuckets: ["spinner", "star"],
-        construction: {
-          dimensions: { width: 21, height: 21, layers: 1 },
-          nodeMap: { nodeCount: 90 }
-        },
-        submodels: { count: 6 }
+        identity: { displayName: "Custom Spinner", canonicalType: "custom" },
+        structure: {
+          customStructure: {
+            profile: "custom_radial_like",
+            traits: ["custom_grid", "radial_like"],
+            trainingBuckets: ["spinner", "star"],
+            construction: {
+              dimensions: { width: 21, height: 21, layers: 1 },
+              nodeMap: { nodeCount: 90 }
+            },
+            submodels: { count: 6 }
+          }
+        }
       }
     ]
   });

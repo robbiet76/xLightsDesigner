@@ -60,22 +60,19 @@ test("display metadata store reads legacy layout metadata when canonical file is
   assert.equal(read.document.tags[0].name, "Legacy");
 });
 
-test("display metadata store writes refreshed model custom and reconciliation artifacts", () => {
+test("display metadata store writes refreshed model index and reconciliation artifacts", () => {
   const { projectFilePath } = makeProjectFixture();
 
   const write = writeDisplayRefreshArtifacts({
     projectFilePath,
     targetMetadata: { artifactType: "display_model_index_v1", records: [{ targetId: "Tree" }] },
-    customModelCatalog: { artifactType: "custom_model_structure_catalog_v1", models: [{ targetId: "Face" }] },
     reconciliation: { artifactType: "display_reconciliation_v1", orphanTargetIds: [] }
   });
   const modelIndex = readDisplayRefreshArtifact({ projectFilePath, kind: "model-index" });
-  const customModels = readDisplayRefreshArtifact({ projectFilePath, kind: "custom-models" });
   const reconciliation = readDisplayRefreshArtifact({ projectFilePath, kind: "reconciliation" });
 
   assert.equal(write.ok, true);
-  assert.deepEqual(write.rows.map((row) => row.kind), ["model-index", "custom-models", "reconciliation"]);
+  assert.deepEqual(write.rows.map((row) => row.kind), ["model-index", "reconciliation"]);
   assert.equal(modelIndex.artifact.records[0].targetId, "Tree");
-  assert.equal(customModels.artifact.models[0].targetId, "Face");
   assert.deepEqual(reconciliation.artifact.orphanTargetIds, []);
 });

@@ -114,17 +114,10 @@ struct XLightsDisplayService: DisplayService {
                     submodelsByParent: submodelsByParent,
                     sourceSummary: "xLights owned API"
                 )
-                let customModelArtifact = try? encodeCustomModelCatalogArtifact(
-                    rows: rows,
-                    nodeLayoutsByModel: nodeLayoutsByModel,
-                    submodelsByParent: submodelsByParent,
-                    sourceSummary: "xLights owned API"
-                )
-                if let project, modelIndexArtifact != nil || customModelArtifact != nil {
+                if let project, modelIndexArtifact != nil {
                     try? metadataStore.writeRefreshArtifacts(
                         project: project,
                         targetMetadata: modelIndexArtifact,
-                        customModelCatalog: customModelArtifact,
                         reconciliation: nil
                     )
                 }
@@ -285,37 +278,6 @@ struct XLightsDisplayService: DisplayService {
             ),
             records: rows.map {
                 DisplayModelIndexRecord(
-                    row: $0,
-                    nodeLayout: nodeLayoutsByModel[$0.targetName],
-                    submodels: submodelsByParent[$0.targetName] ?? []
-                )
-            }
-        )
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        return try encoder.encode(artifact)
-    }
-
-    private func encodeCustomModelCatalogArtifact(
-        rows: [DisplayLayoutRowModel],
-        nodeLayoutsByModel: [String: XLightsModelNodeLayout],
-        submodelsByParent: [String: [XLightsSubmodel]],
-        sourceSummary: String
-    ) throws -> Data? {
-        let customRows = rows.filter { isCustomModelType($0.targetType) }
-        guard !customRows.isEmpty else { return nil }
-        let artifact = DisplayCustomModelCatalogArtifact(
-            artifactType: "custom_model_catalog_v1",
-            artifactVersion: "1.0",
-            createdAt: ISO8601DateFormatter().string(from: Date()),
-            source: DisplayModelIndexSource(source: sourceSummary),
-            summary: DisplayCustomModelCatalogSummary(
-                customModelCount: customRows.count,
-                customModelsWithNodeLayouts: customRows.filter { nodeLayoutsByModel[$0.targetName] != nil }.count,
-                submodelCount: customRows.reduce(0) { $0 + $1.submodelCount }
-            ),
-            models: customRows.map {
-                DisplayCustomModelCatalogRecord(
                     row: $0,
                     nodeLayout: nodeLayoutsByModel[$0.targetName],
                     submodels: submodelsByParent[$0.targetName] ?? []
@@ -600,7 +562,10 @@ private struct DisplayModelIndexRecord: Encodable {
             flattenedGroupMembers: row.flattenedGroupMembers,
             flattenedAllGroupMembers: row.flattenedAllGroupMembers,
             submodels: submodels.map(DisplaySubmodelSummary.init(submodel:)),
-            nodeLayout: nodeLayout.map(DisplayNodeLayoutMetadata.init(layout:))
+            nodeLayout: nodeLayout.map(DisplayNodeLayoutMetadata.init(layout:)),
+            customModel: isCustomModelType(row.targetType)
+                ? DisplayCustomModelMetadata(row: row, nodeLayout: nodeLayout, submodels: submodels)
+                : nil
         )
     }
 }
@@ -626,6 +591,7 @@ private struct DisplayModelIndexStructure: Encodable {
     let flattenedAllGroupMembers: [String]
     let submodels: [DisplaySubmodelSummary]
     let nodeLayout: DisplayNodeLayoutMetadata?
+    let customModel: DisplayCustomModelMetadata?
 }
 
 private struct DisplaySubmodelSummary: Encodable {
@@ -737,36 +703,15 @@ private struct DisplayNodeLayoutSample: Encodable {
     }
 }
 
-private struct DisplayCustomModelCatalogArtifact: Encodable {
-    let artifactType: String
-    let artifactVersion: String
-    let createdAt: String
-    let source: DisplayModelIndexSource
-    let summary: DisplayCustomModelCatalogSummary
-    let models: [DisplayCustomModelCatalogRecord]
-}
-
-private struct DisplayCustomModelCatalogSummary: Encodable {
-    let customModelCount: Int
-    let customModelsWithNodeLayouts: Int
-    let submodelCount: Int
-}
-
-private struct DisplayCustomModelCatalogRecord: Encodable {
-    let targetId: String
-    let modelName: String
-    let rawType: String
-    let canonicalType: String
+private struct DisplayCustomModelMetadata: Encodable {
+    let source: String
     let submodels: DisplayCustomModelSubmodels
-    let construction: DisplayCustomModelConstruction
+    let customModelParsed: Bool?
 
     init(row: DisplayLayoutRowModel, nodeLayout: XLightsModelNodeLayout?, submodels: [XLightsSubmodel]) {
-        targetId = row.targetName
-        modelName = row.targetName
-        rawType = row.targetType
-        canonicalType = "custom"
+        source = nodeLayout == nil ? "layout.getModels" : "layout.getModelNodes"
         self.submodels = DisplayCustomModelSubmodels(row: row, submodels: submodels)
-        construction = DisplayCustomModelConstruction(row: row, nodeLayout: nodeLayout)
+        customModelParsed = nodeLayout?.source?.customModelParsed
     }
 }
 
@@ -781,19 +726,5 @@ private struct DisplayCustomModelSubmodels: Encodable {
         capturedCount = submodels.count
         names = submodels.compactMap { $0.name ?? $0.id }
         details = submodels.map(DisplaySubmodelSummary.init(submodel:))
-    }
-}
-
-private struct DisplayCustomModelConstruction: Encodable {
-    let source: String
-    let nodeCount: Int
-    let nodeLayout: DisplayNodeLayoutMetadata?
-    let customModelParsed: Bool?
-
-    init(row: DisplayLayoutRowModel, nodeLayout: XLightsModelNodeLayout?) {
-        source = nodeLayout == nil ? "layout.getModels" : "layout.getModelNodes"
-        nodeCount = row.nodeCount
-        self.nodeLayout = nodeLayout.map(DisplayNodeLayoutMetadata.init(layout:))
-        customModelParsed = nodeLayout?.source?.customModelParsed
     }
 }

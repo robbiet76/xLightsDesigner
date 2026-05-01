@@ -177,13 +177,12 @@ Recommended project artifact split:
 
 - `display/metadata.json`: user-curated semantic display metadata and assignments.
 - `display/model-index.json`: current model/group/submodel index from the latest refresh.
-- `display/custom-models.json`: current custom model construction summaries.
 - `display/reconciliation.json`: latest refresh reconciliation result.
 - `display/discovery.json`: display-discovery conversation output and proposed metadata.
 
 Large raw API payloads should stay out of durable semantic metadata unless they are compacted into a stable project artifact.
 
-On native Display refresh, `display/model-index.json` is the primary shared artifact. It should compact `layout.getModels`, `layout.getSubmodels`, model group membership, and any available `layout.getModelNodes` output into stable target records. `display/custom-models.json` is a derived projection for custom-model construction review and testing; it should be built from the same enriched target records rather than a separate custom-only capture flow.
+On Display refresh, `display/model-index.json` is the primary shared artifact. It should compact `layout.getModels`, `layout.getSubmodels`, model group membership, any available `layout.getModelNodes` output, and custom-model-specific interpretation into stable target records. Separate filtered custom-model project artifacts should not be written or read as part of normal app behavior; if a custom-only collection is useful for diagnostics, tests, or training exports, it should be derived from `model-index.json` at export time.
 
 ## User Experience
 
