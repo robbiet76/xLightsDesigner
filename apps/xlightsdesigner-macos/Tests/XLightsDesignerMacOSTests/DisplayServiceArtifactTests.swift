@@ -103,13 +103,68 @@ struct DisplayServiceArtifactTests {
         #expect((customSubmodels?["capturedCount"] as? Int) == 2)
         #expect(structure?["customModel"] == nil)
     }
+
+    @Test func modelIndexArtifactEmbedsSharedSubmodelRelationshipsForBuiltInModels() throws {
+        let row = displayArtifactRow(name: "Built In Target", targetType: "Tree", width: 80, height: 160, submodelCount: 3)
+        let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
+        [
+          {
+            "fullName": "Built In Target/Left Segment",
+            "name": "Left Segment",
+            "parentName": "Built In Target",
+            "membership": { "nodeCount": 4, "nodes": [1, 2, 3, 4] }
+          },
+          {
+            "fullName": "Built In Target/Right Segment",
+            "name": "Right Segment",
+            "parentName": "Built In Target",
+            "membership": { "nodeCount": 4, "nodes": [3, 4, 5, 6] }
+          },
+          {
+            "fullName": "Built In Target/Outer Ring",
+            "name": "Outer Ring",
+            "parentName": "Built In Target",
+            "membership": { "nodeCount": 2, "nodes": [9, 10] }
+          }
+        ]
+        """.data(using: .utf8)!)
+        let artifactData = try encodeDisplayModelIndexArtifact(
+            rows: [row],
+            submodelsByParent: groupSubmodelsByParent(submodels),
+            sourceSummary: "test",
+            createdAt: "2026-05-01T00:00:00Z"
+        )
+        let artifact = try JSONSerialization.jsonObject(with: artifactData) as? [String: Any]
+        let records = artifact?["records"] as? [[String: Any]]
+        let structure = records?.first?["structure"] as? [String: Any]
+        let submodelSummaries = structure?["submodels"] as? [[String: Any]]
+        let left = submodelSummaries?.first { $0["name"] as? String == "Left Segment" }
+        let coverage = left?["nodeCoverage"] as? [String: Any]
+        let hints = left?["structureHints"] as? [String]
+
+        #expect(records?.first?["targetKind"] as? String == "model")
+        #expect(structure?["customStructure"] == nil)
+        #expect(left?["siblingCount"] as? Int == 2)
+        #expect(left?["overlapsSibling"] as? Bool == true)
+        #expect(left?["overlappingSiblingIds"] as? [String] == ["Built In Target/Right Segment"])
+        #expect(coverage?["nodeCount"] as? Int == 4)
+        #expect(coverage?["parentNodeCount"] as? Int == 100)
+        #expect(coverage?["ratio"] as? Double == 0.04)
+        #expect(hints?.contains("segment_region") == true)
+    }
 }
 
-private func displayArtifactRow(name: String, width: Double, height: Double, submodelCount: Int = 0) -> DisplayLayoutRowModel {
+private func displayArtifactRow(
+    name: String,
+    targetType: String = "Custom",
+    width: Double,
+    height: Double,
+    submodelCount: Int = 0
+) -> DisplayLayoutRowModel {
     DisplayLayoutRowModel(
         id: name,
         targetName: name,
-        targetType: "Custom",
+        targetType: targetType,
         nodeCount: 100,
         positionX: 0,
         positionY: 0,

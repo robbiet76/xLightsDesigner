@@ -429,6 +429,62 @@ private func submodelSortName(_ submodel: XLightsSubmodel) -> String {
     submodel.name ?? submodel.id ?? ""
 }
 
+private func normalizeSubmodelNodeMembership(_ submodel: XLightsSubmodel) -> [Int] {
+    let values = submodel.membership?.nodeChannels
+        ?? submodel.membership?.nodes
+        ?? submodel.nodeChannels
+        ?? submodel.nodes
+        ?? []
+    return values.sorted()
+}
+
+private func intersectionCount(_ lhs: [Int], _ rhs: [Int]) -> Int {
+    guard !lhs.isEmpty, !rhs.isEmpty else { return 0 }
+    let rhsSet = Set(rhs)
+    return lhs.filter { rhsSet.contains($0) }.count
+}
+
+private func coverageRatio(nodeCount: Int?, parentNodeCount: Int?) -> Double? {
+    guard
+        let nodeCount,
+        let parentNodeCount,
+        nodeCount > 0,
+        parentNodeCount > 0
+    else { return nil }
+    return (Double(nodeCount) / Double(parentNodeCount) * 10_000).rounded() / 10_000
+}
+
+private func classifySubmodelStructureHints(_ submodel: XLightsSubmodel) -> [String] {
+    let text = [
+        submodel.name,
+        submodel.id,
+        submodel.type
+    ].compactMap { $0?.lowercased() }.joined(separator: " ")
+    var hints: [String] = []
+    if text.range(of: #"\beye|blink"#, options: .regularExpression) != nil {
+        hints.append("feature_eye")
+    }
+    if text.range(of: #"\bmouth|phoneme|viseme"#, options: .regularExpression) != nil {
+        hints.append("feature_mouth")
+    }
+    if text.range(of: #"\bspoke|arm|ray"#, options: .regularExpression) != nil {
+        hints.append("radial_spoke")
+    }
+    if text.range(of: #"\bring|circle"#, options: .regularExpression) != nil {
+        hints.append("radial_ring")
+    }
+    if text.range(of: #"\boutline|border|edge"#, options: .regularExpression) != nil {
+        hints.append("outline_region")
+    }
+    if text.range(of: #"\bsegment|section|zone|part"#, options: .regularExpression) != nil {
+        hints.append("segment_region")
+    }
+    if text.range(of: #"\blayer|inner|middle|outer"#, options: .regularExpression) != nil {
+        hints.append("layer_region")
+    }
+    return uniqueStrings(hints)
+}
+
 struct DisplayCustomModelInference: Equatable {
     let profile: String
     let traits: [String]
@@ -574,6 +630,9 @@ struct XLightsSubmodel: Decodable, Sendable {
     let groupNames: [String]?
     let startChannel: Int?
     let endChannel: Int?
+    let membership: XLightsSubmodelMembership?
+    let nodeChannels: [Int]?
+    let nodes: [Int]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -586,6 +645,9 @@ struct XLightsSubmodel: Decodable, Sendable {
         case groupNames
         case startChannel
         case endChannel
+        case membership
+        case nodeChannels
+        case nodes
     }
 
     init(from decoder: Decoder) throws {
@@ -600,6 +662,21 @@ struct XLightsSubmodel: Decodable, Sendable {
         groupNames = try container.decodeIfPresent([String].self, forKey: .groupNames)
         startChannel = try container.decodeIfPresent(Int.self, forKey: .startChannel)
         endChannel = try container.decodeIfPresent(Int.self, forKey: .endChannel)
+        membership = try container.decodeIfPresent(XLightsSubmodelMembership.self, forKey: .membership)
+        nodeChannels = try container.decodeIfPresent([Int].self, forKey: .nodeChannels)
+        nodes = try container.decodeIfPresent([Int].self, forKey: .nodes)
+    }
+}
+
+struct XLightsSubmodelMembership: Decodable, Sendable {
+    let nodeCount: Int?
+    let nodeChannels: [Int]?
+    let nodes: [Int]?
+
+    enum CodingKeys: String, CodingKey {
+        case nodeCount
+        case nodeChannels
+        case nodes
     }
 }
 
@@ -705,7 +782,9 @@ private struct DisplayModelIndexRecord: Encodable {
             activeGroupMembers: row.activeGroupMembers,
             flattenedGroupMembers: row.flattenedGroupMembers,
             flattenedAllGroupMembers: row.flattenedAllGroupMembers,
-            submodels: submodels.map(DisplaySubmodelSummary.init(submodel:)),
+            submodels: submodels.map { submodel in
+                DisplaySubmodelSummary(submodel: submodel, allSubmodels: submodels, parentNodeCount: row.nodeCount)
+            },
             nodeLayout: nodeLayout.map(DisplayNodeLayoutMetadata.init(layout:)),
             customStructure: isCustomModelType(row.targetType)
                 ? DisplayCustomModelStructure(row: row, nodeLayout: nodeLayout, submodels: submodels)
@@ -747,17 +826,53 @@ private struct DisplaySubmodelSummary: Encodable {
     let groupNames: [String]
     let startChannel: Int?
     let endChannel: Int?
+    let siblingCount: Int
+    let siblingIds: [String]
+    let overlappingSiblingIds: [String]
+    let overlapsSibling: Bool
+    let nodeCoverage: DisplaySubmodelNodeCoverage
+    let structureHints: [String]
 
-    init(submodel: XLightsSubmodel) {
+    init(submodel: XLightsSubmodel, allSubmodels: [XLightsSubmodel] = [], parentNodeCount: Int? = nil) {
+        let resolvedParentId = submodel.parentId ?? parentIdFromSubmodelId(submodel.id)
+        let targetId = submodel.id ?? submodel.name ?? ""
+        let siblings = allSubmodels
+            .filter { ($0.parentId ?? parentIdFromSubmodelId($0.id)) == resolvedParentId }
+            .filter { ($0.id ?? $0.name ?? "") != targetId }
+            .sorted { lhs, rhs in
+                (lhs.id ?? lhs.name ?? "").localizedCaseInsensitiveCompare(rhs.id ?? rhs.name ?? "") == .orderedAscending
+            }
+        let nodeMembership = normalizeSubmodelNodeMembership(submodel)
+        let overlappingSiblings = siblings.filter { sibling in
+            intersectionCount(nodeMembership, normalizeSubmodelNodeMembership(sibling)) > 0
+        }
+        let nodeCount = submodel.membership?.nodeCount ?? (nodeMembership.isEmpty ? nil : nodeMembership.count)
+
         id = submodel.id
         name = submodel.name
-        parentId = submodel.parentId
+        parentId = resolvedParentId.isEmpty ? nil : resolvedParentId
         type = submodel.type
         layoutGroup = submodel.layoutGroup
         groupNames = submodel.groupNames ?? []
         startChannel = submodel.startChannel
         endChannel = submodel.endChannel
+        siblingCount = siblings.count
+        siblingIds = siblings.compactMap { $0.id ?? $0.name }
+        overlappingSiblingIds = overlappingSiblings.compactMap { $0.id ?? $0.name }
+        overlapsSibling = !overlappingSiblingIds.isEmpty
+        nodeCoverage = DisplaySubmodelNodeCoverage(
+            nodeCount: nodeCount ?? 0,
+            parentNodeCount: parentNodeCount.flatMap { $0 > 0 ? $0 : nil },
+            ratio: coverageRatio(nodeCount: nodeCount, parentNodeCount: parentNodeCount)
+        )
+        structureHints = classifySubmodelStructureHints(submodel)
     }
+}
+
+private struct DisplaySubmodelNodeCoverage: Encodable {
+    let nodeCount: Int
+    let parentNodeCount: Int?
+    let ratio: Double?
 }
 
 private struct DisplayNodeLayoutMetadata: Encodable {
@@ -892,6 +1007,8 @@ private struct DisplayCustomModelSubmodels: Encodable {
         count = row.submodelCount
         capturedCount = submodels.count
         names = submodels.compactMap { $0.name ?? $0.id }
-        details = submodels.map(DisplaySubmodelSummary.init(submodel:))
+        details = submodels.map { submodel in
+            DisplaySubmodelSummary(submodel: submodel, allSubmodels: submodels, parentNodeCount: row.nodeCount)
+        }
     }
 }

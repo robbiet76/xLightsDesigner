@@ -128,7 +128,8 @@ Each submodel record should support:
 - stable submodel fingerprint when possible
 - node or range membership summary
 - render geometry or bounds when available
-- sibling relationships and overlap/adjacency when inferable
+- sibling relationships, sibling ids, and overlap/adjacency when inferable
+- node coverage against the parent target when membership and parent node counts are known
 - semantic structure hints when inferable from names or shape
 - sequencing constraints when applicable
 
