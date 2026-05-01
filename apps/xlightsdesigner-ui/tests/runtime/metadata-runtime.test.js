@@ -98,7 +98,9 @@ function buildRuntime(state, hooks = {}) {
     normalizeStringArray: (values) => Array.isArray(values)
       ? values.map((value) => String(value || "").trim()).filter(Boolean).sort()
       : [],
-    arraysEqualAsSets: (a, b) => JSON.stringify([...(new Set(a))].sort()) === JSON.stringify([...(new Set(b))].sort())
+    arraysEqualAsSets: (a, b) => JSON.stringify([...(new Set(a))].sort()) === JSON.stringify([...(new Set(b))].sort()),
+    getProjectFilePath: hooks.getProjectFilePath || (() => String(state.projectFilePath || "")),
+    persistDisplayRefreshArtifacts: hooks.persistDisplayRefreshArtifacts || (() => ({ ok: false, skipped: true }))
   });
 }
 
@@ -269,6 +271,61 @@ test("metadata runtime refreshes custom model catalog during display reconciliat
   assert.equal(state.sceneGraph.customModelCatalog.summary.customModelCount, 1);
   assert.equal(state.sceneGraph.customModelCatalog.models[0].targetId, "CustomFace");
   assert.equal(state.sceneGraph.customModelCatalog.models[0].construction.nodeMap.nodeCount, 4);
+});
+
+test("metadata runtime persists display refresh artifacts when project file is available", () => {
+  const state = buildState();
+  state.projectFilePath = "/projects/demo/Demo.xdproj";
+  state.models = [{ id: "CustomFace", name: "Custom Face", type: "Custom" }];
+  state.submodels = [];
+  state.sceneGraph = {
+    modelsById: {
+      CustomFace: {
+        id: "CustomFace",
+        name: "Custom Face",
+        displayAs: "Custom",
+        attributes: { CustomModel: ",1,;2,,3;,4," }
+      }
+    }
+  };
+  const writes = [];
+  const runtime = buildRuntime(state, {
+    persistDisplayRefreshArtifacts: (payload) => {
+      writes.push(payload);
+      return { ok: true };
+    }
+  });
+
+  runtime.reconcileDisplayMetadataForSceneGraphChange({ reason: "layout refresh" });
+
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0].projectFilePath, "/projects/demo/Demo.xdproj");
+  assert.equal(writes[0].targetMetadata.artifactType, "target_metadata_index_v1");
+  assert.equal(writes[0].targetMetadata.summary.targetCount, 1);
+  assert.equal(writes[0].targetMetadata.summary.customModelCount, 1);
+  assert.equal(writes[0].customModelCatalog.summary.customModelCount, 1);
+  assert.equal(writes[0].reconciliation.status, "reconciled");
+});
+
+test("metadata runtime skips display refresh artifact persistence without project file", () => {
+  const state = buildState();
+  state.models = [{ id: "Tree", name: "Tree", type: "Tree" }];
+  state.sceneGraph = {
+    modelsById: {
+      Tree: { id: "Tree", name: "Tree", displayAs: "Tree 360" }
+    }
+  };
+  let writeCount = 0;
+  const runtime = buildRuntime(state, {
+    persistDisplayRefreshArtifacts: () => {
+      writeCount += 1;
+      return { ok: true };
+    }
+  });
+
+  runtime.reconcileDisplayMetadataForSceneGraphChange({ reason: "layout refresh" });
+
+  assert.equal(writeCount, 0);
 });
 
 test("metadata runtime safely resolves duplicate fingerprints when stored identity matches one candidate", () => {

@@ -25,7 +25,9 @@ export function createMetadataRuntime(deps = {}) {
     normalizeStringArray,
     arraysEqualAsSets,
     buildNormalizedTargetMetadataRecords = buildDefaultNormalizedTargetMetadataRecords,
-    getShowFolder = () => String(state?.showFolder || '').trim()
+    getShowFolder = () => String(state?.showFolder || '').trim(),
+    getProjectFilePath = () => String(state?.projectFilePath || '').trim(),
+    persistDisplayRefreshArtifacts = () => ({ ok: false, skipped: true })
   } = deps;
 
   function str(value = '') {
@@ -99,6 +101,43 @@ export function createMetadataRuntime(deps = {}) {
     });
     state.sceneGraph.customModelCatalog = catalog;
     return catalog;
+  }
+
+  function buildTargetMetadataRefreshArtifact() {
+    const records = buildNormalizedTargetMetadataRecords({
+      sceneGraph: state.sceneGraph || {},
+      metadataAssignments: metadataObject().assignments || [],
+      metadataPreferencesByTargetId: metadataObject().preferencesByTargetId || {}
+    });
+    return {
+      artifactType: 'target_metadata_index_v1',
+      artifactVersion: '1.0',
+      createdAt: new Date().toISOString(),
+      source: {
+        showFolder: String(getShowFolder() || ''),
+        sceneGraphSource: String(state.health?.sceneGraphSource || '')
+      },
+      summary: {
+        targetCount: records.length,
+        modelCount: records.filter((row) => row?.targetKind === 'model').length,
+        groupCount: records.filter((row) => row?.targetKind === 'group').length,
+        submodelCount: records.filter((row) => row?.targetKind === 'submodel').length,
+        targetsWithNodeLayout: records.filter((row) => row?.structure?.nodeLayoutMetadata).length,
+        customModelCount: records.filter((row) => row?.structure?.customStructure).length
+      },
+      records
+    };
+  }
+
+  function persistCurrentDisplayRefreshArtifacts({ targetMetadata = null, customModelCatalog = null, reconciliation = null } = {}) {
+    const projectFilePath = String(getProjectFilePath() || '').trim();
+    if (!projectFilePath) return { ok: false, skipped: true, reason: 'missing projectFilePath' };
+    return persistDisplayRefreshArtifacts({
+      projectFilePath,
+      targetMetadata,
+      customModelCatalog,
+      reconciliation
+    });
   }
 
   function buildDisplayMetadataLayoutFingerprint(targets = buildMetadataTargets({ includeSubmodels: true })) {
@@ -336,7 +375,7 @@ export function createMetadataRuntime(deps = {}) {
 
   function reconcileDisplayMetadataForSceneGraphChange({ reason = 'scene graph refreshed' } = {}) {
     const metadata = metadataObject();
-    refreshCustomModelStructureCatalog();
+    const customModelCatalog = refreshCustomModelStructureCatalog();
     const targets = buildMetadataTargets({ includeSubmodels: true });
     const liveIds = new Set(targets.map((target) => String(target.id || '')).filter(Boolean));
     const liveById = new Map(targets.map((target) => [String(target.id || ''), target]).filter(([id]) => id));
@@ -424,6 +463,13 @@ export function createMetadataRuntime(deps = {}) {
       },
       orphanTargetIds
     };
+
+    const targetMetadata = buildTargetMetadataRefreshArtifact();
+    persistCurrentDisplayRefreshArtifacts({
+      targetMetadata,
+      customModelCatalog,
+      reconciliation: metadata.displayBinding
+    });
 
     ensureMetadataTargetSelection();
     if (orphanTargetIds.length) {
