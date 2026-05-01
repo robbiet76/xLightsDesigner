@@ -26,7 +26,6 @@ test("analyzeCustomModelStructure promotes dense custom grids as matrix-like", (
   const out = analyzeCustomModelStructure({ CustomModel: source });
 
   assert.equal(out.profile, "custom_matrix_like");
-  assert.deepEqual(out.trainingBuckets, ["matrix"]);
   assert.equal(out.construction.dimensions.width, 8);
   assert.equal(out.construction.dimensions.height, 8);
 });
@@ -46,7 +45,7 @@ test("analyzeCustomModelStructure promotes elongated custom grids as linear-like
 
   assert.equal(out.profile, "custom_linear_like");
   assert.ok(out.traits.includes("continuous_node_path"));
-  assert.deepEqual(buckets.sort(), ["single_line"]);
+  assert.deepEqual(buckets.sort(), []);
 });
 
 test("analyzeCustomModelStructure promotes sparse radial custom grids cautiously", () => {
@@ -65,7 +64,7 @@ test("analyzeCustomModelStructure promotes sparse radial custom grids cautiously
 
   assert.equal(out.profile, "custom_radial_like");
   assert.ok(out.traits.includes("radial_like"));
-  assert.deepEqual(buckets.sort(), ["spinner", "star"]);
+  assert.deepEqual(buckets.sort(), []);
 });
 
 test("analyzeCustomModelStructure derives construction from API model nodes", () => {
@@ -145,7 +144,6 @@ test("analyzeCustomModelStructure uses face submodels to identify character cust
 
   assert.equal(out.profile, "custom_face_like");
   assert.ok(out.traits.includes("face_submodels"));
-  assert.deepEqual(out.trainingBuckets, []);
   assert.equal(out.submodels.count, 3);
 });
 
@@ -167,7 +165,6 @@ test("vendor custom model structure capture preserves submodel construction sign
 
   const faceLike = capture.models.find((row) => row.profile === "custom_face_like" && row.submodels.count >= 2);
   assert.ok(faceLike);
-  assert.deepEqual(faceLike.trainingBuckets, []);
   assert.equal(faceLike.construction.nodeMap.nodeCount, faceLike.nodeOrder.nodeCount);
   assert.equal(faceLike.construction.nodeMap.firstNodes[0].coordinateSource, "grid");
 
@@ -177,7 +174,6 @@ test("vendor custom model structure capture preserves submodel construction sign
     && row.submodels.count >= 4
   );
   assert.ok(radialWithSubmodels);
-  assert.ok(radialWithSubmodels.trainingBuckets.includes("spinner"));
 
   const layered = capture.models.find((row) => row.traits.includes("layered_submodels"));
   assert.ok(layered);

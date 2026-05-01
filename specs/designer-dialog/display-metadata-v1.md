@@ -133,22 +133,9 @@ Examples:
 - `best_for_quiet_sections`
 - `use_sparingly`
 
-### Optional Training Compatibility
+Custom model meaning should use the same metadata domains as every other target. A user can describe a custom target as radial, character-like, outline-like, focal, accent, or best used sparingly through semantic hints, tags, role preferences, and effect avoidances.
 
-Custom models can be structurally clear without having a built-in xLights model type. When the user, display-discovery process, or migration has confirmed that a custom target should use training knowledge for a known prop family, the project metadata may store optional `trainingBuckets` on that target preference.
-
-Examples:
-- `spinner`
-- `star`
-- `cane`
-- `single_line`
-- `matrix`
-
-Rules:
-- `trainingBuckets` are project display metadata, not xLights-derived facts.
-- They should be user-confirmed, imported, or produced by an explicit metadata/discovery workflow.
-- Core app logic should not infer these buckets from user-defined model names.
-- Structural capture can still provide generic buckets when grounded in node layout or submodel construction.
+The app should not expose a separate compatibility field that maps custom models into built-in model training families. Most custom models will not cleanly fit built-in model training. If future training explicitly supports a custom model family, that should be handled as a training workflow decision, not as a general display metadata shortcut.
 
 ## Optional v1.1 Domains
 

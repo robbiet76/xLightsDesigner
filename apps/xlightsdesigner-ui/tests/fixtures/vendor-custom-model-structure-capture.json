@@ -1,7 +1,7 @@
 {
   "artifactType": "custom_model_structure_catalog_v1",
   "artifactVersion": "1.0",
-  "createdAt": "2026-05-01T12:02:21.842Z",
+  "createdAt": "2026-05-01T12:19:32.586Z",
   "source": {
     "statePath": "",
     "showDir": "/Users/robterry/Projects/xLightsDesigner/render-training-vendor-fixture",
@@ -16,11 +16,6 @@
       "custom_face_like": 4,
       "custom_radial_like": 7,
       "custom_linear_like": 8
-    },
-    "bucketCounts": {
-      "spinner": 7,
-      "star": 7,
-      "single_line": 8
     }
   },
   "models": [
@@ -40,9 +35,6 @@
         "vertical_span"
       ],
       "confidence": 0.65,
-      "trainingBuckets": [
-        "single_line"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -269,9 +261,6 @@
         "vertical_span"
       ],
       "confidence": 0.65,
-      "trainingBuckets": [
-        "single_line"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -498,9 +487,6 @@
         "vertical_span"
       ],
       "confidence": 0.65,
-      "trainingBuckets": [
-        "single_line"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -727,9 +713,6 @@
         "vertical_span"
       ],
       "confidence": 0.65,
-      "trainingBuckets": [
-        "single_line"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -956,9 +939,6 @@
         "vertical_span"
       ],
       "confidence": 0.65,
-      "trainingBuckets": [
-        "single_line"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -1185,9 +1165,6 @@
         "vertical_span"
       ],
       "confidence": 0.65,
-      "trainingBuckets": [
-        "single_line"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -1414,9 +1391,6 @@
         "vertical_span"
       ],
       "confidence": 0.65,
-      "trainingBuckets": [
-        "single_line"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -1643,9 +1617,6 @@
         "vertical_span"
       ],
       "confidence": 0.65,
-      "trainingBuckets": [
-        "single_line"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -1871,10 +1842,6 @@
         "sparse_custom_grid"
       ],
       "confidence": 0.6,
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -2100,10 +2067,6 @@
         "sparse_custom_grid"
       ],
       "confidence": 0.6,
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -2329,10 +2292,6 @@
         "sparse_custom_grid"
       ],
       "confidence": 0.6,
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -2558,10 +2517,6 @@
         "sparse_custom_grid"
       ],
       "confidence": 0.6,
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -2788,7 +2743,6 @@
         "custom_face_like"
       ],
       "confidence": 0.7,
-      "trainingBuckets": [],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -3097,7 +3051,6 @@
         "custom_face_like"
       ],
       "confidence": 0.7,
-      "trainingBuckets": [],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -3406,7 +3359,6 @@
         "custom_face_like"
       ],
       "confidence": 0.7,
-      "trainingBuckets": [],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -3715,7 +3667,6 @@
         "custom_face_like"
       ],
       "confidence": 0.7,
-      "trainingBuckets": [],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -4025,11 +3976,7 @@
         "custom_radial_submodels",
         "ring_submodels"
       ],
-      "confidence": 0.6,
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
+      "confidence": 0.65,
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -4388,10 +4335,6 @@
         "layered_submodels"
       ],
       "confidence": 0.6,
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {
@@ -4643,10 +4586,6 @@
         "layered_submodels"
       ],
       "confidence": 0.6,
-      "trainingBuckets": [
-        "spinner",
-        "star"
-      ],
       "construction": {
         "source": "CustomModel",
         "dimensions": {

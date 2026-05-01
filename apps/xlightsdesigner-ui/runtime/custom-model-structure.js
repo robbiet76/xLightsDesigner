@@ -369,7 +369,6 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   if (!stats) {
     return {
       traits: ["custom_unparsed"],
-      trainingBuckets: [],
       confidence: 0.25,
       nodeCount: directPixelCount,
       profile: "custom_unparsed",
@@ -379,18 +378,15 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
 
   const traits = ["custom_grid"];
   if (apiNodePoints.length) traits.push("api_node_layout");
-  const buckets = new Set();
   let profile = "custom_sparse_shape";
   let confidence = 0.35;
 
   if (stats.occupancy >= 0.45 && stats.area >= 64) {
     traits.push("custom_matrix_like", "matrix_like");
-    buckets.add("matrix");
     profile = "custom_matrix_like";
     confidence = 0.75;
   } else if ((stats.aspectRatio >= 2 && stats.occupancy >= 0.05) || Math.min(stats.width, stats.height) <= 3) {
     traits.push("custom_linear_like", "linear_like");
-    buckets.add("single_line");
     profile = "custom_linear_like";
     confidence = 0.65;
   } else if (
@@ -401,8 +397,6 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
     && stats.centerFillRatio <= 0.2
   ) {
     traits.push("custom_radial_like", "radial_like");
-    buckets.add("spinner");
-    buckets.add("star");
     profile = "custom_radial_like";
     confidence = 0.6;
   }
@@ -414,18 +408,14 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   if (submodels.traits.includes("custom_face_like")) {
     profile = "custom_face_like";
     confidence = Math.max(confidence, 0.7);
-    buckets.clear();
-  } else if (submodels.traits.includes("custom_radial_submodels") && !buckets.size) {
+  } else if (submodels.traits.includes("custom_radial_submodels")) {
     traits.push("custom_radial_like", "radial_like");
-    buckets.add("spinner");
-    buckets.add("star");
     profile = "custom_radial_like";
     confidence = Math.max(confidence, 0.65);
   }
 
   return {
     traits: unique(traits),
-    trainingBuckets: [...buckets],
     confidence,
     nodeCount: directPixelCount || stats.nodeCount,
     profile,
@@ -449,8 +439,7 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
 export function mapClassificationToTrainingBuckets(classification = {}, structure = {}) {
   const rawType = low(classification?.rawType);
   const canonicalType = low(classification?.canonicalType);
-  const structureBuckets = Array.isArray(structure?.trainingBuckets) ? structure.trainingBuckets : [];
-  const buckets = new Set(structureBuckets);
+  const buckets = new Set();
   if (canonicalType === "single_line" || canonicalType === "poly_line") buckets.add("single_line");
   if (canonicalType === "arches") buckets.add("arch");
   if (canonicalType === "candy_canes") buckets.add("cane");

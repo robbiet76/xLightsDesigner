@@ -39,10 +39,6 @@ function normalizeTokenSet(value = '') {
   );
 }
 
-function normalizeTrainingBucket(value = '') {
-  return str(value).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-}
-
 function mergeAssignment(into = new Map(), targetId = '', patch = {}) {
   const id = str(targetId);
   if (!id) return;
@@ -56,8 +52,7 @@ function mergeAssignment(into = new Map(), targetId = '', patch = {}) {
     source: ''
   };
   const rolePreference = str(existing.rolePreference || patch.rolePreference);
-  const trainingBuckets = uniqueStrings([...(existing.trainingBuckets || []), ...(patch.trainingBuckets || [])].map(normalizeTrainingBucket));
-  const merged = {
+  into.set(id, {
     ...existing,
     ...patch,
     targetId: id,
@@ -67,10 +62,7 @@ function mergeAssignment(into = new Map(), targetId = '', patch = {}) {
     effectAvoidances: uniqueStrings([...(existing.effectAvoidances || []), ...(patch.effectAvoidances || [])]),
     rolePreference,
     source: uniqueStrings([existing.source, patch.source]).join('+')
-  };
-  if (trainingBuckets.length) merged.trainingBuckets = trainingBuckets;
-  else delete merged.trainingBuckets;
-  into.set(id, merged);
+  });
 }
 
 function normalizeLayoutRows(layoutRows = []) {
@@ -311,7 +303,6 @@ function loadModelIndexCustomStructureAssignments(projectFile = '') {
         modelName: str(record?.identity?.displayName || record?.targetId),
         profile: str(customStructure?.profile || record?.identity?.canonicalType),
         traits: arr(customStructure?.traits),
-        trainingBuckets: arr(customStructure?.trainingBuckets),
         construction: customStructure?.construction || {
           nodeMap: record?.structure?.nodeLayoutMetadata || record?.structure?.nodeLayout || null
         },
@@ -328,11 +319,9 @@ function loadModelIndexCustomStructureAssignments(projectFile = '') {
     const construction = row?.construction && typeof row.construction === 'object' ? row.construction : {};
     const dimensions = construction?.dimensions && typeof construction.dimensions === 'object' ? construction.dimensions : {};
     const submodels = row?.submodels && typeof row.submodels === 'object' ? row.submodels : {};
-    const trainingBuckets = uniqueStrings(row?.trainingBuckets);
     const traits = uniqueStrings(row?.traits).slice(0, 8);
     const semanticHints = uniqueStrings([
       displayTextForProfile(profile),
-      ...trainingBuckets.map((bucket) => `${bucket} compatible custom model`),
       Number(submodels?.count || 0) > 0 ? `${Number(submodels.count)} custom submodels captured` : '',
       Number(construction?.nodeMap?.nodeCount || row?.nodeOrder?.nodeCount || 0) > 0
         ? `${Number(construction?.nodeMap?.nodeCount || row?.nodeOrder?.nodeCount)} custom model nodes mapped`
@@ -346,11 +335,9 @@ function loadModelIndexCustomStructureAssignments(projectFile = '') {
       tags: uniqueStrings([
         'custom model',
         profile,
-        ...trainingBuckets,
         ...traits
       ]),
       semanticHints,
-      trainingBuckets,
       visualHintDefinitions: [],
       effectAvoidances: [],
       rolePreference: '',
@@ -407,7 +394,6 @@ export function loadProjectDisplayMetadataAssignments(projectFile = '', context 
         ...arr(preference?.semanticHints),
         ...arr(preference?.submodelHints)
       ]);
-      const trainingBuckets = uniqueStrings(arr(preference?.trainingBuckets).map(normalizeTrainingBucket));
       const visualHintDefinitions = semanticHints
         .map((name) => definitionIndex.get(name.toLowerCase()) || null)
         .filter((definition) => definition?.status === 'defined');
@@ -415,15 +401,13 @@ export function loadProjectDisplayMetadataAssignments(projectFile = '', context 
       const allTags = uniqueStrings([
         ...tagNames,
         rolePreference,
-        ...semanticHints,
-        ...trainingBuckets
+        ...semanticHints
       ]);
       if (!targetId || !allTags.length) return null;
       return {
         targetId,
         tags: allTags,
         semanticHints,
-        trainingBuckets,
         visualHintDefinitions,
         effectAvoidances,
         rolePreference,

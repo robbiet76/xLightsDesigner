@@ -50,7 +50,6 @@ struct DisplayServiceArtifactTests {
         #expect(inference.profile == "custom_face_like")
         #expect(inference.traits.contains("face_submodels"))
         #expect(inference.traits.contains("custom_face_like"))
-        #expect(inference.trainingBuckets.isEmpty)
     }
 
     @Test func customModelInferenceUsesGeometryWithoutNameHints() {
@@ -59,12 +58,9 @@ struct DisplayServiceArtifactTests {
         let nameOnlyB = inferCustomModelStructure(row: displayArtifactRow(name: "Custom Target Round B", width: 85, height: 85), submodels: [])
 
         #expect(linear.profile == "custom_linear_like")
-        #expect(linear.trainingBuckets == ["single_line"])
         #expect(!linear.traits.contains { $0.hasPrefix("name_hint_") })
         #expect(nameOnlyA.profile == "custom_model")
-        #expect(nameOnlyA.trainingBuckets.isEmpty)
         #expect(nameOnlyB.profile == "custom_model")
-        #expect(nameOnlyB.trainingBuckets.isEmpty)
     }
 
     @Test func customModelInferenceUsesRadialSubmodelsWithoutStarBucket() throws {
@@ -79,7 +75,6 @@ struct DisplayServiceArtifactTests {
         let inference = inferCustomModelStructure(row: displayArtifactRow(name: "Custom Target B", width: 85, height: 85), submodels: submodels)
 
         #expect(inference.profile == "custom_radial_like")
-        #expect(inference.trainingBuckets == ["spinner"])
     }
 
     @Test func modelIndexArtifactEmbedsCustomStructureAndSubmodels() throws {

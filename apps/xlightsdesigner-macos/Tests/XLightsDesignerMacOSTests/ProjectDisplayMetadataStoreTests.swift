@@ -192,37 +192,6 @@ struct ProjectDisplayMetadataStoreTests {
         #expect(cleared.preferencesByTargetId["Star"]?.rolePreference == "lead")
     }
 
-    @Test func storePreservesTargetTrainingBucketsWhenEditingPreferences() throws {
-        let project = try makeProject(name: "DisplayMetadataStoreF")
-        let store = LocalDisplayMetadataStore()
-        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
-        let metadataURL = projectDir.appendingPathComponent("display/metadata.json")
-        try FileManager.default.createDirectory(at: metadataURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try """
-        {
-          "version": 1,
-          "preferencesByTargetId": {
-            "CustomTarget": {
-              "trainingBuckets": ["spinner"]
-            }
-          }
-        }
-        """.data(using: .utf8)!.write(to: metadataURL)
-
-        try store.updateTargetPreference(
-            project: project,
-            targetIDs: ["CustomTarget"],
-            rolePreference: "accent",
-            semanticHints: ["radial"],
-            effectAvoidances: []
-        )
-        let updated = try store.load(for: project)
-
-        #expect(updated.preferencesByTargetId["CustomTarget"]?.rolePreference == "accent")
-        #expect(updated.preferencesByTargetId["CustomTarget"]?.semanticHints == ["radial"])
-        #expect(updated.preferencesByTargetId["CustomTarget"]?.trainingBuckets == ["spinner"])
-    }
-
     private func makeProject(name: String) throws -> ActiveProjectModel {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-layout-tag-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

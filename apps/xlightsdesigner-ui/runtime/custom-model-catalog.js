@@ -45,21 +45,16 @@ function childSubmodelsFor(parentId = "", submodelsById = {}) {
 
 function summarizeProfiles(models = []) {
   const profileCounts = {};
-  const bucketCounts = {};
   let modelsWithSubmodels = 0;
   for (const model of models) {
     const profile = norm(model?.profile || "unknown") || "unknown";
     profileCounts[profile] = Number(profileCounts[profile] || 0) + 1;
     if (Number(model?.submodels?.count || 0) > 0) modelsWithSubmodels += 1;
-    for (const bucket of arr(model?.trainingBuckets)) {
-      bucketCounts[bucket] = Number(bucketCounts[bucket] || 0) + 1;
-    }
   }
   return {
     customModelCount: models.length,
     modelsWithSubmodels,
-    profileCounts,
-    bucketCounts
+    profileCounts
   };
 }
 
@@ -118,7 +113,6 @@ export function buildCustomModelStructureCatalog({
       profile: analysis.profile,
       traits: analysis.traits,
       confidence: analysis.confidence,
-      trainingBuckets: analysis.trainingBuckets,
       construction: analysis.construction || null,
       nodeOrder: analysis.nodeOrder || null,
       submodels: analysis.submodels || {

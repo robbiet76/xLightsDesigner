@@ -18,10 +18,6 @@ function unique(values = []) {
   return [...new Set(arr(values).map((row) => norm(row)).filter(Boolean))];
 }
 
-function normalizeTrainingBucket(value = "") {
-  return norm(value).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-}
-
 function stableHash(value = "") {
   let hash = 2166136261;
   const text = String(value || "");
@@ -665,11 +661,7 @@ export function buildNormalizedTargetMetadataRecords({
           nodeLayout: model?.nodeLayout || model?.customNodeLayout || model?.attributes?.customNodeLayout || model?.attributes?.nodeLayout || null
         })
       : null;
-    const metadataTrainingBuckets = unique(arr(preference?.trainingBuckets).map(normalizeTrainingBucket)).filter((bucket) => trainedModelBuckets.has(bucket));
-    const trainedBuckets = unique([
-      ...mapClassificationToTrainingBuckets(classification, customStructure),
-      ...metadataTrainingBuckets
-    ]).filter((bucket) => trainedModelBuckets.has(bucket));
+    const trainedBuckets = mapClassificationToTrainingBuckets(classification, customStructure).filter((bucket) => trainedModelBuckets.has(bucket));
     const groupMemberships = unique(groupMembershipIndex.get(targetId) || []);
     const userTags = unique(assignment?.tags || []);
     const confidence = trainedBuckets.length
@@ -752,7 +744,6 @@ export function buildNormalizedTargetMetadataRecords({
         rolePreference: norm(preference?.rolePreference),
         semanticHints: unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])]),
         effectAvoidances: unique(preference?.effectAvoidances),
-        trainingBuckets: metadataTrainingBuckets,
         tags: userTags
       },
       recommendations: buildMetadataRecommendations({

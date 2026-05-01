@@ -432,14 +432,12 @@ private func submodelSortName(_ submodel: XLightsSubmodel) -> String {
 struct DisplayCustomModelInference: Equatable {
     let profile: String
     let traits: [String]
-    let trainingBuckets: [String]
     let confidence: Double
 }
 
 func inferCustomModelStructure(row: DisplayLayoutRowModel, submodels: [XLightsSubmodel]) -> DisplayCustomModelInference {
     let semanticCounts = customSubmodelSemanticCounts(submodels)
     var traits = ["custom_model"]
-    var buckets: [String] = []
     var profile = "custom_model"
     var confidence = 0.35
 
@@ -456,13 +454,11 @@ func inferCustomModelStructure(row: DisplayLayoutRowModel, submodels: [XLightsSu
     if aspectRatio >= 2 {
         profile = "custom_linear_like"
         traits.append(contentsOf: ["custom_linear_like", "linear_like"])
-        buckets.append("single_line")
         confidence = max(confidence, 0.6)
     }
     if semanticCounts.spoke >= 4 || semanticCounts.ring >= 2 {
         profile = "custom_radial_like"
         traits.append(contentsOf: ["spoke_submodels", "ring_submodels", "custom_radial_submodels", "custom_radial_like", "radial_like"])
-        buckets.append("spinner")
         confidence = max(confidence, 0.65)
     }
     if semanticCounts.layer >= 2 {
@@ -471,14 +467,12 @@ func inferCustomModelStructure(row: DisplayLayoutRowModel, submodels: [XLightsSu
     if semanticCounts.eye > 0 && semanticCounts.mouth > 0 {
         profile = "custom_face_like"
         traits.append(contentsOf: ["face_submodels", "custom_face_like"])
-        buckets.removeAll()
         confidence = max(confidence, 0.7)
     }
 
     return DisplayCustomModelInference(
         profile: profile,
         traits: uniqueStrings(traits),
-        trainingBuckets: uniqueStrings(buckets),
         confidence: confidence
     )
 }
@@ -857,7 +851,6 @@ private struct DisplayCustomModelStructure: Encodable {
     let profile: String
     let nodeCount: Int
     let traits: [String]
-    let trainingBuckets: [String]
     let construction: DisplayCustomModelConstruction
     let source: String
     let submodels: DisplayCustomModelSubmodels
@@ -869,7 +862,6 @@ private struct DisplayCustomModelStructure: Encodable {
         profile = inference.profile
         nodeCount = row.nodeCount
         traits = inference.traits
-        trainingBuckets = inference.trainingBuckets
         source = nodeLayout == nil ? "layout.getModels" : "layout.getModelNodes"
         construction = DisplayCustomModelConstruction(row: row, nodeLayout: nodeLayout)
         self.submodels = DisplayCustomModelSubmodels(row: row, submodels: submodels)
