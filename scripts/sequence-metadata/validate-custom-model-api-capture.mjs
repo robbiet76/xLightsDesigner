@@ -59,6 +59,24 @@ function hasCustomGrid(row = {}) {
   return Boolean(norm(attrs.CustomModel) || norm(attrs.CustomModelCompressed));
 }
 
+function hasNodeLayout(row = {}) {
+  const nodeLayout = row?.nodeLayout || row?.attributes?.customNodeLayout;
+  return Boolean(
+    Array.isArray(nodeLayout?.nodes) && nodeLayout.nodes.length
+    || Array.isArray(nodeLayout?.modelNodes) && nodeLayout.modelNodes.length
+    || Array.isArray(nodeLayout?.data?.nodes) && nodeLayout.data.nodes.length
+  );
+}
+
+function countBy(values = []) {
+  const counts = {};
+  for (const value of values) {
+    const key = norm(value) || "unknown";
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  return counts;
+}
+
 function modelDetailPayload(body = {}) {
   const data = body?.data && typeof body.data === "object" ? body.data : body;
   if (data?.model && typeof data.model === "object") return data.model;
@@ -196,9 +214,15 @@ async function main() {
       customSummaryCount: customSummaries.length,
       customDetailFetchCount: customRows.filter(([, , fetched]) => fetched).length,
       customWithApiGridCount: customRows.filter(([, row]) => hasCustomGrid(row)).length,
+      customWithApiNodeLayoutCount: customRows.filter(([, row]) => hasNodeLayout(row)).length,
       customWithoutApiGridNames: customRows.filter(([, row]) => !hasCustomGrid(row)).map(([name]) => name).sort(),
+      customWithoutApiConstructionNames: customRows
+        .filter(([, row]) => !hasCustomGrid(row) && !hasNodeLayout(row))
+        .map(([name]) => name)
+        .sort(),
       submodelCount: submodels.length,
       submodelError,
+      constructionSourceCounts: countBy(catalog.models.map((row) => row?.construction?.source)),
       catalog: catalog.summary
     },
     customModels: catalog.models
