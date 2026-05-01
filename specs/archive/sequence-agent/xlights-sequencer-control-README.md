@@ -32,5 +32,5 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - Historical implementation-step artifacts (WP docs, prior wireframes, regression snapshots, gap audits, and earlier checklists) are in `specs/archive/`.
 
 ## Related Docs
-- `docs/operations/xlightsdesigner-native-release-runbook.md`
-- `docs/operations/xlightsdesigner-native-validation-evidence-log.md`
+- `docs/operations/xlightsdesigner-macos-release-runbook.md`
+- `docs/operations/xlightsdesigner-macos-validation-evidence-log.md`

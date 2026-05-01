@@ -20,7 +20,7 @@ Define go/no-go gates for shipping agent-enabled behavior.
 3. Owned API And Contract Safety
 - Owned xLights API boots from the configured active local xLights runtime.
 - Required sequence, layout, timing, media, render-feedback, and sequencing routes pass owned validation.
-- Native apply uses the owned `sequencing.applyBatchPlan` path and fails closed when required preflight/readback fails.
+- Apply uses the owned `sequencing.applyBatchPlan` path and fails closed when required preflight/readback fails.
 - Revision guard blocks stale apply.
 - Active metadata fingerprint is readable from the owned API.
 
@@ -31,10 +31,10 @@ Define go/no-go gates for shipping agent-enabled behavior.
 - Proof-loop memory, drilldown, and retained validation gates have current evidence.
 
 5. Operational Readiness
-- Native desktop release runbook executed where a release build is being cut.
+- macOS app release runbook executed where a release build is being cut.
 - Historical prototype-shell validation logs are not used as current release evidence.
-- Current validation evidence is captured in active native/runtime artifacts, not retired shell logs.
-- Native backup/restore and xLights session recovery paths have package test evidence.
+- Current validation evidence is captured in active app runtime artifacts, not retired shell logs.
+- App backup/restore and xLights session recovery paths have package test evidence.
 
 ## Evidence Inputs
 - `specs/product-plan.md`
@@ -47,18 +47,18 @@ Define go/no-go gates for shipping agent-enabled behavior.
 - `apps/xlightsdesigner-macos/Tests/XLightsDesignerMacOSTests/XLightsSessionViewModelTests.swift`
 - `scripts/sequencer-render-training/runners/run-stage1-coverage-chunked.sh`
 - active show folder `_xlightsdesigner_api_validation/<run-id>/owned-api-validation-result.json`
-- `docs/operations/xlightsdesigner-native-release-runbook.md`
-- `docs/operations/xlightsdesigner-native-validation-evidence-log.md`
+- `docs/operations/xlightsdesigner-macos-release-runbook.md`
+- `docs/operations/xlightsdesigner-macos-validation-evidence-log.md`
 
 ## Current Interpretation
 
 For the current local app completion workstream, a release-quality agent path requires:
-- native macOS app path, not a retired prototype package path
+- macOS app path, not a retired prototype package path
 - owned API validation on the active xLights runtime
 - current effectmetadata import and drift detection in place
-- green native package tests for backup/restore, session recovery, proposal generation, pending work, and review apply behavior
+- green app package tests for backup/restore, session recovery, proposal generation, pending work, and review apply behavior
 - green sequencer validation at the contract and retained proof-loop level
 - green stage1 training/validation on the active xLights base
 
 This document is a gate summary, not the detailed test plan.
-The detailed acceptance surfaces live in the sequence-agent, native app, and xLights API specs.
+The detailed acceptance surfaces live in the sequence-agent, app, and xLights API specs.

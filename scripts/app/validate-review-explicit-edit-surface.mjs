@@ -14,21 +14,21 @@ import {
 } from '../xlights/owned-api-validation-helpers.mjs';
 
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
-const DEFAULT_NATIVE_URL = 'http://127.0.0.1:49916';
+const DEFAULT_APP_URL = 'http://127.0.0.1:49916';
 const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
 const DEFAULT_PROJECT_FILE = '/Users/robterry/Documents/Lights/xLightsDesigner/projects/Christmas 2026/Christmas 2026.xdproj';
-const DEFAULT_VALIDATION_ROOT_NAME = '_xlightsdesigner_validation/native-review-explicit-edits';
+const DEFAULT_VALIDATION_ROOT_NAME = '_xlightsdesigner_validation/app-review-explicit-edits';
 
 function usage() {
   return [
     'Usage:',
-    '  node scripts/native/validate-review-explicit-edit-surface.mjs [options]',
+    '  node scripts/app/validate-review-explicit-edit-surface.mjs [options]',
     '',
     'Options:',
     '  --project-file <path>     xLightsDesigner project file.',
     '  --show-dir <path>         xLights show folder to validate against.',
     '  --endpoint <url>          Owned xLights API base URL.',
-    '  --native-url <url>        Native automation server URL.',
+    '  --app-url <url>        App automation server URL.',
     '  --source-model <name>     Source model. Defaults to Star when available.',
     '  --target-model <name>     Target model. Defaults to Spinner-01 when available.',
     '  --duration-ms <number>    Validation sequence duration. Defaults to 30000.',
@@ -44,7 +44,7 @@ function parseArgs(argv) {
     projectFile: DEFAULT_PROJECT_FILE,
     showDir: DEFAULT_SHOW_DIR,
     endpoint: DEFAULT_ENDPOINT,
-    nativeUrl: DEFAULT_NATIVE_URL,
+    appUrl: DEFAULT_APP_URL,
     sourceModel: 'Star',
     targetModel: 'Spinner-01',
     durationMs: 30000,
@@ -67,7 +67,7 @@ function parseArgs(argv) {
     if (arg === '--project-file') args.projectFile = next();
     else if (arg === '--show-dir') args.showDir = next();
     else if (arg === '--endpoint') args.endpoint = next().replace(/\/$/, '');
-    else if (arg === '--native-url') args.nativeUrl = next().replace(/\/$/, '');
+    else if (arg === '--app-url') args.appUrl = next().replace(/\/$/, '');
     else if (arg === '--source-model') args.sourceModel = next();
     else if (arg === '--target-model') args.targetModel = next();
     else if (arg === '--duration-ms') args.durationMs = Number(next());
@@ -113,15 +113,15 @@ async function request(baseUrl, route, { method = 'GET', body = null, timeoutMs 
   }
 }
 
-async function waitForNativeReady(nativeUrl, timeoutMs) {
+async function waitForAppReady(appUrl, timeoutMs) {
   const started = Date.now();
   let last = null;
   for (;;) {
-    last = await request(nativeUrl, '/health', { timeoutMs: 10000, allowError: true });
+    last = await request(appUrl, '/health', { timeoutMs: 10000, allowError: true });
     const xlights = last?.xlights && typeof last.xlights === 'object' ? last.xlights : {};
     if (last?.ok === true && String(xlights.runtimeState || '').toLowerCase() === 'ready') return last;
     if (Date.now() - started > timeoutMs) {
-      throw new Error(`Native automation server did not become ready within ${timeoutMs}ms: ${JSON.stringify(last)}`);
+      throw new Error(`App automation server did not become ready within ${timeoutMs}ms: ${JSON.stringify(last)}`);
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
@@ -171,7 +171,7 @@ async function readDisplayOrder(endpoint) {
 
 function buildSeedPlan(sourceModel, targetModel) {
   return {
-    track: 'XD: Native Review Explicit Edit Validation',
+    track: 'XD: App Review Explicit Edit Validation',
     subType: 'Generic',
     replaceExistingMarks: true,
     marks: [
@@ -203,9 +203,9 @@ function writeValidationArtifacts({ projectFile, runId, step, sourceModel, targe
   const proposalBundle = {
     artifactType: 'proposal_bundle_v1',
     artifactVersion: '1.0',
-    artifactId: artifactId('proposal_bundle_v1-native-review-explicit', runId, step),
+    artifactId: artifactId('proposal_bundle_v1-app-review-explicit', runId, step),
     createdAt: now,
-    source: 'native_review_explicit_edit_validation',
+    source: 'app_review_explicit_edit_validation',
     summary,
     proposalLines,
     scope: {
@@ -230,7 +230,7 @@ function writeValidationArtifacts({ projectFile, runId, step, sourceModel, targe
   const intentHandoff = {
     artifactType: 'intent_handoff_v1',
     artifactVersion: '1.0',
-    artifactId: artifactId('intent_handoff_v1-native-review-explicit', runId, step),
+    artifactId: artifactId('intent_handoff_v1-app-review-explicit', runId, step),
     createdAt: now,
     goal: summary,
     mode: 'revise',
@@ -265,20 +265,20 @@ function writeValidationArtifacts({ projectFile, runId, step, sourceModel, targe
   return { intentHandoff, proposalBundle, writeResult };
 }
 
-async function nativeAction(nativeUrl, action, payload = {}) {
-  return request(nativeUrl, '/action', {
+async function appAction(appUrl, action, payload = {}) {
+  return request(appUrl, '/action', {
     method: 'POST',
     body: { action, ...payload },
     timeoutMs: 180000
   });
 }
 
-async function waitForNativeApplyIdle(nativeUrl, previousApplyId = '', timeoutMs = 360000) {
+async function waitForAppApplyIdle(appUrl, previousApplyId = '', timeoutMs = 360000) {
   const started = Date.now();
   let last = null;
   let completedApply = null;
   for (;;) {
-    last = await request(nativeUrl, '/sequencer-validation-snapshot', { timeoutMs: 60000, allowError: true });
+    last = await request(appUrl, '/sequencer-validation-snapshot', { timeoutMs: 60000, allowError: true });
     const latest = last?.latestApplyResult && typeof last.latestApplyResult === 'object'
       ? last.latestApplyResult
       : null;
@@ -286,22 +286,22 @@ async function waitForNativeApplyIdle(nativeUrl, previousApplyId = '', timeoutMs
     if (latest && latestId && latestId !== previousApplyId && str(latest?.status).toLowerCase() === 'applied') {
       completedApply = { snapshot: last, applyResult: latest };
     }
-    const appSnapshot = await request(nativeUrl, '/snapshot', { timeoutMs: 60000, allowError: true });
+    const appSnapshot = await request(appUrl, '/snapshot', { timeoutMs: 60000, allowError: true });
     const applying = Boolean(appSnapshot?.pages?.review?.isApplying);
     const blockedBanner = Array.isArray(appSnapshot?.pages?.review?.banners)
       ? appSnapshot.pages.review.banners.find((banner) => String(banner?.state || '').toLowerCase() === 'blocked')
       : null;
-    if (blockedBanner) throw new Error(`Native Review apply blocked: ${str(blockedBanner.text)}`);
+    if (blockedBanner) throw new Error(`App Review apply blocked: ${str(blockedBanner.text)}`);
     if (completedApply && !applying) return completedApply;
     if (Date.now() - started > timeoutMs) {
       if (completedApply) return completedApply;
-      throw new Error(`Timed out waiting for native Review apply. Last snapshot: ${JSON.stringify(last)}`);
+      throw new Error(`Timed out waiting for app Review apply. Last snapshot: ${JSON.stringify(last)}`);
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }
 
-async function applyReviewScenario({ nativeUrl, projectFile, runId, step, sourceModel, targetModel, proposalLines, summary, targetIds, previousApplyId }) {
+async function applyReviewScenario({ appUrl, projectFile, runId, step, sourceModel, targetModel, proposalLines, summary, targetIds, previousApplyId }) {
   const artifacts = writeValidationArtifacts({
     projectFile,
     runId,
@@ -312,8 +312,8 @@ async function applyReviewScenario({ nativeUrl, projectFile, runId, step, source
     summary,
     targetIds
   });
-  const accepted = await nativeAction(nativeUrl, 'applyReview');
-  const applied = await waitForNativeApplyIdle(nativeUrl, previousApplyId);
+  const accepted = await appAction(appUrl, 'applyReview');
+  const applied = await waitForAppApplyIdle(appUrl, previousApplyId);
   return {
     artifacts,
     accepted,
@@ -328,17 +328,17 @@ async function main() {
   if (!(await pathExists(args.showDir))) throw new Error(`Show folder does not exist: ${args.showDir}`);
 
   const validationDir = path.join(args.showDir, DEFAULT_VALIDATION_ROOT_NAME, args.runId);
-  const sequencePath = path.join(validationDir, 'native-review-explicit-edit-surface.xsq');
-  const evidencePath = path.join(validationDir, 'native-review-explicit-edit-surface-result.json');
+  const sequencePath = path.join(validationDir, 'app-review-explicit-edit-surface.xsq');
+  const evidencePath = path.join(validationDir, 'app-review-explicit-edit-surface-result.json');
   await mkdir(validationDir, { recursive: true });
 
   const result = {
     ok: false,
-    artifactType: 'native_review_explicit_edit_surface_validation_v1',
+    artifactType: 'app_review_explicit_edit_surface_validation_v1',
     artifactVersion: 1,
     runId: args.runId,
     endpoint: args.endpoint,
-    nativeUrl: args.nativeUrl,
+    appUrl: args.appUrl,
     projectFile: args.projectFile,
     showDir: args.showDir,
     validationDir,
@@ -347,26 +347,26 @@ async function main() {
 
   try {
     result.ownedHealth = await waitForOwnedReady(args.endpoint, args.readyTimeoutMs);
-    result.nativeHealth = await waitForNativeReady(args.nativeUrl, args.readyTimeoutMs);
-    result.openProject = await nativeAction(args.nativeUrl, 'openProject', { filePath: args.projectFile });
-    result.nativeRefreshAfterOpenProject = await nativeAction(args.nativeUrl, 'refreshAll');
+    result.appHealth = await waitForAppReady(args.appUrl, args.readyTimeoutMs);
+    result.openProject = await appAction(args.appUrl, 'openProject', { filePath: args.projectFile });
+    result.appRefreshAfterOpenProject = await appAction(args.appUrl, 'refreshAll');
     result.modalStateAtStart = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.mediaCurrent = await assertOpenShowFolder(args.endpoint, args.showDir);
     Object.assign(result, await chooseModels(args.endpoint, args.sourceModel, args.targetModel));
 
-    result.create = await nativeAction(args.nativeUrl, 'createXLightsSequence', {
+    result.create = await appAction(args.appUrl, 'createXLightsSequence', {
       filePath: sequencePath,
       durationMs: args.durationMs,
       frameMs: args.frameMs
     });
-    result.nativeRefreshAfterCreate = await nativeAction(args.nativeUrl, 'refreshXLightsSession');
-    result.nativeRefreshAllAfterCreate = await nativeAction(args.nativeUrl, 'refreshAll');
+    result.appRefreshAfterCreate = await appAction(args.appUrl, 'refreshXLightsSession');
+    result.appRefreshAllAfterCreate = await appAction(args.appUrl, 'refreshAll');
     await waitForOwnedReady(args.endpoint, args.readyTimeoutMs);
     result.modalStateAfterCreate = (await assertNoBlockingModal(args.endpoint))?.data?.modalState || null;
     result.seedPlan = buildSeedPlan(result.sourceModel, result.targetModel);
     result.seedApply = await postQueued(args.endpoint, '/sequencing/apply-batch-plan', result.seedPlan);
-    result.nativeRefreshAfterSeed = await nativeAction(args.nativeUrl, 'refreshXLightsSession');
-    result.nativeRefreshAllAfterSeed = await nativeAction(args.nativeUrl, 'refreshAll');
+    result.appRefreshAfterSeed = await appAction(args.appUrl, 'refreshXLightsSession');
+    result.appRefreshAllAfterSeed = await appAction(args.appUrl, 'refreshAll');
     result.afterSeedSource = await readEffects(args.endpoint, result.sourceModel, 900, 12100);
     result.afterSeedTarget = await readEffects(args.endpoint, result.targetModel, 900, 2100);
     if (!hasEffect(result.afterSeedSource, { effectName: 'On', layer: 0, startMs: 1000, endMs: 2000 })) {
@@ -388,11 +388,11 @@ async function main() {
       throw new Error('Seed did not create occupied target layer.');
     }
 
-    const initialValidationSnapshot = await request(args.nativeUrl, '/sequencer-validation-snapshot', { timeoutMs: 10000, allowError: true });
+    const initialValidationSnapshot = await request(args.appUrl, '/sequencer-validation-snapshot', { timeoutMs: 10000, allowError: true });
     let previousApplyId = str(initialValidationSnapshot?.latestApplyResult?.artifactId);
 
     result.cloneScenario = await applyReviewScenario({
-      nativeUrl: args.nativeUrl,
+      appUrl: args.appUrl,
       projectFile: args.projectFile,
       runId: args.runId,
       step: 'clone',
@@ -415,7 +415,7 @@ async function main() {
     }
 
     result.layerScenario = await applyReviewScenario({
-      nativeUrl: args.nativeUrl,
+      appUrl: args.appUrl,
       projectFile: args.projectFile,
       runId: args.runId,
       step: 'layer-reorder',
@@ -438,7 +438,7 @@ async function main() {
     }
 
     result.updateScenario = await applyReviewScenario({
-      nativeUrl: args.nativeUrl,
+      appUrl: args.appUrl,
       projectFile: args.projectFile,
       runId: args.runId,
       step: 'effect-update',
@@ -458,7 +458,7 @@ async function main() {
     }
 
     result.deleteLayerScenario = await applyReviewScenario({
-      nativeUrl: args.nativeUrl,
+      appUrl: args.appUrl,
       projectFile: args.projectFile,
       runId: args.runId,
       step: 'layer-delete',
@@ -478,7 +478,7 @@ async function main() {
     }
 
     result.compactLayerScenario = await applyReviewScenario({
-      nativeUrl: args.nativeUrl,
+      appUrl: args.appUrl,
       projectFile: args.projectFile,
       runId: args.runId,
       step: 'layer-compact',
@@ -502,7 +502,7 @@ async function main() {
       throw new Error(`Display order did not include validation models: ${result.sourceModel}, ${result.targetModel}`);
     }
     result.displayOrderScenario = await applyReviewScenario({
-      nativeUrl: args.nativeUrl,
+      appUrl: args.appUrl,
       projectFile: args.projectFile,
       runId: args.runId,
       step: 'display-order',

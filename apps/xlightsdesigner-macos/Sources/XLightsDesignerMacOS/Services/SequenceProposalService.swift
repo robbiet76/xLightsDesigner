@@ -14,7 +14,7 @@ protocol SequenceProposalService: Sendable {
 struct LocalSequenceProposalService: SequenceProposalService, Sendable {
     func generateProposal(projectFilePath: String, appRootPath: String, endpoint: String, prompt: String, selectedTagNames: [String] = [], selectedTargetIDs: [String] = [], selectedSections: [String] = [], timingTrackName: String = "") async throws -> SequenceProposalGenerationResult {
         var arguments = [
-            AppEnvironment.nativeDirectProposalScriptPath,
+            AppEnvironment.appDirectProposalScriptPath,
             "--project-file", projectFilePath,
             "--app-root", appRootPath,
             "--endpoint", endpoint,

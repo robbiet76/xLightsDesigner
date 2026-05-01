@@ -36,7 +36,7 @@ function readPayloadArg(args = []) {
   return readJson(payloadPath);
 }
 
-function buildNativeAutomationArgs(command, args = []) {
+function buildAppAutomationArgs(command, args = []) {
   switch (command) {
     case "get-automation-health-snapshot":
       return ["get-health-snapshot"];
@@ -55,9 +55,9 @@ function buildNativeAutomationArgs(command, args = []) {
   }
 }
 
-export async function runNativeAutomation(repoRoot, channel, resultPath, command, args = []) {
-  const script = path.join(repoRoot, "scripts", "native", "automation.mjs");
-  const commandArgs = [script, ...buildNativeAutomationArgs(command, args)];
+export async function runAppAutomation(repoRoot, channel, resultPath, command, args = []) {
+  const script = path.join(repoRoot, "scripts", "app", "automation.mjs");
+  const commandArgs = [script, ...buildAppAutomationArgs(command, args)];
   const { stdout } = await runCommand("node", commandArgs, { cwd: repoRoot });
   const parsed = JSON.parse(stdout);
   const wrapped = { ok: parsed?.ok !== false, channel, command, result: parsed };

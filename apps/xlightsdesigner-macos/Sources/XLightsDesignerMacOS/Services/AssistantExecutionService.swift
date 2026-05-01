@@ -85,7 +85,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
         let payloadData = try JSONSerialization.data(withJSONObject: payload, options: [])
         let payloadText = String(decoding: payloadData, as: UTF8.self)
         let output = try await runNodeScript(arguments: [
-            AppEnvironment.nativeAssistantConversationScriptPath,
+            AppEnvironment.appAssistantConversationScriptPath,
             "--payload", payloadText
         ])
 

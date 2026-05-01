@@ -2,7 +2,7 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
-const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || 'http://127.0.0.1:49916';
+const BASE_URL = process.env.XLD_APP_AUTOMATION_URL || 'http://127.0.0.1:49916';
 const XLIGHTS_API_BASE_URL = process.env.XLD_XLIGHTS_API_URL || 'http://127.0.0.1:49915/xlightsdesigner/api';
 const DEFAULT_VALIDATION_ROOT_NAME = '_xlightsdesigner_validation';
 const DEFAULT_VALIDATION_SECTION_TRACK = 'Validation Section Scope';
@@ -211,7 +211,7 @@ async function ensureSequenceContext(args, targetIds = [], selectedTags = []) {
   const refresh = await refreshXlightsSession();
   const session = refresh?.xlights && typeof refresh.xlights === 'object' ? refresh.xlights : {};
   if (session.isReachable !== true) {
-    throw new Error(`xLights is not reachable through the native app: ${str(session.dirtyStateReason || session.layoutDirtyStateReason)}`);
+    throw new Error(`xLights is not reachable through the app: ${str(session.dirtyStateReason || session.layoutDirtyStateReason)}`);
   }
   if (!args.forceValidationSequence && session.isSequenceOpen === true && str(session.sequencePath)) {
     return {
@@ -819,7 +819,7 @@ const expectedAnchorTracks = splitList(args.expectedAnchorTracks);
 
 const health = await request('GET', '/health');
 if (health?.ok === false) {
-  throw new Error(`Native automation server is not ready: ${JSON.stringify(health)}`);
+  throw new Error(`App automation server is not ready: ${JSON.stringify(health)}`);
 }
 
 const sequenceContext = await ensureSequenceContext(args, targetIds, selectedTags);

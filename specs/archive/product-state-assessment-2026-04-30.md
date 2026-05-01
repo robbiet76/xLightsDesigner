@@ -13,7 +13,7 @@ The target experience is a user-directed creative assistant that understands the
 
 ## What Exists Today
 
-- Native macOS shell with project, design, sequence, review, history, and settings concepts.
+- macOS app shell with project, design, sequence, review, history, and settings concepts.
 - Local project storage model.
 - xLights owned API for show-folder switching, layout discovery, sequence lifecycle, timing, effects, render feedback, and validation.
 - Display metadata and model metadata direction, including stable target identity by fingerprint.
@@ -24,7 +24,7 @@ The target experience is a user-directed creative assistant that understands the
 
 ## Intended User Experience
 
-1. Open the native app and select or create a project.
+1. Open the app and select or create a project.
 2. Select the xLights show folder and sequence.
 3. The app refreshes layout, model metadata, custom model construction data, timing, and current sequence state.
 4. The user describes creative goals in conversation.
@@ -53,7 +53,7 @@ The complete product should be able to produce credible full-song, full-display 
 1. Full-display/full-song sequencing quality: effect choice, composition, pacing, and large-scale review still need more training and proof.
 2. Custom model understanding: capture is underway, but the agent still needs durable construction, node order, submodel, geometry, and semantic interpretation.
 3. Display metadata maturity: the project metadata model needs polished migration, user editing, retention, and review flows.
-4. Native app hardening: project state, session recovery, history, backup/restore, and apply/render UX need continued validation.
+4. App hardening: project state, session recovery, history, backup/restore, and apply/render UX need continued validation.
 5. Training knowledge consolidation: generated records are compacted, but runtime bundles and dated evidence docs should stay under pressure.
 6. Audio-to-sequence quality: timing tracks exist conceptually, but richer musical context must drive sequence decisions more directly.
 7. Release readiness: quality gates exist, but the app still needs repeatable end-to-end validation on real show folders.
@@ -62,12 +62,12 @@ The complete product should be able to produce credible full-song, full-display 
 
 The codebase has useful structure and increasingly solid boundaries, especially around the sequence-agent runtime and render-training tooling. Recent cleanup reduced generated-data sprawl and moved toward packed artifacts.
 
-The main maturity risk is not isolated messy code; it is product surface area. The app spans native UI, local services, xLights API work, agent planning, generated training data, and proof harnesses. That creates drift unless specs and generated artifacts stay compact.
+The main maturity risk is not isolated messy code; it is product surface area. The app spans app UI, local services, xLights API work, agent planning, generated training data, and proof harnesses. That creates drift unless specs and generated artifacts stay compact.
 
 Current refactor pressure:
 
 - keep sequence-agent generated knowledge loading efficient
 - keep xLights API behavior explicit and tested
 - avoid reintroducing direct layout-file parsing where API capture is the intended path
-- keep native app state ownership clear
+- keep app state ownership clear
 - continue replacing dated implementation plans with durable contracts

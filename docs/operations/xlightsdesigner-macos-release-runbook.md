@@ -1,4 +1,4 @@
-# Native Release Validation Runbook
+# macOS Release Validation Runbook
 
 Status: Active
 Owner: xLightsDesigner maintainers
@@ -6,14 +6,14 @@ Last Reviewed: 2026-04-30
 
 ## Purpose
 
-Define the local evidence required before treating the native macOS app and owned xLights API path as release-quality for the current app completion workstream.
+Define the local evidence required before treating the macOS app and owned xLights API path as release-quality for the current app completion workstream.
 
-This runbook defines the native validation path.
+This runbook defines the app validation path.
 
 ## Runtime Boundaries
 
-- Native app source: `apps/xlightsdesigner-macos`
-- Native automation server: `http://127.0.0.1:49916`
+- App source: `apps/xlightsdesigner-macos`
+- App automation server: `http://127.0.0.1:49916`
 - Owned xLights API source: `/Users/robterry/xLights-2026.07/src-ui-wx/xLightsDesigner`
 - Owned xLights API endpoint: `http://127.0.0.1:49915/xlightsdesigner/api`
 - Installed `/Applications/xLights.app` is not valid for owned API validation unless it has been replaced by an API-enabled build.
@@ -22,7 +22,7 @@ This runbook defines the native validation path.
 
 The paths in this section are development validation examples for the current workspace. App-owned project metadata lives under `/Users/robterry/Documents/Lights/xLightsDesigner`; the linked development xLights show folder is `/Users/robterry/Desktop/Show`. `/Users/robterry/Documents/Lights/Current` is a read-only reference source for inspecting completed user sequences during development and is not a project show folder for validation writes.
 
-1. Native package tests
+1. macOS app package tests
 
 ```bash
 swift test --package-path apps/xlightsdesigner-macos
@@ -57,20 +57,20 @@ Required result:
 - `/health`, `/media/current`, `/layout/models`, `/layout/scene`, `/sequence/create`, `/sequencing/apply-batch-plan`, `/sequence/render-current`, `/sequence/save`, and `/jobs/get` succeed
 - `/media/current` reports the same show folder as `--show-dir`; trusted roots alone are not enough
 - the expected `.fseq` exists next to the isolated validation `.xsq`
-- the JSON evidence file is recorded in the native evidence log
+- the JSON evidence file is recorded in the macOS evidence log
 
-3. Native automation smoke
+3. App automation smoke
 
-With the native app running:
+With the app running:
 
 ```bash
-node scripts/native/automation.mjs ping
-node scripts/native/automation.mjs get-app-snapshot
-node scripts/native/automation.mjs get-xlights-session
+node scripts/app/automation.mjs ping
+node scripts/app/automation.mjs get-app-snapshot
+node scripts/app/automation.mjs get-xlights-session
 ```
 
 Required result:
-- native automation server responds
+- app automation server responds
 - app snapshot reflects the current workflow state
 - xLights session snapshot is either connected/actionable or explicitly unreachable with refresh still available
 
@@ -83,7 +83,7 @@ Required result:
 
 ## Manual Smoke
 
-Use the native app to complete the smallest real workflow that exercises the current local app path:
+Use the app to complete the smallest real workflow that exercises the current local app path:
 - open or create a project
 - confirm xLights session state
 - save app design intent
@@ -103,7 +103,7 @@ Required result:
 
 Append each completed run to:
 
-- `docs/operations/xlightsdesigner-native-validation-evidence-log.md`
+- `docs/operations/xlightsdesigner-macos-validation-evidence-log.md`
 
 Every row should include:
 - date
@@ -111,8 +111,8 @@ Every row should include:
 - machine
 - macOS version
 - xLights source/build
-- native package test result
+- app package test result
 - owned API validation evidence path
-- native automation smoke result
+- app automation smoke result
 - sequencer retained validation result
 - notes or blockers

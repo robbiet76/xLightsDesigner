@@ -7,7 +7,7 @@ Supersedes: `cross-platform-shell-boundary-2026-04-10.md`, `hybrid-cloud-learnin
 
 ## Purpose
 
-Define the durable platform boundary for the native app, local services, xLights integration, and future cloud capabilities.
+Define the durable platform boundary for the app, local services, xLights integration, and future cloud capabilities.
 
 ## Local-First Boundary
 
@@ -19,9 +19,9 @@ The product must work as a local desktop tool for project work:
 - generated training/proof artifacts remain local unless explicitly promoted or exported
 - user sequence changes require explicit apply approval
 
-## Native App Boundary
+## App Workspace Boundary
 
-The native app owns user workflow and orchestration. It should not duplicate domain logic already owned by the audio analyst, designer dialog, sequence agent, or xLights API.
+The app owns user workflow and orchestration. It should not duplicate domain logic already owned by the audio analyst, designer dialog, sequence agent, or xLights API.
 
 ## Local Service Boundary
 
@@ -41,10 +41,10 @@ Cloud services may support account management, billing, shared learning, model u
 
 ## Legacy Prototype Shell Boundary
 
-Prototype-shell specs and handler inventories are no longer current app architecture. They can be consulted only as historical parity references when a native feature appears to be missing.
+Prototype-shell specs and handler inventories are no longer current app architecture. They can be consulted only as historical parity references when a app feature appears to be missing.
 
 ## Related Specs
 
-- `native-app.md`
+- `app-workspace.md`
 - `project-storage.md`
 - `../sequence-agent/xlights-api.md`

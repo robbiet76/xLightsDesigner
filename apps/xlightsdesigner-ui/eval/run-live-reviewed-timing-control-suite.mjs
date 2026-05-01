@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
-import { runNativeAutomation } from "./native-automation-runner.mjs";
+import { runAppAutomation } from "./app-automation-runner.mjs";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -47,8 +47,8 @@ function parseArgs(argv = []) {
   return options;
 }
 
-async function assertNativeParityAvailable(repoRoot, channel, outDir) {
-  const resultPath = path.join(outDir, "_native-parity-preflight.json");
+async function assertAppParityAvailable(repoRoot, channel, outDir) {
+  const resultPath = path.join(outDir, "_app-parity-preflight.json");
   const snapshot = await runAutomation(
     repoRoot,
     channel,
@@ -65,7 +65,7 @@ async function assertNativeParityAvailable(repoRoot, channel, outDir) {
   throw new Error(
     "run-live-reviewed-timing-control-suite.mjs still depends on removed legacy automation actions." +
     capabilityMessage +
-    " Do not run this suite until native automation parity exists for reviewed-timing validation commands."
+    " Do not run this suite until app automation parity exists for reviewed-timing validation commands."
   );
 }
 
@@ -92,7 +92,7 @@ function runCommand(cmd, args, { cwd }) {
 }
 
 async function runAutomation(repoRoot, channel, resultPath, command, args = []) {
-  return runNativeAutomation(repoRoot, channel, resultPath, command, args);
+  return runAppAutomation(repoRoot, channel, resultPath, command, args);
 }
 
 function summarizeTimingTracks(sequencePageState = {}) {
@@ -184,7 +184,7 @@ async function main() {
   const repoRoot = resolveRepoRoot();
   const outDir = path.resolve(options.outDir);
   fs.mkdirSync(outDir, { recursive: true });
-  await assertNativeParityAvailable(repoRoot, options.channel, outDir);
+  await assertAppParityAvailable(repoRoot, options.channel, outDir);
   const suitePath = options.suitePath
     ? path.resolve(repoRoot, options.suitePath)
     : path.join(repoRoot, "apps", "xlightsdesigner-ui", "eval", "live-reviewed-timing-control-suite-v1.json");

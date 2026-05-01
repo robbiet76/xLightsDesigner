@@ -101,7 +101,7 @@ private final class ProjectArtifactNotificationRecorder {
     let projectService = LocalProjectService(projectsRootPath: root.path)
     let project = try projectService.createProject(
         draft: ProjectDraftModel(
-            projectName: "Native Test Project \(UUID().uuidString.prefix(6))",
+            projectName: "App Test Project \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
             mediaPath: "",
             migrateMetadata: false,
@@ -110,7 +110,7 @@ private final class ProjectArtifactNotificationRecorder {
     )
     var projectWithIntent = project
     projectWithIntent.snapshot["audioPathInput"] = AnyCodable("/tmp/show/song.mp3")
-    projectWithIntent.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/Native Test Project.xsq")
+    projectWithIntent.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/App Test Project.xsq")
     projectWithIntent.snapshot["appDesignIntent"] = AnyCodable([
         "goal": "Make the chorus feel like a clean red and white canopy.",
         "mood": "Warm, crisp, elegant.",

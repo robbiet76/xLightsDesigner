@@ -5,7 +5,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = AppModel()
     private var window: NSWindow?
-    private var automationServer: NativeAutomationServer?
+    private var automationServer: AppAutomationServer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.regular)
@@ -19,7 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.settingsScreenModel.load()
         model.xlightsSessionModel.refresh()
         model.xlightsSessionModel.startMonitoring()
-        let automationServer = NativeAutomationServer(model: model)
+        let automationServer = AppAutomationServer(model: model)
         automationServer.start()
         self.automationServer = automationServer
 

@@ -3,11 +3,11 @@
 Status: Active
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-04-30
-Supersedes: locked native memory scope note
+Supersedes: locked app memory scope note
 
 ## Purpose
 
-Define the memory model for the native assistant so the system can preserve continuity without leaking the wrong assumptions across unrelated projects.
+Define the memory model for the app assistant so the system can preserve continuity without leaking the wrong assumptions across unrelated projects.
 
 The core requirement is:
 
@@ -148,7 +148,7 @@ Until scoped creative memory exists as a separate layer:
 - migrate the relevant project memory
 - do not migrate ephemeral session chatter
 
-For the current native implementation, project memory is expected to live inside the project folder and therefore migrate with the project copy flow.
+For the current app implementation, project memory is expected to live inside the project folder and therefore migrate with the project copy flow.
 
 Examples:
 

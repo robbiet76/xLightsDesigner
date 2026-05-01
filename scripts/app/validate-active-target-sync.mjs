@@ -2,26 +2,26 @@
 
 import path from 'node:path';
 
-const DEFAULT_NATIVE_URL = 'http://127.0.0.1:49916';
+const DEFAULT_APP_URL = 'http://127.0.0.1:49916';
 
 function str(value = '') {
   return String(value || '').trim();
 }
 
 function usage() {
-  console.error('usage: validate-active-target-sync.mjs [--native-url url] [--project-file path] [--timeout-ms n]');
+  console.error('usage: validate-active-target-sync.mjs [--app-url url] [--project-file path] [--timeout-ms n]');
   process.exit(2);
 }
 
 function parseArgs(argv = []) {
   const args = {
-    nativeUrl: DEFAULT_NATIVE_URL,
+    appUrl: DEFAULT_APP_URL,
     projectFile: '',
     timeoutMs: 30000
   };
   for (let i = 0; i < argv.length; i += 1) {
     const token = str(argv[i]);
-    if (token === '--native-url') args.nativeUrl = str(argv[++i]);
+    if (token === '--app-url') args.appUrl = str(argv[++i]);
     else if (token === '--project-file') args.projectFile = path.resolve(str(argv[++i]));
     else if (token === '--timeout-ms') args.timeoutMs = Number(argv[++i]);
     else if (token === '--help') usage();
@@ -169,19 +169,19 @@ function validateSnapshot(snapshot = {}) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  await request(args.nativeUrl, 'GET', '/health');
+  await request(args.appUrl, 'GET', '/health');
   if (args.projectFile) {
-    await request(args.nativeUrl, 'POST', '/action', { action: 'openProject', filePath: args.projectFile });
+    await request(args.appUrl, 'POST', '/action', { action: 'openProject', filePath: args.projectFile });
   }
-  await request(args.nativeUrl, 'POST', '/action', { action: 'refreshXLightsSession' });
-  await request(args.nativeUrl, 'POST', '/action', { action: 'refreshAll' });
+  await request(args.appUrl, 'POST', '/action', { action: 'refreshXLightsSession' });
+  await request(args.appUrl, 'POST', '/action', { action: 'refreshAll' });
 
   const workflows = ['project', 'display', 'audio', 'design', 'sequence', 'review', 'history'];
   for (const workflow of workflows) {
-    await request(args.nativeUrl, 'POST', '/action', { action: 'selectWorkflow', workflow });
+    await request(args.appUrl, 'POST', '/action', { action: 'selectWorkflow', workflow });
   }
 
-  const snapshot = await request(args.nativeUrl, 'GET', '/snapshot');
+  const snapshot = await request(args.appUrl, 'GET', '/snapshot');
   const validation = validateSnapshot(snapshot);
   if (!validation.ok) {
     throw new Error(`Active target synchronization validation failed: ${JSON.stringify(validation, null, 2)}`);

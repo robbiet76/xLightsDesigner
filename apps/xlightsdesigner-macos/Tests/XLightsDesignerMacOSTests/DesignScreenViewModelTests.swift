@@ -68,7 +68,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
     let project = try service.createProject(
         draft: ProjectDraftModel(
-            projectName: "Native Test Project \(UUID().uuidString.prefix(6))",
+            projectName: "App Test Project \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
             mediaPath: "",
             migrateMetadata: false,
@@ -111,7 +111,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
     let project = try service.createProject(
         draft: ProjectDraftModel(
-            projectName: "Native Test Project \(UUID().uuidString.prefix(6))",
+            projectName: "App Test Project \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
             mediaPath: "",
             migrateMetadata: false,
@@ -149,7 +149,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
     let project = try service.createProject(
         draft: ProjectDraftModel(
-            projectName: "Native Visual Test \(UUID().uuidString.prefix(6))",
+            projectName: "App Visual Test \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
             mediaPath: "",
             migrateMetadata: false,
@@ -257,7 +257,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
     let project = try service.createProject(
         draft: ProjectDraftModel(
-            projectName: "Native Revise Palette \(UUID().uuidString.prefix(6))",
+            projectName: "App Revise Palette \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
             mediaPath: "/tmp/seq-1.xsq",
             migrateMetadata: false,
@@ -343,7 +343,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
     var project = try service.createProject(
         draft: ProjectDraftModel(
-            projectName: "Native Sequence Scope \(UUID().uuidString.prefix(6))",
+            projectName: "App Sequence Scope \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
             mediaPath: "/tmp/show/CandyCaneLane/CandyCaneLane.xsq",
             migrateMetadata: false,
@@ -418,7 +418,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
     let project = try service.createProject(
         draft: ProjectDraftModel(
-            projectName: "Native Missing Song \(UUID().uuidString.prefix(6))",
+            projectName: "App Missing Song \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
             mediaPath: "",
             migrateMetadata: false,
@@ -450,7 +450,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
     let project = try service.createProject(
         draft: ProjectDraftModel(
-            projectName: "Native Generate Visual \(UUID().uuidString.prefix(6))",
+            projectName: "App Generate Visual \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
             mediaPath: "/tmp/seq-1.xsq",
             migrateMetadata: false,
@@ -489,7 +489,7 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
     let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
     let project = try service.createProject(
         draft: ProjectDraftModel(
-            projectName: "Native Revise Visual \(UUID().uuidString.prefix(6))",
+            projectName: "App Revise Visual \(UUID().uuidString.prefix(6))",
             showFolder: "/tmp/show",
             mediaPath: "/tmp/seq-1.xsq",
             migrateMetadata: false,

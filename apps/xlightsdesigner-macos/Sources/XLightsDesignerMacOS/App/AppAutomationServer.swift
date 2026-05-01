@@ -1,10 +1,10 @@
 import Foundation
 import Network
 
-final class NativeAutomationServer: @unchecked Sendable {
+final class AppAutomationServer: @unchecked Sendable {
     private unowned let model: AppModel
     private let projectService: ProjectService
-    private let queue = DispatchQueue(label: "xlightsdesigner.native-automation")
+    private let queue = DispatchQueue(label: "xlightsdesigner.app-automation")
     private var listener: NWListener?
 
     init(model: AppModel, projectService: ProjectService = LocalProjectService()) {
@@ -24,7 +24,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             listener.start(queue: queue)
             self.listener = listener
         } catch {
-            print("Native automation server failed to start: \(error)")
+            print("App automation server failed to start: \(error)")
         }
     }
 
@@ -402,7 +402,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             let saved = try projectService.saveProject(activeProject)
             model.workspace.setProject(saved)
         } catch {
-            print("Native automation failed to persist active sequence path: \(error)")
+            print("App automation failed to persist active sequence path: \(error)")
         }
     }
 
@@ -438,7 +438,7 @@ final class NativeAutomationServer: @unchecked Sendable {
     private func healthSnapshot() -> [String: Any] {
         [
             "ok": true,
-            "automationBaseURL": AppEnvironment.nativeAutomationBaseURL,
+            "automationBaseURL": AppEnvironment.appAutomationBaseURL,
             "xlightsOwnedAPIBaseURL": AppEnvironment.xlightsOwnedAPIBaseURL,
             "selectedWorkflow": model.selectedWorkflow.rawValue,
             "assistantVisible": model.showAssistantPanel,

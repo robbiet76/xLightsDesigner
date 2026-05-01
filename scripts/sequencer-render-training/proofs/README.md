@@ -244,7 +244,7 @@ Harness status:
 - The current artistic-goal proof now keeps the roles distinct:
   - designer owns the artistic correction
   - sequencer receives a bounded execution objective
-- The broader app-assistant/native simulation harness is not yet wired to these sequencing feedback artifacts.
+- The broader app-assistant/app simulation harness is not yet wired to these sequencing feedback artifacts.
 
 ## Real-Show Live Proof
 

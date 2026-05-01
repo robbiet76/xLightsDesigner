@@ -14,7 +14,7 @@ struct WorkflowPlaceholderView: View {
                     .foregroundStyle(.secondary)
             }
 
-            GroupBox("Current native scaffold status") {
+            GroupBox("Current app scaffold status") {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("This workflow is defined in specs and build packages, but no service integration or durable state is wired yet.")
                     Text("Build package")

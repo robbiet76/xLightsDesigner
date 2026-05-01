@@ -1,22 +1,22 @@
 {
-  "artifactType": "xlightsdesigner_native_handoff_validation_scenarios_v1",
+  "artifactType": "xlightsdesigner_app_handoff_validation_scenarios_v1",
   "extraValidations": [
     {
-      "name": "native-active-target-sync",
-      "type": "nativeActiveTargetSync",
+      "name": "app-active-target-sync",
+      "type": "appActiveTargetSync",
       "projectFile": "/Users/robterry/Documents/Lights/xLightsDesigner/projects/Christmas 2026/Christmas 2026.xdproj"
     },
     {
-      "name": "native-visual-inspiration-fixture",
-      "type": "nativeVisualInspirationFixture"
+      "name": "app-visual-inspiration-fixture",
+      "type": "appVisualInspirationFixture"
     },
     {
       "name": "app-design-chat-song-gate",
       "type": "appDesignChatSongGate"
     },
     {
-      "name": "native-review-explicit-edit-surface",
-      "type": "nativeReviewExplicitEditSurface",
+      "name": "app-review-explicit-edit-surface",
+      "type": "appReviewExplicitEditSurface",
       "sourceModel": "Star",
       "targetModel": "Spinner-01"
     }

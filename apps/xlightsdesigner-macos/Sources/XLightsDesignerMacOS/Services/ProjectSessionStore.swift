@@ -8,7 +8,7 @@ protocol ProjectSessionStore: Sendable {
 struct LocalProjectSessionStore: ProjectSessionStore {
     private var stateFileURL: URL {
         URL(fileURLWithPath: AppEnvironment.appStateRoot, isDirectory: true)
-            .appendingPathComponent("native-project-session.json")
+            .appendingPathComponent("app-project-session.json")
     }
 
     func loadLastProjectPath() -> String? {

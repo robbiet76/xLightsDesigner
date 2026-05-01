@@ -23,10 +23,10 @@ import {
 } from "../../../../apps/xlightsdesigner-ui/storage/visual-design-asset-store.mjs";
 import {
   runVisualDesignAssetPackGeneration
-} from "../../../../scripts/designer/native/generate-visual-design-asset-pack.mjs";
+} from "../../../../scripts/designer/app/generate-visual-design-asset-pack.mjs";
 
 function makeProjectFixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-visual-pack-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-visual-pack-"));
   const projectDir = path.join(root, "projects", "Demo");
   fs.mkdirSync(projectDir, { recursive: true });
   const projectFilePath = path.join(projectDir, "Demo.xdproj");
@@ -34,7 +34,7 @@ function makeProjectFixture() {
   return { root, projectDir, projectFilePath };
 }
 
-test("native visual design asset generation writes board image and manifest", async () => {
+test("app visual design asset generation writes board image and manifest", async () => {
   const { projectDir, projectFilePath } = makeProjectFixture();
   let providerInput = null;
   const result = await runVisualDesignAssetPackGeneration({
@@ -90,7 +90,7 @@ test("native visual design asset generation writes board image and manifest", as
   assert.equal(fs.readFileSync(path.join(projectDir, "artifacts", "visual-design", "seq-visual", "inspiration-board.png"), "utf8"), "generated-image");
 });
 
-test("native visual design asset revision edits current board and appends lineage", async () => {
+test("app visual design asset revision edits current board and appends lineage", async () => {
   const { projectDir, projectFilePath } = makeProjectFixture();
   const first = buildVisualDesignAssetPack({
     sequenceId: "seq-visual",
@@ -159,7 +159,7 @@ test("native visual design asset revision edits current board and appends lineag
   assert.equal(fs.readFileSync(path.join(projectDir, "artifacts", "visual-design", "seq-visual", "revisions", "board-r002.png"), "utf8"), "edited-board");
 });
 
-test("native visual design asset generation rejects missing project file", async () => {
+test("app visual design asset generation rejects missing project file", async () => {
   await assert.rejects(
     () => runVisualDesignAssetPackGeneration({
       projectFilePath: "/tmp/xld-missing-project-file.xdproj",
@@ -179,7 +179,7 @@ test("native visual design asset generation rejects missing project file", async
   );
 });
 
-test("native visual design asset generation uses richer default palette up to xLights limit", async () => {
+test("app visual design asset generation uses richer default palette up to xLights limit", async () => {
   const { projectFilePath } = makeProjectFixture();
   let providerInput = null;
   const result = await runVisualDesignAssetPackGeneration({
@@ -220,7 +220,7 @@ test("native visual design asset generation uses richer default palette up to xL
   assert.match(providerInput.prompt, /pine green #1f7a4a/);
 });
 
-test("native visual design asset generation keeps designer palette canonical and stores image palette as diagnostics", async () => {
+test("app visual design asset generation keeps designer palette canonical and stores image palette as diagnostics", async () => {
   const { projectFilePath } = makeProjectFixture();
   const derivedPalette = [
     { name: "image color 1", hex: "#224466", role: "dominant" },

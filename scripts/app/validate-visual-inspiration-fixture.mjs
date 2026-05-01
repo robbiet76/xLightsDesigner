@@ -3,26 +3,26 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || 'http://127.0.0.1:49916';
+const BASE_URL = process.env.XLD_APP_AUTOMATION_URL || 'http://127.0.0.1:49916';
 
 function str(value = '') {
   return String(value || '').trim();
 }
 
 function usage() {
-  console.error('usage: validate-visual-inspiration-fixture.mjs [--native-url url] [--project-file path] [--timeout-ms n]');
+  console.error('usage: validate-visual-inspiration-fixture.mjs [--app-url url] [--project-file path] [--timeout-ms n]');
   process.exit(2);
 }
 
 function parseArgs(argv = []) {
   const out = {
-    nativeUrl: BASE_URL,
+    appUrl: BASE_URL,
     projectFile: '',
     timeoutMs: 30000
   };
   for (let index = 0; index < argv.length; index += 1) {
     const token = str(argv[index]);
-    if (token === '--native-url') out.nativeUrl = str(argv[++index]);
+    if (token === '--app-url') out.appUrl = str(argv[++index]);
     else if (token === '--project-file') out.projectFile = str(argv[++index]);
     else if (token === '--timeout-ms') out.timeoutMs = Number(argv[++index]);
     else usage();
@@ -51,7 +51,7 @@ async function request(baseUrl, method, route, body = null) {
   return parsed;
 }
 
-async function waitForNative(baseUrl, timeoutMs) {
+async function waitForApp(baseUrl, timeoutMs) {
   const started = Date.now();
   let last = null;
   while (Date.now() - started < timeoutMs) {
@@ -63,7 +63,7 @@ async function waitForNative(baseUrl, timeoutMs) {
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
-  throw new Error(`Timed out waiting for native automation. Last response: ${JSON.stringify(last)}`);
+  throw new Error(`Timed out waiting for app automation. Last response: ${JSON.stringify(last)}`);
 }
 
 function ensureDir(dirPath = '') {
@@ -237,20 +237,20 @@ async function waitForFixtureVisual(baseUrl, fixture, timeoutMs) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const fixture = createFixtureProject(args.projectFile);
-  await waitForNative(args.nativeUrl, args.timeoutMs);
-  await request(args.nativeUrl, 'POST', '/action', { action: 'openProject', filePath: fixture.projectPath });
-  const syncedSnapshot = await request(args.nativeUrl, 'GET', '/snapshot');
+  await waitForApp(args.appUrl, args.timeoutMs);
+  await request(args.appUrl, 'POST', '/action', { action: 'openProject', filePath: fixture.projectPath });
+  const syncedSnapshot = await request(args.appUrl, 'GET', '/snapshot');
   const syncedSequenceId = str(syncedSnapshot?.activeTarget?.sequenceName) || 'visual-fixture-sequence';
   const syncedFixture = writeVisualFixtureManifest(fixture.projectDir, syncedSequenceId);
   fixture.visualDir = syncedFixture.visualDir;
   fixture.boardPath = syncedFixture.boardPath;
-  await request(args.nativeUrl, 'POST', '/action', { action: 'selectWorkflow', workflow: 'design' });
-  await request(args.nativeUrl, 'POST', '/action', { action: 'refreshCurrentWorkflow' });
-  const snapshot = await waitForFixtureVisual(args.nativeUrl, fixture, args.timeoutMs);
+  await request(args.appUrl, 'POST', '/action', { action: 'selectWorkflow', workflow: 'design' });
+  await request(args.appUrl, 'POST', '/action', { action: 'refreshCurrentWorkflow' });
+  const snapshot = await waitForFixtureVisual(args.appUrl, fixture, args.timeoutMs);
   const visual = snapshot?.pages?.design?.visualInspiration || {};
   if (!snapshot?.pages?.design || !('visualInspiration' in snapshot.pages.design)) {
     throw new Error(
-      'App Design snapshot does not include visualInspiration. Relaunch the current xLightsDesigner native build before running this validation.'
+      'App Design snapshot does not include visualInspiration. Relaunch the current xLightsDesigner app build before running this validation.'
     );
   }
   assertEqual(visual.available, true, 'visualInspiration.available');

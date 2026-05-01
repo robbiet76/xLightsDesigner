@@ -4,13 +4,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
-const DEFAULT_NATIVE_BASE_URL = 'http://127.0.0.1:49916';
+const DEFAULT_APP_BASE_URL = 'http://127.0.0.1:49916';
 const DEFAULT_XLIGHTS_BASE_URL = 'http://127.0.0.1:49915/xlightsdesigner/api';
 const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
 const DEFAULT_TARGET_IDS = 'Star';
 const DEFAULT_SELECTED_TAGS = 'lead';
-const NATIVE_LOG_PATH = '/tmp/xld-native-app.log';
-const DEFAULT_MATRIX_FILE = path.join(ROOT, 'scripts/native/full-handoff-validation-scenarios.json');
+const APP_LOG_PATH = '/tmp/xld-app-app.log';
+const DEFAULT_MATRIX_FILE = path.join(ROOT, 'scripts/app/full-handoff-validation-scenarios.json');
 
 function str(value = '') {
   return String(value || '').trim();
@@ -38,9 +38,9 @@ function usage() {
     '  --duration-ms <n>              Validation sequence duration. Defaults to 30000.',
     '  --frame-ms <n>                 Validation sequence frame interval. Defaults to 50.',
     '  --timeout-ms <n>               End-to-end validation timeout. Defaults to 180000.',
-    '  --native-timeout-ms <n>        Native automation startup timeout. Defaults to 60000.',
+    '  --app-timeout-ms <n>        App automation startup timeout. Defaults to 60000.',
     '  --xlights-timeout-ms <n>       Owned xLights startup timeout. Defaults to 120000.',
-    '  --skip-launch-native           Require an already-running native automation server.',
+    '  --skip-launch-app           Require an already-running app automation server.',
     '  --skip-launch-xlights          Require an already-running owned xLights API.',
     '  --no-apply-review              Stop after proposal handoff validation.',
     '  --no-render-after-apply        Apply review but skip final render action.',
@@ -62,9 +62,9 @@ function parseArgs(argv = []) {
     durationMs: 30000,
     frameMs: 50,
     timeoutMs: 180000,
-    nativeTimeoutMs: 60000,
+    appTimeoutMs: 60000,
     xlightsTimeoutMs: 120000,
-    launchNative: true,
+    launchApp: true,
     launchXlights: true,
     applyReview: true,
     renderAfterApply: true,
@@ -104,9 +104,9 @@ function parseArgs(argv = []) {
     else if (token === '--duration-ms') args.durationMs = Number(next());
     else if (token === '--frame-ms') args.frameMs = Number(next());
     else if (token === '--timeout-ms') args.timeoutMs = Number(next());
-    else if (token === '--native-timeout-ms') args.nativeTimeoutMs = Number(next());
+    else if (token === '--app-timeout-ms') args.appTimeoutMs = Number(next());
     else if (token === '--xlights-timeout-ms') args.xlightsTimeoutMs = Number(next());
-    else if (token === '--skip-launch-native') args.launchNative = false;
+    else if (token === '--skip-launch-app') args.launchApp = false;
     else if (token === '--skip-launch-xlights') args.launchXlights = false;
     else if (token === '--skip-extra-validations') args.extraValidations = false;
     else if (token === '--only-extra-validations') {
@@ -120,7 +120,7 @@ function parseArgs(argv = []) {
   if (!Number.isFinite(args.durationMs) || args.durationMs <= 0) args.durationMs = 30000;
   if (!Number.isFinite(args.frameMs) || args.frameMs <= 0) args.frameMs = 50;
   if (!Number.isFinite(args.timeoutMs) || args.timeoutMs <= 0) args.timeoutMs = 180000;
-  if (!Number.isFinite(args.nativeTimeoutMs) || args.nativeTimeoutMs <= 0) args.nativeTimeoutMs = 60000;
+  if (!Number.isFinite(args.appTimeoutMs) || args.appTimeoutMs <= 0) args.appTimeoutMs = 60000;
   if (!Number.isFinite(args.xlightsTimeoutMs) || args.xlightsTimeoutMs <= 0) args.xlightsTimeoutMs = 120000;
   return args;
 }
@@ -215,16 +215,16 @@ async function requestJson(url, timeoutMs = 5000) {
   }
 }
 
-async function waitForNative(timeoutMs) {
+async function waitForApp(timeoutMs) {
   const started = Date.now();
   let last = null;
   for (;;) {
-    last = await requestJson(`${DEFAULT_NATIVE_BASE_URL}/health`, 5000);
+    last = await requestJson(`${DEFAULT_APP_BASE_URL}/health`, 5000);
     if (last.ok && last.json?.ok !== false) {
       return last.json;
     }
     if (Date.now() - started > timeoutMs) {
-      throw new Error(`Timed out waiting for native automation server: ${JSON.stringify(last)}`);
+      throw new Error(`Timed out waiting for app automation server: ${JSON.stringify(last)}`);
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
@@ -249,17 +249,17 @@ async function waitForXlights(timeoutMs) {
   }
 }
 
-async function ensureNativeApp(args) {
-  const health = await requestJson(`${DEFAULT_NATIVE_BASE_URL}/health`, 2000);
+async function ensureApp(args) {
+  const health = await requestJson(`${DEFAULT_APP_BASE_URL}/health`, 2000);
   if (health.ok) {
     return { launched: false, health: health.json };
   }
-  if (!args.launchNative) {
-    throw new Error('Native automation server is not reachable and --skip-launch-native was set.');
+  if (!args.launchApp) {
+    throw new Error('App automation server is not reachable and --skip-launch-app was set.');
   }
 
-  fs.writeFileSync(NATIVE_LOG_PATH, '', 'utf8');
-  const logFd = fs.openSync(NATIVE_LOG_PATH, 'a');
+  fs.writeFileSync(APP_LOG_PATH, '', 'utf8');
+  const logFd = fs.openSync(APP_LOG_PATH, 'a');
   const child = spawn('swift', ['run', '--package-path', 'apps/xlightsdesigner-macos', 'XLightsDesignerMacOS'], {
     cwd: ROOT,
     detached: true,
@@ -267,8 +267,8 @@ async function ensureNativeApp(args) {
     env: process.env
   });
   child.unref();
-  const ready = await waitForNative(args.nativeTimeoutMs);
-  return { launched: true, pid: child.pid, logPath: NATIVE_LOG_PATH, health: ready };
+  const ready = await waitForApp(args.appTimeoutMs);
+  return { launched: true, pid: child.pid, logPath: APP_LOG_PATH, health: ready };
 }
 
 async function ensureXlights(args) {
@@ -300,7 +300,7 @@ async function ensureXlights(args) {
 
 function buildValidationArgs(args, showDir, scenario) {
   const validationArgs = [
-    'scripts/native/validate-metadata-tag-proposal-flow.mjs',
+    'scripts/app/validate-metadata-tag-proposal-flow.mjs',
     '--target-ids',
     scenario.targetIds,
     '--selected-tags',
@@ -358,17 +358,17 @@ function normalizeExtraValidation(row = {}, index = 0) {
     sourceModel: str(row?.sourceModel),
     targetModel: str(row?.targetModel),
     projectFile: str(row?.projectFile),
-    nativeUrl: str(row?.nativeUrl),
+    appUrl: str(row?.appUrl),
     timeoutMs: Number.isFinite(Number(row?.timeoutMs)) ? Number(row.timeoutMs) : null
   };
 }
 
 function buildExtraValidationArgs(args, showDir, validation = {}) {
-  if (validation.type === 'nativeVisualInspirationFixture') {
+  if (validation.type === 'appVisualInspirationFixture') {
     const validationArgs = [
-      'scripts/native/validate-visual-inspiration-fixture.mjs',
-      '--native-url',
-      validation.nativeUrl || DEFAULT_NATIVE_BASE_URL
+      'scripts/app/validate-visual-inspiration-fixture.mjs',
+      '--app-url',
+      validation.appUrl || DEFAULT_APP_BASE_URL
     ];
     if (validation.projectFile) validationArgs.push('--project-file', validation.projectFile);
     if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
@@ -376,9 +376,9 @@ function buildExtraValidationArgs(args, showDir, validation = {}) {
   }
   if (validation.type === 'appDesignChatSongGate') {
     const validationArgs = [
-      'scripts/native/validate-design-chat-song-gate.mjs',
-      '--native-url',
-      validation.nativeUrl || DEFAULT_NATIVE_BASE_URL,
+      'scripts/app/validate-design-chat-song-gate.mjs',
+      '--app-url',
+      validation.appUrl || DEFAULT_APP_BASE_URL,
       '--show-dir',
       showDir
     ];
@@ -386,27 +386,27 @@ function buildExtraValidationArgs(args, showDir, validation = {}) {
     if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
     return validationArgs;
   }
-  if (validation.type === 'nativeActiveTargetSync') {
+  if (validation.type === 'appActiveTargetSync') {
     const validationArgs = [
-      'scripts/native/validate-active-target-sync.mjs',
-      '--native-url',
-      validation.nativeUrl || DEFAULT_NATIVE_BASE_URL
+      'scripts/app/validate-active-target-sync.mjs',
+      '--app-url',
+      validation.appUrl || DEFAULT_APP_BASE_URL
     ];
     if (validation.projectFile) validationArgs.push('--project-file', validation.projectFile);
     if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
     return validationArgs;
   }
-  if (validation.type !== 'nativeReviewExplicitEditSurface') {
+  if (validation.type !== 'appReviewExplicitEditSurface') {
     throw new Error(`Unsupported extra validation type: ${validation.type}`);
   }
   const validationArgs = [
-    'scripts/native/validate-review-explicit-edit-surface.mjs',
+    'scripts/app/validate-review-explicit-edit-surface.mjs',
     '--show-dir',
     showDir,
     '--endpoint',
     DEFAULT_XLIGHTS_BASE_URL,
-    '--native-url',
-    DEFAULT_NATIVE_BASE_URL,
+    '--app-url',
+    DEFAULT_APP_BASE_URL,
     '--duration-ms',
     String(args.durationMs),
     '--frame-ms',
@@ -437,9 +437,9 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const showDir = path.resolve(args.showDir);
 
-  const native = await ensureNativeApp(args);
+  const app = await ensureApp(args);
   const xlights = await ensureXlights({ ...args, showDir });
-  await run('node', ['scripts/native/automation.mjs', 'refresh-xlights-session']);
+  await run('node', ['scripts/app/automation.mjs', 'refresh-xlights-session']);
 
   const matrix = args.matrix ? loadMatrixScenarios(args.matrixFile) : null;
   const scenarios = args.onlyExtraValidations
@@ -459,11 +459,11 @@ async function main() {
   }
   console.log(JSON.stringify({
     ok: true,
-    native: {
-      launched: native.launched,
-      pid: native.pid || null,
-      logPath: native.logPath || '',
-      automationBaseURL: DEFAULT_NATIVE_BASE_URL
+    app: {
+      launched: app.launched,
+      pid: app.pid || null,
+      logPath: app.logPath || '',
+      automationBaseURL: DEFAULT_APP_BASE_URL
     },
     xlights: {
       launched: xlights.launched,

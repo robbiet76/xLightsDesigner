@@ -163,7 +163,7 @@ struct LocalVisualDesignAssetGenerationService: VisualDesignAssetGenerationServi
     private func runVisualAssetScript(payloadURL: URL, apiKey: String) async throws -> VisualDesignAssetGenerationResult {
         let output = try await runNode(
             arguments: [
-                AppEnvironment.nativeVisualDesignAssetPackScriptPath,
+                AppEnvironment.appVisualDesignAssetPackScriptPath,
                 "--payload", payloadURL.path
             ],
             apiKey: apiKey

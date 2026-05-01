@@ -39,7 +39,7 @@ The app is not just a chat wrapper. It is a controlled workflow that turns creat
 
 ## Current Product Components
 
-- Native macOS app: project shell, workflow screens, review/apply, history, settings, and local service orchestration.
+- macOS app: project shell, workflow screens, review/apply, history, settings, and local service orchestration.
 - App assistant: routed conversational shell that helps users operate the product without owning specialist domain logic.
 - Audio analyst: music analysis, timing tracks, and audio context.
 - Designer dialog: user intent, display understanding, creative direction, and sequencing handoff.
@@ -56,13 +56,13 @@ Near-term work should favor:
 - custom model and display metadata capture that refreshes when the selected layout/show folder changes
 - effect and layer composition learning from render proof
 - real sequence benchmarks and user-review feedback loops
-- native app reliability around project state, backups, apply, render, restore, and history
+- app reliability around project state, backups, apply, render, restore, and history
 - spec and training consolidation whenever new work touches an area
 
 ## Durable References
 
 - `local-completion-roadmap.md`
-- `app-ui/native-app.md`
+- `app-ui/app-workspace.md`
 - `app-ui/project-storage.md`
 - `designer-dialog/designer-interaction-contract.md`
 - `sequence-agent/sequencing-system.md`

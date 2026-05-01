@@ -219,13 +219,13 @@ struct SequenceScreenView: View {
         let policy = sequenceSwitchUnsavedPolicy.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         switch policy {
         case "discard-unsaved":
-            return "When switching project sequences, native will discard unsaved xLights changes instead of saving first."
+            return "When switching project sequences, the app will discard unsaved xLights changes instead of saving first."
         case "save-if-needed":
             return xlightsSessionModel.snapshot.hasUnsavedChanges == true
-                ? "When switching project sequences, native will save the current xLights sequence first because it has unsaved changes."
-                : "When switching project sequences, native will save first only if the current xLights sequence is dirty."
+                ? "When switching project sequences, the app will save the current xLights sequence first because it has unsaved changes."
+                : "When switching project sequences, the app will save first only if the current xLights sequence is dirty."
         default:
-            return "When switching project sequences, native will follow the configured unsaved-sequence policy."
+            return "When switching project sequences, the app will follow the configured unsaved-sequence policy."
         }
     }
 

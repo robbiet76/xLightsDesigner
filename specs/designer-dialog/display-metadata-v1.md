@@ -211,9 +211,9 @@ It should avoid:
 - per-model custom tags without a durable reason
 - creating tags that simply restate the model name
 
-## Native App Implication
+## App Workspace Implication
 
-The native app should treat display metadata as:
+The app should treat display metadata as:
 - project-owned
 - editable
 - reviewable

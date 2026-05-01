@@ -139,7 +139,7 @@ async function renderCurrentForFeedback(endpoint = '') {
   }
 }
 
-export async function buildNativeApplyVerification({
+export async function buildAppApplyVerification({
   endpoint = '',
   commands = [],
   planHandoff = null,
@@ -168,7 +168,7 @@ export async function buildNativeApplyVerification({
       checks: [
         {
           kind: 'readback',
-          target: 'native_review_apply',
+          target: 'app_review_apply',
           ok: false,
           detail: `Apply readback failed: ${str(error?.message || error)}`
         }
@@ -546,9 +546,9 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
   });
   commandsPlan.artifactType = 'plan_handoff_v1';
 
-  const commands = await hydrateNativeApplyTimingContext({
+  const commands = await hydrateAppApplyTimingContext({
     endpoint,
-    commands: normalizeCommandsForNativeApply(commandsPlan?.commands || [])
+    commands: normalizeCommandsForAppApply(commandsPlan?.commands || [])
   });
   commandsPlan.commands = commands;
   if (!commands.length) {
@@ -597,7 +597,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       failureReason: null,
       currentRevision: str(revisionRes?.data?.revision || 'unknown'),
       nextRevision: str(fallback.nextRevision),
-      ...await buildNativeApplyVerification({
+      ...await buildAppApplyVerification({
         endpoint,
         commands,
         planHandoff: commandsPlan,
@@ -612,7 +612,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     const renderCurrent = await renderCurrentForFeedback(endpoint);
     applyResult.renderCurrentSummary = renderCurrent.summary;
     applyResult.renderCurrentError = renderCurrent.error;
-    const renderArtifacts = await buildNativeRenderFeedbackArtifacts({
+    const renderArtifacts = await buildAppRenderFeedbackArtifacts({
       endpoint,
       showDir: str(inputs.projectDoc?.showFolder || ''),
       sequencePath: inputs.sequencePath,
@@ -625,7 +625,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       metadataAssignments
     });
     const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
-    await persistNativeReviewArtifacts({
+    await persistAppReviewArtifacts({
       projectFile,
       projectDoc: inputs.projectDoc,
       intentHandoff: inputs.intentHandoff,
@@ -670,7 +670,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     failureReason: null,
     currentRevision: str(revisionRes?.data?.revision || 'unknown'),
     nextRevision: str(applyRes?.nextRevision || ''),
-    ...await buildNativeApplyVerification({
+    ...await buildAppApplyVerification({
       endpoint,
       commands,
       planHandoff: commandsPlan,
@@ -685,7 +685,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
   const renderCurrent = await renderCurrentForFeedback(endpoint);
   applyResult.renderCurrentSummary = renderCurrent.summary;
   applyResult.renderCurrentError = renderCurrent.error;
-  const renderArtifacts = await buildNativeRenderFeedbackArtifacts({
+  const renderArtifacts = await buildAppRenderFeedbackArtifacts({
     endpoint,
     showDir: str(inputs.projectDoc?.showFolder || ''),
     sequencePath: inputs.sequencePath,
@@ -698,7 +698,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     metadataAssignments
   });
   const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
-  await persistNativeReviewArtifacts({
+  await persistAppReviewArtifacts({
     projectFile,
     projectDoc: inputs.projectDoc,
     intentHandoff: inputs.intentHandoff,
@@ -737,7 +737,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
   };
 }
 
-async function persistNativeReviewArtifacts({
+async function persistAppReviewArtifacts({
   projectFile = '',
   projectDoc = {},
   intentHandoff = null,
@@ -770,7 +770,7 @@ async function persistNativeReviewArtifacts({
       planHandoff,
       applyResult
     }),
-    applyStage: 'native_review_apply',
+    applyStage: 'app_review_apply',
     commandCount: Array.isArray(planHandoff?.commands) ? planHandoff.commands.length : 0,
     impactCount: Number.isFinite(planHandoff?.estimatedImpact) ? Number(planHandoff.estimatedImpact) : 0,
     verification: applyResult?.verification || null
@@ -792,11 +792,11 @@ async function persistNativeReviewArtifacts({
     artifacts
   });
   if (!writeRes?.ok) {
-    throw new Error(`Failed to persist native review artifacts: ${str(writeRes?.error || writeRes?.reason || 'unknown')}`);
+    throw new Error(`Failed to persist app review artifacts: ${str(writeRes?.error || writeRes?.reason || 'unknown')}`);
   }
 }
 
-async function buildNativeRenderFeedbackArtifacts({
+async function buildAppRenderFeedbackArtifacts({
   endpoint = '',
   showDir = '',
   sequencePath = '',
@@ -810,7 +810,7 @@ async function buildNativeRenderFeedbackArtifacts({
 } = {}) {
   try {
     currentStage = 'build_render_feedback';
-    const sceneGraph = await buildNativeSceneGraph({ endpoint, showDir });
+    const sceneGraph = await buildAppSceneGraph({ endpoint, showDir });
     const targetIds = Array.isArray(intentHandoff?.scope?.targetIds)
       ? intentHandoff.scope.targetIds.map((row) => str(row)).filter(Boolean)
       : [];
@@ -852,7 +852,7 @@ async function buildNativeRenderFeedbackArtifacts({
 
     const designSceneContext = buildDesignSceneContext({
       sceneGraph,
-      revision: revisionToken || 'native_apply'
+      revision: revisionToken || 'app_apply'
     });
     const renderCritiqueContext = buildRenderCritiqueContext({
       renderObservation,
@@ -933,7 +933,7 @@ async function probeOwnedRoute(endpoint = '', routePath = '', { method = 'GET', 
   }
 }
 
-async function buildNativeSceneGraph({ endpoint = '' } = {}) {
+async function buildAppSceneGraph({ endpoint = '' } = {}) {
   const modelRes = await getModels(endpoint);
   const sceneModels = Array.isArray(modelRes?.data?.models) ? modelRes.data.models : [];
   const modelsById = {};
@@ -1045,7 +1045,7 @@ function stableJson(value) {
   }
 }
 
-export function normalizeCommandsForNativeApply(commands = []) {
+export function normalizeCommandsForAppApply(commands = []) {
   const rows = Array.isArray(commands) ? commands : [];
   const canonicalByWriteKey = new Map();
   const duplicateIdMap = new Map();
@@ -1098,7 +1098,7 @@ function normalizeReadbackTimingMarks(payload = {}) {
     .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label));
 }
 
-export async function hydrateNativeApplyTimingContext({
+export async function hydrateAppApplyTimingContext({
   endpoint = '',
   commands = [],
   readTimingMarks = getTimingMarks
@@ -1242,7 +1242,7 @@ function withTimeout(promise, timeoutMs = APPLY_TIMEOUT_MS) {
   return Promise.race([
     promise,
     new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`Native review apply timed out after ${timeoutMs}ms during stage: ${currentStage}`)), timeoutMs);
+      setTimeout(() => reject(new Error(`App review apply timed out after ${timeoutMs}ms during stage: ${currentStage}`)), timeoutMs);
     })
   ]);
 }

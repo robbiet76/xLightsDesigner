@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
-import { runNativeAutomation } from "./native-automation-runner.mjs";
+import { runAppAutomation } from "./app-automation-runner.mjs";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -163,7 +163,7 @@ function runCommand(cmd, args, { cwd }) {
 }
 
 async function runAutomation(repoRoot, channel, resultPath, command, args = []) {
-  return runNativeAutomation(repoRoot, channel, resultPath, command, args);
+  return runAppAutomation(repoRoot, channel, resultPath, command, args);
 }
 
 async function waitForXLightsReady({ repoRoot, channel, outDir, prefix, timeoutMs = 60000, intervalMs = 1500 } = {}) {
@@ -189,7 +189,7 @@ async function runDirectProposalGenerator(repoRoot, {
   selectedSections = [],
   selectedTargetIds = []
 } = {}) {
-  const script = path.join(repoRoot, "scripts", "sequencing", "native", "generate-native-direct-proposal.mjs");
+  const script = path.join(repoRoot, "scripts", "sequencing", "app", "generate-app-direct-proposal.mjs");
   const commandArgs = [script, "--project-file", projectFilePath, "--prompt", prompt];
   for (const section of arr(selectedSections).map((row) => str(row)).filter(Boolean)) {
     commandArgs.push("--selected-section", section);
@@ -688,7 +688,7 @@ async function main() {
   const initialSnapshot = await runAutomation(repoRoot, options.channel, path.join(outDir, "00-preflight-sequencer-validation.json"), "get-sequencer-validation-snapshot");
   const originalProjectFilePath = str(initialSnapshot?.result?.status?.projectFilePath || initialSnapshot?.result?.activeProjectFilePath);
   if (!originalProjectFilePath) {
-    throw new Error("Native benchmark requires an active project file path.");
+    throw new Error("App benchmark requires an active project file path.");
   }
 
   const results = [];
@@ -724,7 +724,7 @@ async function main() {
     failedScenarioIds: failed.map((row) => row.scenarioId),
     failedScenarioLabels: failed.map((row) => row.scenarioLabel),
     supportedSurface: {
-      transport: "native_http",
+      transport: "app_http",
       benchmarkMode: "plan_apply_validation_only",
       renderFeedbackCapabilities: initialSnapshot?.result?.ownedRenderFeedbackCapabilities || null
     },

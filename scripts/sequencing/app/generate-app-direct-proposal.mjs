@@ -79,7 +79,7 @@ function trainedEffectDefinitions() {
     .filter((row) => row.effectName);
 }
 
-function buildNativeEffectCatalog(effectDefinitions = [], deps = DEFAULT_DEPS) {
+function buildAppEffectCatalog(effectDefinitions = [], deps = DEFAULT_DEPS) {
   const definitions = Array.isArray(effectDefinitions) && effectDefinitions.length
     ? effectDefinitions
     : trainedEffectDefinitions();
@@ -325,7 +325,7 @@ function loadLatestReferenceSequencePatterns(projectFile = '') {
   }
 }
 
-function buildNativeSequencingDesignHandoff({
+function buildAppSequencingDesignHandoff({
   projectDoc = {},
   prompt = '',
   proposalBundle = {},
@@ -446,7 +446,7 @@ function parseArgs(argv = []) {
   return out;
 }
 
-export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS) {
+export async function runAppDirectProposal(options = {}, deps = DEFAULT_DEPS) {
   const projectFile = str(options.projectFile);
   const prompt = str(options.prompt);
   const args = {
@@ -484,7 +484,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
   const models = Array.isArray(modelsRes?.data?.models) ? modelsRes.data.models : [];
   const displayElements = mergeDisplayElementsWithLayoutModels(normalizeDisplayElements(displayRes), models);
   const effectDefinitions = Array.isArray(effectsRes?.data?.effects) ? effectsRes.data.effects : [];
-  const effectCatalog = buildNativeEffectCatalog(effectDefinitions, deps);
+  const effectCatalog = buildAppEffectCatalog(effectDefinitions, deps);
   const groupMemberships = groupMembershipsRes?.ok === false ? { data: { groups: [] } } : groupMembershipsRes;
   const groupsById = buildGroupsById(groupMemberships);
   const metadataAssignments = loadProjectDisplayMetadataAssignments(args.projectFile, {
@@ -515,7 +515,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
   if (!orchestration?.ok || !orchestration?.proposalBundle || !orchestration?.intentHandoff) {
     throw new Error(orchestration?.warnings?.join('\n') || orchestration?.summary || 'Direct sequencing orchestration failed.');
   }
-  const sequencingDesignHandoff = buildNativeSequencingDesignHandoff({
+  const sequencingDesignHandoff = buildAppSequencingDesignHandoff({
     projectDoc,
     prompt,
     proposalBundle: orchestration.proposalBundle,
@@ -556,7 +556,7 @@ export async function runNativeDirectProposal(options = {}, deps = DEFAULT_DEPS)
 }
 
 export async function main(argv = process.argv.slice(2), deps = DEFAULT_DEPS) {
-  return runNativeDirectProposal(parseArgs(argv), deps);
+  return runAppDirectProposal(parseArgs(argv), deps);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {

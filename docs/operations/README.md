@@ -4,7 +4,7 @@ Operational runbooks and evidence logs used to execute and validate current rele
 
 ## Current Documents
 
-- `xlightsdesigner-native-release-runbook.md`
-- `xlightsdesigner-native-validation-evidence-log.md`
+- `xlightsdesigner-macos-release-runbook.md`
+- `xlightsdesigner-macos-validation-evidence-log.md`
 
-The retired prototype desktop runbook and evidence log were removed after the native runbook became the current validation path.
+The retired prototype desktop runbook and evidence log were removed after the macOS runbook became the current validation path.

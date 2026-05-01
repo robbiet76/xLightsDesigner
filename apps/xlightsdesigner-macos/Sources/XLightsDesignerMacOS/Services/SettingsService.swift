@@ -127,7 +127,7 @@ struct LocalSettingsService: SettingsService {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let backupURL = URL(fileURLWithPath: AppEnvironment.appStateRoot)
             .appendingPathComponent("backups", isDirectory: true)
-            .appendingPathComponent("native-settings-backup-\(formatter.string(from: Date()).replacingOccurrences(of: ":", with: "-")).json")
+            .appendingPathComponent("app-settings-backup-\(formatter.string(from: Date()).replacingOccurrences(of: ":", with: "-")).json")
         try fileManager.createDirectory(at: backupURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try fileManager.copyItem(at: stateURL, to: backupURL)
         return backupURL.path

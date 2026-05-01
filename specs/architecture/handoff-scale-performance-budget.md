@@ -83,7 +83,7 @@ Runtime code that needs prior revision state may synthesize minimal `revision_re
 
 The agent may mark a pass stable against known checks, but user acceptance remains the final product-level completion signal.
 
-`current_sequence_context_v1` is the compact existing-sequence inspection artifact for revision planning. It carries bounded timing track names/counts, effect names/counts, target ids, display/model order, layer summaries, sequence revision, and scoped effect samples so the sequencer can reason about current xLights state without passing a full sequence document through every handoff. Proposal generation, review apply, and native review apply build this artifact from xLights readback before planning. `plan_handoff_v1.metadata.currentSequenceContext` stores the sanitized version, which keeps placement fields such as effect id, target id, layer index, time window, timing-track anchor, and display order while dropping large settings/palette payloads. `metadata.artifactRefs.currentSequenceContextRef` gives compact consumers a stable pointer.
+`current_sequence_context_v1` is the compact existing-sequence inspection artifact for revision planning. It carries bounded timing track names/counts, effect names/counts, target ids, display/model order, layer summaries, sequence revision, and scoped effect samples so the sequencer can reason about current xLights state without passing a full sequence document through every handoff. Proposal generation, review apply, and app review apply build this artifact from xLights readback before planning. `plan_handoff_v1.metadata.currentSequenceContext` stores the sanitized version, which keeps placement fields such as effect id, target id, layer index, time window, timing-track anchor, and display order while dropping large settings/palette payloads. `metadata.artifactRefs.currentSequenceContextRef` gives compact consumers a stable pointer.
 
 When the expanded current-sequence context includes sampled existing effects, the sequence planner preserves overlapping same-target effects unless the request explicitly uses replacement language such as replace, overwrite, clear, remove, delete, redo, or rebuild. Preservation does not mean the planner must avoid overlap. Additive layered looks are valid creative decisions: for example, an existing spiral on layer 0 can remain while a new counter-moving spiral with a different color is added on layer 1 to create a composite look.
 
@@ -91,13 +91,13 @@ The default preservation move is to place new effect writes on the next open lay
 
 Layered output is an editable realized effect, not a special preservation exception. The observed result may be changed by adding a layer, deleting a layer, changing any layer's effect/settings/palette/timing, moving an effect horizontally in time, moving it vertically in the layer stack, or changing display/model order. Plan handoffs should treat `layerIndex`, effect time window, target/model order, and display-element order as first-class sequencing placement fields because each one can change rendered output.
 
-As of 2026-04-26, native review apply can execute mixed owned API plans by compressing timing/effect-create commands into `sequencing.applyBatchPlan` and then applying explicit display-order and effect/layer edit commands through direct owned API calls. This keeps create-heavy plans efficient while allowing `effects.clone`, `effects.update`, `effects.delete`, `effects.deleteLayer`, `effects.reorderLayer`, `effects.compactLayers`, and `sequencer.setDisplayElementOrder` to remain first-class command-graph operations.
+As of 2026-04-26, app review apply can execute mixed owned API plans by compressing timing/effect-create commands into `sequencing.applyBatchPlan` and then applying explicit display-order and effect/layer edit commands through direct owned API calls. This keeps create-heavy plans efficient while allowing `effects.clone`, `effects.update`, `effects.delete`, `effects.deleteLayer`, `effects.reorderLayer`, `effects.compactLayers`, and `sequencer.setDisplayElementOrder` to remain first-class command-graph operations.
 
 ## Future Work
 
 - Replace large embedded downstream objects with artifact refs plus compact summaries where practical.
 - Add warning thresholds once realistic full-sequence baselines exist.
-- Track handoff size in native validation evidence for large sequence scenarios.
+- Track handoff size in app validation evidence for large sequence scenarios.
 - Add section/pass chunking for full-song generation and revision.
 - Expand full-sequence effect readback coverage once the owned API supports efficient all-target effect summaries without target-by-target queries.
 - Add explicit retry/pass budgets so automatic iteration stops after bounded attempts and returns to user review.

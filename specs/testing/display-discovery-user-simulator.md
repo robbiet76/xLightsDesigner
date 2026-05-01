@@ -5,7 +5,7 @@ Owner: xLightsDesigner Team
 
 ## Purpose
 
-Provide a repeatable testing harness for the display-discovery conversation by simulating a user from private scenario truth while driving the real native assistant stack.
+Provide a repeatable testing harness for the display-discovery conversation by simulating a user from private scenario truth while driving the real app assistant stack.
 
 This is for regression testing and iteration speed.
 It does not replace real user validation.
@@ -37,7 +37,7 @@ Those traits need repeatable testing across:
 
 The harness should drive:
 
-1. the real native assistant
+1. the real app assistant
 - through the normal automation path
 - using the normal discovery prompt and app context
 
@@ -103,7 +103,7 @@ The harness should report:
 
 This harness is on the right path when:
 
-1. it can drive the real native assistant end-to-end
+1. it can drive the real app assistant end-to-end
 2. the simulated user answers from private truth only
 3. the transcript is reproducible enough for regression work
 4. the harness reveals when discovery becomes too scripted, too verbose, or too narrow too early

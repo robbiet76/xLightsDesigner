@@ -343,11 +343,11 @@ async function main() {
     sourceLines: [args.mode === 'delete' ? `Validation / ${scenario.sourceSubmodel} / ${goal}` : `Validation / ${goal}`],
     currentSequenceContext: {
       artifactType: 'current_sequence_context_v1',
-      sequence: { revision: 'native-validation' },
+      sequence: { revision: 'app-validation' },
       summary: { effectCount: sourceRows.length, timingTrackCount: 1 },
       effects: { sample: sourceRows }
     },
-    baseRevision: 'native-validation',
+    baseRevision: 'app-validation',
     displayElements,
     effectCatalog: buildEffectDefinitionCatalog([
       { effectName: 'On', params: [] },

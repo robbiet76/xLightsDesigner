@@ -27,7 +27,7 @@ while [[ $# -gt 0 ]]; do
     --iterations)
       iterations="$2"; shift 2 ;;
     --canary-live-every|--smoke-live-every|--baseline-live-every|--extended-live-every)
-      echo "Option $1 has been removed with the retired automation transport. Use scripts/native validation runners separately." >&2
+      echo "Option $1 has been removed with the retired automation transport. Use scripts/app validation runners separately." >&2
       exit 2 ;;
     --sleep-seconds)
       sleep_seconds="$2"; shift 2 ;;

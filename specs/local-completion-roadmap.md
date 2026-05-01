@@ -17,7 +17,7 @@ Track the remaining local-first work needed before the app is a credible end-to-
 4. Review/apply safety: backups, scoped command review, validation, render proof, and restore.
 5. History and recovery: compact event records, artifact references, and usable recovery workflows.
 6. Training consolidation: keep promoted knowledge compact and remove generated-data clutter.
-7. Release gates: repeatable native app and xLights API validation on real show folders.
+7. Release gates: repeatable app and xLights API validation on real show folders.
 
 ## Current Direction
 

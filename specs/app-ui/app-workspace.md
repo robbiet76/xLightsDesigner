@@ -1,17 +1,17 @@
-# Native App
+# App Workspace
 
 Status: Active
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-04-30
-Supersedes: dated macOS native screen, migration, cutover, and workflow specs under `specs/app-ui/`
+Supersedes: dated macOS app screen, migration, cutover, and workflow specs under `specs/app-ui/`
 
 ## Purpose
 
-Define the durable native app experience for xLightsDesigner.
+Define the durable app experience for xLightsDesigner.
 
 ## Product Shape
 
-The native macOS app is the user's primary workspace. It owns project selection, show-folder binding, sequence selection, workflow navigation, review/apply, history, settings, and orchestration of local services.
+The macOS app is the user's primary workspace. It owns project selection, show-folder binding, sequence selection, workflow navigation, review/apply, history, settings, and orchestration of local services.
 
 The app should feel like a focused production tool, not a dashboard collection or marketing shell. Screens should be dense enough for repeated work, clear enough for review, and conservative around destructive changes.
 
@@ -34,7 +34,7 @@ The app should feel like a focused production tool, not a dashboard collection o
 - Review owns final apply approval and backup visibility.
 - History owns recovery and audit.
 
-## Native Shell Responsibilities
+## App Workspace Responsibilities
 
 - maintain the current project and selected show folder
 - start and monitor local services

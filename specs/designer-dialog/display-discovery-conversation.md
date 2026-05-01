@@ -168,9 +168,9 @@ Examples:
 - character or scene props not fully identified
 - architectural/background layers still ambiguous
 
-## Native App Implications
+## App Workspace Implications
 
-The native assistant should support a display-discovery mode when metadata is thin.
+The app assistant should support a display-discovery mode when metadata is thin.
 
 The first implementation may stop at:
 - detecting thin metadata
@@ -188,7 +188,7 @@ This workflow will later sit on top of:
 1. layout analysis context
 2. guided discovery question generation
 3. reviewable metadata proposal generation
-4. apply/revise loop in the native `Layout` workflow
+4. apply/revise loop in the app `Layout` workflow
 
 ## Acceptance Criteria
 

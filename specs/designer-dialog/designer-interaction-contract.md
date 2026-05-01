@@ -171,7 +171,7 @@ Summary language should describe design intent, not raw internal command strings
 
 The primary interaction is chat-first.
 
-Native app UI should support:
+App UI should support:
 
 - persistent chat/composer access
 - visible project, show folder, sequence, xLights status, and revision
@@ -216,6 +216,6 @@ The designer may project song/design structure into app-owned timing tracks when
 - `director-profile-v1.md`
 - `display-metadata-v1.md`
 - `display-discovery-conversation.md`
-- `../app-ui/native-app.md`
+- `../app-ui/app-workspace.md`
 - `../sequence-agent/sequencing-system.md`
 - `../sequence-agent/xlights-api.md`

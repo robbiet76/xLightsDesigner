@@ -17,7 +17,7 @@ Implementation-facing specifications that drive current development.
 ## Domain Specs
 
 - `app-assistant/`: assistant shell, phase model, memory scope, and model policy.
-- `app-ui/`: native app experience and platform/service boundaries.
+- `app-ui/`: app experience and platform/service boundaries.
 - `audio-analyst/`: audio analysis, timing taxonomy, and timing-track workflow.
 - `designer-dialog/`: design conversation, display context, user preferences, and sequence handoff.
 - `sequence-agent/`: sequencing behavior, model metadata, xLights API, render-training knowledge, and schemas.

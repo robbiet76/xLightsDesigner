@@ -30,7 +30,7 @@ final class AudioScreenViewModel {
         workspace: ProjectWorkspace? = nil,
         projectService: ProjectService = LocalProjectService(),
         trackLibraryService: TrackLibraryService = LocalTrackLibraryService(),
-        fileSelectionService: FileSelectionService = NativeFileSelectionService(),
+        fileSelectionService: FileSelectionService = MacOSFileSelectionService(),
         audioExecutionService: AudioExecutionService = LocalAudioExecutionService()
     ) {
         self.workspace = workspace
@@ -49,7 +49,7 @@ final class AudioScreenViewModel {
         workspace: ProjectWorkspace,
         projectService: ProjectService = LocalProjectService(),
         trackLibraryService: TrackLibraryService = LocalTrackLibraryService(),
-        fileSelectionService: FileSelectionService = NativeFileSelectionService(),
+        fileSelectionService: FileSelectionService = MacOSFileSelectionService(),
         audioExecutionService: AudioExecutionService = LocalAudioExecutionService()
     ) {
         self.init(

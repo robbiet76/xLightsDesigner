@@ -48,7 +48,7 @@ protocol ReviewExecutionService: Sendable {
 struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
     func applyPendingWork(projectFilePath: String, appRootPath: String, endpoint: String) async throws -> ReviewApplyExecutionResult {
         let output = try await runNode(arguments: [
-            AppEnvironment.nativeReviewApplyScriptPath,
+            AppEnvironment.appReviewApplyScriptPath,
             "--project-file", projectFilePath,
             "--app-root", appRootPath,
             "--endpoint", endpoint

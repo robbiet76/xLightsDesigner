@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const DEFAULT_NATIVE_URL = 'http://127.0.0.1:49916';
+const DEFAULT_APP_URL = 'http://127.0.0.1:49916';
 const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
 
 function str(value = '') {
@@ -13,7 +13,7 @@ function str(value = '') {
 
 function parseArgs(argv = []) {
   const args = {
-    nativeUrl: DEFAULT_NATIVE_URL,
+    appUrl: DEFAULT_APP_URL,
     timeoutMs: 30000,
     projectFile: '',
     showDir: DEFAULT_SHOW_DIR,
@@ -21,13 +21,13 @@ function parseArgs(argv = []) {
   };
   for (let i = 0; i < argv.length; i += 1) {
     const token = str(argv[i]);
-    if (token === '--native-url') args.nativeUrl = str(argv[++i]);
+    if (token === '--app-url') args.appUrl = str(argv[++i]);
     else if (token === '--timeout-ms') args.timeoutMs = Number(argv[++i]);
     else if (token === '--project-file') args.projectFile = path.resolve(str(argv[++i]));
     else if (token === '--show-dir') args.showDir = path.resolve(str(argv[++i]));
     else if (token === '--mode') args.mode = str(argv[++i]);
     else if (token === '--help') {
-      console.error('usage: validate-design-chat-song-gate.mjs [--native-url url] [--project-file path] [--show-dir path] [--mode both|missing-song|selected-song] [--timeout-ms n]');
+      console.error('usage: validate-design-chat-song-gate.mjs [--app-url url] [--project-file path] [--show-dir path] [--mode both|missing-song|selected-song] [--timeout-ms n]');
       process.exit(0);
     } else {
       throw new Error(`Unknown argument: ${token}`);
@@ -107,9 +107,9 @@ async function sendDesignPrompt(baseUrl, timeoutMs, prompt = 'Mira, create a vis
 
 async function runMissingSongScenario(args) {
   const fixture = createProject({ projectFile: args.projectFile });
-  await request(args.nativeUrl, 'GET', '/health');
-  await request(args.nativeUrl, 'POST', '/action', { action: 'openProject', filePath: fixture.projectPath });
-  const assistant = await sendDesignPrompt(args.nativeUrl, args.timeoutMs);
+  await request(args.appUrl, 'GET', '/health');
+  await request(args.appUrl, 'POST', '/action', { action: 'openProject', filePath: fixture.projectPath });
+  const assistant = await sendDesignPrompt(args.appUrl, args.timeoutMs);
   const text = str(assistant?.lastMessage?.text);
   if (!/select or open a song\/sequence first/i.test(text)) {
     throw new Error(`Assistant did not block design chat without selected song. Last message: ${text}`);
@@ -117,7 +117,7 @@ async function runMissingSongScenario(args) {
   if (assistant?.lastDiagnostics?.responseCode !== 'SONG_CONTEXT_REQUIRED') {
     throw new Error(`Expected SONG_CONTEXT_REQUIRED diagnostics, got ${assistant?.lastDiagnostics?.responseCode || '(missing)'}`);
   }
-  const app = await request(args.nativeUrl, 'GET', '/snapshot');
+  const app = await request(args.appUrl, 'GET', '/snapshot');
   const visual = app?.pages?.design?.visualInspiration || {};
   if (visual.available === true) {
     throw new Error('Visual inspiration should not be available after blocked no-song chat request.');
@@ -140,17 +140,17 @@ async function runSelectedSongScenario(args) {
     showFolder: showDir,
     sequencePath
   });
-  await request(args.nativeUrl, 'GET', '/health');
-  await request(args.nativeUrl, 'POST', '/action', { action: 'openProject', filePath: fixture.projectPath });
-  await request(args.nativeUrl, 'POST', '/action', {
+  await request(args.appUrl, 'GET', '/health');
+  await request(args.appUrl, 'POST', '/action', { action: 'openProject', filePath: fixture.projectPath });
+  await request(args.appUrl, 'POST', '/action', {
     action: 'createXLightsSequence',
     filePath: sequencePath,
     durationMs: 30000,
     frameMs: 50
   });
-  await request(args.nativeUrl, 'POST', '/action', { action: 'refreshXLightsSession' });
-  await request(args.nativeUrl, 'POST', '/action', { action: 'refreshAll' });
-  const assistant = await sendDesignPrompt(args.nativeUrl, args.timeoutMs, 'Mira, what design direction would you suggest for this active song?');
+  await request(args.appUrl, 'POST', '/action', { action: 'refreshXLightsSession' });
+  await request(args.appUrl, 'POST', '/action', { action: 'refreshAll' });
+  const assistant = await sendDesignPrompt(args.appUrl, args.timeoutMs, 'Mira, what design direction would you suggest for this active song?');
   const text = str(assistant?.lastMessage?.text);
   if (/select or open a song\/sequence first/i.test(text)) {
     throw new Error(`Assistant incorrectly blocked design chat despite selected song. Last message: ${text}`);

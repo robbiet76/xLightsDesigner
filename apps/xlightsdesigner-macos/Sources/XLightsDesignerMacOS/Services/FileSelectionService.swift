@@ -23,7 +23,7 @@ protocol FileSelectionService {
 }
 
 @MainActor
-struct NativeFileSelectionService: FileSelectionService {
+struct MacOSFileSelectionService: FileSelectionService {
     func chooseAudioFile() -> String? {
         let panel = NSOpenPanel()
         configure(panel)

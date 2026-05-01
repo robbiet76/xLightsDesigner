@@ -8,8 +8,8 @@ import { buildAnalysisHandoffFromArtifact } from "../../agent/audio-analyst/audi
 import { buildEffectDefinitionCatalog } from "../../agent/sequence-agent/effect-definition-catalog.js";
 import { executeDirectSequenceRequestOrchestration } from "../../agent/sequence-agent/direct-sequence-orchestrator.js";
 import { writeProjectArtifacts } from "../../storage/project-artifact-store.mjs";
-import { runNativeDirectProposal } from "../../../../scripts/sequencing/native/generate-native-direct-proposal.mjs";
-import { loadProjectDisplayMetadataAssignments } from "../../../../scripts/sequencing/native/project-display-metadata.mjs";
+import { runAppDirectProposal } from "../../../../scripts/sequencing/app/generate-app-direct-proposal.mjs";
+import { loadProjectDisplayMetadataAssignments } from "../../../../scripts/sequencing/app/project-display-metadata.mjs";
 
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -48,16 +48,16 @@ function sampleAnalysisArtifact(audioPath) {
   };
 }
 
-test("native direct proposal writes intent and proposal artifacts from project context", async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-proposal-"));
+test("app direct proposal writes intent and proposal artifacts from project context", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-proposal-"));
   const appRoot = path.join(root, "app-root");
   const projectDir = path.join(root, "project");
-  const projectFile = path.join(projectDir, "Native Proposal Test.xdproj");
+  const projectFile = path.join(projectDir, "App Proposal Test.xdproj");
   const audioPath = path.join(root, "show", "song.mp3");
-  const sequencePath = path.join(root, "show", "Native Proposal Test.xsq");
+  const sequencePath = path.join(root, "show", "App Proposal Test.xsq");
 
   writeJson(projectFile, {
-    projectName: "Native Proposal Test",
+    projectName: "App Proposal Test",
     showFolder: path.dirname(sequencePath),
     snapshot: {
       audioPathInput: audioPath,
@@ -135,7 +135,7 @@ test("native direct proposal writes intent and proposal artifacts from project c
   let capturedMetadataAssignments = [];
   let capturedDisplayElements = [];
 
-  const result = await runNativeDirectProposal(
+  const result = await runAppDirectProposal(
     {
       projectFile,
       appRoot,
@@ -235,8 +235,8 @@ test("native direct proposal writes intent and proposal artifacts from project c
   assert.match(proposal.proposalLines.join("\n"), /On effect/i);
 });
 
-test("native project display metadata loader includes preference-only target intent", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-metadata-"));
+test("app project display metadata loader includes preference-only target intent", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-metadata-"));
   const projectDir = path.join(root, "project");
   const projectFile = path.join(projectDir, "Metadata Loader Test.xdproj");
   writeJson(projectFile, {});
@@ -263,8 +263,8 @@ test("native project display metadata loader includes preference-only target int
   ]);
 });
 
-test("native project display metadata loader promotes display discovery insights to group members", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-discovery-metadata-"));
+test("app project display metadata loader promotes display discovery insights to group members", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-discovery-metadata-"));
   const projectDir = path.join(root, "project");
   const projectFile = path.join(projectDir, "Discovery Metadata Loader Test.xdproj");
   writeJson(projectFile, {});
@@ -308,8 +308,8 @@ test("native project display metadata loader promotes display discovery insights
   assert.deepEqual(assignments.find((row) => row.targetId === "Present-01").tags, ["Presents", "focal_hierarchy", "lead"]);
 });
 
-test("native project display metadata loader can synthesize benchmark assignments for plain layout fixtures", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-benchmark-metadata-"));
+test("app project display metadata loader can synthesize benchmark assignments for plain layout fixtures", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-benchmark-metadata-"));
   const projectDir = path.join(root, "project");
   const projectFile = path.join(projectDir, "Benchmark Metadata Loader Test.xdproj");
   writeJson(projectFile, {});
@@ -334,16 +334,16 @@ test("native project display metadata loader can synthesize benchmark assignment
   assert.equal(assignments.find((row) => row.targetId === "Roofline").tags.includes("line"), true);
 });
 
-test("native direct proposal resolves app metadata tags into proposal target scope", async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-proposal-metadata-"));
+test("app direct proposal resolves app metadata tags into proposal target scope", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-proposal-metadata-"));
   const appRoot = path.join(root, "app-root");
   const projectDir = path.join(root, "project");
-  const projectFile = path.join(projectDir, "Native Metadata Scope Test.xdproj");
+  const projectFile = path.join(projectDir, "App Metadata Scope Test.xdproj");
   const audioPath = path.join(root, "show", "song.mp3");
-  const sequencePath = path.join(root, "show", "Native Metadata Scope Test.xsq");
+  const sequencePath = path.join(root, "show", "App Metadata Scope Test.xsq");
 
   writeJson(projectFile, {
-    projectName: "Native Metadata Scope Test",
+    projectName: "App Metadata Scope Test",
     showFolder: path.dirname(sequencePath),
     snapshot: {
       audioPathInput: audioPath,
@@ -371,7 +371,7 @@ test("native direct proposal resolves app metadata tags into proposal target sco
     }
   });
 
-  const result = await runNativeDirectProposal(
+  const result = await runAppDirectProposal(
     {
       projectFile,
       appRoot,

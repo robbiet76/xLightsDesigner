@@ -3,9 +3,9 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { ownedModalBlockedMessage } from '../../apps/xlightsdesigner-ui/runtime/owned-xlights-health.js';
-import { loadProjectDisplayMetadataAssignments } from '../sequencing/native/project-display-metadata.mjs';
+import { loadProjectDisplayMetadataAssignments } from '../sequencing/app/project-display-metadata.mjs';
 
-const DEFAULT_NATIVE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || 'http://127.0.0.1:49916';
+const DEFAULT_APP_URL = process.env.XLD_APP_AUTOMATION_URL || 'http://127.0.0.1:49916';
 const DEFAULT_XLIGHTS_URL = process.env.XLD_XLIGHTS_API_URL || 'http://127.0.0.1:49915/xlightsdesigner/api';
 const DEFAULT_PROJECT_FILE = '/Users/robterry/Documents/Lights/xLightsDesigner/projects/Christmas 2026/Christmas 2026.xdproj';
 const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
@@ -37,7 +37,7 @@ function usage() {
 
 function parseArgs(argv = []) {
   const out = {
-    nativeUrl: DEFAULT_NATIVE_URL,
+    appUrl: DEFAULT_APP_URL,
     xlightsUrl: DEFAULT_XLIGHTS_URL,
     projectFile: DEFAULT_PROJECT_FILE,
     showDir: DEFAULT_SHOW_DIR,
@@ -55,7 +55,7 @@ function parseArgs(argv = []) {
   };
   for (let i = 0; i < argv.length; i += 1) {
     const token = str(argv[i]);
-    if (token === '--native-url') out.nativeUrl = str(argv[++i]);
+    if (token === '--app-url') out.appUrl = str(argv[++i]);
     else if (token === '--xlights-url') out.xlightsUrl = str(argv[++i]);
     else if (token === '--project-file') out.projectFile = str(argv[++i]);
     else if (token === '--show-dir') out.showDir = str(argv[++i]);
@@ -174,12 +174,12 @@ async function requestJson(url, { method = 'GET', body = null, timeoutMs = 60000
   }
 }
 
-async function nativeRequest(args, pathName, { method = 'GET', body = null, timeoutMs = 60000 } = {}) {
-  return requestJson(`${args.nativeUrl}${pathName}`, { method, body, timeoutMs });
+async function appRequest(args, pathName, { method = 'GET', body = null, timeoutMs = 60000 } = {}) {
+  return requestJson(`${args.appUrl}${pathName}`, { method, body, timeoutMs });
 }
 
-async function nativeAction(args, action, body = {}, timeoutMs = 60000) {
-  return nativeRequest(args, '/action', {
+async function appAction(args, action, body = {}, timeoutMs = 60000) {
+  return appRequest(args, '/action', {
     method: 'POST',
     body: { action, ...body },
     timeoutMs
@@ -194,10 +194,10 @@ async function createSequenceWithRecovery(args, sequencePath) {
       frameMs: args.frameMs
     };
     if (str(args.mediaFile)) body.mediaFile = str(args.mediaFile);
-    return await nativeAction(args, 'createXLightsSequence', body, 180000);
+    return await appAction(args, 'createXLightsSequence', body, 180000);
   } catch (error) {
-    await nativeAction(args, 'refreshXLightsSession', {}, 30000).catch(() => null);
-    const session = await nativeRequest(args, '/xlights-session', { timeoutMs: 30000 }).catch(() => null);
+    await appAction(args, 'refreshXLightsSession', {}, 30000).catch(() => null);
+    const session = await appRequest(args, '/xlights-session', { timeoutMs: 30000 }).catch(() => null);
     if (str(session?.sequencePath) === sequencePath || str(session?.xlights?.sequencePath) === sequencePath) {
       return {
         ok: true,
@@ -239,13 +239,13 @@ async function waitFor({ label = 'condition', timeoutMs = 60000, intervalMs = 10
   throw new Error(`Timed out waiting for ${label}. Last value: ${JSON.stringify(last?.value || last).slice(0, 4000)}`);
 }
 
-async function waitForNativeSnapshot(args, { label = 'native snapshot', timeoutMs = 120000 } = {}) {
+async function waitForAppSnapshot(args, { label = 'app snapshot', timeoutMs = 120000 } = {}) {
   return waitFor({
     label,
     timeoutMs,
     intervalMs: 2000,
     check: async () => {
-      const snapshot = await nativeRequest(args, '/snapshot', { timeoutMs: 60000 }).catch((error) => ({
+      const snapshot = await appRequest(args, '/snapshot', { timeoutMs: 60000 }).catch((error) => ({
         snapshotError: error?.message || String(error)
       }));
       return { done: !snapshot?.snapshotError, value: snapshot };
@@ -627,12 +627,12 @@ async function main() {
   const outputDir = path.resolve(args.outputDir, runId);
   await mkdir(outputDir, { recursive: true });
 
-  logStep('checking native automation and xLights readiness');
-  await nativeRequest(args, '/health', { timeoutMs: 30000 });
+  logStep('checking app automation and xLights readiness');
+  await appRequest(args, '/health', { timeoutMs: 30000 });
   await assertXlightsReady(args);
   logStep(`opening project: ${args.projectFile}`);
-  await nativeAction(args, 'openProject', { filePath: args.projectFile }, 60000);
-  await nativeAction(args, 'refreshXLightsSession', {}, 90000);
+  await appAction(args, 'openProject', { filePath: args.projectFile }, 60000);
+  await appAction(args, 'refreshXLightsSession', {}, 90000);
 
   const sequencePath = args.sequencePath
     ? path.resolve(args.sequencePath)
@@ -640,11 +640,11 @@ async function main() {
   await mkdir(path.dirname(sequencePath), { recursive: true });
   logStep(`creating isolated benchmark sequence: ${sequencePath}`);
   await createSequenceWithRecovery(args, sequencePath);
-  await nativeAction(args, 'refreshXLightsSession', {}, 90000);
+  await appAction(args, 'refreshXLightsSession', {}, 90000);
 
   const layoutPayload = await xlightsRequest(args, '/layout/models', {}, 60000);
   const groupMembershipsPayload = await xlightsRequest(args, '/layout/group-members', {}, 60000).catch(() => ({ data: { groups: [] } }));
-  const appSnapshot = await waitForNativeSnapshot(args, { label: 'post-create app snapshot', timeoutMs: 150000 });
+  const appSnapshot = await waitForAppSnapshot(args, { label: 'post-create app snapshot', timeoutMs: 150000 });
   const semanticTags = extractSemanticTags(appSnapshot);
   const selectedTags = splitList(args.selectedTags);
   const layoutSummary = summarizeLayoutModels(layoutPayload);
@@ -672,23 +672,23 @@ async function main() {
   const designerContext = buildDesignerContext({ args, selectedTags: resolvedTags, layoutSummary, displayMetadataSummary });
 
   logStep(`saving designer context for ${resolvedTags.length} display metadata subjects/tags and ${displayMetadataSummary.assignmentCount} metadata assignments`);
-  await nativeAction(args, 'applyAssistantActionRequest', {
+  await appAction(args, 'applyAssistantActionRequest', {
     actionType: 'save_design_intent',
     reason: 'full sequence creation benchmark',
     payload: designerContext
   }, 60000);
 
   const beforeGeneration = filterSnapshotToSequence(
-    await nativeRequest(args, '/sequencer-validation-snapshot', { timeoutMs: 30000 }),
+    await appRequest(args, '/sequencer-validation-snapshot', { timeoutMs: 30000 }),
     sequencePath
   );
-  const beforeAppSnapshot = await nativeRequest(args, '/snapshot', { timeoutMs: 30000 }).catch(() => null);
+  const beforeAppSnapshot = await appRequest(args, '/snapshot', { timeoutMs: 30000 }).catch(() => null);
   const previousBlockedReviewText = str(blockedReviewBanner(beforeAppSnapshot)?.text);
   const previousPlanId = idOf(beforeGeneration?.latestPlanHandoff);
   const previousApplyId = idOf(beforeGeneration?.latestApplyResult);
 
   logStep('generating full-display sequence proposal');
-  const generation = await nativeAction(args, 'generateSequenceProposal', {
+  const generation = await appAction(args, 'generateSequenceProposal', {
     selectedTagNames: resolvedTags.join(','),
     selectedTargetIds: syntheticBenchmarkTargetIds.join(',')
   }, args.timeoutMs);
@@ -703,12 +703,12 @@ async function main() {
     intervalMs: 1500,
     check: async () => {
       await assertXlightsReady(args);
-      const appSnapshot = await waitForNativeSnapshot(args, { label: 'review-ready app snapshot', timeoutMs: 70000 });
+      const appSnapshot = await waitForAppSnapshot(args, { label: 'review-ready app snapshot', timeoutMs: 70000 });
       const blocker = blockedReviewBanner(appSnapshot);
       if (blocker && str(blocker?.text) !== previousBlockedReviewText) return { done: true, value: { appSnapshot, blocked: blocker } };
       if (reviewReadyForGoal(appSnapshot, args.goal) || sequenceProposalReadyForGoal(appSnapshot, args.goal)) {
         const snapshot = filterSnapshotToSequence(
-          await nativeRequest(args, '/sequencer-validation-snapshot', { timeoutMs: 30000 }).catch(() => ({})),
+          await appRequest(args, '/sequencer-validation-snapshot', { timeoutMs: 30000 }).catch(() => ({})),
           sequencePath
         );
         return { done: true, value: snapshot };
@@ -722,20 +722,20 @@ async function main() {
   let applyBlocked = proposalSnapshot?.blocked || null;
   if (args.apply && !applyBlocked) {
     logStep('applying pending Review proposal');
-    applyResponse = await nativeAction(args, 'applyReview', {}, Math.max(args.timeoutMs, 120000));
+    applyResponse = await appAction(args, 'applyReview', {}, Math.max(args.timeoutMs, 120000));
     applySnapshot = await waitFor({
       label: 'new apply result',
       timeoutMs: Math.max(args.timeoutMs, 120000),
       intervalMs: 1500,
       check: async () => {
         await assertXlightsReady(args);
-        const appSnapshot = await nativeRequest(args, '/snapshot', { timeoutMs: 30000 }).catch(() => null);
+        const appSnapshot = await appRequest(args, '/snapshot', { timeoutMs: 30000 }).catch(() => null);
         const blocker = blockedReviewBanner(appSnapshot);
         if (blocker && str(blocker?.text) !== previousBlockedReviewText) {
           applyBlocked = blocker;
           return { done: true, value: { blocked: blocker } };
         }
-        const rawValidationSnapshot = await nativeRequest(args, '/sequencer-validation-snapshot', { timeoutMs: 90000 }).catch((error) => ({
+        const rawValidationSnapshot = await appRequest(args, '/sequencer-validation-snapshot', { timeoutMs: 90000 }).catch((error) => ({
           snapshotError: error?.message || String(error)
         }));
         if (rawValidationSnapshot?.snapshotError) {
@@ -755,17 +755,17 @@ async function main() {
   let renderResponse = null;
   if (args.apply && args.render && !applyBlocked) {
     logStep('rendering xLights sequence after apply');
-    renderResponse = await nativeAction(args, 'renderXLightsSequence', {}, Math.max(args.timeoutMs, 120000));
+    renderResponse = await appAction(args, 'renderXLightsSequence', {}, Math.max(args.timeoutMs, 120000));
   }
   let saveResponse = null;
   if (args.apply && !applyBlocked) {
     logStep('saving xLights sequence after apply/render');
-    saveResponse = await nativeAction(args, 'saveXLightsSequence', {}, Math.max(args.timeoutMs, 120000));
+    saveResponse = await appAction(args, 'saveXLightsSequence', {}, Math.max(args.timeoutMs, 120000));
   }
 
   logStep('collecting final validation snapshot and scoring gaps');
   const finalSnapshot = filterSnapshotToSequence(
-    await nativeRequest(args, '/sequencer-validation-snapshot', { timeoutMs: 30000 }),
+    await appRequest(args, '/sequencer-validation-snapshot', { timeoutMs: 30000 }),
     sequencePath
   );
   const gaps = rankGaps(finalSnapshot, {

@@ -14,7 +14,7 @@ enum WorkflowID: String, CaseIterable, Identifiable {
     var specPath: String {
         switch self {
         case .project, .display, .audio, .design, .sequence, .review, .history:
-            return "specs/app-ui/native-app.md"
+            return "specs/app-ui/app-workspace.md"
         }
     }
 

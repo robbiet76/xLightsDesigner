@@ -6,7 +6,7 @@ The product turns user creative intent into auditable xLights sequence changes b
 
 ## Product Shape
 
-The active product shell is the native macOS app in `apps/xlightsdesigner-macos/`.
+The active product shell is the macOS app in `apps/xlightsdesigner-macos/`.
 
 Core workflow:
 
@@ -22,7 +22,7 @@ Core workflow:
 ## Repository Structure
 
 - `apps/`: runtime applications and services.
-- `apps/xlightsdesigner-macos/`: active native macOS SwiftUI product shell.
+- `apps/xlightsdesigner-macos/`: active macOS SwiftUI product shell.
 - `apps/xlightsdesigner-ui/`: shared JS agent, runtime, page-state, eval, and test modules.
 - `apps/xlightsdesigner-analysis-service/`: audio analysis service.
 - `training-packages/`: portable LLM training assets.
@@ -35,14 +35,14 @@ Core workflow:
 - Product plan: `specs/product-plan.md`
 - Local roadmap: `specs/local-completion-roadmap.md`
 - Spec and repo governance: `specs/spec-governance.md`
-- Native app contract: `specs/app-ui/native-app.md`
+- App contract: `specs/app-ui/app-workspace.md`
 - Project storage contract: `specs/app-ui/project-storage.md`
 - xLights API contract: `specs/sequence-agent/xlights-api.md`
 - Sequencing system: `specs/sequence-agent/sequencing-system.md`
 - Render-training knowledge: `specs/sequence-agent/render-training-knowledge.md`
 - Training package root: `training-packages/training-package-v1/README.md`
 
-## Run The Native App
+## Run The macOS App
 
 Open `apps/xlightsdesigner-macos/Package.swift` in Xcode, or run:
 
@@ -51,7 +51,7 @@ cd apps/xlightsdesigner-macos
 swift run
 ```
 
-The retired desktop prototype shell has been removed. Do not add new product-shell work outside the native app.
+The retired desktop prototype shell has been removed. Do not add new product-shell work outside the app.
 
 ## Shared JS Runtime
 
@@ -64,26 +64,26 @@ Active work there should stay focused on reusable domain/runtime behavior, espec
 - sequence-agent planning and validation
 - xLights API integration helpers
 - render-training bundle consumption
-- native app page-state composition
+- app page-state composition
 
 ## Validation
 
-Native package tests:
+macOS app package tests:
 
 ```bash
 swift test --package-path apps/xlightsdesigner-macos
 ```
 
-Native-to-xLights handoff validation:
+App-to-xLights handoff validation:
 
 ```bash
-node scripts/native/run-full-handoff-validation.mjs
+node scripts/app/run-full-handoff-validation.mjs
 ```
 
 Broader handoff matrix:
 
 ```bash
-node scripts/native/run-full-handoff-validation.mjs --matrix
+node scripts/app/run-full-handoff-validation.mjs --matrix
 ```
 
 Focused sequence-agent tests:

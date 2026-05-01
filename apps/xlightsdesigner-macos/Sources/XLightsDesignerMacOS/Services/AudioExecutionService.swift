@@ -42,7 +42,7 @@ struct AudioFolderExecutionResult {
 struct LocalAudioExecutionService: AudioExecutionService, Sendable {
     func analyzeTrack(filePath: String, appRootPath: String, mode: String) async throws -> AudioTrackExecutionResult {
         let output = try await runNodeScript(
-            scriptPath: AppEnvironment.nativeAnalyzeTrackScriptPath,
+            scriptPath: AppEnvironment.appAnalyzeTrackScriptPath,
             arguments: [
                 "--file", filePath,
                 "--app-root", appRootPath,
@@ -108,7 +108,7 @@ struct LocalAudioExecutionService: AudioExecutionService, Sendable {
 
     func confirmTrackIdentity(contentFingerprint: String, title: String, artist: String, appRootPath: String) async throws {
         _ = try await runNodeScript(
-            scriptPath: AppEnvironment.nativeUpdateTrackIdentityScriptPath,
+            scriptPath: AppEnvironment.appUpdateTrackIdentityScriptPath,
             arguments: [
                 "--content-fingerprint", contentFingerprint,
                 "--title", title,

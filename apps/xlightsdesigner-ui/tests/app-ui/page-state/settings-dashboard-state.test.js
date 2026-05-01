@@ -10,7 +10,7 @@ test("settings dashboard state summarizes rollout, locks, and nicknames", () => 
         planOnlyForcedByRollout: true
       },
       health: {
-        agentConfigSource: "native-store",
+        agentConfigSource: "app-store",
         agentHasStoredApiKey: true,
         agentConfigured: true,
         runtimeReady: true,

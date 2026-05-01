@@ -1,20 +1,20 @@
 # xLightsDesigner macOS
 
-This is the native macOS app surface for xLightsDesigner.
+This is the macOS app surface for xLightsDesigner.
 
 ## Purpose
 
-This app is the clean SwiftUI-native shell described in the design and cutover specs.
+This app is the clean SwiftUI app shell described in the design and cutover specs.
 
 Current status:
 - this is the active product shell
-- major workflows are now native-primary in practice
+- major workflows are now app-primary in practice
 
 ## Rules
 
-- This directory is the only place new native product-shell work should occur.
+- This directory is the only place new macOS product-shell work should occur.
 - Do not add retired prototype-shell compatibility code here.
-- Do not fork backend contracts or durable schemas for the native shell.
+- Do not fork backend contracts or durable schemas for the app shell.
 - Do not move business logic or artifact truth into SwiftUI views.
 
 ## Build
@@ -28,7 +28,7 @@ swift run
 
 ## Primary references
 
-- `../../specs/app-ui/native-app.md`
+- `../../specs/app-ui/app-workspace.md`
 - `../../specs/app-ui/platform-and-services.md`
 
 ## Current workflow surface

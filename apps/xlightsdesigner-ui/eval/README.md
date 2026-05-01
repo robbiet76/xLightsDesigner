@@ -38,11 +38,11 @@ Current contents:
 - `live-design-validation-suite-extended-v1.json`: slower extended live pack that adds alternate saved-sequence coverage beyond the promoted baseline pack, including additional whole-pass composition checks on alternate saved-sequence families
 - `run-designer-eval.mjs`: offline runner for the current designer runtime/orchestrator
 - `run-section-practical-sequence-validation.mjs`: offline runner for the first sequencer-side practical validation pass
-- `run-live-practical-benchmark.mjs`: native live benchmark that currently validates section-scoped sequencing through prompt -> plan -> apply -> artifact persistence on temporary sequence copies
+- `run-live-practical-benchmark.mjs`: app live benchmark that currently validates section-scoped sequencing through prompt -> plan -> apply -> artifact persistence on temporary sequence copies
 - `live-reviewed-timing-control-suite-v1.json`: real-show four-track reviewed-timing control suite using Candy Cane Lane, Christmas Vacation, Grinch, and Christmas Sarajevo
 - `run-live-reviewed-timing-control-suite.mjs`: live runner that opens each real sequence, refreshes/analyzes, and captures current timing-review state snapshots
 - `run-live-reviewed-timing-wholesequence-baseline.mjs`: live runner that restores real control sequences from captured baselines, seeds reviewed timing tracks, runs whole-sequence sequencing validation, and records timing-fidelity baseline output
-- `scripts/assistant/native/run-display-discovery-simulation.mjs`: simulated-user harness that drives the real app designer discovery conversation through automation while a separate user model answers from private scenario truth
+- `scripts/assistant/app/run-display-discovery-simulation.mjs`: simulated-user harness that drives the real app designer discovery conversation through automation while a separate user model answers from private scenario truth
 - `build-phase2-issue-ledger.mjs`: converts a combined benchmark report into a durable `phase2_issue_ledger_v1` backlog artifact
 - `live-practical-benchmark-baseline.v3.json`: frozen repeated-role whole-sequence practical benchmark baseline contract
 - `compare-live-practical-benchmark.mjs`: compares a fresh combined live benchmark report against the frozen baseline contract
@@ -59,9 +59,9 @@ Current policy:
 - use the smoke live pack as a checkpoint tool, not the default fast loop
 - keep the promoted live baseline pack small enough to complete reliably
 - use the extended live pack for slower alternate-sequence probes and broader cadence checks
-- the native live-suite runner scales timeout with scenario count so the extended pack can complete without manual timeout overrides
-- the native live-suite runner reuses `refreshFromXLights` and `analyzeAudio` work per `(sequencePath, analyzePrompt)` context instead of repeating that setup for every scenario on the same sequence
-- use `run-live-practical-benchmark.mjs` as the current native practical gate for section-scoped sequencing while full render-feedback parity is still incomplete
+- the app live-suite runner scales timeout with scenario count so the extended pack can complete without manual timeout overrides
+- the app live-suite runner reuses `refreshFromXLights` and `analyzeAudio` work per `(sequencePath, analyzePrompt)` context instead of repeating that setup for every scenario on the same sequence
+- use `run-live-practical-benchmark.mjs` as the current app practical gate for section-scoped sequencing while full render-feedback parity is still incomplete
 - use the revision live suite as part of the promoted Phase 2 practical gate
 - the whole-sequence slot in the practical benchmark now uses apply-level validation, not comparative design preference scoring
 
@@ -124,11 +124,11 @@ node apps/xlightsdesigner-ui/eval/run-live-reviewed-timing-control-suite.mjs \
   --out-dir /tmp/live-reviewed-timing-control-suite
 ```
 
-Native validation note:
+App validation note:
 - Legacy automation has been removed.
-- Use `scripts/native/automation.mjs` for direct native automation actions.
-- Use dedicated native validation runners for restored live suites.
+- Use `scripts/app/automation.mjs` for direct app automation actions.
+- Use dedicated app validation runners for restored live suites.
 - `run-live-practical-benchmark.mjs`
 - `run-live-reviewed-timing-control-suite.mjs`
 - `run-live-reviewed-timing-wholesequence-baseline.mjs`
-  currently use native-only automation. The practical benchmark is restored for section-scoped prompt/plan/apply validation; the reviewed-timing runners still abort until native parity exists for their missing actions.
+  currently use app-only automation. The practical benchmark is restored for section-scoped prompt/plan/apply validation; the reviewed-timing runners still abort until app parity exists for their missing actions.

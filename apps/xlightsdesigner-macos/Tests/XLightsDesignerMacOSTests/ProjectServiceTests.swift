@@ -5,7 +5,7 @@ import Testing
 struct ProjectServiceTests {
     @Test func createProjectStoresExpectedFileName() throws {
         let service = try makeService()
-        let name = "Native Test Project \(UUID().uuidString.prefix(6))"
+        let name = "App Test Project \(UUID().uuidString.prefix(6))"
         let project = try service.createProject(
             draft: ProjectDraftModel(
                 projectName: name,
@@ -21,7 +21,7 @@ struct ProjectServiceTests {
 
     @Test func openProjectAcceptsProjectFolder() throws {
         let service = try makeService()
-        let name = "Native Test Project \(UUID().uuidString.prefix(6))"
+        let name = "App Test Project \(UUID().uuidString.prefix(6))"
         let project = try service.createProject(
             draft: ProjectDraftModel(
                 projectName: name,
@@ -39,7 +39,7 @@ struct ProjectServiceTests {
 
     @Test func createProjectMigratesOnlyDisplayMetadataFromExistingProject() throws {
         let service = try makeService()
-        let sourceName = "Native Test Project \(UUID().uuidString.prefix(6))"
+        let sourceName = "App Test Project \(UUID().uuidString.prefix(6))"
         let source = try service.createProject(
             draft: ProjectDraftModel(
                 projectName: sourceName,
@@ -72,7 +72,7 @@ struct ProjectServiceTests {
         """
         try Data(metadataJSON.utf8).write(to: metadataFile)
 
-        let migratedName = "Native Test Project \(UUID().uuidString.prefix(6)) Migrated"
+        let migratedName = "App Test Project \(UUID().uuidString.prefix(6)) Migrated"
         let migrated = try service.createProject(
             draft: ProjectDraftModel(
                 projectName: migratedName,
@@ -107,7 +107,7 @@ struct ProjectServiceTests {
         #expect(throws: ProjectServiceError.self) {
             try service.createProject(
                 draft: ProjectDraftModel(
-                    projectName: "Native Test Project \(UUID().uuidString.prefix(6)) Invalid",
+                    projectName: "App Test Project \(UUID().uuidString.prefix(6)) Invalid",
                     showFolder: "/tmp/new-show",
                     mediaPath: "",
                     migrateMetadata: true,
@@ -119,7 +119,7 @@ struct ProjectServiceTests {
 
     @Test func saveProjectPersistsProjectBriefInSnapshot() throws {
         let service = try makeService()
-        let name = "Native Test Project \(UUID().uuidString.prefix(6))"
+        let name = "App Test Project \(UUID().uuidString.prefix(6))"
         var project = try service.createProject(
             draft: ProjectDraftModel(
                 projectName: name,

@@ -25,7 +25,7 @@ final class ProjectScreenViewModel {
     init(
         workspace: ProjectWorkspace,
         projectService: ProjectService = LocalProjectService(),
-        fileSelectionService: FileSelectionService = NativeFileSelectionService(),
+        fileSelectionService: FileSelectionService = MacOSFileSelectionService(),
         sessionStore: ProjectSessionStore = LocalProjectSessionStore()
     ) {
         self.workspace = workspace
@@ -290,7 +290,7 @@ final class ProjectScreenViewModel {
     }
 
     private func isGeneratedTestProject(_ project: ActiveProjectModel) -> Bool {
-        project.projectName.hasPrefix("Native Test Project ") || project.projectName.hasPrefix("DisplayMetadataStore")
+        project.projectName.hasPrefix("App Test Project ") || project.projectName.hasPrefix("DisplayMetadataStore")
     }
 
     private func string(_ value: Any?) -> String {

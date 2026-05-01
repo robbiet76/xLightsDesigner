@@ -5,20 +5,20 @@ import os from "node:os";
 import path from "node:path";
 
 import {
-  buildNativeApplyVerification,
+  buildAppApplyVerification,
   buildReviewIntentHandoff,
   createSequenceBackup,
   hydrateAnalysisSectionsFromSelectedTimingTrack,
-  hydrateNativeApplyTimingContext,
-  normalizeCommandsForNativeApply,
+  hydrateAppApplyTimingContext,
+  normalizeCommandsForAppApply,
   renderCurrentSummary,
   summarizePracticalValidation
-} from "../../../../scripts/sequencing/native/apply-native-review.mjs";
+} from "../../../../scripts/sequencing/app/apply-app-review.mjs";
 import { buildSequenceAgentPlan } from "../../agent/sequence-agent/sequence-agent.js";
 import { buildEffectDefinitionCatalog } from "../../agent/sequence-agent/effect-definition-catalog.js";
 
 test("createSequenceBackup copies xsq into project artifact backups", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-native-review-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-review-"));
   const projectDir = path.join(root, "Project");
   const showDir = path.join(root, "Show");
   fs.mkdirSync(projectDir, { recursive: true });
@@ -55,7 +55,7 @@ test("renderCurrentSummary prefers rendered sequence path", () => {
   assert.equal(renderCurrentSummary({ data: { rendered: true } }), "Rendered current xLights sequence.");
 });
 
-test("normalizeCommandsForNativeApply preserves display-order and layer edit commands", () => {
+test("normalizeCommandsForAppApply preserves display-order and layer edit commands", () => {
   const commands = [
     { id: "timing.1", cmd: "timing.createTrack", params: { trackName: "XD: Beats" } },
     {
@@ -72,7 +72,7 @@ test("normalizeCommandsForNativeApply preserves display-order and layer edit com
     }
   ];
 
-  const out = normalizeCommandsForNativeApply(commands);
+  const out = normalizeCommandsForAppApply(commands);
 
   assert.deepEqual(out.map((row) => row.cmd), [
     "timing.createTrack",
@@ -83,7 +83,7 @@ test("normalizeCommandsForNativeApply preserves display-order and layer edit com
   assert.deepEqual(out[2].dependsOn, ["display.order.1"]);
 });
 
-test("normalizeCommandsForNativeApply collapses exact duplicate write commands and rewires dependencies", () => {
+test("normalizeCommandsForAppApply collapses exact duplicate write commands and rewires dependencies", () => {
   const commands = [
     {
       id: "effect.1",
@@ -126,14 +126,14 @@ test("normalizeCommandsForNativeApply collapses exact duplicate write commands a
     }
   ];
 
-  const out = normalizeCommandsForNativeApply(commands);
+  const out = normalizeCommandsForAppApply(commands);
 
   assert.equal(out.length, 2);
   assert.deepEqual(out.map((row) => row.id), ["effect.1", "align.1"]);
   assert.deepEqual(out[1].dependsOn, ["effect.1"]);
 });
 
-test("buildNativeApplyVerification attaches practical validation from readback", async () => {
+test("buildAppApplyVerification attaches practical validation from readback", async () => {
   const commands = [
     {
       cmd: "timing.insertMarks",
@@ -173,7 +173,7 @@ test("buildNativeApplyVerification attaches practical validation from readback",
     }
   };
 
-  const result = await buildNativeApplyVerification({
+  const result = await buildAppApplyVerification({
     endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     commands,
     planHandoff,
@@ -206,8 +206,8 @@ test("buildNativeApplyVerification attaches practical validation from readback",
   });
 });
 
-test("buildNativeApplyVerification wires display-order readback dependency", async () => {
-  const result = await buildNativeApplyVerification({
+test("buildAppApplyVerification wires display-order readback dependency", async () => {
+  const result = await buildAppApplyVerification({
     endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     commands: [
       {
@@ -242,7 +242,7 @@ test("buildNativeApplyVerification wires display-order readback dependency", asy
   assert.equal(result.verification.checks[0].kind, "display-order");
 });
 
-test("hydrateNativeApplyTimingContext expands scoped timing mark to full live track context", async () => {
+test("hydrateAppApplyTimingContext expands scoped timing mark to full live track context", async () => {
   const commands = [
     {
       id: "timing.marks.insert",
@@ -259,7 +259,7 @@ test("hydrateNativeApplyTimingContext expands scoped timing mark to full live tr
     }
   ];
 
-  const hydrated = await hydrateNativeApplyTimingContext({
+  const hydrated = await hydrateAppApplyTimingContext({
     endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
     commands,
     readTimingMarks: async (_endpoint, trackName) => {
@@ -283,7 +283,7 @@ test("hydrateNativeApplyTimingContext expands scoped timing mark to full live tr
   assert.equal(hydrated[1], commands[1]);
 });
 
-test("hydrateNativeApplyTimingContext replaces full created timing tracks instead of appending", async () => {
+test("hydrateAppApplyTimingContext replaces full created timing tracks instead of appending", async () => {
   const commands = [
     {
       id: "timing.track.create",
@@ -304,7 +304,7 @@ test("hydrateNativeApplyTimingContext replaces full created timing tracks instea
     }
   ];
 
-  const hydrated = await hydrateNativeApplyTimingContext({
+  const hydrated = await hydrateAppApplyTimingContext({
     commands,
     readTimingMarks: async () => {
       throw new Error("full created timing tracks should not require live mark hydration");

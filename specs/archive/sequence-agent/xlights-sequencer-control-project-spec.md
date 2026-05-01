@@ -28,7 +28,7 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 - Backward compatibility with existing xLights automation is preserved.
 
 ### 2.1 Logic Boundary Rule (Hard Requirement)
-- xLights API layer must remain low-level and xLights-native:
+- xLights API layer must remain low-level and xLights-owned:
   - expose authoritative state,
   - execute requested mutations,
   - expose raw/structured readback data.

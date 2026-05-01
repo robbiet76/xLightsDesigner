@@ -51,7 +51,7 @@ Rules:
 Initial resolution policy:
 
 - inspiration board source image target: 1536px wide or larger when the provider supports it
-- native UI preview: scaled down to fit the Design pane
+- app UI preview: scaled down to fit the Design pane
 - generated sequence still assets: store source resolution plus optional preview/thumbnail
 - thumbnails/spritesheets: stored separately from source files so low-resolution UI display does not destroy source quality
 - if the provider only returns a smaller image, the manifest must record actual width/height and the UI must scale down rather than upscale aggressively
@@ -340,14 +340,14 @@ Required local tests:
 - required palette display/coordination state
 - Designer result can reference a visual asset pack without breaking existing contract validation
 - Sequencer handoff compaction passes only refs/summaries, not binary payloads
-- native Design/Review automation can display a stored inspiration board fixture and verify handoff references
+- app Design/Review automation can display a stored inspiration board fixture and verify handoff references
 - assistant-chat validation blocks design/image generation when no song/sequence is selected
 
 Live validation is opt-in because it incurs provider cost:
 
 - generate one inspiration board using the configured image-generation provider and model
 - write files and manifest into the project app folder
-- show the board in native Design UI
+- show the board in app Design UI
 - pass the artifact reference through Designer -> Sequencer -> Review
 
 Provider access can vary by account. The app should keep the image provider/model configurable, surface provider access failures clearly, and preserve provider/model/source metadata in the manifest.
@@ -356,7 +356,7 @@ Current script:
 
 ```bash
 XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1 OPENAI_API_KEY=... \
-  node scripts/native/validate-live-visual-image-generation.mjs \
+  node scripts/app/validate-live-visual-image-generation.mjs \
   --project-file /path/to/project.xdproj
 ```
 
@@ -367,17 +367,17 @@ The script refuses to run unless `XLD_ENABLE_LIVE_VISUAL_IMAGE_GENERATION=1` is 
 1. Add `visual_design_asset_pack_v1` contract, storage routing, fixtures, and tests.
 2. Extend Designer contract builders and validators with optional visual inspiration refs.
 3. Extend `sequencing_design_handoff_v2` with compact asset-pack refs, palette roles, and motif directives.
-4. Add native Design UI support for showing a stored inspiration board and palette.
-5. Add conversational board revision controls and fixture validation for edit lineage. Done: the native generator supports `revisionRequest`, loads the current board image, calls the provider edit path, appends `board-r###` lineage, and writes the revised manifest/files under the same app-owned artifact folder. The macOS Design screen exposes a revision request field, explicit revise action, revision history, and read-only prior-revision preview.
+4. Add app Design UI support for showing a stored inspiration board and palette.
+5. Add conversational board revision controls and fixture validation for edit lineage. Done: the app generator supports `revisionRequest`, loads the current board image, calls the provider edit path, appends `board-r###` lineage, and writes the revised manifest/files under the same app-owned artifact folder. The macOS Design screen exposes a revision request field, explicit revise action, revision history, and read-only prior-revision preview.
 6. Add a provider adapter for image generation/editing, disabled unless configured. Done: adapter request/response construction and fixture tests are in `apps/xlightsdesigner-ui/agent/designer-dialog/openai-visual-image-provider.js`.
-7. Add live opt-in validation that generates one board, edits it once, and stores both revisions in the project folder. Done: `scripts/native/validate-live-visual-image-generation.mjs`.
+7. Add live opt-in validation that generates one board, edits it once, and stores both revisions in the project folder. Done: `scripts/app/validate-live-visual-image-generation.mjs`.
 8. Wire visual asset generation into the Designer -> Sequencer handoff path behind explicit user intent. Done: proposal generation now calls an injectable visual asset generator only when the user explicitly asks for an inspiration board/image/asset pack, then attaches compact refs to `creative_brief_v1`, `proposal_bundle_v1`, and `sequencing_design_handoff_v2`.
-9. Add native generator entry point for bridge use. Done: `scripts/designer/native/generate-visual-design-asset-pack.mjs` generates one board through the configured image provider, writes `inspiration-board.png`, and writes `visual-design-manifest.json` under the app project artifact folder.
-10. Add native Design screen generation action. Done: the macOS Design screen exposes an explicit `Generate Visual Inspiration` action backed by `LocalVisualDesignAssetGenerationService`; it uses the stored agent API key/base URL, runs the native generator, and writes only to the app-owned project artifact folder.
+9. Add app generator entry point for bridge use. Done: `scripts/designer/app/generate-visual-design-asset-pack.mjs` generates one board through the configured image provider, writes `inspiration-board.png`, and writes `visual-design-manifest.json` under the app project artifact folder.
+10. Add app Design screen generation action. Done: the macOS Design screen exposes an explicit `Generate Visual Inspiration` action backed by `LocalVisualDesignAssetGenerationService`; it uses the stored agent API key/base URL, runs the app generator, and writes only to the app-owned project artifact folder.
 11. Add sequence-agent use of palette/motif context immediately. Done: `sequence_agent` now carries `paletteRoles` and `motifDirectives` into planning metadata, uses motifs as effect-selection context, and applies palette-role hex values to generated xLights palette params when no explicit prompt color overrides them.
 12. Add media asset plan metadata for future Picture/Video use. Done: generated visual manifests now distinguish generated file-backed `sequenceAssets[]` from planned `mediaAssetPlans[]`, and the Designer -> Sequencer handoff carries compact `mediaAssetPlanDirectives[]` without binary payloads.
-13. Require selected song/sequence context before Designer song-design or image generation starts. Done: team-chat design/image prompts now block without selected song context, native visual generation no longer falls back to project name, and `scripts/native/validate-design-chat-song-gate.mjs` validates the no-song chat path.
-14. Trigger native visual generation from explicit Designer chat image/board requests. Done: app-assistant action requests now include `generate_visual_inspiration`, and the macOS app routes that action to the same Design-screen generator.
+13. Require selected song/sequence context before Designer song-design or image generation starts. Done: team-chat design/image prompts now block without selected song context, app visual generation no longer falls back to project name, and `scripts/app/validate-design-chat-song-gate.mjs` validates the no-song chat path.
+14. Trigger app visual generation from explicit Designer chat image/board requests. Done: app-assistant action requests now include `generate_visual_inspiration`, and the macOS app routes that action to the same Design-screen generator.
 15. Add picture/video effect placement later when xLights media effect support is implemented.
 
 ## Open Questions
