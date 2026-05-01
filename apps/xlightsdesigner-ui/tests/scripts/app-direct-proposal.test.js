@@ -308,6 +308,54 @@ test("app project display metadata loader promotes display discovery insights to
   assert.deepEqual(assignments.find((row) => row.targetId === "Present-01").tags, ["Presents", "focal_hierarchy", "lead"]);
 });
 
+test("app project display metadata loader includes custom model structure hints", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-custom-metadata-"));
+  const projectDir = path.join(root, "project");
+  const projectFile = path.join(projectDir, "Custom Metadata.xdproj");
+  writeJson(projectFile, { projectName: "Custom Metadata", showFolder: path.join(root, "show") });
+  writeJson(path.join(projectDir, "display", "custom-models.json"), {
+    artifactType: "custom_model_structure_catalog_v1",
+    models: [
+      {
+        targetId: "SingingBulb",
+        modelName: "Singing Bulb",
+        profile: "custom_face_like",
+        traits: ["custom_grid", "face_submodels", "custom_face_like"],
+        trainingBuckets: [],
+        construction: {
+          dimensions: { width: 56, height: 123, layers: 1 },
+          nodeMap: { nodeCount: 153 }
+        },
+        nodeOrder: { nodeCount: 153 },
+        submodels: { count: 11 }
+      },
+      {
+        targetId: "CustomSpinner",
+        modelName: "Custom Spinner",
+        profile: "custom_radial_like",
+        traits: ["custom_grid", "radial_like"],
+        trainingBuckets: ["spinner", "star"],
+        construction: {
+          dimensions: { width: 21, height: 21, layers: 1 },
+          nodeMap: { nodeCount: 90 }
+        },
+        submodels: { count: 6 }
+      }
+    ]
+  });
+
+  const assignments = loadProjectDisplayMetadataAssignments(projectFile);
+  const byTarget = new Map(assignments.map((row) => [row.targetId, row]));
+
+  assert.ok(byTarget.get("SingingBulb").tags.includes("custom model"));
+  assert.ok(byTarget.get("SingingBulb").tags.includes("custom_face_like"));
+  assert.ok(byTarget.get("SingingBulb").semanticHints.includes("custom face like"));
+  assert.ok(byTarget.get("SingingBulb").semanticHints.includes("11 custom submodels captured"));
+  assert.ok(byTarget.get("SingingBulb").semanticHints.includes("153 custom model nodes mapped"));
+  assert.ok(byTarget.get("CustomSpinner").tags.includes("spinner"));
+  assert.ok(byTarget.get("CustomSpinner").semanticHints.includes("spinner compatible custom model"));
+});
+
 test("app project display metadata loader can synthesize benchmark assignments for plain display fixtures", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-benchmark-metadata-"));
   const projectDir = path.join(root, "project");

@@ -238,6 +238,39 @@ test("metadata runtime remaps renamed targets by fingerprint during reconciliati
   assert.deepEqual(binding.orphanTargetIds, []);
 });
 
+test("metadata runtime refreshes custom model catalog during display reconciliation", () => {
+  const state = buildState();
+  state.models = [{ id: "CustomFace", name: "Custom Face", type: "Custom" }];
+  state.submodels = [{ id: "CustomFace/@Mouth", name: "@Mouth", parentId: "CustomFace" }];
+  state.sceneGraph = {
+    modelsById: {
+      CustomFace: {
+        id: "CustomFace",
+        name: "Custom Face",
+        displayAs: "Custom",
+        attributes: { CustomModel: ",1,;2,,3;,4," }
+      }
+    },
+    submodelsById: {
+      "CustomFace/@Mouth": {
+        id: "CustomFace/@Mouth",
+        name: "@Mouth",
+        parentId: "CustomFace",
+        type: "ranges",
+        line0: "2-3"
+      }
+    }
+  };
+  const runtime = buildRuntime(state);
+
+  runtime.reconcileDisplayMetadataForSceneGraphChange({ reason: "layout refresh" });
+
+  assert.equal(state.sceneGraph.customModelCatalog.artifactType, "custom_model_structure_catalog_v1");
+  assert.equal(state.sceneGraph.customModelCatalog.summary.customModelCount, 1);
+  assert.equal(state.sceneGraph.customModelCatalog.models[0].targetId, "CustomFace");
+  assert.equal(state.sceneGraph.customModelCatalog.models[0].construction.nodeMap.nodeCount, 4);
+});
+
 test("metadata runtime safely resolves duplicate fingerprints when stored identity matches one candidate", () => {
   const state = buildState();
   state.models = [

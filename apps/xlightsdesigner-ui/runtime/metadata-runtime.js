@@ -1,4 +1,5 @@
 import { buildNormalizedTargetMetadataRecords as buildDefaultNormalizedTargetMetadataRecords } from './target-metadata-runtime.js';
+import { buildCustomModelStructureCatalog } from './custom-model-catalog.js';
 
 export function createMetadataRuntime(deps = {}) {
   const {
@@ -85,6 +86,19 @@ export function createMetadataRuntime(deps = {}) {
       String(row?.construction?.dimensions?.layers || ''),
       Array.isArray(row?.submodels?.names) ? row.submodels.names.join(',') : ''
     ].join(':')));
+  }
+
+  function refreshCustomModelStructureCatalog() {
+    if (!state.sceneGraph || typeof state.sceneGraph !== 'object' || Array.isArray(state.sceneGraph)) return null;
+    const catalog = buildCustomModelStructureCatalog({
+      sceneGraph: state.sceneGraph,
+      source: {
+        showFolder: String(getShowFolder() || ''),
+        sceneGraphSource: String(state.health?.sceneGraphSource || '')
+      }
+    });
+    state.sceneGraph.customModelCatalog = catalog;
+    return catalog;
   }
 
   function buildDisplayMetadataLayoutFingerprint(targets = buildMetadataTargets({ includeSubmodels: true })) {
@@ -322,6 +336,7 @@ export function createMetadataRuntime(deps = {}) {
 
   function reconcileDisplayMetadataForSceneGraphChange({ reason = 'scene graph refreshed' } = {}) {
     const metadata = metadataObject();
+    refreshCustomModelStructureCatalog();
     const targets = buildMetadataTargets({ includeSubmodels: true });
     const liveIds = new Set(targets.map((target) => String(target.id || '')).filter(Boolean));
     const liveById = new Map(targets.map((target) => [String(target.id || ''), target]).filter(([id]) => id));

@@ -284,6 +284,56 @@ function buildSyntheticBenchmarkAssignments({ layoutRows = [], existingAssignmen
   return out.sort((a, b) => a.targetId.localeCompare(b.targetId));
 }
 
+function displayTextForProfile(profile = '') {
+  const value = str(profile).replace(/^custom_/, '').replace(/_/g, ' ');
+  return value ? `custom ${value}` : 'custom model';
+}
+
+function loadCustomModelStructureAssignments(projectFile = '') {
+  const projectDir = path.dirname(str(projectFile));
+  const customModelsPath = path.join(projectDir, 'display', 'custom-models.json');
+  if (!fs.existsSync(customModelsPath)) return [];
+  const document = readJson(customModelsPath);
+  const rows = arr(document?.models);
+  const out = [];
+  for (const row of rows) {
+    const targetId = str(row?.targetId || row?.modelName);
+    if (!targetId) continue;
+    const profile = str(row?.profile);
+    const construction = row?.construction && typeof row.construction === 'object' ? row.construction : {};
+    const dimensions = construction?.dimensions && typeof construction.dimensions === 'object' ? construction.dimensions : {};
+    const submodels = row?.submodels && typeof row.submodels === 'object' ? row.submodels : {};
+    const trainingBuckets = uniqueStrings(row?.trainingBuckets);
+    const traits = uniqueStrings(row?.traits).slice(0, 8);
+    const semanticHints = uniqueStrings([
+      displayTextForProfile(profile),
+      ...trainingBuckets.map((bucket) => `${bucket} compatible custom model`),
+      Number(submodels?.count || 0) > 0 ? `${Number(submodels.count)} custom submodels captured` : '',
+      Number(construction?.nodeMap?.nodeCount || row?.nodeOrder?.nodeCount || 0) > 0
+        ? `${Number(construction?.nodeMap?.nodeCount || row?.nodeOrder?.nodeCount)} custom model nodes mapped`
+        : '',
+      Number(dimensions?.width || 0) && Number(dimensions?.height || 0)
+        ? `custom construction ${Number(dimensions.width)}x${Number(dimensions.height)}`
+        : ''
+    ]);
+    out.push({
+      targetId,
+      tags: uniqueStrings([
+        'custom model',
+        profile,
+        ...trainingBuckets,
+        ...traits
+      ]),
+      semanticHints,
+      visualHintDefinitions: [],
+      effectAvoidances: [],
+      rolePreference: '',
+      source: 'xlightsdesigner_custom_model_structure'
+    });
+  }
+  return out.sort((a, b) => a.targetId.localeCompare(b.targetId));
+}
+
 export function loadProjectDisplayMetadataAssignments(projectFile = '', context = {}) {
   const projectDir = path.dirname(str(projectFile));
   const canonicalMetadataPath = path.join(projectDir, 'display', 'metadata.json');
@@ -308,6 +358,9 @@ export function loadProjectDisplayMetadataAssignments(projectFile = '', context 
   ].map(str).filter(Boolean));
 
   const byTarget = new Map();
+  for (const row of loadCustomModelStructureAssignments(projectFile)) {
+    mergeAssignment(byTarget, row.targetId, row);
+  }
   for (const row of loadDiscoveryAssignments(projectFile, context)) {
     mergeAssignment(byTarget, row.targetId, row);
   }
