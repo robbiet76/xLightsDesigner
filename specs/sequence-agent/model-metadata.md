@@ -171,7 +171,7 @@ Custom model capture should include enough construction detail for testing and a
 - preview/render geometry
 - source/provenance fields when the API exposes them
 
-Submodels for custom models are part of the custom model capture contract, not a separate optional enhancement.
+Submodels for custom models are part of the custom model capture contract, not a separate optional enhancement. They are often the primary sequencing surface for custom models, so capture should preserve enough information to reason about each submodel as a first-class target: membership, node coverage, sibling relationships, overlap, semantic structure hints, and parent context. Whole-parent custom model targeting remains useful, but custom model understanding should assume submodel-level sequencing will often be the normal case.
 
 ## Storage And Artifacts
 

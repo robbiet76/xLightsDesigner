@@ -53,7 +53,7 @@ The app should learn custom model behavior in layers:
    - node layout and coordinate extents
    - node order/path continuity
    - density, aspect, sparsity, and populated regions
-   - submodel definitions and node membership
+   - submodel definitions, node membership, naming, ranges, and overlap
    - preview/render geometry when available
 2. Capture semantic project metadata:
    - what the user says the target represents
@@ -62,16 +62,25 @@ The app should learn custom model behavior in layers:
    - effect avoidances and special handling
 3. Run effect probes against the actual custom target when useful:
    - start with low-risk effects and conservative settings
-   - render short validation windows
+   - render short validation windows on both the parent custom model and important submodels
    - observe coverage, motion, color spread, readability, flicker, and blank-node behavior
    - compare outcomes against the requested intent and metadata
 4. Promote learned behavior as custom-structure evidence:
    - keyed by stable target fingerprint and compact structural features
-   - scoped to effect family, parameter region, and observed outcome
+   - scoped to parent or submodel target, effect family, parameter region, and observed outcome
    - reusable only for similar structure and metadata context
    - never promoted solely because of the model name
 
 This means custom model support starts from general effect knowledge and runtime validation, then becomes more confident per display as the app observes how effects render on that target. Mature project metadata helps the agent choose what to try. Render evidence teaches the app what actually works for that user's installation.
+
+Submodels are usually the primary sequencing surface for custom models. The parent custom model is still important for identity, fingerprinting, whole-prop fills, and fallback targeting, but most useful sequencing decisions often happen at the submodel level. Custom learning must therefore model:
+
+- submodel purpose and relationship to the parent
+- submodel node coverage, density, and visual region
+- sibling overlap or adjacency
+- whether a submodel reads as a feature, layer, outline, segment, mouth/eye, spoke/ring, or other structure
+- effect behavior when applied to a single submodel versus the parent
+- effect behavior when multiple sibling submodels are layered or sequenced in succession
 
 Custom model learning should answer practical questions:
 
@@ -79,6 +88,8 @@ Custom model learning should answer practical questions:
 - which effects leave important regions blank
 - whether motion reads directionally or as noisy sparkle
 - whether submodels should be targeted instead of the full parent
+- which submodels are useful lead/detail targets and which are better treated as supporting regions
+- whether sibling submodels should be chased, alternated, layered, or kept synchronized
 - which settings are too dense, too sparse, too fast, or visually confusing
 - whether the target is reliable as a lead, support, accent, or texture surface
 
