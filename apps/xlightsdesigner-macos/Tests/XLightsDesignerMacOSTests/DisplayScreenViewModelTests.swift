@@ -28,6 +28,14 @@ private final class StubDisplayService: DisplayService, @unchecked Sendable {
     func deleteTagDefinition(for project: ActiveProjectModel?, tagID: String) async throws {}
 }
 
+private struct StubTargetBehaviorLearningStore: TargetBehaviorLearningStore {
+    var document = TargetBehaviorLearningDocument()
+
+    func load(for project: ActiveProjectModel?) throws -> TargetBehaviorLearningDocument {
+        document
+    }
+}
+
 @MainActor
 @Test func displayLoadsPersistedLabelsAsConfirmedMetadataRows() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-display-tests-\(UUID().uuidString)", isDirectory: true)
@@ -275,6 +283,84 @@ private final class StubDisplayService: DisplayService, @unchecked Sendable {
     #expect(selection.submodelFacts.first?.name == "@Mouth1")
     #expect(selection.submodelFacts.first?.nodeCoverageSummary == "12/120 nodes (10%)")
     #expect(selection.submodelFacts.first?.structureHints == ["feature_mouth"])
+}
+
+@MainActor
+@Test func displaySelectionIncludesLinkedTargetBehaviorFacts() async throws {
+    let label = DisplayLabelDefinitionModel(
+        id: "tag-feature",
+        name: "Feature Props",
+        description: "Feature props.",
+        usageCount: 1,
+        color: .blue
+    )
+    let workspace = ProjectWorkspace(sessionStore: DisplayTestProjectSessionStore())
+    workspace.setProject(ActiveProjectModel(
+        id: "project-1",
+        projectName: "Display Behavior",
+        projectFilePath: "/tmp/Display Behavior.xdproj",
+        showFolder: "/tmp/show",
+        mediaPath: "",
+        appRootPath: AppEnvironment.canonicalAppRoot,
+        createdAt: "2026-05-01T00:00:00Z",
+        updatedAt: "2026-05-01T00:00:00Z",
+        snapshot: [:]
+    ))
+    let service = StubDisplayService(result: DisplayServiceResult(
+        readiness: DisplayReadinessSummaryModel(
+            state: .needsReview,
+            totalTargets: 1,
+            readyCount: 1,
+            unresolvedCount: 0,
+            orphanCount: 0,
+            explanationText: "Ready.",
+            nextStepText: "Continue."
+        ),
+        rows: [displayRow(name: "CustomFace/@Mouth", labels: [label])],
+        sourceSummary: "test",
+        banners: [],
+        labelDefinitions: [label],
+        targetPreferences: [:],
+        visualHintDefinitions: []
+    ))
+    let behaviorStore = StubTargetBehaviorLearningStore(document: TargetBehaviorLearningDocument(
+        records: [
+            TargetBehaviorLearningRecord(
+                recordId: "tbl1:mouth-on",
+                targetId: "CustomFace/@Mouth",
+                targetKind: "submodel",
+                targetFingerprint: "tmf1:mouth",
+                displayName: "CustomFace / @Mouth",
+                effectName: "On",
+                effectFamily: "fill",
+                probeScope: "submodel",
+                stats: TargetBehaviorLearningStats(
+                    sampleCount: 3,
+                    positiveCount: 2,
+                    negativeCount: 1,
+                    lastObservedAt: "2026-05-01T12:00:00Z"
+                )
+            )
+        ]
+    ))
+    let model = DisplayScreenViewModel(
+        workspace: workspace,
+        displayService: service,
+        displayDiscoveryStore: LocalDisplayDiscoveryStateStore(),
+        targetBehaviorLearningStore: behaviorStore
+    )
+
+    model.loadDisplay()
+    try await xldWaitUntil { model.confirmedMetadataCount == 1 }
+
+    guard case let .selected(selection) = model.screenModel.selectedMetadata else {
+        Issue.record("Expected selected metadata")
+        return
+    }
+    #expect(selection.targetBehaviorFacts.count == 1)
+    #expect(selection.targetBehaviorFacts.first?.effectName == "On")
+    #expect(selection.targetBehaviorFacts.first?.probeScope == "submodel")
+    #expect(selection.targetBehaviorFacts.first?.outcomeSummary == "2 positive, 1 needs review")
 }
 
 private func displayRow(

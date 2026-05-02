@@ -52,6 +52,7 @@ final class DisplayScreenViewModel {
     private let workspace: ProjectWorkspace
     private let displayService: DisplayService
     private let displayDiscoveryStore: DisplayDiscoveryStateStore
+    private let targetBehaviorLearningStore: TargetBehaviorLearningStore
 
     var searchText = ""
     var categoryFilter = "All Categories"
@@ -108,11 +109,13 @@ final class DisplayScreenViewModel {
     init(
         workspace: ProjectWorkspace,
         displayService: DisplayService = XLightsDisplayService(),
-        displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore()
+        displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore(),
+        targetBehaviorLearningStore: TargetBehaviorLearningStore = LocalTargetBehaviorLearningStore()
     ) {
         self.workspace = workspace
         self.displayService = displayService
         self.displayDiscoveryStore = displayDiscoveryStore
+        self.targetBehaviorLearningStore = targetBehaviorLearningStore
     }
 
     var discoveryProposals: [DisplayDiscoveryTagProposalModel] {
@@ -374,6 +377,7 @@ final class DisplayScreenViewModel {
         let row = selected[0]
         let relatedLabels = relatedLabels(for: row)
         let submodelFacts = relatedSubmodelFacts(for: row)
+        let targetBehaviorFacts = relatedTargetBehaviorFacts(for: row)
         screenModel = DisplayScreenModel(
             header: screenModel.header,
             readinessSummary: screenModel.readinessSummary,
@@ -390,7 +394,8 @@ final class DisplayScreenViewModel {
                 rationale: row.rationale,
                 linkedTargets: row.linkedTargets,
                 relatedLabels: relatedLabels,
-                submodelFacts: submodelFacts
+                submodelFacts: submodelFacts,
+                targetBehaviorFacts: targetBehaviorFacts
             )),
             banners: screenModel.banners,
             labelDefinitions: screenModel.labelDefinitions,
@@ -995,6 +1000,37 @@ final class DisplayScreenViewModel {
                     return $0.parentId.localizedCaseInsensitiveCompare($1.parentId) == .orderedAscending
                 }
                 return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+    }
+
+    private func relatedTargetBehaviorFacts(for row: DisplayMetadataRowModel) -> [DisplayTargetBehaviorFactModel] {
+        guard let activeProject = workspace.activeProject else { return [] }
+        let linked = Set(row.linkedTargets.map { $0.lowercased() })
+        guard !linked.isEmpty else { return [] }
+        let document = (try? targetBehaviorLearningStore.load(for: activeProject)) ?? TargetBehaviorLearningDocument()
+        return document.records
+            .filter { record in
+                guard let targetId = record.targetId?.trimmingCharacters(in: .whitespacesAndNewlines), !targetId.isEmpty else { return false }
+                return linked.contains(targetId.lowercased())
+            }
+            .map { record in
+                let stats = record.stats
+                return DisplayTargetBehaviorFactModel(
+                    id: record.recordId,
+                    targetId: record.targetId ?? "",
+                    targetKind: record.targetKind ?? "",
+                    effectName: record.effectName ?? record.effectFamily ?? "",
+                    probeScope: record.probeScope ?? "",
+                    sampleCount: stats?.sampleCount ?? 0,
+                    positiveCount: stats?.positiveCount ?? 0,
+                    negativeCount: stats?.negativeCount ?? 0,
+                    lastObservedAt: stats?.lastObservedAt ?? ""
+                )
+            }
+            .sorted {
+                if $0.negativeCount != $1.negativeCount { return $0.negativeCount > $1.negativeCount }
+                if $0.sampleCount != $1.sampleCount { return $0.sampleCount > $1.sampleCount }
+                return $0.effectName.localizedCaseInsensitiveCompare($1.effectName) == .orderedAscending
             }
     }
 

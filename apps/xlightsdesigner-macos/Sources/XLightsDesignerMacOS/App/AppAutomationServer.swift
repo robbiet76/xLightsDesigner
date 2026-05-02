@@ -676,6 +676,20 @@ final class AppAutomationServer: @unchecked Sendable {
                 "rationale": entry.rationale,
                 "linkedTargets": entry.linkedTargets,
                 "relatedLabels": entry.relatedLabels.map { ["name": $0.name, "description": $0.description, "color": $0.color.displayName] },
+                "targetBehavior": entry.targetBehaviorFacts.prefix(24).map {
+                    [
+                        "id": $0.id,
+                        "targetId": $0.targetId,
+                        "targetKind": $0.targetKind,
+                        "effectName": $0.effectName,
+                        "probeScope": $0.probeScope,
+                        "sampleCount": $0.sampleCount,
+                        "positiveCount": $0.positiveCount,
+                        "negativeCount": $0.negativeCount,
+                        "lastObservedAt": $0.lastObservedAt,
+                        "outcomeSummary": $0.outcomeSummary
+                    ] as [String: Any]
+                },
                 "submodels": entry.submodelFacts.prefix(24).map {
                     [
                         "id": $0.id,

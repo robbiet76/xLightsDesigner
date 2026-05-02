@@ -99,6 +99,25 @@ struct DisplaySubmodelFactModel: Identifiable, Hashable, Sendable {
     }
 }
 
+struct DisplayTargetBehaviorFactModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let targetId: String
+    let targetKind: String
+    let effectName: String
+    let probeScope: String
+    let sampleCount: Int
+    let positiveCount: Int
+    let negativeCount: Int
+    let lastObservedAt: String
+
+    var outcomeSummary: String {
+        if sampleCount <= 0 { return "No samples" }
+        if positiveCount > 0 && negativeCount == 0 { return "\(positiveCount)/\(sampleCount) positive" }
+        if negativeCount > 0 && positiveCount == 0 { return "\(negativeCount)/\(sampleCount) needs review" }
+        return "\(positiveCount) positive, \(negativeCount) needs review"
+    }
+}
+
 struct DisplayMetadataRowModel: Identifiable, Hashable, Sendable {
     let id: String
     let subject: String
@@ -130,6 +149,7 @@ struct DisplayMetadataSelectionModel: Sendable {
     let linkedTargets: [String]
     let relatedLabels: [DisplayLabelDefinitionModel]
     let submodelFacts: [DisplaySubmodelFactModel]
+    let targetBehaviorFacts: [DisplayTargetBehaviorFactModel]
 }
 
 struct DisplayMetadataOverviewCardModel: Identifiable, Hashable, Sendable {
