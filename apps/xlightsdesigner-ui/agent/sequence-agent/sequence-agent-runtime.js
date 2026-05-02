@@ -31,6 +31,7 @@ export function buildSequenceAgentInput({
   revisionRetryPressure = null,
   revisionFeedback = null,
   candidateSelectionContext = null,
+  targetBehaviorLearning = null,
   timingOwnership = [],
   manualXdLocks = [],
   allowTimingWrites = true
@@ -76,6 +77,9 @@ export function buildSequenceAgentInput({
       : null,
     candidateSelectionContext: candidateSelectionContext && typeof candidateSelectionContext === "object" && !Array.isArray(candidateSelectionContext)
       ? candidateSelectionContext
+      : null,
+    targetBehaviorLearning: targetBehaviorLearning && typeof targetBehaviorLearning === "object" && !Array.isArray(targetBehaviorLearning)
+      ? targetBehaviorLearning
       : null,
     safety: {
       timingOwnership: Array.isArray(timingOwnership) ? timingOwnership : [],

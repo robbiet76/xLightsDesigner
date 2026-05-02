@@ -4,6 +4,7 @@ import {
   resolveRevisionFeedbackFromSnapshots,
   resolveRevisionRetryPressureFromSnapshots
 } from "./compact-plan-metadata.js";
+import { readTargetBehaviorLearningDocument as readProjectTargetBehaviorLearningDocument } from "../storage/display-metadata-store.mjs";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -11,6 +12,27 @@ function str(value = "") {
 
 function arr(value) {
   return Array.isArray(value) ? value : [];
+}
+
+async function loadTargetBehaviorLearning({ state = {}, deps = {} } = {}) {
+  const projectFilePath = str(state?.projectFilePath);
+  if (!projectFilePath) return null;
+  const readTargetBehaviorLearningDocument =
+    deps.readTargetBehaviorLearningDocument || readProjectTargetBehaviorLearningDocument;
+  if (typeof readTargetBehaviorLearningDocument !== "function") return null;
+  try {
+    const result = await readTargetBehaviorLearningDocument({ projectFilePath });
+    const document = result?.document && typeof result.document === "object" && !Array.isArray(result.document)
+      ? result.document
+      : null;
+    if (!document) return null;
+    return {
+      ...document,
+      artifactPath: str(result?.artifactPath || document.artifactPath)
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function addRevisionFeedbackToProposalLines(lines = [], revisionFeedback = null) {
@@ -594,6 +616,7 @@ export function createProposalGenerationRuntime(deps = {}) {
         )
         || state.sequenceAgentRuntime?.revisionFeedback
         || null;
+      const targetBehaviorLearning = await loadTargetBehaviorLearning({ state, deps });
       const sequenceAgentInput = buildSequenceAgentInput({
         currentSequenceContext: await (async () => {
           try {
@@ -644,6 +667,7 @@ export function createProposalGenerationRuntime(deps = {}) {
         renderValidationEvidence: state.agentPlan?.handoff?.metadata?.renderValidationEvidence || null,
         revisionRetryPressure,
         revisionFeedback,
+        targetBehaviorLearning,
         candidateSelectionContext: buildCandidateSelectionContext({
           requestId: `${orchestrationRun.id}-generate`,
           phase: "proposal",
@@ -687,6 +711,7 @@ export function createProposalGenerationRuntime(deps = {}) {
           renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
           revisionRetryPressure: sequenceAgentInput.revisionRetryPressure,
           revisionFeedback: sequenceAgentInput.revisionFeedback,
+          targetBehaviorLearning: sequenceAgentInput.targetBehaviorLearning,
           candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
           currentSequenceContext: sequenceAgentInput.currentSequenceContext,
           priorPassMemory,

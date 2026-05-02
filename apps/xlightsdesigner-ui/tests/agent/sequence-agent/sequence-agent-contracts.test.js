@@ -124,6 +124,18 @@ test("sequence_agent input contract accepts optional candidate selection context
   assert.deepEqual(errors, []);
 });
 
+test("sequence_agent input contract accepts optional target behavior learning object", () => {
+  const errors = validateSequenceAgentInput(sampleInput({
+    targetBehaviorLearning: {
+      artifactType: "project_target_behavior_learning_v1",
+      records: [
+        { recordId: "tbl1:abc", targetId: "CustomFace/@Mouth", effectName: "On" }
+      ]
+    }
+  }));
+  assert.deepEqual(errors, []);
+});
+
 test("sequence_agent input contract rejects missing required fields", () => {
   const errors = validateSequenceAgentInput(sampleInput({ requestId: "", safety: {} }));
   assert.ok(errors.some((e) => /requestId is required/i.test(e)));
@@ -137,12 +149,14 @@ test("sequence_agent input contract rejects non-object artistic goal and revisio
     sequenceArtisticGoal: "bad",
     sequenceRevisionObjective: 42,
     renderValidationEvidence: "bad",
-    candidateSelectionContext: "bad"
+    candidateSelectionContext: "bad",
+    targetBehaviorLearning: "bad"
   }));
   assert.ok(errors.some((e) => /sequenceArtisticGoal must be an object/i.test(e)));
   assert.ok(errors.some((e) => /sequenceRevisionObjective must be an object/i.test(e)));
   assert.ok(errors.some((e) => /renderValidationEvidence must be an object/i.test(e)));
   assert.ok(errors.some((e) => /candidateSelectionContext must be an object/i.test(e)));
+  assert.ok(errors.some((e) => /targetBehaviorLearning must be an object/i.test(e)));
 });
 
 test("sequence_agent plan output contract requires metadata.degradedMode", () => {

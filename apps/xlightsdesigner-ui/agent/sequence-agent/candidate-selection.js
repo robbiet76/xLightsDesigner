@@ -92,11 +92,48 @@ function biasAlignmentScore(candidate = null, selectionContext = null) {
   return clamp01(score);
 }
 
-function computeCandidateScore(candidate = null, intentEnvelope = null, selectionContext = null) {
+function targetBehaviorSignal(candidate = null, targetBehaviorLearning = null) {
+  const records = arr(targetBehaviorLearning?.records).filter((row) => row && typeof row === 'object');
+  if (!records.length) {
+    return { behaviorScore: 0.5, evidenceCount: 0, positiveCount: 0, negativeCount: 0, matchedRecordIds: [] };
+  }
+  const refs = arr(candidate?.realizationRefs).filter((row) => row && typeof row === 'object');
+  const matched = [];
+  for (const ref of refs) {
+    const targetIds = arr(ref?.targetIds).map((row) => str(row).toLowerCase()).filter(Boolean);
+    const effectName = str(ref?.effectName).toLowerCase();
+    if (!targetIds.length || !effectName) continue;
+    for (const record of records) {
+      const recordTarget = str(record?.targetId).toLowerCase();
+      const recordEffect = str(record?.effectName || record?.effectFamily).toLowerCase();
+      if (!recordTarget || !recordEffect) continue;
+      if (targetIds.includes(recordTarget) && recordEffect === effectName) matched.push(record);
+    }
+  }
+  const uniqueMatched = matched.filter((row, index, list) => list.findIndex((other) => str(other?.recordId) === str(row?.recordId)) === index);
+  const positiveCount = uniqueMatched.reduce((sum, row) => sum + Number(row?.stats?.positiveCount || 0), 0);
+  const negativeCount = uniqueMatched.reduce((sum, row) => sum + Number(row?.stats?.negativeCount || 0), 0);
+  const sampleCount = uniqueMatched.reduce((sum, row) => sum + Number(row?.stats?.sampleCount || 0), 0);
+  const observedCount = positiveCount + negativeCount;
+  const behaviorScore = sampleCount > 0
+    ? clamp01(((positiveCount * 1) + ((sampleCount - observedCount) * 0.5)) / sampleCount)
+    : 0.5;
+  return {
+    behaviorScore: Number(behaviorScore.toFixed(4)),
+    evidenceCount: uniqueMatched.length,
+    sampleCount,
+    positiveCount,
+    negativeCount,
+    matchedRecordIds: uniqueMatched.map((row) => str(row?.recordId)).filter(Boolean).slice(0, 8)
+  };
+}
+
+function computeCandidateScore(candidate = null, intentEnvelope = null, selectionContext = null, targetBehaviorLearning = null) {
   const fitScore = bandToScore(candidate?.fitSignals?.overallFit);
   const revisionScore = clamp01(candidate?.revisionSignals?.revisionScore);
   const noveltyScore = clamp01(candidate?.noveltySignals?.noveltyScore);
   const biasAlignment = biasAlignmentScore(candidate, selectionContext);
+  const behaviorSignal = targetBehaviorSignal(candidate, targetBehaviorLearning);
   const memoryPenalty = clamp01(candidate?.noveltySignals?.memoryPenalty);
   const oscillationPenalty = clamp01(candidate?.noveltySignals?.oscillationPenalty);
   const riskBands = [
@@ -120,7 +157,8 @@ function computeCandidateScore(candidate = null, intentEnvelope = null, selectio
   const reusePenaltyComponent = memoryPenalty * (0.08 + ((1 - reuseTolerance) * 0.08));
   const lowChangePenaltyComponent = lowChangeRetryPressure * (0.06 * (1 - noveltyScore));
   const oscillationPenaltyComponent = oscillationPenalty * 0.18;
-  return Number((fitComponent + revisionComponent + biasAlignmentComponent + noveltyComponent + safetyComponent - reusePenaltyComponent - lowChangePenaltyComponent - oscillationPenaltyComponent).toFixed(4));
+  const behaviorComponent = behaviorSignal.evidenceCount ? ((behaviorSignal.behaviorScore - 0.5) * 0.12) : 0;
+  return Number((fitComponent + revisionComponent + biasAlignmentComponent + noveltyComponent + safetyComponent + behaviorComponent - reusePenaltyComponent - lowChangePenaltyComponent - oscillationPenaltyComponent).toFixed(4));
 }
 
 function selectionMode(selectionSeed = '') {
@@ -137,28 +175,38 @@ export function buildCandidateSelectionV1({
   intentEnvelope = null,
   realizationCandidates = null,
   renderValidationEvidence = null,
+  targetBehaviorLearning = null,
   selectionSeed = '',
   selectionContext = null
 } = {}) {
   const candidates = arr(realizationCandidates?.candidates);
   const scoredCandidates = candidates
-    .map((candidate) => ({
-      candidateId: str(candidate?.candidateId),
-      selectionScore: computeCandidateScore(candidate, intentEnvelope, selectionContext),
-      fitScore: bandToScore(candidate?.fitSignals?.overallFit),
-      revisionScore: clamp01(candidate?.revisionSignals?.revisionScore),
-      biasAlignmentScore: biasAlignmentScore(candidate, selectionContext),
-      noveltyScore: clamp01(candidate?.noveltySignals?.noveltyScore),
-      oscillationRisk: str(candidate?.noveltySignals?.oscillationRisk),
-      riskScore: Number((1 - (
-        [
-          candidate?.riskSignals?.attentionConflictRisk,
-          candidate?.riskSignals?.layeringConflictRisk,
-          candidate?.riskSignals?.complexityRisk,
-          candidate?.riskSignals?.renderUncertainty
-        ].map((row) => bandToScore(row)).reduce((sum, row) => sum + row, 0) / 4
-      )).toFixed(4))
-    }))
+    .map((candidate) => {
+      const behaviorSignal = targetBehaviorSignal(candidate, targetBehaviorLearning);
+      return {
+        candidateId: str(candidate?.candidateId),
+        selectionScore: computeCandidateScore(candidate, intentEnvelope, selectionContext, targetBehaviorLearning),
+        fitScore: bandToScore(candidate?.fitSignals?.overallFit),
+        revisionScore: clamp01(candidate?.revisionSignals?.revisionScore),
+        biasAlignmentScore: biasAlignmentScore(candidate, selectionContext),
+        noveltyScore: clamp01(candidate?.noveltySignals?.noveltyScore),
+        behaviorScore: behaviorSignal.behaviorScore,
+        behaviorEvidenceCount: behaviorSignal.evidenceCount,
+        behaviorSampleCount: behaviorSignal.sampleCount || 0,
+        behaviorPositiveCount: behaviorSignal.positiveCount || 0,
+        behaviorNegativeCount: behaviorSignal.negativeCount || 0,
+        behaviorRecordIds: behaviorSignal.matchedRecordIds,
+        oscillationRisk: str(candidate?.noveltySignals?.oscillationRisk),
+        riskScore: Number((1 - (
+          [
+            candidate?.riskSignals?.attentionConflictRisk,
+            candidate?.riskSignals?.layeringConflictRisk,
+            candidate?.riskSignals?.complexityRisk,
+            candidate?.riskSignals?.renderUncertainty
+          ].map((row) => bandToScore(row)).reduce((sum, row) => sum + row, 0) / 4
+        )).toFixed(4))
+      };
+    })
     .sort((left, right) => right.selectionScore - left.selectionScore || left.candidateId.localeCompare(right.candidateId));
 
   const topScore = scoredCandidates[0]?.selectionScore ?? 0;
@@ -171,7 +219,8 @@ export function buildCandidateSelectionV1({
     source: {
       intentEnvelopeRef: str(intentEnvelope?.artifactId),
       realizationCandidatesRef: str(realizationCandidates?.artifactId),
-      renderValidationEvidenceRef: str(renderValidationEvidence?.renderObservationRef)
+      renderValidationEvidenceRef: str(renderValidationEvidence?.renderObservationRef),
+      targetBehaviorLearningRef: str(targetBehaviorLearning?.artifactPath || targetBehaviorLearning?.artifactId)
     },
     policy: {
       mode: selectionMode(selectionSeed),
@@ -198,6 +247,13 @@ export function buildCandidateSelectionV1({
           explorationEnabled: Boolean(selectionContext.explorationEnabled),
           unresolvedSignals: arr(selectionContext.unresolvedSignals).map((row) => str(row)).filter(Boolean),
           retryPressureSignals: arr(selectionContext.retryPressureSignals).map((row) => str(row)).filter(Boolean),
+          targetBehaviorLearning: targetBehaviorLearning && typeof targetBehaviorLearning === 'object'
+            ? {
+                available: arr(targetBehaviorLearning.records).length > 0,
+                recordCount: arr(targetBehaviorLearning.records).length,
+                artifactPath: str(targetBehaviorLearning.artifactPath)
+              }
+            : null,
           submodelProbePlan: selectionContext.submodelProbePlan && typeof selectionContext.submodelProbePlan === 'object'
             ? {
                 strategy: str(selectionContext.submodelProbePlan.strategy),

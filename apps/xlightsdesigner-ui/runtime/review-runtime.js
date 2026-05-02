@@ -89,6 +89,27 @@ async function persistTargetBehaviorLearning({
   };
 }
 
+async function loadTargetBehaviorLearning({ state = {}, deps = {} } = {}) {
+  const projectFilePath = String(state?.projectFilePath || "").trim();
+  if (!projectFilePath) return null;
+  const readTargetBehaviorLearningDocument =
+    deps.readTargetBehaviorLearningDocument || readProjectTargetBehaviorLearningDocument;
+  if (typeof readTargetBehaviorLearningDocument !== "function") return null;
+  try {
+    const result = await readTargetBehaviorLearningDocument({ projectFilePath });
+    const document = result?.document && typeof result.document === "object" && !Array.isArray(result.document)
+      ? result.document
+      : null;
+    if (!document) return null;
+    return {
+      ...document,
+      artifactPath: String(result?.artifactPath || document.artifactPath || "").trim()
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function executeApplyCore({
   state = {},
   sourceLines = [],
@@ -200,6 +221,7 @@ export async function executeApplyCore({
       targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
       tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
     };
+    const targetBehaviorLearning = await loadTargetBehaviorLearning({ state, deps });
     let currentSequenceContext = null;
     try {
       currentSequenceContext = await buildCurrentSequenceContextFromReadback({
@@ -244,6 +266,7 @@ export async function executeApplyCore({
       renderValidationEvidence: planHandoff?.metadata?.renderValidationEvidence || null,
       revisionRetryPressure,
       revisionFeedback,
+      targetBehaviorLearning,
       candidateSelectionContext: buildCandidateSelectionContext({
         requestId: `${orchestrationRun.id}-apply`,
         phase: "review",
@@ -297,6 +320,7 @@ export async function executeApplyCore({
       renderValidationEvidence: sequenceAgentInput.renderValidationEvidence,
       revisionRetryPressure: sequenceAgentInput.revisionRetryPressure,
       revisionFeedback: sequenceAgentInput.revisionFeedback,
+      targetBehaviorLearning: sequenceAgentInput.targetBehaviorLearning,
       candidateSelectionContext: sequenceAgentInput.candidateSelectionContext,
       currentSequenceContext: sequenceAgentInput.currentSequenceContext,
       priorPassMemory,

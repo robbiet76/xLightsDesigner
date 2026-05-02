@@ -1660,6 +1660,36 @@ test("sequence_agent plan metadata carries render validation evidence refs", () 
   });
 });
 
+test("sequence_agent plan metadata carries advisory target behavior learning", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / add Color Wash"],
+    baseRevision: "rev-behavior",
+    effectCatalog: sampleCatalog(),
+    targetBehaviorLearning: {
+      artifactType: "project_target_behavior_learning_v1",
+      artifactPath: "/project/display/target-behavior.json",
+      records: [
+        {
+          recordId: "tbl1:megagood",
+          targetId: "MegaTree",
+          targetKind: "model",
+          targetFingerprint: "tmf1:mega",
+          effectName: "Color Wash",
+          probeScope: "target",
+          stats: { sampleCount: 3, positiveCount: 3, negativeCount: 0, lastObservedAt: "2026-05-01T12:00:00Z" }
+        }
+      ]
+    }
+  });
+
+  assert.equal(out.metadata.targetBehaviorLearning.recordCount, 1);
+  assert.equal(out.metadata.targetBehaviorLearning.records[0].recordId, "tbl1:megagood");
+  assert.equal(out.metadata.candidateSelection.source.targetBehaviorLearningRef, "/project/display/target-behavior.json");
+  assert.ok(out.metadata.candidateSelection.scoredCandidates.some((row) => row.behaviorEvidenceCount >= 1));
+});
+
 test("sequence_agent exposes bounded parameter prior guidance for matched target geometry", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

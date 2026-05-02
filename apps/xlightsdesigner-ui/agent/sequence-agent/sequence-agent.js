@@ -3555,6 +3555,7 @@ export function buildSequenceAgentPlan({
   metadataAssignments = [],
   renderValidationEvidence = null,
   candidateSelectionContext = null,
+  targetBehaviorLearning = null,
   currentSequenceContext = null,
   stageOverrides = {}
 } = {}) {
@@ -3646,6 +3647,7 @@ export function buildSequenceAgentPlan({
     intentEnvelope,
     realizationCandidates,
     renderValidationEvidence,
+    targetBehaviorLearning,
     selectionSeed: resolvedCandidateSelectionContext?.explorationEnabled ? resolvedCandidateSelectionContext?.seed : "",
     selectionContext: resolvedCandidateSelectionContext
   });
@@ -3780,6 +3782,30 @@ export function buildSequenceAgentPlan({
     intentEnvelope,
     realizationCandidates,
     candidateSelection,
+    targetBehaviorLearning: targetBehaviorLearning && typeof targetBehaviorLearning === "object"
+      ? {
+          artifactType: normText(targetBehaviorLearning.artifactType || "project_target_behavior_learning_v1"),
+          artifactPath: normText(targetBehaviorLearning.artifactPath),
+          recordCount: normArray(targetBehaviorLearning.records).length,
+          records: normArray(targetBehaviorLearning.records).slice(0, 24).map((row) => ({
+            recordId: normText(row?.recordId),
+            targetId: normText(row?.targetId),
+            targetKind: normText(row?.targetKind),
+            targetFingerprint: normText(row?.targetFingerprint),
+            effectName: normText(row?.effectName),
+            effectFamily: normText(row?.effectFamily),
+            probeScope: normText(row?.probeScope),
+            stats: row?.stats && typeof row.stats === "object"
+              ? {
+                  sampleCount: Number(row.stats.sampleCount || 0),
+                  positiveCount: Number(row.stats.positiveCount || 0),
+                  negativeCount: Number(row.stats.negativeCount || 0),
+                  lastObservedAt: normText(row.stats.lastObservedAt)
+                }
+              : null
+          }))
+        }
+      : null,
     candidateChoice: {
       chosenCandidateId: normText(candidateChoice?.chosenCandidateId),
       selectionMode: normText(candidateChoice?.selectionMode),

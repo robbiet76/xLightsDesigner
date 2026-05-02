@@ -242,3 +242,78 @@ test("candidate selection context builds advisory submodel probe plan from rende
   assert.equal(out.selectionContext.submodelProbePlan.strategy, "submodel_first_with_parent_control");
   assert.deepEqual(out.selectionContext.submodelProbePlan.recommendedSubmodelTargetIds, ["Singing Face/@Mouth1", "Spinner/Spoke 1"]);
 });
+
+test("candidate selection uses project target behavior learning as advisory evidence", () => {
+  const out = buildCandidateSelectionV1({
+    intentEnvelope: {
+      artifactId: "intent-behavior",
+      novelty: { explorationPressure: "medium", reuseTolerance: "medium" }
+    },
+    realizationCandidates: {
+      artifactId: "candidates-behavior",
+      candidates: [
+        {
+          candidateId: "candidate-known-good",
+          realizationRefs: [
+            { targetIds: ["CustomFace/@Mouth"], effectName: "On" }
+          ],
+          fitSignals: { overallFit: "medium" },
+          revisionSignals: { revisionScore: 0.6 },
+          noveltySignals: { noveltyScore: 0.5, memoryPenalty: 0, oscillationPenalty: 0, oscillationRisk: "low" },
+          riskSignals: {
+            attentionConflictRisk: "medium",
+            layeringConflictRisk: "medium",
+            complexityRisk: "medium",
+            renderUncertainty: "medium"
+          }
+        },
+        {
+          candidateId: "candidate-known-poor",
+          realizationRefs: [
+            { targetIds: ["CustomFace/@Mouth"], effectName: "Bars" }
+          ],
+          fitSignals: { overallFit: "medium" },
+          revisionSignals: { revisionScore: 0.6 },
+          noveltySignals: { noveltyScore: 0.5, memoryPenalty: 0, oscillationPenalty: 0, oscillationRisk: "low" },
+          riskSignals: {
+            attentionConflictRisk: "medium",
+            layeringConflictRisk: "medium",
+            complexityRisk: "medium",
+            renderUncertainty: "medium"
+          }
+        }
+      ]
+    },
+    targetBehaviorLearning: {
+      artifactPath: "/project/display/target-behavior.json",
+      records: [
+        {
+          recordId: "tbl1:good",
+          targetId: "CustomFace/@Mouth",
+          effectName: "On",
+          stats: { sampleCount: 4, positiveCount: 4, negativeCount: 0 }
+        },
+        {
+          recordId: "tbl1:poor",
+          targetId: "CustomFace/@Mouth",
+          effectName: "Bars",
+          stats: { sampleCount: 4, positiveCount: 0, negativeCount: 4 }
+        }
+      ]
+    },
+    selectionContext: {
+      phase: "proposal",
+      seed: "proposal::behavior",
+      explorationEnabled: true
+    }
+  });
+
+  assert.equal(out.scoredCandidates[0].candidateId, "candidate-known-good");
+  const good = out.scoredCandidates.find((row) => row.candidateId === "candidate-known-good");
+  const poor = out.scoredCandidates.find((row) => row.candidateId === "candidate-known-poor");
+  assert.equal(good.behaviorEvidenceCount, 1);
+  assert.equal(good.behaviorScore, 1);
+  assert.equal(poor.behaviorScore, 0);
+  assert.ok(good.selectionScore > poor.selectionScore);
+  assert.equal(out.selectionContext.targetBehaviorLearning.recordCount, 2);
+});

@@ -125,6 +125,9 @@ export function validateSequenceAgentInput(payload = {}) {
   if (obj.candidateSelectionContext != null && !isPlainObject(obj.candidateSelectionContext)) {
     errors.push("candidateSelectionContext must be an object when provided");
   }
+  if (obj.targetBehaviorLearning != null && !isPlainObject(obj.targetBehaviorLearning)) {
+    errors.push("targetBehaviorLearning must be an object when provided");
+  }
 
   return errors;
 }
