@@ -37,7 +37,7 @@ struct ProjectServiceTests {
         #expect(reopened.projectName == project.projectName)
     }
 
-    @Test func createProjectMigratesOnlyDisplayMetadataFromExistingProject() throws {
+    @Test func createProjectMigratesOnlyDisplayProjectKnowledgeFromExistingProject() throws {
         let service = try makeService()
         let sourceName = "App Test Project \(UUID().uuidString.prefix(6))"
         let source = try service.createProject(
@@ -71,6 +71,18 @@ struct ProjectServiceTests {
         }
         """
         try Data(metadataJSON.utf8).write(to: metadataFile)
+        let targetBehaviorFile = sourceDir.appendingPathComponent("display/target-behavior.json")
+        try FileManager.default.createDirectory(at: targetBehaviorFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let targetBehaviorJSON = """
+        {
+          "artifactType": "project_target_behavior_learning_v1",
+          "artifactVersion": "1.0",
+          "records": [
+            { "recordId": "tbl1:test", "targetId": "Tree", "effectName": "On", "stats": { "sampleCount": 2 } }
+          ]
+        }
+        """
+        try Data(targetBehaviorJSON.utf8).write(to: targetBehaviorFile)
 
         let migratedName = "App Test Project \(UUID().uuidString.prefix(6)) Migrated"
         let migrated = try service.createProject(
@@ -85,13 +97,16 @@ struct ProjectServiceTests {
         let migratedDir = URL(fileURLWithPath: migrated.projectFilePath).deletingLastPathComponent()
         let migratedMarker = migratedDir.appendingPathComponent("diagnostics/marker.txt")
         let migratedMetadata = migratedDir.appendingPathComponent("display/metadata.json")
+        let migratedTargetBehavior = migratedDir.appendingPathComponent("display/target-behavior.json")
 
         #expect(migrated.projectName == migratedName)
         #expect(migrated.showFolder == "/tmp/new-show")
         #expect(FileManager.default.fileExists(atPath: migrated.projectFilePath))
         #expect(FileManager.default.fileExists(atPath: migratedMetadata.path))
+        #expect(FileManager.default.fileExists(atPath: migratedTargetBehavior.path))
         #expect(!FileManager.default.fileExists(atPath: migratedMarker.path))
         #expect(try String(contentsOf: migratedMetadata).contains("\"Tree\""))
+        #expect(try String(contentsOf: migratedTargetBehavior).contains("\"tbl1:test\""))
         #expect(URL(fileURLWithPath: migrated.projectFilePath).lastPathComponent == "\(migratedName).xdproj")
     }
 

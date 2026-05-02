@@ -8,8 +8,10 @@ import {
   buildDisplayMetadataPaths,
   readDisplayMetadataDocument,
   readDisplayRefreshArtifact,
+  readTargetBehaviorLearningDocument,
   writeDisplayMetadataDocument,
-  writeDisplayRefreshArtifacts
+  writeDisplayRefreshArtifacts,
+  writeTargetBehaviorLearningDocument
 } from "../../storage/display-metadata-store.mjs";
 
 function makeProjectFixture() {
@@ -75,4 +77,33 @@ test("display metadata store writes refreshed model index and reconciliation art
   assert.deepEqual(write.rows.map((row) => row.kind), ["model-index", "reconciliation"]);
   assert.equal(modelIndex.artifact.records[0].targetId, "Tree");
   assert.deepEqual(reconciliation.artifact.orphanTargetIds, []);
+});
+
+test("display metadata store writes project-local target behavior learning", () => {
+  const { projectFilePath } = makeProjectFixture();
+  const initial = readTargetBehaviorLearningDocument({ projectFilePath });
+  const document = {
+    artifactType: "project_target_behavior_learning_v1",
+    artifactVersion: "1.0",
+    records: [
+      {
+        recordId: "tbl1:abc12345",
+        targetFingerprint: "tmf1:target001",
+        targetId: "Tree",
+        effectName: "On",
+        stats: { sampleCount: 1 }
+      }
+    ]
+  };
+  const write = writeTargetBehaviorLearningDocument({ projectFilePath, document });
+  const read = readTargetBehaviorLearningDocument({ projectFilePath });
+  const artifact = readDisplayRefreshArtifact({ projectFilePath, kind: "target-behavior" });
+
+  assert.equal(initial.ok, true);
+  assert.equal(initial.exists, false);
+  assert.equal(write.ok, true);
+  assert.equal(read.ok, true);
+  assert.equal(read.exists, true);
+  assert.equal(read.document.records[0].targetFingerprint, "tmf1:target001");
+  assert.equal(artifact.artifact.records[0].recordId, "tbl1:abc12345");
 });

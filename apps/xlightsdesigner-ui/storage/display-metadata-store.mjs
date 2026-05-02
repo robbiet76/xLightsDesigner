@@ -36,6 +36,7 @@ export function buildDisplayMetadataPaths(projectFilePath = "") {
     modelIndexPath: displayDir ? path.join(displayDir, "model-index.json") : "",
     reconciliationPath: displayDir ? path.join(displayDir, "reconciliation.json") : "",
     discoveryPath: displayDir ? path.join(displayDir, "discovery.json") : "",
+    targetBehaviorPath: displayDir ? path.join(displayDir, "target-behavior.json") : "",
     legacyMetadataPath: legacyLayoutDir ? path.join(legacyLayoutDir, "layout-metadata.json") : ""
   };
 }
@@ -114,7 +115,8 @@ export function readDisplayRefreshArtifact({ projectFilePath = "", kind = "" } =
   const byKind = {
     "model-index": paths.modelIndexPath,
     reconciliation: paths.reconciliationPath,
-    discovery: paths.discoveryPath
+    discovery: paths.discoveryPath,
+    "target-behavior": paths.targetBehaviorPath
   };
   const artifactPath = byKind[str(kind)];
   if (!artifactPath) return { ok: false, error: `Unsupported display artifact kind: ${kind}` };
@@ -124,5 +126,42 @@ export function readDisplayRefreshArtifact({ projectFilePath = "", kind = "" } =
     kind: str(kind),
     artifactPath,
     artifact: readJson(artifactPath)
+  };
+}
+
+export function readTargetBehaviorLearningDocument({ projectFilePath = "" } = {}) {
+  const paths = buildDisplayMetadataPaths(projectFilePath);
+  if (!paths.projectDir) return { ok: false, error: "Missing projectFilePath" };
+  if (!fs.existsSync(paths.targetBehaviorPath)) {
+    return {
+      ok: true,
+      exists: false,
+      artifactPath: paths.targetBehaviorPath,
+      document: {
+        artifactType: "project_target_behavior_learning_v1",
+        artifactVersion: "1.0",
+        records: []
+      }
+    };
+  }
+  return {
+    ok: true,
+    exists: true,
+    artifactPath: paths.targetBehaviorPath,
+    document: readJson(paths.targetBehaviorPath)
+  };
+}
+
+export function writeTargetBehaviorLearningDocument({ projectFilePath = "", document = null } = {}) {
+  const paths = buildDisplayMetadataPaths(projectFilePath);
+  if (!paths.projectDir) return { ok: false, error: "Missing projectFilePath" };
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    return { ok: false, error: "Missing target behavior document" };
+  }
+  ensureProjectStructure(paths.projectDir);
+  writeJson(paths.targetBehaviorPath, document);
+  return {
+    ok: true,
+    artifactPath: paths.targetBehaviorPath
   };
 }

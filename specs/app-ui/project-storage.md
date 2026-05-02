@@ -98,8 +98,11 @@ Stable identifiers:
 - `mediaId`: normalized media path plus file metadata; locator for a specific file instance.
 - `sequenceId`: normalized sequence path; project-local sequencing state key.
 - display/model metadata fingerprints: durable target identity for retaining user metadata when show folders or xLights layouts change.
+- display/target behavior learning: project-local observations about how effects render on specific model and submodel fingerprints.
 
 The model fingerprint and reconciliation contract is defined in `../sequence-agent/model-metadata.md`.
+
+Project-local target behavior learning belongs under `display/target-behavior.json`. Records are keyed by target or submodel fingerprint plus effect/probe scope, not only by the current xLights name. This file should migrate with a project and should not be replaced by central training packages; shared training may provide priors, while this file preserves observations from the user's own display.
 
 ## Project Migration
 

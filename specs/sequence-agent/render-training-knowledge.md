@@ -103,6 +103,8 @@ The durable shared training layer may eventually aggregate anonymized structural
 
 Local custom-model learning should be stored with the project or user installation, not only in the central training package. It should survive normal project reopen and show-folder refresh, and should be portable when the user explicitly migrates or copies the project. Local learning should remain advisory and reviewable because users may intentionally change props, layouts, wiring, or metadata.
 
+Project-local target and submodel behavior learning is stored in `display/target-behavior.json`. Each record is keyed by target/submodel fingerprint, effect family/name, and probe scope. Records keep compact evidence references, structure hints, submodel context, observed coverage/readability outcomes, and aggregate sample counts. This is the durable project layer where accepted render/probe outcomes can accumulate before any optional shared-training promotion.
+
 ## Current Learnings
 
 - Generated record packs replaced thousands of loose semantic files.

@@ -58,7 +58,7 @@ struct LocalProjectService: ProjectService {
             let sourceProjectFile = try resolveProjectFilePath(from: sourcePath)
             let sourceDir = URL(fileURLWithPath: sourceProjectFile).deletingLastPathComponent()
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            try copyDisplayMetadataIfPresent(from: sourceDir, to: dir)
+            try copyDisplayProjectKnowledgeIfPresent(from: sourceDir, to: dir)
         } else {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
@@ -143,14 +143,21 @@ struct LocalProjectService: ProjectService {
         try data.write(to: url, options: .atomic)
     }
 
-    private func copyDisplayMetadataIfPresent(from sourceDir: URL, to destinationDir: URL) throws {
+    private func copyDisplayProjectKnowledgeIfPresent(from sourceDir: URL, to destinationDir: URL) throws {
         let canonicalSourceFile = sourceDir.appendingPathComponent("display/metadata.json", isDirectory: false)
         let legacySourceFile = sourceDir.appendingPathComponent("layout/layout-metadata.json", isDirectory: false)
         let sourceFile = FileManager.default.fileExists(atPath: canonicalSourceFile.path)
             ? canonicalSourceFile
             : legacySourceFile
+        try copyProjectKnowledgeFileIfPresent(from: sourceFile, to: destinationDir.appendingPathComponent("display/metadata.json", isDirectory: false))
+
+        let targetBehaviorSourceFile = sourceDir.appendingPathComponent("display/target-behavior.json", isDirectory: false)
+        let targetBehaviorDestinationFile = destinationDir.appendingPathComponent("display/target-behavior.json", isDirectory: false)
+        try copyProjectKnowledgeFileIfPresent(from: targetBehaviorSourceFile, to: targetBehaviorDestinationFile)
+    }
+
+    private func copyProjectKnowledgeFileIfPresent(from sourceFile: URL, to destinationFile: URL) throws {
         guard FileManager.default.fileExists(atPath: sourceFile.path) else { return }
-        let destinationFile = destinationDir.appendingPathComponent("display/metadata.json", isDirectory: false)
         try FileManager.default.createDirectory(at: destinationFile.deletingLastPathComponent(), withIntermediateDirectories: true)
         if FileManager.default.fileExists(atPath: destinationFile.path) {
             try FileManager.default.removeItem(at: destinationFile)
