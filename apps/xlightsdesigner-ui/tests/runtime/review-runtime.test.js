@@ -591,6 +591,145 @@ test("executeApplyCore prefers collected post-apply render observation when avai
   assert.ok(Array.isArray(state.sequenceAgentRuntime.revisionFeedback?.rejectionReasons));
 });
 
+test("executeApplyCore persists target behavior learning after successful render validation", async () => {
+  let writtenDocument = null;
+  const diagnostics = [];
+  const state = {
+    projectFilePath: "/tmp/xld-project/Test/Test.xdproj",
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    draftBaseRevision: "rev-1",
+    revision: "rev-1",
+    sequenceSettings: { durationMs: 60000 },
+    displayElements: [],
+    sceneGraph: {
+      groupsById: {},
+      modelsById: {
+        CustomFace: {
+          id: "CustomFace",
+          name: "CustomFace",
+          displayAs: "Custom",
+          attributes: { CustomModel: "1,2;3,4" },
+          nodeCount: 4
+        }
+      },
+      submodelsById: {
+        "CustomFace/@Mouth": {
+          id: "CustomFace/@Mouth",
+          name: "@Mouth",
+          parentId: "CustomFace",
+          type: "ranges",
+          membership: { nodeCount: 2, nodeChannels: [1, 2] }
+        }
+      }
+    },
+    ui: { metadataSelectionIds: ["CustomFace/@Mouth"], metadataSelectedTags: [] },
+    health: { capabilityCommands: [] },
+    creative: {},
+    flags: {},
+    proposed: ["Chorus 1 / CustomFace/@Mouth / add On"],
+    sequenceAgentRuntime: {
+      timingTrackPolicies: {},
+      timingGeneratedSignatures: {},
+      timingTrackProvenance: {}
+    }
+  };
+
+  await executeApplyCore({
+    state,
+    sourceLines: ["Chorus 1 / CustomFace/@Mouth / add On"],
+    applyLabel: "proposal",
+    orchestrationRun: { id: "run-target-behavior" },
+    intentHandoffRecord: {},
+    intentHandoff: {},
+    planHandoff: { planId: "plan-target-behavior", metadata: {} },
+    deps: {
+      currentSequencePathForSidecar: () => "/show/Test.xsq",
+      getAppBackupBridge: () => null,
+      getValidHandoff: () => null,
+      buildSequenceAgentInput: () => ({ ok: true }),
+      currentLayoutMode: () => "2d",
+      getSelectedSections: () => ["Chorus 1"],
+      normalizeMetadataSelectionIds: (v = []) => v,
+      normalizeMetadataSelectedTags: (v = []) => v,
+      getSequenceTimingOwnershipRows: () => [],
+      getManualLockedXdTracks: () => [],
+      validateSequenceAgentContractGate: (_kind, payload) => ({ ok: true, stage: "", report: { errors: [], payload } }),
+      arraysEqualOrdered: () => true,
+      validateCommandGraph: () => ({ ok: true, nodeCount: 1, errors: [] }),
+      buildSequenceAgentPlan: () => ({
+        commands: [{ id: "effect-1", cmd: "effects.create", params: { modelName: "CustomFace/@Mouth", effectName: "On", startMs: 0, endMs: 1000 } }],
+        warnings: []
+      }),
+      emitSequenceAgentStageTelemetry: () => {},
+      evaluateSequencePlanCapabilities: () => ({ ok: true, skipped: false, requiredCapabilities: [] }),
+      isXdTimingTrack: () => false,
+      timingMarksSignature: () => "",
+      buildGlobalXdTrackPolicyKey: () => "",
+      validateAndApplyPlan: async () => ({ ok: true, executedCount: 1, currentRevision: "rev-1", nextRevision: "rev-2" }),
+      verifyAppliedPlanReadback: async () => ({
+        checks: [],
+        expectedMutationsPresent: true,
+        revisionAdvanced: true,
+        lockedTracksUnchanged: true
+      }),
+      collectPostApplyRenderObservation: async () => ({
+        artifactType: "render_observation_v1",
+        artifactId: "render-target-behavior",
+        macro: {
+          activeModelNames: ["CustomFace"],
+          activeFamilyTotals: { On: 1 },
+          leadModel: "CustomFace",
+          activeCoverageRatio: 0.08,
+          coverageRead: "partial",
+          temporalRead: "flat"
+        }
+      }),
+      buildSequenceAgentApplyResult: ({ practicalValidation }) => ({
+        artifactId: "apply-target-behavior",
+        practicalValidation,
+        verification: { revisionAdvanced: true, expectedMutationsPresent: true, lockedTracksUnchanged: true }
+      }),
+      classifyOrchestrationFailureReason: () => "",
+      getSequenceTimingTrackPoliciesState: () => ({}),
+      getSequenceTimingGeneratedSignaturesState: () => ({}),
+      setSequenceTimingTrackPoliciesState: () => {},
+      setSequenceTimingGeneratedSignaturesState: () => {},
+      applyAcceptedProposalToDirectorProfile: () => ({}),
+      buildApplyHistoryEntry: () => ({}),
+      buildChatArtifactCard: () => ({}),
+      getTeamChatSpeakerLabel: () => "Patch",
+      buildEffectiveMetadataAssignments: () => [],
+      readTargetBehaviorLearningDocument: async () => ({
+        ok: true,
+        exists: false,
+        document: { artifactType: "project_target_behavior_learning_v1", artifactVersion: "1.0", records: [] }
+      }),
+      writeTargetBehaviorLearningDocument: async ({ document }) => {
+        writtenDocument = document;
+        return { ok: true, artifactPath: "/tmp/xld-project/Test/display/target-behavior.json" };
+      }
+    },
+    callbacks: {
+      pushSequenceAgentContractDiagnostic: () => {},
+      markOrchestrationStage: () => {},
+      endOrchestrationRun: () => {},
+      pushDiagnostic: (level, message) => diagnostics.push({ level, message }),
+      upsertJob: () => {},
+      bumpVersion: () => {},
+      setStatusWithDiagnostics: () => {},
+      addStructuredChatMessage: () => {}
+    }
+  });
+
+  assert.equal(writtenDocument?.artifactType, "project_target_behavior_learning_v1");
+  assert.equal(writtenDocument?.records?.length, 1);
+  assert.equal(writtenDocument.records[0].targetId, "CustomFace/@Mouth");
+  assert.equal(writtenDocument.records[0].effectName, "On");
+  assert.equal(writtenDocument.records[0].evidenceRefs.renderObservationRef, "render-target-behavior");
+  assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.recordCount, 1);
+  assert.equal(diagnostics.some((row) => /Recorded 1 target behavior learning record/.test(row.message)), true);
+});
+
 test("executeApplyCore prefers render critique refresh when render observation is available", async () => {
   const state = {
     endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",

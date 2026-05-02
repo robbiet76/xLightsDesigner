@@ -12,6 +12,15 @@ import { buildRenderCritiqueContext } from "../agent/sequence-agent/render-criti
 import { buildRenderValidationEvidence } from "../agent/sequence-agent/render-validation-evidence.js";
 import { buildCandidateSelectionContext } from "../agent/sequence-agent/candidate-selection-context.js";
 import { buildRevisionRetryPressureV1 } from "../agent/sequence-agent/revision-retry-pressure.js";
+import { buildNormalizedTargetMetadataRecords } from "./target-metadata-runtime.js";
+import {
+  buildTargetBehaviorLearningRecordsForApply,
+  upsertTargetBehaviorLearningRecord
+} from "./target-behavior-learning-runtime.js";
+import {
+  readTargetBehaviorLearningDocument as readProjectTargetBehaviorLearningDocument,
+  writeTargetBehaviorLearningDocument as writeProjectTargetBehaviorLearningDocument
+} from "../storage/display-metadata-store.mjs";
 import {
   resolveRevisionFeedbackFromSnapshots,
   resolveRevisionRetryPressureFromPlanMetadata,
@@ -20,6 +29,64 @@ import {
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
+}
+
+async function persistTargetBehaviorLearning({
+  state = {},
+  rawPlan = [],
+  metadataAssignments = [],
+  renderObservation = null,
+  renderValidationEvidence = null,
+  renderCritiqueContext = null,
+  planHandoff = null,
+  applyResult = null,
+  deps = {}
+} = {}) {
+  const projectFilePath = String(state?.projectFilePath || "").trim();
+  if (!projectFilePath) return { ok: false, skipped: true, reason: "missing_project_file_path", recordCount: 0 };
+  const readTargetBehaviorLearningDocument =
+    deps.readTargetBehaviorLearningDocument || readProjectTargetBehaviorLearningDocument;
+  const writeTargetBehaviorLearningDocument =
+    deps.writeTargetBehaviorLearningDocument || writeProjectTargetBehaviorLearningDocument;
+  if (typeof readTargetBehaviorLearningDocument !== "function" || typeof writeTargetBehaviorLearningDocument !== "function") {
+    return { ok: false, skipped: true, reason: "missing_target_behavior_store", recordCount: 0 };
+  }
+
+  const targetRecords = buildNormalizedTargetMetadataRecords({
+    sceneGraph: state.sceneGraph || {},
+    metadataAssignments,
+    metadataPreferencesByTargetId: state.metadata?.preferencesByTargetId || {}
+  });
+  const observedAt = new Date().toISOString();
+  const records = buildTargetBehaviorLearningRecordsForApply({
+    commands: rawPlan,
+    targetRecords,
+    renderObservation,
+    renderValidationEvidence,
+    renderCritiqueContext,
+    sourceArtifactRefs: {
+      planHandoffRef: String(planHandoff?.artifactId || planHandoff?.planId || ""),
+      applyResultRef: String(applyResult?.artifactId || "")
+    },
+    observedAt
+  });
+  if (!records.length) return { ok: true, skipped: true, reason: "no_target_behavior_records", recordCount: 0 };
+
+  const existing = await readTargetBehaviorLearningDocument({ projectFilePath });
+  let document = existing?.document && typeof existing.document === "object" && !Array.isArray(existing.document)
+    ? existing.document
+    : null;
+  for (const record of records) {
+    document = upsertTargetBehaviorLearningRecord(document, record, { now: observedAt });
+  }
+  const write = await writeTargetBehaviorLearningDocument({ projectFilePath, document });
+  return {
+    ok: write?.ok !== false,
+    skipped: false,
+    recordCount: records.length,
+    artifactPath: write?.artifactPath || existing?.artifactPath || "",
+    error: write?.error || ""
+  };
 }
 
 export async function executeApplyCore({
@@ -501,6 +568,31 @@ export async function executeApplyCore({
       const failedChecks = verification.checks.filter((row) => !row.ok).map((row) => `${row.kind}:${row.target} ${row.detail}`);
       markOrchestrationStage(orchestrationRun, "validate_apply", "error", failedChecks.join(" | ") || "expected mutations missing");
       throw new Error(`Apply verification failed: ${failedChecks.join("; ") || "expected mutations missing"}`);
+    }
+
+    try {
+      const targetBehaviorWrite = await persistTargetBehaviorLearning({
+        state,
+        rawPlan,
+        metadataAssignments,
+        renderObservation,
+        renderValidationEvidence: nextRenderValidationEvidence,
+        renderCritiqueContext,
+        planHandoff,
+        applyResult,
+        deps
+      });
+      if (targetBehaviorWrite.recordCount > 0) {
+        state.sequenceAgentRuntime.targetBehaviorLearning = {
+          artifactType: "target_behavior_learning_write_v1",
+          updatedAt: new Date().toISOString(),
+          recordCount: targetBehaviorWrite.recordCount,
+          artifactPath: targetBehaviorWrite.artifactPath || ""
+        };
+        pushDiagnostic("info", `Recorded ${targetBehaviorWrite.recordCount} target behavior learning record${targetBehaviorWrite.recordCount === 1 ? "" : "s"}.`);
+      }
+    } catch (err) {
+      pushDiagnostic("warning", "Target behavior learning was not recorded.", String(err?.message || err || "unknown error"));
     }
 
     pushDiagnostic("info", `Apply verification passed: revision advanced, ${verification.checks.length} readback check${verification.checks.length === 1 ? "" : "s"}.`);

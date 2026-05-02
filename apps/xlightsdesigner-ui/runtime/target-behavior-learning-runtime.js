@@ -189,3 +189,85 @@ export function upsertTargetBehaviorLearningRecord(document = null, record = nul
     records: records.sort((left, right) => str(left.recordId).localeCompare(str(right.recordId)))
   };
 }
+
+function commandTargetId(command = {}) {
+  const params = obj(command?.params);
+  return str(params.modelName || params.targetId || params.targetName || params.model || params.elementName);
+}
+
+function commandEffectName(command = {}) {
+  const params = obj(command?.params);
+  return str(params.effectName || params.effect || params.name);
+}
+
+function matchSubmodelEvidence(renderValidationEvidence = null, targetId = "") {
+  const id = str(targetId);
+  if (!id) return null;
+  return arr(renderValidationEvidence?.submodelEvidence)
+    .find((row) => str(row?.targetId) === id || str(row?.submodelId) === id) || null;
+}
+
+function outcomeFromCritique({ renderCritiqueContext = null, renderObservation = null } = {}) {
+  const quality = obj(renderCritiqueContext?.quality);
+  const observed = obj(renderCritiqueContext?.observed);
+  const band = str(quality?.band);
+  let readability = str(quality?.readability);
+  if (!readability) {
+    if (["strong", "acceptable"].includes(band)) readability = "good";
+    else if (band === "very_low") readability = "poor";
+    else if (band === "weak") readability = "confusing";
+  }
+  return normalizeOutcome({
+    outcome: {
+      coverageRead: observed.coverageRead,
+      temporalRead: observed.temporalRead,
+      readability,
+      blankRisk: Number(observed.activeCoverageRatio || renderObservation?.macro?.activeCoverageRatio || 0) <= 0 ? "high" : "",
+      activeCoverageRatio: observed.activeCoverageRatio,
+      confidence: "observed",
+      notes: arr(quality?.issues).slice(0, 8)
+    },
+    renderObservation
+  });
+}
+
+export function buildTargetBehaviorLearningRecordsForApply({
+  commands = [],
+  targetRecords = [],
+  renderObservation = null,
+  renderValidationEvidence = null,
+  renderCritiqueContext = null,
+  sourceArtifactRefs = {},
+  observedAt = new Date().toISOString()
+} = {}) {
+  const byId = new Map(arr(targetRecords).map((row) => [str(row?.targetId), row]).filter(([id]) => id));
+  const byDisplayName = new Map(arr(targetRecords).map((row) => [str(row?.identity?.displayName), row]).filter(([name]) => name));
+  const rows = [];
+  const seen = new Set();
+  for (const command of arr(commands)) {
+    const cmd = str(command?.cmd);
+    if (!["effects.create", "effects.update"].includes(cmd)) continue;
+    const targetId = commandTargetId(command);
+    const effectName = commandEffectName(command);
+    if (!targetId || !effectName) continue;
+    const targetRecord = byId.get(targetId) || byDisplayName.get(targetId);
+    if (!targetRecord) continue;
+    const submodelEvidence = matchSubmodelEvidence(renderValidationEvidence, targetRecord.targetId);
+    const record = buildTargetBehaviorLearningRecord({
+      targetRecord,
+      effectName,
+      effectFamily: effectName,
+      probeScope: targetRecord.targetKind === "submodel" ? "submodel" : "target",
+      submodelEvidence,
+      renderObservation,
+      renderValidationEvidence,
+      outcome: outcomeFromCritique({ renderCritiqueContext, renderObservation }),
+      sourceArtifactRefs,
+      observedAt
+    });
+    if (seen.has(record.recordId)) continue;
+    seen.add(record.recordId);
+    rows.push(record);
+  }
+  return rows;
+}

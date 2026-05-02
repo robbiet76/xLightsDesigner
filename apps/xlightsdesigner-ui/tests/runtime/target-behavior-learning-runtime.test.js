@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   buildTargetBehaviorLearningRecord,
+  buildTargetBehaviorLearningRecordsForApply,
   upsertTargetBehaviorLearningRecord
 } from "../../runtime/target-behavior-learning-runtime.js";
 
@@ -86,4 +87,58 @@ test("target behavior learning document upserts compact aggregates", () => {
   assert.equal(second.records[0].stats.negativeCount, 1);
   assert.equal(second.records[0].stats.positiveCount, 1);
   assert.equal(second.records[0].stats.lastObservedAt, "2026-05-01T12:05:00Z");
+});
+
+test("target behavior learning records can be derived from applied effect commands", () => {
+  const records = buildTargetBehaviorLearningRecordsForApply({
+    commands: [
+      { id: "effect-1", cmd: "effects.create", params: { modelName: "CustomFace/@Mouth", effectName: "On" } },
+      { id: "timing-1", cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure" } }
+    ],
+    targetRecords: [
+      {
+        targetId: "CustomFace/@Mouth",
+        targetKind: "submodel",
+        identity: {
+          fingerprint: "tmf1:mouth001",
+          fingerprintVersion: "target-metadata-fingerprint-v1",
+          displayName: "CustomFace / @Mouth",
+          parentId: "CustomFace"
+        },
+        structure: {
+          submodelMetadata: {
+            parentId: "CustomFace",
+            structureHints: ["feature_mouth"]
+          }
+        }
+      }
+    ],
+    renderObservation: {
+      artifactId: "render-1",
+      macro: { coverageRead: "partial", temporalRead: "flat", activeCoverageRatio: 0.1 }
+    },
+    renderValidationEvidence: {
+      renderObservationRef: "render-1",
+      submodelEvidence: [
+        {
+          targetId: "CustomFace/@Mouth",
+          siblingCount: 4,
+          nodeCoverage: { nodeCount: 12, parentNodeCount: 200, ratio: 0.06 },
+          structureHints: ["feature_mouth"]
+        }
+      ]
+    },
+    renderCritiqueContext: {
+      observed: { coverageRead: "partial", temporalRead: "flat", activeCoverageRatio: 0.1 },
+      quality: { band: "acceptable", issues: [] }
+    },
+    observedAt: "2026-05-01T12:00:00Z"
+  });
+
+  assert.equal(records.length, 1);
+  assert.equal(records[0].targetFingerprint, "tmf1:mouth001");
+  assert.equal(records[0].effectName, "On");
+  assert.equal(records[0].probeScope, "submodel");
+  assert.equal(records[0].outcome.readability, "good");
+  assert.equal(records[0].submodelContext.nodeCoverage.nodeCount, 12);
 });
