@@ -22,6 +22,8 @@ __pycache__/
 *.log
 logs/
 var/
+.tmp/
+.cache/
 *.tmp
 *.swp
 
