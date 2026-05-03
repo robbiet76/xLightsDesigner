@@ -16,6 +16,7 @@ import {
   buildFullDisplayPlan,
   buildVisualDesignPlanningContext,
   collectDefinedVisualHintBehaviorTextForTargets,
+  collectMetadataBehaviorHintsForTargets,
   collectEffectAvoidancesForTargets
 } from "./full-display-planner.js";
 import {
@@ -2218,20 +2219,25 @@ function buildParameterPriorGuidance({
   displayElements = [],
   intentSummary = "",
   sequencerRevisionBrief = null,
-  configuredBehaviorRecommendation = null
+  configuredBehaviorRecommendation = null,
+  desiredBehaviorHints = []
 } = {}) {
   const preferredPaletteMode = inferPreferredPaletteMode({ effectName });
-  const desiredBehaviorHints = inferDesiredParameterBehaviorHints({
+  const inferredBehaviorHints = inferDesiredParameterBehaviorHints({
     effectName,
     summary: intentSummary,
     sequencerRevisionBrief
   });
+  const combinedDesiredBehaviorHints = uniqueNormTexts([
+    ...inferredBehaviorHints,
+    ...normArray(desiredBehaviorHints)
+  ]);
   const recommendation = recommendDerivedParameterPriors({
     effectName,
     targetIds,
     displayElements,
     paletteMode: preferredPaletteMode,
-    desiredBehaviorHints,
+    desiredBehaviorHints: combinedDesiredBehaviorHints,
     limit: 3,
     anchorsPerPrior: 2
   });
@@ -2269,7 +2275,7 @@ function buildParameterPriorGuidance({
   return {
     effectName: normText(effectName),
     preferredPaletteMode,
-    desiredBehaviorHints,
+    desiredBehaviorHints: combinedDesiredBehaviorHints,
     configuredBehaviorRecordId: normText(configuredBehaviorRecommendation?.recordId),
     recommendationMode: normText(recommendation?.recommendationMode),
     matchedGeometryProfiles: normArray(recommendation?.matchedGeometryProfiles),
@@ -2546,6 +2552,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
         const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
         const effectAvoidances = collectEffectAvoidancesForTargets(prioritizedTargetIds, metadataAssignmentIndex);
         const visualHintBehaviorText = collectDefinedVisualHintBehaviorTextForTargets(prioritizedTargetIds, metadataAssignmentIndex);
+        const metadataBehaviorHints = collectMetadataBehaviorHintsForTargets(prioritizedTargetIds, metadataAssignmentIndex);
         const visualContextText = normText(visualPlanningContext.summaryText);
         const translationLayer = resolveTranslationLayer({
           translationIntent: scope?.executionStrategy?.translationIntent,
@@ -2569,6 +2576,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           effectAvoidances,
           visualHintBehaviorText: [
             ...visualHintBehaviorText,
+            ...metadataBehaviorHints,
             ...normArray(translationLayer?.behaviorTexts)
           ],
           translationVisualFamilies: normArray(translationLayer?.preferredVisualFamilies),
@@ -2591,7 +2599,8 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
             targetIds: prioritizedTargetIds,
             displayElements,
             intentSummary,
-            sequencerRevisionBrief
+            sequencerRevisionBrief,
+            desiredBehaviorHints: metadataBehaviorHints
           }),
           sharedSettingPriorGuidance: buildSharedSettingPriorGuidance({
             sequencerRevisionBrief,
@@ -2607,6 +2616,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           ? scope.targetIds.slice(0, 8).join(", ")
           : "Whole Show";
         const fallbackEffectName = inferRevisionBriefEffectName(sequencerRevisionBrief || {});
+        const metadataBehaviorHints = collectMetadataBehaviorHintsForTargets(normArray(scope.targetIds), metadataAssignmentIndex);
         return {
           section: sectionText,
           targetIds: normArray(scope.targetIds),
@@ -2617,7 +2627,8 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
             targetIds: normArray(scope.targetIds),
             displayElements,
             intentSummary: `${normText(scope.goal)}${toneText}`,
-            sequencerRevisionBrief
+            sequencerRevisionBrief,
+            desiredBehaviorHints: metadataBehaviorHints
           }),
           sharedSettingPriorGuidance: buildSharedSettingPriorGuidance({
             sequencerRevisionBrief,
@@ -2634,6 +2645,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           const section = normText(placement?.sourceSectionLabel || placement?.section);
           const intentSummary = `${normText(placement?.intentSummary || scope.goal)}${toneText}`;
           const targetIds = targetId ? [targetId] : normArray(scope.targetIds);
+          const metadataBehaviorHints = collectMetadataBehaviorHintsForTargets(targetIds, metadataAssignmentIndex);
           return {
             section,
             targetIds,
@@ -2650,7 +2662,11 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
               targetIds,
               displayElements,
               intentSummary,
-              sequencerRevisionBrief
+              sequencerRevisionBrief,
+              desiredBehaviorHints: [
+                ...metadataBehaviorHints,
+                ...normArray(placement?.configuredBehaviorDesiredHints)
+              ]
             }),
             sharedSettingPriorGuidance: placement?.sharedSettingPriorGuidance || buildSharedSettingPriorGuidance({
               sequencerRevisionBrief,

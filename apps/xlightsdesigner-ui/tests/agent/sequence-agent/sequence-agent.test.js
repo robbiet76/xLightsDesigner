@@ -2211,6 +2211,61 @@ test("sequence_agent uses defined visual hint behavior text to steer fallback ef
   assert.match(combined, /\bBars\b/);
 });
 
+test("sequence_agent uses submodel metadata hints to steer effect choice without name cues", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track B2", artist: "Artist B" },
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 0, endMs: 1000, energy: "medium", density: "medium" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Keep this detail readable.",
+      mode: "revise",
+      scope: {
+        targetIds: ["CustomProp/RegionA"],
+        tagNames: [],
+        sections: ["Verse 1"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            section: "Verse 1",
+            energy: "medium",
+            density: "medium",
+            intentSummary: "keep this detail readable",
+            targetIds: ["CustomProp/RegionA"],
+            effectHints: []
+          }
+        ]
+      }
+    },
+    metadataAssignments: [
+      {
+        targetId: "CustomProp/RegionA",
+        targetType: "submodel",
+        semanticHints: [],
+        submodelHints: ["sparkle texture"]
+      }
+    ],
+    displayElements: [
+      { id: "CustomProp/RegionA", name: "RegionA", type: "submodel", displayAs: "SubModel" }
+    ],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Color Wash", params: [] },
+      { effectName: "On", params: [] }
+    ])
+  });
+
+  const recommendation = out.metadata.effectStrategy.seedRecommendations[0];
+  assert.equal(recommendation.effectName, "Shimmer");
+  assert.match(out.executionLines[0], /apply Shimmer effect/i);
+  assert.ok(recommendation.parameterPriorGuidance.desiredBehaviorHints.includes("sparkle texture"));
+});
+
 test("sequence_agent lets translation behavior outrank conflicting effect hints", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

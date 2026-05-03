@@ -71,6 +71,33 @@ export function collectDefinedVisualHintBehaviorTextForTargets(targetIds = [], m
   return out;
 }
 
+export function collectMetadataBehaviorHintsForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
+  const out = [];
+  const seen = new Set();
+  const add = (value = "") => {
+    const text = normText(value);
+    if (!text) return;
+    const key = text.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(text);
+  };
+  for (const targetId of normArray(targetIds).map((row) => normText(row)).filter(Boolean)) {
+    const assignment = metadataAssignmentForTarget(targetId, metadataAssignmentIndex);
+    for (const value of normArray(assignment?.semanticHints)) add(value);
+    for (const value of normArray(assignment?.submodelHints)) add(value);
+    for (const definition of normArray(assignment?.visualHintDefinitions)) {
+      const status = normText(definition?.status).toLowerCase();
+      if (status && status !== "defined") continue;
+      add(definition?.name);
+      add(definition?.semanticClass);
+      for (const tag of normArray(definition?.behavioralTags)) add(tag);
+      add(definition?.behavioralIntent);
+    }
+  }
+  return out;
+}
+
 function normalizeVisualPaletteRows(rows = []) {
   return normArray(rows)
     .map((row) => ({
@@ -1215,6 +1242,7 @@ export function buildFullDisplayPlan({
     offset = 0
   } = {}) => {
     const targetId = normText(targetRow?.targetId);
+    const targetMetadataBehaviorHints = collectMetadataBehaviorHintsForTargets([targetId], metadataAssignmentIndex);
     const candidateEffects = filterAvailableTrainingEffects(
       uniqueNormTexts([
         ...normArray(portfolio?.rankedCandidates),
@@ -1231,16 +1259,21 @@ export function buildFullDisplayPlan({
       sectionBucket,
       sectionDirective
     });
+    const combinedDesiredBehaviorHints = uniqueNormTexts([
+      ...desiredBehaviorHints,
+      ...targetMetadataBehaviorHints
+    ]);
     const placementRecommendations = recommendConfiguredBehaviorCapabilities({
       summary: [
         intentSummary,
         normText(role),
         normText(targetRow?.targetRole),
         normText(sectionBucket),
-        normText(targetId)
+        normText(targetId),
+        ...targetMetadataBehaviorHints
       ].filter(Boolean).join(" | "),
       preferredVisualFamilies: portfolio?.visualFamilies || [],
-      desiredBehaviorHints,
+      desiredBehaviorHints: combinedDesiredBehaviorHints,
       effectNames: candidateEffects,
       targetIds: [targetId],
       displayElements,
@@ -1259,7 +1292,7 @@ export function buildFullDisplayPlan({
           "cross geometry behavior fallback"
         ].filter(Boolean).join(" | "),
         preferredVisualFamilies: portfolio?.visualFamilies || [],
-        desiredBehaviorHints,
+        desiredBehaviorHints: combinedDesiredBehaviorHints,
         effectNames: candidateEffects,
         targetIds: [],
         displayElements: [],
@@ -1297,14 +1330,14 @@ export function buildFullDisplayPlan({
       return {
         effectName: fallbackEffectName,
         configuredBehaviorRecommendation: null,
-        desiredBehaviorHints,
+        desiredBehaviorHints: combinedDesiredBehaviorHints,
         selectionSource: "fallback_role_effect_no_configured_behavior"
       };
     }
     return {
       effectName: normText(selected.effectName) || fallbackEffectName,
       configuredBehaviorRecommendation: selected,
-      desiredBehaviorHints,
+      desiredBehaviorHints: combinedDesiredBehaviorHints,
       selectionSource: "placement_configured_behavior_capability"
     };
   };
@@ -1321,6 +1354,7 @@ export function buildFullDisplayPlan({
     ]);
     const effectAvoidances = collectEffectAvoidancesForTargets(sectionTargets, metadataAssignmentIndex);
     const visualHintBehaviorText = collectDefinedVisualHintBehaviorTextForTargets(sectionTargets, metadataAssignmentIndex);
+    const metadataBehaviorHints = collectMetadataBehaviorHintsForTargets(sectionTargets, metadataAssignmentIndex);
     const translationLayer = resolveTranslationLayer({
       translationIntent: scope?.executionStrategy?.translationIntent,
       section: sectionRow.section,
@@ -1346,6 +1380,7 @@ export function buildFullDisplayPlan({
       effectAvoidances,
       visualHintBehaviorText: [
         ...visualHintBehaviorText,
+        ...metadataBehaviorHints,
         ...normArray(translationLayer?.behaviorTexts)
       ],
       translationVisualFamilies: normArray(translationLayer?.preferredVisualFamilies),
