@@ -143,7 +143,21 @@ The model-index schema preserves both raw xLights type labels and normalized can
 
 ## Project Migration
 
-Creating a new project from an existing project should copy the project metadata into the new project folder.
+Creating a new project from an existing project should copy durable project knowledge into the new project folder. This includes:
+
+- `display/metadata.json`
+- `display/discovery.json`
+- `display/target-behavior.json`
+- project-level durable snapshot fields such as project brief, saved app design intent, project concept, and safety preferences
+
+Migration should not copy regenerated or point-in-time state such as:
+
+- `display/model-index.json`
+- `display/reconciliation.json`
+- active sequence paths
+- recent sequence lists
+- selected audio/media paths
+- generated proposal, plan, apply, render, backup, diagnostics, or history artifacts
 
 Creating a new project without migration starts with blank project metadata. Users may manually import or copy metadata files when they intentionally want to reuse mature metadata outside the app migration flow.
 

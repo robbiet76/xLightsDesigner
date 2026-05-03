@@ -47,6 +47,7 @@ struct LocalProjectService: ProjectService {
         if FileManager.default.fileExists(atPath: fileURL.path) || FileManager.default.fileExists(atPath: dir.path) {
             throw ProjectServiceError.projectAlreadyExists(normalized)
         }
+        var migratedSnapshot: [String: AnyCodable] = [:]
         if draft.migrateMetadata {
             let sourcePath = draft.migrationSourceProjectPath.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !sourcePath.isEmpty else { throw ProjectServiceError.migrationSourceRequired }
@@ -56,9 +57,11 @@ struct LocalProjectService: ProjectService {
                 throw ProjectServiceError.invalidMigrationSource(sourcePath)
             }
             let sourceProjectFile = try resolveProjectFilePath(from: sourcePath)
+            let sourceProject = try readProject(from: sourceProjectFile)
             let sourceDir = URL(fileURLWithPath: sourceProjectFile).deletingLastPathComponent()
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             try copyDisplayProjectKnowledgeIfPresent(from: sourceDir, to: dir)
+            migratedSnapshot = durableMigrationSnapshot(from: sourceProject)
         } else {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
@@ -72,7 +75,7 @@ struct LocalProjectService: ProjectService {
             id: projectID(projectName: normalized),
             createdAt: now,
             updatedAt: now,
-            snapshot: buildSnapshot(projectName: normalized, projectFilePath: fileURL.path, mediaPath: draft.mediaPath)
+            snapshot: buildSnapshot(projectName: normalized, projectFilePath: fileURL.path, mediaPath: draft.mediaPath, existing: migratedSnapshot)
         )
         try writeDocument(doc, to: fileURL)
         return try readProject(from: fileURL.path)
@@ -154,6 +157,23 @@ struct LocalProjectService: ProjectService {
         let targetBehaviorSourceFile = sourceDir.appendingPathComponent("display/target-behavior.json", isDirectory: false)
         let targetBehaviorDestinationFile = destinationDir.appendingPathComponent("display/target-behavior.json", isDirectory: false)
         try copyProjectKnowledgeFileIfPresent(from: targetBehaviorSourceFile, to: targetBehaviorDestinationFile)
+
+        let canonicalDiscoverySourceFile = sourceDir.appendingPathComponent("display/discovery.json", isDirectory: false)
+        let legacyDiscoverySourceFile = sourceDir.appendingPathComponent("layout/display-discovery.json", isDirectory: false)
+        let discoverySourceFile = FileManager.default.fileExists(atPath: canonicalDiscoverySourceFile.path)
+            ? canonicalDiscoverySourceFile
+            : legacyDiscoverySourceFile
+        try copyProjectKnowledgeFileIfPresent(from: discoverySourceFile, to: destinationDir.appendingPathComponent("display/discovery.json", isDirectory: false))
+    }
+
+    private func durableMigrationSnapshot(from sourceProject: ActiveProjectModel) -> [String: AnyCodable] {
+        var migrated: [String: AnyCodable] = [:]
+        for key in ["projectBrief", "appDesignIntent", "projectConcept", "safety"] {
+            if let value = sourceProject.snapshot[key] {
+                migrated[key] = value
+            }
+        }
+        return migrated
     }
 
     private func copyProjectKnowledgeFileIfPresent(from sourceFile: URL, to destinationFile: URL) throws {

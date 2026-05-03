@@ -41,10 +41,10 @@ struct ProjectServiceTests {
         #expect(reopened.projectName == project.projectName)
     }
 
-    @Test func createProjectMigratesOnlyDisplayProjectKnowledgeFromExistingProject() throws {
+    @Test func createProjectMigratesDurableProjectKnowledgeFromExistingProject() throws {
         let service = try makeService()
         let sourceName = "App Test Project \(UUID().uuidString.prefix(6))"
-        let source = try service.createProject(
+        var source = try service.createProject(
             draft: ProjectDraftModel(
                 projectName: sourceName,
                 showFolder: "/tmp/show",
@@ -53,10 +53,29 @@ struct ProjectServiceTests {
                 migrationSourceProjectPath: ""
             )
         )
+        source.snapshot["projectBrief"] = AnyCodable([
+            "document": "Warm community show with a clear central focal area.",
+            "updatedAt": "2026-05-01T00:00:00Z"
+        ])
+        source.snapshot["appDesignIntent"] = AnyCodable([
+            "goal": "Keep the mature display style but start a new project cleanly."
+        ])
+        source.snapshot["projectConcept"] = AnyCodable("Neighborhood holiday display")
+        source.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/OldSong/OldSong.xsq")
+        source.snapshot["audioPathInput"] = AnyCodable("/tmp/show/Audio/OldSong.mp3")
+        source.snapshot["recentSequences"] = AnyCodable(["/tmp/show/OldSong/OldSong.xsq"])
+        source.snapshot["proposed"] = AnyCodable([["summary": "Generated proposal should not migrate"]])
+        source = try service.saveProject(source)
         let sourceDir = URL(fileURLWithPath: source.projectFilePath).deletingLastPathComponent()
         let markerFile = sourceDir.appendingPathComponent("diagnostics/marker.txt")
         try FileManager.default.createDirectory(at: markerFile.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data("marker".utf8).write(to: markerFile)
+        let proposalFile = sourceDir.appendingPathComponent("artifacts/proposals/proposal.json")
+        try FileManager.default.createDirectory(at: proposalFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(#"{"artifactType":"proposal_bundle_v1"}"#.utf8).write(to: proposalFile)
+        let modelIndexFile = sourceDir.appendingPathComponent("display/model-index.json")
+        try FileManager.default.createDirectory(at: modelIndexFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(#"{"artifactType":"target_metadata_index_v1"}"#.utf8).write(to: modelIndexFile)
         let metadataFile = sourceDir.appendingPathComponent("layout/layout-metadata.json")
         try FileManager.default.createDirectory(at: metadataFile.deletingLastPathComponent(), withIntermediateDirectories: true)
         let metadataJSON = """
@@ -87,6 +106,17 @@ struct ProjectServiceTests {
         }
         """
         try Data(targetBehaviorJSON.utf8).write(to: targetBehaviorFile)
+        let discoveryFile = sourceDir.appendingPathComponent("display/discovery.json")
+        let discoveryJSON = """
+        {
+          "status": "readyForProposal",
+          "scope": "full-display",
+          "candidateProps": [],
+          "insights": [],
+          "proposedTags": []
+        }
+        """
+        try Data(discoveryJSON.utf8).write(to: discoveryFile)
 
         let migratedName = "App Test Project \(UUID().uuidString.prefix(6)) Migrated"
         let migrated = try service.createProject(
@@ -102,15 +132,31 @@ struct ProjectServiceTests {
         let migratedMarker = migratedDir.appendingPathComponent("diagnostics/marker.txt")
         let migratedMetadata = migratedDir.appendingPathComponent("display/metadata.json")
         let migratedTargetBehavior = migratedDir.appendingPathComponent("display/target-behavior.json")
+        let migratedDiscovery = migratedDir.appendingPathComponent("display/discovery.json")
+        let migratedProposal = migratedDir.appendingPathComponent("artifacts/proposals/proposal.json")
+        let migratedModelIndex = migratedDir.appendingPathComponent("display/model-index.json")
+        let migratedBrief = migrated.snapshot["projectBrief"]?.value as? [String: Any]
+        let migratedIntent = migrated.snapshot["appDesignIntent"]?.value as? [String: Any]
 
         #expect(migrated.projectName == migratedName)
         #expect(migrated.showFolder == "/tmp/new-show")
         #expect(FileManager.default.fileExists(atPath: migrated.projectFilePath))
         #expect(FileManager.default.fileExists(atPath: migratedMetadata.path))
         #expect(FileManager.default.fileExists(atPath: migratedTargetBehavior.path))
+        #expect(FileManager.default.fileExists(atPath: migratedDiscovery.path))
         #expect(!FileManager.default.fileExists(atPath: migratedMarker.path))
+        #expect(!FileManager.default.fileExists(atPath: migratedProposal.path))
+        #expect(!FileManager.default.fileExists(atPath: migratedModelIndex.path))
         #expect(try String(contentsOf: migratedMetadata).contains("\"Tree\""))
         #expect(try String(contentsOf: migratedTargetBehavior).contains("\"tbl1:test\""))
+        #expect(try String(contentsOf: migratedDiscovery).contains("readyForProposal"))
+        #expect(migratedBrief?["document"] as? String == "Warm community show with a clear central focal area.")
+        #expect(migratedIntent?["goal"] as? String == "Keep the mature display style but start a new project cleanly.")
+        #expect(migrated.snapshot["projectConcept"]?.value as? String == "Neighborhood holiday display")
+        #expect(migrated.snapshot["sequencePathInput"]?.value as? String == "")
+        #expect(migrated.snapshot["audioPathInput"]?.value as? String == "")
+        #expect((migrated.snapshot["recentSequences"]?.value as? [Any])?.isEmpty == true)
+        #expect(migrated.snapshot["proposed"] == nil)
         #expect(URL(fileURLWithPath: migrated.projectFilePath).lastPathComponent == "\(migratedName).xdproj")
     }
 
