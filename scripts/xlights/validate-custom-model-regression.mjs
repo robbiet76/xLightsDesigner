@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 
 import { getSubmodels } from '../../apps/xlightsdesigner-ui/api.js';
+import { buildDiagnosticsDashboardState } from '../../apps/xlightsdesigner-ui/app-ui/page-state/diagnostics-dashboard-state.js';
 import { persistAppTargetBehaviorLearning } from '../sequencing/app/apply-app-review.mjs';
 
 const DEFAULT_ENDPOINT = process.env.XLIGHTS_ENDPOINT || 'http://127.0.0.1:49915/xlightsdesigner/api';
@@ -285,6 +286,30 @@ async function main() {
   if (!persistence.ok) {
     throw new Error('Project target behavior persistence fixture failed.');
   }
+  const persistedTargetBehavior = readJson(persistence.artifactPath);
+  const diagnostics = buildDiagnosticsDashboardState({
+    state: {
+      ui: { diagnosticsOpen: true, diagnosticsFilter: 'all' },
+      sceneGraph: {},
+      diagnostics: [],
+      applyHistory: [],
+      sequenceAgentRuntime: {
+        targetBehaviorLearning: {
+          artifactPath: persistence.artifactPath,
+          records: persistedTargetBehavior.records || []
+        }
+      },
+      health: {}
+    }
+  });
+  const diagnosticHealth = diagnostics?.data?.health || {};
+  if (
+    Number(diagnosticHealth.targetBehaviorLearningCount || 0) !== 1 ||
+    Number(diagnosticHealth.targetBehaviorLearningSubmodelCount || 0) !== 1 ||
+    Number(diagnosticHealth.targetBehaviorLearningCustomParentCount || 0) !== 1
+  ) {
+    throw new Error('Diagnostics target behavior summary did not reflect persisted custom submodel learning.');
+  }
 
   const report = {
     artifactType: 'custom_model_regression_validation_v1',
@@ -305,7 +330,13 @@ async function main() {
         layoutModelCount: Number(liveEvidence.layoutModelCount || 0),
         layoutSubmodelCount: Number(liveEvidence.layoutSubmodelCount || 0)
       },
-      persistence: persistence.summary
+      persistence: persistence.summary,
+      diagnostics: {
+        targetBehaviorLearningCount: Number(diagnosticHealth.targetBehaviorLearningCount || 0),
+        targetBehaviorLearningSubmodelCount: Number(diagnosticHealth.targetBehaviorLearningSubmodelCount || 0),
+        targetBehaviorLearningCustomParentCount: Number(diagnosticHealth.targetBehaviorLearningCustomParentCount || 0),
+        targetBehaviorLearningArtifactPath: str(diagnosticHealth.targetBehaviorLearningArtifactPath)
+      }
     }
   };
   const outputPath = args.output || path.join(root, 'custom-model-regression-report.json');
@@ -316,7 +347,8 @@ async function main() {
     liveTarget,
     captureCustomModelCount: Number(captureSummary.customSummaryCount || 0),
     captureSubmodelCount: Number(captureSummary.submodelCount || 0),
-    targetBehaviorRecordCount: persistence.summary.recordCount
+    targetBehaviorRecordCount: persistence.summary.recordCount,
+    diagnosticsTargetBehaviorCount: Number(diagnosticHealth.targetBehaviorLearningCount || 0)
   }, null, 2));
 }
 

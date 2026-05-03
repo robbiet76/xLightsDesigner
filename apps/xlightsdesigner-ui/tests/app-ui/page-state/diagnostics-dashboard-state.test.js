@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 import { buildDiagnosticsDashboardState } from "../../../app-ui/page-state/diagnostics-dashboard-state.js";
 
@@ -99,4 +102,46 @@ test("diagnostics dashboard state summarizes compact target behavior write statu
   assert.equal(dashboard.data.health.targetBehaviorLearningCount, 3);
   assert.equal(dashboard.data.health.targetBehaviorLearningSubmodelCount, 2);
   assert.equal(dashboard.data.health.targetBehaviorLearningCustomParentCount, 1);
+});
+
+test("diagnostics dashboard state summarizes persisted target behavior records", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-diagnostics-target-behavior-"));
+  const artifactPath = path.join(root, "Project", "display", "target-behavior.json");
+  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+  fs.writeFileSync(artifactPath, JSON.stringify({
+    artifactType: "project_target_behavior_learning_v1",
+    artifactVersion: "1.0",
+    records: [
+      {
+        targetId: "CustomFace/@Mouth1",
+        targetKind: "submodel",
+        parentContext: {
+          targetId: "CustomFace",
+          customStructure: { profile: "custom_face_like" }
+        }
+      }
+    ]
+  }, null, 2), "utf8");
+  const persisted = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+
+  const dashboard = buildDiagnosticsDashboardState({
+    state: {
+      ui: { diagnosticsOpen: true, diagnosticsFilter: "all" },
+      sceneGraph: {},
+      sequenceAgentRuntime: {
+        targetBehaviorLearning: {
+          artifactPath,
+          records: persisted.records
+        }
+      },
+      diagnostics: [],
+      applyHistory: [],
+      health: {}
+    }
+  });
+
+  assert.equal(dashboard.data.health.targetBehaviorLearningCount, 1);
+  assert.equal(dashboard.data.health.targetBehaviorLearningSubmodelCount, 1);
+  assert.equal(dashboard.data.health.targetBehaviorLearningCustomParentCount, 1);
+  assert.equal(dashboard.data.health.targetBehaviorLearningArtifactPath, artifactPath);
 });
