@@ -6,6 +6,26 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function sceneGraphValues(value = {}) {
+  return value && typeof value === "object" && !Array.isArray(value) ? Object.values(value) : [];
+}
+
+function isCustomModel(model = {}) {
+  return str(model?.displayAs || model?.type || model?.displayType).toLowerCase() === "custom";
+}
+
+function summarizeCustomModels(sceneGraph = {}) {
+  const customModels = sceneGraphValues(sceneGraph?.modelsById).filter(isCustomModel);
+  const submodels = sceneGraphValues(sceneGraph?.submodelsById);
+  return {
+    customModelCount: customModels.length,
+    customModelsWithSubmodels: customModels.filter((model) => {
+      const id = str(model?.id || model?.name);
+      return id && submodels.some((submodel) => str(submodel?.parentId) === id);
+    }).length
+  };
+}
+
 function formatTime(value = "", withSeconds = false) {
   const raw = str(value);
   if (!raw) return withSeconds ? "--:--:--" : "Never";
@@ -28,6 +48,7 @@ export function buildDiagnosticsDashboardState({
   const filter = str(state.ui?.diagnosticsFilter || "all");
   const rows = arr(state.diagnostics);
   const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
+  const customModelSummary = summarizeCustomModels(state.sceneGraph || {});
   const applyHistory = arr(state.applyHistory).slice(0, 12);
   return {
     contract: "diagnostics_dashboard_state_v1",
@@ -86,8 +107,8 @@ export function buildDiagnosticsDashboardState({
         sceneGraphSource: str(state.health?.sceneGraphSource || "unknown"),
         sceneGraphLayoutMode: str(state.health?.sceneGraphLayoutMode || "2d").toUpperCase(),
         sceneGraphSpatialNodeCount: Number(state.health?.sceneGraphSpatialNodeCount || 0),
-        customModelCount: Number(state.sceneGraph?.customModelCatalog?.summary?.customModelCount || 0),
-        customModelsWithSubmodels: Number(state.sceneGraph?.customModelCatalog?.summary?.modelsWithSubmodels || 0),
+        customModelCount: customModelSummary.customModelCount,
+        customModelsWithSubmodels: customModelSummary.customModelsWithSubmodels,
         sceneGraphWarnings: arr(state.health?.sceneGraphWarnings).map((row) => str(row)).filter(Boolean),
         effectCatalogError: str(state.health?.effectCatalogError),
         hasSequencingApplyBatchPlan: Boolean(state.health?.hasSequencingApplyBatchPlan),

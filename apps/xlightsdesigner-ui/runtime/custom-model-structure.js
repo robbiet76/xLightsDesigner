@@ -436,23 +436,23 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   };
 }
 
-export function mapClassificationToTrainingBuckets(classification = {}, structure = {}) {
+export function mapClassificationToTrainedModelProfiles(classification = {}, structure = {}) {
   const rawType = low(classification?.rawType);
   const canonicalType = low(classification?.canonicalType);
-  const buckets = new Set();
-  if (canonicalType === "single_line" || canonicalType === "poly_line") buckets.add("single_line");
-  if (canonicalType === "arches") buckets.add("arch");
-  if (canonicalType === "candy_canes") buckets.add("cane");
-  if (canonicalType === "spinner") buckets.add("spinner");
-  if (canonicalType === "star") buckets.add("star");
-  if (canonicalType === "matrix_horizontal" || canonicalType === "matrix_vertical" || canonicalType === "matrix") buckets.add("matrix");
-  if (canonicalType === "icicles") buckets.add("icicles");
+  const profiles = new Set();
+  if (canonicalType === "single_line" || canonicalType === "poly_line") profiles.add("single_line");
+  if (canonicalType === "arches") profiles.add("arch");
+  if (canonicalType === "candy_canes") profiles.add("cane");
+  if (canonicalType === "spinner") profiles.add("spinner");
+  if (canonicalType === "star") profiles.add("star");
+  if (canonicalType === "matrix_horizontal" || canonicalType === "matrix_vertical" || canonicalType === "matrix") profiles.add("matrix");
+  if (canonicalType === "icicles") profiles.add("icicles");
   if (canonicalType === "tree") {
-    buckets.add("tree_360");
-    buckets.add("tree_flat");
+    profiles.add("tree_360");
+    profiles.add("tree_flat");
   }
-  if (rawType.includes("tree flat")) buckets.add("tree_flat");
-  if (rawType.includes("tree") && rawType.includes("360")) buckets.add("tree_360");
-  if (rawType.includes("tree") && rawType.includes("180")) buckets.add("tree_flat");
-  return [...buckets];
+  if (rawType.includes("tree flat")) profiles.add("tree_flat");
+  if (rawType.includes("tree") && rawType.includes("360")) profiles.add("tree_360");
+  if (rawType.includes("tree") && rawType.includes("180")) profiles.add("tree_flat");
+  return [...profiles];
 }

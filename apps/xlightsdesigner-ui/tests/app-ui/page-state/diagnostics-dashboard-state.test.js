@@ -11,11 +11,15 @@ test("diagnostics dashboard state summarizes counts, rows, and recent applies", 
         diagnosticsFilter: "warning"
       },
       sceneGraph: {
-        customModelCatalog: {
-          summary: {
-            customModelCount: 3,
-            modelsWithSubmodels: 2
-          }
+        modelsById: {
+          CustomA: { id: "CustomA", displayAs: "Custom" },
+          CustomB: { id: "CustomB", displayAs: "Custom" },
+          CustomC: { id: "CustomC", displayAs: "Custom" },
+          Tree: { id: "Tree", displayAs: "Tree 360" }
+        },
+        submodelsById: {
+          "CustomA/@Part": { id: "CustomA/@Part", parentId: "CustomA" },
+          "CustomB/@Part": { id: "CustomB/@Part", parentId: "CustomB" }
         }
       },
       diagnostics: [

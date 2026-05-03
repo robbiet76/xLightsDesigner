@@ -4,9 +4,9 @@ import fs from "node:fs";
 
 import {
   analyzeCustomModelStructure,
-  mapClassificationToTrainingBuckets
+  mapClassificationToTrainedModelProfiles
 } from "../../runtime/custom-model-structure.js";
-import { buildCustomModelStructureCatalog } from "../../runtime/custom-model-catalog.js";
+import { buildNormalizedTargetMetadataRecords } from "../../runtime/target-metadata-runtime.js";
 import {
   parseXLightsRgbEffectsCustomModelSceneGraph,
   parseXmlAttributes
@@ -41,11 +41,11 @@ test("analyzeCustomModelStructure promotes elongated custom grids as linear-like
   ]);
 
   const out = analyzeCustomModelStructure({ CustomModel: source });
-  const buckets = mapClassificationToTrainingBuckets(classifyModelDisplayType("Custom"), out);
+  const profiles = mapClassificationToTrainedModelProfiles(classifyModelDisplayType("Custom"), out);
 
   assert.equal(out.profile, "custom_linear_like");
   assert.ok(out.traits.includes("continuous_node_path"));
-  assert.deepEqual(buckets.sort(), []);
+  assert.deepEqual(profiles.sort(), []);
 });
 
 test("analyzeCustomModelStructure promotes sparse radial custom grids cautiously", () => {
@@ -60,11 +60,11 @@ test("analyzeCustomModelStructure promotes sparse radial custom grids cautiously
   ]);
 
   const out = analyzeCustomModelStructure({ CustomModel: source });
-  const buckets = mapClassificationToTrainingBuckets(classifyModelDisplayType("Custom"), out);
+  const profiles = mapClassificationToTrainedModelProfiles(classifyModelDisplayType("Custom"), out);
 
   assert.equal(out.profile, "custom_radial_like");
   assert.ok(out.traits.includes("radial_like"));
-  assert.deepEqual(buckets.sort(), []);
+  assert.deepEqual(profiles.sort(), []);
 });
 
 test("analyzeCustomModelStructure derives construction from API model nodes", () => {
@@ -147,79 +147,79 @@ test("analyzeCustomModelStructure uses face submodels to identify character cust
   assert.equal(out.submodels.count, 3);
 });
 
-test("mapClassificationToTrainingBuckets treats Tree 180 as tree-compatible", () => {
-  const buckets = mapClassificationToTrainingBuckets(classifyModelDisplayType("Tree 180"));
+test("mapClassificationToTrainedModelProfiles treats Tree 180 as tree-compatible", () => {
+  const profiles = mapClassificationToTrainedModelProfiles(classifyModelDisplayType("Tree 180"));
 
-  assert.ok(buckets.includes("tree_flat"));
-  assert.ok(buckets.includes("tree_360"));
+  assert.ok(profiles.includes("tree_flat"));
+  assert.ok(profiles.includes("tree_360"));
 });
 
 test("vendor custom model structure capture preserves submodel construction signals", () => {
-  const capture = JSON.parse(fs.readFileSync(
-    new URL("../fixtures/vendor-custom-model-structure-capture.json", import.meta.url),
+  const xml = fs.readFileSync(
+    new URL("../../../../render-training-vendor-fixture/xlights_rgbeffects.xml", import.meta.url),
     "utf8"
-  ));
+  );
+  const sceneGraph = parseXLightsRgbEffectsCustomModelSceneGraph(xml);
+  const records = buildNormalizedTargetMetadataRecords({ sceneGraph });
+  const customModels = records
+    .filter((row) => row?.targetKind === "model" && row?.structure?.customStructure)
+    .map((row) => row.structure.customStructure);
 
-  assert.equal(capture.artifactType, "custom_model_structure_catalog_v1");
-  assert.equal(capture.summary.customModelCount, 19);
+  assert.equal(customModels.length, 19);
 
-  const faceLike = capture.models.find((row) => row.profile === "custom_face_like" && row.submodels.count >= 2);
+  const faceLike = customModels.find((row) => row.profile === "custom_face_like" && row.submodels.count >= 2);
   assert.ok(faceLike);
   assert.equal(faceLike.construction.nodeMap.nodeCount, faceLike.nodeOrder.nodeCount);
   assert.equal(faceLike.construction.nodeMap.firstNodes[0].coordinateSource, "grid");
 
-  const radialWithSubmodels = capture.models.find((row) =>
+  const radialWithSubmodels = customModels.find((row) =>
     row.profile === "custom_radial_like"
     && row.traits.includes("custom_radial_submodels")
     && row.submodels.count >= 4
   );
   assert.ok(radialWithSubmodels);
 
-  const layered = capture.models.find((row) => row.traits.includes("layered_submodels"));
+  const layered = customModels.find((row) => row.traits.includes("layered_submodels"));
   assert.ok(layered);
   assert.ok(layered.submodels.count >= 2);
 });
 
-test("buildCustomModelStructureCatalog captures all custom models from a scene graph", () => {
-  const catalog = buildCustomModelStructureCatalog({
-    sceneGraph: {
-      modelsById: {
-        CustomTargetA: {
-          id: "CustomTargetA",
-          name: "Custom Target A",
-          displayAs: "Custom",
-          attributes: {
-            CustomModel: grid([
-              ["", 1, ""],
-              [2, "", 3],
-              ["", 4, ""]
-            ])
-          }
-        },
-        Matrix: {
-          id: "Matrix",
-          name: "Matrix",
-          displayAs: "Horiz Matrix"
+test("target metadata captures custom model structure inside the shared model index", () => {
+  const sceneGraph = {
+    modelsById: {
+      CustomTargetA: {
+        id: "CustomTargetA",
+        name: "Custom Target A",
+        displayAs: "Custom",
+        attributes: {
+          CustomModel: grid([
+            ["", 1, ""],
+            [2, "", 3],
+            ["", 4, ""]
+          ])
         }
       },
-      submodelsById: {
-        "CustomTargetA/@Eye": { id: "CustomTargetA/@Eye", name: "@Eye", parentId: "CustomTargetA", type: "ranges", line0: "2-3" },
-        "CustomTargetA/@Mouth": { id: "CustomTargetA/@Mouth", name: "@Mouth", parentId: "CustomTargetA", type: "ranges", line0: "4" }
+      Matrix: {
+        id: "Matrix",
+        name: "Matrix",
+        displayAs: "Horiz Matrix"
       }
     },
-    createdAt: "2026-04-30T00:00:00.000Z"
-  });
+    submodelsById: {
+      "CustomTargetA/@Eye": { id: "CustomTargetA/@Eye", name: "@Eye", parentId: "CustomTargetA", type: "ranges", line0: "2-3" },
+      "CustomTargetA/@Mouth": { id: "CustomTargetA/@Mouth", name: "@Mouth", parentId: "CustomTargetA", type: "ranges", line0: "4" }
+    }
+  };
+  const records = buildNormalizedTargetMetadataRecords({ sceneGraph });
+  const customRecord = records.find((row) => row.targetId === "CustomTargetA");
 
-  assert.equal(catalog.artifactType, "custom_model_structure_catalog_v1");
-  assert.equal(catalog.summary.customModelCount, 1);
-  assert.equal(catalog.summary.modelsWithSubmodels, 1);
-  assert.equal(catalog.models[0].modelName, "Custom Target A");
-  assert.match(catalog.models[0].fingerprint, /^cmf1:[0-9a-f]{8}$/);
-  assert.equal(catalog.models[0].fingerprintVersion, "custom-model-fingerprint-v1");
-  assert.equal(catalog.models[0].profile, "custom_face_like");
+  assert.equal(customRecord.structure.submodelCount, 2);
+  assert.equal(customRecord.structure.customStructure.profile, "custom_face_like");
+  assert.match(customRecord.identity.fingerprint, /^tmf1:[0-9a-f]{8}$/);
+  assert.equal(records.filter((row) => row?.structure?.customStructure).length, 1);
 });
 
-test("buildCustomModelStructureCatalog fingerprints include custom submodel construction", () => {
+test("target metadata fingerprints include custom submodel construction", () => {
   const baseSceneGraph = {
     modelsById: {
       CustomTargetA: {
@@ -247,13 +247,13 @@ test("buildCustomModelStructureCatalog fingerprints include custom submodel cons
     }
   };
 
-  const base = buildCustomModelStructureCatalog({ sceneGraph: baseSceneGraph });
-  const changed = buildCustomModelStructureCatalog({ sceneGraph: changedSceneGraph });
+  const base = buildNormalizedTargetMetadataRecords({ sceneGraph: baseSceneGraph }).find((row) => row.targetId === "CustomTargetA");
+  const changed = buildNormalizedTargetMetadataRecords({ sceneGraph: changedSceneGraph }).find((row) => row.targetId === "CustomTargetA");
 
-  assert.notEqual(base.models[0].fingerprint, changed.models[0].fingerprint);
+  assert.notEqual(base.identity.fingerprint, changed.identity.fingerprint);
 });
 
-test("buildCustomModelStructureCatalog fingerprints survive model renames", () => {
+test("target metadata custom structure fingerprints survive model renames", () => {
   const baseSceneGraph = {
     modelsById: {
       CustomTargetA: {
@@ -280,10 +280,10 @@ test("buildCustomModelStructureCatalog fingerprints survive model renames", () =
     }
   };
 
-  const base = buildCustomModelStructureCatalog({ sceneGraph: baseSceneGraph });
-  const renamed = buildCustomModelStructureCatalog({ sceneGraph: renamedSceneGraph });
+  const base = buildNormalizedTargetMetadataRecords({ sceneGraph: baseSceneGraph }).find((row) => row.targetId === "CustomTargetA");
+  const renamed = buildNormalizedTargetMetadataRecords({ sceneGraph: renamedSceneGraph }).find((row) => row.targetId === "RenamedTargetA");
 
-  assert.equal(base.models[0].fingerprint, renamed.models[0].fingerprint);
+  assert.equal(base.identity.fingerprint, renamed.identity.fingerprint);
 });
 
 test("parseXmlAttributes decodes quoted XML attributes", () => {
@@ -308,27 +308,35 @@ test("parseXLightsRgbEffectsCustomModelSceneGraph extracts custom models and sub
     </xrgb>
   `;
   const sceneGraph = parseXLightsRgbEffectsCustomModelSceneGraph(xml);
-  const catalog = buildCustomModelStructureCatalog({ sceneGraph });
+  const records = buildNormalizedTargetMetadataRecords({ sceneGraph });
+  const customRecord = records.find((row) => row.targetId === "Custom Target A");
 
   assert.equal(Object.keys(sceneGraph.modelsById).length, 2);
   assert.equal(Object.keys(sceneGraph.submodelsById).length, 2);
   assert.equal(sceneGraph.modelsById["Custom Target A"].attributes.CustomModel, "1,-1,2;3,-1,4");
   assert.equal(sceneGraph.submodelsById["Custom Target A/@Mouth1"].line0, "3-4");
-  assert.equal(catalog.summary.customModelCount, 1);
-  assert.equal(catalog.models[0].profile, "custom_face_like");
+  assert.equal(records.filter((row) => row?.structure?.customStructure).length, 1);
+  assert.equal(customRecord.structure.customStructure.profile, "custom_face_like");
 });
 
-test("vendor custom model XML parser feeds permanent catalog builder", () => {
+test("vendor custom model XML parser feeds shared target metadata", () => {
   const xml = fs.readFileSync(
     new URL("../../../../render-training-vendor-fixture/xlights_rgbeffects.xml", import.meta.url),
     "utf8"
   );
   const sceneGraph = parseXLightsRgbEffectsCustomModelSceneGraph(xml);
-  const catalog = buildCustomModelStructureCatalog({ sceneGraph });
+  const records = buildNormalizedTargetMetadataRecords({ sceneGraph });
+  const customModels = records
+    .filter((row) => row?.targetKind === "model" && row?.structure?.customStructure)
+    .map((row) => row.structure.customStructure);
+  const profileCounts = customModels.reduce((out, row) => {
+    out[row.profile] = Number(out[row.profile] || 0) + 1;
+    return out;
+  }, {});
 
-  assert.equal(catalog.summary.customModelCount, 19);
-  assert.equal(catalog.summary.modelsWithSubmodels, 7);
-  assert.equal(catalog.summary.profileCounts.custom_face_like, 4);
-  assert.equal(catalog.summary.profileCounts.custom_radial_like, 7);
-  assert.equal(catalog.summary.profileCounts.custom_linear_like, 8);
+  assert.equal(customModels.length, 19);
+  assert.equal(customModels.filter((row) => row.submodels.count > 0).length, 7);
+  assert.equal(profileCounts.custom_face_like, 4);
+  assert.equal(profileCounts.custom_radial_like, 7);
+  assert.equal(profileCounts.custom_linear_like, 8);
 });

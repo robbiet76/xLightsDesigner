@@ -28,6 +28,6 @@
     "submodelsById carries authoritative parent linkage so parent/submodel overlap can collapse broad writes while preserving explicit refinement lines.",
     "displayModelIndex is the compact project display/model index derived from the latest xLights layout refresh. It is the preferred structural source for target identity, fingerprints, custom model construction, node layout summaries, and enriched submodel metadata.",
     "targetBehaviorEvidence carries compact project-local render/probe learning keyed by target or submodel fingerprint. It is advisory evidence for effect suitability, readability, and target/submodel behavior, not a replacement for current xLights readback.",
-    "Custom models and submodels use the same target framework as built-in models. The sequence agent should not infer user-specific prop meaning from target names or route custom models through a separate training bucket."
+    "Custom models and submodels use the same target framework as built-in models. The sequence agent should not infer user-specific prop meaning from target names or route custom models through a separate training path."
   ]
 }

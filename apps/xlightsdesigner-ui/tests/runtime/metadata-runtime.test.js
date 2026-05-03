@@ -240,7 +240,7 @@ test("metadata runtime remaps renamed targets by fingerprint during reconciliati
   assert.deepEqual(binding.orphanTargetIds, []);
 });
 
-test("metadata runtime refreshes custom model catalog during display reconciliation", () => {
+test("metadata runtime refreshes custom model structure in target metadata during reconciliation", () => {
   const state = buildState();
   state.models = [{ id: "CustomFace", name: "Custom Face", type: "Custom" }];
   state.submodels = [{ id: "CustomFace/@Mouth", name: "@Mouth", parentId: "CustomFace" }];
@@ -267,10 +267,9 @@ test("metadata runtime refreshes custom model catalog during display reconciliat
 
   runtime.reconcileDisplayMetadataForSceneGraphChange({ reason: "layout refresh" });
 
-  assert.equal(state.sceneGraph.customModelCatalog.artifactType, "custom_model_structure_catalog_v1");
-  assert.equal(state.sceneGraph.customModelCatalog.summary.customModelCount, 1);
-  assert.equal(state.sceneGraph.customModelCatalog.models[0].targetId, "CustomFace");
-  assert.equal(state.sceneGraph.customModelCatalog.models[0].construction.nodeMap.nodeCount, 4);
+  const record = runtime.buildTargetMetadataRefreshArtifact().records[0];
+  assert.equal(record.targetId, "CustomFace");
+  assert.equal(record.structure.customStructure.construction.nodeMap.nodeCount, 4);
 });
 
 test("metadata runtime prefers structural submodel identity over parsed names", () => {
@@ -329,7 +328,6 @@ test("metadata runtime persists display refresh artifacts when project file is a
   assert.equal(writes[0].targetMetadata.artifactType, "target_metadata_index_v1");
   assert.equal(writes[0].targetMetadata.summary.targetCount, 1);
   assert.equal(writes[0].targetMetadata.summary.customModelCount, 1);
-  assert.equal(writes[0].customModelCatalog, undefined);
   assert.ok(writes[0].targetMetadata.records[0].structure.customStructure.profile.startsWith("custom_"));
   assert.equal(writes[0].targetMetadata.records[0].structure.customStructure.construction.nodeMap.nodeCount, 4);
   assert.equal(writes[0].reconciliation.status, "reconciled");

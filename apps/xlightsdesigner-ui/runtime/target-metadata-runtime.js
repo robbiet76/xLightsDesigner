@@ -1,6 +1,6 @@
 import { classifyModelDisplayType } from "../agent/sequence-agent/model-type-catalog.js";
 import { getStage1TrainedEffectBundle } from "../agent/sequence-agent/trained-effect-knowledge.js";
-import { analyzeCustomModelStructure, analyzeModelNodeLayout, mapClassificationToTrainingBuckets } from "./custom-model-structure.js";
+import { analyzeCustomModelStructure, analyzeModelNodeLayout, mapClassificationToTrainedModelProfiles } from "./custom-model-structure.js";
 
 function norm(value = "") {
   return String(value || "").trim();
@@ -504,8 +504,8 @@ function inferRole({ userTags = [], targetKind = "", groupMemberships = [] } = {
   return "";
 }
 
-function supportStateLabel({ trainedBuckets = [] } = {}) {
-  return trainedBuckets.length ? "trained_supported" : "runtime_targetable_only";
+function supportStateLabel({ trainedModelProfiles = [] } = {}) {
+  return trainedModelProfiles.length ? "trained_supported" : "runtime_targetable_only";
 }
 
 function worstMetadataCompleteness(values = []) {
@@ -522,7 +522,7 @@ function buildMetadataCompleteness({
   inferredSemanticTraits = [],
   preference = {},
   userTags = [],
-  trainedBuckets = [],
+  trainedModelProfiles = [],
   submodelCount = 0,
   memberCount = 0
 } = {}) {
@@ -548,7 +548,7 @@ function buildMetadataCompleteness({
       : (Number(submodelCount) > 0
           ? (semanticHints.length ? "metadata_ready" : "metadata_partial")
           : "metadata_ready");
-  const sequencing = trainedBuckets.length
+  const sequencing = trainedModelProfiles.length
     ? "metadata_ready"
     : normalizedCanonical
       ? "metadata_partial"
@@ -564,7 +564,7 @@ function buildMetadataCompleteness({
 }
 
 function buildProvenanceDetail({
-  trainedBuckets = [],
+  trainedModelProfiles = [],
   canonicalType = "",
   userTags = [],
   preference = {},
@@ -577,10 +577,10 @@ function buildProvenanceDetail({
       detail: canonicalType ? `Derived from display/model type as ${canonicalType}.` : "Canonical type not inferred."
     },
     supportState: {
-      source: trainedBuckets.length ? "training_bundle" : "runtime_only",
-      detail: trainedBuckets.length
-        ? `Mapped into Stage 1 trained buckets: ${trainedBuckets.join(", ")}.`
-        : "No Stage 1 trained bucket currently mapped for this target."
+      source: trainedModelProfiles.length ? "training_bundle" : "runtime_only",
+      detail: trainedModelProfiles.length
+        ? `Matched Stage 1 trained model profiles: ${trainedModelProfiles.join(", ")}.`
+        : "No Stage 1 trained model profile currently mapped for this target."
     },
     inferredRole: {
       source: userTags.length ? "metadata_tags" : "derived_layout",
@@ -709,7 +709,7 @@ export function buildNormalizedTargetMetadataRecords({
     : {};
   const groupMembershipIndex = buildGroupMembershipIndex(groupsById);
   const trainedBundle = getStage1TrainedEffectBundle();
-  const trainedModelBuckets = new Set(Object.keys(trainedBundle?.modelTypeIndex || {}));
+  const trainedModelProfileSet = new Set(Object.keys(trainedBundle?.modelTypeIndex || {}));
   const artifactVersion = norm(trainedBundle?.artifactVersion || "1.0");
   const bounds = sceneGraph?.stats?.bounds || null;
   const now = new Date().toISOString();
@@ -731,10 +731,10 @@ export function buildNormalizedTargetMetadataRecords({
           nodeLayout: model?.nodeLayout || model?.customNodeLayout || model?.attributes?.customNodeLayout || model?.attributes?.nodeLayout || null
         })
       : null;
-    const trainedBuckets = mapClassificationToTrainingBuckets(classification, customStructure).filter((bucket) => trainedModelBuckets.has(bucket));
+    const trainedModelProfiles = mapClassificationToTrainedModelProfiles(classification, customStructure).filter((profile) => trainedModelProfileSet.has(profile));
     const groupMemberships = unique(groupMembershipIndex.get(targetId) || []);
     const userTags = unique(assignment?.tags || []);
-    const confidence = trainedBuckets.length
+    const confidence = trainedModelProfiles.length
       ? Math.max(0.6, Number(customStructure?.confidence || 1))
       : (classification?.canonicalType === "custom" ? Number(customStructure?.confidence || 0.25) : 0.5);
     const submodelCount = childSubmodels.length;
@@ -767,7 +767,7 @@ export function buildNormalizedTargetMetadataRecords({
       inferredSemanticTraits,
       preference,
       userTags,
-      trainedBuckets,
+      trainedModelProfiles,
       submodelCount
     });
     records.push({
@@ -802,12 +802,12 @@ export function buildNormalizedTargetMetadataRecords({
       semantics: {
         inferredRole,
         inferredSemanticTraits,
-        supportState: supportStateLabel({ trainedBuckets }),
+        supportState: supportStateLabel({ trainedModelProfiles }),
         metadataCompleteness
       },
       training: {
-        trainedModelBuckets: trainedBuckets,
-        trainedSupportState: trainedBuckets.length ? "trained_supported" : "out_of_stage1_model_support",
+        trainedModelProfiles,
+        trainedSupportState: trainedModelProfiles.length ? "trained_supported" : "out_of_stage1_model_support",
         trainingArtifactVersion: artifactVersion
       },
       user: {
@@ -827,7 +827,7 @@ export function buildNormalizedTargetMetadataRecords({
         updatedAt: now,
         confidence,
         fields: buildProvenanceDetail({
-          trainedBuckets,
+          trainedModelProfiles,
           canonicalType: norm(classification?.canonicalType),
           userTags,
           preference,
@@ -876,7 +876,7 @@ export function buildNormalizedTargetMetadataRecords({
       inferredSemanticTraits,
       preference,
       userTags,
-      trainedBuckets: [],
+      trainedModelProfiles: [],
       memberCount: flattened.length
     });
     records.push({
@@ -911,7 +911,7 @@ export function buildNormalizedTargetMetadataRecords({
         metadataCompleteness
       },
       training: {
-        trainedModelBuckets: [],
+        trainedModelProfiles: [],
         trainedSupportState: "runtime_targetable_only",
         trainingArtifactVersion: artifactVersion
       },
@@ -932,7 +932,7 @@ export function buildNormalizedTargetMetadataRecords({
         updatedAt: now,
         confidence,
         fields: buildProvenanceDetail({
-          trainedBuckets: [],
+          trainedModelProfiles: [],
           canonicalType: "model_group",
           userTags,
           preference,
@@ -986,7 +986,7 @@ export function buildNormalizedTargetMetadataRecords({
       inferredSemanticTraits,
       preference,
       userTags,
-      trainedBuckets: [],
+      trainedModelProfiles: [],
       memberCount: nodeCount
     });
     records.push({
@@ -1022,7 +1022,7 @@ export function buildNormalizedTargetMetadataRecords({
         metadataCompleteness
       },
       training: {
-        trainedModelBuckets: [],
+        trainedModelProfiles: [],
         trainedSupportState: "runtime_targetable_only",
         trainingArtifactVersion: artifactVersion
       },
@@ -1043,7 +1043,7 @@ export function buildNormalizedTargetMetadataRecords({
         updatedAt: now,
         confidence,
         fields: buildProvenanceDetail({
-          trainedBuckets: [],
+          trainedModelProfiles: [],
           canonicalType: "submodel",
           userTags,
           preference,

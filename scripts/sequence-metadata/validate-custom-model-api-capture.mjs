@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { getMediaStatus, getModel, getModelNodes, getModels, getSubmodels, setShowDirectory } from "../../apps/xlightsdesigner-ui/api.js";
 import { classifyModelDisplayType } from "../../apps/xlightsdesigner-ui/agent/sequence-agent/model-type-catalog.js";
-import { buildCustomModelStructureCatalog } from "../../apps/xlightsdesigner-ui/runtime/custom-model-catalog.js";
+import { buildNormalizedTargetMetadataRecords } from "../../apps/xlightsdesigner-ui/runtime/target-metadata-runtime.js";
 
 function norm(value = "") {
   return String(value || "").trim();
@@ -75,6 +75,21 @@ function countBy(values = []) {
     counts[key] = (counts[key] || 0) + 1;
   }
   return counts;
+}
+
+function summarizeCustomModelStructure(records = []) {
+  const profileCounts = {};
+  let customModelCount = 0;
+  let modelsWithSubmodels = 0;
+  for (const row of records) {
+    const structure = row?.structure?.customStructure;
+    if (row?.targetKind !== "model" || !structure) continue;
+    customModelCount += 1;
+    if (Number(structure?.submodels?.count || 0) > 0) modelsWithSubmodels += 1;
+    const profile = norm(structure?.profile || "unknown") || "unknown";
+    profileCounts[profile] = Number(profileCounts[profile] || 0) + 1;
+  }
+  return { customModelCount, modelsWithSubmodels, profileCounts };
 }
 
 function modelDetailPayload(body = {}) {
@@ -193,14 +208,20 @@ async function main() {
     })
     .filter(([id]) => id));
   const submodelsById = Object.fromEntries(submodels.map((row) => [row.id, row]));
-  const catalog = buildCustomModelStructureCatalog({
-    sceneGraph: { modelsById, submodelsById, groupsById: {}, stats: {} },
-    source: {
-      endpoint: args.endpoint,
-      modelSource: "layout.getModels + layout.getModel",
-      submodelSource: submodelError ? "layout.getSubmodels failed" : "layout.getSubmodels"
-    }
+  const records = buildNormalizedTargetMetadataRecords({
+    sceneGraph: { modelsById, submodelsById, groupsById: {}, stats: {} }
   });
+  const customModels = records
+    .filter((row) => row?.targetKind === "model" && row?.structure?.customStructure)
+    .map((row) => ({
+      targetId: row.targetId,
+      modelName: norm(row?.identity?.displayName || row?.targetId),
+      rawType: norm(row?.identity?.rawType),
+      canonicalType: norm(row?.identity?.canonicalType),
+      fingerprint: norm(row?.identity?.fingerprint),
+      fingerprintVersion: norm(row?.identity?.fingerprintVersion),
+      ...row.structure.customStructure
+    }));
   const report = {
     artifactType: "custom_model_api_capture_validation_v1",
     artifactVersion: "1.0",
@@ -222,10 +243,10 @@ async function main() {
         .sort(),
       submodelCount: submodels.length,
       submodelError,
-      constructionSourceCounts: countBy(catalog.models.map((row) => row?.construction?.source)),
-      catalog: catalog.summary
+      constructionSourceCounts: countBy(customModels.map((row) => row?.construction?.source)),
+      modelIndexCustomStructure: summarizeCustomModelStructure(records)
     },
-    customModels: catalog.models
+    customModels
   };
 
   if (args.output) {

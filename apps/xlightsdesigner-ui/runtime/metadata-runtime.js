@@ -1,5 +1,4 @@
 import { buildNormalizedTargetMetadataRecords as buildDefaultNormalizedTargetMetadataRecords } from './target-metadata-runtime.js';
-import { buildCustomModelStructureCatalog } from './custom-model-catalog.js';
 
 export function createMetadataRuntime(deps = {}) {
   const {
@@ -76,33 +75,6 @@ export function createMetadataRuntime(deps = {}) {
     return new Map(records.map((row) => [String(row?.targetId || ''), row]).filter(([id]) => id));
   }
 
-  function customStructureFingerprintRows() {
-    const rows = Array.isArray(state.sceneGraph?.customModelCatalog?.models)
-      ? state.sceneGraph.customModelCatalog.models
-      : [];
-    return rows.map((row) => String(row?.fingerprint || [
-      String(row?.profile || ''),
-      String(row?.nodeCount || ''),
-      String(row?.construction?.dimensions?.width || ''),
-      String(row?.construction?.dimensions?.height || ''),
-      String(row?.construction?.dimensions?.layers || ''),
-      Array.isArray(row?.submodels?.names) ? row.submodels.names.join(',') : ''
-    ].join(':')));
-  }
-
-  function refreshCustomModelStructureCatalog() {
-    if (!state.sceneGraph || typeof state.sceneGraph !== 'object' || Array.isArray(state.sceneGraph)) return null;
-    const catalog = buildCustomModelStructureCatalog({
-      sceneGraph: state.sceneGraph,
-      source: {
-        showFolder: String(getShowFolder() || ''),
-        sceneGraphSource: String(state.health?.sceneGraphSource || '')
-      }
-    });
-    state.sceneGraph.customModelCatalog = catalog;
-    return catalog;
-  }
-
   function buildTargetMetadataRefreshArtifact() {
     const records = buildNormalizedTargetMetadataRecords({
       sceneGraph: state.sceneGraph || {},
@@ -146,7 +118,7 @@ export function createMetadataRuntime(deps = {}) {
       String(target?.fingerprint || target?.id || ''),
       target?.fingerprint ? '' : String(target?.name || '')
     ].join(':'));
-    const payload = [...targetRows, ...customStructureFingerprintRows()].sort().join('|');
+    const payload = targetRows.sort().join('|');
     return payload ? stableHash(payload) : '';
   }
 
@@ -379,7 +351,6 @@ export function createMetadataRuntime(deps = {}) {
 
   function reconcileDisplayMetadataForSceneGraphChange({ reason = 'scene graph refreshed' } = {}) {
     const metadata = metadataObject();
-    refreshCustomModelStructureCatalog();
     const targets = buildMetadataTargets({ includeSubmodels: true });
     const liveIds = new Set(targets.map((target) => String(target.id || '')).filter(Boolean));
     const liveById = new Map(targets.map((target) => [String(target.id || ''), target]).filter(([id]) => id));
@@ -977,6 +948,7 @@ export function createMetadataRuntime(deps = {}) {
     ensureMetadataTargetSelection,
     markDisplayMetadataPendingReconciliation,
     reconcileDisplayMetadataForSceneGraphChange,
+    buildTargetMetadataRefreshArtifact,
     buildDisplayMetadataLayoutFingerprint,
     getMetadataOrphans,
     getVisualHintDefinitionRecords,

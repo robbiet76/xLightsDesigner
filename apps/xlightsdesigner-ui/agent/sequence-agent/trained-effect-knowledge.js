@@ -4,7 +4,7 @@ import { CROSS_EFFECT_SHARED_SETTINGS_BUNDLE } from './generated/cross-effect-sh
 import { BEHAVIOR_CAPABILITY_RECORDS_BUNDLE } from './generated/behavior-capability-records-bundle.js';
 import { LAYER_COMPOSITION_PRIORS_BUNDLE } from './generated/layer-composition-priors-bundle.js';
 import { classifyModelDisplayType } from './model-type-catalog.js';
-import { analyzeCustomModelStructure, mapClassificationToTrainingBuckets } from '../../runtime/custom-model-structure.js';
+import { analyzeCustomModelStructure, mapClassificationToTrainedModelProfiles } from '../../runtime/custom-model-structure.js';
 
 function normText(value = '') {
   return String(value || '').trim();
@@ -76,9 +76,9 @@ function buildDisplayElementIndex(displayElements = []) {
   return index;
 }
 
-function inferModelBucketsForTargets({ targetIds = [], displayElements = [] } = {}) {
+function inferTrainedModelProfilesForTargets({ targetIds = [], displayElements = [] } = {}) {
   const displayIndex = buildDisplayElementIndex(displayElements);
-  const buckets = new Set();
+  const profiles = new Set();
   for (const targetId of unique(targetIds)) {
     const row = displayIndex.get(targetId);
     if (!row) continue;
@@ -86,11 +86,11 @@ function inferModelBucketsForTargets({ targetIds = [], displayElements = [] } = 
     const customStructure = classification?.canonicalType === 'custom'
       ? analyzeCustomModelStructure(row?.attributes || row)
       : null;
-    for (const bucket of mapClassificationToTrainingBuckets(classification, customStructure)) {
-      buckets.add(bucket);
+    for (const profile of mapClassificationToTrainedModelProfiles(classification, customStructure)) {
+      profiles.add(profile);
     }
   }
-  return [...buckets];
+  return [...profiles];
 }
 
 function inferExactGeometryProfilesForTargets({ targetIds = [], displayElements = [] } = {}) {
@@ -431,7 +431,7 @@ export function recommendTrainedEffectsForTargets({
   displayElements = [],
   limit = 5
 } = {}) {
-  const targetModelTypes = inferModelBucketsForTargets({ targetIds, displayElements });
+  const targetModelTypes = inferTrainedModelProfilesForTargets({ targetIds, displayElements });
   return recommendTrainedEffects({ summary, energy, density, targetModelTypes, limit });
 }
 
@@ -441,7 +441,7 @@ export function recommendTrainedEffectsForVisualFamilies({
   displayElements = [],
   limit = 5
 } = {}) {
-  const targetModelTypes = inferModelBucketsForTargets({ targetIds, displayElements });
+  const targetModelTypes = inferTrainedModelProfilesForTargets({ targetIds, displayElements });
   const desiredTokens = buildBehaviorTokenSet(preferredVisualFamilies);
   const scored = [];
 
@@ -585,7 +585,7 @@ export function recommendConfiguredBehaviorCapabilities({
     : [];
   const allowedEffects = new Set(unique(effectNames));
   const matchedGeometryProfiles = inferExactGeometryProfilesForTargets({ targetIds, displayElements });
-  const matchedModelTypes = inferModelBucketsForTargets({ targetIds, displayElements });
+  const matchedModelTypes = inferTrainedModelProfilesForTargets({ targetIds, displayElements });
   const desiredTokens = buildBehaviorTokenSet([
     summary,
     ...unique(preferredVisualFamilies),
@@ -710,7 +710,7 @@ export function recommendDerivedParameterPriors({
     };
   }
   const matchedGeometryProfiles = inferExactGeometryProfilesForTargets({ targetIds, displayElements });
-  const matchedModelTypes = inferModelBucketsForTargets({ targetIds, displayElements });
+  const matchedModelTypes = inferTrainedModelProfilesForTargets({ targetIds, displayElements });
   const normalizedPaletteMode = normText(paletteMode);
   const desired = unique(desiredBehaviorHints);
   const scored = profile.priors
@@ -745,7 +745,7 @@ export function recommendDerivedParameterPriors({
     .sort((a, b) => b.score - a.score || a.parameterName.localeCompare(b.parameterName));
   const recommendationMode = matchedGeometryProfiles.length
     ? 'exact_geometry'
-    : (matchedModelTypes.length ? 'model_type_bucket' : 'effect_only');
+    : (matchedModelTypes.length ? 'model_type_profile' : 'effect_only');
   return {
     effectName: normText(effectName),
     recommendationMode,

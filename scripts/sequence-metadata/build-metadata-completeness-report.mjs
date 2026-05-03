@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { buildNormalizedTargetMetadataRecords } from "../../apps/xlightsdesigner-ui/runtime/target-metadata-runtime.js";
-import { buildCustomModelStructureCatalog } from "../../apps/xlightsdesigner-ui/runtime/custom-model-catalog.js";
 
 function norm(value = "") {
   return String(value || "").trim();
@@ -90,6 +89,21 @@ function summarizePriorityGaps(records = []) {
   };
 }
 
+function summarizeCustomModelStructure(records = []) {
+  const profileCounts = {};
+  let customModelCount = 0;
+  let modelsWithSubmodels = 0;
+  for (const row of records) {
+    const structure = row?.structure?.customStructure;
+    if (row?.targetKind !== "model" || !structure) continue;
+    customModelCount += 1;
+    if (Number(structure?.submodels?.count || 0) > 0) modelsWithSubmodels += 1;
+    const profile = norm(structure?.profile || "unknown") || "unknown";
+    profileCounts[profile] = Number(profileCounts[profile] || 0) + 1;
+  }
+  return { customModelCount, modelsWithSubmodels, profileCounts };
+}
+
 function extractPriorityGapExamples(records = [], limit = 20) {
   return arr(records)
     .filter((row) =>
@@ -147,15 +161,6 @@ function main() {
   const inputPath = process.argv[2] || defaultAppStatePath();
   const outputPath = process.argv[3] || "/tmp/metadata-completeness-report.v1.json";
   const state = readAppState(inputPath);
-  const customModelCatalog = buildCustomModelStructureCatalog({
-    sceneGraph: state.sceneGraph || {},
-    source: {
-      statePath: inputPath,
-      projectName: norm(state.projectName),
-      sequencePath: norm(state.sequencePathInput),
-      sceneGraphSource: norm(state.health?.sceneGraphSource)
-    }
-  });
   const records = buildNormalizedTargetMetadataRecords({
     sceneGraph: state.sceneGraph || {},
     metadataAssignments: state.metadata?.assignments || [],
@@ -171,7 +176,7 @@ function main() {
       totalTargets: records.length,
       byTargetKind: summarizeByTargetKind(records),
       modelSlices: summarizeModelSlices(records),
-      customModelStructure: customModelCatalog.summary,
+      customModelStructure: summarizeCustomModelStructure(records),
       priorityGaps: summarizePriorityGaps(records)
     },
     gapExamples: extractGapExamples(records, 40),
