@@ -300,8 +300,9 @@ final class SequenceScreenViewModel {
 
     private static func proposalPrerequisiteBlockers(project: ActiveProjectModel, pendingWork: PendingWorkReadModel?) -> [String] {
         let snapshot = project.snapshot.mapValues(\.value)
-        let audioPath = string(snapshot["audioPathInput"], fallback: pendingWork?.audioPath ?? "")
-        let sequencePath = string(snapshot["sequencePathInput"], fallback: pendingWork?.activeSequencePath ?? "")
+        let target = ProjectTargetContext.resolve(project: project)
+        let audioPath = string(target.audioPath, fallback: string(snapshot["audioPathInput"], fallback: pendingWork?.audioPath ?? ""))
+        let sequencePath = string(target.sequencePath, fallback: string(snapshot["sequencePathInput"], fallback: pendingWork?.activeSequencePath ?? ""))
         var blockers: [String] = []
         if audioPath.isEmpty || audioPath == "No audio path selected" {
             blockers.append("Choose or analyze audio before generating a sequencing proposal.")
@@ -606,12 +607,14 @@ final class SequenceScreenViewModel {
         let flags = (snapshot["flags"] as? [String: Any]) ?? [:]
         let planOnlyMode = bool(flags["planOnlyMode"])
         let activeSequenceLoaded = bool(flags["activeSequenceLoaded"])
-        let sequencePathInput = string(snapshot["sequencePathInput"])
+        let projectTarget = ProjectTargetContext.resolve(project: project)
+        let sequencePathInput = string(projectTarget.sequencePath, fallback: string(snapshot["sequencePathInput"]))
+        let projectSequenceName = string(projectTarget.sequenceName, fallback: string(snapshot["activeSequence"]))
         let showFolder = project.showFolder
         let liveSequencePath = openSequence.path
         let liveSequenceAllowed = isPathWithinShowFolder(liveSequencePath, showFolder)
         let liveSequenceOpen = openSequence.isOpen && !liveSequencePath.isEmpty && liveSequenceAllowed
-        let effectiveSequenceLoaded = activeSequenceLoaded || liveSequenceOpen
+        let effectiveSequenceLoaded = activeSequenceLoaded || liveSequenceOpen || !sequencePathInput.isEmpty
         let effectiveSequencePath = liveSequenceOpen ? liveSequencePath : sequencePathInput
         let effectiveSequenceAllowed = effectiveSequencePath.isEmpty ? true : isPathWithinShowFolder(effectiveSequencePath, showFolder.isEmpty ? effectiveSequencePath : showFolder)
         let liveSequenceName = liveSequencePath.isEmpty
@@ -706,10 +709,10 @@ final class SequenceScreenViewModel {
             effectiveSequencePath: effectiveSequencePath,
             hasLiveSequence: liveSequenceOpen,
             planOnlyMode: planOnlyMode,
-            activeSequenceName: liveSequenceOpen ? liveSequenceName : string(snapshot["activeSequence"]),
+            activeSequenceName: liveSequenceOpen ? liveSequenceName : projectSequenceName,
             activeSequencePathSummary: liveSequenceOpen
                 ? "\(liveSequencePath)\nSource of truth: currently open in xLights."
-                : (effectiveSequencePath.isEmpty ? "No sequence path available." : "\(effectiveSequencePath)\nSource of truth: project snapshot (no live sequence open).")
+                : (effectiveSequencePath.isEmpty ? "No sequence path available." : "\(effectiveSequencePath)\nSource of truth: project sequence record (no live sequence open).")
         )
     }
 

@@ -228,3 +228,46 @@ private final class ProjectArtifactNotificationRecorder {
     #expect(model.transientBanner?.text.contains("Choose or analyze audio") == true)
     #expect(model.transientBanner?.text.contains("Create or select the project sequence") == true)
 }
+
+@MainActor
+@Test func sequenceProposalPrerequisitesUseCanonicalSequenceRecord() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-sequence-canonical-\(UUID().uuidString)", isDirectory: true)
+    let showFolder = root.appendingPathComponent("show", isDirectory: true)
+    let sequencePath = showFolder.appendingPathComponent("Canonical/Canonical.xsq")
+    let audioPath = showFolder.appendingPathComponent("Audio/Canonical.mp3")
+    try FileManager.default.createDirectory(at: sequencePath.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: audioPath.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try Data("<sequence/>".utf8).write(to: sequencePath)
+    try Data("audio".utf8).write(to: audioPath)
+    let projectService = LocalProjectService(projectsRootPath: root.appendingPathComponent("projects", isDirectory: true).path)
+    var project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Canonical Sequence \(UUID().uuidString.prefix(6))",
+            showFolder: showFolder.path,
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    project.snapshot["appDesignIntent"] = AnyCodable([
+        "goal": "Use the canonical sequence record."
+    ])
+    try LocalProjectSequenceStore().upsertActiveSequence(project: &project, sequencePath: sequencePath.path, audioPath: audioPath.path)
+    project.snapshot["audioPathInput"] = AnyCodable("")
+    project.snapshot["sequencePathInput"] = AnyCodable("")
+    let workspace = ProjectWorkspace(sessionStore: SequenceTestProjectSessionStore())
+    workspace.setProject(project)
+    let proposalService = StubSequenceProposalService()
+    let model = SequenceScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: projectService,
+        proposalService: proposalService
+    )
+
+    model.generateProposalFromDesignIntent()
+    try await xldWaitUntil { model.isGeneratingProposal == false }
+
+    #expect(proposalService.callCount == 1)
+    #expect(model.transientBanner?.state == .ready)
+}
