@@ -53,6 +53,7 @@ final class DisplayScreenViewModel {
     private let displayService: DisplayService
     private let displayDiscoveryStore: DisplayDiscoveryStateStore
     private let targetBehaviorLearningStore: TargetBehaviorLearningStore
+    private let displayModelIndexStore: DisplayModelIndexStore
 
     var searchText = ""
     var categoryFilter = "All Categories"
@@ -110,12 +111,14 @@ final class DisplayScreenViewModel {
         workspace: ProjectWorkspace,
         displayService: DisplayService = XLightsDisplayService(),
         displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore(),
-        targetBehaviorLearningStore: TargetBehaviorLearningStore = LocalTargetBehaviorLearningStore()
+        targetBehaviorLearningStore: TargetBehaviorLearningStore = LocalTargetBehaviorLearningStore(),
+        displayModelIndexStore: DisplayModelIndexStore = LocalDisplayModelIndexStore()
     ) {
         self.workspace = workspace
         self.displayService = displayService
         self.displayDiscoveryStore = displayDiscoveryStore
         self.targetBehaviorLearningStore = targetBehaviorLearningStore
+        self.displayModelIndexStore = displayModelIndexStore
     }
 
     var discoveryProposals: [DisplayDiscoveryTagProposalModel] {
@@ -1008,10 +1011,16 @@ final class DisplayScreenViewModel {
         let linked = Set(row.linkedTargets.map { $0.lowercased() })
         guard !linked.isEmpty else { return [] }
         let document = (try? targetBehaviorLearningStore.load(for: activeProject)) ?? TargetBehaviorLearningDocument()
+        let fingerprintIndex = buildFingerprintIndex(for: activeProject)
+        let linkedFingerprints = Set(row.linkedTargets.compactMap { targetId in
+            fingerprintIndex[targetId.lowercased()]?.lowercased()
+        })
         return document.records
             .filter { record in
-                guard let targetId = record.targetId?.trimmingCharacters(in: .whitespacesAndNewlines), !targetId.isEmpty else { return false }
-                return linked.contains(targetId.lowercased())
+                let targetId = record.targetId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                if !targetId.isEmpty, linked.contains(targetId.lowercased()) { return true }
+                let fingerprint = record.targetFingerprint?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+                return !fingerprint.isEmpty && linkedFingerprints.contains(fingerprint)
             }
             .map { record in
                 let stats = record.stats
@@ -1032,6 +1041,24 @@ final class DisplayScreenViewModel {
                 if $0.sampleCount != $1.sampleCount { return $0.sampleCount > $1.sampleCount }
                 return $0.effectName.localizedCaseInsensitiveCompare($1.effectName) == .orderedAscending
             }
+    }
+
+    private func buildFingerprintIndex(for project: ActiveProjectModel) -> [String: String] {
+        let document = (try? displayModelIndexStore.load(for: project)) ?? DisplayModelIndexDocument()
+        var index: [String: String] = [:]
+        for record in document.records {
+            let fingerprint = record.identity?.fingerprint?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !fingerprint.isEmpty else { continue }
+            let targetId = record.targetId.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !targetId.isEmpty {
+                index[targetId.lowercased()] = fingerprint
+            }
+            let displayName = record.identity?.displayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if !displayName.isEmpty {
+                index[displayName.lowercased()] = fingerprint
+            }
+        }
+        return index
     }
 
     private func normalizeForMatching(_ value: String) -> String {

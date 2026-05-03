@@ -36,6 +36,14 @@ private struct StubTargetBehaviorLearningStore: TargetBehaviorLearningStore {
     }
 }
 
+private struct StubDisplayModelIndexStore: DisplayModelIndexStore {
+    var document = DisplayModelIndexDocument()
+
+    func load(for project: ActiveProjectModel?) throws -> DisplayModelIndexDocument {
+        document
+    }
+}
+
 @MainActor
 @Test func displayLoadsPersistedLabelsAsConfirmedMetadataRows() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-display-tests-\(UUID().uuidString)", isDirectory: true)
@@ -347,7 +355,8 @@ private struct StubTargetBehaviorLearningStore: TargetBehaviorLearningStore {
         workspace: workspace,
         displayService: service,
         displayDiscoveryStore: LocalDisplayDiscoveryStateStore(),
-        targetBehaviorLearningStore: behaviorStore
+        targetBehaviorLearningStore: behaviorStore,
+        displayModelIndexStore: StubDisplayModelIndexStore()
     )
 
     model.loadDisplay()
@@ -361,6 +370,97 @@ private struct StubTargetBehaviorLearningStore: TargetBehaviorLearningStore {
     #expect(selection.targetBehaviorFacts.first?.effectName == "On")
     #expect(selection.targetBehaviorFacts.first?.probeScope == "submodel")
     #expect(selection.targetBehaviorFacts.first?.outcomeSummary == "2 positive, 1 needs review")
+}
+
+@MainActor
+@Test func displaySelectionMatchesTargetBehaviorByFingerprintAfterRename() async throws {
+    let label = DisplayLabelDefinitionModel(
+        id: "tag-feature",
+        name: "Feature Props",
+        description: "Feature props.",
+        usageCount: 1,
+        color: .blue
+    )
+    let workspace = ProjectWorkspace(sessionStore: DisplayTestProjectSessionStore())
+    workspace.setProject(ActiveProjectModel(
+        id: "project-1",
+        projectName: "Display Behavior Rename",
+        projectFilePath: "/tmp/Display Behavior Rename.xdproj",
+        showFolder: "/tmp/show",
+        mediaPath: "",
+        appRootPath: AppEnvironment.canonicalAppRoot,
+        createdAt: "2026-05-02T00:00:00Z",
+        updatedAt: "2026-05-02T00:00:00Z",
+        snapshot: [:]
+    ))
+    let service = StubDisplayService(result: DisplayServiceResult(
+        readiness: DisplayReadinessSummaryModel(
+            state: .needsReview,
+            totalTargets: 1,
+            readyCount: 1,
+            unresolvedCount: 0,
+            orphanCount: 0,
+            explanationText: "Ready.",
+            nextStepText: "Continue."
+        ),
+        rows: [displayRow(name: "RenamedFace", labels: [label])],
+        sourceSummary: "test",
+        banners: [],
+        labelDefinitions: [label],
+        targetPreferences: [:],
+        visualHintDefinitions: []
+    ))
+    let behaviorStore = StubTargetBehaviorLearningStore(document: TargetBehaviorLearningDocument(
+        records: [
+            TargetBehaviorLearningRecord(
+                recordId: "tbl1:old-face-on",
+                targetId: "OldFace",
+                targetKind: "model",
+                targetFingerprint: "tmf1:face",
+                displayName: "Old Face",
+                effectName: "On",
+                effectFamily: "fill",
+                probeScope: "target",
+                stats: TargetBehaviorLearningStats(
+                    sampleCount: 2,
+                    positiveCount: 2,
+                    negativeCount: 0,
+                    lastObservedAt: "2026-05-02T12:00:00Z"
+                )
+            )
+        ]
+    ))
+    let modelIndexStore = StubDisplayModelIndexStore(document: DisplayModelIndexDocument(
+        records: [
+            PersistedDisplayModelIndexRecord(
+                targetId: "RenamedFace",
+                targetKind: "model",
+                identity: PersistedDisplayModelIndexIdentity(
+                    fingerprint: "tmf1:face",
+                    fingerprintVersion: "target-metadata-fingerprint-v1",
+                    displayName: "Renamed Face"
+                )
+            )
+        ]
+    ))
+    let model = DisplayScreenViewModel(
+        workspace: workspace,
+        displayService: service,
+        displayDiscoveryStore: LocalDisplayDiscoveryStateStore(),
+        targetBehaviorLearningStore: behaviorStore,
+        displayModelIndexStore: modelIndexStore
+    )
+
+    model.loadDisplay()
+    try await xldWaitUntil { model.confirmedMetadataCount == 1 }
+
+    guard case let .selected(selection) = model.screenModel.selectedMetadata else {
+        Issue.record("Expected selected metadata")
+        return
+    }
+    #expect(selection.targetBehaviorFacts.count == 1)
+    #expect(selection.targetBehaviorFacts.first?.targetId == "OldFace")
+    #expect(selection.targetBehaviorFacts.first?.outcomeSummary == "2/2 positive")
 }
 
 private func displayRow(
