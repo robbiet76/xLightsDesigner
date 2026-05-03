@@ -12,6 +12,7 @@ import {
   hydrateAnalysisSectionsFromSelectedTimingTrack,
   hydrateAppApplyTimingContext,
   normalizeCommandsForAppApply,
+  persistAppTargetBehaviorLearning,
   renderCurrentSummary,
   summarizePracticalValidation
 } from "../../../../scripts/sequencing/app/apply-app-review.mjs";
@@ -532,4 +533,121 @@ test("review apply handoff preserves metadata-resolved proposal targets for sequ
     }
   ]);
   assert.match(out.executionLines.join("\n"), /MegaTree/i);
+});
+
+test("persistAppTargetBehaviorLearning writes project target behavior for custom submodel apply", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-target-behavior-"));
+  const projectDir = path.join(root, "Project");
+  const displayDir = path.join(projectDir, "display");
+  fs.mkdirSync(displayDir, { recursive: true });
+  const projectFile = path.join(projectDir, "Project.xdproj");
+  fs.writeFileSync(projectFile, JSON.stringify({ projectName: "Project" }), "utf8");
+  fs.writeFileSync(path.join(displayDir, "model-index.json"), JSON.stringify({
+    artifactType: "target_metadata_index_v1",
+    records: [
+      {
+        targetId: "CustomFace",
+        targetKind: "model",
+        identity: {
+          displayName: "Custom Face",
+          rawType: "Custom",
+          canonicalType: "custom",
+          fingerprint: "tmf1:custom-face",
+          fingerprintVersion: "target-metadata-fingerprint-v1"
+        },
+        structure: {
+          customStructure: {
+            profile: "custom_face_like",
+            traits: ["custom_face_like", "face_submodels"],
+            confidence: 0.8,
+            nodeCount: 143,
+            submodels: { count: 8 },
+            construction: {
+              source: "layout.getModelNodes",
+              dimensions: { width: 16, height: 12, layers: 1 }
+            }
+          }
+        }
+      },
+      {
+        targetId: "CustomFace/@Mouth1",
+        targetKind: "submodel",
+        identity: {
+          displayName: "CustomFace / @Mouth1",
+          canonicalType: "submodel",
+          fingerprint: "tmf1:mouth001",
+          fingerprintVersion: "target-metadata-fingerprint-v1",
+          parentId: "CustomFace",
+          parentName: "CustomFace"
+        },
+        structure: {
+          submodelMetadata: {
+            parentId: "CustomFace",
+            parentName: "CustomFace",
+            siblingCount: 7,
+            overlappingSiblingIds: ["CustomFace/@Mouth2"],
+            nodeCoverage: { nodeCount: 12, parentNodeCount: 143, ratio: 0.0839 },
+            structureHints: ["feature_mouth"]
+          }
+        }
+      }
+    ]
+  }, null, 2), "utf8");
+
+  const write = await persistAppTargetBehaviorLearning({
+    projectFile,
+    commands: [
+      {
+        id: "effect-mouth",
+        cmd: "effects.create",
+        params: {
+          modelName: "CustomFace/@Mouth1",
+          effectName: "On",
+          startMs: 0,
+          endMs: 1000
+        }
+      }
+    ],
+    renderObservation: {
+      artifactId: "render-custom-submodel",
+      macro: { coverageRead: "partial", temporalRead: "flat", activeCoverageRatio: 0.08 }
+    },
+    renderValidationEvidence: {
+      renderObservationRef: "render-custom-submodel",
+      submodelEvidence: [
+        {
+          targetId: "CustomFace/@Mouth1",
+          siblingCount: 7,
+          nodeCoverage: { nodeCount: 12, parentNodeCount: 143, ratio: 0.0839 },
+          structureHints: ["feature_mouth"]
+        }
+      ]
+    },
+    renderCritiqueContext: {
+      observed: { coverageRead: "partial", temporalRead: "flat", activeCoverageRatio: 0.08 },
+      quality: { band: "acceptable", issues: [] }
+    },
+    planHandoff: { artifactId: "plan-custom-submodel" },
+    applyResult: { artifactId: "apply-custom-submodel" }
+  });
+
+  assert.equal(write.ok, true);
+  assert.equal(write.skipped, false);
+  assert.equal(write.recordCount, 1);
+  assert.equal(write.artifactPath, path.join(displayDir, "target-behavior.json"));
+
+  const document = JSON.parse(fs.readFileSync(write.artifactPath, "utf8"));
+  assert.equal(document.artifactType, "project_target_behavior_learning_v1");
+  assert.equal(document.records.length, 1);
+  assert.equal(document.records[0].targetId, "CustomFace/@Mouth1");
+  assert.equal(document.records[0].targetKind, "submodel");
+  assert.equal(document.records[0].targetFingerprint, "tmf1:mouth001");
+  assert.equal(document.records[0].effectName, "On");
+  assert.equal(document.records[0].probeScope, "submodel");
+  assert.equal(document.records[0].submodelContext.nodeCoverage.nodeCount, 12);
+  assert.equal(document.records[0].parentContext.targetId, "CustomFace");
+  assert.equal(document.records[0].parentContext.customStructure.profile, "custom_face_like");
+  assert.equal(document.records[0].parentContext.customStructure.submodelCount, 8);
+  assert.equal(document.records[0].stats.sampleCount, 1);
+  assert.equal(document.records[0].stats.positiveCount, 1);
 });

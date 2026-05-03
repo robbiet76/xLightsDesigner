@@ -265,7 +265,7 @@ export function buildAppRenderEvidenceTargetIds({ selectedTargetIds = [], comman
   return uniqueStrings([...selectedTargetIds, ...commandTargets]);
 }
 
-async function persistAppTargetBehaviorLearning({
+export async function persistAppTargetBehaviorLearning({
   projectFile = '',
   commands = [],
   renderObservation = null,
