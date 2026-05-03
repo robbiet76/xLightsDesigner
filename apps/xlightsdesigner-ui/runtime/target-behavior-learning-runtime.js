@@ -222,7 +222,9 @@ export function normalizeModelIndexTargetRecords(modelIndexArtifact = null) {
           rawType: str(identity.rawType),
           canonicalType: str(identity.canonicalType),
           fingerprint: str(identity.fingerprint),
-          fingerprintVersion: str(identity.fingerprintVersion)
+          fingerprintVersion: str(identity.fingerprintVersion),
+          parentId: str(identity.parentId || record?.structure?.submodelMetadata?.parentId),
+          parentName: str(identity.parentName || record?.structure?.submodelMetadata?.parentId)
         },
         structure: obj(record?.structure),
         provenance: { source: "display/model-index.json" }

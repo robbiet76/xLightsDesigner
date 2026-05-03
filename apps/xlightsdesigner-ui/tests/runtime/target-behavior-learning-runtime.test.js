@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   buildTargetBehaviorLearningRecord,
   buildTargetBehaviorLearningRecordsForApply,
+  normalizeModelIndexTargetRecords,
   upsertTargetBehaviorLearningRecord
 } from "../../runtime/target-behavior-learning-runtime.js";
 
@@ -141,4 +142,35 @@ test("target behavior learning records can be derived from applied effect comman
   assert.equal(records[0].probeScope, "submodel");
   assert.equal(records[0].outcome.readability, "good");
   assert.equal(records[0].submodelContext.nodeCoverage.nodeCount, 12);
+});
+
+test("model index target normalization preserves submodel identity parent fields", () => {
+  const records = normalizeModelIndexTargetRecords({
+    artifactType: "target_metadata_index_v1",
+    records: [
+      {
+        targetId: "CustomFace/@Mouth",
+        targetKind: "submodel",
+        identity: {
+          displayName: "CustomFace / @Mouth",
+          canonicalType: "submodel",
+          fingerprint: "tmf1:mouth001",
+          fingerprintVersion: "target-metadata-fingerprint-v1",
+          parentId: "CustomFace",
+          parentName: "CustomFace"
+        },
+        structure: {
+          submodelMetadata: {
+            parentId: "CustomFace",
+            structureHints: ["feature_mouth"]
+          }
+        }
+      }
+    ]
+  });
+
+  assert.equal(records.length, 1);
+  assert.equal(records[0].identity.parentId, "CustomFace");
+  assert.equal(records[0].identity.parentName, "CustomFace");
+  assert.equal(records[0].identity.fingerprint, "tmf1:mouth001");
 });

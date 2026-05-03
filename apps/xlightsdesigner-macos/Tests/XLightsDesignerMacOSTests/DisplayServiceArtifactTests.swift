@@ -103,6 +103,8 @@ struct DisplayServiceArtifactTests {
         let customStructure = structure?["customStructure"] as? [String: Any]
         let customSubmodels = customStructure?["submodels"] as? [String: Any]
         let submodelIdentity = submodelRecord?["identity"] as? [String: Any]
+        let submodelStructure = submodelRecord?["structure"] as? [String: Any]
+        let submodelMetadata = submodelStructure?["submodelMetadata"] as? [String: Any]
 
         #expect(artifact?["artifactType"] as? String == "target_metadata_index_v1")
         #expect((artifact?["summary"] as? [String: Any])?["targetCount"] as? Int == 3)
@@ -114,6 +116,10 @@ struct DisplayServiceArtifactTests {
         #expect(structure?["customModel"] == nil)
         #expect(submodelIdentity?["canonicalType"] as? String == "submodel")
         #expect((submodelIdentity?["fingerprint"] as? String)?.hasPrefix("tmf1:") == true)
+        #expect(submodelIdentity?["parentId"] as? String == "Custom Target A")
+        #expect(submodelIdentity?["parentName"] as? String == "Custom Target A")
+        #expect(submodelMetadata?["parentId"] as? String == "Custom Target A")
+        #expect((submodelMetadata?["nodeCoverage"] as? [String: Any])?["nodeCount"] as? Int == 0)
     }
 
     @Test func modelIndexArtifactEmbedsSharedSubmodelRelationshipsForBuiltInModels() throws {
@@ -158,11 +164,17 @@ struct DisplayServiceArtifactTests {
         let left = submodelSummaries?.first { $0["name"] as? String == "Left Segment" }
         let coverage = left?["nodeCoverage"] as? [String: Any]
         let hints = left?["structureHints"] as? [String]
+        let submodelIdentity = submodelRecord?["identity"] as? [String: Any]
+        let submodelStructure = submodelRecord?["structure"] as? [String: Any]
+        let submodelMetadata = submodelStructure?["submodelMetadata"] as? [String: Any]
 
         #expect((artifact?["summary"] as? [String: Any])?["targetCount"] as? Int == 4)
         #expect(modelRecord?["targetKind"] as? String == "model")
         #expect(submodelRecord?["targetKind"] as? String == "submodel")
         #expect(structure?["customStructure"] == nil)
+        #expect(submodelIdentity?["parentId"] as? String == "Built In Target")
+        #expect(submodelMetadata?["parentId"] as? String == "Built In Target")
+        #expect((submodelMetadata?["nodeCoverage"] as? [String: Any])?["nodeCount"] as? Int == 4)
         #expect(left?["siblingCount"] as? Int == 2)
         #expect(left?["overlapsSibling"] as? Bool == true)
         #expect(left?["overlappingSiblingIds"] as? [String] == ["Built In Target/Right Segment"])

@@ -904,6 +904,7 @@ private struct DisplayModelIndexRecord: Encodable {
         let resolvedId = summary.id ?? summary.name ?? ""
         let resolvedName = summary.name ?? resolvedId
         let displayName = parent.targetName.isEmpty ? resolvedName : "\(parent.targetName) / \(resolvedName)"
+        let parentId = summary.parentId ?? parent.targetName
         targetId = resolvedId
         targetKind = "submodel"
         identity = DisplayModelIndexIdentity(
@@ -911,7 +912,9 @@ private struct DisplayModelIndexRecord: Encodable {
             rawType: "SubModel",
             canonicalType: "submodel",
             fingerprint: displaySubmodelFingerprint(submodel: submodel),
-            fingerprintVersion: "target-metadata-fingerprint-v1"
+            fingerprintVersion: "target-metadata-fingerprint-v1",
+            parentId: parentId,
+            parentName: parent.targetName
         )
         structure = DisplayModelIndexStructure(
             nodeCount: summary.nodeCoverage.nodeCount,
@@ -926,6 +929,7 @@ private struct DisplayModelIndexRecord: Encodable {
             activeGroupMembers: [],
             flattenedGroupMembers: [],
             flattenedAllGroupMembers: [],
+            submodelMetadata: summary,
             submodels: [],
             nodeLayout: nil,
             customStructure: nil
@@ -939,6 +943,26 @@ private struct DisplayModelIndexIdentity: Encodable {
     let canonicalType: String
     let fingerprint: String
     let fingerprintVersion: String
+    let parentId: String?
+    let parentName: String?
+
+    init(
+        displayName: String,
+        rawType: String,
+        canonicalType: String,
+        fingerprint: String,
+        fingerprintVersion: String,
+        parentId: String? = nil,
+        parentName: String? = nil
+    ) {
+        self.displayName = displayName
+        self.rawType = rawType
+        self.canonicalType = canonicalType
+        self.fingerprint = fingerprint
+        self.fingerprintVersion = fingerprintVersion
+        self.parentId = parentId?.isEmpty == false ? parentId : nil
+        self.parentName = parentName?.isEmpty == false ? parentName : nil
+    }
 }
 
 private struct DisplayModelIndexStructure: Encodable {
@@ -954,9 +978,46 @@ private struct DisplayModelIndexStructure: Encodable {
     let activeGroupMembers: [String]
     let flattenedGroupMembers: [String]
     let flattenedAllGroupMembers: [String]
+    let submodelMetadata: DisplaySubmodelSummary?
     let submodels: [DisplaySubmodelSummary]
     let nodeLayout: DisplayNodeLayoutMetadata?
     let customStructure: DisplayCustomModelStructure?
+
+    init(
+        nodeCount: Int,
+        positionX: Double,
+        positionY: Double,
+        positionZ: Double,
+        width: Double,
+        height: Double,
+        depth: Double,
+        submodelCount: Int,
+        directGroupMembers: [String],
+        activeGroupMembers: [String],
+        flattenedGroupMembers: [String],
+        flattenedAllGroupMembers: [String],
+        submodelMetadata: DisplaySubmodelSummary? = nil,
+        submodels: [DisplaySubmodelSummary],
+        nodeLayout: DisplayNodeLayoutMetadata?,
+        customStructure: DisplayCustomModelStructure?
+    ) {
+        self.nodeCount = nodeCount
+        self.positionX = positionX
+        self.positionY = positionY
+        self.positionZ = positionZ
+        self.width = width
+        self.height = height
+        self.depth = depth
+        self.submodelCount = submodelCount
+        self.directGroupMembers = directGroupMembers
+        self.activeGroupMembers = activeGroupMembers
+        self.flattenedGroupMembers = flattenedGroupMembers
+        self.flattenedAllGroupMembers = flattenedAllGroupMembers
+        self.submodelMetadata = submodelMetadata
+        self.submodels = submodels
+        self.nodeLayout = nodeLayout
+        self.customStructure = customStructure
+    }
 }
 
 private struct DisplaySubmodelSummary: Encodable {
