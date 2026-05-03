@@ -1,8 +1,11 @@
 {
   "moduleId": "xlights_sequencer_execution",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "purpose": "Translate design intent into safe, deterministic xLights API plans and write operations.",
   "assets": {
+    "docs": [
+      "README.md"
+    ],
     "prompts": [
       "prompts/sequencer_execution_system.md"
     ],
