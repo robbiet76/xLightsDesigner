@@ -312,6 +312,19 @@ Submodel behavior records should carry the enriched submodel context from `displ
 
 Live validation confirmed that applying an `On` probe to a custom-model submodel updates one stable target behavior record keyed by the submodel fingerprint and preserves parent identity, node coverage, and structural relationship hints without requiring semantic inference from the submodel name.
 
+## Custom And Submodel Learning Flow
+
+The app should treat custom models, built-in models, groups, and submodels as one target framework. Custom models need richer structure capture because their useful sequencing surfaces are often user-specific, but they should still enter the same flow as every other target:
+
+1. Display refresh builds `display/model-index.json` from xLights layout APIs. This captures current target ids, fingerprints, raw/canonical type, parent linkage, group membership, node layout when available, custom structure summaries, and first-class submodel records.
+2. Runtime planning loads the model index and enriches `displayElements` and `sceneGraph.submodelsById` before proposal generation, review/apply, render validation, and automation diagnostics.
+3. Sequence planning builds candidate realization refs with target fingerprints. Candidate selection may use project `display/target-behavior.json` as advisory evidence, matching by fingerprint before target name so renamed models and submodels can reuse mature behavior learning.
+4. Plan handoff metadata exposes compact traceability only: target-behavior artifact refs, matched behavior record ids, candidate ids influenced by local behavior evidence, aggregate behavior stats, and sampled target fingerprints. It should not copy full model-index geometry or raw API payloads into every plan.
+5. Accepted apply/render outcomes update `display/target-behavior.json`. The write path should prefer model-index fingerprints over fallback scene-derived fingerprints and should consolidate existing records by fingerprint, target kind, effect family/name, and probe scope.
+6. Later planning passes reuse the updated project-local behavior evidence as advisory input. Review/apply validation and render readback remain authoritative.
+
+This flow gives each user installation a way to learn custom and submodel behavior without requiring centralized training to know every possible custom prop. Portable training packages may include anonymized summaries of these artifacts, but the user project remains the source of truth for display-specific target behavior.
+
 ## User Experience
 
 The user should not have to rebuild mature display metadata after normal show-folder changes. The app should reconcile current display data automatically where risk is minimal and surface user-facing review only for records that cannot be safely matched, imported, ignored, or retained in the backend.

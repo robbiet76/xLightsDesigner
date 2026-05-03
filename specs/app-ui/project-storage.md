@@ -141,6 +141,8 @@ Project-local target behavior learning belongs under `display/target-behavior.js
 
 The model-index schema preserves both raw xLights type labels and normalized canonical types. For example, `identity.rawType` may be `Custom` while `identity.canonicalType` is `custom`. Consumers should key app reasoning from the normalized canonical field and keep the raw field for diagnostics and user-facing traceability.
 
+Plan handoffs should expose compact target-context traceability, not full display artifacts. Useful review/debug metadata includes the target-behavior artifact path, matched behavior record ids, candidate ids influenced by behavior evidence, aggregate behavior counts, and sampled target fingerprints. Full model-index geometry, raw layout API payloads, and generated render artifacts stay in their project artifact locations.
+
 ## Project Migration
 
 Creating a new project from an existing project should copy durable project knowledge into the new project folder. This includes:
