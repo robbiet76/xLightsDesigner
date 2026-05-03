@@ -29,6 +29,24 @@ test("diagnostics dashboard state summarizes counts, rows, and recent applies", 
       applyHistory: [
         { status: "completed", commandCount: 3, createdAt: "2026-03-16T13:10:00.000Z", summary: "Applied test plan" }
       ],
+      sequenceAgentRuntime: {
+        targetBehaviorLearning: {
+          artifactPath: "/project/display/target-behavior.json",
+          records: [
+            {
+              targetId: "CustomA/@Part",
+              targetKind: "submodel",
+              parentContext: {
+                customStructure: { profile: "custom_face_like" }
+              }
+            },
+            {
+              targetId: "Tree",
+              targetKind: "model"
+            }
+          ]
+        }
+      },
       health: {
         lastCheckedAt: "2026-03-16T13:20:00.000Z",
         runtimeReady: true,
@@ -53,4 +71,32 @@ test("diagnostics dashboard state summarizes counts, rows, and recent applies", 
   assert.equal(dashboard.data.health.buildLabel, "Build: test");
   assert.equal(dashboard.data.health.customModelCount, 3);
   assert.equal(dashboard.data.health.customModelsWithSubmodels, 2);
+  assert.equal(dashboard.data.health.targetBehaviorLearningCount, 2);
+  assert.equal(dashboard.data.health.targetBehaviorLearningSubmodelCount, 1);
+  assert.equal(dashboard.data.health.targetBehaviorLearningCustomParentCount, 1);
+  assert.equal(dashboard.data.health.targetBehaviorLearningArtifactPath, "/project/display/target-behavior.json");
+});
+
+test("diagnostics dashboard state summarizes compact target behavior write status", () => {
+  const dashboard = buildDiagnosticsDashboardState({
+    state: {
+      ui: { diagnosticsOpen: true, diagnosticsFilter: "all" },
+      sceneGraph: {},
+      sequenceAgentRuntime: {
+        targetBehaviorLearning: {
+          recordCount: 3,
+          submodelRecordCount: 2,
+          customParentRecordCount: 1,
+          artifactPath: "/project/display/target-behavior.json"
+        }
+      },
+      diagnostics: [],
+      applyHistory: [],
+      health: {}
+    }
+  });
+
+  assert.equal(dashboard.data.health.targetBehaviorLearningCount, 3);
+  assert.equal(dashboard.data.health.targetBehaviorLearningSubmodelCount, 2);
+  assert.equal(dashboard.data.health.targetBehaviorLearningCustomParentCount, 1);
 });

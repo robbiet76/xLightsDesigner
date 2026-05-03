@@ -26,6 +26,23 @@ function summarizeCustomModels(sceneGraph = {}) {
   };
 }
 
+function summarizeTargetBehaviorLearning(sequenceAgentRuntime = {}) {
+  const learning = sequenceAgentRuntime?.targetBehaviorLearning && typeof sequenceAgentRuntime.targetBehaviorLearning === "object"
+    ? sequenceAgentRuntime.targetBehaviorLearning
+    : {};
+  const records = arr(learning.records);
+  return {
+    targetBehaviorLearningCount: records.length || Number(learning.recordCount || 0),
+    targetBehaviorLearningSubmodelCount: records.length
+      ? records.filter((row) => str(row?.targetKind) === "submodel").length
+      : Number(learning.submodelRecordCount || 0),
+    targetBehaviorLearningCustomParentCount: records.length
+      ? records.filter((row) => str(row?.parentContext?.customStructure?.profile)).length
+      : Number(learning.customParentRecordCount || 0),
+    targetBehaviorLearningArtifactPath: str(learning.artifactPath)
+  };
+}
+
 function formatTime(value = "", withSeconds = false) {
   const raw = str(value);
   if (!raw) return withSeconds ? "--:--:--" : "Never";
@@ -49,6 +66,7 @@ export function buildDiagnosticsDashboardState({
   const rows = arr(state.diagnostics);
   const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
   const customModelSummary = summarizeCustomModels(state.sceneGraph || {});
+  const targetBehaviorSummary = summarizeTargetBehaviorLearning(state.sequenceAgentRuntime || {});
   const applyHistory = arr(state.applyHistory).slice(0, 12);
   return {
     contract: "diagnostics_dashboard_state_v1",
@@ -109,6 +127,10 @@ export function buildDiagnosticsDashboardState({
         sceneGraphSpatialNodeCount: Number(state.health?.sceneGraphSpatialNodeCount || 0),
         customModelCount: customModelSummary.customModelCount,
         customModelsWithSubmodels: customModelSummary.customModelsWithSubmodels,
+        targetBehaviorLearningCount: targetBehaviorSummary.targetBehaviorLearningCount,
+        targetBehaviorLearningSubmodelCount: targetBehaviorSummary.targetBehaviorLearningSubmodelCount,
+        targetBehaviorLearningCustomParentCount: targetBehaviorSummary.targetBehaviorLearningCustomParentCount,
+        targetBehaviorLearningArtifactPath: targetBehaviorSummary.targetBehaviorLearningArtifactPath,
         sceneGraphWarnings: arr(state.health?.sceneGraphWarnings).map((row) => str(row)).filter(Boolean),
         effectCatalogError: str(state.health?.effectCatalogError),
         hasSequencingApplyBatchPlan: Boolean(state.health?.hasSequencingApplyBatchPlan),

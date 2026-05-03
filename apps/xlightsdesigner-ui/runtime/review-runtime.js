@@ -83,6 +83,14 @@ function buildEffectiveDisplayElements({ state = {}, deps = {} } = {}) {
   );
 }
 
+function summarizeTargetBehaviorRecords(records = []) {
+  const rows = Array.isArray(records) ? records : [];
+  return {
+    submodelRecordCount: rows.filter((row) => String(row?.targetKind || "").trim() === "submodel").length,
+    customParentRecordCount: rows.filter((row) => String(row?.parentContext?.customStructure?.profile || "").trim()).length
+  };
+}
+
 async function persistTargetBehaviorLearning({
   state = {},
   rawPlan = [],
@@ -132,10 +140,13 @@ async function persistTargetBehaviorLearning({
     document = upsertTargetBehaviorLearningRecord(document, record, { now: observedAt });
   }
   const write = await writeTargetBehaviorLearningDocument({ projectFilePath, document });
+  const summary = summarizeTargetBehaviorRecords(records);
   return {
     ok: write?.ok !== false,
     skipped: false,
     recordCount: records.length,
+    submodelRecordCount: summary.submodelRecordCount,
+    customParentRecordCount: summary.customParentRecordCount,
     artifactPath: write?.artifactPath || existing?.artifactPath || "",
     error: write?.error || ""
   };
@@ -668,6 +679,8 @@ export async function executeApplyCore({
           artifactType: "target_behavior_learning_write_v1",
           updatedAt: new Date().toISOString(),
           recordCount: targetBehaviorWrite.recordCount,
+          submodelRecordCount: targetBehaviorWrite.submodelRecordCount || 0,
+          customParentRecordCount: targetBehaviorWrite.customParentRecordCount || 0,
           artifactPath: targetBehaviorWrite.artifactPath || ""
         };
         pushDiagnostic("info", `Recorded ${targetBehaviorWrite.recordCount} target behavior learning record${targetBehaviorWrite.recordCount === 1 ? "" : "s"}.`);

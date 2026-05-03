@@ -783,6 +783,8 @@ test("executeApplyCore persists target behavior learning after successful render
   assert.match(writtenDocument.records[0].parentContext.targetFingerprint, /^tmf1:[0-9a-f]{8}$/);
   assert.equal(writtenDocument.records[0].parentContext.customStructure.profile, "custom_face_like");
   assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.recordCount, 1);
+  assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.submodelRecordCount, 1);
+  assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.customParentRecordCount, 1);
   assert.equal(diagnostics.some((row) => /Recorded 1 target behavior learning record/.test(row.message)), true);
 });
 

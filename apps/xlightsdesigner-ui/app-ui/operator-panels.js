@@ -179,6 +179,9 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
           <div class="kv"><div class="k">Spatial Nodes</div><div>${health.sceneGraphSpatialNodeCount || 0}</div></div>
           <div class="kv"><div class="k">Custom Models</div><div>${health.customModelCount || 0}</div></div>
           <div class="kv"><div class="k">Custom Submodels</div><div>${health.customModelsWithSubmodels || 0}</div></div>
+          <div class="kv"><div class="k">Target Behavior Records</div><div>${health.targetBehaviorLearningCount || 0}</div></div>
+          <div class="kv"><div class="k">Submodel Behavior</div><div>${health.targetBehaviorLearningSubmodelCount || 0}</div></div>
+          <div class="kv"><div class="k">Custom Parent Learning</div><div>${health.targetBehaviorLearningCustomParentCount || 0}</div></div>
           ${
             Array.isArray(health.sceneGraphWarnings) && health.sceneGraphWarnings.length
               ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(health.sceneGraphWarnings.join(" | "))}</p>`
