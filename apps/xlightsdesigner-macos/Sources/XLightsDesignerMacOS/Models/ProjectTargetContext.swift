@@ -23,18 +23,22 @@ struct ProjectTargetContext: Sendable, Equatable {
         }
 
         let snapshot = project.snapshot.mapValues(\.value)
+        let activeSequenceRecord = try? LocalProjectSequenceStore().loadActiveSequence(project: project)
         let projectSequences = (snapshot["projectSequences"] as? [[String: Any]]) ?? []
         let activeProjectSequence = projectSequences.first(where: { bool($0["isActive"]) })
         let sequencePath = firstNonEmpty([
+            string(activeSequenceRecord?.sequencePath),
             string(snapshot["sequencePathInput"]),
             string(activeProjectSequence?["sequencePath"])
         ])
         let sequenceName = firstNonEmpty([
+            string(activeSequenceRecord?.displayName),
             nameWithoutExtension(sequencePath),
             string(snapshot["activeSequence"]),
             mediaLooksLikeSequence(string(snapshot["mediaPath"])) ? nameWithoutExtension(string(snapshot["mediaPath"])) : ""
         ])
         let audioPath = firstNonEmpty([
+            string(activeSequenceRecord?.mediaPath),
             string(snapshot["audioPathInput"]),
             mediaLooksLikeAudio(string(snapshot["mediaPath"])) ? string(snapshot["mediaPath"]) : "",
             mediaLooksLikeAudio(project.mediaPath) ? project.mediaPath : ""

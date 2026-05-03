@@ -6,6 +6,7 @@ protocol ProjectSequenceStore: Sendable {
     func upsertActiveSequence(project: inout ActiveProjectModel, sequencePath: String, audioPath: String?) throws -> Bool
     @discardableResult
     func relinkSequences(project: inout ActiveProjectModel, previousShowFolder: String, newShowFolder: String) throws -> Bool
+    func loadActiveSequence(project: ActiveProjectModel) throws -> ProjectSequenceDocument?
 }
 
 struct ProjectSequenceDocument: Codable, Equatable, Sendable {
@@ -108,6 +109,22 @@ struct LocalProjectSequenceStore: ProjectSequenceStore {
         }
 
         return replaceProjectSnapshotRows(project: &project, records: records) || changed
+    }
+
+    func loadActiveSequence(project: ActiveProjectModel) throws -> ProjectSequenceDocument? {
+        let rows = (project.snapshot["projectSequences"]?.value as? [[String: Any]]) ?? []
+        if let activeSequenceID = rows.first(where: { bool($0["isActive"]) }).flatMap({ string($0["sequenceId"]) }),
+           !activeSequenceID.isEmpty,
+           let record = try? loadRecord(project: project, sequenceID: activeSequenceID) {
+            return record
+        }
+
+        let activePath = normalizedPath(string(project.snapshot["sequencePathInput"]?.value))
+        if !activePath.isEmpty,
+           let record = try loadRecords(project: project).first(where: { $0.sequencePath == activePath || $0.priorSequencePaths.contains(activePath) }) {
+            return record
+        }
+        return nil
     }
 
     private func findExistingRecord(project: ActiveProjectModel, sequencePath: String) throws -> ProjectSequenceDocument? {

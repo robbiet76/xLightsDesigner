@@ -86,16 +86,23 @@ struct LocalPendingWorkService: PendingWorkService {
         let latestMusic = artifactMusic
         let runtime: [String: Any]? = nil
 
-        let activeSequenceName = string(snapshot["activeSequence"])
+        let activeSequenceRecord = try? LocalProjectSequenceStore().loadActiveSequence(project: project)
+        let activeSequenceName = firstNonEmpty([
+            string(activeSequenceRecord?.displayName),
+            string(snapshot["activeSequence"])
+        ])
         let recentSequences = arrayOfStrings(snapshot["recentSequences"])
         let audioPath = string(snapshot["audioPathInput"])
         let projectSequences = (snapshot["projectSequences"] as? [[String: Any]]) ?? []
         let activeProjectSequence = projectSequences.first(where: { bool($0["isActive"]) })
         let preferredSequencePath = string(activeProjectSequence?["sequencePath"])
         let liveSequencePath = string(snapshot["sequencePathInput"])
-        let activeSequencePath = !liveSequencePath.isEmpty
-            ? liveSequencePath
-            : (preferredSequencePath.isEmpty ? (recentSequences.first ?? "") : preferredSequencePath)
+        let activeSequencePath = firstNonEmpty([
+            string(activeSequenceRecord?.sequencePath),
+            liveSequencePath,
+            preferredSequencePath,
+            recentSequences.first ?? ""
+        ])
         let appDesignIntent = snapshot["appDesignIntent"] as? [String: Any] ?? [:]
         let appDesignGoal = string(appDesignIntent["goal"])
         let appDesignMood = string(appDesignIntent["mood"])
@@ -275,6 +282,10 @@ struct LocalPendingWorkService: PendingWorkService {
             return rows.map { String(describing: $0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         }
         return []
+    }
+
+    private func firstNonEmpty(_ values: [String]) -> String {
+        values.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.first(where: { !$0.isEmpty }) ?? ""
     }
 
     private func buildEffectPlacements(_ value: Any?) -> [PendingEffectPlacement] {

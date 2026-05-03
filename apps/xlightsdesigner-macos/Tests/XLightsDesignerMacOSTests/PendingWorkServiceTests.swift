@@ -112,6 +112,45 @@ import Foundation
     #expect(pending.proposalTargetCount == 1)
 }
 
+@Test func pendingWorkPrefersCanonicalActiveSequenceRecord() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-pending-work-record-\(UUID().uuidString)", isDirectory: true)
+    let projectDir = root.appendingPathComponent("Project", isDirectory: true)
+    let showFolder = root.appendingPathComponent("show", isDirectory: true)
+    try FileManager.default.createDirectory(at: showFolder, withIntermediateDirectories: true)
+    let canonicalSequence = showFolder.appendingPathComponent("Canonical/Canonical.xsq")
+    let canonicalAudio = showFolder.appendingPathComponent("Audio/Canonical.mp3")
+    try FileManager.default.createDirectory(at: canonicalSequence.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: canonicalAudio.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try Data("<sequence/>".utf8).write(to: canonicalSequence)
+    try Data("audio".utf8).write(to: canonicalAudio)
+    var project = ActiveProjectModel(
+        id: "project-1",
+        projectName: "Christmas 2026",
+        projectFilePath: projectDir.appendingPathComponent("Christmas 2026.xdproj").path,
+        showFolder: showFolder.path,
+        mediaPath: "",
+        appRootPath: AppEnvironment.canonicalAppRoot,
+        createdAt: "2026-04-23T00:00:00Z",
+        updatedAt: "2026-04-23T00:00:00Z",
+        snapshot: [
+            "activeSequence": AnyCodable("StaleSnapshot"),
+            "sequencePathInput": AnyCodable("/tmp/stale/StaleSnapshot.xsq")
+        ]
+    )
+    try LocalProjectSequenceStore().upsertActiveSequence(
+        project: &project,
+        sequencePath: canonicalSequence.path,
+        audioPath: canonicalAudio.path
+    )
+    project.snapshot["activeSequence"] = AnyCodable("StaleSnapshot")
+    project.snapshot["sequencePathInput"] = AnyCodable("/tmp/stale/StaleSnapshot.xsq")
+
+    let pending = try #require(try LocalPendingWorkService().loadPendingWork(for: project))
+
+    #expect(pending.activeSequenceName == "Canonical")
+    #expect(pending.activeSequencePath == canonicalSequence.path)
+}
+
 private func writeJSON(_ object: [String: Any], to url: URL) throws {
     let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
     try data.write(to: url)
