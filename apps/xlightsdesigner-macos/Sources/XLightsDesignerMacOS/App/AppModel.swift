@@ -8,6 +8,7 @@ final class AppModel {
     private let userProfileStore: AssistantUserProfileStore
     private let xlightsDerivedMetadataService: XLightsDerivedMetadataService
     private let projectService: ProjectService
+    private let projectSequenceStore: ProjectSequenceStore
 
     var selectedWorkflow: WorkflowID = .project
     var showSettings = false
@@ -31,12 +32,14 @@ final class AppModel {
         displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore(),
         userProfileStore: AssistantUserProfileStore = LocalAssistantUserProfileStore(),
         xlightsDerivedMetadataService: XLightsDerivedMetadataService = DefaultXLightsDerivedMetadataService(),
-        projectService: ProjectService = LocalProjectService()
+        projectService: ProjectService = LocalProjectService(),
+        projectSequenceStore: ProjectSequenceStore = LocalProjectSequenceStore()
     ) {
         self.displayDiscoveryStore = displayDiscoveryStore
         self.userProfileStore = userProfileStore
         self.xlightsDerivedMetadataService = xlightsDerivedMetadataService
         self.projectService = projectService
+        self.projectSequenceStore = projectSequenceStore
         let workspace = ProjectWorkspace()
         self.workspace = workspace
         self.xlightsSessionModel = XLightsSessionViewModel(workspace: workspace)
@@ -630,6 +633,11 @@ final class AppModel {
         let sequenceName = ProjectTargetContext.nameWithoutExtension(sequencePath)
         let audioPath = snapshot.mediaFile.trimmingCharacters(in: .whitespacesAndNewlines)
         var changed = false
+        do {
+            changed = try projectSequenceStore.upsertActiveSequence(project: &project, sequencePath: sequencePath, audioPath: audioPath) || changed
+        } catch {
+            print("Failed to persist project sequence record: \(error)")
+        }
 
         if string(project.snapshot["sequencePathInput"]?.value) != sequencePath {
             project.snapshot["sequencePathInput"] = AnyCodable(sequencePath)

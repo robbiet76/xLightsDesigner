@@ -7,6 +7,7 @@ final class SequenceScreenViewModel {
     private let workspace: ProjectWorkspace
     private let pendingWorkService: PendingWorkService
     private let projectService: ProjectService
+    private let projectSequenceStore: ProjectSequenceStore
     private let proposalService: SequenceProposalService
     private var liveRefreshTask: Task<Void, Never>?
     private var latestPendingWork: PendingWorkReadModel?
@@ -22,11 +23,13 @@ final class SequenceScreenViewModel {
         workspace: ProjectWorkspace,
         pendingWorkService: PendingWorkService = LocalPendingWorkService(),
         projectService: ProjectService = LocalProjectService(),
+        projectSequenceStore: ProjectSequenceStore = LocalProjectSequenceStore(),
         proposalService: SequenceProposalService = LocalSequenceProposalService()
     ) {
         self.workspace = workspace
         self.pendingWorkService = pendingWorkService
         self.projectService = projectService
+        self.projectSequenceStore = projectSequenceStore
         self.proposalService = proposalService
         self.screenModel = Self.placeholderScreenModel(project: workspace.activeProject)
         self.selectedRowID = nil
@@ -139,6 +142,16 @@ final class SequenceScreenViewModel {
         let sequenceName = ProjectTargetContext.nameWithoutExtension(sequencePath)
         let audioPath = mediaFile?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         var changed = false
+        do {
+            changed = try projectSequenceStore.upsertActiveSequence(project: &project, sequencePath: sequencePath, audioPath: audioPath) || changed
+        } catch {
+            transientBanner = WorkflowBannerModel(
+                id: "sequence-record-save-failed",
+                text: "Unable to save the project sequence record: \(error.localizedDescription)",
+                state: .blocked
+            )
+            return
+        }
         if ProjectTargetContext.normalizedPath(Self.string(project.snapshot["sequencePathInput"]?.value)) != ProjectTargetContext.normalizedPath(sequencePath) {
             project.snapshot["sequencePathInput"] = AnyCodable(sequencePath)
             changed = true
