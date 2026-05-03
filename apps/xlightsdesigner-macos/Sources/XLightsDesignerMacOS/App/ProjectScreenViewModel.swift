@@ -10,6 +10,7 @@ final class ProjectScreenViewModel {
 
     private let workspace: ProjectWorkspace
     private let projectService: ProjectService
+    private let projectSequenceStore: ProjectSequenceStore
     private let fileSelectionService: FileSelectionService
     private let sessionStore: ProjectSessionStore
 
@@ -25,11 +26,13 @@ final class ProjectScreenViewModel {
     init(
         workspace: ProjectWorkspace,
         projectService: ProjectService = LocalProjectService(),
+        projectSequenceStore: ProjectSequenceStore = LocalProjectSequenceStore(),
         fileSelectionService: FileSelectionService = MacOSFileSelectionService(),
         sessionStore: ProjectSessionStore = LocalProjectSessionStore()
     ) {
         self.workspace = workspace
         self.projectService = projectService
+        self.projectSequenceStore = projectSequenceStore
         self.fileSelectionService = fileSelectionService
         self.sessionStore = sessionStore
     }
@@ -179,6 +182,16 @@ final class ProjectScreenViewModel {
             previousShowFolder: previousShowFolder,
             newShowFolder: trimmedPath
         )
+        do {
+            try projectSequenceStore.relinkSequences(
+                project: &active,
+                previousShowFolder: previousShowFolder,
+                newShowFolder: trimmedPath
+            )
+        } catch {
+            workspace.projectBanner = ProjectBannerModel(id: "show-folder-sequence-relink-failed", level: .blocked, text: "Unable to refresh project sequence records: \(error.localizedDescription)")
+            return
+        }
         relinkMediaSnapshotPaths(
             in: &active,
             previousShowFolder: previousShowFolder,

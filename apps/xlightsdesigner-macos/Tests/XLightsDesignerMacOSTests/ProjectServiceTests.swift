@@ -263,11 +263,13 @@ struct ProjectServiceTests {
         )
         let workspace = ProjectWorkspace(sessionStore: ProjectServiceTestSessionStore())
         var projectWithSequenceState = project
+        try LocalProjectSequenceStore().upsertActiveSequence(
+            project: &projectWithSequenceState,
+            sequencePath: oldSequencePath.path,
+            audioPath: oldAudioPath.path
+        )
         projectWithSequenceState.snapshot["sequencePathInput"] = AnyCodable(oldSequencePath.path)
         projectWithSequenceState.snapshot["recentSequences"] = AnyCodable([oldSequencePath.path])
-        projectWithSequenceState.snapshot["projectSequences"] = AnyCodable([
-            ["sequencePath": oldSequencePath.path, "isActive": true]
-        ])
         projectWithSequenceState.snapshot["audioPathInput"] = AnyCodable(oldAudioPath.path)
         projectWithSequenceState.snapshot["sequenceMediaFile"] = AnyCodable(oldAudioPath.path)
         projectWithSequenceState.snapshot["proposed"] = AnyCodable([
@@ -311,6 +313,11 @@ struct ProjectServiceTests {
         let timingTrackProvenance = runtime?["timingTrackProvenance"] as? [String: Any]
         let recentSequences = active.snapshot["recentSequences"]?.value as? [String]
         let projectSequences = active.snapshot["projectSequences"]?.value as? [[String: Any]]
+        let activeSequenceID = try #require(projectSequences?.first?["sequenceId"] as? String)
+        let sequenceRecordURL = URL(fileURLWithPath: active.projectFilePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("sequences/\(activeSequenceID)/sequence.json")
+        let sequenceRecord = try JSONDecoder().decode(ProjectSequenceDocument.self, from: Data(contentsOf: sequenceRecordURL))
         #expect(active.id == project.id)
         #expect(active.projectFilePath == project.projectFilePath)
         #expect(active.showFolder == newShowFolder.path)
@@ -321,6 +328,13 @@ struct ProjectServiceTests {
         #expect(active.snapshot["sequencePathInput"]?.value as? String == newSequencePath.path)
         #expect(recentSequences == [newSequencePath.path])
         #expect(projectSequences?.first?["sequencePath"] as? String == newSequencePath.path)
+        #expect(projectSequences?.first?["availabilityStatus"] as? String == "available")
+        #expect(sequenceRecord.sequenceId == activeSequenceID)
+        #expect(sequenceRecord.sequencePath == newSequencePath.path)
+        #expect(sequenceRecord.showFolderAtLastUse == newShowFolder.path)
+        #expect(sequenceRecord.mediaPath == newAudioPath.path)
+        #expect(sequenceRecord.availabilityStatus == "available")
+        #expect(sequenceRecord.priorSequencePaths == [oldSequencePath.path])
         #expect((active.snapshot["proposed"]?.value as? [[String: Any]])?.count == 1)
         #expect(relink?["previousShowFolder"] as? String == oldShowFolder.path)
         #expect(relink?["showFolder"] as? String == newShowFolder.path)
@@ -373,6 +387,58 @@ struct ProjectServiceTests {
         #expect(active.snapshot["mediaPath"]?.value as? String == "")
         #expect(active.snapshot["audioPathInput"]?.value as? String == "")
         #expect(active.snapshot["sequenceMediaFile"]?.value as? String == "")
+    }
+
+    @MainActor
+    @Test func projectScreenRelinkMarksMissingSequenceRecordUnavailable() throws {
+        let service = try makeService()
+        let name = "App Test Project \(UUID().uuidString.prefix(6))"
+        let showRoot = FileManager.default.temporaryDirectory.appendingPathComponent("xld-project-relink-sequence-\(UUID().uuidString)", isDirectory: true)
+        let oldShowFolder = showRoot.appendingPathComponent("OldShow", isDirectory: true)
+        let newShowFolder = showRoot.appendingPathComponent("NewShow", isDirectory: true)
+        let oldSequencePath = oldShowFolder.appendingPathComponent("MissingInNewShow/MissingInNewShow.xsq")
+        try FileManager.default.createDirectory(at: oldSequencePath.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: newShowFolder, withIntermediateDirectories: true)
+        try Data("<sequence/>".utf8).write(to: oldSequencePath)
+        var project = try service.createProject(
+            draft: ProjectDraftModel(
+                projectName: name,
+                showFolder: oldShowFolder.path,
+                mediaPath: "",
+                migrateMetadata: false,
+                migrationSourceProjectPath: ""
+            )
+        )
+        try LocalProjectSequenceStore().upsertActiveSequence(project: &project, sequencePath: oldSequencePath.path, audioPath: nil)
+        project.snapshot["sequencePathInput"] = AnyCodable(oldSequencePath.path)
+        let workspace = ProjectWorkspace(sessionStore: ProjectServiceTestSessionStore())
+        workspace.setProject(project)
+        let model = ProjectScreenViewModel(
+            workspace: workspace,
+            projectService: service,
+            fileSelectionService: ProjectServiceTestFileSelectionService(folderPath: newShowFolder.path),
+            sessionStore: ProjectServiceTestSessionStore()
+        )
+
+        model.chooseShowFolderForActiveProject()
+
+        let active = try #require(workspace.activeProject)
+        let rows = try #require(active.snapshot["projectSequences"]?.value as? [[String: Any]])
+        let row = try #require(rows.first)
+        let sequenceID = try #require(row["sequenceId"] as? String)
+        let sequenceRecordURL = URL(fileURLWithPath: active.projectFilePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("sequences/\(sequenceID)/sequence.json")
+        let sequenceRecord = try JSONDecoder().decode(ProjectSequenceDocument.self, from: Data(contentsOf: sequenceRecordURL))
+
+        #expect(active.showFolder == newShowFolder.path)
+        #expect(active.snapshot["sequencePathInput"]?.value as? String == oldSequencePath.path)
+        #expect(row["sequencePath"] as? String == oldSequencePath.path)
+        #expect(row["availabilityStatus"] as? String == "unavailable")
+        #expect(row["isActive"] as? Bool == true)
+        #expect(sequenceRecord.sequencePath == oldSequencePath.path)
+        #expect(sequenceRecord.showFolderAtLastUse == newShowFolder.path)
+        #expect(sequenceRecord.availabilityStatus == "unavailable")
     }
 
     private func makeService() throws -> LocalProjectService {
