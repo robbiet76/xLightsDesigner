@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { isAbsolute, relative, resolve } from "node:path";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -8,6 +8,14 @@ function str(value = "") {
 
 function normalizeKey(value = "") {
   return str(value).toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function repoRelativePath(value = "") {
+  const normalized = str(value);
+  if (!normalized) return "";
+  const relativePath = relative(process.cwd(), resolve(normalized));
+  if (!relativePath || relativePath.startsWith("..") || isAbsolute(relativePath)) return normalized;
+  return relativePath;
 }
 
 const inputPath = process.argv[2]
@@ -51,7 +59,7 @@ for (const [effectName, effectRecord] of Object.entries(source.effects || {})) {
 const artifact = {
   artifactType: "sequencer_effect_parameter_registry_bundle",
   artifactVersion: "1.0",
-  sourcePath: inputPath,
+  sourcePath: repoRelativePath(inputPath),
   sourceVersion: str(source.version),
   generatedAt: new Date().toISOString(),
   effectCount: Object.keys(effects).length,

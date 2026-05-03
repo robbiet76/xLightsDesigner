@@ -1,9 +1,9 @@
 {
   "artifactType": "effect_screening_record_pack_index_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-30T20:06:35.093Z",
+  "generatedAt": "2026-05-03T01:23:15.351Z",
   "source": "scripts/sequencer-render-training/catalog/effect-screening-record-packs",
-  "compactionPolicy": "promoted_runtime_training_evidence_without_raw_frame_payloads_or_artifact_paths",
+  "compactionPolicy": "promoted_runtime_training_evidence_without_raw_frame_payloads_artifact_paths_channel_addresses_or_machine_local_palette_paths",
   "recordCount": 2446,
   "packCount": 18,
   "packs": [

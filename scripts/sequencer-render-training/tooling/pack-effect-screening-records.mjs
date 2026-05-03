@@ -158,6 +158,9 @@ function calculateRenderedColorMetrics(record = {}) {
 function compactScreeningRecord(record = {}) {
   if (!record || record.recordVersion !== "1.0") return record;
   const features = record.features || {};
+  const fixture = record.fixture || {};
+  const sharedSettings = record.sharedSettings || {};
+  const modelMetadata = record.modelMetadata || {};
   const colorMetrics = calculateRenderedColorMetrics(record);
   return {
     recordVersion: record.recordVersion,
@@ -165,11 +168,38 @@ function compactScreeningRecord(record = {}) {
     effectName: record.effectName,
     placementId: record.placementId,
     effectSettings: record.effectSettings || {},
-    sharedSettings: record.sharedSettings || {},
+    sharedSettings: {
+      renderStyle: sharedSettings.renderStyle,
+      paletteProfile: sharedSettings.paletteProfile,
+      palette: sharedSettings.palette || {},
+      trainingBrightnessPercent: sharedSettings.trainingBrightnessPercent,
+      trainingPaletteStandard: sharedSettings.trainingPaletteStandard,
+      brightnessPolicy: sharedSettings.brightnessPolicy,
+      paletteActivationMode: sharedSettings.paletteActivationMode,
+      paletteActiveSlots: Array.isArray(sharedSettings.paletteActiveSlots) ? sharedSettings.paletteActiveSlots : []
+    },
     trainingContext: record.trainingContext || {},
     observations: record.observations || {},
-    fixture: record.fixture || {},
-    modelMetadata: record.modelMetadata || {},
+    fixture: {
+      modelType: fixture.modelType,
+      geometryProfile: fixture.geometryProfile,
+      expectedModelType: fixture.expectedModelType,
+      startMs: fixture.startMs,
+      endMs: fixture.endMs,
+      durationMs: fixture.durationMs,
+      durationClass: fixture.durationClass
+    },
+    modelMetadata: {
+      displayAsNormalized: modelMetadata.displayAsNormalized,
+      resolvedModelType: modelMetadata.resolvedModelType,
+      resolvedGeometryProfile: modelMetadata.resolvedGeometryProfile,
+      geometryTraits: Array.isArray(modelMetadata.geometryTraits) ? modelMetadata.geometryTraits : [],
+      analyzerFamily: modelMetadata.analyzerFamily,
+      structuralSettings: modelMetadata.structuralSettings || {},
+      stringType: modelMetadata.stringType,
+      nodeCount: modelMetadata.nodeCount,
+      channelsPerNode: modelMetadata.channelsPerNode
+    },
     features: {
       temporalMotionMean: features.temporalMotionMean,
       temporalChangeMean: features.temporalChangeMean,
@@ -254,7 +284,7 @@ export function packEffectScreeningRecords({ source, outDir } = {}) {
     artifactVersion: "1.0",
     generatedAt: new Date().toISOString(),
     source,
-    compactionPolicy: "promoted_runtime_training_evidence_without_raw_frame_payloads_or_artifact_paths",
+    compactionPolicy: "promoted_runtime_training_evidence_without_raw_frame_payloads_artifact_paths_channel_addresses_or_machine_local_palette_paths",
     recordCount: records.length,
     packCount: packs.length,
     packs

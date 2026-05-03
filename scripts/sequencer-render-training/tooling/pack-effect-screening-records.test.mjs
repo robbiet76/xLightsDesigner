@@ -16,7 +16,26 @@ function screeningRecord({ paletteMode }) {
     sharedSettings: { paletteProfile: paletteMode },
     trainingContext: { screeningPaletteMode: paletteMode },
     observations: { labels: ["decoded_fseq"] },
-    fixture: { geometryProfile: "arch-grouped" },
+    fixture: {
+      sequencePath: "/tmp/source.xsq",
+      workingSequencePath: "/tmp/working.xsq",
+      modelName: "Arch 1",
+      modelType: "arch",
+      geometryProfile: "arch-grouped"
+    },
+    modelMetadata: {
+      modelName: "Arch 1",
+      displayAsNormalized: "arches",
+      resolvedModelType: "arch",
+      resolvedGeometryProfile: "arch-grouped",
+      geometryTraits: ["type:arch"],
+      startChannel: 1,
+      startChannelZero: 0,
+      endChannel: 300,
+      channelCount: 300,
+      nodeCount: 100,
+      channelsPerNode: 3
+    },
     features: {
       temporalMotionMean: 0.1,
       analysis: { qualitySignals: { nonBlank: true } },
@@ -50,4 +69,10 @@ test("pack-effect-screening-records compacts loose records into readable per-eff
   assert.deepEqual(records.map((record) => record.trainingContext.screeningPaletteMode).sort(), ["mono_white", "rgb_primary"]);
   assert.equal(records.every((record) => record.features.frames === undefined), true);
   assert.equal(records.every((record) => Number.isFinite(record.features.renderedColorDiversity)), true);
+  assert.equal(records.every((record) => record.fixture.sequencePath === undefined), true);
+  assert.equal(records.every((record) => record.fixture.workingSequencePath === undefined), true);
+  assert.equal(records.every((record) => record.fixture.modelName === undefined), true);
+  assert.equal(records.every((record) => record.modelMetadata.modelName === undefined), true);
+  assert.equal(records.every((record) => record.modelMetadata.startChannel === undefined), true);
+  assert.equal(records.every((record) => record.modelMetadata.nodeCount === 100), true);
 });
