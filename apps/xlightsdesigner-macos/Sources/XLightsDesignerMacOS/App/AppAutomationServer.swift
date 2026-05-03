@@ -4,12 +4,18 @@ import Network
 final class AppAutomationServer: @unchecked Sendable {
     private unowned let model: AppModel
     private let projectService: ProjectService
+    private let projectSequenceStore: ProjectSequenceStore
     private let queue = DispatchQueue(label: "xlightsdesigner.app-automation")
     private var listener: NWListener?
 
-    init(model: AppModel, projectService: ProjectService = LocalProjectService()) {
+    init(
+        model: AppModel,
+        projectService: ProjectService = LocalProjectService(),
+        projectSequenceStore: ProjectSequenceStore = LocalProjectSequenceStore()
+    ) {
         self.model = model
         self.projectService = projectService
+        self.projectSequenceStore = projectSequenceStore
     }
 
     func start() {
@@ -168,7 +174,7 @@ final class AppAutomationServer: @unchecked Sendable {
                 let saveBeforeSwitch = payload["saveBeforeSwitch"] as? Bool
                     ?? model.xlightsSessionModel.shouldSaveBeforeSwitch(policy: policy)
                 let summary = try await model.xlightsSessionModel.openSequence(filePath: filePath, saveBeforeSwitch: saveBeforeSwitch)
-                persistActiveSequencePath(filePath)
+                persistActiveSequencePath(filePath, mediaFile: model.xlightsSessionModel.snapshot.mediaFile)
                 refreshAll()
                 return .json(200, body: ["ok": true, "summary": summary])
             } catch {
@@ -192,7 +198,7 @@ final class AppAutomationServer: @unchecked Sendable {
                     frameMs: frameMs,
                     saveBeforeSwitch: saveBeforeSwitch
                 )
-                persistActiveSequencePath(filePath)
+                persistActiveSequencePath(filePath, mediaFile: mediaFile)
                 refreshAll()
                 return .json(200, body: ["ok": true, "summary": summary])
             } catch {
@@ -390,15 +396,36 @@ final class AppAutomationServer: @unchecked Sendable {
     }
 
     @MainActor
-    private func persistActiveSequencePath(_ filePath: String) {
+    private func persistActiveSequencePath(_ filePath: String, mediaFile: String?) {
         guard var activeProject = model.workspace.activeProject else { return }
         let normalizedPath = filePath.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedPath.isEmpty else { return }
-        activeProject.snapshot["sequencePathInput"] = AnyCodable(normalizedPath)
         let sequenceName = ProjectTargetContext.nameWithoutExtension(normalizedPath)
-        if !sequenceName.isEmpty {
-            activeProject.snapshot["activeSequence"] = AnyCodable(sequenceName)
+        let audioPath = mediaFile?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        var changed = false
+        do {
+            changed = try projectSequenceStore.upsertActiveSequence(
+                project: &activeProject,
+                sequencePath: normalizedPath,
+                audioPath: audioPath
+            ) || changed
+        } catch {
+            print("App automation failed to persist project sequence record: \(error)")
+            return
         }
+        if ProjectTargetContext.normalizedPath(string(activeProject.snapshot["sequencePathInput"]?.value)) != ProjectTargetContext.normalizedPath(normalizedPath) {
+            activeProject.snapshot["sequencePathInput"] = AnyCodable(normalizedPath)
+            changed = true
+        }
+        if !sequenceName.isEmpty, string(activeProject.snapshot["activeSequence"]?.value) != sequenceName {
+            activeProject.snapshot["activeSequence"] = AnyCodable(sequenceName)
+            changed = true
+        }
+        if !audioPath.isEmpty, ProjectTargetContext.normalizedPath(string(activeProject.snapshot["audioPathInput"]?.value)) != ProjectTargetContext.normalizedPath(audioPath) {
+            activeProject.snapshot["audioPathInput"] = AnyCodable(audioPath)
+            changed = true
+        }
+        guard changed else { return }
         do {
             let saved = try projectService.saveProject(activeProject)
             model.workspace.setProject(saved)
