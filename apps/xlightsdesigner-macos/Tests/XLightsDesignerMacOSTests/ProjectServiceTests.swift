@@ -157,6 +157,32 @@ struct ProjectServiceTests {
         #expect(brief?["document"] as? String == "Warm neighborhood show with a strong central focal area that feels welcoming and cohesive across songs, with the tree and character zone staying visually connected.")
     }
 
+    @Test func saveProjectPreservesProjectIdentityWhenShowFolderChanges() throws {
+        let service = try makeService()
+        let name = "App Test Project \(UUID().uuidString.prefix(6))"
+        var project = try service.createProject(
+            draft: ProjectDraftModel(
+                projectName: name,
+                showFolder: "/tmp/show",
+                mediaPath: "",
+                migrateMetadata: false,
+                migrationSourceProjectPath: ""
+            )
+        )
+        let originalID = project.id
+        let originalFilePath = project.projectFilePath
+
+        project.showFolder = "/tmp/new-show"
+
+        let saved = try service.saveProject(project)
+        let reopened = try service.openProject(filePath: originalFilePath)
+
+        #expect(saved.id == originalID)
+        #expect(reopened.id == originalID)
+        #expect(saved.projectFilePath == originalFilePath)
+        #expect(reopened.showFolder == "/tmp/new-show")
+    }
+
     private func makeService() throws -> LocalProjectService {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-project-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

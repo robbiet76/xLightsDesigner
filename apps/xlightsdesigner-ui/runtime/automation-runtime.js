@@ -3,6 +3,7 @@ import { mergeVisualHintDefinitions } from "./visual-hint-definitions.js";
 import { readDisplayRefreshArtifact } from "../storage/display-metadata-store.mjs";
 import { normalizeModelIndexTargetRecords } from "./target-behavior-learning-runtime.js";
 import { mergeModelIndexSubmodelsIntoSceneGraph, mergeModelIndexTargetsIntoDisplayElements } from "./model-index-scene-graph-runtime.js";
+import { relinkProjectShowFolder } from "./show-folder-relink-runtime.js";
 
 export function createAutomationRuntime(deps = {}) {
   const {
@@ -19,6 +20,9 @@ export function createAutomationRuntime(deps = {}) {
     onRefreshSequenceCatalog,
     adoptMediaDirectoryFromPath,
     onRefreshMediaCatalog,
+    markDisplayMetadataPendingReconciliation,
+    reconcileDisplayMetadataForSceneGraphChange,
+    saveProjectToCurrentFile,
     clearDesignRevisionTarget,
     normalizeDesignRevisionTarget,
     clearDesignerDraft,
@@ -730,18 +734,32 @@ export function createAutomationRuntime(deps = {}) {
     if (!targetPath) {
       return { ok: false, error: "showFolder is required." };
     }
-    state.showFolder = targetPath;
-    if (typeof onRefreshSequenceCatalog === "function") {
-      await onRefreshSequenceCatalog({ silent: true });
-    }
-    persist();
-    render();
+    const relink = await relinkProjectShowFolder({
+      state,
+      showFolder: targetPath,
+      reason: "automation show folder update",
+      deps: {
+        markDisplayMetadataPendingReconciliation,
+        reconcileDisplayMetadataForSceneGraphChange,
+        clearSequencingHandoffsForSequenceChange,
+        onRefreshSequenceCatalog,
+        onRefreshMediaCatalog,
+        onRefreshDisplay: onRefresh,
+        saveProjectToCurrentFile,
+        persist,
+        render,
+        setStatus
+      }
+    });
+    if (relink?.ok === false) return relink;
     return {
       ok: true,
+      changed: relink.changed === true,
       status: state.status || null,
       activeSequence: state.activeSequence || "",
       showFolder: state.showFolder || "",
-      sequencePathInput: state.sequencePathInput || ""
+      sequencePathInput: state.sequencePathInput || "",
+      reconciliation: relink.reconciliation || null
     };
   }
 

@@ -210,6 +210,71 @@ test("automation runtime rejects invalid render observation artifacts", () => {
   assert.match(out.error, /renderObservation must be render_observation_v1/i);
 });
 
+test("automation show folder update runs project relink refresh flow", async () => {
+  const calls = [];
+  const state = {
+    status: null,
+    showFolder: "/shows/A",
+    activeSequence: "",
+    sequencePathInput: "",
+    proposed: ["stale"],
+    chat: [],
+    flags: { proposalStale: false },
+    ui: {},
+    creative: {},
+    metadata: { displayBinding: {} },
+    sequenceAgentRuntime: {}
+  };
+  const runtime = createAutomationRuntime(buildDeps({
+    state,
+    markDisplayMetadataPendingReconciliation: (reason) => {
+      calls.push(`pending:${reason}`);
+      state.metadata.displayBinding.status = "pending";
+    },
+    reconcileDisplayMetadataForSceneGraphChange: ({ reason }) => {
+      calls.push(`reconcile:${reason}`);
+      return { status: "reconciled", showFolder: state.showFolder };
+    },
+    clearSequencingHandoffsForSequenceChange: (reason) => calls.push(`clear:${reason}`),
+    onRefreshSequenceCatalog: async () => {
+      calls.push("sequence-catalog");
+      return { ok: true };
+    },
+    onRefreshMediaCatalog: async () => {
+      calls.push("media-catalog");
+      return { ok: true };
+    },
+    onRefresh: async () => {
+      calls.push("display-refresh");
+      return { ok: true };
+    },
+    saveProjectToCurrentFile: async ({ reason }) => {
+      calls.push(`save:${reason}`);
+      return { ok: true };
+    },
+    persist: () => calls.push("persist"),
+    render: () => calls.push("render")
+  }));
+
+  const out = await runtime.setAutomationShowFolder({ showFolder: "/shows/B" });
+
+  assert.equal(out.ok, true);
+  assert.equal(out.changed, true);
+  assert.equal(out.showFolder, "/shows/B");
+  assert.equal(state.flags.proposalStale, true);
+  assert.deepEqual(calls, [
+    "pending:automation show folder update",
+    "clear:show folder changed",
+    "sequence-catalog",
+    "media-catalog",
+    "display-refresh",
+    "reconcile:show folder relink",
+    "save:show_folder_relink",
+    "persist",
+    "render"
+  ]);
+});
+
 test("automation sequencer validation snapshot exposes review chain guidance and persistence diagnostics", () => {
   const runtime = createAutomationRuntime(buildDeps({
     state: {

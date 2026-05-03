@@ -68,8 +68,8 @@ struct LocalProjectService: ProjectService {
             projectName: normalized,
             showFolder: draft.showFolder.trimmingCharacters(in: .whitespacesAndNewlines),
             mediaPath: draft.mediaPath.trimmingCharacters(in: .whitespacesAndNewlines),
-            key: projectKey(projectName: normalized, showFolder: draft.showFolder),
-            id: projectID(projectName: normalized, showFolder: draft.showFolder),
+            key: projectKey(projectName: normalized),
+            id: projectID(projectName: normalized),
             createdAt: now,
             updatedAt: now,
             snapshot: buildSnapshot(projectName: normalized, projectFilePath: fileURL.path, mediaPath: draft.mediaPath)
@@ -176,8 +176,8 @@ struct LocalProjectService: ProjectService {
             projectName: projectName,
             showFolder: showFolder,
             mediaPath: mediaPath,
-            key: projectKey(projectName: projectName, showFolder: showFolder),
-            id: projectID(projectName: projectName, showFolder: showFolder),
+            key: projectKey(projectName: projectName),
+            id: project.id.isEmpty ? projectID(projectName: projectName) : project.id,
             createdAt: createdAt,
             updatedAt: updatedAt,
             snapshot: snapshot
@@ -241,12 +241,12 @@ struct LocalProjectService: ProjectService {
         )
     }
 
-    private func projectKey(projectName: String, showFolder: String) -> String {
-        "\(projectName.trimmingCharacters(in: .whitespacesAndNewlines))::\(showFolder.trimmingCharacters(in: .whitespacesAndNewlines))"
+    private func projectKey(projectName: String) -> String {
+        projectName.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func projectID(projectName: String, showFolder: String) -> String {
-        let input = Data(projectKey(projectName: projectName, showFolder: showFolder).utf8)
+    private func projectID(projectName: String) -> String {
+        let input = Data(projectKey(projectName: projectName).utf8)
         return Insecure.SHA1.hash(data: input).map { String(format: "%02x", $0) }.joined()
     }
 
