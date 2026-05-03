@@ -10,7 +10,7 @@
   ],
   "notes": [
     "The result envelope distinguishes ok, partial, and failed designer outcomes.",
-    "A successful result may include creative_brief_v1, proposal_bundle_v1, and intent_handoff_v1 together.",
+    "A successful designer-driven result may include creative_brief_v1, proposal_bundle_v1, intent_handoff_v1, and sequencing_design_handoff_v2 together.",
     "Designer failure reasons should distinguish clarification, proposal generation, stale rebase, and handoff validation."
   ]
 }

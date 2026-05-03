@@ -57,6 +57,9 @@ export function validateTrainingAgentRegistry({ registry = {}, profiles = [] } =
     if (!inputs.has("intent_handoff_v1")) {
       errors.push("sequence_agent inputs missing intent_handoff_v1");
     }
+    if (!inputs.has("sequencing_design_handoff_v2")) {
+      errors.push("sequence_agent inputs missing sequencing_design_handoff_v2");
+    }
     if (!inputs.has("analysis_handoff_v1")) {
       errors.push("sequence_agent inputs missing analysis_handoff_v1");
     }

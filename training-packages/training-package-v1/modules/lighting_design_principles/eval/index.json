@@ -41,7 +41,7 @@
     },
     {
       "id": "handoff_completeness",
-      "checks": ["intent_handoff_v1 emitted", "handoff derived from brief/proposal", "approval policy preserved"]
+      "checks": ["intent_handoff_v1 emitted", "sequencing_design_handoff_v2 emitted for designer-driven sequencing", "handoff derived from brief/proposal", "approval policy preserved"]
     },
     {
       "id": "degraded_mode_without_analysis",

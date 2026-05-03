@@ -22,7 +22,7 @@
       },
       "expectation": {
         "behavior": "proceed_with_bounded_assumptions",
-        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1", "sequencing_design_handoff_v2"],
         "mustInclude": [
           "warm welcoming brief summary",
           "readable broad-first design direction",
@@ -51,7 +51,7 @@
       },
       "expectation": {
         "behavior": "proceed_with_bounded_assumptions",
-        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1", "sequencing_design_handoff_v2"],
         "mustInclude": [
           "clear intro restraint",
           "clear chorus reveal",
@@ -109,7 +109,7 @@
       },
       "expectation": {
         "behavior": "proceed_with_bounded_assumptions",
-        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1", "sequencing_design_handoff_v2"],
         "mustInclude": [
           "warm memory-oriented brief summary",
           "explicit assumptions about motion and contrast",
@@ -169,7 +169,7 @@
       },
       "expectation": {
         "behavior": "refine_existing_direction",
-        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1", "sequencing_design_handoff_v2"],
         "mustInclude": [
           "soft preference influence",
           "explicit focal hierarchy",
@@ -258,7 +258,7 @@
       },
       "expectation": {
         "behavior": "use_scene_context_explicitly",
-        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1", "sequencing_design_handoff_v2"],
         "mustInclude": [
           "broad coverage before refinement",
           "explicit focal hierarchy tied to scene context",
@@ -288,7 +288,7 @@
       },
       "expectation": {
         "behavior": "use_music_context_explicitly",
-        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1", "sequencing_design_handoff_v2"],
         "mustInclude": [
           "hold-vs-reveal logic tied to section arc",
           "energy pacing language tied to music structure",
@@ -318,7 +318,7 @@
       },
       "expectation": {
         "behavior": "keep_sequence_local_direction_local",
-        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1", "sequencing_design_handoff_v2"],
         "mustInclude": [
           "explicit local exception framing",
           "no implication that the director profile has broadly changed",

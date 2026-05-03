@@ -25,7 +25,7 @@ function validPayload() {
         id: "sequence_agent",
         profile: {
           id: "sequence_agent",
-          inputs: ["analysis_handoff_v1", "intent_handoff_v1"],
+          inputs: ["analysis_handoff_v1", "intent_handoff_v1", "sequencing_design_handoff_v2"],
           outputs: ["plan_handoff_v1"],
           handoff: { to: ["orchestrator"] }
         }
@@ -59,5 +59,6 @@ test("registry validator fails profile id mismatch and missing handoff contracts
   assert.equal(out.ok, false);
   assert.ok(out.errors.some((e) => /profile id mismatch/i.test(e)));
   assert.ok(out.errors.some((e) => /missing analysis_handoff_v1/i.test(e)));
+  assert.ok(out.errors.some((e) => /missing sequencing_design_handoff_v2/i.test(e)));
   assert.ok(out.errors.some((e) => /missing plan_handoff_v1/i.test(e)));
 });
