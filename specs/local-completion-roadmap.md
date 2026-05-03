@@ -12,7 +12,7 @@ Track the remaining local-first work needed before the app is a credible end-to-
 ## Priorities
 
 1. Project and show-folder lifecycle: reliable create/open/migrate flows, show-folder switching, and metadata refresh.
-2. Display understanding: durable model metadata, custom model construction capture, submodel capture, and user-editable display semantics.
+2. Display understanding: durable model metadata, custom model structure, submodels, user-editable display semantics, and project-local target behavior learning.
 3. Sequence planning quality: full-display/full-song planning, better effect choices, stronger layer composition, and revision loops.
 4. Review/apply safety: backups, scoped command review, validation, render proof, and restore.
 5. History and recovery: compact event records, artifact references, and usable recovery workflows.

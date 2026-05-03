@@ -24,14 +24,14 @@ The app should feel like a focused production tool, not a dashboard collection o
 - Design: capture user intent, display knowledge, preferences, and creative direction.
 - Sequence: translate approved intent into concrete sequence plans.
 - Review: inspect commands, warnings, backups, validation status, and render proof before apply.
-- Display: inspect display/model metadata and custom model understanding.
+- Display: inspect display metadata, model structure, custom model understanding, submodels, and learned target behavior.
 - History: review project events, generated artifacts, backups, restore points, and proof evidence.
 - Settings: configure local paths, API connection, cloud/account settings, and diagnostics.
 
 ## Workflow Rules
 
 - Project state is the root of the user experience.
-- Selecting a different show folder or display refreshes display, model metadata, custom model data, and current sequence context.
+- Selecting a different show folder or display refreshes display understanding and current sequence context.
 - Project migration, metadata retention, and app-owned storage behavior follow `project-storage.md`.
 - Review owns final apply approval and backup visibility.
 - History owns recovery and audit.

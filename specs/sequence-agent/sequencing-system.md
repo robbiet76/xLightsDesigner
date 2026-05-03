@@ -17,8 +17,7 @@ The sequence agent turns structured design intent into concrete xLights sequence
 
 - user intent from designer dialog
 - project and show-folder context
-- display/model metadata
-- custom model construction data
+- display/model metadata, including custom model structure and submodels
 - audio/timing artifacts
 - current sequence context
 - trained effect and layer knowledge
@@ -58,7 +57,7 @@ The agent can critique rendered output and propose revisions, but revision is ga
 ## Current Gaps
 
 - richer full-song progression planning
-- better custom model interpretation
+- broader calibration of custom/submodel behavior from accepted render outcomes
 - stronger layer composition across diverse layouts
 - better use of mature sequence examples
 - stronger audio-driven pacing and section-aware decisions

@@ -19,7 +19,7 @@ The app is not just a chat wrapper. It is a controlled workflow that turns creat
 
 1. The user selects or creates a project.
 2. The project is bound to a show folder, sequence, media file, and display.
-3. The app refreshes display metadata, model metadata, custom model construction data, timing data, and current sequence state.
+3. The app refreshes display understanding from xLights layout data, project metadata, timing data, and current sequence state.
 4. Audio analysis creates reusable timing and music-context artifacts.
 5. Designer conversation captures user intent, display understanding, style preferences, and constraints.
 6. The sequence agent translates intent into structured sequence plans.
@@ -54,7 +54,7 @@ The highest-value work is improving full-display sequencing quality while keepin
 
 Near-term work should favor:
 
-- custom model and display metadata capture that refreshes when the selected display/show folder changes
+- display understanding refresh, including model metadata, custom model structure, submodels, and project-local target behavior learning
 - effect and layer composition learning from render proof
 - real sequence benchmarks and user-review feedback loops
 - app reliability around project state, backups, apply, render, restore, and history
