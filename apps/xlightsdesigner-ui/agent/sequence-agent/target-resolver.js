@@ -38,13 +38,19 @@ function mapLiveTargets(models = [], submodels = []) {
     });
   }
   for (const submodel of submodels) {
-    const id = String(submodel?.id || "").trim();
+    const parentId = String(submodel?.parentId || submodel?.parentName || "").trim();
+    const name = String(submodel?.name || "").trim();
+    const id = String(
+      submodel?.id
+      || submodel?.fullName
+      || (parentId && name ? `${parentId}/${name}` : "")
+    ).trim();
     if (!id) continue;
     rows.push({
       id,
       name: String(submodel?.name || id),
       type: "submodel",
-      parentId: String(submodel?.parentId || parseSubmodelParentId(id)).trim()
+      parentId: String(parentId || parseSubmodelParentId(id)).trim()
     });
   }
   return uniqueById(rows);

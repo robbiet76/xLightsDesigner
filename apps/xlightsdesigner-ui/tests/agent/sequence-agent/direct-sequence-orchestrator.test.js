@@ -73,9 +73,9 @@ test("direct sequence orchestrator preserves explicit submodel-only target scope
     ],
     submodels: [
       {
-        id: "Singing Bulb 1/@Mouth1",
+        fullName: "Singing Bulb 1/@Mouth1",
         name: "@Mouth1",
-        parentId: "Singing Bulb 1",
+        parentName: "Singing Bulb 1",
         type: "ranges"
       }
     ],
