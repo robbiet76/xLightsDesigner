@@ -72,6 +72,12 @@ function buildEffectPriorBundle(effect = {}) {
         }))
 	        .filter((anchor) => anchor.sampleCount > 0);
 	      if (!geometryProfile || !anchorProfiles.length) return null;
+      const behaviorRules = normArray(row?.behaviorDimensions?.behaviorRules).map((rule) => ({
+        dimension: normText(rule?.dimension),
+        direction: normText(rule?.direction),
+        magnitude: Number(rule?.magnitude || 0),
+        summary: normText(rule?.summary)
+      })).filter((rule) => rule.dimension && rule.direction);
 	      return {
 	        parameterName: normText(row?.parameterName),
         geometryProfile,
@@ -83,8 +89,7 @@ function buildEffectPriorBundle(effect = {}) {
         configurationProfileCount: Number(row?.configurationProfileCount || 0),
 	        distinctAnchorCount: Number(row?.distinctAnchorCount || 0),
 	        sampleCount: Number(row?.sampleCount || 0),
-	        structuralSignatures: unique(row?.structuralSignatures),
-	        behaviorDimensions: row?.behaviorDimensions || null,
+	        behaviorDimensions: { behaviorRules },
 	        anchorProfiles
 	      };
     })

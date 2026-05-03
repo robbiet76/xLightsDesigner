@@ -41,7 +41,7 @@ test("derived parameter prior bundle stays generic and excludes runtime-specific
   }
 });
 
-test("derived parameter prior bundle preserves generalized behavior dimensions", () => {
+test("derived parameter prior bundle preserves runtime behavior rules without source-only dimensions", () => {
   const bundle = buildBundle({
     artifactType: "sequencer_unified_training_set_v1",
     artifactVersion: "1.0",
@@ -91,8 +91,9 @@ test("derived parameter prior bundle preserves generalized behavior dimensions",
     ]
   });
   const prior = bundle.effectsByName.Marquee.priors[0];
-  assert.equal(prior.behaviorDimensions.abstraction, "sparse_anchor_trend");
+  assert.deepEqual(Object.keys(prior.behaviorDimensions), ["behaviorRules"]);
   assert.equal(prior.behaviorDimensions.behaviorRules[0].summary, "speed increases motion");
-  assert.equal(prior.behaviorDimensions.generalization.exactCombinationRequired, false);
+  assert.equal(prior.behaviorDimensions.behaviorRules[0].magnitude, 0.06);
+  assert.equal(prior.structuralSignatures, undefined);
   assert.equal(prior.anchorProfiles[1].meanRenderedColorDiversity, 0.375);
 });
