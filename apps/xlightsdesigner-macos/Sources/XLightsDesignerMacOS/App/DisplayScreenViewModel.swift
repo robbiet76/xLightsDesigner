@@ -1027,9 +1027,12 @@ final class DisplayScreenViewModel {
                 return DisplayTargetBehaviorFactModel(
                     id: record.recordId,
                     targetId: record.targetId ?? "",
+                    targetDisplayName: record.displayName ?? "",
                     targetKind: record.targetKind ?? "",
+                    parentId: record.parentId ?? "",
                     effectName: record.effectName ?? record.effectFamily ?? "",
                     probeScope: record.probeScope ?? "",
+                    nodeCoverageSummary: targetBehaviorNodeCoverageSummary(record.submodelContext?.nodeCoverage),
                     sampleCount: stats?.sampleCount ?? 0,
                     positiveCount: stats?.positiveCount ?? 0,
                     negativeCount: stats?.negativeCount ?? 0,
@@ -1041,6 +1044,17 @@ final class DisplayScreenViewModel {
                 if $0.sampleCount != $1.sampleCount { return $0.sampleCount > $1.sampleCount }
                 return $0.effectName.localizedCaseInsensitiveCompare($1.effectName) == .orderedAscending
             }
+    }
+
+    private func targetBehaviorNodeCoverageSummary(_ coverage: TargetBehaviorLearningNodeCoverage?) -> String {
+        guard let coverage, let nodeCount = coverage.nodeCount, nodeCount > 0 else { return "" }
+        if let parentNodeCount = coverage.parentNodeCount, parentNodeCount > 0 {
+            if let ratio = coverage.ratio {
+                return "\(nodeCount)/\(parentNodeCount) nodes (\(Int((ratio * 100).rounded()))%)"
+            }
+            return "\(nodeCount)/\(parentNodeCount) nodes"
+        }
+        return "\(nodeCount) nodes"
     }
 
     private func buildFingerprintIndex(for project: ActiveProjectModel) -> [String: String] {

@@ -339,9 +339,17 @@ private struct StubDisplayModelIndexStore: DisplayModelIndexStore {
                 targetKind: "submodel",
                 targetFingerprint: "tmf1:mouth",
                 displayName: "CustomFace / @Mouth",
+                parentId: "CustomFace",
                 effectName: "On",
                 effectFamily: "fill",
                 probeScope: "submodel",
+                submodelContext: TargetBehaviorLearningSubmodelContext(
+                    nodeCoverage: TargetBehaviorLearningNodeCoverage(
+                        nodeCount: 8,
+                        parentNodeCount: 143,
+                        ratio: 0.0559
+                    )
+                ),
                 stats: TargetBehaviorLearningStats(
                     sampleCount: 3,
                     positiveCount: 2,
@@ -367,6 +375,9 @@ private struct StubDisplayModelIndexStore: DisplayModelIndexStore {
         return
     }
     #expect(selection.targetBehaviorFacts.count == 1)
+    #expect(selection.targetBehaviorFacts.first?.targetDisplayName == "CustomFace / @Mouth")
+    #expect(selection.targetBehaviorFacts.first?.parentId == "CustomFace")
+    #expect(selection.targetBehaviorFacts.first?.nodeCoverageSummary == "8/143 nodes (6%)")
     #expect(selection.targetBehaviorFacts.first?.effectName == "On")
     #expect(selection.targetBehaviorFacts.first?.probeScope == "submodel")
     #expect(selection.targetBehaviorFacts.first?.outcomeSummary == "2 positive, 1 needs review")

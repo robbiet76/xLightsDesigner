@@ -12,21 +12,38 @@ struct TargetBehaviorLearningDocument: Codable, Sendable {
 
 struct TargetBehaviorLearningRecord: Codable, Sendable {
     var recordId: String
-    var targetId: String?
-    var targetKind: String?
-    var targetFingerprint: String?
-    var displayName: String?
-    var effectName: String?
-    var effectFamily: String?
-    var probeScope: String?
-    var stats: TargetBehaviorLearningStats?
+    var targetId: String? = nil
+    var targetKind: String? = nil
+    var targetFingerprint: String? = nil
+    var fingerprintVersion: String? = nil
+    var displayName: String? = nil
+    var parentId: String? = nil
+    var parentName: String? = nil
+    var effectName: String? = nil
+    var effectFamily: String? = nil
+    var probeScope: String? = nil
+    var structureHints: [String]? = nil
+    var submodelContext: TargetBehaviorLearningSubmodelContext? = nil
+    var stats: TargetBehaviorLearningStats? = nil
+}
+
+struct TargetBehaviorLearningSubmodelContext: Codable, Sendable {
+    var siblingCount: Int? = nil
+    var overlappingSiblingIds: [String]? = nil
+    var nodeCoverage: TargetBehaviorLearningNodeCoverage? = nil
+}
+
+struct TargetBehaviorLearningNodeCoverage: Codable, Sendable {
+    var nodeCount: Int? = nil
+    var parentNodeCount: Int? = nil
+    var ratio: Double? = nil
 }
 
 struct TargetBehaviorLearningStats: Codable, Sendable {
-    var sampleCount: Int?
-    var positiveCount: Int?
-    var negativeCount: Int?
-    var lastObservedAt: String?
+    var sampleCount: Int? = nil
+    var positiveCount: Int? = nil
+    var negativeCount: Int? = nil
+    var lastObservedAt: String? = nil
 }
 
 struct LocalTargetBehaviorLearningStore: TargetBehaviorLearningStore {

@@ -576,8 +576,18 @@ struct DisplayScreenView: View {
                                 .foregroundStyle(fact.negativeCount > fact.positiveCount ? .orange : .secondary)
                         }
                         HStack(spacing: 6) {
-                            compactInfoChip(label: "Target", value: fact.targetId)
+                            compactInfoChip(label: "Target", value: fact.targetDisplayName.isEmpty ? fact.targetId : fact.targetDisplayName)
                             compactInfoChip(label: "Scope", value: fact.probeScope.isEmpty ? fact.targetKind : fact.probeScope)
+                        }
+                        if !fact.parentId.isEmpty || !fact.nodeCoverageSummary.isEmpty {
+                            HStack(spacing: 6) {
+                                if !fact.parentId.isEmpty {
+                                    compactInfoChip(label: "Parent", value: fact.parentId)
+                                }
+                                if !fact.nodeCoverageSummary.isEmpty {
+                                    compactInfoChip(label: "Coverage", value: fact.nodeCoverageSummary)
+                                }
+                            }
                         }
                         if !fact.lastObservedAt.isEmpty {
                             Text("Last observed \(fact.lastObservedAt)")

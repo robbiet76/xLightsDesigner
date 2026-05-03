@@ -102,9 +102,12 @@ struct DisplaySubmodelFactModel: Identifiable, Hashable, Sendable {
 struct DisplayTargetBehaviorFactModel: Identifiable, Hashable, Sendable {
     let id: String
     let targetId: String
+    let targetDisplayName: String
     let targetKind: String
+    let parentId: String
     let effectName: String
     let probeScope: String
+    let nodeCoverageSummary: String
     let sampleCount: Int
     let positiveCount: Int
     let negativeCount: Int

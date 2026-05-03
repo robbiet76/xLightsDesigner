@@ -18,8 +18,19 @@ import Testing
           "recordId": "tbl1:test",
           "targetId": "CustomFace/@Mouth",
           "targetKind": "submodel",
+          "targetFingerprint": "tmf1:mouth",
+          "fingerprintVersion": "target-metadata-fingerprint-v1",
+          "displayName": "CustomFace / @Mouth",
+          "parentId": "CustomFace",
+          "parentName": "CustomFace",
           "effectName": "On",
           "probeScope": "submodel",
+          "structureHints": ["feature_mouth"],
+          "submodelContext": {
+            "siblingCount": 2,
+            "overlappingSiblingIds": [],
+            "nodeCoverage": { "nodeCount": 8, "parentNodeCount": 143, "ratio": 0.0559 }
+          },
           "stats": {
             "sampleCount": 2,
             "positiveCount": 2,
@@ -47,5 +58,8 @@ import Testing
 
     #expect(document.records.count == 1)
     #expect(document.records.first?.recordId == "tbl1:test")
+    #expect(document.records.first?.parentId == "CustomFace")
+    #expect(document.records.first?.submodelContext?.nodeCoverage?.nodeCount == 8)
+    #expect(document.records.first?.structureHints == ["feature_mouth"])
     #expect(document.records.first?.stats?.positiveCount == 2)
 }
