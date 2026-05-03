@@ -1,5 +1,8 @@
 import { buildEffectiveMetadataAssignments } from "./effective-metadata-assignments.js";
 import { mergeVisualHintDefinitions } from "./visual-hint-definitions.js";
+import { readDisplayRefreshArtifact } from "../storage/display-metadata-store.mjs";
+import { normalizeModelIndexTargetRecords } from "./target-behavior-learning-runtime.js";
+import { mergeModelIndexSubmodelsIntoSceneGraph } from "./model-index-scene-graph-runtime.js";
 
 export function createAutomationRuntime(deps = {}) {
   const {
@@ -48,6 +51,25 @@ export function createAutomationRuntime(deps = {}) {
     getCurrentDirectSequenceValidationSnapshot,
     getPageStates
   } = deps;
+
+  function buildEffectiveSceneGraph() {
+    const projectFilePath = String(state?.projectFilePath || "").trim();
+    let modelIndexTargetRecords = [];
+    if (projectFilePath) {
+      const reader = deps.readDisplayRefreshArtifact || readDisplayRefreshArtifact;
+      try {
+        const result = typeof reader === "function"
+          ? reader({ projectFilePath, kind: "model-index" })
+          : null;
+        modelIndexTargetRecords = result?.ok === true
+          ? normalizeModelIndexTargetRecords(result.artifact)
+          : [];
+      } catch {
+        modelIndexTargetRecords = [];
+      }
+    }
+    return mergeModelIndexSubmodelsIntoSceneGraph(state.sceneGraph || {}, modelIndexTargetRecords);
+  }
 
   function setAutomationRenderObservation(payload = {}) {
     state.sequenceAgentRuntime =
@@ -370,6 +392,7 @@ export function createAutomationRuntime(deps = {}) {
     let planSource = "generated";
     let rawPlan = [];
     let graph = null;
+    const effectiveSceneGraph = buildEffectiveSceneGraph();
     const generated = buildSequenceAgentPlan({
       analysisHandoff,
       intentHandoff,
@@ -380,9 +403,9 @@ export function createAutomationRuntime(deps = {}) {
       sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
-      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-      groupsById: state.sceneGraph?.groupsById || {},
-      submodelsById: state.sceneGraph?.submodelsById || {},
+      groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
+      groupsById: effectiveSceneGraph?.groupsById || {},
+      submodelsById: effectiveSceneGraph?.submodelsById || {},
       timingOwnership: getSequenceTimingOwnershipRows(),
       allowTimingWrites: true
     });
@@ -541,6 +564,7 @@ export function createAutomationRuntime(deps = {}) {
     const executionPlan = proposalBundle?.executionPlan || null;
     let planSource = "generated";
     let rawPlan = [];
+    const effectiveSceneGraph = buildEffectiveSceneGraph();
     const generated = buildSequenceAgentPlan({
       analysisHandoff,
       intentHandoff,
@@ -551,9 +575,9 @@ export function createAutomationRuntime(deps = {}) {
       sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
-      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-      groupsById: state.sceneGraph?.groupsById || {},
-      submodelsById: state.sceneGraph?.submodelsById || {},
+      groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
+      groupsById: effectiveSceneGraph?.groupsById || {},
+      submodelsById: effectiveSceneGraph?.submodelsById || {},
       timingOwnership: getSequenceTimingOwnershipRows(),
       allowTimingWrites: true
     });

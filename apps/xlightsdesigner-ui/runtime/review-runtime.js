@@ -19,6 +19,7 @@ import {
   normalizeModelIndexTargetRecords,
   upsertTargetBehaviorLearningRecord
 } from "./target-behavior-learning-runtime.js";
+import { mergeModelIndexSubmodelsIntoSceneGraph } from "./model-index-scene-graph-runtime.js";
 import {
   readDisplayRefreshArtifact,
   readTargetBehaviorLearningDocument as readProjectTargetBehaviorLearningDocument,
@@ -46,6 +47,13 @@ function loadModelIndexTargetRecords({ state = {}, deps = {} } = {}) {
   } catch {
     return [];
   }
+}
+
+function buildEffectiveSceneGraph({ state = {}, deps = {} } = {}) {
+  return mergeModelIndexSubmodelsIntoSceneGraph(
+    state.sceneGraph || {},
+    loadModelIndexTargetRecords({ state, deps })
+  );
 }
 
 async function persistTargetBehaviorLearning({
@@ -239,6 +247,7 @@ export async function executeApplyCore({
       tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
     };
     const targetBehaviorLearning = await loadTargetBehaviorLearning({ state, deps });
+    const effectiveSceneGraph = buildEffectiveSceneGraph({ state, deps });
     let currentSequenceContext = null;
     try {
       currentSequenceContext = await buildCurrentSequenceContextFromReadback({
@@ -271,9 +280,9 @@ export async function executeApplyCore({
       sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
-      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-      groupsById: state.sceneGraph?.groupsById || {},
-      submodelsById: state.sceneGraph?.submodelsById || {},
+      groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
+      groupsById: effectiveSceneGraph?.groupsById || {},
+      submodelsById: effectiveSceneGraph?.submodelsById || {},
       intentHandoff,
       sequencingDesignHandoff,
       sequenceArtisticGoal,
@@ -348,9 +357,9 @@ export async function executeApplyCore({
       sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
-      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-      groupsById: state.sceneGraph?.groupsById || {},
-      submodelsById: state.sceneGraph?.submodelsById || {},
+      groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
+      groupsById: effectiveSceneGraph?.groupsById || {},
+      submodelsById: effectiveSceneGraph?.submodelsById || {},
       metadataAssignments,
       timingOwnership: getSequenceTimingOwnershipRows(),
       allowTimingWrites: true
@@ -471,7 +480,7 @@ export async function executeApplyCore({
 
     const executed = Number(orchestrated?.executedCount || 0);
     const verification = await verifyAppliedPlanReadback(rawPlan, {
-      submodelsById: state.sceneGraph?.submodelsById || {},
+      submodelsById: effectiveSceneGraph?.submodelsById || {},
       planMetadata: planHandoff?.metadata || {}
     });
     lastVerification = verification;
@@ -532,7 +541,7 @@ export async function executeApplyCore({
       renderCritiqueContext,
       sectionNames: getSelectedSections(),
       targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
-      submodelsById: state.sceneGraph?.submodelsById || {}
+      submodelsById: effectiveSceneGraph?.submodelsById || {}
     });
     state.sequenceAgentRuntime.renderValidationEvidence = nextRenderValidationEvidence;
     if (planHandoff && typeof planHandoff === "object") {

@@ -4,7 +4,12 @@ import {
   resolveRevisionFeedbackFromSnapshots,
   resolveRevisionRetryPressureFromSnapshots
 } from "./compact-plan-metadata.js";
-import { readTargetBehaviorLearningDocument as readProjectTargetBehaviorLearningDocument } from "../storage/display-metadata-store.mjs";
+import {
+  readDisplayRefreshArtifact,
+  readTargetBehaviorLearningDocument as readProjectTargetBehaviorLearningDocument
+} from "../storage/display-metadata-store.mjs";
+import { normalizeModelIndexTargetRecords } from "./target-behavior-learning-runtime.js";
+import { mergeModelIndexSubmodelsIntoSceneGraph } from "./model-index-scene-graph-runtime.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -33,6 +38,27 @@ async function loadTargetBehaviorLearning({ state = {}, deps = {} } = {}) {
   } catch {
     return null;
   }
+}
+
+function loadModelIndexTargetRecords({ state = {}, deps = {} } = {}) {
+  const projectFilePath = str(state?.projectFilePath);
+  if (!projectFilePath) return [];
+  const reader = deps.readDisplayRefreshArtifact || readDisplayRefreshArtifact;
+  if (typeof reader !== "function") return [];
+  try {
+    const result = reader({ projectFilePath, kind: "model-index" });
+    if (result?.ok !== true) return [];
+    return normalizeModelIndexTargetRecords(result.artifact);
+  } catch {
+    return [];
+  }
+}
+
+function buildEffectiveSceneGraph({ state = {}, deps = {} } = {}) {
+  return mergeModelIndexSubmodelsIntoSceneGraph(
+    state.sceneGraph || {},
+    loadModelIndexTargetRecords({ state, deps })
+  );
 }
 
 export function addRevisionFeedbackToProposalLines(lines = [], revisionFeedback = null) {
@@ -617,6 +643,7 @@ export function createProposalGenerationRuntime(deps = {}) {
         || state.sequenceAgentRuntime?.revisionFeedback
         || null;
       const targetBehaviorLearning = await loadTargetBehaviorLearning({ state, deps });
+      const effectiveSceneGraph = buildEffectiveSceneGraph({ state, deps });
       const sequenceAgentInput = buildSequenceAgentInput({
         currentSequenceContext: await (async () => {
           try {
@@ -656,9 +683,9 @@ export function createProposalGenerationRuntime(deps = {}) {
         sequenceSettings: state.sequenceSettings,
         layoutMode: currentLayoutMode(),
         displayElements: state.displayElements,
-        groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-        groupsById: state.sceneGraph?.groupsById || {},
-        submodelsById: state.sceneGraph?.submodelsById || {},
+        groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
+        groupsById: effectiveSceneGraph?.groupsById || {},
+        submodelsById: effectiveSceneGraph?.submodelsById || {},
         intentHandoff,
         sequencingDesignHandoff: state.creative?.sequencingDesignHandoff || intentHandoff?.sequencingDesignHandoff || null,
         sequenceArtisticGoal: state.creative?.sequenceArtisticGoal || null,
@@ -722,9 +749,9 @@ export function createProposalGenerationRuntime(deps = {}) {
           sequenceSettings: state.sequenceSettings,
           layoutMode: currentLayoutMode(),
           displayElements: state.displayElements,
-          groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-          groupsById: state.sceneGraph?.groupsById || {},
-          submodelsById: state.sceneGraph?.submodelsById || {},
+          groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
+          groupsById: effectiveSceneGraph?.groupsById || {},
+          submodelsById: effectiveSceneGraph?.submodelsById || {},
           timingOwnership: getSequenceTimingOwnershipRows(),
           metadataAssignments: buildEffectiveMetadataAssignments(),
           allowTimingWrites: true

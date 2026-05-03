@@ -6,7 +6,6 @@ import path from "node:path";
 
 import {
   buildAppApplyVerification,
-  buildSubmodelsByIdFromModelIndexTargetRecords,
   buildReviewIntentHandoff,
   createSequenceBackup,
   hydrateAnalysisSectionsFromSelectedTimingTrack,
@@ -15,6 +14,7 @@ import {
   renderCurrentSummary,
   summarizePracticalValidation
 } from "../../../../scripts/sequencing/app/apply-app-review.mjs";
+import { buildSubmodelsByIdFromModelIndexTargetRecords } from "../../runtime/model-index-scene-graph-runtime.js";
 import { buildSequenceAgentPlan } from "../../agent/sequence-agent/sequence-agent.js";
 import { buildEffectDefinitionCatalog } from "../../agent/sequence-agent/effect-definition-catalog.js";
 

@@ -62,6 +62,7 @@ import {
   normalizeModelIndexTargetRecords,
   upsertTargetBehaviorLearningRecord
 } from '../../../apps/xlightsdesigner-ui/runtime/target-behavior-learning-runtime.js';
+import { buildSubmodelsByIdFromModelIndexTargetRecords } from '../../../apps/xlightsdesigner-ui/runtime/model-index-scene-graph-runtime.js';
 import { loadProjectDisplayMetadataAssignments } from './project-display-metadata.mjs';
 
 const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
@@ -241,50 +242,6 @@ function loadModelIndexTargetRecords(projectFile = '') {
   } catch {
     return [];
   }
-}
-
-export function buildSubmodelsByIdFromModelIndexTargetRecords(targetRecords = []) {
-  const out = {};
-  for (const record of Array.isArray(targetRecords) ? targetRecords : []) {
-    if (str(record?.targetKind) !== 'submodel') continue;
-    const targetId = str(record?.targetId);
-    if (!targetId) continue;
-    const identity = record?.identity && typeof record.identity === 'object' ? record.identity : {};
-    const structure = record?.structure && typeof record.structure === 'object' ? record.structure : {};
-    const submodelMetadata = structure?.submodelMetadata && typeof structure.submodelMetadata === 'object'
-      ? structure.submodelMetadata
-      : {};
-    const nodeCoverage = submodelMetadata?.nodeCoverage && typeof submodelMetadata.nodeCoverage === 'object'
-      ? submodelMetadata.nodeCoverage
-      : {};
-    out[targetId] = {
-      id: targetId,
-      name: str(submodelMetadata.name || identity.displayName || targetId),
-      parentId: str(identity.parentId || submodelMetadata.parentId),
-      parentName: str(identity.parentName || submodelMetadata.parentId),
-      type: str(submodelMetadata.type || identity.canonicalType || 'submodel'),
-      layoutGroup: str(submodelMetadata.layoutGroup),
-      startChannel: Number.isFinite(Number(submodelMetadata.startChannel)) ? Number(submodelMetadata.startChannel) : null,
-      endChannel: Number.isFinite(Number(submodelMetadata.endChannel)) ? Number(submodelMetadata.endChannel) : null,
-      lines: str(submodelMetadata.lines),
-      siblingCount: Number(submodelMetadata.siblingCount || 0),
-      siblingIds: Array.isArray(submodelMetadata.siblingIds) ? submodelMetadata.siblingIds.map((row) => str(row)).filter(Boolean) : [],
-      overlappingSiblingIds: Array.isArray(submodelMetadata.overlappingSiblingIds) ? submodelMetadata.overlappingSiblingIds.map((row) => str(row)).filter(Boolean) : [],
-      overlapsSibling: Boolean(submodelMetadata.overlapsSibling),
-      structureHints: Array.isArray(submodelMetadata.structureHints) ? submodelMetadata.structureHints.map((row) => str(row)).filter(Boolean) : [],
-      nodeCoverage: {
-        nodeCount: Number(nodeCoverage.nodeCount || structure.nodeCount || 0),
-        parentNodeCount: Number.isFinite(Number(nodeCoverage.parentNodeCount)) ? Number(nodeCoverage.parentNodeCount) : null,
-        ratio: Number.isFinite(Number(nodeCoverage.ratio)) ? Number(nodeCoverage.ratio) : null
-      },
-      identity: {
-        displayName: str(identity.displayName || targetId),
-        fingerprint: str(identity.fingerprint),
-        fingerprintVersion: str(identity.fingerprintVersion)
-      }
-    };
-  }
-  return out;
 }
 
 async function persistAppTargetBehaviorLearning({
