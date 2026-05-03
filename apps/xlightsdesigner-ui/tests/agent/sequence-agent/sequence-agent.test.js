@@ -2338,6 +2338,101 @@ test("sequence_agent uses vendor custom submodel metadata through the shared mod
   assert.ok(recommendation.parameterPriorGuidance.desiredBehaviorHints.includes("sparkle texture"));
 });
 
+test("sequence_agent full-display planning uses multiple vendor submodel hints", () => {
+  const xml = fs.readFileSync(
+    new URL("../../../../../render-training-vendor-fixture/xlights_rgbeffects.xml", import.meta.url),
+    "utf8"
+  );
+  const sceneGraph = parseXLightsRgbEffectsCustomModelSceneGraph(xml);
+  const records = buildNormalizedTargetMetadataRecords({ sceneGraph });
+  const displayElements = Object.values(buildDisplayElementsByIdFromModelIndexTargetRecords(records));
+  const targetIds = [
+    "Singing Bulb 1/@Mouth1",
+    "Singing Bulb 1/@Mouth2",
+    "Singing Bulb 1/@Mouth3",
+    "Singing Bulb 1/@Mouth4",
+    "Singing Bulb 1/@Mouth5"
+  ];
+
+  for (const targetId of targetIds) {
+    const record = records.find((row) => row.targetId === targetId);
+    assert.equal(record?.targetKind, "submodel");
+    assert.equal(record?.structure?.submodelMetadata?.parentId, "Singing Bulb 1");
+  }
+
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Vendor Full Display Track", artist: "Fixture" },
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 0, endMs: 4000, energy: "medium", density: "medium" },
+          { label: "Chorus 1", startMs: 4000, endMs: 8000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Create a full-display pass using the vendor mouth submodels as readable texture accents.",
+      mode: "create",
+      scope: {
+        targetIds,
+        tagNames: [],
+        sections: []
+      },
+      executionStrategy: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        shouldUseFullSongStructureTrack: true,
+        sectionPlans: [
+          {
+            section: "Verse 1",
+            energy: "medium",
+            density: "medium",
+            intentSummary: "readable sparkle texture across vendor detail submodels",
+            targetIds,
+            effectHints: []
+          },
+          {
+            section: "Chorus 1",
+            energy: "high",
+            density: "dense",
+            intentSummary: "brighter rhythmic sparkle texture across vendor detail submodels",
+            targetIds,
+            effectHints: []
+          }
+        ]
+      }
+    },
+    sourceLines: [],
+    metadataAssignments: targetIds.map((targetId) => ({
+      targetId,
+      targetType: "submodel",
+      targetParentId: "Singing Bulb 1",
+      submodelHints: ["sparkle texture"]
+    })),
+    displayElements,
+    sequenceSettings: { durationMs: 8000, frameMs: 50 },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Bars", params: [] },
+      { effectName: "Color Wash", params: [] },
+      { effectName: "On", params: [] }
+    ])
+  });
+
+  const effectCommands = out.commands.filter((command) => command.cmd === "effects.create");
+  const placementTargets = new Set(out.metadata.effectPlacements.map((placement) => placement.targetId));
+  const hintedPlacements = out.metadata.effectPlacements.filter((placement) =>
+    targetIds.includes(placement.targetId)
+    && placement.settingsIntent?.configuredBehaviorDesiredHints?.includes("sparkle texture")
+  );
+
+  assert.ok(effectCommands.length >= 3);
+  assert.ok(targetIds.some((targetId) => placementTargets.has(targetId)));
+  assert.ok(hintedPlacements.length >= 1);
+  assert.ok(hintedPlacements.some((placement) => placement.parameterPriorGuidance?.desiredBehaviorHints?.includes("sparkle texture")));
+  assert.ok(effectCommands.some((command) => command.params.effectName === "Shimmer"));
+});
+
 test("sequence_agent lets translation behavior outrank conflicting effect hints", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

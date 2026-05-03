@@ -1610,7 +1610,8 @@ export function buildFullDisplayPlan({
           displayElements,
           intentSummary,
           sequencerRevisionBrief,
-          configuredBehaviorRecommendation: row.configuredBehaviorRecommendation
+          configuredBehaviorRecommendation: row.configuredBehaviorRecommendation,
+          desiredBehaviorHints: normArray(row.configuredBehaviorDesiredHints)
         }),
         sharedSettingPriorGuidance: buildSharedSettingPriorGuidance({
           sequencerRevisionBrief,
