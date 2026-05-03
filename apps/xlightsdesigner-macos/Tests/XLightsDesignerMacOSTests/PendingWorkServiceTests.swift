@@ -149,6 +149,7 @@ import Foundation
 
     #expect(pending.activeSequenceName == "Canonical")
     #expect(pending.activeSequencePath == canonicalSequence.path)
+    #expect(pending.audioPath == canonicalAudio.path)
 }
 
 private func writeJSON(_ object: [String: Any], to url: URL) throws {

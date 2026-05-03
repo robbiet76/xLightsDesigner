@@ -1014,6 +1014,7 @@ final class AppAutomationServer: @unchecked Sendable {
     @MainActor
     private func sequencerValidationSnapshot() async -> [String: Any] {
         let project = model.workspace.activeProject
+        let target = model.currentTargetContext()
         let snapshot = latestProjectValidationSnapshot(for: project)
         let latestPlanHandoff = snapshot["latestPlanHandoff"] as? [String: Any]
         let latestProposalBundle = snapshot["latestProposalBundle"] as? [String: Any]
@@ -1025,8 +1026,20 @@ final class AppAutomationServer: @unchecked Sendable {
                 "projectName": project?.projectName ?? "",
                 "projectFilePath": project?.projectFilePath ?? ""
             ],
-            "activeSequence": string(project?.snapshot["activeSequence"]?.value),
-            "sequencePathInput": string(project?.snapshot["sequencePathInput"]?.value),
+            "activeTarget": [
+                "projectName": target.projectName,
+                "sequenceName": target.sequenceName,
+                "sequencePath": target.sequencePath,
+                "audioName": target.audioName,
+                "audioPath": target.audioPath
+            ],
+            "activeSequence": target.sequenceName,
+            "sequencePathInput": target.sequencePath,
+            "diagnostics": [
+                "snapshotActiveSequence": string(project?.snapshot["activeSequence"]?.value),
+                "snapshotSequencePathInput": string(project?.snapshot["sequencePathInput"]?.value),
+                "snapshotAudioPathInput": string(project?.snapshot["audioPathInput"]?.value)
+            ],
             "reviewHistorySnapshotAvailable": bool(snapshot["reviewHistorySnapshotAvailable"]),
             "latestApply": snapshot["latestApply"] ?? NSNull(),
             "latestPracticalValidation": snapshot["latestPracticalValidation"] ?? NSNull(),

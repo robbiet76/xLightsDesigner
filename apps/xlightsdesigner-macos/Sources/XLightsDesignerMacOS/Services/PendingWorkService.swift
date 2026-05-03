@@ -92,7 +92,10 @@ struct LocalPendingWorkService: PendingWorkService {
             string(snapshot["activeSequence"])
         ])
         let recentSequences = arrayOfStrings(snapshot["recentSequences"])
-        let audioPath = string(snapshot["audioPathInput"])
+        let audioPath = firstNonEmpty([
+            string(activeSequenceRecord?.mediaPath),
+            string(snapshot["audioPathInput"])
+        ])
         let projectSequences = (snapshot["projectSequences"] as? [[String: Any]]) ?? []
         let activeProjectSequence = projectSequences.first(where: { bool($0["isActive"]) })
         let preferredSequencePath = string(activeProjectSequence?["sequencePath"])
