@@ -201,7 +201,21 @@ struct ProjectServiceTests {
             )
         )
         let workspace = ProjectWorkspace(sessionStore: ProjectServiceTestSessionStore())
-        workspace.setProject(project)
+        var projectWithSequenceState = project
+        projectWithSequenceState.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/OldSong/OldSong.xsq")
+        projectWithSequenceState.snapshot["proposed"] = AnyCodable([
+            ["summary": "Existing proposal row"]
+        ])
+        projectWithSequenceState.snapshot["flags"] = AnyCodable([
+            "proposalStale": false,
+            "hasDraftProposal": true
+        ])
+        projectWithSequenceState.snapshot["sequenceAgentRuntime"] = AnyCodable([
+            "timingTrackProvenance": [
+                "track-1": ["trackName": "XD: Song Structure"]
+            ]
+        ])
+        workspace.setProject(projectWithSequenceState)
         let model = ProjectScreenViewModel(
             workspace: workspace,
             projectService: service,
@@ -224,11 +238,22 @@ struct ProjectServiceTests {
 
         let active = try #require(workspace.activeProject)
         let relink = active.snapshot["showFolderRelink"]?.value as? [String: Any]
+        let flags = active.snapshot["flags"]?.value as? [String: Any]
+        let runtime = active.snapshot["sequenceAgentRuntime"]?.value as? [String: Any]
+        let displayRelink = runtime?["displayRelink"] as? [String: Any]
+        let timingTrackProvenance = runtime?["timingTrackProvenance"] as? [String: Any]
         #expect(active.id == project.id)
         #expect(active.projectFilePath == project.projectFilePath)
         #expect(active.showFolder == "/tmp/new-show")
+        #expect(active.snapshot["sequencePathInput"]?.value as? String == "/tmp/show/OldSong/OldSong.xsq")
+        #expect((active.snapshot["proposed"]?.value as? [[String: Any]])?.count == 1)
         #expect(relink?["previousShowFolder"] as? String == "/tmp/show")
         #expect(relink?["showFolder"] as? String == "/tmp/new-show")
+        #expect(flags?["proposalStale"] as? Bool == true)
+        #expect(flags?["hasDraftProposal"] as? Bool == true)
+        #expect(displayRelink?["previousShowFolder"] as? String == "/tmp/show")
+        #expect(displayRelink?["showFolder"] as? String == "/tmp/new-show")
+        #expect((timingTrackProvenance?["track-1"] as? [String: Any])?["trackName"] as? String == "XD: Song Structure")
         #expect(relinkNotificationCapture.object == active.projectFilePath)
         #expect(workspace.projectBanner?.id == "show-folder-relinked")
     }

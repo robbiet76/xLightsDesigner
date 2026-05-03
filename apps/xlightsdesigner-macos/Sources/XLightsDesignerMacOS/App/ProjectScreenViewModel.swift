@@ -174,6 +174,19 @@ final class ProjectScreenViewModel {
             "updatedAt": ISO8601DateFormatter().string(from: Date()),
             "behavior": "Preserve project metadata and refresh display, sequence, design, and review state against the new show folder."
         ])
+        var flags = (active.snapshot["flags"]?.value as? [String: Any]) ?? [:]
+        let proposedRows = active.snapshot["proposed"]?.value as? [Any] ?? []
+        flags["proposalStale"] = true
+        flags["hasDraftProposal"] = !proposedRows.isEmpty
+        active.snapshot["flags"] = AnyCodable(flags)
+        var runtime = (active.snapshot["sequenceAgentRuntime"]?.value as? [String: Any]) ?? [:]
+        runtime["displayRelink"] = [
+            "previousShowFolder": previousShowFolder,
+            "showFolder": trimmedPath,
+            "reason": "show folder changed",
+            "changedAt": ISO8601DateFormatter().string(from: Date())
+        ]
+        active.snapshot["sequenceAgentRuntime"] = AnyCodable(runtime)
         do {
             let saved = try projectService.saveProject(active)
             workspace.setProject(saved)
