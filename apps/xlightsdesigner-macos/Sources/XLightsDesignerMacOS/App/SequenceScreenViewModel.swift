@@ -607,6 +607,7 @@ final class SequenceScreenViewModel {
         let flags = (snapshot["flags"] as? [String: Any]) ?? [:]
         let planOnlyMode = bool(flags["planOnlyMode"])
         let activeSequenceLoaded = bool(flags["activeSequenceLoaded"])
+        let proposalStale = bool(flags["proposalStale"]) && bool(flags["hasDraftProposal"])
         let projectTarget = ProjectTargetContext.resolve(project: project)
         let sequencePathInput = string(projectTarget.sequencePath, fallback: string(snapshot["sequencePathInput"]))
         let projectSequenceName = string(projectTarget.sequenceName, fallback: string(snapshot["activeSequence"]))
@@ -657,6 +658,14 @@ final class SequenceScreenViewModel {
         if timingReview.needsReview {
             validationIssues.append(SequenceValidationIssueModel(id: "timing-review-required", severity: .partial, code: "timing_review_required", message: timingReview.summaryText))
         }
+        if proposalStale {
+            validationIssues.append(SequenceValidationIssueModel(
+                id: "proposal-stale-after-relink",
+                severity: .blocked,
+                code: "proposal_stale_after_show_relink",
+                message: "Generated proposal is stale after the show-folder relink. Regenerate it before review or apply."
+            ))
+        }
 
         let overallState: PendingWorkState
         if validationIssues.contains(where: { $0.severity == .blocked }) {
@@ -687,6 +696,13 @@ final class SequenceScreenViewModel {
         }
         if timingReview.needsReview {
             banners.append(WorkflowBannerModel(id: "timing-review", text: timingReview.summaryText, state: .partial))
+        }
+        if proposalStale {
+            banners.append(WorkflowBannerModel(
+                id: "sequence-proposal-stale-after-relink",
+                text: "The generated proposal predates the show-folder relink. Regenerate the sequencing proposal before review or apply.",
+                state: .blocked
+            ))
         }
 
         var technicalWarnings: [String] = []

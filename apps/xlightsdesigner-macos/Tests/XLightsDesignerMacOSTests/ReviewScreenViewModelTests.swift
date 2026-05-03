@@ -526,6 +526,57 @@ private func reviewPendingWork(
     #expect(model.transientBanner?.text == "Pending work deferred. No sequence changes were applied.")
 }
 
+@MainActor
+@Test func reviewBlocksStaleProposalAfterShowFolderRelink() {
+    let workspace = ProjectWorkspace()
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: "/tmp/Christmas 2026.xdproj",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [
+                "flags": AnyCodable([
+                    "proposalStale": true,
+                    "hasDraftProposal": true
+                ])
+            ]
+        )
+    )
+    let model = ReviewScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: StubReviewPendingWorkService(pendingWork: reviewPendingWork()),
+        reviewExecutionService: StubReviewExecutionService { _, _, _ in
+            Issue.record("Stale relinked proposal should not apply.")
+            return ReviewApplyExecutionResult(
+                summary: "",
+                commandCount: 0,
+                nextRevision: "",
+                applyPath: "",
+                sequencePath: "",
+                sequenceBackupPath: "",
+                renderCurrentSummary: "",
+                renderCurrentError: "",
+                renderFeedbackCaptured: false,
+                renderFeedbackStatus: "",
+                renderFeedbackMissingRequirements: [],
+                metadataAssignmentCount: 0,
+                practicalValidationSummary: nil
+            )
+        }
+    )
+
+    model.refresh()
+
+    #expect(model.screenModel.actions.canApply == false)
+    #expect(model.screenModel.readiness.blockers.first?.contains("stale after the show-folder relink") == true)
+    #expect(model.screenModel.banners.contains { $0.id == "review-proposal-stale-after-relink" && $0.state == .blocked })
+}
+
 private func writeReviewJSON(_ object: [String: Any], to url: URL) throws {
     let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
     try data.write(to: url)

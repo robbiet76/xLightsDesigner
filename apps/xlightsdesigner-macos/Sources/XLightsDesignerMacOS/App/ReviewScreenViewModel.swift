@@ -208,6 +208,7 @@ final class ReviewScreenViewModel {
             ? (pendingWork?.activeSequenceName ?? "No active sequence")
             : targetContext.sequenceName
         let pendingMatchesTarget = pendingWorkMatchesTarget(project: project, pendingWork: pendingWork)
+        let proposalStale = projectProposalIsStale(project)
         let blockers = reviewBlockers(project: project, pendingWork: pendingWork)
         let canApply = blockers.isEmpty
         let pendingSummary = pendingWork?.proposalSummary ?? "There is no pending implementation context yet."
@@ -270,6 +271,9 @@ final class ReviewScreenViewModel {
                 warnings: hasProject
                     ? {
                         var warnings = ["Apply uses the owned xLights API and should be reviewed before it changes the active sequence."]
+                        if proposalStale {
+                            warnings.append("The generated proposal is stale after a show-folder relink. Regenerate it before applying.")
+                        }
                         if let pendingWork, pendingWork.riskNotes.isEmpty == false {
                             warnings.append(contentsOf: pendingWork.riskNotes.prefix(3))
                         }
@@ -308,6 +312,12 @@ final class ReviewScreenViewModel {
                     banners.append(WorkflowBannerModel(
                         id: "review-target-mismatch",
                         text: "Review artifacts do not match the current sequence focus. Regenerate the sequencing proposal for the selected sequence before applying.",
+                        state: .blocked
+                    ))
+                } else if proposalStale {
+                    banners.append(WorkflowBannerModel(
+                        id: "review-proposal-stale-after-relink",
+                        text: "This proposal was generated before the show-folder relink. Regenerate the sequencing proposal before applying.",
                         state: .blocked
                     ))
                 }
@@ -362,6 +372,9 @@ final class ReviewScreenViewModel {
     private static func reviewBlockers(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> [String] {
         guard let project else { return ["Project context missing."] }
         guard let pendingWork else { return ["Generate a sequencing proposal before apply."] }
+        if projectProposalIsStale(project) {
+            return ["Generated proposal is stale after the show-folder relink. Regenerate the sequencing proposal before apply."]
+        }
         if !pendingWorkMatchesTarget(project: project, pendingWork: pendingWork) {
             return ["Pending review artifacts do not match the selected project sequence."]
         }
@@ -387,6 +400,20 @@ final class ReviewScreenViewModel {
             return ["Generated proposal has no sequence commands to apply."]
         }
         return []
+    }
+
+    private static func projectProposalIsStale(_ project: ActiveProjectModel?) -> Bool {
+        guard let project else { return false }
+        let flags = (project.snapshot["flags"]?.value as? [String: Any]) ?? [:]
+        return bool(flags["proposalStale"]) && bool(flags["hasDraftProposal"])
+    }
+
+    private static func bool(_ value: Any?) -> Bool {
+        if let bool = value as? Bool { return bool }
+        if let string = value as? String {
+            return ["true", "yes", "1"].contains(string.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
+        }
+        return false
     }
 
     private static func pendingWorkMatchesTarget(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> Bool {
