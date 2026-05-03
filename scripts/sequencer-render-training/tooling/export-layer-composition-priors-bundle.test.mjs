@@ -51,5 +51,27 @@ test("layer composition bundle indexes priors by sequencer retrieval facets", ()
   const record = bundle.records["layer_composition:group_model_interplay:rgb_primary:group_then_model"];
   assert.equal(record.sourceObservationRef, "passes/group_then_model/composition-stack-observation.json");
   assert.equal(record.sourcePassPlanRef, "passes/group_then_model/pass-plan.json");
+  assert.deepEqual(Object.keys(record.scope).sort(), [
+    "compositionIntent",
+    "effectNames",
+    "family",
+    "geometryProfiles",
+    "layerIndexes",
+    "modelTypes",
+    "paletteProfile",
+    "targetScopes"
+  ].sort());
+  assert.deepEqual(Object.keys(record.observedEffects).sort(), [
+    "activeModelCountDeltaFromBaseline",
+    "brightnessVariationDirectionFromPrevious",
+    "colorSpreadDirectionFromBaseline",
+    "equivalentToPass",
+    "maxActiveNodeCountDeltaFromBaseline",
+    "motionDirectionFromPrevious",
+    "multicolorFrameRatioDirectionFromBaseline",
+    "sceneSpreadDirectionFromBaseline"
+  ].sort());
+  assert.equal(record.conditions, undefined);
+  assert.equal(record.artifactType, undefined);
   assert.equal(JSON.stringify(bundle).includes("/tmp/run-1/passes"), false);
 });

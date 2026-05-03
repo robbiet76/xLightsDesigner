@@ -67,6 +67,32 @@ function outcomeTags(prior = {}) {
   return unique(tags);
 }
 
+function compactScope(scope = {}) {
+  return {
+    family: str(scope.family),
+    paletteProfile: str(scope.paletteProfile),
+    compositionIntent: str(scope.compositionIntent),
+    targetScopes: unique(scope.targetScopes),
+    modelTypes: unique(scope.modelTypes),
+    geometryProfiles: unique(scope.geometryProfiles),
+    effectNames: unique(scope.effectNames),
+    layerIndexes: arr(scope.layerIndexes).map(Number).filter(Number.isFinite)
+  };
+}
+
+function compactObservedEffects(observed = {}) {
+  return {
+    activeModelCountDeltaFromBaseline: Number(observed.activeModelCountDeltaFromBaseline || 0),
+    maxActiveNodeCountDeltaFromBaseline: Number(observed.maxActiveNodeCountDeltaFromBaseline || 0),
+    sceneSpreadDirectionFromBaseline: str(observed.sceneSpreadDirectionFromBaseline),
+    colorSpreadDirectionFromBaseline: str(observed.colorSpreadDirectionFromBaseline),
+    multicolorFrameRatioDirectionFromBaseline: str(observed.multicolorFrameRatioDirectionFromBaseline),
+    motionDirectionFromPrevious: str(observed.motionDirectionFromPrevious),
+    brightnessVariationDirectionFromPrevious: str(observed.brightnessVariationDirectionFromPrevious),
+    equivalentToPass: str(observed.equivalentToPass)
+  };
+}
+
 function addIndex(index, key, priorId) {
   const normalized = str(key);
   if (!normalized) return;
@@ -96,7 +122,17 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
     const tags = outcomeTags(prior);
     const compactedPrior = compactRuntimePrior(prior, resolvedRunRoot);
     records[priorId] = {
-      ...compactedPrior,
+      priorId,
+      confidence: str(compactedPrior.confidence),
+      selectorReady: compactedPrior.selectorReady === true,
+      promotionState: str(compactedPrior.promotionState),
+      scope: compactScope(compactedPrior.scope || {}),
+      observedEffects: compactObservedEffects(compactedPrior.observedEffects || {}),
+      guidance: unique(compactedPrior.guidance),
+      safeguards: unique(compactedPrior.safeguards),
+      sourceObservationRef: str(compactedPrior.sourceObservationRef),
+      sourcePassPlanRef: str(compactedPrior.sourcePassPlanRef),
+      sourceExperimentId: str(compactedPrior.sourceExperimentId || compactedPrior.scope?.experimentId),
       outcomeTags: tags
     };
     addIndex(indexes.byFamily, prior.scope?.family, priorId);
