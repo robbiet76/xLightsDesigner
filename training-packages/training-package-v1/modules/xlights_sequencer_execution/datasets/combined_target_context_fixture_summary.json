@@ -1,0 +1,137 @@
+{
+  "datasetId": "combined_target_context_fixture_summary",
+  "version": "1.0",
+  "source": {
+    "fixture": "render-training-vendor-fixture/xlights_rgbeffects.xml",
+    "derivedFrom": [
+      "display/model-index.json",
+      "display/target-behavior.json"
+    ],
+    "privacy": "anonymized_compact_summary"
+  },
+  "purpose": "Portable eval summary proving sequence planning can use display/model-index structure and project target-behavior evidence together without name-specific custom-model logic.",
+  "examples": [
+    {
+      "id": "renamed_submodel_behavior_matches_model_index_fingerprint",
+      "displayModelIndexShape": {
+        "artifactType": "target_metadata_index_v1",
+        "artifactVersion": "1.0",
+        "records": [
+          {
+            "targetId": "custom_model_current",
+            "targetKind": "model",
+            "identity": {
+              "displayName": "Custom Model Current",
+              "rawType": "Custom",
+              "canonicalType": "custom",
+              "fingerprint": "tmf1:custom-model-a",
+              "fingerprintVersion": "target-metadata-fingerprint-v1"
+            },
+            "structure": {
+              "nodeLayout": {
+                "source": "layout.getModelNodes",
+                "nodeCount": 143,
+                "coordinateCoverage": 1,
+                "bounds": {
+                  "width": 50,
+                  "height": 69,
+                  "layers": 1
+                }
+              },
+              "customStructure": {
+                "profile": "custom_sparse_shape",
+                "traits": [
+                  "custom_grid",
+                  "api_node_layout",
+                  "sparse_custom_grid"
+                ],
+                "nodeCount": 143,
+                "submodels": {
+                  "count": 11
+                },
+                "construction": {
+                  "source": "layout.getModelNodes"
+                }
+              }
+            }
+          },
+          {
+            "targetId": "custom_model_current/submodel_region_1",
+            "targetKind": "submodel",
+            "identity": {
+              "displayName": "Custom Model Current / Region 1",
+              "rawType": "SubModel",
+              "canonicalType": "submodel",
+              "fingerprint": "tmf1:custom-model-a-region-1",
+              "fingerprintVersion": "target-metadata-fingerprint-v1",
+              "parentId": "custom_model_current",
+              "parentName": "Custom Model Current"
+            },
+            "structure": {
+              "submodelMetadata": {
+                "parentId": "custom_model_current",
+                "parentName": "Custom Model Current",
+                "siblingCount": 11,
+                "nodeCoverage": {
+                  "nodeCount": 12,
+                  "parentNodeCount": 143,
+                  "ratio": 0.12
+                },
+                "structureHints": [
+                  "custom_submodel",
+                  "partial_region"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "targetBehaviorShape": {
+        "artifactType": "project_target_behavior_learning_v1",
+        "artifactVersion": "1.0",
+        "records": [
+          {
+            "artifactType": "target_behavior_learning_record_v1",
+            "artifactVersion": "1.0",
+            "recordId": "tbl1:previous-name-region-on",
+            "targetId": "custom_model_previous/submodel_region_1",
+            "targetKind": "submodel",
+            "targetFingerprint": "tmf1:custom-model-a-region-1",
+            "fingerprintVersion": "target-metadata-fingerprint-v1",
+            "displayName": "Custom Model Previous / Region 1",
+            "parentId": "custom_model_previous",
+            "parentName": "Custom Model Previous",
+            "effectName": "On",
+            "effectFamily": "On",
+            "probeScope": "submodel",
+            "stats": {
+              "sampleCount": 3,
+              "positiveCount": 3,
+              "negativeCount": 0,
+              "lastObservedAt": "2026-05-03T13:45:01.702Z"
+            }
+          }
+        ]
+      },
+      "candidateSelectionExpectation": {
+        "candidateRealizationRef": {
+          "targetIds": [
+            "custom_model_current/submodel_region_1"
+          ],
+          "targetFingerprints": [
+            "tmf1:custom-model-a-region-1"
+          ],
+          "effectName": "On"
+        },
+        "expectedBehaviorRecordId": "tbl1:previous-name-region-on",
+        "expectedBehaviorScore": 1,
+        "planningPolicy": [
+          "match behavior evidence by fingerprint before current display name",
+          "treat the submodel as a first-class target",
+          "keep behavior evidence advisory and validation authoritative",
+          "do not infer custom-model semantics from target names"
+        ]
+      }
+    }
+  ]
+}

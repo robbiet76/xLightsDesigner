@@ -6,7 +6,8 @@
     "08-plan-execution-smoke.sh",
     "09-async-jobs-smoke.sh",
     "node scripts/sequencer-render-training/tooling/validate-display-model-index-training-fixture.mjs",
-    "node scripts/sequencer-render-training/tooling/validate-target-behavior-training-fixture.mjs"
+    "node scripts/sequencer-render-training/tooling/validate-target-behavior-training-fixture.mjs",
+    "node scripts/sequencer-render-training/tooling/validate-combined-target-context-training-fixture.mjs"
   ],
   "automatedCoverage": [
     {
@@ -91,6 +92,15 @@
         "target behavior fixture summaries satisfy target_behavior_evidence_v1 required fields",
         "fixture coverage includes a submodel behavior record with enriched parent and node coverage context",
         "fixture assertions keep project-local behavior evidence advisory and validation authoritative"
+      ]
+    },
+    {
+      "id": "combined_target_context_training_fixture_contract",
+      "source": "scripts/sequencer-render-training/tooling/validate-combined-target-context-training-fixture.mjs",
+      "asserts": [
+        "combined fixture summaries include display/model-index and display/target-behavior evidence together",
+        "candidate realization references carry model-index fingerprints that match behavior records after target rename",
+        "fixture assertions preserve first-class submodel targeting without target-name semantic inference"
       ]
     }
   ],

@@ -1,7 +1,7 @@
 {
   "packageId": "xlightsdesigner-training-package-v1",
   "schemaVersion": "1.0.0",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "createdAt": "2026-03-10",
   "status": "draft",
   "distributionModel": "byo-api-key",

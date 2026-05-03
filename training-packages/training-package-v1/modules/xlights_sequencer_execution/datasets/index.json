@@ -59,6 +59,11 @@
       "id": "target-behavior-evidence-fixture-summary",
       "type": "fixture-summary",
       "path": "training-packages/training-package-v1/modules/xlights_sequencer_execution/datasets/target_behavior_evidence_fixture_summary.json"
+    },
+    {
+      "id": "combined-target-context-fixture-summary",
+      "type": "fixture-summary",
+      "path": "training-packages/training-package-v1/modules/xlights_sequencer_execution/datasets/combined_target_context_fixture_summary.json"
     }
   ]
 }

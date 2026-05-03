@@ -385,3 +385,102 @@ test("candidate selection matches project target behavior by fingerprint before 
   assert.equal(wrong.behaviorEvidenceCount, 0);
   assert.ok(renamed.selectionScore > wrong.selectionScore);
 });
+
+test("candidate selection uses model-index fingerprints to apply renamed submodel behavior evidence", () => {
+  const modelIndexSubmodel = {
+    targetId: "CustomFaceCurrent/@Mouth",
+    targetKind: "submodel",
+    identity: {
+      fingerprint: "tmf1:custom-mouth",
+      fingerprintVersion: "target-metadata-fingerprint-v1",
+      parentId: "CustomFaceCurrent",
+      parentName: "CustomFaceCurrent"
+    },
+    structure: {
+      submodelMetadata: {
+        parentId: "CustomFaceCurrent",
+        siblingCount: 11,
+        nodeCoverage: { nodeCount: 12, parentNodeCount: 143, ratio: 0.12 },
+        structureHints: ["custom_submodel"]
+      }
+    }
+  };
+
+  const out = buildCandidateSelectionV1({
+    intentEnvelope: {
+      artifactId: "intent-combined-target-context",
+      novelty: { explorationPressure: "medium", reuseTolerance: "medium" }
+    },
+    realizationCandidates: {
+      artifactId: "candidates-combined-target-context",
+      candidates: [
+        {
+          candidateId: "candidate-model-index-fingerprint",
+          realizationRefs: [
+            {
+              targetIds: [modelIndexSubmodel.targetId],
+              targetFingerprints: [modelIndexSubmodel.identity.fingerprint],
+              effectName: "On"
+            }
+          ],
+          fitSignals: { overallFit: "medium" },
+          revisionSignals: { revisionScore: 0.6 },
+          noveltySignals: { noveltyScore: 0.5, memoryPenalty: 0, oscillationPenalty: 0, oscillationRisk: "low" },
+          riskSignals: {
+            attentionConflictRisk: "medium",
+            layeringConflictRisk: "medium",
+            complexityRisk: "medium",
+            renderUncertainty: "medium"
+          }
+        },
+        {
+          candidateId: "candidate-name-only-miss",
+          realizationRefs: [
+            {
+              targetIds: [modelIndexSubmodel.targetId],
+              effectName: "On"
+            }
+          ],
+          fitSignals: { overallFit: "medium" },
+          revisionSignals: { revisionScore: 0.6 },
+          noveltySignals: { noveltyScore: 0.5, memoryPenalty: 0, oscillationPenalty: 0, oscillationRisk: "low" },
+          riskSignals: {
+            attentionConflictRisk: "medium",
+            layeringConflictRisk: "medium",
+            complexityRisk: "medium",
+            renderUncertainty: "medium"
+          }
+        }
+      ]
+    },
+    targetBehaviorLearning: {
+      artifactPath: "/project/display/target-behavior.json",
+      records: [
+        {
+          recordId: "tbl1:previous-custom-mouth",
+          targetId: "CustomFacePrevious/@Mouth",
+          targetKind: "submodel",
+          targetFingerprint: "tmf1:custom-mouth",
+          effectName: "On",
+          effectFamily: "On",
+          probeScope: "submodel",
+          stats: { sampleCount: 3, positiveCount: 3, negativeCount: 0 }
+        }
+      ]
+    },
+    selectionContext: {
+      phase: "proposal",
+      seed: "proposal::combined-target-context",
+      explorationEnabled: true
+    }
+  });
+
+  const fingerprintMatched = out.scoredCandidates.find((row) => row.candidateId === "candidate-model-index-fingerprint");
+  const nameOnlyMiss = out.scoredCandidates.find((row) => row.candidateId === "candidate-name-only-miss");
+
+  assert.equal(fingerprintMatched.behaviorEvidenceCount, 1);
+  assert.deepEqual(fingerprintMatched.behaviorRecordIds, ["tbl1:previous-custom-mouth"]);
+  assert.equal(fingerprintMatched.behaviorScore, 1);
+  assert.equal(nameOnlyMiss.behaviorEvidenceCount, 0);
+  assert.ok(fingerprintMatched.selectionScore > nameOnlyMiss.selectionScore);
+});
