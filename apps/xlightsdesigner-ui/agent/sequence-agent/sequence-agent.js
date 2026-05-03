@@ -576,6 +576,7 @@ function sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments = []) {
         targetId,
         tags: normArray(assignment?.tags).map((row) => normText(row)).filter(Boolean),
         semanticHints: normArray(assignment?.semanticHints).map((row) => normText(row)).filter(Boolean),
+        submodelHints: normArray(assignment?.submodelHints).map((row) => normText(row)).filter(Boolean),
         effectAvoidances: normArray(assignment?.effectAvoidances).map((row) => normText(row)).filter(Boolean),
         rolePreference: normText(assignment?.rolePreference),
         visualHintDefinitions: normArray(assignment?.visualHintDefinitions)

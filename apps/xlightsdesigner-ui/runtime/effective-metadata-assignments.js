@@ -10,9 +10,14 @@ function norm(value = "") {
 }
 
 function buildMergedAssignment(baseAssignment = {}, preference = {}, definitionIndex = new Map()) {
-  const semanticHints = Array.from(new Set([
-    ...arr(preference?.semanticHints),
+  const submodelHints = Array.from(new Set([
+    ...arr(baseAssignment?.submodelHints),
     ...arr(preference?.submodelHints)
+  ].map(norm).filter(Boolean)));
+  const semanticHints = Array.from(new Set([
+    ...arr(baseAssignment?.semanticHints),
+    ...arr(preference?.semanticHints),
+    ...submodelHints
   ].map(norm).filter(Boolean)));
   const tags = Array.from(new Set([
     ...arr(baseAssignment?.tags),
@@ -23,6 +28,7 @@ function buildMergedAssignment(baseAssignment = {}, preference = {}, definitionI
     ...baseAssignment,
     tags,
     semanticHints,
+    submodelHints,
     visualHintDefinitions: semanticHints
       .map((name) => definitionIndex.get(name) || null)
       .filter((row) => row && row.status === "defined"),

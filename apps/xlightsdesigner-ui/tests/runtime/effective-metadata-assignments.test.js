@@ -59,3 +59,18 @@ test("effective metadata assignments attach only defined visual hint records", (
   assert.equal(out.length, 1);
   assert.deepEqual(out[0].visualHintDefinitions.map((row) => row.name), ["Flood Light"]);
 });
+
+test("effective metadata assignments preserve submodel hints as distinct planner metadata", () => {
+  const out = buildEffectiveMetadataAssignments([
+    { targetId: "Face/Mouth", targetType: "submodel", tags: ["existing"], semanticHints: ["character"] }
+  ], {
+    "Face/Mouth": {
+      submodelHints: ["Mouth", "Lyric"]
+    }
+  });
+
+  assert.equal(out.length, 1);
+  assert.deepEqual(out[0].submodelHints, ["Mouth", "Lyric"]);
+  assert.deepEqual(out[0].semanticHints, ["Character", "Mouth", "Lyric"]);
+  assert.deepEqual(out[0].tags, ["Existing", "Character", "Mouth", "Lyric"]);
+});

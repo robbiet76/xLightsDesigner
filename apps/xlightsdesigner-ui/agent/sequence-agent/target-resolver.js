@@ -120,6 +120,7 @@ export function resolveTargetSelection({
   const metadataTermsForAssignment = (assignment = {}) => {
     const tags = Array.isArray(assignment?.tags) ? assignment.tags : [];
     const semanticHints = Array.isArray(assignment?.semanticHints) ? assignment.semanticHints : [];
+    const submodelHints = Array.isArray(assignment?.submodelHints) ? assignment.submodelHints : [];
     const visualHintDefinitions = Array.isArray(assignment?.visualHintDefinitions) ? assignment.visualHintDefinitions : [];
     const definedHintTerms = visualHintDefinitions.flatMap((definition) => {
       const status = normalizeName(definition?.status);
@@ -130,7 +131,7 @@ export function resolveTargetSelection({
         ...(Array.isArray(definition?.behavioralTags) ? definition.behavioralTags : [])
       ];
     });
-    return [...new Set([...tags, ...semanticHints, ...definedHintTerms].map(normalizeName).filter(Boolean))];
+    return [...new Set([...tags, ...semanticHints, ...submodelHints, ...definedHintTerms].map(normalizeName).filter(Boolean))];
   };
 
   const isWritableTarget = (target) => {

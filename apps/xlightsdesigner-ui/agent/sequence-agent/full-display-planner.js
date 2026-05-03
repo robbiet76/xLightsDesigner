@@ -267,7 +267,8 @@ function normalizedMetadataRoleForTarget(targetId = "", metadataAssignmentIndex 
   if (/support|background|framing|frame|rhythm|texture|volume|foundation/.test(explicitRole)) return "support";
   const text = [
     ...normArray(assignment?.tags),
-    ...normArray(assignment?.semanticHints)
+    ...normArray(assignment?.semanticHints),
+    ...normArray(assignment?.submodelHints)
   ].join(" ").toLowerCase();
   if (!text) return "";
   if (/primary|lead|hero|focal|center stage/.test(text)) return "lead";

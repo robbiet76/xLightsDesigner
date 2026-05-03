@@ -254,7 +254,11 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
   for (const assignment of metadataAssignments || []) {
     const targetId = str(assignment?.targetId);
     if (!targetId) continue;
-    const tags = arr(assignment?.tags).map((row) => normalizeName(row)).filter(Boolean);
+    const tags = [
+      ...arr(assignment?.tags),
+      ...arr(assignment?.semanticHints),
+      ...arr(assignment?.submodelHints)
+    ].map((row) => normalizeName(row)).filter(Boolean);
     if (tags.length) tagsByTargetId.set(targetId, tags);
   }
 
@@ -318,9 +322,16 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
       lines.push(`${scope} / ${targetName} / use this prop as an accent layer instead of broad base coverage`);
     }
 
-    const semanticHints = arr(assignment?.semanticHints).map((row) => str(row)).filter(Boolean);
+    const submodelHints = arr(assignment?.submodelHints).map((row) => str(row)).filter(Boolean);
+    const submodelHintKeys = new Set(submodelHints.map((row) => normalizeName(row)));
+    const semanticHints = arr(assignment?.semanticHints)
+      .map((row) => str(row))
+      .filter((row) => row && !submodelHintKeys.has(normalizeName(row)));
     if (semanticHints.length) {
       lines.push(`${scope} / ${targetName} / this target can support these visual treatments when they fit the section intent: ${semanticHints.join(", ")}`);
+    }
+    if (submodelHints.length) {
+      lines.push(`${scope} / ${targetName} / this submodel region can support these scoped treatments when they fit the section intent: ${submodelHints.join(", ")}`);
     }
     const definedHintIntents = arr(assignment?.visualHintDefinitions)
       .map((row) => ({

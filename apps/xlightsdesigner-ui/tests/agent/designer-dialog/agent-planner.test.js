@@ -177,6 +177,55 @@ test('resolveTargets honors submodel metadata hints as scoped metadata terms', (
   assert.deepEqual(targets.map((t) => t.id), ['MegaTree/TopHalf']);
 });
 
+test('resolveTargets honors raw submodelHints without relying on submodel names', () => {
+  const normalizedIntent = normalizeIntent({
+    promptText: 'Use the lyric detail for the phrase',
+    selectedTagNames: ['lyric']
+  });
+
+  const scopedMetadataAssignments = [
+    {
+      targetId: 'MegaTree/TopHalf',
+      targetType: 'submodel',
+      tags: [],
+      semanticHints: [],
+      submodelHints: ['lyric']
+    }
+  ];
+
+  const targets = resolveTargets({
+    normalizedIntent,
+    models,
+    submodels,
+    metadataAssignments: scopedMetadataAssignments,
+    displayElements
+  });
+
+  assert.deepEqual(targets.map((t) => t.id), ['MegaTree/TopHalf']);
+});
+
+test('proposal guidance carries submodel hints into planner context', () => {
+  const result = buildProposalFromIntent({
+    promptText: 'Use the lyric detail for the phrase',
+    selectedTagNames: ['lyric'],
+    models,
+    submodels,
+    metadataAssignments: [
+      {
+        targetId: 'MegaTree/TopHalf',
+        targetType: 'submodel',
+        tags: [],
+        semanticHints: [],
+        submodelHints: ['lyric']
+      }
+    ],
+    displayElements
+  });
+
+  assert.deepEqual(result.targets.map((t) => t.id), ['MegaTree/TopHalf']);
+  assert.ok(result.proposalLines.some((line) => /submodel region.*lyric/i.test(line)));
+});
+
 test('resolveTargets honors defined visual hint semantics as scoped metadata terms', () => {
   const normalizedIntent = normalizeIntent({
     promptText: 'Focus the precise localized crown detail',
