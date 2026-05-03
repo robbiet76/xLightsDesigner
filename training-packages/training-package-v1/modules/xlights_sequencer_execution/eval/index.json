@@ -4,7 +4,8 @@
   "keySuites": [
     "03-sequencer-mutation-smoke.sh",
     "08-plan-execution-smoke.sh",
-    "09-async-jobs-smoke.sh"
+    "09-async-jobs-smoke.sh",
+    "node scripts/sequencer-render-training/tooling/validate-display-model-index-training-fixture.mjs"
   ],
   "automatedCoverage": [
     {
@@ -71,6 +72,15 @@
       "asserts": [
         "display/model-index target fingerprints load as project-local identity data",
         "current display names can change without becoming the durable metadata key"
+      ]
+    },
+    {
+      "id": "display_model_index_training_fixture_contract",
+      "source": "scripts/sequencer-render-training/tooling/validate-display-model-index-training-fixture.mjs",
+      "asserts": [
+        "custom model fixture summaries satisfy display_model_index_v1 required fields",
+        "fixture coverage includes at least one custom model record and one first-class submodel record",
+        "fixture assertions preserve shared target collection behavior and forbid semantic inference from target names"
       ]
     }
   ],

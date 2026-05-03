@@ -26,6 +26,20 @@
               "fingerprintVersion": "target-metadata-fingerprint-v1"
             },
             "structure": {
+              "nodeLayout": {
+                "source": "layout.getModelNodes",
+                "nodeCount": 143,
+                "coordinateCoverage": 1,
+                "bounds": {
+                  "width": 50,
+                  "height": 69,
+                  "layers": 1
+                },
+                "orderSummary": {
+                  "continuity": "partial",
+                  "sampledNodeCount": 12
+                }
+              },
               "customStructure": {
                 "profile": "custom_sparse_shape",
                 "traits": [
@@ -54,6 +68,7 @@
             "targetKind": "submodel",
             "identity": {
               "displayName": "Custom Model A / Region 1",
+              "rawType": "SubModel",
               "canonicalType": "submodel",
               "fingerprint": "tmf1:custom-model-a-region-1",
               "fingerprintVersion": "target-metadata-fingerprint-v1",
