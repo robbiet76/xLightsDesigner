@@ -11,7 +11,7 @@ import {
   planLayerCompositionRetentionCleanup
 } from "./apply-layer-composition-retention.mjs";
 
-const DEFAULT_GEOMETRY = "scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json";
+const DEFAULT_GEOMETRY = process.env.XLD_RENDER_TRAINING_GEOMETRY || "/tmp/xld-render-training-proofs/preview-scene-geometry-render-training-live.json";
 const DEFAULT_FRAME_OFFSETS = "0,4,8,16,32,48,64,78";
 
 function readJson(filePath) {

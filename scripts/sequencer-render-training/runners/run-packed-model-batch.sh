@@ -233,7 +233,7 @@ model_channel_count="$(jq -r '.channelCount' <<<"${model_metadata_json}")"
 model_node_count="$(jq -r '.nodeCount' <<<"${model_metadata_json}")"
 model_channels_per_node="$(jq -r '.channelsPerNode' <<<"${model_metadata_json}")"
 decoder_bin="$("${ROOT_DIR}/tooling/build-fseq-window-decoder.sh")"
-geometry_artifact_path="${GEOMETRY_ARTIFACT_PATH:-${ROOT_DIR}/proofs/preview-scene-geometry-render-training-live.json}"
+geometry_artifact_path="${GEOMETRY_ARTIFACT_PATH:-/tmp/xld-render-training-proofs/preview-scene-geometry-render-training-live.json}"
 preview_window_frame_offsets="${PREVIEW_WINDOW_FRAME_OFFSETS:-8,10,12}"
 pack_id="$(jq -r '.packId // "packed-batch"' "${MANIFEST_FILE}")"
 # Keep generated working sequences in the show root. xLights resolves the show

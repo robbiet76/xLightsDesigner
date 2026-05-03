@@ -23,6 +23,8 @@ Primary system spec:
 - `tooling/`: shared helpers, export tools, build helpers, and extractors
 - `analysis/`: decoded render analysis helpers
 - `manifests/`: active render-sweep manifests
+- `proofs/`: compact proof summaries and regression fixtures only; detailed
+  proof payloads regenerate locally under `/tmp/xld-render-training-proofs`
 - `archive/`: reserved for historical or superseded material
 - `manifest.v1.json`: tracked lifecycle inventory for this subtree
 

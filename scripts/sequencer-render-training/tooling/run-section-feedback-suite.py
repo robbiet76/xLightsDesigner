@@ -6,7 +6,11 @@ import subprocess
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 PROOFS_DIR = os.path.join(ROOT_DIR, "scripts/sequencer-render-training/proofs")
-GEOMETRY = os.path.join(PROOFS_DIR, "preview-scene-geometry-render-training-live.json")
+OUT_DIR = os.environ.get("XLD_RENDER_TRAINING_PROOF_OUT_DIR", "/tmp/xld-render-training-proofs")
+GEOMETRY = os.environ.get(
+    "XLD_RENDER_TRAINING_GEOMETRY",
+    os.path.join(OUT_DIR, "preview-scene-geometry-render-training-live.json"),
+)
 SCENARIOS = os.path.join(os.path.dirname(__file__), "section-proof-scenarios.json")
 
 
@@ -31,6 +35,12 @@ def require_scope_fields(scenario):
 
 
 def main():
+    if not os.path.exists(GEOMETRY):
+        raise RuntimeError(
+            f"Missing geometry artifact: {GEOMETRY}. "
+            "Set XLD_RENDER_TRAINING_GEOMETRY to a local preview_scene_geometry_v1 export."
+        )
+    os.makedirs(OUT_DIR, exist_ok=True)
     scenarios = load_json(SCENARIOS)
     suite = {
         "artifactType": "sequence_section_feedback_suite_v1",
@@ -46,7 +56,7 @@ def main():
         scenario_id = scenario["scenarioId"]
         source_windows = []
         for source in scenario["compositeSources"]:
-            path = os.path.join(PROOFS_DIR, f"preview-scene-window-{scenario_id}-{source['modelName']}.json")
+            path = os.path.join(OUT_DIR, f"preview-scene-window-{scenario_id}-{source['modelName']}.json")
             run([
                 "python3",
                 "scripts/sequencer-render-training/tooling/reconstruct-preview-scene-window.py",
@@ -59,7 +69,7 @@ def main():
             ])
             source_windows.append(path)
 
-        window_path = os.path.join(PROOFS_DIR, f"preview-scene-window-{scenario_id}.json")
+        window_path = os.path.join(OUT_DIR, f"preview-scene-window-{scenario_id}.json")
         compose_cmd = [
             "python3",
             "scripts/sequencer-render-training/tooling/compose-preview-scene-window.py",
@@ -69,12 +79,12 @@ def main():
         compose_cmd.extend(["--out", window_path])
         run(compose_cmd)
 
-        observation_path = os.path.join(PROOFS_DIR, f"render-observation-{scenario_id}.json")
-        critique_path = os.path.join(PROOFS_DIR, f"sequence-critique-{scenario_id}.json")
-        gate_path = os.path.join(PROOFS_DIR, f"sequence-revision-gate-{scenario_id}.json")
-        artistic_goal_path = os.path.join(PROOFS_DIR, f"sequence-artistic-goal-{scenario_id}.json")
-        revision_objective_path = os.path.join(PROOFS_DIR, f"sequence-revision-objective-{scenario_id}.json")
-        record_path = os.path.join(PROOFS_DIR, f"sequence-learning-record-{scenario_id}.json")
+        observation_path = os.path.join(OUT_DIR, f"render-observation-{scenario_id}.json")
+        critique_path = os.path.join(OUT_DIR, f"sequence-critique-{scenario_id}.json")
+        gate_path = os.path.join(OUT_DIR, f"sequence-revision-gate-{scenario_id}.json")
+        artistic_goal_path = os.path.join(OUT_DIR, f"sequence-artistic-goal-{scenario_id}.json")
+        revision_objective_path = os.path.join(OUT_DIR, f"sequence-revision-objective-{scenario_id}.json")
+        record_path = os.path.join(OUT_DIR, f"sequence-learning-record-{scenario_id}.json")
 
         run([
             "python3",
@@ -166,7 +176,7 @@ def main():
             "cycleOutcome": record["outcome"]["cycleOutcome"],
         })
 
-    summary_path = os.path.join(PROOFS_DIR, "sequence-section-feedback-suite-summary.json")
+    summary_path = os.path.join(OUT_DIR, "sequence-section-feedback-suite-summary.json")
     with open(summary_path, "w", encoding="utf-8") as handle:
         json.dump(suite, handle, indent=2)
         handle.write("\n")

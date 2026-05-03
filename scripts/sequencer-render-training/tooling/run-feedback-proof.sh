@@ -4,12 +4,20 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "${ROOT_DIR}"
 
-GEOMETRY="scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json"
+GEOMETRY="${XLD_RENDER_TRAINING_GEOMETRY:-/tmp/xld-render-training-proofs/preview-scene-geometry-render-training-live.json}"
 FSEQ="render-training/fseq/singlestrand-treeflat-stage1-coverage-v1-chaseSize-registry-v1.20260319T201838Z.fseq"
-WINDOW="scripts/sequencer-render-training/proofs/preview-scene-window-render-training-treeflat.json"
-OBS="scripts/sequencer-render-training/proofs/render-observation-render-training-treeflat.json"
-CRITIQUE="scripts/sequencer-render-training/proofs/sequence-critique-render-training-treeflat.json"
-RECORD="scripts/sequencer-render-training/proofs/sequence-learning-record-render-training-treeflat.json"
+OUT_DIR="${XLD_RENDER_TRAINING_PROOF_OUT_DIR:-/tmp/xld-render-training-proofs}"
+WINDOW="${OUT_DIR}/preview-scene-window-render-training-treeflat.json"
+OBS="${OUT_DIR}/render-observation-render-training-treeflat.json"
+CRITIQUE="${OUT_DIR}/sequence-critique-render-training-treeflat.json"
+RECORD="${OUT_DIR}/sequence-learning-record-render-training-treeflat.json"
+
+if [[ ! -f "${GEOMETRY}" ]]; then
+  printf 'Missing geometry artifact: %s\nSet XLD_RENDER_TRAINING_GEOMETRY to a local preview_scene_geometry_v1 export.\n' "${GEOMETRY}" >&2
+  exit 2
+fi
+
+mkdir -p "${OUT_DIR}"
 
 python3 scripts/sequencer-render-training/tooling/reconstruct-preview-scene-window.py \
   --geometry "${GEOMETRY}" \

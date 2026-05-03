@@ -8,8 +8,7 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 PROOFS_DIR = os.path.join(ROOT_DIR, "scripts/sequencer-render-training/proofs")
 MACRO_SCENARIOS = os.path.join(os.path.dirname(__file__), "feedback-proof-scenarios.json")
 SECTION_SCENARIOS = os.path.join(os.path.dirname(__file__), "section-proof-scenarios.json")
-MACRO_SUMMARY = os.path.join(PROOFS_DIR, "sequence-feedback-suite-summary.json")
-SECTION_SUMMARY = os.path.join(PROOFS_DIR, "sequence-section-feedback-suite-summary.json")
+REGRESSION_FIXTURES = os.path.join(PROOFS_DIR, "feedback-regression-fixtures.json")
 
 
 def load_json(path):
@@ -47,11 +46,11 @@ def in_range(value, bounds):
 def validate_scope_semantics(scenario, record, errors):
     scenario_id = scenario["scenarioId"]
     expected = expected_scope(scenario)
-    requested_scope = record.get("context", {}).get("requestedScope") or {}
-    section_scope = record.get("context", {}).get("sectionScope") or []
-    target_scope = record.get("context", {}).get("targetScope") or []
-    section_targets = record.get("revisionBatch", {}).get("sectionTargets") or []
-    target_ids = record.get("revisionBatch", {}).get("targetIds") or []
+    requested_scope = record.get("requestedScope") or {}
+    section_scope = record.get("sectionScope") or []
+    target_scope = record.get("targetScope") or []
+    section_targets = record.get("sectionTargets") or []
+    target_ids = record.get("targetIds") or []
 
     expected_sections = split_scope_values(scenario.get("sectionScope"))
     expected_targets = split_scope_values(scenario.get("targetScope"))
@@ -95,102 +94,102 @@ def validate_scope_semantics(scenario, record, errors):
             )
 
 
-def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors):
-    summary = load_json(summary_path)
+def validate_fixture_suite(suite_name, suite, scenarios_path, expected_ladder_level, errors):
     scenarios = {row["scenarioId"]: row for row in load_json(scenarios_path)}
 
-    summary_ids = {row["scenarioId"] for row in summary["scenarios"]}
+    summary_ids = {row["scenarioId"] for row in suite["scenarios"]}
     scenario_ids = set(scenarios)
     if summary_ids != scenario_ids:
         missing = sorted(scenario_ids - summary_ids)
         extra = sorted(summary_ids - scenario_ids)
         if missing:
-            errors.append(f"{os.path.basename(summary_path)} missing scenarios: {', '.join(missing)}")
+            errors.append(f"{suite_name} fixture missing scenarios: {', '.join(missing)}")
         if extra:
-            errors.append(f"{os.path.basename(summary_path)} has unexpected scenarios: {', '.join(extra)}")
+            errors.append(f"{suite_name} fixture has unexpected scenarios: {', '.join(extra)}")
 
-    for row in summary["scenarios"]:
+    for row in suite["scenarios"]:
         scenario = scenarios[row["scenarioId"]]
         expected = expected_scope(scenario)
         actual = row.get("requestScope") or {}
+        summary = row.get("summary") or {}
         if actual != expected:
             errors.append(
                 f"{row['scenarioId']} summary scope mismatch: expected {expected}, got {actual}"
             )
 
         expected_focus = scenario.get("expectedFocusRead")
-        if expected_focus and row.get("focusRead") != expected_focus:
+        if expected_focus and summary.get("focusRead") != expected_focus:
             errors.append(
-                f"{row['scenarioId']} focusRead mismatch: expected {expected_focus}, got {row.get('focusRead')}"
+                f"{row['scenarioId']} focusRead mismatch: expected {expected_focus}, got {summary.get('focusRead')}"
             )
 
         expected_intent = scenario.get("expectedIntentRead")
-        if expected_intent and row.get("intentRead") != expected_intent:
+        if expected_intent and summary.get("intentRead") != expected_intent:
             errors.append(
-                f"{row['scenarioId']} intentRead mismatch: expected {expected_intent}, got {row.get('intentRead')}"
+                f"{row['scenarioId']} intentRead mismatch: expected {expected_intent}, got {summary.get('intentRead')}"
             )
 
         expected_composition = scenario.get("expectedCompositionRead")
-        if expected_composition and row.get("compositionRead") != expected_composition:
+        if expected_composition and summary.get("compositionRead") != expected_composition:
             errors.append(
-                f"{row['scenarioId']} compositionRead mismatch: expected {expected_composition}, got {row.get('compositionRead')}"
+                f"{row['scenarioId']} compositionRead mismatch: expected {expected_composition}, got {summary.get('compositionRead')}"
             )
 
         expected_family_balance = scenario.get("expectedFamilyBalanceRead")
-        if expected_family_balance and row.get("familyBalanceRead") != expected_family_balance:
+        if expected_family_balance and summary.get("familyBalanceRead") != expected_family_balance:
             errors.append(
-                f"{row['scenarioId']} familyBalanceRead mismatch: expected {expected_family_balance}, got {row.get('familyBalanceRead')}"
+                f"{row['scenarioId']} familyBalanceRead mismatch: expected {expected_family_balance}, got {summary.get('familyBalanceRead')}"
             )
 
         expected_cycle_outcome = scenario.get("expectedCycleOutcome")
-        if expected_cycle_outcome and row.get("cycleOutcome") != expected_cycle_outcome:
+        if expected_cycle_outcome and summary.get("cycleOutcome") != expected_cycle_outcome:
             errors.append(
-                f"{row['scenarioId']} cycleOutcome mismatch: expected {expected_cycle_outcome}, got {row.get('cycleOutcome')}"
+                f"{row['scenarioId']} cycleOutcome mismatch: expected {expected_cycle_outcome}, got {summary.get('cycleOutcome')}"
             )
 
         expected_highest_failing_level = scenario.get("expectedHighestFailingLevel")
-        if expected_highest_failing_level and row.get("highestFailingLevel") != expected_highest_failing_level:
+        if expected_highest_failing_level and summary.get("highestFailingLevel") != expected_highest_failing_level:
             errors.append(
-                f"{row['scenarioId']} highestFailingLevel mismatch: expected {expected_highest_failing_level}, got {row.get('highestFailingLevel')}"
+                f"{row['scenarioId']} highestFailingLevel mismatch: expected {expected_highest_failing_level}, got {summary.get('highestFailingLevel')}"
             )
 
         expected_gate_decision = scenario.get("expectedGateDecision")
-        if expected_gate_decision and row.get("gateDecision") != expected_gate_decision:
+        if expected_gate_decision and summary.get("gateDecision") != expected_gate_decision:
             errors.append(
-                f"{row['scenarioId']} gateDecision mismatch: expected {expected_gate_decision}, got {row.get('gateDecision')}"
+                f"{row['scenarioId']} gateDecision mismatch: expected {expected_gate_decision}, got {summary.get('gateDecision')}"
             )
 
         expected_next_owner = scenario.get("expectedNextOwner")
-        if expected_next_owner and row.get("nextOwner") != expected_next_owner:
+        if expected_next_owner and summary.get("nextOwner") != expected_next_owner:
             errors.append(
-                f"{row['scenarioId']} nextOwner mismatch: expected {expected_next_owner}, got {row.get('nextOwner')}"
+                f"{row['scenarioId']} nextOwner mismatch: expected {expected_next_owner}, got {summary.get('nextOwner')}"
             )
 
         expected_next_revision_level = scenario.get("expectedNextRevisionLevel")
-        if expected_next_revision_level and row.get("nextRevisionLevel") != expected_next_revision_level:
+        if expected_next_revision_level and summary.get("nextRevisionLevel") != expected_next_revision_level:
             errors.append(
-                f"{row['scenarioId']} nextRevisionLevel mismatch: expected {expected_next_revision_level}, got {row.get('nextRevisionLevel')}"
+                f"{row['scenarioId']} nextRevisionLevel mismatch: expected {expected_next_revision_level}, got {summary.get('nextRevisionLevel')}"
             )
 
         expected_designer_direction = scenario.get("expectedDesignerDirection")
-        if expected_designer_direction and row.get("designerDirection") != expected_designer_direction:
+        if expected_designer_direction and summary.get("designerDirection") != expected_designer_direction:
             errors.append(
-                f"{row['scenarioId']} designerDirection mismatch: expected {expected_designer_direction}, got {row.get('designerDirection')}"
+                f"{row['scenarioId']} designerDirection mismatch: expected {expected_designer_direction}, got {summary.get('designerDirection')}"
             )
 
         expected_sequencer_direction = scenario.get("expectedSequencerDirection")
-        if expected_sequencer_direction and row.get("sequencerDirection") != expected_sequencer_direction:
+        if expected_sequencer_direction and summary.get("sequencerDirection") != expected_sequencer_direction:
             errors.append(
-                f"{row['scenarioId']} sequencerDirection mismatch: expected {expected_sequencer_direction}, got {row.get('sequencerDirection')}"
+                f"{row['scenarioId']} sequencerDirection mismatch: expected {expected_sequencer_direction}, got {summary.get('sequencerDirection')}"
             )
 
-        critique = load_json(row["critiqueArtifactPath"])
+        critique = row.get("critique") or {}
         if critique.get("ladderLevel") != expected_ladder_level:
             errors.append(
                 f"{row['scenarioId']} critique ladder mismatch: expected {expected_ladder_level}, got {critique.get('ladderLevel')}"
             )
 
-        gate = load_json(row["revisionGateArtifactPath"])
+        gate = row.get("gate") or {}
         if expected_highest_failing_level and gate.get("highestFailingLevel") != expected_highest_failing_level:
             errors.append(
                 f"{row['scenarioId']} gate artifact highestFailingLevel mismatch: expected {expected_highest_failing_level}, got {gate.get('highestFailingLevel')}"
@@ -208,18 +207,17 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
                 f"{row['scenarioId']} gate artifact nextRevisionLevel mismatch: expected {expected_next_revision_level}, got {gate.get('nextRevisionLevel')}"
             )
 
-        revision_objective = load_json(row["revisionObjectiveArtifactPath"])
-        if expected_designer_direction and revision_objective.get("designerDirection", {}).get("artisticCorrection") != expected_designer_direction:
+        revision_objective = row.get("revisionObjective") or {}
+        if expected_designer_direction and revision_objective.get("designerDirection") != expected_designer_direction:
             errors.append(
-                f"{row['scenarioId']} revision objective designerDirection mismatch: expected {expected_designer_direction}, got {revision_objective.get('designerDirection', {}).get('artisticCorrection')}"
+                f"{row['scenarioId']} revision objective designerDirection mismatch: expected {expected_designer_direction}, got {revision_objective.get('designerDirection')}"
             )
-        if expected_sequencer_direction and revision_objective.get("sequencerDirection", {}).get("executionObjective") != expected_sequencer_direction:
+        if expected_sequencer_direction and revision_objective.get("sequencerDirection") != expected_sequencer_direction:
             errors.append(
-                f"{row['scenarioId']} revision objective sequencerDirection mismatch: expected {expected_sequencer_direction}, got {revision_objective.get('sequencerDirection', {}).get('executionObjective')}"
+                f"{row['scenarioId']} revision objective sequencerDirection mismatch: expected {expected_sequencer_direction}, got {revision_objective.get('sequencerDirection')}"
             )
 
-        observation = load_json(row["observationArtifactPath"])
-        macro = observation.get("macro", {})
+        macro = row.get("observation") or {}
         expected_active_models = scenario.get("expectedActiveModelNames")
         if expected_active_models and sorted(macro.get("activeModelNames", [])) != sorted(expected_active_models):
             errors.append(
@@ -250,8 +248,8 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
                 f"{row['scenarioId']} centroidMotionMean out of range: expected {expected_motion_range}, got {macro.get('centroidMotionMean')}"
             )
 
-        record = load_json(row["learningRecordArtifactPath"])
-        record_scope = record.get("context", {}).get("requestedScope") or {}
+        record = row.get("learningRecord") or {}
+        record_scope = record.get("requestedScope") or {}
         if record_scope != expected:
             errors.append(
                 f"{row['scenarioId']} learning record scope mismatch: expected {expected}, got {record_scope}"
@@ -261,8 +259,10 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
 
 def main():
     errors = []
-    validate_summary(MACRO_SUMMARY, MACRO_SCENARIOS, "macro", errors)
-    validate_summary(SECTION_SUMMARY, SECTION_SCENARIOS, "section", errors)
+    fixture = load_json(REGRESSION_FIXTURES)
+    suites = fixture.get("suites") or {}
+    validate_fixture_suite("macro", suites.get("macro") or {"scenarios": []}, MACRO_SCENARIOS, "macro", errors)
+    validate_fixture_suite("section", suites.get("section") or {"scenarios": []}, SECTION_SCENARIOS, "section", errors)
 
     if errors:
         print(json.dumps({"ok": False, "errors": errors}, indent=2))
@@ -271,8 +271,7 @@ def main():
     print(json.dumps({
         "ok": True,
         "validated": {
-            "macroSummary": os.path.abspath(MACRO_SUMMARY),
-            "sectionSummary": os.path.abspath(SECTION_SUMMARY),
+            "regressionFixtures": os.path.abspath(REGRESSION_FIXTURES),
         },
         "scopeClasses": sorted({
             row["requestedScopeMode"]
