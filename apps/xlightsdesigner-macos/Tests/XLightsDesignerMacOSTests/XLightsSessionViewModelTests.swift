@@ -10,6 +10,7 @@ private struct StubXLightsSessionProjectStore: ProjectSessionStore {
 private final class StubXLightsSessionService: XLightsSessionService, @unchecked Sendable {
     var nextLoad: (@Sendable (String) async throws -> XLightsSessionSnapshotModel)?
     var setShowDirectoryCalls: [String] = []
+    var requestShowDirectoryAccessCalls: [String] = []
 
     func loadSession(projectShowFolder: String) async throws -> XLightsSessionSnapshotModel {
         if let nextLoad {
@@ -21,6 +22,11 @@ private final class StubXLightsSessionService: XLightsSessionService, @unchecked
     func setShowDirectory(_ showDirectory: String, force: Bool, permanent: Bool) async throws -> String {
         setShowDirectoryCalls.append(showDirectory)
         return "set"
+    }
+
+    func requestShowDirectoryAccess(_ showDirectory: String, force: Bool, permanent: Bool) async throws -> String {
+        requestShowDirectoryAccessCalls.append(showDirectory)
+        return "granted"
     }
 
     func saveCurrentSequence() async throws -> String { "saved" }
@@ -38,7 +44,7 @@ private func sessionSnapshot(
 ) -> XLightsSessionSnapshotModel {
     XLightsSessionSnapshotModel(
         runtimeState: "ready",
-        supportedCommands: ["media.setShowDirectory"],
+        supportedCommands: ["media.setShowDirectory", "media.requestShowDirectoryAccess"],
         isReachable: true,
         isSequenceOpen: sequenceOpen,
         sequencePath: sequenceOpen ? "\(showDirectory)/Current.xsq" : "",
@@ -224,4 +230,65 @@ private actor XLightsSessionLoadGate {
     #expect(service.setShowDirectoryCalls.isEmpty)
     #expect(refreshed.projectShowMatches == false)
     #expect(refreshed.showDirectory == "/tmp/show-a")
+}
+
+@MainActor
+@Test func xlightsSessionAccessRequestSwitchesToProjectShowFolderWhenMismatchIsClean() async throws {
+    let workspace = ProjectWorkspace(sessionStore: StubXLightsSessionProjectStore())
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: "/tmp/Christmas 2026.xdproj",
+            showFolder: "/tmp/show-b",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [:]
+        )
+    )
+    let service = StubXLightsSessionService()
+    service.nextLoad = { projectShowFolder in
+        let current = service.requestShowDirectoryAccessCalls.isEmpty ? "/tmp/show-a" : projectShowFolder
+        return sessionSnapshot(projectShowFolder: projectShowFolder, showDirectory: current)
+    }
+    let model = XLightsSessionViewModel(workspace: workspace, service: service)
+
+    let refreshed = await model.requestProjectShowFolderAccess()
+
+    #expect(service.requestShowDirectoryAccessCalls == ["/tmp/show-b"])
+    #expect(service.setShowDirectoryCalls.isEmpty)
+    #expect(refreshed.projectShowMatches == true)
+    #expect(refreshed.showDirectory == "/tmp/show-b")
+}
+
+@MainActor
+@Test func xlightsSessionAccessRequestDoesNotSwitchWhenOpenSequenceIsDirty() async throws {
+    let workspace = ProjectWorkspace(sessionStore: StubXLightsSessionProjectStore())
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: "/tmp/Christmas 2026.xdproj",
+            showFolder: "/tmp/show-b",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [:]
+        )
+    )
+    let service = StubXLightsSessionService()
+    service.nextLoad = { projectShowFolder in
+        sessionSnapshot(projectShowFolder: projectShowFolder, showDirectory: "/tmp/show-a", sequenceOpen: true, hasUnsavedChanges: true)
+    }
+    let model = XLightsSessionViewModel(workspace: workspace, service: service)
+
+    let refreshed = await model.requestProjectShowFolderAccess()
+
+    #expect(service.requestShowDirectoryAccessCalls.isEmpty)
+    #expect(service.setShowDirectoryCalls.isEmpty)
+    #expect(refreshed.projectShowMatches == false)
+    #expect(model.lastShowFolderReconcileError.contains("unsaved changes"))
 }

@@ -86,6 +86,33 @@ final class XLightsSessionViewModel {
     }
 
     @discardableResult
+    func requestProjectShowFolderAccess() async -> XLightsSessionSnapshotModel {
+        let refreshed = await refreshNow()
+        let projectShowFolder = workspace.activeProject?.showFolder.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard refreshed.isReachable, !projectShowFolder.isEmpty else {
+            lastShowFolderReconcileSummary = ""
+            lastShowFolderReconcileError = projectShowFolder.isEmpty
+                ? "Project show folder is not set."
+                : "xLights is not reachable."
+            return refreshed
+        }
+        if refreshed.isSequenceOpen && refreshed.hasUnsavedChanges != false {
+            lastShowFolderReconcileSummary = ""
+            lastShowFolderReconcileError = "xLights has an open sequence with unsaved changes. Save or close it before switching show folders."
+            return refreshed
+        }
+        do {
+            lastShowFolderReconcileError = ""
+            lastShowFolderReconcileSummary = try await service.requestShowDirectoryAccess(projectShowFolder, force: true, permanent: false)
+            return await refreshNow()
+        } catch {
+            lastShowFolderReconcileSummary = ""
+            lastShowFolderReconcileError = error.localizedDescription
+            return refreshed
+        }
+    }
+
+    @discardableResult
     func refreshNow() async -> XLightsSessionSnapshotModel {
         let projectShowFolder = workspace.activeProject?.showFolder ?? ""
         let previous = snapshot

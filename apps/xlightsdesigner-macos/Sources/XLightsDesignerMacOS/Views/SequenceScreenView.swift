@@ -142,6 +142,14 @@ struct SequenceScreenView: View {
                     }
                     .disabled(showFolderMismatchText == nil)
 
+                    Button("Grant Access In xLights") {
+                        Task {
+                            await xlightsSessionModel.requestProjectShowFolderAccess()
+                            model.refresh()
+                        }
+                    }
+                    .disabled(model.projectShowFolder.isEmpty || xlightsSessionModel.snapshot.isReachable == false)
+
                     Button("Save Sequence") {
                         Task {
                             try? await xlightsSessionModel.saveCurrentSequence()

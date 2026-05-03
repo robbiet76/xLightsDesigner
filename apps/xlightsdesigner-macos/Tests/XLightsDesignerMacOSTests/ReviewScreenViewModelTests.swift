@@ -47,6 +47,10 @@ private struct StubXLightsSessionService: XLightsSessionService, Sendable {
         "Set xLights show folder: \(showDirectory)"
     }
 
+    func requestShowDirectoryAccess(_ showDirectory: String, force: Bool, permanent: Bool) async throws -> String {
+        "Granted xLights access and set show folder: \(showDirectory)"
+    }
+
     func saveCurrentSequence() async throws -> String {
         "Saved xLights sequence: /tmp/HolidayRoad.xsq"
     }

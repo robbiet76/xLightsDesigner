@@ -79,8 +79,13 @@ struct ProjectScreenView: View {
                         Text(mismatchText)
                             .foregroundStyle(.orange)
                             .textSelection(.enabled)
-                        Button("Set xLights To Project Show Folder") {
-                            Task { await xlightsSessionModel.reconcileProjectShowFolder() }
+                        HStack(spacing: 10) {
+                            Button("Set xLights To Project Show Folder") {
+                                Task { await xlightsSessionModel.reconcileProjectShowFolder() }
+                            }
+                            Button("Grant Access In xLights") {
+                                Task { await xlightsSessionModel.requestProjectShowFolderAccess() }
+                            }
                         }
                     }
                     if !xlightsSessionModel.lastShowFolderReconcileError.isEmpty {
