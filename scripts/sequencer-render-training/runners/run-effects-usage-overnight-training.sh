@@ -133,12 +133,16 @@ function arr(value) {
 }
 
 function listManifests(manifestDir) {
+  const repoRoot = path.resolve(process.argv[2]);
   return fs.readdirSync(manifestDir)
     .filter((fileName) => fileName.endsWith(".json"))
     .map((fileName) => {
       const manifestPath = path.join(manifestDir, fileName);
       const manifest = readJson(manifestPath, {});
-      const sequencePath = str(manifest?.fixture?.sequencePath || manifest?.context?.sequencePath || manifest?.sequencePath);
+      const rawSequencePath = str(manifest?.fixture?.sequencePath || manifest?.context?.sequencePath || manifest?.sequencePath);
+      const sequencePath = rawSequencePath && path.isAbsolute(rawSequencePath)
+        ? rawSequencePath
+        : path.join(repoRoot, rawSequencePath);
       return {
         packId: fileName.replace(/\.json$/, ""),
         fileName,
@@ -263,8 +267,10 @@ const automationPlan = readJson(path.join(repoRoot, "scripts/sequencer-render-tr
 const coverage = readJson(path.join(repoRoot, "scripts/sequencer-render-training/catalog/effect-settings-coverage-report-v1.json"), { effects: [] });
 const samplingAudit = readJson(path.join(repoRoot, "scripts/sequencer-render-training/catalog/effect-sampling-audit-v1.json"), { summary: {}, nextSamplingQueue: [], currentEffectQueue: [], newEffectExpansionQueue: [] });
 const trainingLayout = readJson(path.join(repoRoot, "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json"), {});
-const trainingShowDir = str(trainingLayout.showDir || path.join(repoRoot, "render-training"));
-const trainingFixtureSequencePath = str(trainingLayout.fixtureSequencePath || path.join(trainingShowDir, "RenderTraining-AnimationFixture.xsq"));
+const trainingShowDirRaw = str(trainingLayout.showDir || "render-training");
+const trainingShowDir = path.isAbsolute(trainingShowDirRaw) ? trainingShowDirRaw : path.join(repoRoot, trainingShowDirRaw);
+const trainingFixtureSequencePathRaw = str(trainingLayout.fixtureSequencePath || path.join(trainingShowDir, "RenderTraining-AnimationFixture.xsq"));
+const trainingFixtureSequencePath = path.isAbsolute(trainingFixtureSequencePathRaw) ? trainingFixtureSequencePathRaw : path.join(repoRoot, trainingFixtureSequencePathRaw);
 const manifestDir = path.join(repoRoot, "scripts/sequencer-render-training/manifests");
 const allManifests = listManifests(manifestDir);
 const excludedNontrainingManifests = allManifests
@@ -364,7 +370,7 @@ const plan = {
   },
   paletteProtocol: {
     profiles: ["mono_white", "rgb_primary"],
-    defaultPalettePath: process.env.TRAINING_DEFAULT_PALETTE_PATH || "/Users/robterry/xLights-2026.06/resources/palettes/Default.xpalette",
+    defaultPalettePath: process.env.TRAINING_DEFAULT_PALETTE_PATH || `${process.env.HOME || ""}/xLights-2026.06/resources/palettes/Default.xpalette`,
     profileActivation: {
       mono_white: [1],
       rgb_primary: [2, 3, 4]

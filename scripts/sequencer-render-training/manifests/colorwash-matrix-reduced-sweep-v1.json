@@ -3,7 +3,7 @@
   "packId": "colorwash-matrix-reduced-sweep-v1",
   "description": "Reduced baseline Color Wash sweep on a concrete matrix model using the 4-second animated-effect standard.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "MatrixHighDensity",
     "modelType": "matrix",
     "startMs": 1000,

@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 XLIGHTS_BASE_URL="${XLIGHTS_BASE_URL:-http://127.0.0.1:49914}"
 AUTOMATION_URL="${XLIGHTS_BASE_URL}/xlDoAutomation"
 CURL_MAX_TIME="${CURL_MAX_TIME:-60}"
 XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-}"
 XLIGHTS_RECYCLE_BEFORE_SAMPLE="${XLIGHTS_RECYCLE_BEFORE_SAMPLE:-0}"
 XLIGHTS_STARTUP_WAIT_SECONDS="${XLIGHTS_STARTUP_WAIT_SECONDS:-180}"
-RENDER_TRAINING_ROOT="${RENDER_TRAINING_ROOT:-/Users/robterry/Projects/xLightsDesigner/render-training}"
+RENDER_TRAINING_ROOT="${RENDER_TRAINING_ROOT:-${REPO_ROOT}/render-training}"
 
 post_cmd() {
   local payload="$1"
@@ -38,7 +40,7 @@ resolve_xlights_app_path() {
   fi
 
   local derived_app
-  derived_app="$(find /Users/robterry/Library/Developer/Xcode/DerivedData -path '*/Build/Products/Debug/xLights.app' -type d 2>/dev/null | head -n 1 || true)"
+  derived_app="$(find "${HOME}/Library/Developer/Xcode/DerivedData" -path '*/Build/Products/Debug/xLights.app' -type d 2>/dev/null | head -n 1 || true)"
   if [[ -n "${derived_app}" && -d "${derived_app}" ]]; then
     printf '%s\n' "${derived_app}"
     return 0
@@ -73,6 +75,15 @@ require_cmd() {
     echo "Missing required command: ${cmd}" >&2
     exit 1
   }
+}
+
+resolve_repo_path() {
+  local value="$1"
+  if [[ "${value}" = /* ]]; then
+    printf '%s\n' "${value}"
+  else
+    printf '%s\n' "${REPO_ROOT}/${value}"
+  fi
 }
 
 xlights_ping() {
@@ -164,7 +175,8 @@ get_fseq_directory() {
 }
 
 resolve_show_dir_for_sequence() {
-  local xsq_path="$1"
+  local xsq_path
+  xsq_path="$(resolve_repo_path "$1")"
   local probe
   probe="$(cd "$(dirname "${xsq_path}")" && pwd)"
 

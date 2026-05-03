@@ -11,7 +11,7 @@ from pathlib import Path
 def load_default_xpalette() -> dict[str, str]:
     palette_path = Path(os.environ.get(
         "TRAINING_DEFAULT_PALETTE_PATH",
-        "/Users/robterry/xLights-2026.06/resources/palettes/Default.xpalette",
+        str(Path.home() / "xLights-2026.06/resources/palettes/Default.xpalette"),
     ))
     line = next(
         (

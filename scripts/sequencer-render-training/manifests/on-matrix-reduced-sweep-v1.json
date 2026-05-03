@@ -3,7 +3,7 @@
   "packId": "on-matrix-reduced-sweep-v1",
   "description": "Reduced baseline On sweep on a concrete matrix model using a short standard duration.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "MatrixHighDensity",
     "modelType": "matrix",
     "startMs": 1000,

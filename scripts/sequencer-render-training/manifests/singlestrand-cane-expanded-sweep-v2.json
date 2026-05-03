@@ -3,7 +3,7 @@
   "packId": "singlestrand-cane-expanded-sweep-v2",
   "description": "Expanded SingleStrand sweep on a concrete cane model. Adds denser chase, alternate skip spacing, and softer FX coverage beyond the reduced set.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "CandyCane-01",
     "modelType": "cane",
     "startMs": 1000,

@@ -6,7 +6,7 @@ import path from 'node:path';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const DEFAULT_APP_BASE_URL = 'http://127.0.0.1:49916';
 const DEFAULT_XLIGHTS_BASE_URL = 'http://127.0.0.1:49915/xlightsdesigner/api';
-const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
+const DEFAULT_SHOW_DIR = process.env.XLIGHTS_SHOW_DIR || path.join(process.env.HOME || '', 'Desktop', 'Show');
 const DEFAULT_TARGET_IDS = 'Star';
 const DEFAULT_SELECTED_TAGS = 'lead';
 const APP_LOG_PATH = '/tmp/xld-app-app.log';
@@ -21,7 +21,7 @@ function usage() {
     'usage: run-full-handoff-validation.mjs [options]',
     '',
     'Options:',
-    '  --show-dir <path>              Linked xLights show folder. Defaults to /Users/robterry/Desktop/Show.',
+    '  --show-dir <path>              Linked xLights show folder. Defaults to $XLIGHTS_SHOW_DIR or ~/Desktop/Show.',
     '  --target-ids <ids>             Exact xLights target ids. Defaults to Star.',
     '  --selected-tags <tags>         Selected metadata tags. Defaults to lead.',
     '  --section-label <label>        Optional timing-track section label to scope generation.',

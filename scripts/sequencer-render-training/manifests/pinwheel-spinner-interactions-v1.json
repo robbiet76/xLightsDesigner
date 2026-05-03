@@ -3,7 +3,7 @@
   "packId": "pinwheel-spinner-interactions-v1",
   "description": "Representative Pinwheel interaction sweep on the canonical spinner model.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "Spinner",
     "modelType": "spinner",
     "startMs": 1000,

@@ -3,7 +3,7 @@
   "packId": "colorwash-matrix-expanded-sweep-v2",
   "description": "Expanded Color Wash sweep on a concrete matrix model. Adds horizontal and two-axis steady fades to broaden the fill look space beyond the reduced set.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "MatrixHighDensity",
     "modelType": "matrix",
     "startMs": 1000,

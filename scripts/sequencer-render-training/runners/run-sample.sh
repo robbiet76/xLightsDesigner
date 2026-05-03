@@ -52,6 +52,8 @@ sample_json="$(jq -c --arg sid "${SAMPLE_ID}" '.samples[] | select(.sampleId == 
 [[ -n "${sample_json}" ]] || { echo "Sample not found: ${SAMPLE_ID}" >&2; exit 1; }
 
 sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
+sequence_path="$(resolve_repo_path "${sequence_path}")"
+fixture_json="$(jq -c --arg sequencePath "${sequence_path}" '.sequencePath = $sequencePath' <<<"${fixture_json}")"
 model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
 expected_model_type="$(jq -r '.modelType // empty' <<<"${fixture_json}")"
 fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
@@ -73,7 +75,7 @@ effect_settings_json="$(jq -c '.effectSettings // {}' <<<"${sample_json}")"
 palette_json="$(jq -c '.sharedSettings.palette // {}' <<<"${sample_json}")"
 palette_activation_mode="$(jq -r '.sharedSettings.paletteActivationMode // "explicit"' <<<"${sample_json}")"
 palette_active_slots_json="$(jq -c '.sharedSettings.paletteActiveSlots // []' <<<"${sample_json}")"
-default_palette_path="${TRAINING_DEFAULT_PALETTE_PATH:-/Users/robterry/xLights-2026.06/resources/palettes/Default.xpalette}"
+default_palette_path="${TRAINING_DEFAULT_PALETTE_PATH:-${HOME}/xLights-2026.06/resources/palettes/Default.xpalette}"
 export_mode="$(jq -r '.export.mode // "model_with_render"' <<<"${sample_json}")"
 export_format="$(jq -r '.export.format // "gif"' <<<"${sample_json}")"
 start_ms="$(jq -r --argjson fixture "${fixture_json}" '(.timingWindow.startMs // $fixture.startMs)' <<<"${sample_json}")"

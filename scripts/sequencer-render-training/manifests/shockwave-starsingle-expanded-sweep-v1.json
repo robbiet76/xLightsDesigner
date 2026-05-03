@@ -3,7 +3,7 @@
   "packId": "shockwave-starsingle-expanded-sweep-v1",
   "description": "Expanded Shockwave sweep on the canonical single star model in the generic render-training layout.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "StarSingle",
     "modelType": "star",
     "startMs": 1000,

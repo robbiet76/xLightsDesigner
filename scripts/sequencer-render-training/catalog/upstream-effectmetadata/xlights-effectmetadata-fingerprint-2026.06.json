@@ -1,9 +1,9 @@
 {
   "artifactType": "xlights_effect_metadata_fingerprint_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T01:04:15.819Z",
+  "generatedAt": "2026-05-03T01:33:37.603Z",
   "xlightsVersion": "2026.06",
-  "sourceDir": "/Users/robterry/xLights-2026.06/resources/effectmetadata",
+  "sourceDir": "resources/effectmetadata",
   "schemaSha256": "fbb394e9ed58d2b7858ca487f7734abbc179330edd16ffacbe2ad4f190d3cecb",
   "effectCount": 56,
   "sharedCount": 3,
@@ -304,5 +304,5 @@
       "sha256": "4127d4f79f389a7448454084b11cf1fe142ecbbbc8e3b36820f25608e7ab0543"
     }
   ],
-  "bundleSha256": "4382a39313eaca60cc9cb3eb089788978e90ce8f4b502eee8b492032a64b6292"
+  "bundleSha256": "b9891e973e35fa2b08a2508758f9aa781248e173d4093c4ff2499961d9308519"
 }

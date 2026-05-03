@@ -3,7 +3,7 @@
   "packId": "shimmer-hiddentreestar-dutyfactor-range-v1",
   "description": "Range sampling sweep for Shimmer dutyFactor on the HiddenTreeStar model.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "HiddenTreeStar",
     "modelType": "star",
     "startMs": 1000,

@@ -3,7 +3,7 @@
   "packId": "colorwash-matrix-interactions-v1",
   "description": "Representative Color Wash interaction sweep on the canonical matrix model.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "MatrixHighDensity",
     "modelType": "matrix",
     "startMs": 1000,

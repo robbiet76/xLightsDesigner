@@ -1,10 +1,10 @@
 {
   "artifactType": "xlights_effect_metadata_diff_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T01:04:15.826Z",
+  "generatedAt": "2026-05-03T01:33:37.607Z",
   "xlightsVersion": "2026.06",
-  "sourceDir": "/Users/robterry/xLights-2026.06/resources/effectmetadata",
-  "registryPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-parameter-registry.json",
+  "sourceDir": "resources/effectmetadata",
+  "registryPath": "scripts/sequencer-render-training/catalog/effect-parameter-registry.json",
   "localRegistryEffectCount": 18,
   "upstreamEffectCount": 56,
   "overlapEffects": [

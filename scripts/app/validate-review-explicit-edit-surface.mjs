@@ -15,8 +15,8 @@ import {
 
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
 const DEFAULT_APP_URL = 'http://127.0.0.1:49916';
-const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
-const DEFAULT_PROJECT_FILE = '/Users/robterry/Documents/Lights/xLightsDesigner/projects/Christmas 2026/Christmas 2026.xdproj';
+const DEFAULT_SHOW_DIR = process.env.XLIGHTS_SHOW_DIR || path.join(process.env.HOME || '', 'Desktop', 'Show');
+const DEFAULT_PROJECT_FILE = process.env.XLD_PROJECT_FILE || path.join(process.env.HOME || '', 'Documents', 'Lights', 'xLightsDesigner', 'projects', 'Christmas 2026', 'Christmas 2026.xdproj');
 const DEFAULT_VALIDATION_ROOT_NAME = '_xlightsdesigner_validation/app-review-explicit-edits';
 
 function usage() {

@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-DEBUG_APP_DEFAULT="/Users/robterry/xLights-2026.07/build/XLD-CodexDerivedData/Build/Products/Debug/xLights.app"
+DEBUG_APP_DEFAULT="${HOME}/xLights-2026.07/build/XLD-CodexDerivedData/Build/Products/Debug/xLights.app"
 
 export XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-${DEBUG_APP_DEFAULT}}"
 export XLIGHTS_RECYCLE_BEFORE_SAMPLE="${XLIGHTS_RECYCLE_BEFORE_SAMPLE:-0}"

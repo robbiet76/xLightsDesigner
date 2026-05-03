@@ -5,8 +5,8 @@ import path from 'node:path';
 import { finalizeArtifact } from '../../../apps/xlightsdesigner-ui/agent/shared/artifact-ids.js';
 import { writeProjectArtifact } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
 
-const DEFAULT_PROJECT_FILE = '/Users/robterry/Documents/Lights/xLightsDesigner/projects/Christmas 2026/Christmas 2026.xdproj';
-const DEFAULT_SOURCE_ROOT = '/Users/robterry/Documents/Lights/Current';
+const DEFAULT_PROJECT_FILE = process.env.XLD_PROJECT_FILE || path.join(process.env.HOME || '', 'Documents', 'Lights', 'xLightsDesigner', 'projects', 'Christmas 2026', 'Christmas 2026.xdproj');
+const DEFAULT_SOURCE_ROOT = process.env.XLIGHTS_SEQUENCE_SOURCE_ROOT || path.join(process.env.HOME || '', 'Documents', 'Lights', 'Current');
 
 function str(value = '') {
   return String(value || '').trim();

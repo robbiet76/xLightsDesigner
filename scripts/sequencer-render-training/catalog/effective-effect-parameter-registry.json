@@ -4402,7 +4402,7 @@
   "metadataSource": {
     "type": "xlights_effectmetadata_overlay",
     "xlightsVersion": "2026.06",
-    "generatedAt": "2026-04-17T01:05:22.693Z",
-    "bundlePath": "/var/folders/12/_jd_58gd53jc9b_3dk7nrykr0000gp/T/xlights-effectmetadata-kAycu2/xlights-effectmetadata-bundle-2026.06.json"
+    "generatedAt": "2026-05-03T01:33:37.602Z",
+    "bundlePath": "scripts/sequencer-render-training/catalog/upstream-effectmetadata/xlights-effectmetadata-bundle-2026.06.json"
   }
 }

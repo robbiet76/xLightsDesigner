@@ -3,7 +3,7 @@
   "packId": "colorwash-matrix-fade-combos-v1",
   "description": "Structured sweep for Color Wash fade combinations on a matrix model. Holds cycles fixed while enumerating the major fade-combination states.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "MatrixHighDensity",
     "modelType": "matrix",
     "startMs": 1000,

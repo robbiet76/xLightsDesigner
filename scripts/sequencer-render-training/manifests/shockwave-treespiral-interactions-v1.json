@@ -3,7 +3,7 @@
   "packId": "shockwave-treespiral-interactions-v1",
   "description": "Representative Shockwave interaction sweep on the canonical spiral tree model.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "TreeSpiral",
     "modelType": "tree_360",
     "startMs": 1000,

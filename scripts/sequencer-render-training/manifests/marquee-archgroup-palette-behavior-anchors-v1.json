@@ -3,7 +3,7 @@
   "packId": "marquee-archgroup-palette-behavior-anchors-v1",
   "description": "Focused Marquee behavior anchors on grouped arches for single-color and multi-color representative palette modes.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "ArchGroup",
     "modelType": "arch",
     "startMs": 1000,

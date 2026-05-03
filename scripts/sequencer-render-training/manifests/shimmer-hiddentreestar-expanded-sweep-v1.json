@@ -3,7 +3,7 @@
   "packId": "shimmer-hiddentreestar-expanded-sweep-v1",
   "description": "Expanded Shimmer sweep on the HiddenTreeStar model. Adds sparse all-color sparkle and punchier palette-limited shimmer to widen the star look space.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "HiddenTreeStar",
     "modelType": "star",
     "startMs": 1000,

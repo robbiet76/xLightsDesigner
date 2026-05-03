@@ -3,7 +3,7 @@
   "packId": "marquee-archgroup-interactions-v1",
   "description": "Representative Marquee interaction sweep on the canonical grouped arch model.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "ArchGroup",
     "modelType": "arch",
     "startMs": 1000,

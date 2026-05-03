@@ -3,7 +3,7 @@
   "packId": "singlestrand-reduced-sweep-v1",
   "description": "Reduced baseline SingleStrand sweep on a concrete cane model using a 4-second standard animated duration.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "CandyCane-01",
     "modelType": "cane",
     "startMs": 1000,

@@ -11,7 +11,7 @@ Current capture policy:
 - `run-manifest.sh` now writes `screeningQuality` so collapsed sweeps are flagged instead of silently treated as usable training evidence.
 
 Primary system spec:
-- [render-training-knowledge.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-knowledge.md)
+- [render-training-knowledge.md](../../specs/sequence-agent/render-training-knowledge.md)
 
 ## Directory Layout
 - `catalog/`: stable training catalogs and standards
@@ -158,8 +158,8 @@ bash scripts/sequencer-render-training/runners/run-stage1-coverage-chunked-backg
 
 ```bash
 python3 scripts/sequencer-render-training/tooling/build-animation-fixture.py \
-  --source /Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq \
-  --output /Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq \
+  --source "$XLIGHTS_SHOW_DIR/Test/Validation-Clean-Phase1.xsq" \
+  --output var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq \
   --duration-seconds 30
 ```
 
@@ -172,7 +172,7 @@ python3 scripts/sequencer-render-training/tooling/normalize-manifest.py \
 
 ```bash
 python3 scripts/sequencer-render-training/generators/generate-model-geometry-audit.py \
-  --show-dir /Users/robterry/Projects/xLightsDesigner/var/render-training \
+  --show-dir var/render-training \
   --out-file scripts/sequencer-render-training/catalog/generic-layout-geometry-audit.json
 ```
 
@@ -230,7 +230,7 @@ bash scripts/sequencer-render-training/runners/run-layer-composition-training.sh
 ```
 
 ```bash
-TRAINING_API_STAGING_ROOT=/Users/robterry/Desktop/Show/_xlightsdesigner_api_training/layer-composition-smoke \
+TRAINING_API_STAGING_ROOT="$XLIGHTS_SHOW_DIR/_xlightsdesigner_api_training/layer-composition-smoke" \
   node scripts/sequencer-render-training/tooling/run-layer-composition-pass-runner.mjs \
   --run-root var/logs/sequencer-layer-composition-training-runs/<run-id> \
   --max-passes 22
@@ -348,8 +348,8 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
   - default: `0`
   - optional manual recovery mode for batch runs
 - `RENDER_TRAINING_ROOT`
-  - recommended: `/Users/robterry/Projects/xLightsDesigner/var/render-training`
-  - legacy examples may still reference `/Users/robterry/Projects/xLightsDesigner/render-training`
+  - recommended: `var/render-training`
+  - legacy examples may still reference `render-training`
   - internal workspace for packed `.fseq`, working `.xsq`, copied manifests, and derived artifacts
 - `PHASE_SET`
   - used by `runners/run-overnight-approved-matrix.sh`
@@ -372,7 +372,7 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
 - Registry planning should be geometry-profile-aware.
 - The old unified training set is now transitional and should not be treated as the long-term selector foundation.
 - The reset rebuild should follow:
-  - `/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-knowledge.md`
+  - `specs/sequence-agent/render-training-knowledge.md`
 - Preference learning must remain outside the rebuilt shared training records in a separate store.
 
 

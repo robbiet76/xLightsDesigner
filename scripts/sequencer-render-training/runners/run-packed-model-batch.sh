@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 source "${ROOT_DIR}/tooling/effect-settings.sh"
-RENDER_TRAINING_ROOT="${RENDER_TRAINING_ROOT:-/Users/robterry/Projects/xLightsDesigner/render-training}"
+RENDER_TRAINING_ROOT="${RENDER_TRAINING_ROOT:-$(cd "${ROOT_DIR}/../.." && pwd)/render-training}"
 
 require_cmd() {
   local cmd="$1"
@@ -12,6 +12,15 @@ require_cmd() {
     echo "Missing required command: ${cmd}" >&2
     exit 1
   }
+}
+
+resolve_repo_path() {
+  local value="$1"
+  if [[ "${value}" = /* ]]; then
+    printf '%s\n' "${value}"
+  else
+    printf '%s\n' "$(cd "${ROOT_DIR}/../.." && pwd)/${value}"
+  fi
 }
 
 wait_owned_ready() {
@@ -54,7 +63,8 @@ require_cmd jq
 require_cmd python3
 
 resolve_show_dir_for_sequence() {
-  local xsq_path="$1"
+  local xsq_path
+  xsq_path="$(resolve_repo_path "$1")"
   local probe
   probe="$(cd "$(dirname "${xsq_path}")" && pwd)"
   while [[ "${probe}" != "/" ]]; do
@@ -108,7 +118,7 @@ const protocol = String(protocolRaw || "")
   .filter(Boolean);
 
 const palettePath = process.env.TRAINING_DEFAULT_PALETTE_PATH
-  || "/Users/robterry/xLights-2026.06/resources/palettes/Default.xpalette";
+  || `${process.env.HOME || ""}/xLights-2026.06/resources/palettes/Default.xpalette`;
 
 function loadXpalette(path) {
   const raw = fs.readFileSync(path, "utf8");
@@ -187,6 +197,8 @@ decoder_max_frame_cells="$(jq -r '.interpretationFramework.decodePolicy.maxFrame
 
 fixture_json="$(jq -c '.fixture' "${MANIFEST_FILE}")"
 sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
+sequence_path="$(resolve_repo_path "${sequence_path}")"
+fixture_json="$(jq -c --arg sequencePath "${sequence_path}" '.sequencePath = $sequencePath' <<<"${fixture_json}")"
 model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
 expected_model_type="$(jq -r '.modelType // empty' <<<"${fixture_json}")"
 fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"

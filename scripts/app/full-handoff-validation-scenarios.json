@@ -3,8 +3,7 @@
   "extraValidations": [
     {
       "name": "app-active-target-sync",
-      "type": "appActiveTargetSync",
-      "projectFile": "/Users/robterry/Documents/Lights/xLightsDesigner/projects/Christmas 2026/Christmas 2026.xdproj"
+      "type": "appActiveTargetSync"
     },
     {
       "name": "app-visual-inspiration-fixture",

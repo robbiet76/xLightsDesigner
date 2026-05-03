@@ -1,11 +1,11 @@
 # xLights Effect Metadata Import
 
-Generated: 2026-04-17T01:04:15.813Z
+Generated: 2026-05-03T01:33:37.602Z
 
 xLights version: `2026.06`
 Upstream effects: 56
 Shared metadata files: 3
-Bundle hash: `4382a39313eaca60cc9cb3eb089788978e90ce8f4b502eee8b492032a64b6292`
+Bundle hash: `b9891e973e35fa2b08a2508758f9aa781248e173d4093c4ff2499961d9308519`
 
 ## Diff Summary
 

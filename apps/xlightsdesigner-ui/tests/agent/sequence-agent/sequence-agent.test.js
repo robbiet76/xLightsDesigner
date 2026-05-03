@@ -1386,7 +1386,7 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
       artifactId: "current_sequence_context_v1-existing",
       source: "xlights_readback",
       sequence: {
-        path: "/Users/robterry/Desktop/Show/test.xsq",
+        path: "/tmp/xlightsdesigner-test-show/test.xsq",
         revision: "rev-56"
       },
       scope: {

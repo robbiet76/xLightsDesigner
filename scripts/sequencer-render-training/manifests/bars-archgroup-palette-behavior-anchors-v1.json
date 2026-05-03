@@ -3,7 +3,7 @@
   "packId": "bars-archgroup-palette-behavior-anchors-v1",
   "description": "Focused Bars behavior anchors on grouped arches for palette repetition and gradient behavior.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "ArchGroup",
     "modelType": "arch",
     "startMs": 1000,

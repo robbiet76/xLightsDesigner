@@ -3,7 +3,7 @@
   "packId": "fire-matrix-expanded-sweep-v1",
   "description": "First focused Fire sweep on the canonical high-density matrix model.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "MatrixHighDensity",
     "modelType": "matrix",
     "startMs": 1000,

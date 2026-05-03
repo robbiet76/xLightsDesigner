@@ -3,7 +3,7 @@
   "packId": "shimmer-hiddentree-cycles-range-v1",
   "description": "Range sampling sweep for Shimmer cycles on the HiddenTree model. Uses fixed dutyFactor to isolate cadence changes.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "HiddenTree",
     "modelType": "tree_flat",
     "startMs": 1000,

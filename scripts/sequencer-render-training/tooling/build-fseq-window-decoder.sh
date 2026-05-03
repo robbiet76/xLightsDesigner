@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_BIN="${SCRIPT_DIR}/fseq_window_decoder"
 SRC_CPP="${SCRIPT_DIR}/fseq_window_decoder.cpp"
-XLIGHTS_ROOT="${XLIGHTS_ROOT:-/Users/robterry/xLights-2026.07}"
+XLIGHTS_ROOT="${XLIGHTS_ROOT:-${HOME}/xLights-2026.07}"
 XLIGHTS_DEPS_ROOT="${XLIGHTS_DEPS_ROOT:-${XLIGHTS_ROOT}/macOS/xLights-macOS-dependencies-2026.07}"
 FSEQ_CPP="${XLIGHTS_ROOT}/src-core/render/FSEQFile.cpp"
 

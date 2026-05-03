@@ -208,7 +208,7 @@ test("effect compatibility accepts designer-provided picture file paths", () => 
       params: {
         effectName: "Pictures",
         settings: {
-          E_TEXTCTRL_Pictures_Filename: "/Users/robterry/Documents/Lights/assets/snowflake.png"
+          E_TEXTCTRL_Pictures_Filename: "/tmp/xlightsdesigner-assets/snowflake.png"
         }
       }
     }],
@@ -225,7 +225,7 @@ test("effect compatibility accepts designer-provided video file paths", () => {
       params: {
         effectName: "Video",
         settings: {
-          E_FILEPICKERCTRL_Video_Filename: "/Users/robterry/Documents/Lights/assets/intro.mp4"
+          E_FILEPICKERCTRL_Video_Filename: "/tmp/xlightsdesigner-assets/intro.mp4"
         }
       }
     }],

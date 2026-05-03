@@ -3,7 +3,7 @@
   "packId": "shimmer-hiddentree-expanded-sweep-v1",
   "description": "Expanded Shimmer sweep on the HiddenTree model. Adds sparse all-color sparkle and punchier palette-limited shimmer to widen the flat-tree look space.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "HiddenTree",
     "modelType": "tree_flat",
     "startMs": 1000,

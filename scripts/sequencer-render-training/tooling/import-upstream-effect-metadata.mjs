@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve } from "node:path";
 
 function loadJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
@@ -344,12 +344,29 @@ function collectFiles(dir) {
     .sort((a, b) => a.localeCompare(b));
 }
 
+function repoRelativePath(value = "") {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  const relativePath = relative(process.cwd(), resolve(normalized));
+  if (!relativePath || relativePath.startsWith("..") || isAbsolute(relativePath)) return normalized;
+  return relativePath;
+}
+
+function upstreamRelativePath(value = "", sourceRoot = "") {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  const relativePath = relative(resolve(sourceRoot), resolve(normalized));
+  if (!relativePath) return "resources/effectmetadata";
+  if (relativePath.startsWith("..") || isAbsolute(relativePath)) return repoRelativePath(normalized);
+  return join("resources/effectmetadata", relativePath);
+}
+
 const outputDir = process.argv[2]
   ? resolve(process.argv[2])
   : resolve("scripts/sequencer-render-training/catalog/upstream-effectmetadata");
 const sourceDir = process.argv[3]
   ? resolve(process.argv[3])
-  : resolve("/Users/robterry/xLights-2026.06/resources/effectmetadata");
+  : resolve(process.env.XLIGHTS_EFFECT_METADATA_DIR || join(process.env.HOME || "", "xLights-2026.06", "resources", "effectmetadata"));
 const registryPath = process.argv[4]
   ? resolve(process.argv[4])
   : resolve("scripts/sequencer-render-training/catalog/effect-parameter-registry.json");
@@ -383,7 +400,7 @@ for (const fileName of effectFiles) {
   effects.push({
     effectName: raw.effectName,
     sourceFile: fileName,
-    sourcePath: path,
+    sourcePath: upstreamRelativePath(path, sourceDir),
     jsonSha256: sha256(rawText),
     canvasMode: Boolean(raw.canvasMode),
     propertyCount: Array.isArray(raw.properties) ? raw.properties.length : 0,
@@ -421,8 +438,8 @@ const normalizedBundle = {
   generatedAt: new Date().toISOString(),
   source: {
     xlightsVersion,
-    sourceDir,
-    schemaPath,
+    sourceDir: upstreamRelativePath(sourceDir, sourceDir),
+    schemaPath: upstreamRelativePath(schemaPath, sourceDir),
     schemaSha256: sha256(readFileSync(schemaPath, "utf8"))
   },
   schema,
@@ -439,7 +456,7 @@ const effectiveRegistry = {
     type: "xlights_effectmetadata_overlay",
     xlightsVersion,
     generatedAt: normalizedBundle.generatedAt,
-    bundlePath: join(outputDir, `xlights-effectmetadata-bundle-${xlightsVersion}.json`)
+    bundlePath: repoRelativePath(join(outputDir, `xlights-effectmetadata-bundle-${xlightsVersion}.json`))
   },
   effects: {}
 };
@@ -449,7 +466,7 @@ const fingerprint = {
   artifactVersion: "1.0",
   generatedAt: new Date().toISOString(),
   xlightsVersion,
-  sourceDir,
+  sourceDir: upstreamRelativePath(sourceDir, sourceDir),
   schemaSha256: normalizedBundle.source.schemaSha256,
   effectCount: effects.length,
   sharedCount: Object.keys(shared).length,
@@ -469,8 +486,8 @@ const diff = {
   artifactVersion: "1.0",
   generatedAt: new Date().toISOString(),
   xlightsVersion,
-  sourceDir,
-  registryPath,
+  sourceDir: upstreamRelativePath(sourceDir, sourceDir),
+  registryPath: repoRelativePath(registryPath),
   localRegistryEffectCount: Object.keys(mergedRegistryEffects).length,
   upstreamEffectCount: effects.length,
   overlapEffects: [],
@@ -600,13 +617,17 @@ const fingerprintPath = join(outputDir, `xlights-effectmetadata-fingerprint-${xl
 const diffPath = join(outputDir, `xlights-effectmetadata-diff-${xlightsVersion}.json`);
 const mdPath = join(outputDir, `xlights-effectmetadata-diff-${xlightsVersion}.md`);
 const effectiveRegistryVersionedPath = join(outputDir, `effective-effect-parameter-registry-${xlightsVersion}.json`);
+const canonicalOutputDir = resolve("scripts/sequencer-render-training/catalog/upstream-effectmetadata");
 const effectiveRegistryCanonicalPath = resolve("scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json");
+const shouldWriteCanonicalRegistry = outputDir === canonicalOutputDir;
 
 writeFileSync(bundlePath, `${JSON.stringify(normalizedBundle, null, 2)}\n`, "utf8");
 writeFileSync(fingerprintPath, `${JSON.stringify(fingerprint, null, 2)}\n`, "utf8");
 writeFileSync(diffPath, `${JSON.stringify(diff, null, 2)}\n`, "utf8");
 writeFileSync(effectiveRegistryVersionedPath, `${JSON.stringify(effectiveRegistry, null, 2)}\n`, "utf8");
-writeFileSync(effectiveRegistryCanonicalPath, `${JSON.stringify(effectiveRegistry, null, 2)}\n`, "utf8");
+if (shouldWriteCanonicalRegistry) {
+  writeFileSync(effectiveRegistryCanonicalPath, `${JSON.stringify(effectiveRegistry, null, 2)}\n`, "utf8");
+}
 
 let md = "# xLights Effect Metadata Import\n\n";
 md += `Generated: ${normalizedBundle.generatedAt}\n\n`;
@@ -654,7 +675,7 @@ console.log(JSON.stringify({
   diffPath,
   mdPath,
   effectiveRegistryVersionedPath,
-  effectiveRegistryCanonicalPath,
+  effectiveRegistryCanonicalPath: shouldWriteCanonicalRegistry ? effectiveRegistryCanonicalPath : null,
   overlapEffectCount: diff.overlapEffects.length,
   breakingChangeCount: diff.breakingChanges.length
 }, null, 2));

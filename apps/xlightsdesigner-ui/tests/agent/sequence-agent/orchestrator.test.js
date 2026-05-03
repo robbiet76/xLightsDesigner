@@ -557,7 +557,7 @@ test('owned batch builder preserves corpus-backed settings and metadata payloads
     T_CHOICE_In_Transition_Type: 'Wipe',
     T_CHOICE_Out_Transition_Type: 'Circle Explode',
     B_CHOICE_BufferStyle: 'Per Preview',
-    E_TEXTCTRL_Pictures_Filename: '/Users/robterry/Documents/Lights/assets/snowflake.png'
+    E_TEXTCTRL_Pictures_Filename: '/tmp/xlightsdesigner-assets/snowflake.png'
   };
   const palette = { C_BUTTON_Palette1: '#ffffff', C_SLIDER_Contrast: 0 };
   const commands = compressibleCommands({
@@ -578,7 +578,7 @@ test('owned batch builder preserves corpus-backed settings and metadata payloads
   assert.equal(batchPlan.effects.length, 1);
   assert.equal(
     batchPlan.effects[0].settings,
-    'T_CHOICE_LayerMethod=Layered,T_CHOICE_In_Transition_Type=Wipe,T_CHOICE_Out_Transition_Type=Circle Explode,B_CHOICE_BufferStyle=Per Preview,E_TEXTCTRL_Pictures_Filename=/Users/robterry/Documents/Lights/assets/snowflake.png'
+    'T_CHOICE_LayerMethod=Layered,T_CHOICE_In_Transition_Type=Wipe,T_CHOICE_Out_Transition_Type=Circle Explode,B_CHOICE_BufferStyle=Per Preview,E_TEXTCTRL_Pictures_Filename=/tmp/xlightsdesigner-assets/snowflake.png'
   );
   assert.equal(
     batchPlan.effects[0].palette,

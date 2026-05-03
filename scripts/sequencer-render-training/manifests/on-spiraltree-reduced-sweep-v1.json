@@ -3,7 +3,7 @@
   "packId": "on-spiraltree-reduced-sweep-v1",
   "description": "Reduced baseline On sweep on the SpiralTree-01 model using a short standard duration.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "SpiralTree-01",
     "modelType": "tree_360",
     "startMs": 1000,

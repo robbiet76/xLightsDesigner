@@ -3,7 +3,7 @@ import { mkdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
-const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
+const DEFAULT_SHOW_DIR = process.env.XLIGHTS_SHOW_DIR || path.join(process.env.HOME || '', 'Desktop', 'Show');
 const DEFAULT_VALIDATION_ROOT_NAME = '_xlightsdesigner_api_validation';
 
 function usage() {

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 const DEFAULT_APP_URL = 'http://127.0.0.1:49916';
-const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
+const DEFAULT_SHOW_DIR = process.env.XLIGHTS_SHOW_DIR || path.join(process.env.HOME || '', 'Desktop', 'Show');
 
 function str(value = '') {
   return String(value || '').trim();

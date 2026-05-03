@@ -16,8 +16,8 @@ It remains useful as historical planning context only and should not be used as 
 
 The rebuild should instead follow:
 
-- [render-training-knowledge.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-knowledge.md)
-- [render-training-knowledge.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-knowledge.md)
+- [render-training-knowledge.md](specs/sequence-agent/render-training-knowledge.md)
+- [render-training-knowledge.md](specs/sequence-agent/render-training-knowledge.md)
 
 ## Purpose
 

@@ -3,7 +3,7 @@
   "packId": "colorwash-matrix-fade-behavior-anchors-v1",
   "description": "Focused Color Wash behavior anchors on a high-density matrix for single-color and multi-color representative palette modes.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "MatrixHighDensity",
     "modelType": "matrix",
     "startMs": 1000,

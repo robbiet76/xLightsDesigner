@@ -3,7 +3,7 @@
   "packId": "shimmer-outline-expanded-sweep-v2",
   "description": "Expanded Shimmer sweep on a concrete outline model. Adds sparse all-color sparkle and punchier palette-limited shimmer to widen the outline look space.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "Border-01",
     "modelType": "outline",
     "startMs": 1000,

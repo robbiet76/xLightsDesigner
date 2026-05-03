@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 test("import-upstream-effect-metadata emits normalized bundle, fingerprint, and diff", () => {
@@ -12,7 +12,7 @@ test("import-upstream-effect-metadata emits normalized bundle, fingerprint, and 
     [
       resolve("scripts/sequencer-render-training/tooling/import-upstream-effect-metadata.mjs"),
       root,
-      "/Users/robterry/xLights-2026.06/resources/effectmetadata",
+      join(homedir(), "xLights-2026.06", "resources", "effectmetadata"),
       resolve("scripts/sequencer-render-training/catalog/effect-parameter-registry.json"),
       "2026.06"
     ],
@@ -39,6 +39,8 @@ test("import-upstream-effect-metadata emits normalized bundle, fingerprint, and 
 
   assert.equal(bundle.artifactType, "xlights_effect_metadata_bundle_v1");
   assert.equal(bundle.source.xlightsVersion, "2026.06");
+  assert.equal(bundle.source.sourceDir, "resources/effectmetadata");
+  assert.equal(bundle.effects.every((effect) => !effect.sourcePath.startsWith("/")), true);
   assert.ok(bundle.effectCount >= 50);
   assert.ok(bundle.sharedCount >= 3);
 

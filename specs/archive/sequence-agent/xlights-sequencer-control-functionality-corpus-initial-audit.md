@@ -25,13 +25,13 @@ Do not use this corpus for:
 
 Read-only local inspection on March 11, 2026:
 
-- `/Users/robterry/Documents/Lights/Current/Christmas/Show/BeginningToLookXmas/BeginningToLookXmas.xsq`
-- `/Users/robterry/Documents/Lights/Current/Christmas/Show/JingleBells - Sinatra/JingleBells_Sinatra.xsq`
-- `/Users/robterry/Documents/Lights/Current/Christmas/Show/WinterWonderland/WinterWonderland.xsq`
+- `<sequence-source-root>/Christmas/Show/BeginningToLookXmas/BeginningToLookXmas.xsq`
+- `<sequence-source-root>/Christmas/Show/JingleBells - Sinatra/JingleBells_Sinatra.xsq`
+- `<sequence-source-root>/Christmas/Show/WinterWonderland/WinterWonderland.xsq`
 
 Expanded live-corpus scan:
 
-- root: `/Users/robterry/Documents/Lights/Current/Christmas/Show`
+- root: `<sequence-source-root>/Christmas/Show`
 - live `.xsq` files scanned for corpus use: `63`
 - excluded from corpus counts:
   - `Backup/...` snapshots

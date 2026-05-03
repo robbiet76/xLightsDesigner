@@ -8,7 +8,7 @@ import {
 
 test("current sequence context compacts timing tracks and effects", () => {
   const context = buildCurrentSequenceContext({
-    sequencePath: "/Users/robterry/Desktop/Show/test.xsq",
+    sequencePath: "/tmp/xlightsdesigner-test-show/test.xsq",
     sequenceRevision: "rev-42",
     selectedSections: ["Chorus 1"],
     selectedTargets: ["MegaTree"],

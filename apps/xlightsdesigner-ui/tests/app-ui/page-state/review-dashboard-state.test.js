@@ -472,7 +472,7 @@ test("review dashboard state exposes current generative sequencing summary from 
             artifactId: "current_sequence_context_v1-visible",
             source: "xlights_readback",
             sequence: {
-              path: "/Users/robterry/Desktop/Show/test.xsq",
+              path: "/tmp/xlightsdesigner-test-show/test.xsq",
               revision: "rev-44"
             },
             summary: {

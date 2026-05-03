@@ -3,7 +3,7 @@
   "packId": "singlestrand-spiraltree-numberchases-range-v1",
   "description": "Range sampling sweep for SingleStrand numberChases on the SpiralTree-01 model. Uses fixed chaseSize and cycles to isolate density changes on spiral geometry.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "SpiralTree-01",
     "modelType": "tree_360",
     "startMs": 1000,

@@ -15,8 +15,8 @@ import { buildEffectDefinitionCatalog } from '../../apps/xlightsdesigner-ui/agen
 import { buildSequenceAgentPlan } from '../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent.js';
 
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
-const DEFAULT_SHOW_DIR = '/Users/robterry/Desktop/Show';
-const DEFAULT_MEDIA_FILE = "/Users/robterry/Desktop/Show/Audio/01 CAN'T STOP THE FEELING Film final.mp3";
+const DEFAULT_SHOW_DIR = process.env.XLIGHTS_SHOW_DIR || path.join(process.env.HOME || '', 'Desktop', 'Show');
+const DEFAULT_MEDIA_FILE = process.env.XLIGHTS_MEDIA_FILE || path.join(DEFAULT_SHOW_DIR, 'Audio', "01 CAN'T STOP THE FEELING Film final.mp3");
 const VALIDATION_ROOT = '_xlightsdesigner_validation';
 
 function str(value = '') {

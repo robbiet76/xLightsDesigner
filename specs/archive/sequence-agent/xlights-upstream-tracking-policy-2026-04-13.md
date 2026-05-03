@@ -14,11 +14,11 @@ Define how xLightsDesigner should track upstream xLights changes while the upstr
 This policy is no longer aligned with the current integration state.
 
 It assumes:
-- the old local xLights tree at `/Users/robterry/xLights`
+- the old local xLights tree at `<xlights-source-root>`
 - the old owned branch strategy
 - pre-`2026.06` migration posture
 
-The active integration baseline is now `/Users/robterry/xLights-2026.06`, and migration governance is defined by the `2026.06` specs listed above.
+The active integration baseline is now `<xlights-source-root>`, and migration governance is defined by the `2026.06` specs listed above.
 
 This policy exists to prevent the sequencing POC from being destabilized by upstream churn while still ensuring that render and preview architecture changes are actively monitored.
 
@@ -39,7 +39,7 @@ This is the branch that should be used when assessing:
 The local fork/integration branch used for xLightsDesigner work should remain on the owned stable branch until an explicit migration checkpoint is chosen.
 
 Current local xLights integration tree:
-- `/Users/robterry/xLights`
+- `<xlights-source-root>`
 
 Current observed branch:
 - `api-cleanup`

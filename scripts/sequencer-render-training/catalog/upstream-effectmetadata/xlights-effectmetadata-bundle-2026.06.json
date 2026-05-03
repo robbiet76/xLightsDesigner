@@ -1,11 +1,11 @@
 {
   "artifactType": "xlights_effect_metadata_bundle_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-17T01:04:15.813Z",
+  "generatedAt": "2026-05-03T01:33:37.602Z",
   "source": {
     "xlightsVersion": "2026.06",
-    "sourceDir": "/Users/robterry/xLights-2026.06/resources/effectmetadata",
-    "schemaPath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/_schema.json",
+    "sourceDir": "resources/effectmetadata",
+    "schemaPath": "resources/effectmetadata/_schema.json",
     "schemaSha256": "fbb394e9ed58d2b7858ca487f7734abbc179330edd16ffacbe2ad4f190d3cecb"
   },
   "schema": {
@@ -307,7 +307,7 @@
     {
       "effectName": "Adjust",
       "sourceFile": "Adjust.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Adjust.json",
+      "sourcePath": "resources/effectmetadata/Adjust.json",
       "jsonSha256": "475f355954cd8c8985ba3a7efeb56fb48e669e63cb4f0b27f3021ce97a764967",
       "canvasMode": true,
       "propertyCount": 6,
@@ -463,7 +463,7 @@
     {
       "effectName": "Bars",
       "sourceFile": "Bars.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Bars.json",
+      "sourcePath": "resources/effectmetadata/Bars.json",
       "jsonSha256": "b56e2e41203fca400b4a1ff65e18cc46a2e28646738b6cf0616f576bf30a4995",
       "canvasMode": false,
       "propertyCount": 8,
@@ -685,7 +685,7 @@
     {
       "effectName": "Butterfly",
       "sourceFile": "Butterfly.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Butterfly.json",
+      "sourcePath": "resources/effectmetadata/Butterfly.json",
       "jsonSha256": "864bc6f000113f48f0d25c73af38b4c3560fdaca7d58ce5f051ebac25cdfc341",
       "canvasMode": false,
       "propertyCount": 6,
@@ -837,7 +837,7 @@
     {
       "effectName": "Candle",
       "sourceFile": "Candle.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Candle.json",
+      "sourcePath": "resources/effectmetadata/Candle.json",
       "jsonSha256": "0daefde0a0584ed79b8a55c1f221eb3fc1c292e6d1ea0bde33ade08bcaa5f73c",
       "canvasMode": false,
       "propertyCount": 6,
@@ -983,7 +983,7 @@
     {
       "effectName": "Circles",
       "sourceFile": "Circles.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Circles.json",
+      "sourcePath": "resources/effectmetadata/Circles.json",
       "jsonSha256": "2e0af9e0a2281130c38cfee059169d37c3eaf0bff91a200202da2661808b4236",
       "canvasMode": false,
       "propertyCount": 11,
@@ -1252,7 +1252,7 @@
     {
       "effectName": "Color Wash",
       "sourceFile": "ColorWash.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/ColorWash.json",
+      "sourcePath": "resources/effectmetadata/ColorWash.json",
       "jsonSha256": "7054ea7d7d2831fd49768f6aa2e0e7cd365690c4c8e5be5cf2bdce74dc60bd66",
       "canvasMode": false,
       "propertyCount": 6,
@@ -1398,7 +1398,7 @@
     {
       "effectName": "Curtain",
       "sourceFile": "Curtain.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Curtain.json",
+      "sourcePath": "resources/effectmetadata/Curtain.json",
       "jsonSha256": "de00ac465f66b4736377180f809ea72578a1c7a1f793b3fc49ce8e75d2c43474",
       "canvasMode": false,
       "propertyCount": 5,
@@ -1534,7 +1534,7 @@
     {
       "effectName": "DMX",
       "sourceFile": "DMX.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/DMX.json",
+      "sourcePath": "resources/effectmetadata/DMX.json",
       "jsonSha256": "0011216c49691871106fa02953159910d8df353d619253e209e53050a2739264",
       "canvasMode": false,
       "propertyCount": 2,
@@ -1592,7 +1592,7 @@
     {
       "effectName": "Duplicate",
       "sourceFile": "Duplicate.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Duplicate.json",
+      "sourcePath": "resources/effectmetadata/Duplicate.json",
       "jsonSha256": "853d1ea19d8d7b6e0b92241c15258477d076675a89f6ea40568de17134f73481",
       "canvasMode": false,
       "propertyCount": 6,
@@ -1738,7 +1738,7 @@
     {
       "effectName": "Faces",
       "sourceFile": "Faces.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Faces.json",
+      "sourcePath": "resources/effectmetadata/Faces.json",
       "jsonSha256": "e7e0a3fad498f4d685861861e78ec6443958d0e57c77d5e3c9c7bdec1c35bbb3",
       "canvasMode": false,
       "propertyCount": 12,
@@ -2088,7 +2088,7 @@
     {
       "effectName": "Fan",
       "sourceFile": "Fan.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Fan.json",
+      "sourcePath": "resources/effectmetadata/Fan.json",
       "jsonSha256": "99dd035910c97de04b67a7cd6e54a59c0bb73f8cefd0a7b756d1848a6c307833",
       "canvasMode": false,
       "propertyCount": 16,
@@ -2492,7 +2492,7 @@
     {
       "effectName": "Fill",
       "sourceFile": "Fill.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Fill.json",
+      "sourcePath": "resources/effectmetadata/Fill.json",
       "jsonSha256": "670578279c1326706f9d147d207ac7cbe72bdc7f555b4ef652d32b125a3e2452",
       "canvasMode": false,
       "propertyCount": 8,
@@ -2687,7 +2687,7 @@
     {
       "effectName": "Fire",
       "sourceFile": "Fire.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Fire.json",
+      "sourcePath": "resources/effectmetadata/Fire.json",
       "jsonSha256": "6f0d5915565b99d0c3533405c850c4ad77ac910d860a543b76ce8b8d70946e1b",
       "canvasMode": false,
       "propertyCount": 5,
@@ -2827,7 +2827,7 @@
     {
       "effectName": "Fireworks",
       "sourceFile": "Fireworks.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Fireworks.json",
+      "sourcePath": "resources/effectmetadata/Fireworks.json",
       "jsonSha256": "ef659156cabb4a0e06d8fb77983495ff89f88f1a6a3f018ae71212381ea8923a",
       "canvasMode": false,
       "propertyCount": 14,
@@ -3179,7 +3179,7 @@
     {
       "effectName": "Galaxy",
       "sourceFile": "Galaxy.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Galaxy.json",
+      "sourcePath": "resources/effectmetadata/Galaxy.json",
       "jsonSha256": "65687088be52b2282945b2b06135e75ae9a0ff347c319f3250ea22d64d21b7e1",
       "canvasMode": false,
       "propertyCount": 14,
@@ -3537,7 +3537,7 @@
     {
       "effectName": "Garlands",
       "sourceFile": "Garlands.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Garlands.json",
+      "sourcePath": "resources/effectmetadata/Garlands.json",
       "jsonSha256": "490518369dd02e98878cf501246d0846bcdbbfe512726af2e521d18904e99b9b",
       "canvasMode": false,
       "propertyCount": 4,
@@ -3648,7 +3648,7 @@
     {
       "effectName": "Glediator",
       "sourceFile": "Glediator.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Glediator.json",
+      "sourcePath": "resources/effectmetadata/Glediator.json",
       "jsonSha256": "cd406e2062138faec13955e4232bdf209caa7cce02861e9105ee702bf1b1cf4f",
       "canvasMode": false,
       "propertyCount": 2,
@@ -3710,7 +3710,7 @@
     {
       "effectName": "Guitar",
       "sourceFile": "Guitar.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Guitar.json",
+      "sourcePath": "resources/effectmetadata/Guitar.json",
       "jsonSha256": "6ea5a83a6faae81d9a9c3bffa3d885c50f838c77d15bed9a29a04ec1d5b0e4a6",
       "canvasMode": false,
       "propertyCount": 10,
@@ -3964,7 +3964,7 @@
     {
       "effectName": "Kaleidoscope",
       "sourceFile": "Kaleidoscope.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Kaleidoscope.json",
+      "sourcePath": "resources/effectmetadata/Kaleidoscope.json",
       "jsonSha256": "b9f17552cafdf173314de0ea5e400751f466599198fe02896c037706f7cd73da",
       "canvasMode": true,
       "propertyCount": 5,
@@ -4096,7 +4096,7 @@
     {
       "effectName": "Life",
       "sourceFile": "Life.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Life.json",
+      "sourcePath": "resources/effectmetadata/Life.json",
       "jsonSha256": "cad7b897ca5ff55367a4fca36b781842eefb4373a540207c0afbae4cc354bd76",
       "canvasMode": false,
       "propertyCount": 3,
@@ -4176,7 +4176,7 @@
     {
       "effectName": "Lightning",
       "sourceFile": "Lightning.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Lightning.json",
+      "sourcePath": "resources/effectmetadata/Lightning.json",
       "jsonSha256": "8ad9a0781e9bae5b2353a12595f46d593cfb3ae738d53c29dbb0171118532224",
       "canvasMode": false,
       "propertyCount": 8,
@@ -4369,7 +4369,7 @@
     {
       "effectName": "Lines",
       "sourceFile": "Lines.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Lines.json",
+      "sourcePath": "resources/effectmetadata/Lines.json",
       "jsonSha256": "eabb706e01ab92fad5deebfea37478ec6f2194bf4d1196f0953dcef47284395b",
       "canvasMode": false,
       "propertyCount": 6,
@@ -4515,7 +4515,7 @@
     {
       "effectName": "Liquid",
       "sourceFile": "Liquid.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Liquid.json",
+      "sourcePath": "resources/effectmetadata/Liquid.json",
       "jsonSha256": "f8fd3de3ec80fc3a12b29ccddf5c440943438010137b46ed3eae4e6eebed81ca",
       "canvasMode": false,
       "propertyCount": 44,
@@ -5610,7 +5610,7 @@
     {
       "effectName": "Marquee",
       "sourceFile": "Marquee.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Marquee.json",
+      "sourcePath": "resources/effectmetadata/Marquee.json",
       "jsonSha256": "0725c0fca910d2b0973f74203d0429364edb88797a4948543448344b60ab9db4",
       "canvasMode": false,
       "propertyCount": 14,
@@ -5970,7 +5970,7 @@
     {
       "effectName": "Meteors",
       "sourceFile": "Meteors.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Meteors.json",
+      "sourcePath": "resources/effectmetadata/Meteors.json",
       "jsonSha256": "0614e234027968085343bb0650e44b32c18ba3ac7f8cf9ff0e18556304f6c879",
       "canvasMode": false,
       "propertyCount": 11,
@@ -6254,7 +6254,7 @@
     {
       "effectName": "Morph",
       "sourceFile": "Morph.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Morph.json",
+      "sourcePath": "resources/effectmetadata/Morph.json",
       "jsonSha256": "d29fb8e6f1fc1e160fb4d9eeea0976a71627ce980bab9b364e726050516bc3f4",
       "canvasMode": false,
       "propertyCount": 21,
@@ -6794,7 +6794,7 @@
     {
       "effectName": "Moving Head",
       "sourceFile": "MovingHead.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/MovingHead.json",
+      "sourcePath": "resources/effectmetadata/MovingHead.json",
       "jsonSha256": "d68f2dd560354965e7e61056561d09626f37c029b743123bbb41f0186248ee0d",
       "canvasMode": false,
       "propertyCount": 20,
@@ -7306,7 +7306,7 @@
     {
       "effectName": "Music",
       "sourceFile": "MusicEffect.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/MusicEffect.json",
+      "sourcePath": "resources/effectmetadata/MusicEffect.json",
       "jsonSha256": "b096cb8cb0b7c5f541e9e0ca79ebd35be7dca1bc0e8fd47bdce69af5d17a0ca6",
       "canvasMode": false,
       "propertyCount": 11,
@@ -7576,7 +7576,7 @@
     {
       "effectName": "Off",
       "sourceFile": "Off.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Off.json",
+      "sourcePath": "resources/effectmetadata/Off.json",
       "jsonSha256": "7d94fa271572126be0233dd6e514d5bbf40c5fe845dfaa3c0cc12006fb9b6d2c",
       "canvasMode": false,
       "propertyCount": 1,
@@ -7617,7 +7617,7 @@
     {
       "effectName": "On",
       "sourceFile": "On.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/On.json",
+      "sourcePath": "resources/effectmetadata/On.json",
       "jsonSha256": "653f9f626848ebd0b72a1c5cb80b38540e6a10b815f38eb4dfe31d0066d84f7e",
       "canvasMode": false,
       "propertyCount": 5,
@@ -7741,7 +7741,7 @@
     {
       "effectName": "Piano",
       "sourceFile": "Piano.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Piano.json",
+      "sourcePath": "resources/effectmetadata/Piano.json",
       "jsonSha256": "a4f09ef10056f7ab159a5cbb99ea3e7d8c56f84991b42a9996fe93d3e465e420",
       "canvasMode": false,
       "propertyCount": 8,
@@ -7934,7 +7934,7 @@
     {
       "effectName": "Pictures",
       "sourceFile": "Pictures.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Pictures.json",
+      "sourcePath": "resources/effectmetadata/Pictures.json",
       "jsonSha256": "9813bfa3db505d6de9512005441b6859ba0cda6e0e2369a5df7490c18c1d4335",
       "canvasMode": false,
       "propertyCount": 17,
@@ -8420,7 +8420,7 @@
     {
       "effectName": "Pinwheel",
       "sourceFile": "Pinwheel.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Pinwheel.json",
+      "sourcePath": "resources/effectmetadata/Pinwheel.json",
       "jsonSha256": "6b631df2b96c0e6e0e666893200869be102b5ad5f6f8f81dd26c9d744aaca0b2",
       "canvasMode": false,
       "propertyCount": 11,
@@ -8690,7 +8690,7 @@
     {
       "effectName": "Plasma",
       "sourceFile": "Plasma.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Plasma.json",
+      "sourcePath": "resources/effectmetadata/Plasma.json",
       "jsonSha256": "53a930de01a61679fcb647bfb490e3f209196d997a728ef847fca5cb8e036a1f",
       "canvasMode": false,
       "propertyCount": 4,
@@ -8798,7 +8798,7 @@
     {
       "effectName": "Ripple",
       "sourceFile": "Ripple.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Ripple.json",
+      "sourcePath": "resources/effectmetadata/Ripple.json",
       "jsonSha256": "9d0ff497d7bbc16488795b1c022ff5ba4b807e58df0653d86afdd98b6681c36d",
       "canvasMode": false,
       "propertyCount": 17,
@@ -9223,7 +9223,7 @@
     {
       "effectName": "Servo",
       "sourceFile": "Servo.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Servo.json",
+      "sourcePath": "resources/effectmetadata/Servo.json",
       "jsonSha256": "dd1a9f8de49ff6a73fb58c62f805bfca31242066d4d29560414d3d77296f158b",
       "canvasMode": false,
       "propertyCount": 6,
@@ -9384,7 +9384,7 @@
     {
       "effectName": "Shader",
       "sourceFile": "Shader.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Shader.json",
+      "sourcePath": "resources/effectmetadata/Shader.json",
       "jsonSha256": "22ba261b9e960b50c4d60ed7973ae619b4d8c2b4cda972c9ae443dec975911b9",
       "canvasMode": false,
       "propertyCount": 7,
@@ -9552,7 +9552,7 @@
     {
       "effectName": "Shape",
       "sourceFile": "Shape.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Shape.json",
+      "sourcePath": "resources/effectmetadata/Shape.json",
       "jsonSha256": "288f4fbd6ccb0e803d991c693063b46e08a74d21bc6d14540b4ce5d5f7b984d8",
       "canvasMode": false,
       "propertyCount": 27,
@@ -10185,7 +10185,7 @@
     {
       "effectName": "Shimmer",
       "sourceFile": "Shimmer.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Shimmer.json",
+      "sourcePath": "resources/effectmetadata/Shimmer.json",
       "jsonSha256": "9ec307394ecb69a503f1b85b514821b13d912a94f0b0398a39b3a9a53c70c01a",
       "canvasMode": false,
       "propertyCount": 4,
@@ -10287,7 +10287,7 @@
     {
       "effectName": "Shockwave",
       "sourceFile": "Shockwave.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Shockwave.json",
+      "sourcePath": "resources/effectmetadata/Shockwave.json",
       "jsonSha256": "8bfeeb59a589a1ebc9eb7caf53da7b1f77214459db6b6b73df3780ed2b17de0f",
       "canvasMode": false,
       "propertyCount": 10,
@@ -10548,7 +10548,7 @@
     {
       "effectName": "SingleStrand",
       "sourceFile": "SingleStrand.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/SingleStrand.json",
+      "sourcePath": "resources/effectmetadata/SingleStrand.json",
       "jsonSha256": "a23852bcfbcba7ca29f1ae88ef9802292e72668a8a8f28f0c12dca84b4f461fe",
       "canvasMode": false,
       "propertyCount": 17,
@@ -11015,7 +11015,7 @@
     {
       "effectName": "Sketch",
       "sourceFile": "Sketch.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Sketch.json",
+      "sourcePath": "resources/effectmetadata/Sketch.json",
       "jsonSha256": "c31fa73deb39752cbe2cc7fff13b32f297de5583b94fce19826d9875fc5d0a35",
       "canvasMode": false,
       "propertyCount": 8,
@@ -11240,7 +11240,7 @@
     {
       "effectName": "Snowflakes",
       "sourceFile": "Snowflakes.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Snowflakes.json",
+      "sourcePath": "resources/effectmetadata/Snowflakes.json",
       "jsonSha256": "0fb54f7e5012f9ad52a37b7f21d0ed721074257627c15b2ff72828f599cdb1bb",
       "canvasMode": false,
       "propertyCount": 5,
@@ -11368,7 +11368,7 @@
     {
       "effectName": "Snowstorm",
       "sourceFile": "Snowstorm.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Snowstorm.json",
+      "sourcePath": "resources/effectmetadata/Snowstorm.json",
       "jsonSha256": "8f805bf1dc21da92c53a3ed5713a79ebe9dc126b6401b99981e42e7448caaf19",
       "canvasMode": false,
       "propertyCount": 3,
@@ -11448,7 +11448,7 @@
     {
       "effectName": "Spirals",
       "sourceFile": "Spirals.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Spirals.json",
+      "sourcePath": "resources/effectmetadata/Spirals.json",
       "jsonSha256": "a91d87740c1b1ce466e61300476808847fb4a2b608cffdb17c5466f0c021656e",
       "canvasMode": false,
       "propertyCount": 8,
@@ -11638,7 +11638,7 @@
     {
       "effectName": "Spirograph",
       "sourceFile": "Spirograph.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Spirograph.json",
+      "sourcePath": "resources/effectmetadata/Spirograph.json",
       "jsonSha256": "6dc884d4df85812060de9bdd952941603bb61f6ed96ff0c077e38b436af3a926",
       "canvasMode": false,
       "propertyCount": 7,
@@ -11806,7 +11806,7 @@
     {
       "effectName": "State",
       "sourceFile": "State.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/State.json",
+      "sourcePath": "resources/effectmetadata/State.json",
       "jsonSha256": "06e6b377051ebb0024c7155406a884e486c4b9fe793547d33c0ba289d4194621",
       "canvasMode": false,
       "propertyCount": 5,
@@ -11949,7 +11949,7 @@
     {
       "effectName": "Strobe",
       "sourceFile": "Strobe.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Strobe.json",
+      "sourcePath": "resources/effectmetadata/Strobe.json",
       "jsonSha256": "d33420e0a85e5eee60de001f2af2fdb4dd8aa6b0d237b1a2bcbfbc7bd69b5c3e",
       "canvasMode": false,
       "propertyCount": 4,
@@ -12051,7 +12051,7 @@
     {
       "effectName": "Tendril",
       "sourceFile": "Tendril.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Tendril.json",
+      "sourcePath": "resources/effectmetadata/Tendril.json",
       "jsonSha256": "d2b2bf212497e30b019a7f02e0dc542c8ef1f834844d74ea7f411803bad45947",
       "canvasMode": false,
       "propertyCount": 13,
@@ -12376,7 +12376,7 @@
     {
       "effectName": "Text",
       "sourceFile": "Text.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Text.json",
+      "sourcePath": "resources/effectmetadata/Text.json",
       "jsonSha256": "9749ea0cc661ddd671b1ed8170e896f1f9c7dc025f64d44a5ef02fc1ae8250bc",
       "canvasMode": false,
       "propertyCount": 17,
@@ -12826,7 +12826,7 @@
     {
       "effectName": "Tree",
       "sourceFile": "Tree.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Tree.json",
+      "sourcePath": "resources/effectmetadata/Tree.json",
       "jsonSha256": "77a84700d4637c456a04f92965da0f13652a4804afb24542e7ee1314be4c0173",
       "canvasMode": false,
       "propertyCount": 3,
@@ -12906,7 +12906,7 @@
     {
       "effectName": "Twinkle",
       "sourceFile": "Twinkle.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Twinkle.json",
+      "sourcePath": "resources/effectmetadata/Twinkle.json",
       "jsonSha256": "b301b0b40165f728d51a23633c7b018d0c14c8535ce71a923c4346cbc0d1b51c",
       "canvasMode": false,
       "propertyCount": 5,
@@ -13033,7 +13033,7 @@
     {
       "effectName": "Video",
       "sourceFile": "Video.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Video.json",
+      "sourcePath": "resources/effectmetadata/Video.json",
       "jsonSha256": "55533339a7e2a2769bc5d0004490ae019dd1441a1a1ff422609547b91215953a",
       "canvasMode": false,
       "propertyCount": 13,
@@ -13373,7 +13373,7 @@
     {
       "effectName": "VU Meter",
       "sourceFile": "VUMeter.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/VUMeter.json",
+      "sourcePath": "resources/effectmetadata/VUMeter.json",
       "jsonSha256": "1a543ac3c02e1b2f176443a18ebe6d36f345c5f446f06c4e50eb971705259c9d",
       "canvasMode": false,
       "propertyCount": 16,
@@ -13805,7 +13805,7 @@
     {
       "effectName": "Warp",
       "sourceFile": "Warp.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Warp.json",
+      "sourcePath": "resources/effectmetadata/Warp.json",
       "jsonSha256": "8abb23cea52ab16870a77d29f546b5a5b8b0732993e28eda8ae5e10de4a2814e",
       "canvasMode": true,
       "propertyCount": 7,
@@ -13991,7 +13991,7 @@
     {
       "effectName": "Wave",
       "sourceFile": "Wave.json",
-      "sourcePath": "/Users/robterry/xLights-2026.06/resources/effectmetadata/Wave.json",
+      "sourcePath": "resources/effectmetadata/Wave.json",
       "jsonSha256": "4127d4f79f389a7448454084b11cf1fe142ecbbbc8e3b36820f25608e7ab0543",
       "canvasMode": false,
       "propertyCount": 9,

@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
+import path from 'node:path';
 
 const BASE = 'http://127.0.0.1:49915/xlightsdesigner/api';
-const MEDIA_FILE = `/Users/robterry/Desktop/Show/Audio/01 CAN'T STOP THE FEELING Film final.mp3`;
+const DEFAULT_SHOW_DIR = process.env.XLIGHTS_SHOW_DIR || path.join(process.env.HOME || '', 'Desktop', 'Show');
+const MEDIA_FILE = process.env.XLIGHTS_MEDIA_FILE || path.join(DEFAULT_SHOW_DIR, 'Audio', "01 CAN'T STOP THE FEELING Film final.mp3");
 
 async function request(path, { method = 'GET', body = null } = {}) {
   const response = await fetch(`${BASE}${path}`, {
@@ -51,7 +53,7 @@ async function main() {
   await assertNoBlockingModal();
   const explicitPath = process.argv[2];
   const ts = execFileSync('date', ['+%Y%m%d-%H%M%S'], { encoding: 'utf8' }).trim();
-  const file = explicitPath || `/Users/robterry/Desktop/Show/Test/API-App-Flow-${ts}.xsq`;
+  const file = explicitPath || path.join(DEFAULT_SHOW_DIR, 'Test', `API-App-Flow-${ts}.xsq`);
   const create = await request('/sequence/create', {
     method: 'POST',
     body: {

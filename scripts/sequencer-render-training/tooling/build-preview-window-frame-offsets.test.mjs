@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 
 test("build-preview-window-frame-offsets emits broad distributed offsets", () => {
@@ -27,7 +27,7 @@ test("build-preview-window-frame-offsets emits broad distributed offsets", () =>
     "--window-plan", planPath,
     "--window-name", "opening",
     "--out", outPath
-  ], { cwd: "/Users/robterry/Projects/xLightsDesigner" });
+  ], { cwd: resolve(".") });
 
   const out = JSON.parse(readFileSync(outPath, "utf8"));
   assert.equal(out.artifactType, "preview_window_frame_offsets_v1");

@@ -3,7 +3,7 @@
   "packId": "shimmer-hiddentree-dutyfactor-range-v1",
   "description": "Range sampling sweep for Shimmer dutyFactor on the HiddenTree model. Uses a fixed palette-limited shimmer profile and sweeps low-to-high duty anchors.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "sequencePath": "var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "HiddenTree",
     "modelType": "tree_flat",
     "startMs": 1000,

@@ -25,7 +25,7 @@ EFFECT_TEMPLATE_MANIFESTS = {
 def load_default_xpalette() -> dict[str, str]:
     palette_path = Path(os.environ.get(
         "TRAINING_DEFAULT_PALETTE_PATH",
-        "/Users/robterry/xLights-2026.06/resources/palettes/Default.xpalette",
+        str(Path.home() / "xLights-2026.06/resources/palettes/Default.xpalette"),
     ))
     line = next(
         (
@@ -42,6 +42,13 @@ def load_default_xpalette() -> dict[str, str]:
 
 
 DEFAULT_XLIGHTS_PALETTE = load_default_xpalette()
+
+
+def default_fixture_sequence_path() -> str:
+    return os.environ.get(
+        "RENDER_TRAINING_FIXTURE_SEQUENCE_PATH",
+        str(Path.cwd() / "render-training/RenderTraining-AnimationFixture.xsq"),
+    )
 
 PALETTE_VARIANTS = [
     {
@@ -177,7 +184,7 @@ def generate_registry_seed_manifest(effect: str, geometry_profile: str, target_m
         'packId': pack_id,
         'description': f"Registry-seeded Stage 1 baseline manifest for {effect} on {target_model['modelName']} in the canonical render-training layout.",
         'fixture': {
-            'sequencePath': '/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq',
+            'sequencePath': default_fixture_sequence_path(),
             'modelName': target_model['modelName'],
             'modelType': target_model['modelType'],
             'startMs': 1000,
@@ -195,7 +202,7 @@ def generate_manifest(effect: str, geometry_profile: str, target_model: dict, te
     manifest = load_json(template_path)
     generated = deepcopy(manifest)
     fixture = generated.setdefault('fixture', {})
-    fixture['sequencePath'] = '/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq'
+    fixture['sequencePath'] = default_fixture_sequence_path()
     fixture['modelName'] = target_model['modelName']
     fixture['modelType'] = target_model['modelType']
     fixture['notes'] = f"Auto-generated Stage 1 coverage base manifest for {effect} on {target_model['modelName']} ({geometry_profile})."

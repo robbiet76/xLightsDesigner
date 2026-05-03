@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-const REPO_ROOT = "/Users/robterry/Projects/xLightsDesigner";
+const REPO_ROOT = path.resolve(new URL("../../..", import.meta.url).pathname);
 const BASE_URL = process.env.XLD_APP_AUTOMATION_URL || "http://127.0.0.1:49916";
 const DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1";
 const DEFAULT_OPENAI_MODEL = "gpt-5.4-mini";
