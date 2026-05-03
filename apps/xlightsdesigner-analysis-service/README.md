@@ -99,17 +99,17 @@ In xLightsDesigner Settings:
 Use this to score section-label quality against your expected structure on known tracks.
 
 Files:
-- `eval/structure_eval.py` - runner
+- `eval/runners/structure_eval.py` - runner
 - `eval/structure_eval_cases.example.json` - starter case format
-- `eval/export_xlights_track_case.py` - export a timing track from xLights into eval-case JSON
-- `eval/ingest_structure_corpus.py` - auto-build stanza corpus from catalog songs (LRCLIB)
-- `eval/optimize_stanza_split.py` - grid-search stanza segmentation parameters against reference cases
+- `eval/probes/export_xlights_track_case.py` - export a timing track from xLights into eval-case JSON
+- `eval/probes/ingest_structure_corpus.py` - auto-build stanza corpus from catalog songs (LRCLIB)
+- `eval/probes/optimize_stanza_split.py` - grid-search stanza segmentation parameters against reference cases
 
 Export from your xLights reference track:
 ```bash
 cd apps/xlightsdesigner-analysis-service
 cp eval/structure_eval_cases.example.json eval/structure_eval_cases.local.json
-python3 eval/export_xlights_track_case.py \
+python3 eval/probes/export_xlights_track_case.py \
   --endpoint http://127.0.0.1:49914/xlDoAutomation \
   --track-name "Director Song Structure" \
   --out eval/structure_eval_cases.local.json
@@ -120,7 +120,7 @@ If the exported case has empty `audioPath`, re-run with explicit `--audio-path`.
 Run:
 ```bash
 cd apps/xlightsdesigner-analysis-service
-python3 eval/structure_eval.py \
+python3 eval/runners/structure_eval.py \
   --cases eval/structure_eval_cases.local.json \
   --base-url http://127.0.0.1:5055 \
   --provider beatnet \
@@ -139,7 +139,7 @@ downbeat pass on the same local audio.
 
 ```bash
 cd apps/xlightsdesigner-analysis-service
-./.venv310/bin/python eval/compare_downbeat_providers.py \
+./.venv310/bin/python eval/probes/compare_downbeat_providers.py \
   "/path/to/song.mp3" \
   --out /tmp/xld-downbeat-compare.json
 ```
@@ -159,7 +159,7 @@ Use this to tune stanza segmentation systematically (instead of manual trial/err
 
 ```bash
 cd apps/xlightsdesigner-analysis-service
-python3 eval/optimize_stanza_split.py \
+python3 eval/probes/optimize_stanza_split.py \
   --cases eval/structure_eval_cases.local.json \
   --base-url http://127.0.0.1:5055 \
   --provider beatnet \
@@ -177,7 +177,7 @@ This reduces manual stanza collection by scanning a catalog and pulling lyrics f
 Example (discovery terms):
 ```bash
 cd apps/xlightsdesigner-analysis-service
-python3 eval/ingest_structure_corpus.py \
+python3 eval/probes/ingest_structure_corpus.py \
   --itunes-term "holiday classics" \
   --itunes-term "classical christmas" \
   --itunes-limit 80 \
@@ -187,7 +187,7 @@ python3 eval/ingest_structure_corpus.py \
 
 Example (your own catalog CSV/JSON):
 ```bash
-python3 eval/ingest_structure_corpus.py \
+python3 eval/probes/ingest_structure_corpus.py \
   --catalog /path/to/your_songs.csv \
   --out eval/structure_corpus_catalog.json
 ```
