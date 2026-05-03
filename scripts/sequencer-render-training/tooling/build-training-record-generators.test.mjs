@@ -42,4 +42,13 @@ test("behavior record generator can emit a packed catalog consumed by the bundle
   const bundle = readFileSync(bundlePath, "utf8");
   assert.equal(bundle.includes("BEHAVIOR_CAPABILITY_RECORDS_BUNDLE"), true);
   assert.equal(bundle.includes("behavior_capability_record_index_v1"), true);
+  const moduleText = bundle
+    .replace(/^export const BEHAVIOR_CAPABILITY_RECORDS_BUNDLE = /, "")
+    .replace(/;\n?$/, "");
+  const parsedBundle = JSON.parse(moduleText);
+  const firstRecord = parsedBundle.records[0];
+  assert.equal(firstRecord.traceability, undefined);
+  assert.equal(firstRecord.confidence.evidenceClass, undefined);
+  assert.equal(firstRecord.parameterRegion.regionKind, undefined);
+  assert.equal(firstRecord.renderOutcomeSignals.temporalColorDelta, undefined);
 });

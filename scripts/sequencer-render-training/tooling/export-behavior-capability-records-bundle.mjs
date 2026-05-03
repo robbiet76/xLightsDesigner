@@ -24,7 +24,6 @@ const records = loadGeneratedRecordCatalog(inputDir, { artifactType: "behavior_c
     modelType: str(record.modelType),
     parameterRegion: {
       parameterName: str(record.parameterRegion?.parameterName),
-      regionKind: str(record.parameterRegion?.regionKind),
       valueSummary: str(record.parameterRegion?.valueSummary)
     },
     paletteMode: str(record.paletteContext?.paletteMode || record.sharedSettingsContext?.paletteMode),
@@ -34,29 +33,19 @@ const records = loadGeneratedRecordCatalog(inputDir, { artifactType: "behavior_c
       motionPacing: str(record.behaviorSignals?.motionPacing),
       textureDensity: str(record.behaviorSignals?.textureDensity),
       energyLevel: str(record.behaviorSignals?.energyLevel),
-      coverageLevel: str(record.behaviorSignals?.coverageLevel),
-      geometryCoupling: str(record.behaviorSignals?.geometryCoupling),
-      stability: str(record.behaviorSignals?.stability)
+      coverageLevel: str(record.behaviorSignals?.coverageLevel)
     },
     renderOutcomeSignals: {
       temporalRead: str(record.renderOutcomeSignals?.temporalRead),
       densityRead: str(record.renderOutcomeSignals?.densityRead),
       nonBlankRatio: Number(record.renderOutcomeSignals?.nonBlankRatio || 0),
-      temporalMotion: Number(record.renderOutcomeSignals?.temporalMotion || 0),
-      temporalColorDelta: Number(record.renderOutcomeSignals?.temporalColorDelta || 0),
-      temporalBrightnessDelta: Number(record.renderOutcomeSignals?.temporalBrightnessDelta || 0)
+      temporalMotion: Number(record.renderOutcomeSignals?.temporalMotion || 0)
     },
     confidence: {
       level: str(record.confidence?.level),
-      evidenceClass: str(record.confidence?.evidenceClass),
       coverageStatus: str(record.confidence?.coverageStatus)
     },
-    evidenceCount: Number(record.evidenceCount || 0),
-    traceability: {
-      sourceGeometryProfiles: Array.isArray(record.traceability?.sourceGeometryProfiles)
-        ? record.traceability.sourceGeometryProfiles.map((row) => str(row)).filter(Boolean)
-        : []
-    }
+    evidenceCount: Number(record.evidenceCount || 0)
   };
 });
 
