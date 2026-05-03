@@ -183,9 +183,57 @@ struct ProjectServiceTests {
         #expect(reopened.showFolder == "/tmp/new-show")
     }
 
+    @MainActor
+    @Test func projectScreenRelinksShowFolderWithoutChangingProjectIdentity() throws {
+        let service = try makeService()
+        let name = "App Test Project \(UUID().uuidString.prefix(6))"
+        let project = try service.createProject(
+            draft: ProjectDraftModel(
+                projectName: name,
+                showFolder: "/tmp/show",
+                mediaPath: "",
+                migrateMetadata: false,
+                migrationSourceProjectPath: ""
+            )
+        )
+        let workspace = ProjectWorkspace(sessionStore: ProjectServiceTestSessionStore())
+        workspace.setProject(project)
+        let model = ProjectScreenViewModel(
+            workspace: workspace,
+            projectService: service,
+            fileSelectionService: ProjectServiceTestFileSelectionService(folderPath: "/tmp/new-show"),
+            sessionStore: ProjectServiceTestSessionStore()
+        )
+
+        model.chooseShowFolderForActiveProject()
+
+        let active = try #require(workspace.activeProject)
+        let relink = active.snapshot["showFolderRelink"]?.value as? [String: Any]
+        #expect(active.id == project.id)
+        #expect(active.projectFilePath == project.projectFilePath)
+        #expect(active.showFolder == "/tmp/new-show")
+        #expect(relink?["previousShowFolder"] as? String == "/tmp/show")
+        #expect(relink?["showFolder"] as? String == "/tmp/new-show")
+        #expect(workspace.projectBanner?.id == "show-folder-relinked")
+    }
+
     private func makeService() throws -> LocalProjectService {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-project-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         return LocalProjectService(projectsRootPath: root.path)
     }
+}
+
+private struct ProjectServiceTestSessionStore: ProjectSessionStore {
+    func loadLastProjectPath() -> String? { nil }
+    func saveLastProjectPath(_ path: String?) {}
+}
+
+@MainActor
+private struct ProjectServiceTestFileSelectionService: FileSelectionService {
+    let folderPath: String?
+
+    func chooseAudioFile() -> String? { nil }
+    func chooseFolder(prompt: String) -> String? { folderPath }
+    func chooseProjectFolder() -> String? { nil }
 }

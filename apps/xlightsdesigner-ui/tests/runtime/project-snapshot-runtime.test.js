@@ -30,8 +30,9 @@ test("project snapshot runtime reads and writes keyed snapshots", () => {
   runtime.saveCurrentProjectSnapshot();
 
   const store = JSON.parse(storage.getItem("projects"));
-  assert.deepEqual(store["Show A::/show"], { saved: true });
+  assert.deepEqual(store["Show A"], { saved: true });
   assert.equal(queued, 1);
+  assert.equal(runtime.getProjectKey("Show A", "/show"), "Show A");
   assert.deepEqual(runtime.parseProjectKey("Show A::/show"), { projectName: "Show A", showFolder: "/show" });
 });
 
@@ -39,6 +40,7 @@ test("project snapshot runtime deletes and hydrates snapshots", () => {
   const applied = [];
   const storage = createStorage({
     projects: JSON.stringify({
+      "Show A": { route: "sequence" },
       "Show A::/show": { route: "sequence" },
       "Other::/else": { route: "audio" }
     })
@@ -55,6 +57,25 @@ test("project snapshot runtime deletes and hydrates snapshots", () => {
 
   runtime.deleteProjectSnapshot("Show A", "/show");
   const store = JSON.parse(storage.getItem("projects"));
+  assert.equal("Show A" in store, false);
   assert.equal("Show A::/show" in store, false);
   assert.equal("Other::/else" in store, true);
+});
+
+test("project snapshot runtime can hydrate legacy show-folder keyed snapshots", () => {
+  const applied = [];
+  const storage = createStorage({
+    projects: JSON.stringify({
+      "Show A::/show": { route: "display" }
+    })
+  });
+  const runtime = createProjectSnapshotRuntime({
+    state: { projectName: "Show A", showFolder: "/show" },
+    projectsKey: "projects",
+    localStorageRef: storage,
+    applyProjectSnapshot: (snapshot) => applied.push(snapshot)
+  });
+
+  assert.equal(runtime.tryLoadProjectSnapshot("Show A", "/show"), true);
+  assert.deepEqual(applied, [{ route: "display" }]);
 });

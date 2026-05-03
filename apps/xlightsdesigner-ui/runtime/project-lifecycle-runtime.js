@@ -294,8 +294,8 @@ export function createProjectLifecycleRuntime(deps = {}) {
 
   function resetProjectWorkspace() {
     const key = typeof deps.getProjectKey === "function" ? deps.getProjectKey() : "";
-    if (!key || key === "::") {
-      setStatus("warning", "Set project name and show folder before reset.");
+    if (!key) {
+      setStatus("warning", "Set project name before reset.");
       render();
       return;
     }

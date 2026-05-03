@@ -8,8 +8,8 @@ export function createProjectSnapshotRuntime(deps = {}) {
     applyProjectSnapshot = () => {}
   } = deps;
 
-  function getProjectKey(projectName = state.projectName, showFolder = state.showFolder) {
-    return `${(projectName || "").trim()}::${(showFolder || "").trim()}`;
+  function getProjectKey(projectName = state.projectName, _showFolder = state.showFolder) {
+    return String(projectName || "").trim();
   }
 
   function parseProjectKey(key) {
@@ -40,7 +40,7 @@ export function createProjectSnapshotRuntime(deps = {}) {
 
   function saveCurrentProjectSnapshot() {
     const key = getProjectKey();
-    if (!key || key === "::") return;
+    if (!key) return;
     const store = loadProjectsStore();
     store[key] = extractProjectSnapshot();
     persistProjectsStore(store);
@@ -48,17 +48,20 @@ export function createProjectSnapshotRuntime(deps = {}) {
 
   function deleteProjectSnapshot(projectName, showFolder) {
     const key = getProjectKey(projectName, showFolder);
-    if (!key || key === "::") return;
+    if (!key) return;
     const store = loadProjectsStore();
-    if (!(key in store)) return;
+    const legacyKey = `${String(projectName || "").trim()}::${String(showFolder || "").trim()}`;
+    if (!(key in store) && !(legacyKey in store)) return;
     delete store[key];
+    delete store[legacyKey];
     persistProjectsStore(store);
   }
 
   function tryLoadProjectSnapshot(projectName, showFolder) {
     const key = getProjectKey(projectName, showFolder);
     const store = loadProjectsStore();
-    const snapshot = store[key];
+    const legacyKey = `${String(projectName || "").trim()}::${String(showFolder || "").trim()}`;
+    const snapshot = store[key] || store[legacyKey];
     if (!snapshot) return false;
     applyProjectSnapshot(snapshot);
     return true;

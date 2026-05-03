@@ -162,11 +162,22 @@ final class ProjectScreenViewModel {
         guard let path = fileSelectionService.chooseFolder(prompt: "Choose Project Show Folder") else { return }
         let trimmedPath = path.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedPath.isEmpty else { return }
+        let previousShowFolder = active.showFolder.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard previousShowFolder != trimmedPath else {
+            workspace.projectBanner = ProjectBannerModel(id: "show-folder-unchanged", level: .ready, text: "Show folder is already linked to this project.")
+            return
+        }
         active.showFolder = trimmedPath
+        active.snapshot["showFolderRelink"] = AnyCodable([
+            "previousShowFolder": previousShowFolder,
+            "showFolder": trimmedPath,
+            "updatedAt": ISO8601DateFormatter().string(from: Date()),
+            "behavior": "Preserve project metadata and refresh display, sequence, design, and review state against the new show folder."
+        ])
         do {
             let saved = try projectService.saveProject(active)
             workspace.setProject(saved)
-            workspace.projectBanner = ProjectBannerModel(id: "show-folder", level: .ready, text: "Updated show folder.")
+            workspace.projectBanner = ProjectBannerModel(id: "show-folder-relinked", level: .ready, text: "Relinked show folder. Existing project metadata was kept; Display, Sequence, Design, and Review will refresh against the new folder.")
             loadAvailableProjects()
             syncSelectedProjectFromActive()
         } catch {
