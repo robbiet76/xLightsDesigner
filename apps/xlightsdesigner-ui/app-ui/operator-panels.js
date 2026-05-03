@@ -131,6 +131,17 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
   const filteredRows = Array.isArray(data.filteredRows) ? data.filteredRows : [];
   const applyHistory = Array.isArray(data.recentApplies) ? data.recentApplies : [];
   const health = data.health || {};
+  const targetBehaviorEvidence = data.targetBehaviorEvidence || {};
+  const targetBehaviorRecords = Array.isArray(targetBehaviorEvidence.records) ? targetBehaviorEvidence.records : [];
+  const targetBehaviorPlanContext = targetBehaviorEvidence.planContext && typeof targetBehaviorEvidence.planContext === "object"
+    ? targetBehaviorEvidence.planContext
+    : {};
+  const formatTargetBehaviorStats = (stats = {}) => {
+    const sampleCount = Number(stats?.sampleCount || 0);
+    const positiveCount = Number(stats?.positiveCount || 0);
+    const negativeCount = Number(stats?.negativeCount || 0);
+    return `${sampleCount} sample${sampleCount === 1 ? "" : "s"} | ${positiveCount} positive | ${negativeCount} needs review`;
+  };
   return `
     <section class="settings-overlay" id="diagnostics-overlay">
       <section class="card settings-drawer diagnostics-drawer">
@@ -182,6 +193,47 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
           <div class="kv"><div class="k">Target Behavior Records</div><div>${health.targetBehaviorLearningCount || 0}</div></div>
           <div class="kv"><div class="k">Submodel Behavior</div><div>${health.targetBehaviorLearningSubmodelCount || 0}</div></div>
           <div class="kv"><div class="k">Custom Parent Learning</div><div>${health.targetBehaviorLearningCustomParentCount || 0}</div></div>
+          ${
+            targetBehaviorEvidence.artifactPath || targetBehaviorRecords.length || targetBehaviorPlanContext.targetBehaviorAvailable
+              ? `
+                <div class="kv"><div class="k">Behavior Artifact</div><div>${escapeHtml(targetBehaviorEvidence.artifactPath || "not recorded")}</div></div>
+                <div class="kv"><div class="k">Behavior Samples</div><div>${escapeHtml(formatTargetBehaviorStats(targetBehaviorEvidence.stats || health.targetBehaviorLearningStats || {}))}</div></div>
+                ${
+                  Array.isArray(targetBehaviorPlanContext.targetBehaviorMatchedRecordIds) && targetBehaviorPlanContext.targetBehaviorMatchedRecordIds.length
+                    ? `<div class="kv"><div class="k">Matched Behavior</div><div>${escapeHtml(targetBehaviorPlanContext.targetBehaviorMatchedRecordIds.join(", "))}</div></div>`
+                    : ""
+                }
+                ${
+                  Array.isArray(targetBehaviorPlanContext.targetBehaviorEvidenceCandidateIds) && targetBehaviorPlanContext.targetBehaviorEvidenceCandidateIds.length
+                    ? `<div class="kv"><div class="k">Influenced Candidates</div><div>${escapeHtml(targetBehaviorPlanContext.targetBehaviorEvidenceCandidateIds.join(", "))}</div></div>`
+                    : ""
+                }
+                ${
+                  targetBehaviorRecords.length
+                    ? `
+                      <ul class="list compact-list">
+                        ${targetBehaviorRecords
+                          .map((record) => {
+                            const target = String(record?.targetId || "unknown target");
+                            const effect = String(record?.effectName || "unknown effect");
+                            const scope = String(record?.probeScope || record?.targetKind || "target");
+                            const fingerprint = String(record?.targetFingerprint || "").trim();
+                            const coverage = record?.nodeCoverageRatio == null ? "" : ` | coverage ${Math.round(Number(record.nodeCoverageRatio) * 100)}%`;
+                            return `
+                              <li>
+                                <strong>${escapeHtml(target)}</strong> / ${escapeHtml(effect)} (${escapeHtml(scope)})
+                                <div class="banner">${escapeHtml(formatTargetBehaviorStats(record))}${escapeHtml(coverage)}${fingerprint ? ` | ${escapeHtml(fingerprint)}` : ""}</div>
+                              </li>
+                            `;
+                          })
+                          .join("")}
+                      </ul>
+                    `
+                    : ""
+                }
+              `
+              : ""
+          }
           ${
             Array.isArray(health.sceneGraphWarnings) && health.sceneGraphWarnings.length
               ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(health.sceneGraphWarnings.join(" | "))}</p>`

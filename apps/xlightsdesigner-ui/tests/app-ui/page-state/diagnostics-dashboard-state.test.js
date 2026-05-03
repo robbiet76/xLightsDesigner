@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { buildDiagnosticsDashboardState } from "../../../app-ui/page-state/diagnostics-dashboard-state.js";
+import { buildDiagnosticsDrawer } from "../../../app-ui/operator-panels.js";
 
 test("diagnostics dashboard state summarizes counts, rows, and recent applies", () => {
   const dashboard = buildDiagnosticsDashboardState({
@@ -39,6 +40,18 @@ test("diagnostics dashboard state summarizes counts, rows, and recent applies", 
             {
               targetId: "CustomA/@Part",
               targetKind: "submodel",
+              targetFingerprint: "tmf1:custom-part",
+              effectName: "On",
+              probeScope: "submodel",
+              stats: {
+                sampleCount: 3,
+                positiveCount: 2,
+                negativeCount: 1,
+                lastObservedAt: "2026-03-16T13:05:00.000Z"
+              },
+              submodelContext: {
+                nodeCoverage: { ratio: 0.2 }
+              },
               parentContext: {
                 customStructure: { profile: "custom_face_like" }
               }
@@ -48,6 +61,25 @@ test("diagnostics dashboard state summarizes counts, rows, and recent applies", 
               targetKind: "model"
             }
           ]
+        }
+      },
+      agentPlan: {
+        handoff: {
+          metadata: {
+            generativeSummary: {
+              targetContext: {
+                targetBehaviorAvailable: true,
+                targetBehaviorMatchedRecordIds: ["tbl1:custom-part-on"],
+                targetBehaviorEvidenceCandidateIds: ["candidate-focused"],
+                targetFingerprints: ["tmf1:custom-part"],
+                targetBehaviorStats: {
+                  sampleCount: 3,
+                  positiveCount: 2,
+                  negativeCount: 1
+                }
+              }
+            }
+          }
         }
       },
       health: {
@@ -78,6 +110,71 @@ test("diagnostics dashboard state summarizes counts, rows, and recent applies", 
   assert.equal(dashboard.data.health.targetBehaviorLearningSubmodelCount, 1);
   assert.equal(dashboard.data.health.targetBehaviorLearningCustomParentCount, 1);
   assert.equal(dashboard.data.health.targetBehaviorLearningArtifactPath, "/project/display/target-behavior.json");
+  assert.equal(dashboard.data.targetBehaviorEvidence.stats.sampleCount, 3);
+  assert.equal(dashboard.data.targetBehaviorEvidence.records[0].targetFingerprint, "tmf1:custom-part");
+  assert.equal(dashboard.data.targetBehaviorEvidence.records[0].nodeCoverageRatio, 0.2);
+  assert.deepEqual(dashboard.data.targetBehaviorEvidence.planContext.targetBehaviorMatchedRecordIds, ["tbl1:custom-part-on"]);
+  assert.deepEqual(dashboard.data.targetBehaviorEvidence.planContext.targetBehaviorEvidenceCandidateIds, ["candidate-focused"]);
+});
+
+test("diagnostics drawer renders compact target behavior evidence", () => {
+  const html = buildDiagnosticsDrawer({
+    state: {
+      ui: { diagnosticsOpen: true, diagnosticsFilter: "all" }
+    },
+    helpers: {
+      getDiagnosticsCounts: () => ({ total: 0, warning: 0, actionRequired: 0 }),
+      escapeHtml: (value) => String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;"),
+      buildLabel: "Build: test",
+      pageStates: {
+        diagnostics: {
+          data: {
+            counts: { total: 0, warning: 0, actionRequired: 0 },
+            filter: "all",
+            filteredRows: [],
+            recentApplies: [],
+            health: {
+              targetBehaviorLearningCount: 1,
+              targetBehaviorLearningSubmodelCount: 1,
+              targetBehaviorLearningCustomParentCount: 1
+            },
+            targetBehaviorEvidence: {
+              artifactPath: "/project/display/target-behavior.json",
+              stats: { sampleCount: 3, positiveCount: 2, negativeCount: 1 },
+              planContext: {
+                targetBehaviorAvailable: true,
+                targetBehaviorMatchedRecordIds: ["tbl1:custom-part-on"],
+                targetBehaviorEvidenceCandidateIds: ["candidate-focused"]
+              },
+              records: [
+                {
+                  targetId: "CustomA/@Part",
+                  targetKind: "submodel",
+                  targetFingerprint: "tmf1:custom-part",
+                  effectName: "On",
+                  probeScope: "submodel",
+                  sampleCount: 3,
+                  positiveCount: 2,
+                  negativeCount: 1,
+                  nodeCoverageRatio: 0.2
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  });
+
+  assert.match(html, /Behavior Artifact/);
+  assert.match(html, /Matched Behavior/);
+  assert.match(html, /tbl1:custom-part-on/);
+  assert.match(html, /Influenced Candidates/);
+  assert.match(html, /candidate-focused/);
+  assert.match(html, /CustomA\/@Part/);
 });
 
 test("diagnostics dashboard state summarizes compact target behavior write status", () => {

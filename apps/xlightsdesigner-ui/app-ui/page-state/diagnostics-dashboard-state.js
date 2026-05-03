@@ -31,6 +31,17 @@ function summarizeTargetBehaviorLearning(sequenceAgentRuntime = {}) {
     ? sequenceAgentRuntime.targetBehaviorLearning
     : {};
   const records = arr(learning.records);
+  const stats = records.reduce((totals, row) => {
+    const rowStats = row?.stats && typeof row.stats === "object" ? row.stats : {};
+    totals.sampleCount += Number(rowStats.sampleCount || 0);
+    totals.positiveCount += Number(rowStats.positiveCount || 0);
+    totals.negativeCount += Number(rowStats.negativeCount || 0);
+    return totals;
+  }, {
+    sampleCount: Number(learning.sampleCount || 0),
+    positiveCount: Number(learning.positiveCount || 0),
+    negativeCount: Number(learning.negativeCount || 0)
+  });
   return {
     targetBehaviorLearningCount: records.length || Number(learning.recordCount || 0),
     targetBehaviorLearningSubmodelCount: records.length
@@ -39,7 +50,42 @@ function summarizeTargetBehaviorLearning(sequenceAgentRuntime = {}) {
     targetBehaviorLearningCustomParentCount: records.length
       ? records.filter((row) => str(row?.parentContext?.customStructure?.profile)).length
       : Number(learning.customParentRecordCount || 0),
-    targetBehaviorLearningArtifactPath: str(learning.artifactPath)
+    targetBehaviorLearningArtifactPath: str(learning.artifactPath),
+    targetBehaviorLearningStats: stats,
+    targetBehaviorLearningSampleRecords: records.slice(0, 8).map((row) => ({
+      recordId: str(row?.recordId),
+      targetId: str(row?.targetId),
+      targetKind: str(row?.targetKind),
+      targetFingerprint: str(row?.targetFingerprint),
+      parentId: str(row?.parentId || row?.parentContext?.targetId),
+      effectName: str(row?.effectName || row?.effectFamily),
+      probeScope: str(row?.probeScope),
+      sampleCount: Number(row?.stats?.sampleCount || 0),
+      positiveCount: Number(row?.stats?.positiveCount || 0),
+      negativeCount: Number(row?.stats?.negativeCount || 0),
+      nodeCoverageRatio: Number.isFinite(Number(row?.submodelContext?.nodeCoverage?.ratio))
+        ? Number(row.submodelContext.nodeCoverage.ratio)
+        : null,
+      lastObservedAt: str(row?.stats?.lastObservedAt || row?.updatedAt || row?.observedAt)
+    }))
+  };
+}
+
+function summarizePlanTargetContext(agentPlan = {}) {
+  const targetContext = agentPlan?.handoff?.metadata?.generativeSummary?.targetContext;
+  if (!targetContext || typeof targetContext !== "object" || Array.isArray(targetContext)) return {};
+  return {
+    targetBehaviorAvailable: Boolean(targetContext.targetBehaviorAvailable),
+    targetBehaviorMatchedRecordIds: arr(targetContext.targetBehaviorMatchedRecordIds).map((row) => str(row)).filter(Boolean).slice(0, 12),
+    targetBehaviorEvidenceCandidateIds: arr(targetContext.targetBehaviorEvidenceCandidateIds).map((row) => str(row)).filter(Boolean).slice(0, 8),
+    targetBehaviorStats: targetContext.targetBehaviorStats && typeof targetContext.targetBehaviorStats === "object"
+      ? {
+          sampleCount: Number(targetContext.targetBehaviorStats.sampleCount || 0),
+          positiveCount: Number(targetContext.targetBehaviorStats.positiveCount || 0),
+          negativeCount: Number(targetContext.targetBehaviorStats.negativeCount || 0)
+        }
+      : null,
+    targetFingerprints: arr(targetContext.targetFingerprints).map((row) => str(row)).filter(Boolean).slice(0, 12)
   };
 }
 
@@ -67,6 +113,7 @@ export function buildDiagnosticsDashboardState({
   const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
   const customModelSummary = summarizeCustomModels(state.sceneGraph || {});
   const targetBehaviorSummary = summarizeTargetBehaviorLearning(state.sequenceAgentRuntime || {});
+  const planTargetContext = summarizePlanTargetContext(state.agentPlan || {});
   const applyHistory = arr(state.applyHistory).slice(0, 12);
   return {
     contract: "diagnostics_dashboard_state_v1",
@@ -131,12 +178,19 @@ export function buildDiagnosticsDashboardState({
         targetBehaviorLearningSubmodelCount: targetBehaviorSummary.targetBehaviorLearningSubmodelCount,
         targetBehaviorLearningCustomParentCount: targetBehaviorSummary.targetBehaviorLearningCustomParentCount,
         targetBehaviorLearningArtifactPath: targetBehaviorSummary.targetBehaviorLearningArtifactPath,
+        targetBehaviorLearningStats: targetBehaviorSummary.targetBehaviorLearningStats,
         sceneGraphWarnings: arr(state.health?.sceneGraphWarnings).map((row) => str(row)).filter(Boolean),
         effectCatalogError: str(state.health?.effectCatalogError),
         hasSequencingApplyBatchPlan: Boolean(state.health?.hasSequencingApplyBatchPlan),
         hasJobsGet: Boolean(state.health?.hasJobsGet),
         sequenceOpen: Boolean(state.health?.sequenceOpen),
         buildLabel: str(buildLabel)
+      },
+      targetBehaviorEvidence: {
+        artifactPath: targetBehaviorSummary.targetBehaviorLearningArtifactPath,
+        records: targetBehaviorSummary.targetBehaviorLearningSampleRecords,
+        stats: targetBehaviorSummary.targetBehaviorLearningStats,
+        planContext: planTargetContext
       }
     }
   };
