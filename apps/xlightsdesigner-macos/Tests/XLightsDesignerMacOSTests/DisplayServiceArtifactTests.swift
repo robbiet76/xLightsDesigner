@@ -144,11 +144,14 @@ struct DisplayServiceArtifactTests {
         let submodelIdentity = submodelRecord?["identity"] as? [String: Any]
         let submodelStructure = submodelRecord?["structure"] as? [String: Any]
         let submodelMetadata = submodelStructure?["submodelMetadata"] as? [String: Any]
+        let modelIdentity = modelRecord?["identity"] as? [String: Any]
 
         #expect(artifact?["artifactType"] as? String == "target_metadata_index_v1")
         #expect((artifact?["summary"] as? [String: Any])?["targetCount"] as? Int == 3)
         #expect((artifact?["summary"] as? [String: Any])?["submodelCount"] as? Int == 2)
         #expect(modelRecord?["targetKind"] as? String == "model")
+        #expect(modelIdentity?["rawType"] as? String == "Custom")
+        #expect(modelIdentity?["canonicalType"] as? String == "custom")
         #expect(submodelRecord?["targetKind"] as? String == "submodel")
         #expect(customStructure?["profile"] as? String == "custom_face_like")
         #expect((customSubmodels?["capturedCount"] as? Int) == 2)
@@ -206,9 +209,12 @@ struct DisplayServiceArtifactTests {
         let submodelIdentity = submodelRecord?["identity"] as? [String: Any]
         let submodelStructure = submodelRecord?["structure"] as? [String: Any]
         let submodelMetadata = submodelStructure?["submodelMetadata"] as? [String: Any]
+        let modelIdentity = modelRecord?["identity"] as? [String: Any]
 
         #expect((artifact?["summary"] as? [String: Any])?["targetCount"] as? Int == 4)
         #expect(modelRecord?["targetKind"] as? String == "model")
+        #expect(modelIdentity?["rawType"] as? String == "Tree")
+        #expect(modelIdentity?["canonicalType"] as? String == "tree")
         #expect(submodelRecord?["targetKind"] as? String == "submodel")
         #expect(structure?["customStructure"] == nil)
         #expect(submodelIdentity?["parentId"] as? String == "Built In Target")

@@ -432,6 +432,14 @@ private func isCustomModelType(_ type: String) -> Bool {
     return normalized == "custom" || normalized.contains("custom")
 }
 
+private func canonicalDisplayModelType(_ type: String) -> String {
+    let normalized = type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    if normalized.contains("modelgroup") { return "model_group" }
+    if normalized == "single line" { return "single_line" }
+    return normalized.replacingOccurrences(of: "[^a-z0-9]+", with: "_", options: .regularExpression)
+        .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+}
+
 func groupSubmodelsByParent(_ submodels: [XLightsSubmodel]?) -> [String: [XLightsSubmodel]] {
     Dictionary(grouping: submodels ?? []) { submodel in
         submodel.parentId ?? parentIdFromSubmodelId(submodel.id)
@@ -872,7 +880,7 @@ private struct DisplayModelIndexRecord: Encodable {
         identity = DisplayModelIndexIdentity(
             displayName: row.targetName,
             rawType: row.targetType,
-            canonicalType: row.targetType,
+            canonicalType: canonicalDisplayModelType(row.targetType),
             fingerprint: displayModelFingerprint(row: row, nodeLayout: nodeLayout, submodels: submodels),
             fingerprintVersion: "target-metadata-fingerprint-v1"
         )
