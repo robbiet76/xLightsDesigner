@@ -102,6 +102,20 @@
       ]
     },
     {
+      "id": "display_model_index_target_identity_support",
+      "asserts": [
+        "sequence_agent prefers display/model-index target identity and fingerprints over display-name-only reasoning",
+        "custom model construction and enriched submodel metadata are consumed from the shared target index instead of a custom-only artifact"
+      ]
+    },
+    {
+      "id": "target_behavior_evidence_support",
+      "asserts": [
+        "sequence_agent treats display/target-behavior evidence as advisory local learning for target and submodel suitability",
+        "planning keeps render/apply validation authoritative when local evidence is missing, stale, or low confidence"
+      ]
+    },
+    {
       "id": "group_first_then_specific_override_support",
       "asserts": [
         "sequence_agent preserves explicit group-first target ordering when broad coverage plus focused overrides are requested",

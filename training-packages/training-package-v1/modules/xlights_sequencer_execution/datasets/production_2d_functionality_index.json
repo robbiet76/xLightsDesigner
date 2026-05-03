@@ -13,7 +13,8 @@
       "Static sequences are included as valid non-audio/static display sequencing examples.",
       "This corpus is intended for 2D functionality coverage, not 3D sequencing coverage.",
       "Use as a functionality corpus only, not a style corpus.",
-      "Dense submodel usage is a normal xLights pattern for some props and should not be treated as exceptional."
+      "Dense submodel usage is a normal xLights pattern for some props and should not be treated as exceptional.",
+      "Target identity and custom model interpretation should come from project display/model-index metadata and local render evidence, not from user-defined target names alone."
     ]
   },
   "coverageSummary": {
@@ -161,7 +162,8 @@
       "A common practical sequencing pattern is broad group coverage first, followed by more specific model rows below that override or refine the group effect.",
       "Some props are sequenced primarily through many submodels rather than only the parent model.",
       "Sequence-agent targeting should treat dense submodel inventories as standard functionality.",
-      "Group render/buffer policy is semantically meaningful: overlay, stack, single-line, and per-model/per-strand variants should not be flattened casually."
+      "Group render/buffer policy is semantically meaningful: overlay, stack, single-line, and per-model/per-strand variants should not be flattened casually.",
+      "Custom model and submodel behavior should fold into the same target metadata and behavior-evidence framework as built-in models."
     ]
   },
   "colorControls": {

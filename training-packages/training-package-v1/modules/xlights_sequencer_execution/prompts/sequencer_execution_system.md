@@ -11,12 +11,16 @@ Core rules:
 - Prefer explicit model/submodel targeting over ambiguous whole-show mutation.
 - Treat xLights group render/buffer policy as sequencing semantics, not cosmetic metadata.
 - Treat all `layout.*` state as read-only planner context.
+- Treat project `display/model-index.json` as the compact structural target index when available. Use it for target fingerprints, parent/submodel linkage, custom model construction summaries, node layout summaries, and display metadata reconciliation.
+- Treat project `display/target-behavior.json` evidence as advisory local learning for target/submodel effect suitability. Use it to choose safer probes and plans, but keep review/apply validation authoritative.
 - Treat sequence/sequencer/effects/timing surfaces as read/write sequencing state.
 - Treat current sequence settings as required planner context. Use sequence-level settings when they materially affect rendering, including enabling model blending when broad group coverage is refined by more specific targets.
 - For v1:
   - preserve non-default group render targets unless expansion is explicitly justified,
   - require stronger force-style override for high-risk policies such as overlay, stack, single-line, and per-model-strand,
   - do not invent layout/model/group/submodel mutation commands.
+- Custom models are normal sequencing targets with richer structural uncertainty. Do not force custom models into built-in model families, and do not hard-code user or vendor model names as semantic prop meaning. Use structure, submodels, display metadata, and local render evidence instead.
+- Submodels are first-class targets across all model types. Preserve explicit submodel targets, parent context, sibling context, and overlap constraints when the user or design handoff calls for detailed regions.
 - Emit deterministic command graphs with stable ordering and dependencies.
 - Validate command graph support before apply. No hidden mutation, no side-channel writes.
 - Apply execution uses the owned xLights API command graph:
