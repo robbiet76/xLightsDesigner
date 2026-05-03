@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { mkdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
 const DEFAULT_SHOW_DIR = process.env.XLIGHTS_SHOW_DIR || path.join(process.env.HOME || '', 'Desktop', 'Show');
@@ -15,7 +16,7 @@ function usage() {
     '  --show-dir <path>          Show folder to validate against.',
     '  --endpoint <url>           Owned xLights API base URL.',
     '  --media-file <path>        Optional media file for sequence.create.',
-    '  --target-model <name>      Optional layout model to apply the test effect to.',
+    '  --target-model <name>      Optional model or submodel target to apply the test effect to.',
     '  --effect-name <name>       Effect to apply. Defaults to Color Wash.',
     '  --duration-ms <number>     Used when no media file is provided. Defaults to 30000.',
     '  --frame-ms <number>        Sequence frame interval. Defaults to 50.',
@@ -248,24 +249,45 @@ async function setOpenShowFolder(endpoint, expectedShowDir) {
   }
 }
 
-async function chooseTargetModel(endpoint, requestedName) {
+export function normalizeSubmodelTarget(submodel = {}) {
+  const id = String(submodel?.fullName || submodel?.id || '').trim();
+  const parentName = String(submodel?.parentName || submodel?.parentId || '').trim();
+  const name = String(submodel?.name || '').trim();
+  const fullName = id || (parentName && name ? `${parentName}/${name}` : '');
+  return fullName ? {
+    ...submodel,
+    name: fullName,
+    id: fullName,
+    targetKind: 'submodel',
+    displayAs: 'Submodel'
+  } : null;
+}
+
+export async function chooseTargetModel(endpoint, requestedName) {
   const modelsPayload = await request(endpoint, '/layout/models');
   const models = Array.isArray(modelsPayload?.data?.models) ? modelsPayload.data.models : [];
   if (!models.length) {
     throw new Error('No layout models were returned by /layout/models.');
   }
+  const submodelsPayload = await request(endpoint, '/layout/submodels').catch(() => ({ data: { submodels: [] } }));
+  const submodels = Array.isArray(submodelsPayload?.data?.submodels)
+    ? submodelsPayload.data.submodels.map(normalizeSubmodelTarget).filter(Boolean)
+    : [];
   if (requestedName) {
-    const match = models.find((model) => String(model?.name || '') === requestedName);
+    const match = [
+      ...models.map((model) => ({ ...model, targetKind: 'model' })),
+      ...submodels
+    ].find((target) => String(target?.name || '') === requestedName || String(target?.id || '') === requestedName);
     if (!match) {
       throw new Error(`Requested target model was not found: ${requestedName}`);
     }
-    return { model: match, modelsPayload };
+    return { model: match, modelsPayload, submodelsPayload };
   }
   const firstUsable = models.find((model) => String(model?.name || '').trim());
   if (!firstUsable) {
     throw new Error('No usable layout model name was returned by /layout/models.');
   }
-  return { model: firstUsable, modelsPayload };
+  return { model: { ...firstUsable, targetKind: 'model' }, modelsPayload, submodelsPayload };
 }
 
 function buildBatchPayload({ targetModel, effectName, durationMs }) {
@@ -315,7 +337,7 @@ async function main() {
   const showDirectorySwitch = await setOpenShowFolder(args.endpoint, showDir);
   const mediaCurrent = await assertOpenShowFolder(args.endpoint, showDir);
   const layoutScene = await request(args.endpoint, '/layout/scene');
-  const { model, modelsPayload } = await chooseTargetModel(args.endpoint, args.targetModel);
+  const { model, modelsPayload, submodelsPayload } = await chooseTargetModel(args.endpoint, args.targetModel);
   const targetModel = String(model.name);
 
   await mkdir(validationDir, { recursive: true });
@@ -344,11 +366,13 @@ async function main() {
     expectedFseq,
     expectedFseqExists: await pathExists(expectedFseq),
     targetModel,
+    targetKind: String(model?.targetKind || 'model'),
     effectName: args.effectName,
     health,
     showDirectorySwitch,
     mediaCurrent,
     layoutModelCount: Array.isArray(modelsPayload?.data?.models) ? modelsPayload.data.models.length : 0,
+    layoutSubmodelCount: Array.isArray(submodelsPayload?.data?.submodels) ? submodelsPayload.data.submodels.length : 0,
     layoutSceneModelCount: Array.isArray(layoutScene?.data?.models) ? layoutScene.data.models.length : 0
   };
 
@@ -401,7 +425,10 @@ async function main() {
   }, null, 2));
 }
 
-main().catch((error) => {
-  console.error(error.stack || String(error));
-  process.exit(1);
-});
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error(error.stack || String(error));
+    process.exit(1);
+  });
+}
