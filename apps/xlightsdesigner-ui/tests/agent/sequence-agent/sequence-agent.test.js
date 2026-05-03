@@ -1,9 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 
 import { buildSequenceAgentPlan } from "../../../agent/sequence-agent/sequence-agent.js";
 import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_ROLE } from "../../../agent/sequence-agent/sequence-agent-contracts.js";
 import { buildEffectDefinitionCatalog } from "../../../agent/sequence-agent/effect-definition-catalog.js";
+import { parseXLightsRgbEffectsCustomModelSceneGraph } from "../../../runtime/custom-model-xml.js";
+import { buildDisplayElementsByIdFromModelIndexTargetRecords } from "../../../runtime/model-index-scene-graph-runtime.js";
+import { buildNormalizedTargetMetadataRecords } from "../../../runtime/target-metadata-runtime.js";
 
 function sampleAnalysis() {
   return {
@@ -2263,6 +2267,74 @@ test("sequence_agent uses submodel metadata hints to steer effect choice without
   const recommendation = out.metadata.effectStrategy.seedRecommendations[0];
   assert.equal(recommendation.effectName, "Shimmer");
   assert.match(out.executionLines[0], /apply Shimmer effect/i);
+  assert.ok(recommendation.parameterPriorGuidance.desiredBehaviorHints.includes("sparkle texture"));
+});
+
+test("sequence_agent uses vendor custom submodel metadata through the shared model index", () => {
+  const xml = fs.readFileSync(
+    new URL("../../../../../render-training-vendor-fixture/xlights_rgbeffects.xml", import.meta.url),
+    "utf8"
+  );
+  const sceneGraph = parseXLightsRgbEffectsCustomModelSceneGraph(xml);
+  const records = buildNormalizedTargetMetadataRecords({ sceneGraph });
+  const displayElements = Object.values(buildDisplayElementsByIdFromModelIndexTargetRecords(records));
+  const targetId = "Singing Bulb 1/@Mouth1";
+  const parentRecord = records.find((row) => row.targetId === "Singing Bulb 1");
+  const submodelRecord = records.find((row) => row.targetId === targetId);
+
+  assert.equal(parentRecord?.structure?.customStructure?.submodels?.names?.includes("@Mouth1"), true);
+  assert.equal(submodelRecord?.targetKind, "submodel");
+  assert.equal(submodelRecord?.structure?.submodelMetadata?.parentId, "Singing Bulb 1");
+
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Vendor Fixture Track", artist: "Fixture" },
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 0, endMs: 1000, energy: "medium", density: "medium" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Use the detailed vendor submodel for a readable texture.",
+      mode: "revise",
+      scope: {
+        targetIds: [targetId],
+        tagNames: [],
+        sections: ["Verse 1"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            section: "Verse 1",
+            energy: "medium",
+            density: "medium",
+            intentSummary: "readable detailed texture",
+            targetIds: [targetId],
+            effectHints: []
+          }
+        ]
+      }
+    },
+    metadataAssignments: [
+      {
+        targetId,
+        targetType: "submodel",
+        targetParentId: "Singing Bulb 1",
+        submodelHints: ["sparkle texture"]
+      }
+    ],
+    displayElements,
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Color Wash", params: [] },
+      { effectName: "On", params: [] }
+    ])
+  });
+
+  const recommendation = out.metadata.effectStrategy.seedRecommendations[0];
+  assert.equal(recommendation.targetIds[0], targetId);
+  assert.equal(recommendation.effectName, "Shimmer");
   assert.ok(recommendation.parameterPriorGuidance.desiredBehaviorHints.includes("sparkle texture"));
 });
 
