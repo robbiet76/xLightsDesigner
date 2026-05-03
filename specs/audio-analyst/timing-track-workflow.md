@@ -60,6 +60,19 @@ Phrase cues have one extra rule:
 - unlabeled filler is used where no phrase should exist
 - drives vocal/lyric accents and phrase-scale motion
 
+## Lyric Ownership
+
+Lyrics needed for runtime analysis, lyric timing tracks, and phrase cues belong
+to the selected user media analysis flow. The audio analysis service may fetch
+or derive synced lyric lines and plain-lyrics phrase fallback, and project-local
+analysis artifacts may retain those lines as user/project data.
+
+Portable training packages should not be treated as a runtime lyric source.
+They may include compact lyric-derived structure features such as line counts,
+timing windows, labels, repetition ratios, title-hit ratios, and pattern flags,
+but should not store raw lyric `lines` or stanza `text` except for tiny synthetic
+fixtures created specifically for tests.
+
 ## Data Contract
 
 Every generated timing track should carry:

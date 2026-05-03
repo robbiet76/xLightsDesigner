@@ -12,4 +12,5 @@ Notes:
 - API keys are not stored in this package.
 - Packaged corpora used at runtime should live under module `datasets/`.
 - Portable datasets should retain durable features and labels, not raw generated intermediates or bulky source artifacts.
+- Real song lyrics belong to runtime/user project analysis artifacts, not the portable package. Package datasets may retain compact lyric-derived features only.
 - Machine-specific eval inputs (for example local audio path case files) must stay outside package assets.
