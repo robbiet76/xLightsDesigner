@@ -289,38 +289,9 @@ function submodelLineValue(submodel = {}) {
   return lines.join(",");
 }
 
-function analyzeSubmodelStructure(submodels = [], faceInfo = null) {
+function analyzeSubmodelStructure(submodels = []) {
   const rows = Array.isArray(submodels) ? submodels : [];
   const names = rows.map((row) => norm(row?.name || row?.id || row?.targetId)).filter(Boolean);
-  const lowerNames = names.map((name) => low(name));
-  const semanticCounts = {
-    face: 0,
-    eye: 0,
-    mouth: 0,
-    outline: 0,
-    spoke: 0,
-    ring: 0,
-    layer: 0,
-    center: 0
-  };
-  for (const name of lowerNames) {
-    if (/(face|bulb|socket)/.test(name)) semanticCounts.face += 1;
-    if (/eye|blink/.test(name)) semanticCounts.eye += 1;
-    if (/mouth|phoneme|viseme/.test(name)) semanticCounts.mouth += 1;
-    if (/outline|border/.test(name)) semanticCounts.outline += 1;
-    if (/spoke|arm/.test(name)) semanticCounts.spoke += 1;
-    if (/circle|ring/.test(name)) semanticCounts.ring += 1;
-    if (/outer|middle|inner|layer/.test(name)) semanticCounts.layer += 1;
-    if (/center|centre/.test(name)) semanticCounts.center += 1;
-  }
-  if (faceInfo && typeof faceInfo === "object") {
-    for (const key of Object.keys(faceInfo)) {
-      const lowered = low(key);
-      if (lowered.includes("mouth")) semanticCounts.mouth += 1;
-      if (lowered.includes("eye")) semanticCounts.eye += 1;
-      if (lowered.includes("outline") || lowered.includes("face")) semanticCounts.face += 1;
-    }
-  }
   const details = rows.map((row) => {
     const nodes = parseNodeRanges(submodelLineValue(row));
     return {
@@ -330,23 +301,17 @@ function analyzeSubmodelStructure(submodels = [], faceInfo = null) {
       range: submodelLineValue(row)
     };
   });
-  const traits = [];
-  if (semanticCounts.eye && semanticCounts.mouth) traits.push("face_submodels", "custom_face_like");
-  if (semanticCounts.spoke >= 4) traits.push("spoke_submodels", "custom_radial_submodels");
-  if (semanticCounts.ring >= 2) traits.push("ring_submodels", "custom_radial_submodels");
-  if (semanticCounts.layer >= 2) traits.push("layered_submodels");
   return {
     count: rows.length,
     names,
-    semanticCounts,
-    traits: unique(traits),
+    traits: [],
     details
   };
 }
 
 export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   const layers = parseCustomModelGrid(attrs);
-  const submodels = analyzeSubmodelStructure(options?.submodels || attrs?.submodels || [], options?.faceInfo || attrs?.faceInfo || null);
+  const submodels = analyzeSubmodelStructure(options?.submodels || attrs?.submodels || []);
   const nodeLayout = options?.nodeLayout || attrs?.customNodeLayout || attrs?.nodeLayout || null;
   const apiNodePoints = pointsFromApiNodeLayout(nodeLayout);
   const apiNodeLayoutAnalysis = analyzeModelNodeLayout(nodeLayout);
@@ -405,14 +370,6 @@ export function analyzeCustomModelStructure(attrs = {}, options = {}) {
   if (stats.aspectRatio >= 2) traits.push(stats.height >= stats.width ? "vertical_span" : "horizontal_span");
   if (nodeOrder.adjacentStepRatio >= 0.75) traits.push("continuous_node_path");
   traits.push(...submodels.traits);
-  if (submodels.traits.includes("custom_face_like")) {
-    profile = "custom_face_like";
-    confidence = Math.max(confidence, 0.7);
-  } else if (submodels.traits.includes("custom_radial_submodels")) {
-    traits.push("custom_radial_like", "radial_like");
-    profile = "custom_radial_like";
-    confidence = Math.max(confidence, 0.65);
-  }
 
   return {
     traits: unique(traits),

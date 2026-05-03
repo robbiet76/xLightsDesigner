@@ -716,8 +716,8 @@ test("executeApplyCore persists target behavior learning after successful render
               },
               structure: {
                 customStructure: {
-                  profile: "custom_face_like",
-                  traits: ["custom_face_like", "face_submodels"],
+                  profile: "custom_linear_like",
+                  traits: ["custom_model", "custom_grid", "custom_linear_like", "linear_like"],
                   submodels: { count: 1 },
                   construction: { source: "layout.getModelNodes" }
                 }
@@ -744,7 +744,7 @@ test("executeApplyCore persists target behavior learning after successful render
                   overlappingSiblingIds: ["CustomFace/@Eye"],
                   overlapsSibling: true,
                   nodeCoverage: { nodeCount: 2, parentNodeCount: 10, ratio: 0.2 },
-                  structureHints: ["feature_mouth"]
+                  structureHints: ["range_defined_region", "node_scoped_region", "partial_region", "sibling_region", "overlapping_region"]
                 }
               }
             }
@@ -778,10 +778,10 @@ test("executeApplyCore persists target behavior learning after successful render
   assert.deepEqual(state.sequenceAgentRuntime.renderValidationEvidence.targetIds, ["CustomFace/@Mouth"]);
   assert.equal(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].targetId, "CustomFace/@Mouth");
   assert.equal(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].nodeCoverage.nodeCount, 2);
-  assert.deepEqual(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].structureHints, ["feature_mouth"]);
+  assert.deepEqual(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].structureHints, ["range_defined_region", "node_scoped_region", "partial_region", "sibling_region", "overlapping_region"]);
   assert.equal(writtenDocument.records[0].submodelContext.nodeCoverage.nodeCount, 2);
   assert.match(writtenDocument.records[0].parentContext.targetFingerprint, /^tmf1:[0-9a-f]{8}$/);
-  assert.equal(writtenDocument.records[0].parentContext.customStructure.profile, "custom_face_like");
+  assert.equal(writtenDocument.records[0].parentContext.customStructure.profile, "custom_linear_like");
   assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.recordCount, 1);
   assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.submodelRecordCount, 1);
   assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.customParentRecordCount, 1);

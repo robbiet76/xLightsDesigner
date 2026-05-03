@@ -122,7 +122,7 @@ test("analyzeCustomModelStructure prefers API node layout when CustomModel grid 
   assert.equal(out.construction.nodeMap.nodeCount, 4);
 });
 
-test("analyzeCustomModelStructure uses face submodels to identify character customs", () => {
+test("analyzeCustomModelStructure captures submodels without semantic name inference", () => {
   const source = grid([
     ["", "", 1, "", ""],
     ["", 2, "", 3, ""],
@@ -142,9 +142,10 @@ test("analyzeCustomModelStructure uses face submodels to identify character cust
     }
   );
 
-  assert.equal(out.profile, "custom_face_like");
-  assert.ok(out.traits.includes("face_submodels"));
+  assert.equal(out.profile, "custom_sparse_shape");
+  assert.equal(out.traits.includes("face_submodels"), false);
   assert.equal(out.submodels.count, 3);
+  assert.deepEqual(out.submodels.names, ["@Eye-Left", "@Eye-Right", "@Mouth1"]);
 });
 
 test("mapClassificationToTrainedModelProfiles treats Tree 180 as tree-compatible", () => {
@@ -167,21 +168,19 @@ test("vendor custom model structure capture preserves submodel construction sign
 
   assert.equal(customModels.length, 19);
 
-  const faceLike = customModels.find((row) => row.profile === "custom_face_like" && row.submodels.count >= 2);
-  assert.ok(faceLike);
-  assert.equal(faceLike.construction.nodeMap.nodeCount, faceLike.nodeOrder.nodeCount);
-  assert.equal(faceLike.construction.nodeMap.firstNodes[0].coordinateSource, "grid");
+  const submodelRich = customModels.find((row) => row.profile === "custom_sparse_shape" && row.submodels.count >= 2);
+  assert.ok(submodelRich);
+  assert.equal(submodelRich.construction.nodeMap.nodeCount, submodelRich.nodeOrder.nodeCount);
+  assert.equal(submodelRich.construction.nodeMap.firstNodes[0].coordinateSource, "grid");
 
   const radialWithSubmodels = customModels.find((row) =>
     row.profile === "custom_radial_like"
-    && row.traits.includes("custom_radial_submodels")
     && row.submodels.count >= 4
   );
   assert.ok(radialWithSubmodels);
 
-  const layered = customModels.find((row) => row.traits.includes("layered_submodels"));
-  assert.ok(layered);
-  assert.ok(layered.submodels.count >= 2);
+  assert.equal(customModels.some((row) => row.traits.includes("custom_face_like")), false);
+  assert.equal(customModels.some((row) => row.traits.includes("custom_radial_submodels")), false);
 });
 
 test("target metadata captures custom model structure inside the shared model index", () => {
@@ -214,7 +213,8 @@ test("target metadata captures custom model structure inside the shared model in
   const customRecord = records.find((row) => row.targetId === "CustomTargetA");
 
   assert.equal(customRecord.structure.submodelCount, 2);
-  assert.equal(customRecord.structure.customStructure.profile, "custom_face_like");
+  assert.equal(customRecord.structure.customStructure.profile, "custom_linear_like");
+  assert.deepEqual(customRecord.structure.customStructure.submodels.names, ["@Eye", "@Mouth"]);
   assert.match(customRecord.identity.fingerprint, /^tmf1:[0-9a-f]{8}$/);
   assert.equal(records.filter((row) => row?.structure?.customStructure).length, 1);
 });
@@ -316,7 +316,8 @@ test("parseXLightsRgbEffectsCustomModelSceneGraph extracts custom models and sub
   assert.equal(sceneGraph.modelsById["Custom Target A"].attributes.CustomModel, "1,-1,2;3,-1,4");
   assert.equal(sceneGraph.submodelsById["Custom Target A/@Mouth1"].line0, "3-4");
   assert.equal(records.filter((row) => row?.structure?.customStructure).length, 1);
-  assert.equal(customRecord.structure.customStructure.profile, "custom_face_like");
+  assert.equal(customRecord.structure.customStructure.profile, "custom_linear_like");
+  assert.deepEqual(customRecord.structure.customStructure.submodels.names, ["@Eye-Left", "@Mouth1"]);
 });
 
 test("vendor custom model XML parser feeds shared target metadata", () => {
@@ -336,7 +337,8 @@ test("vendor custom model XML parser feeds shared target metadata", () => {
 
   assert.equal(customModels.length, 19);
   assert.equal(customModels.filter((row) => row.submodels.count > 0).length, 7);
-  assert.equal(profileCounts.custom_face_like, 4);
+  assert.equal(profileCounts.custom_sparse_shape, 4);
   assert.equal(profileCounts.custom_radial_like, 7);
   assert.equal(profileCounts.custom_linear_like, 8);
+  assert.equal(customModels.some((row) => row.traits.includes("custom_face_like")), false);
 });

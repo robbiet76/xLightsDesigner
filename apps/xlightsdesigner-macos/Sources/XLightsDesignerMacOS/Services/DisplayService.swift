@@ -502,33 +502,27 @@ private func coverageRatio(nodeCount: Int?, parentNodeCount: Int?) -> Double? {
     return (Double(nodeCount) / Double(parentNodeCount) * 10_000).rounded() / 10_000
 }
 
-private func classifySubmodelStructureHints(_ submodel: XLightsSubmodel) -> [String] {
-    let text = [
-        submodel.name,
-        submodel.id,
-        submodel.type
-    ].compactMap { $0?.lowercased() }.joined(separator: " ")
+private func classifySubmodelStructureHints(
+    submodel: XLightsSubmodel,
+    siblingCount: Int,
+    overlapsSibling: Bool,
+    nodeCoverage: DisplaySubmodelNodeCoverage
+) -> [String] {
     var hints: [String] = []
-    if text.range(of: #"\beye|blink"#, options: .regularExpression) != nil {
-        hints.append("feature_eye")
+    if submodel.lines?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+        hints.append("range_defined_region")
     }
-    if text.range(of: #"\bmouth|phoneme|viseme"#, options: .regularExpression) != nil {
-        hints.append("feature_mouth")
+    if nodeCoverage.nodeCount > 0 {
+        hints.append("node_scoped_region")
     }
-    if text.range(of: #"\bspoke|arm|ray"#, options: .regularExpression) != nil {
-        hints.append("radial_spoke")
+    if let ratio = nodeCoverage.ratio, ratio > 0, ratio < 0.95 {
+        hints.append("partial_region")
     }
-    if text.range(of: #"\bring|circle"#, options: .regularExpression) != nil {
-        hints.append("radial_ring")
+    if siblingCount > 0 {
+        hints.append("sibling_region")
     }
-    if text.range(of: #"\boutline|border|edge"#, options: .regularExpression) != nil {
-        hints.append("outline_region")
-    }
-    if text.range(of: #"\bsegment|section|zone|part"#, options: .regularExpression) != nil {
-        hints.append("segment_region")
-    }
-    if text.range(of: #"\blayer|inner|middle|outer"#, options: .regularExpression) != nil {
-        hints.append("layer_region")
+    if overlapsSibling {
+        hints.append("overlapping_region")
     }
     return uniqueStrings(hints)
 }
@@ -540,7 +534,6 @@ struct DisplayCustomModelInference: Equatable {
 }
 
 func inferCustomModelStructure(row: DisplayLayoutRowModel, submodels: [XLightsSubmodel]) -> DisplayCustomModelInference {
-    let semanticCounts = customSubmodelSemanticCounts(submodels)
     var traits = ["custom_model"]
     var profile = "custom_model"
     var confidence = 0.35
@@ -560,48 +553,12 @@ func inferCustomModelStructure(row: DisplayLayoutRowModel, submodels: [XLightsSu
         traits.append(contentsOf: ["custom_linear_like", "linear_like"])
         confidence = max(confidence, 0.6)
     }
-    if semanticCounts.spoke >= 4 || semanticCounts.ring >= 2 {
-        profile = "custom_radial_like"
-        traits.append(contentsOf: ["spoke_submodels", "ring_submodels", "custom_radial_submodels", "custom_radial_like", "radial_like"])
-        confidence = max(confidence, 0.65)
-    }
-    if semanticCounts.layer >= 2 {
-        traits.append("layered_submodels")
-    }
-    if semanticCounts.eye > 0 && semanticCounts.mouth > 0 {
-        profile = "custom_face_like"
-        traits.append(contentsOf: ["face_submodels", "custom_face_like"])
-        confidence = max(confidence, 0.7)
-    }
 
     return DisplayCustomModelInference(
         profile: profile,
         traits: uniqueStrings(traits),
         confidence: confidence
     )
-}
-
-private func customSubmodelSemanticCounts(_ submodels: [XLightsSubmodel]) -> (eye: Int, mouth: Int, spoke: Int, ring: Int, layer: Int) {
-    var counts = (eye: 0, mouth: 0, spoke: 0, ring: 0, layer: 0)
-    for submodel in submodels {
-        let name = (submodel.name ?? submodel.id ?? "").lowercased()
-        if name.contains("eye") || name.contains("blink") {
-            counts.eye += 1
-        }
-        if name.contains("mouth") || name.contains("phoneme") || name.contains("viseme") {
-            counts.mouth += 1
-        }
-        if name.contains("spoke") || name.contains("arm") {
-            counts.spoke += 1
-        }
-        if name.contains("circle") || name.contains("ring") {
-            counts.ring += 1
-        }
-        if name.contains("outer") || name.contains("middle") || name.contains("inner") || name.contains("layer") {
-            counts.layer += 1
-        }
-    }
-    return counts
 }
 
 private func uniqueStrings(_ values: [String]) -> [String] {
@@ -1073,12 +1030,18 @@ private struct DisplaySubmodelSummary: Encodable {
         siblingIds = siblings.compactMap { $0.id ?? $0.name }
         overlappingSiblingIds = overlappingSiblings.compactMap { $0.id ?? $0.name }
         overlapsSibling = !overlappingSiblingIds.isEmpty
-        nodeCoverage = DisplaySubmodelNodeCoverage(
+        let coverage = DisplaySubmodelNodeCoverage(
             nodeCount: nodeCount ?? 0,
             parentNodeCount: parentNodeCount.flatMap { $0 > 0 ? $0 : nil },
             ratio: coverageRatio(nodeCount: nodeCount, parentNodeCount: parentNodeCount)
         )
-        structureHints = classifySubmodelStructureHints(submodel)
+        nodeCoverage = coverage
+        structureHints = classifySubmodelStructureHints(
+            submodel: submodel,
+            siblingCount: siblings.count,
+            overlapsSibling: !overlappingSiblings.isEmpty,
+            nodeCoverage: coverage
+        )
     }
 }
 

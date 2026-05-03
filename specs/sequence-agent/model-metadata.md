@@ -219,16 +219,16 @@ Each record should follow this shape:
 
 Model and group records place whole-target data under `structure`, including node count, position, dimensions, group membership, embedded submodel summaries, optional `nodeLayout`, and optional `customStructure`.
 
-Custom model records remain normal `targetKind: "model"` records. They are identified structurally by `identity.canonicalType: "custom"` and may include `structure.customStructure`. The live vendor validation display currently proves this shape with custom face-like, radial-like, linear-like, and layered custom-model profiles in the same model-index collection as built-in models and groups.
+Custom model records remain normal `targetKind: "model"` records. They are identified structurally by `identity.canonicalType: "custom"` and may include `structure.customStructure`. The live vendor validation display currently proves this shape with radial-like, linear-like, and sparse custom-model profiles in the same model-index collection as built-in models and groups.
 
 `structure.customStructure` should contain compact custom-model interpretation when available:
 
-- `profile`: structural profile such as `custom_face_like`, `custom_radial_like`, `custom_linear_like`, or `custom_model`.
+- `profile`: structural profile such as `custom_radial_like`, `custom_linear_like`, `custom_sparse_shape`, or `custom_model`.
 - `traits`: structural traits inferred from construction, node layout, and submodels.
 - `construction`: compact dimensions, node map, coordinate coverage, and node-order facts.
 - `submodels`: captured submodel names/counts and structural groupings relevant to the custom model.
 
-These fields are structural hints, not user semantics. A profile can say a custom model is radial-like because it has spoke/ring submodels, but core code should not infer user-specific prop meaning from target names.
+These fields are structural hints, not user semantics. Core code must not infer face, mouth, spoke, ring, or similar semantic meaning from user-defined model or submodel names. Those meanings should come from user/display metadata such as semantic hints and target preferences. Submodel names are still preserved as data so users and diagnostics can recognize what xLights exposed.
 
 Submodel records are first-class records and should place their specific submodel facts under `structure.submodelMetadata`, including:
 
@@ -239,19 +239,19 @@ Submodel records are first-class records and should place their specific submode
 - node coverage against the parent
 - sibling count and sibling ids
 - overlapping sibling ids
-- semantic structure hints
+- structural relationship hints
 
 `structure.submodels` remains the embedded submodel summary list for parent model records. It should not be the only place submodels exist.
 
 Validated live shape for a custom-model submodel:
 
-- `targetId`: `Singing Bulb 1/@Mouth1`
+- `targetId`: current xLights submodel target id
 - `targetKind`: `submodel`
-- `identity.parentId`: `Singing Bulb 1`
+- `identity.parentId`: current parent model id
 - `identity.fingerprint`: stable `tmf1:*` value
 - `structure.submodelMetadata.nodeCoverage`: `nodeCount`, `parentNodeCount`, and `ratio`
 - `structure.submodelMetadata.siblingCount` and sibling/overlap lists when known
-- `structure.submodelMetadata.structureHints`: compact hints such as `feature_mouth`
+- `structure.submodelMetadata.structureHints`: compact structural hints such as `range_defined_region`, `node_scoped_region`, `partial_region`, `sibling_region`, and `overlapping_region`
 
 ### `sceneGraph.submodelsById`
 
@@ -308,7 +308,7 @@ Submodel behavior records should carry the enriched submodel context from `displ
 - `submodelContext.siblingCount`, `overlappingSiblingIds`, and `structureHints` preserve local structure.
 - `stats.sampleCount`, `positiveCount`, and `negativeCount` accumulate under the same fingerprint/effect/probe aggregate.
 
-Live validation confirmed that applying an `On` probe to `Singing Bulb 1/@Mouth1` updates one stable target behavior record keyed by the submodel fingerprint and preserves parent identity, `8/143` node coverage, and `feature_mouth` structure hints.
+Live validation confirmed that applying an `On` probe to a custom-model submodel updates one stable target behavior record keyed by the submodel fingerprint and preserves parent identity, node coverage, and structural relationship hints without requiring semantic inference from the submodel name.
 
 ## User Experience
 

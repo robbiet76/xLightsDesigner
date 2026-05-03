@@ -80,7 +80,7 @@ struct DisplayServiceArtifactTests {
         #expect(targetSubmodels.first { $0.name == "@Mouth1" }?.lines == "1-8")
     }
 
-    @Test func customModelInferenceUsesFaceSubmodels() throws {
+    @Test func customModelInferenceCapturesSubmodelsWithoutSemanticNameHints() throws {
         let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
         [
           { "fullName": "Custom Target A/@Eye-Left", "name": "@Eye-Left", "parentName": "Custom Target A" },
@@ -90,9 +90,9 @@ struct DisplayServiceArtifactTests {
 
         let inference = inferCustomModelStructure(row: displayArtifactRow(name: "Custom Target A", width: 56, height: 123), submodels: submodels)
 
-        #expect(inference.profile == "custom_face_like")
-        #expect(inference.traits.contains("face_submodels"))
-        #expect(inference.traits.contains("custom_face_like"))
+        #expect(inference.profile == "custom_linear_like")
+        #expect(!inference.traits.contains("face_submodels"))
+        #expect(!inference.traits.contains("custom_face_like"))
     }
 
     @Test func customModelInferenceUsesGeometryWithoutNameHints() {
@@ -106,7 +106,7 @@ struct DisplayServiceArtifactTests {
         #expect(nameOnlyB.profile == "custom_model")
     }
 
-    @Test func customModelInferenceUsesRadialSubmodelsWithoutStarBucket() throws {
+    @Test func customModelInferenceDoesNotUseRadialNameBuckets() throws {
         let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
         [
           { "fullName": "Custom Target B/Spoke 1", "name": "Spoke 1", "parentName": "Custom Target B" },
@@ -117,7 +117,8 @@ struct DisplayServiceArtifactTests {
         """.data(using: .utf8)!)
         let inference = inferCustomModelStructure(row: displayArtifactRow(name: "Custom Target B", width: 85, height: 85), submodels: submodels)
 
-        #expect(inference.profile == "custom_radial_like")
+        #expect(inference.profile == "custom_model")
+        #expect(!inference.traits.contains("custom_radial_like"))
     }
 
     @Test func modelIndexArtifactEmbedsCustomStructureAndSubmodels() throws {
@@ -153,7 +154,7 @@ struct DisplayServiceArtifactTests {
         #expect(modelIdentity?["rawType"] as? String == "Custom")
         #expect(modelIdentity?["canonicalType"] as? String == "custom")
         #expect(submodelRecord?["targetKind"] as? String == "submodel")
-        #expect(customStructure?["profile"] as? String == "custom_face_like")
+        #expect(customStructure?["profile"] as? String == "custom_linear_like")
         #expect((customSubmodels?["capturedCount"] as? Int) == 2)
         #expect(structure?["customModel"] == nil)
         #expect(submodelIdentity?["canonicalType"] as? String == "submodel")
@@ -226,7 +227,7 @@ struct DisplayServiceArtifactTests {
         #expect(coverage?["nodeCount"] as? Int == 4)
         #expect(coverage?["parentNodeCount"] as? Int == 100)
         #expect(coverage?["ratio"] as? Double == 0.04)
-        #expect(hints?.contains("segment_region") == true)
+        #expect(hints == ["range_defined_region", "node_scoped_region", "partial_region", "sibling_region", "overlapping_region"])
     }
 }
 

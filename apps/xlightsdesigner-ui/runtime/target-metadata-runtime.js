@@ -434,16 +434,19 @@ function intersectionCount(left = [], right = []) {
   return left.filter((row) => rightSet.has(row)).length;
 }
 
-function classifySubmodelStructureHints(submodel = {}) {
-  const text = low(`${submodel?.name || ""} ${submodel?.id || ""} ${submodel?.type || ""} ${submodel?.renderPolicy?.submodelType || ""}`);
+function classifySubmodelStructureHints({
+  submodel = {},
+  siblingCount = 0,
+  overlapsSibling = false,
+  nodeCoverage = {}
+} = {}) {
   const hints = [];
-  if (/\beye|blink/.test(text)) hints.push("feature_eye");
-  if (/\bmouth|phoneme|viseme/.test(text)) hints.push("feature_mouth");
-  if (/\bspoke|arm|ray/.test(text)) hints.push("radial_spoke");
-  if (/\bring|circle/.test(text)) hints.push("radial_ring");
-  if (/\boutline|border|edge/.test(text)) hints.push("outline_region");
-  if (/\bsegment|section|zone|part/.test(text)) hints.push("segment_region");
-  if (/\blayer|inner|middle|outer/.test(text)) hints.push("layer_region");
+  if (norm(submodel?.lines || submodel?.line0 || submodel?.range)) hints.push("range_defined_region");
+  if (Number(nodeCoverage?.nodeCount || 0) > 0) hints.push("node_scoped_region");
+  const ratio = Number(nodeCoverage?.ratio);
+  if (Number.isFinite(ratio) && ratio > 0 && ratio < 0.95) hints.push("partial_region");
+  if (Number(siblingCount || 0) > 0) hints.push("sibling_region");
+  if (overlapsSibling) hints.push("overlapping_region");
   return unique(hints);
 }
 
@@ -470,17 +473,23 @@ function buildSubmodelRelationshipMetadata({
   const nodeCoverageRatio = parentNodeCount > 0 && nodeCount > 0
     ? safeFixed(nodeCount / parentNodeCount, 4)
     : null;
+  const nodeCoverage = {
+    nodeCount,
+    parentNodeCount: parentNodeCount || null,
+    ratio: nodeCoverageRatio
+  };
   return {
     siblingCount: siblings.length,
     siblingIds: siblings.map((row) => norm(row?.id || row?.name)).filter(Boolean),
     overlappingSiblingIds,
     overlapsSibling: overlappingSiblingIds.length > 0,
-    nodeCoverage: {
-      nodeCount,
-      parentNodeCount: parentNodeCount || null,
-      ratio: nodeCoverageRatio
-    },
-    structureHints: classifySubmodelStructureHints(submodel)
+    nodeCoverage,
+    structureHints: classifySubmodelStructureHints({
+      submodel,
+      siblingCount: siblings.length,
+      overlapsSibling: overlappingSiblingIds.length > 0,
+      nodeCoverage
+    })
   };
 }
 

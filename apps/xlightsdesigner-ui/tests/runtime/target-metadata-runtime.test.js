@@ -92,7 +92,7 @@ test("target metadata includes shared submodel relationship metadata", () => {
   assert.equal(metadata?.nodeCoverage?.nodeCount, 4);
   assert.equal(metadata?.nodeCoverage?.parentNodeCount, 10);
   assert.equal(metadata?.nodeCoverage?.ratio, 0.4);
-  assert.ok(metadata?.structureHints.includes("segment_region"));
+  assert.deepEqual(metadata?.structureHints, ["node_scoped_region", "partial_region", "sibling_region", "overlapping_region"]);
 });
 
 test("target metadata records include node layout metadata for built in models", () => {
