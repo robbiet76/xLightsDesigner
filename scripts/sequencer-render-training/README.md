@@ -33,7 +33,6 @@ Primary system spec:
 - `runners/run-manifest.sh`
 - `runners/run-model-batch.sh`
 - `runners/run-packed-model-batch.sh`
-- `runners/run-overnight-approved-matrix.sh`
 - `runners/run-registry-plan.sh`
 - `runners/run-stage1-coverage-round.sh`
 - `runners/run-stage1-coverage-chunked.sh`
@@ -106,25 +105,25 @@ Generated manifests under `manifests/generated/` are local run artifacts. They a
 
 ```bash
 bash scripts/sequencer-render-training/runners/run-sample.sh \
-  --manifest scripts/sequencer-render-training/manifests/on-sample-v1.json \
+  --manifest scripts/sequencer-render-training/manifests/on-singlelinehorizontal-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training
 ```
 
 ```bash
 bash scripts/sequencer-render-training/runners/run-manifest.sh \
-  --manifest scripts/sequencer-render-training/manifests/singlestrand-reduced-sweep-v1.json \
+  --manifest scripts/sequencer-render-training/manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-batch
 ```
 
 ```bash
 bash scripts/sequencer-render-training/runners/run-model-batch.sh \
-  --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
+  --manifest scripts/sequencer-render-training/manifests/on-singlelinehorizontal-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-model-batch
 ```
 
 ```bash
 bash scripts/sequencer-render-training/runners/run-packed-model-batch.sh \
-  --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
+  --manifest scripts/sequencer-render-training/manifests/on-singlelinehorizontal-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-packed-batch
 ```
 
@@ -165,7 +164,7 @@ python3 scripts/sequencer-render-training/tooling/build-animation-fixture.py \
 
 ```bash
 python3 scripts/sequencer-render-training/tooling/normalize-manifest.py \
-  --manifest scripts/sequencer-render-training/manifests/singlestrand-linear-expanded-sweep-v2.json \
+  --manifest scripts/sequencer-render-training/manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json \
   --standards scripts/sequencer-render-training/catalog/training-standards.json \
   --out-file /tmp/normalized-manifest.json
 ```
@@ -351,12 +350,6 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
   - recommended: `var/render-training`
   - legacy examples may still reference `render-training`
   - internal workspace for packed `.fseq`, working `.xsq`, copied manifests, and derived artifacts
-- `PHASE_SET`
-  - used by `runners/run-overnight-approved-matrix.sh`
-  - values:
-    - `phase1`
-    - `phase1_phase2`
-  - default: `phase1_phase2`
 
 ## Notes
 - This is an internal harness, not product runtime.

@@ -5,7 +5,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-test("build-sequencer-training-reset-report allows clean regeneration when interaction coverage and records are complete", () => {
+test("build-sequencer-training-reset-report blocks clean regeneration when interaction coverage is incomplete", () => {
   const root = mkdtempSync(join(tmpdir(), "reset-report-"));
   const settingsCoverage = join(root, "settings-coverage.json");
   const automationPlan = join(root, "automation-plan.json");
@@ -17,7 +17,6 @@ test("build-sequencer-training-reset-report allows clean regeneration when inter
   const interactionDir = join(root, "interaction-records");
   const outFile = join(root, "reset-report.json");
 
-  execFileSync("node", [resolve("scripts/sequencer-render-training/tooling/build-unified-training-set.mjs")], { cwd: resolve("."), stdio: "pipe" });
   execFileSync("node", [resolve("scripts/sequencer-render-training/tooling/build-effect-settings-coverage-report.mjs"), settingsCoverage], { cwd: resolve("."), stdio: "pipe" });
   execFileSync("node", [resolve("scripts/sequencer-render-training/tooling/build-effect-training-automation-plan.mjs"), automationPlan], { cwd: resolve("."), stdio: "pipe" });
   execFileSync("node", [resolve("scripts/sequencer-render-training/tooling/build-effect-parameter-screening-plan.mjs"), screeningPlan], { cwd: resolve("."), stdio: "pipe" });
@@ -41,7 +40,8 @@ test("build-sequencer-training-reset-report allows clean regeneration when inter
 
   const report = JSON.parse(readFileSync(outFile, "utf8"));
   assert.equal(report.artifactType, "sequencer_training_reset_report_v1");
-  assert.equal(report.summary.cleanRegenerationAllowed, true);
-  assert.deepEqual(report.blockers, []);
+  assert.equal(report.summary.cleanRegenerationAllowed, false);
+  assert.deepEqual(report.blockers, ["interaction_coverage_incomplete"]);
   assert.equal(report.summary.behaviorRecordCount > 0, true);
+  assert.equal(report.summary.interactionRecordCount > 0, true);
 });

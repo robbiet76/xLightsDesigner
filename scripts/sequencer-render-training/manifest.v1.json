@@ -1,5 +1,5 @@
 {
-  "generatedFrom": "/tmp/render_training_refs.json",
+  "generatedFrom": "tracked files after stale manifest cleanup",
   "files": [
     {
       "path": "README.md",
@@ -586,22 +586,6 @@
       "notes": "parameter sweep manifest"
     },
     {
-      "path": "manifests/on-hiddentree-reduced-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/on-hiddentreestar-reduced-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
       "path": "manifests/on-matrix-reduced-sweep-v1.json",
       "purpose": "render_manifest",
       "refCount": 0,
@@ -610,35 +594,11 @@
       "notes": "parameter sweep manifest"
     },
     {
-      "path": "manifests/on-reduced-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 2,
-      "lifecycle": "active_data",
-      "recommendation": "keep",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/on-sample-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 1,
-      "lifecycle": "active_data",
-      "recommendation": "keep",
-      "notes": "parameter sweep manifest"
-    },
-    {
       "path": "manifests/on-singlelinehorizontal-reduced-sweep-v1.json",
       "purpose": "render_manifest",
       "refCount": 2,
       "lifecycle": "active_data",
       "recommendation": "keep",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/on-spiraltree-reduced-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
       "notes": "parameter sweep manifest"
     },
     {
@@ -719,86 +679,6 @@
       "refCount": 1,
       "lifecycle": "active_data",
       "recommendation": "keep",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-hiddentree-cycles-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-hiddentree-dutyfactor-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-hiddentree-expanded-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-hiddentreestar-cycles-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-hiddentreestar-dutyfactor-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-hiddentreestar-expanded-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-outline-cycles-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-outline-dutyfactor-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-outline-expanded-sweep-v2.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/shimmer-outline-reduced-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
       "notes": "parameter sweep manifest"
     },
     {
@@ -914,147 +794,11 @@
       "notes": "parameter sweep manifest"
     },
     {
-      "path": "manifests/singlestrand-cane-expanded-sweep-v2.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-advances-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-bandsize-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-chasesize-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-chasetype-combos-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-cycles-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-expanded-sweep-v2.json",
-      "purpose": "render_manifest",
-      "refCount": 1,
-      "lifecycle": "active_data",
-      "recommendation": "keep",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-fadetype-combos-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-fx-intensity-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-numberchases-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-reduced-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-linear-skipsize-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-reduced-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 1,
-      "lifecycle": "active_data",
-      "recommendation": "keep",
-      "notes": "parameter sweep manifest"
-    },
-    {
       "path": "manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json",
       "purpose": "render_manifest",
       "refCount": 5,
       "lifecycle": "active_data",
       "recommendation": "keep",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-spiraltree-chasesize-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-spiraltree-cycles-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-spiraltree-expanded-sweep-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
-      "notes": "parameter sweep manifest"
-    },
-    {
-      "path": "manifests/singlestrand-spiraltree-numberchases-range-v1.json",
-      "purpose": "render_manifest",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review_for_archive",
       "notes": "parameter sweep manifest"
     },
     {
@@ -1261,14 +1005,6 @@
       "path": "runners/run-model-batch.sh",
       "purpose": "runner",
       "refCount": 1,
-      "lifecycle": "active_manual",
-      "recommendation": "keep",
-      "notes": "operator-facing execution entrypoint"
-    },
-    {
-      "path": "runners/run-overnight-approved-matrix.sh",
-      "purpose": "runner",
-      "refCount": 2,
       "lifecycle": "active_manual",
       "recommendation": "keep",
       "notes": "operator-facing execution entrypoint"
@@ -1481,5 +1217,10 @@
       "recommendation": "review",
       "notes": "shared helper, extractor, or export tool"
     }
+  ],
+  "cleanupNotes": [
+    "Removed stale manifests that referenced the absent var/render-training/Validation-Clean-Phase1-AnimationOnly.xsq fixture.",
+    "Removed the obsolete overnight approved matrix runner because its hard-coded pack list only referenced removed manifests.",
+    "Promoted render evidence and regenerated catalog records are the durable learning layer."
   ]
 }
