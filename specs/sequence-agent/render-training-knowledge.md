@@ -109,12 +109,7 @@ The submodel and parent context in behavior learning should come from the effect
 
 Training cleanup and future training exports should derive custom-model and submodel facts from `display/model-index.json` and `display/target-behavior.json`. They should not reintroduce separate custom-model artifact paths or duplicate model parsing logic. The project-local contract is the source layer; central/shared training packages may consume curated exports from it.
 
-The current training package coverage mirrors that lifecycle:
-
-- `display_model_index_v1` validates the structural target index shape for custom models and first-class submodels.
-- `target_behavior_evidence_v1` validates compact project-local behavior records with parent and submodel context.
-- The combined target-context fixture validates that candidate realization refs can use model-index fingerprints to match target-behavior evidence after a target rename.
-- Runtime tests cover proposal generation loading both artifacts, candidate selection applying fingerprint-matched behavior evidence, compact plan metadata traceability, and accepted apply/render outcomes updating the durable behavior aggregate.
+The sequencer execution training module documents the current package contracts, compact fixtures, runtime coverage, and promotion rules in `../../training-packages/training-package-v1/modules/xlights_sequencer_execution/README.md`.
 
 ## Current Learnings
 
