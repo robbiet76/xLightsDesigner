@@ -6,6 +6,7 @@ import path from "node:path";
 
 import {
   buildAppApplyVerification,
+  buildAppRenderEvidenceTargetIds,
   buildReviewIntentHandoff,
   createSequenceBackup,
   hydrateAnalysisSectionsFromSelectedTimingTrack,
@@ -50,6 +51,19 @@ test("buildSubmodelsByIdFromModelIndexTargetRecords preserves persisted submodel
   assert.equal(submodelsById["CustomFace/@Mouth"].nodeCoverage.nodeCount, 12);
   assert.deepEqual(submodelsById["CustomFace/@Mouth"].structureHints, ["feature_mouth"]);
   assert.equal(submodelsById["CustomFace/@Mouth"].identity.fingerprint, "tmf1:mouth001");
+});
+
+test("buildAppRenderEvidenceTargetIds includes applied effect command targets", () => {
+  const out = buildAppRenderEvidenceTargetIds({
+    selectedTargetIds: ["AllModels"],
+    commands: [
+      { cmd: "effects.create", params: { modelName: "CustomFace/@Mouth", effectName: "On" } },
+      { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure" } },
+      { cmd: "effects.update", params: { targetId: "CustomFace/@Eye", effectName: "Bars" } }
+    ]
+  });
+
+  assert.deepEqual(out, ["AllModels", "CustomFace/@Mouth", "CustomFace/@Eye"]);
 });
 
 test("createSequenceBackup copies xsq into project artifact backups", () => {

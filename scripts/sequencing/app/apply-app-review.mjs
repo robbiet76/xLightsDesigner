@@ -47,6 +47,7 @@ import { buildRenderCritiqueContext } from '../../../apps/xlightsdesigner-ui/age
 import { buildArtifactRefs, buildHistoryEntry, buildHistorySnapshotSummary } from '../../../apps/xlightsdesigner-ui/agent/shared/history-entry.js';
 import { buildRenderObservationFromSamples, buildRenderSamplingPlan } from '../../../apps/xlightsdesigner-ui/runtime/render-observation-runtime.js';
 import { buildCurrentSequenceContextFromReadback } from '../../../apps/xlightsdesigner-ui/runtime/current-sequence-context-runtime.js';
+import { buildRenderValidationEvidence } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/render-validation-evidence.js';
 import {
   assertOwnedXlightsNotBlocked
 } from '../../../apps/xlightsdesigner-ui/runtime/owned-xlights-health.js';
@@ -244,11 +245,32 @@ function loadModelIndexTargetRecords(projectFile = '') {
   }
 }
 
+function uniqueStrings(values = []) {
+  return [...new Set((Array.isArray(values) ? values : [])
+    .map((row) => str(row))
+    .filter(Boolean))];
+}
+
+function effectCommandTargetId(command = {}) {
+  const params = command?.params && typeof command.params === 'object' && !Array.isArray(command.params)
+    ? command.params
+    : {};
+  return str(params.modelName || params.targetId || params.targetName || params.model || params.elementName);
+}
+
+export function buildAppRenderEvidenceTargetIds({ selectedTargetIds = [], commands = [] } = {}) {
+  const commandTargets = (Array.isArray(commands) ? commands : [])
+    .filter((command) => ['effects.create', 'effects.update'].includes(str(command?.cmd)))
+    .map(effectCommandTargetId);
+  return uniqueStrings([...selectedTargetIds, ...commandTargets]);
+}
+
 async function persistAppTargetBehaviorLearning({
   projectFile = '',
   commands = [],
   renderObservation = null,
   renderCritiqueContext = null,
+  renderValidationEvidence = null,
   planHandoff = null,
   applyResult = null
 } = {}) {
@@ -259,6 +281,7 @@ async function persistAppTargetBehaviorLearning({
     commands,
     targetRecords,
     renderObservation,
+    renderValidationEvidence,
     renderCritiqueContext,
     sourceArtifactRefs: {
       planHandoffRef: str(planHandoff?.artifactId || planHandoff?.planId),
@@ -692,12 +715,26 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       metadataAssignments,
       submodelsById: modelIndexSubmodelsById
     });
+    const renderValidationEvidence = buildRenderValidationEvidence({
+      priorEvidence: commandsPlan?.metadata?.renderValidationEvidence || null,
+      renderObservation: renderArtifacts.renderObservation,
+      renderCritiqueContext: renderArtifacts.renderCritiqueContext,
+      sectionNames: Array.isArray(inputs.intentHandoff?.scope?.sections) ? inputs.intentHandoff.scope.sections : [],
+      targetIds: buildAppRenderEvidenceTargetIds({
+        selectedTargetIds: Array.isArray(inputs.intentHandoff?.scope?.targetIds) ? inputs.intentHandoff.scope.targetIds : [],
+        commands
+      }),
+      submodelsById: modelIndexSubmodelsById
+    });
+    commandsPlan.metadata = commandsPlan.metadata && typeof commandsPlan.metadata === 'object' ? commandsPlan.metadata : {};
+    commandsPlan.metadata.renderValidationEvidence = renderValidationEvidence;
     const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
     const targetBehaviorLearning = await persistAppTargetBehaviorLearning({
       projectFile,
       commands,
       renderObservation: renderArtifacts.renderObservation,
       renderCritiqueContext: renderArtifacts.renderCritiqueContext,
+      renderValidationEvidence,
       planHandoff: commandsPlan,
       applyResult
     });
@@ -777,12 +814,26 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     metadataAssignments,
     submodelsById: modelIndexSubmodelsById
   });
+  const renderValidationEvidence = buildRenderValidationEvidence({
+    priorEvidence: commandsPlan?.metadata?.renderValidationEvidence || null,
+    renderObservation: renderArtifacts.renderObservation,
+    renderCritiqueContext: renderArtifacts.renderCritiqueContext,
+    sectionNames: Array.isArray(inputs.intentHandoff?.scope?.sections) ? inputs.intentHandoff.scope.sections : [],
+    targetIds: buildAppRenderEvidenceTargetIds({
+      selectedTargetIds: Array.isArray(inputs.intentHandoff?.scope?.targetIds) ? inputs.intentHandoff.scope.targetIds : [],
+      commands
+    }),
+    submodelsById: modelIndexSubmodelsById
+  });
+  commandsPlan.metadata = commandsPlan.metadata && typeof commandsPlan.metadata === 'object' ? commandsPlan.metadata : {};
+  commandsPlan.metadata.renderValidationEvidence = renderValidationEvidence;
   const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
   const targetBehaviorLearning = await persistAppTargetBehaviorLearning({
     projectFile,
     commands,
     renderObservation: renderArtifacts.renderObservation,
     renderCritiqueContext: renderArtifacts.renderCritiqueContext,
+    renderValidationEvidence,
     planHandoff: commandsPlan,
     applyResult
   });
