@@ -13,6 +13,8 @@ Define the durable owned xLights API boundary used by xLightsDesigner.
 
 The API is the only supported path for app-driven xLights state access and sequence mutation. It should expose stable, testable operations for project workflow, display discovery, timing, sequence lifecycle, effects, render feedback, and validation.
 
+Launch and runtime readiness requirements are defined in `xlights-launch-runtime.md`.
+
 ## Show Folder Switching
 
 Clean show-folder switching is basic product functionality. The API must allow the app to switch the active show folder, refresh layout/display data, and avoid stale state leaking between displays.

@@ -97,12 +97,14 @@ const env = {
   XLIGHTS_DESIGNER_ENABLED: '1',
   XLIGHTS_DESIGNER_MODAL_POLICY: modalPolicy,
   XLIGHTS_DESIGNER_PORT: process.env.XLIGHTS_DESIGNER_PORT || '49915',
-  XLIGHTS_DESIGNER_STARTUP_SETTLE_MS: process.env.XLIGHTS_DESIGNER_STARTUP_SETTLE_MS || '30000'
+  XLIGHTS_DESIGNER_STARTUP_SETTLE_MS: process.env.XLIGHTS_DESIGNER_STARTUP_SETTLE_MS || '30000',
+  XLIGHTS_DESIGNER_DIAGNOSTIC_LOG: process.env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG || '/tmp/xld-owned-designer-api.log'
 };
 if (trustedRoots.length) {
   env.XLIGHTS_DESIGNER_TRUSTED_ROOTS = Array.from(new Set(trustedRoots)).join(path.delimiter);
 }
 const logPath = '/tmp/xld-owned-xlights.log';
+const spdlogPath = path.join(os.homedir(), 'Library/Containers/org.xlights/Data/Library/Logs/xLights_spdlog.log');
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -129,6 +131,26 @@ function requestJson(url, timeoutMs = 2000) {
       resolve({ ok: false, statusCode: 0, error: String(error?.message || error) });
     });
   });
+}
+
+function readTail(filePath, maxLines = 80) {
+  try {
+    const raw = execFileSync('tail', ['-n', String(maxLines), filePath], { encoding: 'utf8' });
+    return raw.trimEnd();
+  } catch {
+    return '';
+  }
+}
+
+function collectLaunchEvidence() {
+  return {
+    launcherLogPath: logPath,
+    launcherLogTail: readTail(logPath, 80),
+    xlightsSpdlogPath: spdlogPath,
+    xlightsSpdlogTail: readTail(spdlogPath, 120),
+    designerDiagnosticLogPath: env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG,
+    designerDiagnosticTail: readTail(env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG, 120)
+  };
 }
 
 function listXLightsProcesses() {
@@ -366,7 +388,7 @@ async function waitForOwnedApi(processInfo, timeoutMs = 45000) {
   while (Date.now() - started < timeoutMs) {
     if (!isProcessAlive(processInfo.pid)) {
       const error = new Error('xLights exited before the owned Designer API became ready.');
-      error.details = { endpoint, lastProbe, blocker: classifyStartupBlocker(processInfo) };
+      error.details = { endpoint, lastProbe, blocker: classifyStartupBlocker(processInfo), launchEvidence: collectLaunchEvidence() };
       throw error;
     }
     lastProbe = await requestJson(endpoint, 2000);
@@ -375,7 +397,7 @@ async function waitForOwnedApi(processInfo, timeoutMs = 45000) {
     const modalMessage = modalBlockedMessageFromHealth(lastProbe.json);
     if (modalMessage) {
       const error = new Error(modalMessage);
-      error.details = { endpoint, lastProbe, blocker: classifyStartupBlocker(processInfo) };
+      error.details = { endpoint, lastProbe, blocker: classifyStartupBlocker(processInfo), launchEvidence: collectLaunchEvidence() };
       throw error;
     }
     const ready = lastProbe.ok && lastProbe.json?.ok !== false && (data.startupSettled === true || state === 'ready');
@@ -404,11 +426,14 @@ async function waitForOwnedApi(processInfo, timeoutMs = 45000) {
           ? 'xLights only exposed the legacy automation listener, not the owned Designer API.'
           : 'xLights owned Designer API did not become responsive.';
   const error = new Error(reason);
-  error.details = { endpoint, lastProbe, blocker };
+  error.details = { endpoint, lastProbe, blocker, launchEvidence: collectLaunchEvidence() };
   throw error;
 }
 
 fs.writeFileSync(logPath, '', 'utf8');
+if (env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG) {
+  fs.writeFileSync(env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG, '', 'utf8');
+}
 console.log(JSON.stringify({
   target,
   binary,
@@ -421,6 +446,7 @@ console.log(JSON.stringify({
     XLIGHTS_DESIGNER_MODAL_POLICY: env.XLIGHTS_DESIGNER_MODAL_POLICY,
     XLIGHTS_DESIGNER_PORT: env.XLIGHTS_DESIGNER_PORT,
     XLIGHTS_DESIGNER_STARTUP_SETTLE_MS: env.XLIGHTS_DESIGNER_STARTUP_SETTLE_MS,
+    XLIGHTS_DESIGNER_DIAGNOSTIC_LOG: env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG,
     XLIGHTS_DESIGNER_TRUSTED_ROOTS: env.XLIGHTS_DESIGNER_TRUSTED_ROOTS
   }
 }, null, 2));
