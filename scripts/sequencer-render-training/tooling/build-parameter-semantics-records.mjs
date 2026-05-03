@@ -14,6 +14,35 @@ function inferAxis(name = "") {
   return "variation";
 }
 
+function dedupeValueRegions(valueRegions = []) {
+  const byKey = new Map();
+  for (const row of valueRegions) {
+    const key = [
+      str(row.valueSummary),
+      (Array.isArray(row.geometrySpecificNotes) ? row.geometrySpecificNotes : []).map(str).sort().join("|"),
+      (Array.isArray(row.affectedSignals) ? row.affectedSignals : []).map(str).sort().join("|")
+    ].join("::");
+    if (!byKey.has(key)) {
+      byKey.set(key, {
+        ...row,
+        affectedSignals: [...new Set((row.affectedSignals || []).map(str).filter(Boolean))],
+        geometrySpecificNotes: [...new Set((row.geometrySpecificNotes || []).map(str).filter(Boolean))]
+      });
+      continue;
+    }
+    const existing = byKey.get(key);
+    existing.evidenceCount = Number(existing.evidenceCount || 0) + Number(row.evidenceCount || 0);
+    existing.confidence = existing.confidence === "high" || row.confidence !== "high"
+      ? existing.confidence
+      : row.confidence;
+  }
+  return [...byKey.values()].sort((a, b) => {
+    const geometry = str(a.geometrySpecificNotes?.[0]).localeCompare(str(b.geometrySpecificNotes?.[0]));
+    if (geometry) return geometry;
+    return str(a.valueSummary).localeCompare(str(b.valueSummary), undefined, { numeric: true });
+  });
+}
+
 function upstreamSummary(meta = {}) {
   const upstream = meta?.upstream;
   if (!upstream || typeof upstream !== "object") return null;
@@ -44,7 +73,7 @@ for (const effect of effects) {
   const priors = Array.isArray(effect?.parameterLearning?.derivedPriors?.priors) ? effect.parameterLearning.derivedPriors.priors : [];
   for (const [parameterName, meta] of Object.entries(regParams)) {
     const matchingPriors = priors.filter((p) => str(p.parameterName) === parameterName);
-    const valueRegions = matchingPriors.flatMap((prior) => (Array.isArray(prior.anchorProfiles) ? prior.anchorProfiles : []).map((anchor) => ({
+    const valueRegions = dedupeValueRegions(matchingPriors.flatMap((prior) => (Array.isArray(prior.anchorProfiles) ? prior.anchorProfiles : []).map((anchor) => ({
       regionId: `${slug(effectName)}-${slug(parameterName)}-${slug(prior.geometryProfile)}-${slug(String(anchor.parameterValue))}`,
       valueSummary: String(anchor.parameterValue),
       behaviorImpactSummary: Array.isArray(anchor.behaviorHints) ? anchor.behaviorHints.join(",") : "",
@@ -52,7 +81,7 @@ for (const effect of effects) {
       geometrySpecificNotes: [str(prior.geometryProfile)],
       confidence: str(prior.confidence || "low"),
       evidenceCount: Number(anchor.sampleCount || 0)
-    })));
+    }))));
     const record = {
       artifactType: "parameter_semantics_record_v1",
       artifactVersion: "1.0",

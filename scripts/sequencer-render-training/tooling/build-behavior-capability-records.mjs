@@ -34,12 +34,7 @@ for (const effect of effects) {
           modelType: str(anchor.modelType || effect?.screeningLearning?.configurationRepresentativeness?.profiles?.find((p) => p.geometryProfile === prior.geometryProfile)?.modelType),
           parameterRegion: {
             parameterName: str(prior.parameterName),
-            regionKind: "single_value",
-            valueSummary: String(anchor.parameterValue),
-            interactionAssumptions: []
-          },
-          sharedSettingsContext: {
-            paletteMode: str(prior.paletteMode)
+            valueSummary: String(anchor.parameterValue)
           },
           paletteContext: {
             paletteMode: str(prior.paletteMode)
@@ -50,32 +45,19 @@ for (const effect of effects) {
             motionPacing: Array.isArray(anchor.temporalSignatureHints) ? anchor.temporalSignatureHints.join(",") : "",
             textureDensity: Array.isArray(anchor.behaviorHints) ? anchor.behaviorHints.join(",") : "",
             energyLevel: anchor.meanTemporalMotion >= 0.08 ? "elevated" : anchor.meanTemporalMotion > 0.02 ? "moderate" : "restrained",
-            coverageLevel: anchor.meanNonBlankRatio >= 0.75 ? "broad" : anchor.meanNonBlankRatio >= 0.35 ? "focused" : "sparse",
-            hierarchySuitability: "unknown",
-            geometryCoupling: "observed",
-            stability: str(prior.confidence || "low")
+            coverageLevel: anchor.meanNonBlankRatio >= 0.75 ? "broad" : anchor.meanNonBlankRatio >= 0.35 ? "focused" : "sparse"
           },
           renderOutcomeSignals: {
             temporalRead: Array.isArray(anchor.temporalSignatureHints) ? anchor.temporalSignatureHints[0] || "unknown" : "unknown",
             densityRead: anchor.meanNonBlankRatio >= 0.75 ? "dense" : anchor.meanNonBlankRatio >= 0.35 ? "moderate" : "sparse",
             nonBlankRatio: anchor.meanNonBlankRatio || 0,
-            temporalMotion: anchor.meanTemporalMotion || 0,
-            temporalColorDelta: anchor.meanTemporalColorDelta || 0,
-            temporalBrightnessDelta: anchor.meanTemporalBrightnessDelta || 0,
-            clarityRead: "unknown",
-            contrastRead: "unknown"
+            temporalMotion: anchor.meanTemporalMotion || 0
           },
           confidence: {
             level: str(prior.confidence || "low"),
-            evidenceClass: "aggregated_render",
             coverageStatus: str(prior.configurationCoverageStatus || "narrow")
           },
-          evidenceCount: Number(anchor.sampleCount || prior.sampleCount || 0),
-          traceability: {
-            sourceArtifactIds: ["sequencer_unified_training_set_v1"],
-            sourceGeometryProfiles: [str(prior.geometryProfile)],
-            generatedBy: "build-behavior-capability-records.mjs"
-          }
+          evidenceCount: Number(anchor.sampleCount || prior.sampleCount || 0)
         });
       }
     }
@@ -90,11 +72,8 @@ for (const effect of effects) {
       modelType: "mixed",
       parameterRegion: {
         parameterName: "baseline",
-        regionKind: "cluster",
-        valueSummary: "current_baseline_capability",
-        interactionAssumptions: []
+        valueSummary: "current_baseline_capability"
       },
-      sharedSettingsContext: {},
       paletteContext: {},
       behaviorSignals: {
         primaryMotion: Array.isArray(effect?.baseline?.intentTags) ? effect.baseline.intentTags[0] || "unknown" : "unknown",
@@ -102,32 +81,19 @@ for (const effect of effects) {
         motionPacing: Array.isArray(effect?.baseline?.intentTags) ? effect.baseline.intentTags.join(",") : "",
         textureDensity: Array.isArray(effect?.baseline?.patternFamilies) ? effect.baseline.patternFamilies.join(",") : "",
         energyLevel: "unknown",
-        coverageLevel: "unknown",
-        hierarchySuitability: "unknown",
-        geometryCoupling: "mixed",
-        stability: "low"
+        coverageLevel: "unknown"
       },
       renderOutcomeSignals: {
         temporalRead: "unknown",
         densityRead: "unknown",
         nonBlankRatio: 0,
-        temporalMotion: 0,
-        temporalColorDelta: 0,
-        temporalBrightnessDelta: 0,
-        clarityRead: "unknown",
-        contrastRead: "unknown"
+        temporalMotion: 0
       },
       confidence: {
         level: "low",
-        evidenceClass: "aggregated_render",
         coverageStatus: str(effect?.parameterLearning?.coverageStatus || "narrow")
       },
-      evidenceCount: Number(effect?.screeningLearning?.screeningRecordCount || 0),
-      traceability: {
-        sourceArtifactIds: ["sequencer_unified_training_set_v1"],
-        sourceGeometryProfiles: Array.isArray(effect?.baseline?.supportedGeometryProfiles) ? effect.baseline.supportedGeometryProfiles : [],
-        generatedBy: "build-behavior-capability-records.mjs"
-      }
+      evidenceCount: Number(effect?.screeningLearning?.screeningRecordCount || 0)
     });
   }
 }
