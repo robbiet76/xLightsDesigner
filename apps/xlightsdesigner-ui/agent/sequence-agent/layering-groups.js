@@ -1,3 +1,5 @@
+import { parseSubmodelParentId } from "../shared/target-semantics-registry.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -16,7 +18,7 @@ function parentTargetId(targetId = "", submodelsById = {}) {
   if (!normalized) return "";
   const explicitParent = str(submodelsById?.[normalized]?.parentId);
   if (explicitParent) return explicitParent;
-  return normalized.includes("/") ? normalized.split("/")[0] : normalized;
+  return parseSubmodelParentId(normalized) || normalized;
 }
 
 function windowsOverlap(a, b) {
@@ -185,4 +187,3 @@ export function buildLayeringPlacementGroups({ effectPlacements = [], submodelsB
     unresolved: uniqByGroupId(unresolved)
   };
 }
-

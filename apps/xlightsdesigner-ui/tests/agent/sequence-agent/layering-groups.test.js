@@ -87,6 +87,36 @@ test("buildLayeringPlacementGroups detects parent/submodel overlap using target 
   assert.equal(out.groups[0].parentTargetId, "MegaTree");
 });
 
+test("buildLayeringPlacementGroups uses explicit submodel parent identity without parsing target id", () => {
+  const out = buildLayeringPlacementGroups({
+    effectPlacements: [
+      {
+        placementId: "p1",
+        targetId: "CustomFace",
+        layerIndex: 0,
+        effectName: "On",
+        startMs: 1000,
+        endMs: 2000
+      },
+      {
+        placementId: "p2",
+        targetId: "mouth-node-set",
+        layerIndex: 0,
+        effectName: "On",
+        startMs: 1100,
+        endMs: 1900
+      }
+    ],
+    submodelsById: {
+      "mouth-node-set": { id: "mouth-node-set", parentId: "CustomFace" }
+    }
+  });
+
+  assert.equal(out.groups.length, 1);
+  assert.equal(out.groups[0].taxonomy, "parent_submodel_overlap");
+  assert.equal(out.groups[0].parentTargetId, "CustomFace");
+});
+
 test("buildLayeringPlacementGroups marks sibling submodel overlap unresolved", () => {
   const out = buildLayeringPlacementGroups({
     effectPlacements: [
@@ -118,4 +148,3 @@ test("buildLayeringPlacementGroups marks sibling submodel overlap unresolved", (
   assert.equal(out.unresolved[0].taxonomy, "sibling_submodel_overlap");
   assert.match(out.unresolved[0].unresolvedReason, /not enough physical ownership detail/i);
 });
-
