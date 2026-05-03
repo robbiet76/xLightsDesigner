@@ -198,6 +198,30 @@ test("target behavior learning records can be derived from applied effect comman
     ],
     targetRecords: [
       {
+        targetId: "CustomFace",
+        targetKind: "model",
+        identity: {
+          displayName: "Custom Face",
+          rawType: "Custom",
+          canonicalType: "custom",
+          fingerprint: "tmf1:custom-face",
+          fingerprintVersion: "target-metadata-fingerprint-v1"
+        },
+        structure: {
+          customStructure: {
+            profile: "custom_face_like",
+            traits: ["custom_face_like", "face_submodels"],
+            confidence: 0.75,
+            nodeCount: 143,
+            submodels: { count: 8 },
+            construction: {
+              source: "layout.getModelNodes",
+              dimensions: { width: 16, height: 12, layers: 1 }
+            }
+          }
+        }
+      },
+      {
         targetId: "CustomFace/@Mouth",
         targetKind: "submodel",
         identity: {
@@ -242,6 +266,10 @@ test("target behavior learning records can be derived from applied effect comman
   assert.equal(records[0].probeScope, "submodel");
   assert.equal(records[0].outcome.readability, "good");
   assert.equal(records[0].submodelContext.nodeCoverage.nodeCount, 12);
+  assert.equal(records[0].parentContext.targetFingerprint, "tmf1:custom-face");
+  assert.equal(records[0].parentContext.customStructure.profile, "custom_face_like");
+  assert.deepEqual(records[0].parentContext.customStructure.traits, ["custom_face_like", "face_submodels"]);
+  assert.equal(records[0].parentContext.customStructure.submodelCount, 8);
 });
 
 test("model index target normalization preserves submodel identity parent fields", () => {

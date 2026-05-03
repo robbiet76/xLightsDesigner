@@ -50,6 +50,35 @@ function targetIdentityFromRecord(targetRecord = {}) {
   };
 }
 
+function compactParentContext(parentTargetRecord = null) {
+  const parent = obj(parentTargetRecord);
+  if (!Object.keys(parent).length) return null;
+  const identity = obj(parent.identity);
+  const structure = obj(parent.structure);
+  const customStructure = obj(structure.customStructure);
+  const context = {
+    targetId: str(parent.targetId),
+    targetKind: str(parent.targetKind),
+    displayName: str(identity.displayName || parent.targetId),
+    canonicalType: str(identity.canonicalType),
+    rawType: str(identity.rawType),
+    targetFingerprint: str(identity.fingerprint),
+    fingerprintVersion: str(identity.fingerprintVersion)
+  };
+  if (Object.keys(customStructure).length) {
+    context.customStructure = {
+      profile: str(customStructure.profile),
+      traits: unique(customStructure.traits).slice(0, 16),
+      confidence: numberOrNull(customStructure.confidence),
+      nodeCount: numberOrNull(customStructure.nodeCount),
+      submodelCount: numberOrNull(customStructure.submodels?.count),
+      constructionSource: str(customStructure.construction?.source),
+      dimensions: obj(customStructure.construction?.dimensions)
+    };
+  }
+  return context;
+}
+
 function normalizeEvidenceRefs({
   renderObservation = null,
   renderValidationEvidence = null,
@@ -106,6 +135,7 @@ function behaviorSemanticMatch(left = {}, right = {}) {
 
 export function buildTargetBehaviorLearningRecord({
   targetRecord = null,
+  parentTargetRecord = null,
   targetIdentity = null,
   effectName = "",
   effectFamily = "",
@@ -153,6 +183,7 @@ export function buildTargetBehaviorLearningRecord({
       overlappingSiblingIds: unique(submodel?.overlappingSiblingIds).slice(0, 16),
       nodeCoverage: obj(submodel?.nodeCoverage)
     },
+    parentContext: compactParentContext(parentTargetRecord),
     evidenceRefs: normalizeEvidenceRefs({ renderObservation, renderValidationEvidence, sourceArtifactRefs }),
     outcome: normalizeOutcome({ outcome, renderObservation }),
     observedAt: str(observedAt)
@@ -325,9 +356,12 @@ export function buildTargetBehaviorLearningRecordsForApply({
     if (!targetId || !effectName) continue;
     const targetRecord = byId.get(targetId) || byDisplayName.get(targetId);
     if (!targetRecord) continue;
+    const parentId = str(targetRecord?.identity?.parentId || targetRecord?.structure?.submodelMetadata?.parentId);
+    const parentTargetRecord = parentId ? byId.get(parentId) || byDisplayName.get(parentId) || null : null;
     const submodelEvidence = matchSubmodelEvidence(renderValidationEvidence, targetRecord.targetId);
     const record = buildTargetBehaviorLearningRecord({
       targetRecord,
+      parentTargetRecord,
       effectName,
       effectFamily: effectName,
       probeScope: targetRecord.targetKind === "submodel" ? "submodel" : "target",

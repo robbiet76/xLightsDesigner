@@ -293,7 +293,7 @@ Target behavior records should keep:
 - `targetId`, `targetKind`, `targetFingerprint`, and `fingerprintVersion`
 - display name and parent id/name when applicable
 - effect name/family and probe scope
-- compact structure hints and submodel context
+- compact structure hints, submodel context, and parent context when applicable
 - evidence artifact references
 - observed coverage/readability outcomes
 - aggregate sample, positive, and negative counts
@@ -303,6 +303,7 @@ When older records exist with the same fingerprint/effect/scope but different re
 Submodel behavior records should carry the enriched submodel context from `display/model-index.json` through the effective scene graph. For a submodel probe this means:
 
 - `parentId` and `parentName` identify the parent model.
+- `parentContext` preserves the parent target fingerprint, canonical/raw type, and compact custom structure profile when the parent is a custom model.
 - `submodelContext.nodeCoverage` records how much of the parent the submodel covers.
 - `submodelContext.siblingCount`, `overlappingSiblingIds`, and `structureHints` preserve local structure.
 - `stats.sampleCount`, `positiveCount`, and `negativeCount` accumulate under the same fingerprint/effect/probe aggregate.
