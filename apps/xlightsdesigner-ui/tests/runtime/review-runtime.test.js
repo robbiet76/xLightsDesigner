@@ -612,9 +612,12 @@ test("executeApplyCore persists target behavior learning after successful render
           nodeCount: 4
         }
       },
-      submodelsById: {}
+      submodelsById: {
+        "CustomFace/@Mouth": { id: "CustomFace/@Mouth", name: "@Mouth", parentId: "CustomFace", type: "ranges", line0: "2-3" },
+        "CustomFace/@Eye": { id: "CustomFace/@Eye", name: "@Eye", parentId: "CustomFace", type: "ranges", line0: "1" }
+      }
     },
-    ui: { metadataSelectionIds: ["CustomFace/@Mouth"], metadataSelectedTags: [] },
+    ui: { metadataSelectionIds: [], metadataSelectedTags: [] },
     health: { capabilityCommands: [] },
     creative: {},
     flags: {},
@@ -702,16 +705,47 @@ test("executeApplyCore persists target behavior learning after successful render
           artifactType: "target_metadata_index_v1",
           records: [
             {
+              targetId: "CustomFace",
+              targetKind: "model",
+              identity: {
+                displayName: "Custom Face",
+                rawType: "Custom",
+                canonicalType: "custom",
+                fingerprint: "tmf1:test-face",
+                fingerprintVersion: "target-metadata-fingerprint-v1"
+              },
+              structure: {
+                customStructure: {
+                  profile: "custom_face_like",
+                  traits: ["custom_face_like", "face_submodels"],
+                  submodels: { count: 1 },
+                  construction: { source: "layout.getModelNodes" }
+                }
+              }
+            },
+            {
               targetId: "CustomFace/@Mouth",
               targetKind: "submodel",
               identity: {
                 displayName: "CustomFace / @Mouth",
                 canonicalType: "submodel",
                 fingerprint: "tmf1:test-mouth",
-                fingerprintVersion: "target-metadata-fingerprint-v1"
+                fingerprintVersion: "target-metadata-fingerprint-v1",
+                parentId: "CustomFace",
+                parentName: "CustomFace"
               },
               structure: {
-                nodeCount: 2
+                nodeCount: 2,
+                submodelMetadata: {
+                  parentId: "CustomFace",
+                  parentName: "CustomFace",
+                  siblingCount: 1,
+                  siblingIds: ["CustomFace/@Eye"],
+                  overlappingSiblingIds: ["CustomFace/@Eye"],
+                  overlapsSibling: true,
+                  nodeCoverage: { nodeCount: 2, parentNodeCount: 10, ratio: 0.2 },
+                  structureHints: ["feature_mouth"]
+                }
               }
             }
           ]
@@ -738,9 +772,16 @@ test("executeApplyCore persists target behavior learning after successful render
   assert.equal(writtenDocument?.records?.length, 1);
   assert.equal(writtenDocument.records[0].targetId, "CustomFace/@Mouth");
   assert.equal(writtenDocument.records[0].targetKind, "submodel");
-  assert.equal(writtenDocument.records[0].targetFingerprint, "tmf1:test-mouth");
+  assert.match(writtenDocument.records[0].targetFingerprint, /^tmf1:[0-9a-f]{8}$/);
   assert.equal(writtenDocument.records[0].effectName, "On");
   assert.equal(writtenDocument.records[0].evidenceRefs.renderObservationRef, "render-target-behavior");
+  assert.deepEqual(state.sequenceAgentRuntime.renderValidationEvidence.targetIds, ["CustomFace/@Mouth"]);
+  assert.equal(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].targetId, "CustomFace/@Mouth");
+  assert.equal(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].nodeCoverage.nodeCount, 2);
+  assert.deepEqual(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].structureHints, ["feature_mouth"]);
+  assert.equal(writtenDocument.records[0].submodelContext.nodeCoverage.nodeCount, 2);
+  assert.match(writtenDocument.records[0].parentContext.targetFingerprint, /^tmf1:[0-9a-f]{8}$/);
+  assert.equal(writtenDocument.records[0].parentContext.customStructure.profile, "custom_face_like");
   assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.recordCount, 1);
   assert.equal(diagnostics.some((row) => /Recorded 1 target behavior learning record/.test(row.message)), true);
 });

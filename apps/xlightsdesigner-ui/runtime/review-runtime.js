@@ -35,6 +35,26 @@ function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
 }
 
+function uniqueStrings(values = []) {
+  return [...new Set((Array.isArray(values) ? values : [])
+    .map((row) => String(row || "").trim())
+    .filter(Boolean))];
+}
+
+function effectCommandTargetId(command = {}) {
+  const params = command?.params && typeof command.params === "object" && !Array.isArray(command.params)
+    ? command.params
+    : {};
+  return String(params.modelName || params.targetId || params.targetName || params.model || params.elementName || "").trim();
+}
+
+function buildRenderEvidenceTargetIds({ selectedTargetIds = [], commands = [] } = {}) {
+  const commandTargets = (Array.isArray(commands) ? commands : [])
+    .filter((command) => ["effects.create", "effects.update"].includes(String(command?.cmd || "").trim()))
+    .map(effectCommandTargetId);
+  return uniqueStrings([...selectedTargetIds, ...commandTargets]);
+}
+
 function loadModelIndexTargetRecords({ state = {}, deps = {} } = {}) {
   const projectFilePath = String(state?.projectFilePath || "").trim();
   if (!projectFilePath) return [];
@@ -548,7 +568,10 @@ export async function executeApplyCore({
       renderObservation,
       renderCritiqueContext,
       sectionNames: getSelectedSections(),
-      targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+      targetIds: buildRenderEvidenceTargetIds({
+        selectedTargetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+        commands: rawPlan
+      }),
       submodelsById: effectiveSceneGraph?.submodelsById || {}
     });
     state.sequenceAgentRuntime.renderValidationEvidence = nextRenderValidationEvidence;
