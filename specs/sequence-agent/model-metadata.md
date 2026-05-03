@@ -2,7 +2,7 @@
 
 Status: Active
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-04-30
+Last Reviewed: 2026-05-03
 Supersedes: `model-metadata-ownership-and-tagging-2026-03-22.md`, `model-metadata-record-contract-2026-03-22.md`, `custom-model-stage1-breadth-plan-2026-03-22.md`
 
 ## Purpose
@@ -209,8 +209,8 @@ Each record should follow this shape:
 - `targetId`: current sequencing/API id.
 - `targetKind`: `model`, `group`, or `submodel`.
 - `identity.displayName`: current user-visible target label.
-- `identity.rawType`: raw xLights model/group/submodel type.
-- `identity.canonicalType`: normalized type used by app reasoning.
+- `identity.rawType`: raw xLights model/group/submodel type exactly enough to preserve the xLights label, such as `Custom`, `Tree`, `Single Line`, or `SubModel`.
+- `identity.canonicalType`: normalized lower-case type used by app reasoning, such as `custom`, `tree`, `single_line`, `model_group`, or `submodel`.
 - `identity.fingerprint`: durable target fingerprint.
 - `identity.fingerprintVersion`: fingerprint algorithm version.
 - `identity.parentId`: parent target id for submodels.
@@ -218,6 +218,17 @@ Each record should follow this shape:
 - `structure`: compact structural details for the target.
 
 Model and group records place whole-target data under `structure`, including node count, position, dimensions, group membership, embedded submodel summaries, optional `nodeLayout`, and optional `customStructure`.
+
+Custom model records remain normal `targetKind: "model"` records. They are identified structurally by `identity.canonicalType: "custom"` and may include `structure.customStructure`. The live vendor validation display currently proves this shape with custom face-like, radial-like, linear-like, and layered custom-model profiles in the same model-index collection as built-in models and groups.
+
+`structure.customStructure` should contain compact custom-model interpretation when available:
+
+- `profile`: structural profile such as `custom_face_like`, `custom_radial_like`, `custom_linear_like`, or `custom_model`.
+- `traits`: structural traits inferred from construction, node layout, and submodels.
+- `construction`: compact dimensions, node map, coordinate coverage, and node-order facts.
+- `submodels`: captured submodel names/counts and structural groupings relevant to the custom model.
+
+These fields are structural hints, not user semantics. A profile can say a custom model is radial-like because it has spoke/ring submodels, but core code should not infer user-specific prop meaning from target names.
 
 Submodel records are first-class records and should place their specific submodel facts under `structure.submodelMetadata`, including:
 
@@ -232,6 +243,16 @@ Submodel records are first-class records and should place their specific submode
 
 `structure.submodels` remains the embedded submodel summary list for parent model records. It should not be the only place submodels exist.
 
+Validated live shape for a custom-model submodel:
+
+- `targetId`: `Singing Bulb 1/@Mouth1`
+- `targetKind`: `submodel`
+- `identity.parentId`: `Singing Bulb 1`
+- `identity.fingerprint`: stable `tmf1:*` value
+- `structure.submodelMetadata.nodeCoverage`: `nodeCount`, `parentNodeCount`, and `ratio`
+- `structure.submodelMetadata.siblingCount` and sibling/overlap lists when known
+- `structure.submodelMetadata.structureHints`: compact hints such as `feature_mouth`
+
 ### `sceneGraph.submodelsById`
 
 Runtime scene graphs may contain live submodel information from XML, API readback, or other transient sources. Before sequence planning, review/apply validation, render evidence construction, or automation diagnostics use `sceneGraph.submodelsById`, the app should enrich it from `display/model-index.json`.
@@ -244,6 +265,15 @@ The merge rule is:
 - update `stats.submodelCount` to reflect the effective merged graph.
 
 This keeps runtime reasoning grounded in one project-level identity contract while still allowing live readback to provide details that are too volatile or too large for the compact model index.
+
+Consumers that should use the enriched scene graph include:
+
+- proposal generation
+- review/apply execution
+- render validation and render feedback artifacts
+- app automation diagnostics
+- direct app apply scripts and validation tooling
+- target behavior learning
 
 ### `display/target-behavior.json`
 
@@ -269,6 +299,15 @@ Target behavior records should keep:
 - aggregate sample, positive, and negative counts
 
 When older records exist with the same fingerprint/effect/scope but different record ids, upsert should consolidate them into the current semantic aggregate instead of preserving duplicates.
+
+Submodel behavior records should carry the enriched submodel context from `display/model-index.json` through the effective scene graph. For a submodel probe this means:
+
+- `parentId` and `parentName` identify the parent model.
+- `submodelContext.nodeCoverage` records how much of the parent the submodel covers.
+- `submodelContext.siblingCount`, `overlappingSiblingIds`, and `structureHints` preserve local structure.
+- `stats.sampleCount`, `positiveCount`, and `negativeCount` accumulate under the same fingerprint/effect/probe aggregate.
+
+Live validation confirmed that applying an `On` probe to `Singing Bulb 1/@Mouth1` updates one stable target behavior record keyed by the submodel fingerprint and preserves parent identity, `8/143` node coverage, and `feature_mouth` structure hints.
 
 ## User Experience
 

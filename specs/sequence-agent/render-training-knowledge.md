@@ -107,6 +107,8 @@ Project-local target and submodel behavior learning is stored in `display/target
 
 The submodel context in behavior learning should come from the effective runtime scene graph after enrichment from `display/model-index.json`. This means target behavior learning can retain parent identity, node coverage, sibling context, and structure hints even when the live scene graph only provided partial submodel data. If a later refresh enriches the submodel metadata, the behavior record should be updated under the same fingerprint/effect/scope aggregate rather than creating a new record id.
 
+Training cleanup and future training exports should derive custom-model and submodel facts from `display/model-index.json` and `display/target-behavior.json`. They should not reintroduce separate custom-model artifact paths or duplicate model parsing logic. The project-local contract is the source layer; central/shared training packages may consume curated exports from it.
+
 ## Current Learnings
 
 - Generated record packs replaced thousands of loose semantic files.

@@ -106,6 +106,8 @@ Project-local target behavior learning belongs under `display/target-behavior.js
 
 `display/model-index.json` is the project-local structural target index generated from xLights layout refresh. Runtime scene graphs should enrich `sceneGraph.submodelsById` from this model index before planning, review, render validation, or automation diagnostics. That lets transient scene data keep live membership/render-policy details while target identity, parent relationships, fingerprints, node coverage, sibling context, and structure hints come from one canonical project artifact.
 
+The model-index schema preserves both raw xLights type labels and normalized canonical types. For example, `identity.rawType` may be `Custom` while `identity.canonicalType` is `custom`. Consumers should key app reasoning from the normalized canonical field and keep the raw field for diagnostics and user-facing traceability.
+
 ## Project Migration
 
 Creating a new project from an existing project should copy the project metadata into the new project folder.
