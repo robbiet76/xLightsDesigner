@@ -616,18 +616,17 @@ const bundlePath = join(outputDir, `xlights-effectmetadata-bundle-${xlightsVersi
 const fingerprintPath = join(outputDir, `xlights-effectmetadata-fingerprint-${xlightsVersion}.json`);
 const diffPath = join(outputDir, `xlights-effectmetadata-diff-${xlightsVersion}.json`);
 const mdPath = join(outputDir, `xlights-effectmetadata-diff-${xlightsVersion}.md`);
-const effectiveRegistryVersionedPath = join(outputDir, `effective-effect-parameter-registry-${xlightsVersion}.json`);
 const canonicalOutputDir = resolve("scripts/sequencer-render-training/catalog/upstream-effectmetadata");
 const effectiveRegistryCanonicalPath = resolve("scripts/sequencer-render-training/catalog/effective-effect-parameter-registry.json");
 const shouldWriteCanonicalRegistry = outputDir === canonicalOutputDir;
+const effectiveRegistryOutputPath = shouldWriteCanonicalRegistry
+  ? effectiveRegistryCanonicalPath
+  : join(outputDir, "effective-effect-parameter-registry.json");
 
 writeFileSync(bundlePath, `${JSON.stringify(normalizedBundle, null, 2)}\n`, "utf8");
 writeFileSync(fingerprintPath, `${JSON.stringify(fingerprint, null, 2)}\n`, "utf8");
 writeFileSync(diffPath, `${JSON.stringify(diff, null, 2)}\n`, "utf8");
-writeFileSync(effectiveRegistryVersionedPath, `${JSON.stringify(effectiveRegistry, null, 2)}\n`, "utf8");
-if (shouldWriteCanonicalRegistry) {
-  writeFileSync(effectiveRegistryCanonicalPath, `${JSON.stringify(effectiveRegistry, null, 2)}\n`, "utf8");
-}
+writeFileSync(effectiveRegistryOutputPath, `${JSON.stringify(effectiveRegistry, null, 2)}\n`, "utf8");
 
 let md = "# xLights Effect Metadata Import\n\n";
 md += `Generated: ${normalizedBundle.generatedAt}\n\n`;
@@ -674,7 +673,7 @@ console.log(JSON.stringify({
   fingerprintPath,
   diffPath,
   mdPath,
-  effectiveRegistryVersionedPath,
+  effectiveRegistryOutputPath,
   effectiveRegistryCanonicalPath: shouldWriteCanonicalRegistry ? effectiveRegistryCanonicalPath : null,
   overlapEffectCount: diff.overlapEffects.length,
   breakingChangeCount: diff.breakingChanges.length

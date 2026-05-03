@@ -25,7 +25,7 @@ test("import-upstream-effect-metadata emits normalized bundle, fingerprint, and 
   const bundlePath = join(root, "xlights-effectmetadata-bundle-2026.06.json");
   const fingerprintPath = join(root, "xlights-effectmetadata-fingerprint-2026.06.json");
   const diffPath = join(root, "xlights-effectmetadata-diff-2026.06.json");
-  const effectiveRegistryPath = join(root, "effective-effect-parameter-registry-2026.06.json");
+  const effectiveRegistryPath = join(root, "effective-effect-parameter-registry.json");
 
   assert.equal(existsSync(bundlePath), true);
   assert.equal(existsSync(fingerprintPath), true);
