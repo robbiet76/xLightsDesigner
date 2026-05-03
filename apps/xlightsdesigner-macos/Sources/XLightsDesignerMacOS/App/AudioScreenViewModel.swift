@@ -9,6 +9,7 @@ final class AudioScreenViewModel {
     private let trackLibraryService: TrackLibraryService
     private let fileSelectionService: FileSelectionService
     private let audioExecutionService: AudioExecutionService
+    private let projectSequenceStore: ProjectSequenceStore
 
     var mode: AudioMode = .singleTrack
     var singleTrackPath = ""
@@ -31,13 +32,15 @@ final class AudioScreenViewModel {
         projectService: ProjectService = LocalProjectService(),
         trackLibraryService: TrackLibraryService = LocalTrackLibraryService(),
         fileSelectionService: FileSelectionService = MacOSFileSelectionService(),
-        audioExecutionService: AudioExecutionService = LocalAudioExecutionService()
+        audioExecutionService: AudioExecutionService = LocalAudioExecutionService(),
+        projectSequenceStore: ProjectSequenceStore = LocalProjectSequenceStore()
     ) {
         self.workspace = workspace
         self.projectService = projectService
         self.trackLibraryService = trackLibraryService
         self.fileSelectionService = fileSelectionService
         self.audioExecutionService = audioExecutionService
+        self.projectSequenceStore = projectSequenceStore
         self.allRows = rows
         self.selectedRowID = selectedRowID
         if let selectedRowID {
@@ -330,6 +333,19 @@ final class AudioScreenViewModel {
         let sourcePath = row.sourceMediaPath.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !sourcePath.isEmpty else { return }
         guard ProjectTargetContext.normalizedPath(string(project.snapshot["audioPathInput"]?.value)) != ProjectTargetContext.normalizedPath(sourcePath) else { return }
+        let activeSequencePath = ProjectTargetContext.resolve(project: project).sequencePath
+        if !activeSequencePath.isEmpty {
+            do {
+                try projectSequenceStore.upsertActiveSequence(project: &project, sequencePath: activeSequencePath, audioPath: sourcePath)
+            } catch {
+                currentResult = .error(AudioErrorModel(
+                    title: "Unable to update sequence audio focus",
+                    explanation: String(error.localizedDescription),
+                    canRetry: true
+                ))
+                return
+            }
+        }
         project.snapshot["audioPathInput"] = AnyCodable(sourcePath)
         do {
             let saved = try projectService.saveProject(project)

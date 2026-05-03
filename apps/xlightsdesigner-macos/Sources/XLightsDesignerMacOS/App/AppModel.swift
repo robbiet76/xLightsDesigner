@@ -44,7 +44,7 @@ final class AppModel {
         self.workspace = workspace
         self.xlightsSessionModel = XLightsSessionViewModel(workspace: workspace)
         self.assistantModel = AssistantWindowViewModel(workspace: workspace)
-        self.audioScreenModel = AudioScreenViewModel(workspace: workspace)
+        self.audioScreenModel = AudioScreenViewModel(rows: [], workspace: workspace, projectSequenceStore: projectSequenceStore)
         self.projectScreenModel = ProjectScreenViewModel(workspace: workspace)
         self.displayScreenModel = DisplayScreenViewModel(workspace: workspace)
         self.designScreenModel = DesignScreenViewModel(workspace: workspace)
