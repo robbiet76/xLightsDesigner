@@ -8,7 +8,6 @@ Evaluation and probe tooling for the analysis service.
 - `corpus/`: reference corpus JSON files used for eval and audit work
 - `archive/`: reserved for superseded or low-value probes after review
 - `structure_eval_cases.example.json`: template for local machine-specific eval cases
-- `manifest.v1.json`: tracked lifecycle inventory for this subtree
 
 ## Canonical Data Ownership
 - Runtime packaged corpus source of truth:

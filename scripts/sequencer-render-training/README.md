@@ -26,7 +26,11 @@ Primary system spec:
 - `proofs/`: compact proof summaries and regression fixtures only; detailed
   proof payloads regenerate locally under `/tmp/xld-render-training-proofs`
 - `archive/`: reserved for historical or superseded material
-- `manifest.v1.json`: tracked lifecycle inventory for this subtree
+
+The durable catalog layer is classified by `catalog/knowledge-inventory.v1.json`
+and validated with `tooling/validate-training-catalog-inventory.mjs`. The broader
+tooling subtree is intentionally organized by directory rather than a separate
+hand-maintained lifecycle manifest.
 
 ## Core Entry Points
 - `runners/run-sample.sh`
