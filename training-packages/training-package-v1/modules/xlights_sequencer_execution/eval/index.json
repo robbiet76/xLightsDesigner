@@ -46,6 +46,32 @@
         "partial scope planning remains deterministic",
         "scope metadata narrows to selected target/section"
       ]
+    },
+    {
+      "id": "display_model_index_custom_structure",
+      "source": "apps/xlightsdesigner-macos/Tests/XLightsDesignerMacOSTests/DisplayServiceArtifactTests.swift",
+      "asserts": [
+        "display/model-index embeds custom model records in the shared target collection",
+        "custom model records include structural customStructure instead of a separate custom-only artifact",
+        "custom model inference uses geometry and API node layout signals rather than user-defined target-name hints"
+      ]
+    },
+    {
+      "id": "display_model_index_submodel_identity",
+      "source": "apps/xlightsdesigner-macos/Tests/XLightsDesignerMacOSTests/DisplayServiceArtifactTests.swift",
+      "asserts": [
+        "submodel records are first-class display/model-index targets",
+        "submodel identity preserves parent id/name, fingerprint, node coverage, sibling context, overlap, and structure hints",
+        "the same submodel framework applies to built-in and custom parent models"
+      ]
+    },
+    {
+      "id": "display_model_index_fingerprint_loading",
+      "source": "apps/xlightsdesigner-macos/Tests/XLightsDesignerMacOSTests/DisplayModelIndexStoreTests.swift",
+      "asserts": [
+        "display/model-index target fingerprints load as project-local identity data",
+        "current display names can change without becoming the durable metadata key"
+      ]
     }
   ],
   "corpusBackedCoverage": {
@@ -105,7 +131,8 @@
       "id": "display_model_index_target_identity_support",
       "asserts": [
         "sequence_agent prefers display/model-index target identity and fingerprints over display-name-only reasoning",
-        "custom model construction and enriched submodel metadata are consumed from the shared target index instead of a custom-only artifact"
+        "custom model construction and enriched submodel metadata are consumed from the shared target index instead of a custom-only artifact",
+        "display_model_index_v1 contract fields are present when custom model and submodel fixture summaries are used in eval inputs"
       ]
     },
     {
