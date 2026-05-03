@@ -207,6 +207,59 @@ function matchSubmodelEvidence(renderValidationEvidence = null, targetId = "") {
     .find((row) => str(row?.targetId) === id || str(row?.submodelId) === id) || null;
 }
 
+export function normalizeModelIndexTargetRecords(modelIndexArtifact = null) {
+  const records = arr(modelIndexArtifact?.records);
+  return records
+    .map((record) => {
+      const targetId = str(record?.targetId);
+      if (!targetId) return null;
+      const identity = obj(record?.identity);
+      return {
+        targetId,
+        targetKind: str(record?.targetKind),
+        identity: {
+          displayName: str(identity.displayName || targetId),
+          rawType: str(identity.rawType),
+          canonicalType: str(identity.canonicalType),
+          fingerprint: str(identity.fingerprint),
+          fingerprintVersion: str(identity.fingerprintVersion)
+        },
+        structure: obj(record?.structure),
+        provenance: { source: "display/model-index.json" }
+      };
+    })
+    .filter(Boolean);
+}
+
+export function mergeTargetBehaviorTargetRecords(primaryRecords = [], supplementalRecords = []) {
+  const byId = new Map();
+  for (const record of arr(supplementalRecords)) {
+    const targetId = str(record?.targetId);
+    if (targetId) byId.set(targetId, record);
+  }
+  for (const record of arr(primaryRecords)) {
+    const targetId = str(record?.targetId);
+    if (!targetId) continue;
+    const supplemental = byId.get(targetId) || {};
+    byId.set(targetId, {
+      ...supplemental,
+      ...record,
+      identity: {
+        ...obj(supplemental.identity),
+        ...obj(record.identity),
+        fingerprint: str(record?.identity?.fingerprint || supplemental?.identity?.fingerprint),
+        fingerprintVersion: str(record?.identity?.fingerprintVersion || supplemental?.identity?.fingerprintVersion),
+        displayName: str(record?.identity?.displayName || supplemental?.identity?.displayName || targetId)
+      },
+      structure: {
+        ...obj(supplemental.structure),
+        ...obj(record.structure)
+      }
+    });
+  }
+  return [...byId.values()];
+}
+
 function outcomeFromCritique({ renderCritiqueContext = null, renderObservation = null } = {}) {
   const quality = obj(renderCritiqueContext?.quality);
   const observed = obj(renderCritiqueContext?.observed);

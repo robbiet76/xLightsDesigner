@@ -97,15 +97,23 @@ struct DisplayServiceArtifactTests {
         )
         let artifact = try JSONSerialization.jsonObject(with: artifactData) as? [String: Any]
         let records = artifact?["records"] as? [[String: Any]]
-        let structure = records?.first?["structure"] as? [String: Any]
+        let modelRecord = records?.first { $0["targetId"] as? String == "Custom Target A" }
+        let submodelRecord = records?.first { $0["targetId"] as? String == "Custom Target A/@Mouth1" }
+        let structure = modelRecord?["structure"] as? [String: Any]
         let customStructure = structure?["customStructure"] as? [String: Any]
         let customSubmodels = customStructure?["submodels"] as? [String: Any]
+        let submodelIdentity = submodelRecord?["identity"] as? [String: Any]
 
         #expect(artifact?["artifactType"] as? String == "target_metadata_index_v1")
-        #expect(records?.first?["targetId"] as? String == "Custom Target A")
+        #expect((artifact?["summary"] as? [String: Any])?["targetCount"] as? Int == 3)
+        #expect((artifact?["summary"] as? [String: Any])?["submodelCount"] as? Int == 2)
+        #expect(modelRecord?["targetKind"] as? String == "model")
+        #expect(submodelRecord?["targetKind"] as? String == "submodel")
         #expect(customStructure?["profile"] as? String == "custom_face_like")
         #expect((customSubmodels?["capturedCount"] as? Int) == 2)
         #expect(structure?["customModel"] == nil)
+        #expect(submodelIdentity?["canonicalType"] as? String == "submodel")
+        #expect((submodelIdentity?["fingerprint"] as? String)?.hasPrefix("tmf1:") == true)
     }
 
     @Test func modelIndexArtifactEmbedsSharedSubmodelRelationshipsForBuiltInModels() throws {
@@ -143,13 +151,17 @@ struct DisplayServiceArtifactTests {
         )
         let artifact = try JSONSerialization.jsonObject(with: artifactData) as? [String: Any]
         let records = artifact?["records"] as? [[String: Any]]
-        let structure = records?.first?["structure"] as? [String: Any]
+        let modelRecord = records?.first { $0["targetId"] as? String == "Built In Target" }
+        let submodelRecord = records?.first { $0["targetId"] as? String == "Built In Target/Left Segment" }
+        let structure = modelRecord?["structure"] as? [String: Any]
         let submodelSummaries = structure?["submodels"] as? [[String: Any]]
         let left = submodelSummaries?.first { $0["name"] as? String == "Left Segment" }
         let coverage = left?["nodeCoverage"] as? [String: Any]
         let hints = left?["structureHints"] as? [String]
 
-        #expect(records?.first?["targetKind"] as? String == "model")
+        #expect((artifact?["summary"] as? [String: Any])?["targetCount"] as? Int == 4)
+        #expect(modelRecord?["targetKind"] as? String == "model")
+        #expect(submodelRecord?["targetKind"] as? String == "submodel")
         #expect(structure?["customStructure"] == nil)
         #expect(left?["siblingCount"] as? Int == 2)
         #expect(left?["overlapsSibling"] as? Bool == true)

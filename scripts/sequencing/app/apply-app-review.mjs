@@ -52,6 +52,16 @@ import {
 } from '../../../apps/xlightsdesigner-ui/runtime/owned-xlights-health.js';
 import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/orchestrator.js';
 import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
+import {
+  readDisplayRefreshArtifact,
+  readTargetBehaviorLearningDocument,
+  writeTargetBehaviorLearningDocument
+} from '../../../apps/xlightsdesigner-ui/storage/display-metadata-store.mjs';
+import {
+  buildTargetBehaviorLearningRecordsForApply,
+  normalizeModelIndexTargetRecords,
+  upsertTargetBehaviorLearningRecord
+} from '../../../apps/xlightsdesigner-ui/runtime/target-behavior-learning-runtime.js';
 import { loadProjectDisplayMetadataAssignments } from './project-display-metadata.mjs';
 
 const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
@@ -219,6 +229,57 @@ function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
   }
   if (basenameMatch) return basenameMatch;
   throw new Error(`No shared track metadata found for audio file: ${targetPath}`);
+}
+
+function loadModelIndexTargetRecords(projectFile = '') {
+  try {
+    const result = readDisplayRefreshArtifact({ projectFilePath: projectFile, kind: 'model-index' });
+    if (result?.ok !== true) return [];
+    return normalizeModelIndexTargetRecords(result.artifact);
+  } catch {
+    return [];
+  }
+}
+
+async function persistAppTargetBehaviorLearning({
+  projectFile = '',
+  commands = [],
+  renderObservation = null,
+  renderCritiqueContext = null,
+  planHandoff = null,
+  applyResult = null
+} = {}) {
+  const targetRecords = loadModelIndexTargetRecords(projectFile);
+  if (!targetRecords.length) return { ok: true, skipped: true, reason: 'missing_model_index_targets', recordCount: 0 };
+  const observedAt = new Date().toISOString();
+  const records = buildTargetBehaviorLearningRecordsForApply({
+    commands,
+    targetRecords,
+    renderObservation,
+    renderCritiqueContext,
+    sourceArtifactRefs: {
+      planHandoffRef: str(planHandoff?.artifactId || planHandoff?.planId),
+      applyResultRef: str(applyResult?.artifactId)
+    },
+    observedAt
+  });
+  if (!records.length) return { ok: true, skipped: true, reason: 'no_target_behavior_records', recordCount: 0 };
+
+  const existing = readTargetBehaviorLearningDocument({ projectFilePath: projectFile });
+  let document = existing?.document && typeof existing.document === 'object' && !Array.isArray(existing.document)
+    ? existing.document
+    : null;
+  for (const record of records) {
+    document = upsertTargetBehaviorLearningRecord(document, record, { now: observedAt });
+  }
+  const write = writeTargetBehaviorLearningDocument({ projectFilePath: projectFile, document });
+  return {
+    ok: write?.ok !== false,
+    skipped: false,
+    recordCount: records.length,
+    artifactPath: write?.artifactPath || existing?.artifactPath || '',
+    error: str(write?.error)
+  };
 }
 
 function loadReviewInputs({ projectFile = '', appRoot = '' } = {}) {
@@ -625,6 +686,15 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       metadataAssignments
     });
     const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
+    const targetBehaviorLearning = await persistAppTargetBehaviorLearning({
+      projectFile,
+      commands,
+      renderObservation: renderArtifacts.renderObservation,
+      renderCritiqueContext: renderArtifacts.renderCritiqueContext,
+      planHandoff: commandsPlan,
+      applyResult
+    });
+    applyResult.targetBehaviorLearning = targetBehaviorLearning;
     await persistAppReviewArtifacts({
       projectFile,
       projectDoc: inputs.projectDoc,
@@ -650,6 +720,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       renderCurrentError: renderCurrent.error,
       summary: fallback.summary,
       applyResultId: str(applyResult?.artifactId),
+      targetBehaviorLearning,
       metadataAssignmentCount: metadataAssignments.length,
       practicalValidationSummary: summarizePracticalValidation(applyResult?.practicalValidation),
       renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),
@@ -698,6 +769,15 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     metadataAssignments
   });
   const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
+  const targetBehaviorLearning = await persistAppTargetBehaviorLearning({
+    projectFile,
+    commands,
+    renderObservation: renderArtifacts.renderObservation,
+    renderCritiqueContext: renderArtifacts.renderCritiqueContext,
+    planHandoff: commandsPlan,
+    applyResult
+  });
+  applyResult.targetBehaviorLearning = targetBehaviorLearning;
   await persistAppReviewArtifacts({
     projectFile,
     projectDoc: inputs.projectDoc,
@@ -723,6 +803,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     renderCurrentError: renderCurrent.error,
     summary: str(commandsPlan?.summary || inputs.proposalBundle?.summary || 'Applied pending work.'),
     applyResultId: str(applyResult?.artifactId),
+    targetBehaviorLearning,
     metadataAssignmentCount: metadataAssignments.length,
     practicalValidationSummary: summarizePracticalValidation(applyResult?.practicalValidation),
     renderFeedbackCaptured: Boolean(renderArtifacts.renderObservation && renderArtifacts.renderCritiqueContext),

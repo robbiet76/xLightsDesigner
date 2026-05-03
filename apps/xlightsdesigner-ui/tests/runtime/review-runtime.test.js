@@ -612,15 +612,7 @@ test("executeApplyCore persists target behavior learning after successful render
           nodeCount: 4
         }
       },
-      submodelsById: {
-        "CustomFace/@Mouth": {
-          id: "CustomFace/@Mouth",
-          name: "@Mouth",
-          parentId: "CustomFace",
-          type: "ranges",
-          membership: { nodeCount: 2, nodeChannels: [1, 2] }
-        }
-      }
+      submodelsById: {}
     },
     ui: { metadataSelectionIds: ["CustomFace/@Mouth"], metadataSelectedTags: [] },
     health: { capabilityCommands: [] },
@@ -704,6 +696,27 @@ test("executeApplyCore persists target behavior learning after successful render
         exists: false,
         document: { artifactType: "project_target_behavior_learning_v1", artifactVersion: "1.0", records: [] }
       }),
+      readDisplayRefreshArtifact: () => ({
+        ok: true,
+        artifact: {
+          artifactType: "target_metadata_index_v1",
+          records: [
+            {
+              targetId: "CustomFace/@Mouth",
+              targetKind: "submodel",
+              identity: {
+                displayName: "CustomFace / @Mouth",
+                canonicalType: "submodel",
+                fingerprint: "tmf1:test-mouth",
+                fingerprintVersion: "target-metadata-fingerprint-v1"
+              },
+              structure: {
+                nodeCount: 2
+              }
+            }
+          ]
+        }
+      }),
       writeTargetBehaviorLearningDocument: async ({ document }) => {
         writtenDocument = document;
         return { ok: true, artifactPath: "/tmp/xld-project/Test/display/target-behavior.json" };
@@ -724,6 +737,8 @@ test("executeApplyCore persists target behavior learning after successful render
   assert.equal(writtenDocument?.artifactType, "project_target_behavior_learning_v1");
   assert.equal(writtenDocument?.records?.length, 1);
   assert.equal(writtenDocument.records[0].targetId, "CustomFace/@Mouth");
+  assert.equal(writtenDocument.records[0].targetKind, "submodel");
+  assert.equal(writtenDocument.records[0].targetFingerprint, "tmf1:test-mouth");
   assert.equal(writtenDocument.records[0].effectName, "On");
   assert.equal(writtenDocument.records[0].evidenceRefs.renderObservationRef, "render-target-behavior");
   assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.recordCount, 1);

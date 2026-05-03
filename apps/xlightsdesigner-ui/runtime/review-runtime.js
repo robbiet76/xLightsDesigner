@@ -15,9 +15,12 @@ import { buildRevisionRetryPressureV1 } from "../agent/sequence-agent/revision-r
 import { buildNormalizedTargetMetadataRecords } from "./target-metadata-runtime.js";
 import {
   buildTargetBehaviorLearningRecordsForApply,
+  mergeTargetBehaviorTargetRecords,
+  normalizeModelIndexTargetRecords,
   upsertTargetBehaviorLearningRecord
 } from "./target-behavior-learning-runtime.js";
 import {
+  readDisplayRefreshArtifact,
   readTargetBehaviorLearningDocument as readProjectTargetBehaviorLearningDocument,
   writeTargetBehaviorLearningDocument as writeProjectTargetBehaviorLearningDocument
 } from "../storage/display-metadata-store.mjs";
@@ -29,6 +32,20 @@ import {
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
+}
+
+function loadModelIndexTargetRecords({ state = {}, deps = {} } = {}) {
+  const projectFilePath = String(state?.projectFilePath || "").trim();
+  if (!projectFilePath) return [];
+  const reader = deps.readDisplayRefreshArtifact || readDisplayRefreshArtifact;
+  if (typeof reader !== "function") return [];
+  try {
+    const result = reader({ projectFilePath, kind: "model-index" });
+    if (result?.ok !== true) return [];
+    return normalizeModelIndexTargetRecords(result.artifact);
+  } catch {
+    return [];
+  }
 }
 
 async function persistTargetBehaviorLearning({
@@ -52,11 +69,11 @@ async function persistTargetBehaviorLearning({
     return { ok: false, skipped: true, reason: "missing_target_behavior_store", recordCount: 0 };
   }
 
-  const targetRecords = buildNormalizedTargetMetadataRecords({
+  const targetRecords = mergeTargetBehaviorTargetRecords(buildNormalizedTargetMetadataRecords({
     sceneGraph: state.sceneGraph || {},
     metadataAssignments,
     metadataPreferencesByTargetId: state.metadata?.preferencesByTargetId || {}
-  });
+  }), loadModelIndexTargetRecords({ state, deps }));
   const observedAt = new Date().toISOString();
   const records = buildTargetBehaviorLearningRecordsForApply({
     commands: rawPlan,

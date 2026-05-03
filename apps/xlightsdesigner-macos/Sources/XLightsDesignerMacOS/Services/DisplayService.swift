@@ -295,24 +295,34 @@ private func encodeDisplayModelIndexArtifactInternal(
     sourceSummary: String,
     createdAt: String = ISO8601DateFormatter().string(from: Date())
 ) throws -> Data {
+    let records = rows.flatMap { row in
+        let submodels = submodelsByParent[row.targetName] ?? []
+        let parentRecord = DisplayModelIndexRecord(
+            row: row,
+            nodeLayout: nodeLayoutsByModel[row.targetName],
+            submodels: submodels
+        )
+        let submodelRecords = submodels.map { submodel in
+            DisplayModelIndexRecord(
+                submodel: submodel,
+                parent: row,
+                allSubmodels: submodels
+            )
+        }
+        return [parentRecord] + submodelRecords
+    }
     let artifact = DisplayModelIndexArtifact(
         artifactType: "target_metadata_index_v1",
         artifactVersion: "1.0",
         createdAt: createdAt,
         source: DisplayModelIndexSource(source: sourceSummary),
         summary: DisplayModelIndexSummary(
-            targetCount: rows.count,
+            targetCount: records.count,
             modelCount: rows.filter { !$0.targetType.localizedCaseInsensitiveContains("modelgroup") }.count,
             groupCount: rows.filter { $0.targetType.localizedCaseInsensitiveContains("modelgroup") }.count,
             submodelCount: rows.reduce(0) { $0 + $1.submodelCount }
         ),
-        records: rows.map {
-            DisplayModelIndexRecord(
-                row: $0,
-                nodeLayout: nodeLayoutsByModel[$0.targetName],
-                submodels: submodelsByParent[$0.targetName] ?? []
-            )
-        }
+        records: records
     )
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -599,6 +609,65 @@ private func uniqueStrings(_ values: [String]) -> [String] {
     return result
 }
 
+private func displayModelFingerprint(row: DisplayLayoutRowModel, nodeLayout: XLightsModelNodeLayout?, submodels: [XLightsSubmodel]) -> String {
+    let targetKind = isModelGroupType(row.targetType) ? "group" : "model"
+    let customPayload = isCustomModelType(row.targetType)
+        ? """
+        {"construction":\(displayNodeLayoutFingerprintPayload(nodeLayout)),"nodeCount":\(row.nodeCount),"profile":\(jsonString(inferCustomModelStructure(row: row, submodels: submodels).profile)),"submodels":[\(submodels.map(displaySubmodelSummaryFingerprintPayload).joined(separator: ","))]}
+        """
+        : "null"
+    let nodeLayoutPayload = nodeLayout.map {
+        """
+        {"dimensions":null,"nodeCount":\($0.nodes.count),"nodeOrderContinuity":null,"occupancy":null,"source":"layout.getModelNodes"}
+        """
+    } ?? "null"
+    let groupMembers = row.flattenedGroupMembers.sorted().map(jsonString).joined(separator: ",")
+    let payload = """
+    {"canonicalType":\(jsonString(row.targetType)),"custom":\(customPayload),"dimensions":null,"groupMembers":[\(groupMembers)],"nodeCount":\(row.nodeCount),"nodeLayout":\(nodeLayoutPayload),"structuralAttrs":{"DisplayAs":\(jsonString(row.targetType)),"ModelChain":"","PixelCount":"","StringType":"","parm1":"","parm2":"","parm3":""},"submodel":null,"targetKind":\(jsonString(targetKind))}
+    """
+    return "tmf1:\(stableFNV1aHash(payload))"
+}
+
+private func displaySubmodelFingerprint(submodel: XLightsSubmodel) -> String {
+    let nodeCount = submodel.membership?.nodeCount
+        ?? submodel.nodeCount
+        ?? normalizeSubmodelNodeMembership(submodel).count
+    let payload = """
+    {"canonicalType":"submodel","custom":null,"dimensions":null,"groupMembers":[],"nodeCount":\(nodeCount),"nodeLayout":null,"structuralAttrs":{"DisplayAs":"","ModelChain":"","PixelCount":"","StringType":"","parm1":"","parm2":"","parm3":""},"submodel":{"lines":\(jsonString(submodel.lines ?? "")),"nodeCount":\(nodeCount),"type":\(jsonString(submodel.type ?? ""))},"targetKind":"submodel"}
+    """
+    return "tmf1:\(stableFNV1aHash(payload))"
+}
+
+private func displayNodeLayoutFingerprintPayload(_ nodeLayout: XLightsModelNodeLayout?) -> String {
+    guard let nodeLayout else { return "null" }
+    return """
+    {"nodeMap":{"nodeCount":\(nodeLayout.nodes.count)}}
+    """
+}
+
+private func displaySubmodelSummaryFingerprintPayload(_ submodel: XLightsSubmodel) -> String {
+    let nodeCount = submodel.membership?.nodeCount
+        ?? submodel.nodeCount
+        ?? normalizeSubmodelNodeMembership(submodel).count
+    return """
+    {"name":\(jsonString(submodel.name ?? "")),"nodeCount":\(nodeCount),"range":\(jsonString(submodel.lines ?? "")),"type":\(jsonString(submodel.type ?? ""))}
+    """
+}
+
+private func jsonString(_ value: String) -> String {
+    let data = try? JSONEncoder().encode(value.trimmingCharacters(in: .whitespacesAndNewlines))
+    return data.flatMap { String(data: $0, encoding: .utf8) } ?? "\"\""
+}
+
+private func stableFNV1aHash(_ value: String) -> String {
+    var hash: UInt32 = 2_166_136_261
+    for scalar in value.unicodeScalars {
+        hash ^= UInt32(scalar.value)
+        hash = hash &* 16_777_619
+    }
+    return String(format: "%08x", hash)
+}
+
 private struct XLightsHealthResponse: Decodable {
     let data: XLightsHealth
 }
@@ -803,7 +872,9 @@ private struct DisplayModelIndexRecord: Encodable {
         identity = DisplayModelIndexIdentity(
             displayName: row.targetName,
             rawType: row.targetType,
-            canonicalType: row.targetType
+            canonicalType: row.targetType,
+            fingerprint: displayModelFingerprint(row: row, nodeLayout: nodeLayout, submodels: submodels),
+            fingerprintVersion: "target-metadata-fingerprint-v1"
         )
         structure = DisplayModelIndexStructure(
             nodeCount: row.nodeCount,
@@ -827,12 +898,47 @@ private struct DisplayModelIndexRecord: Encodable {
                 : nil
         )
     }
+
+    init(submodel: XLightsSubmodel, parent: DisplayLayoutRowModel, allSubmodels: [XLightsSubmodel]) {
+        let summary = DisplaySubmodelSummary(submodel: submodel, allSubmodels: allSubmodels, parentNodeCount: parent.nodeCount)
+        let resolvedId = summary.id ?? summary.name ?? ""
+        let resolvedName = summary.name ?? resolvedId
+        let displayName = parent.targetName.isEmpty ? resolvedName : "\(parent.targetName) / \(resolvedName)"
+        targetId = resolvedId
+        targetKind = "submodel"
+        identity = DisplayModelIndexIdentity(
+            displayName: displayName,
+            rawType: "SubModel",
+            canonicalType: "submodel",
+            fingerprint: displaySubmodelFingerprint(submodel: submodel),
+            fingerprintVersion: "target-metadata-fingerprint-v1"
+        )
+        structure = DisplayModelIndexStructure(
+            nodeCount: summary.nodeCoverage.nodeCount,
+            positionX: parent.positionX,
+            positionY: parent.positionY,
+            positionZ: parent.positionZ,
+            width: parent.width,
+            height: parent.height,
+            depth: parent.depth,
+            submodelCount: 0,
+            directGroupMembers: [],
+            activeGroupMembers: [],
+            flattenedGroupMembers: [],
+            flattenedAllGroupMembers: [],
+            submodels: [],
+            nodeLayout: nil,
+            customStructure: nil
+        )
+    }
 }
 
 private struct DisplayModelIndexIdentity: Encodable {
     let displayName: String
     let rawType: String
     let canonicalType: String
+    let fingerprint: String
+    let fingerprintVersion: String
 }
 
 private struct DisplayModelIndexStructure: Encodable {
