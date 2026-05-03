@@ -71,11 +71,13 @@ struct XLightsDisplayService: DisplayService {
         let rows: [DisplayLayoutRowModel]
         let taggedCount: Int
         let unresolvedCount: Int
+        let orphanedCount: Int
 
         if health?.listenerReachable != true {
             rows = []
             taggedCount = 0
             unresolvedCount = 0
+            orphanedCount = 0
             state = .blocked
             explanation = "Display needs a live xLights session to load the current model list."
             nextStep = "Open xLights to this project's show folder, then return to Display."
@@ -89,6 +91,7 @@ struct XLightsDisplayService: DisplayService {
                 rows = []
                 taggedCount = 0
                 unresolvedCount = 0
+                orphanedCount = 0
                 state = .blocked
                 explanation = "xLights is currently open to a different show folder than the active project."
                 nextStep = "Open xLights to the project's show folder, or correct the project show folder in Project if the project points at the wrong folder."
@@ -120,17 +123,29 @@ struct XLightsDisplayService: DisplayService {
                     rows: rows,
                     nodeLayoutsByModel: nodeLayoutsByModel,
                     submodelsByParent: submodelsByParent,
-                    sourceSummary: "xLights owned API"
+                    sourceSummary: "xLights owned API",
+                    sourceShowFolder: project?.showFolder ?? ""
+                )
+                let reconciliationArtifact = try? encodeDisplayReconciliationArtifact(
+                    rows: rows,
+                    submodelsByParent: submodelsByParent,
+                    metadataDocument: metadataDocument,
+                    sourceSummary: "xLights owned API",
+                    sourceShowFolder: project?.showFolder ?? ""
                 )
                 if let project, modelIndexArtifact != nil {
                     try? metadataStore.writeRefreshArtifacts(
                         project: project,
                         targetMetadata: modelIndexArtifact,
-                        reconciliation: nil
+                        reconciliation: reconciliationArtifact
                     )
                 }
                 taggedCount = rows.filter { !$0.labelDefinitions.isEmpty }.count
                 unresolvedCount = rows.count - taggedCount
+                orphanedCount = orphanedMetadataTargetIDs(
+                    document: metadataDocument,
+                    currentTargetIDs: currentDisplayTargetIDs(rows: rows, submodelsByParent: submodelsByParent)
+                ).count
 
                 if unresolvedCount > 0 {
                     state = .needsReview
@@ -148,6 +163,7 @@ struct XLightsDisplayService: DisplayService {
             rows = []
             taggedCount = 0
             unresolvedCount = 0
+            orphanedCount = 0
             state = .blocked
             explanation = "Project context is incomplete or invalid."
             nextStep = "Correct the project show folder in Project, then return to Display."
@@ -164,7 +180,7 @@ struct XLightsDisplayService: DisplayService {
                 totalTargets: rows.count,
                 readyCount: taggedCount,
                 unresolvedCount: unresolvedCount,
-                orphanCount: 0,
+                orphanCount: orphanedCount,
                 explanationText: explanation,
                 nextStepText: nextStep
             ),
@@ -278,6 +294,7 @@ func encodeDisplayModelIndexArtifact(
     rows: [DisplayLayoutRowModel],
     submodelsByParent: [String: [XLightsSubmodel]],
     sourceSummary: String,
+    sourceShowFolder: String = "",
     createdAt: String = ISO8601DateFormatter().string(from: Date())
 ) throws -> Data {
     try encodeDisplayModelIndexArtifactInternal(
@@ -285,6 +302,7 @@ func encodeDisplayModelIndexArtifact(
         nodeLayoutsByModel: [:],
         submodelsByParent: submodelsByParent,
         sourceSummary: sourceSummary,
+        sourceShowFolder: sourceShowFolder,
         createdAt: createdAt
     )
 }
@@ -294,6 +312,7 @@ private func encodeDisplayModelIndexArtifactInternal(
     nodeLayoutsByModel: [String: XLightsModelNodeLayout],
     submodelsByParent: [String: [XLightsSubmodel]],
     sourceSummary: String,
+    sourceShowFolder: String = "",
     createdAt: String = ISO8601DateFormatter().string(from: Date())
 ) throws -> Data {
     let records = rows.flatMap { row in
@@ -316,7 +335,7 @@ private func encodeDisplayModelIndexArtifactInternal(
         artifactType: "target_metadata_index_v1",
         artifactVersion: "1.0",
         createdAt: createdAt,
-        source: DisplayModelIndexSource(source: sourceSummary),
+        source: DisplayModelIndexSource(source: sourceSummary, showFolder: normalizedOptionalPath(sourceShowFolder)),
         summary: DisplayModelIndexSummary(
             targetCount: records.count,
             modelCount: rows.filter { !$0.targetType.localizedCaseInsensitiveContains("modelgroup") }.count,
@@ -328,6 +347,81 @@ private func encodeDisplayModelIndexArtifactInternal(
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     return try encoder.encode(artifact)
+}
+
+func encodeDisplayReconciliationArtifact(
+    rows: [DisplayLayoutRowModel],
+    submodelsByParent: [String: [XLightsSubmodel]],
+    metadataDocument: PersistedDisplayMetadataDocument,
+    sourceSummary: String,
+    sourceShowFolder: String = "",
+    createdAt: String = ISO8601DateFormatter().string(from: Date())
+) throws -> Data {
+    let currentTargetIDs = currentDisplayTargetIDs(rows: rows, submodelsByParent: submodelsByParent)
+    let metadataTargetIDs = metadataTargetIDs(document: metadataDocument)
+    let records = metadataTargetIDs.map { targetID in
+        DisplayReconciliationRecord(
+            targetId: targetID,
+            status: currentTargetIDs.contains(targetID) ? "active" : "retained-orphaned",
+            matchedBy: currentTargetIDs.contains(targetID) ? "target-id" : "retained-project-metadata",
+            metadataSources: metadataSources(for: targetID, document: metadataDocument)
+        )
+    }
+    let artifact = DisplayReconciliationArtifact(
+        artifactType: "display_reconciliation_v1",
+        artifactVersion: "1.0",
+        createdAt: createdAt,
+        source: DisplayModelIndexSource(source: sourceSummary, showFolder: normalizedOptionalPath(sourceShowFolder)),
+        summary: DisplayReconciliationSummary(
+            currentTargetCount: currentTargetIDs.count,
+            metadataTargetCount: metadataTargetIDs.count,
+            activeMetadataCount: records.filter { $0.status == "active" }.count,
+            retainedOrphanedMetadataCount: records.filter { $0.status == "retained-orphaned" }.count
+        ),
+        records: records
+    )
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    return try encoder.encode(artifact)
+}
+
+func currentDisplayTargetIDs(rows: [DisplayLayoutRowModel], submodelsByParent: [String: [XLightsSubmodel]]) -> Set<String> {
+    var ids = Set(rows.map(\.targetName).filter { !$0.isEmpty })
+    for submodel in submodelsByParent.values.flatMap({ $0 }) {
+        let id = (submodel.id ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !id.isEmpty {
+            ids.insert(id)
+        }
+    }
+    return ids
+}
+
+func orphanedMetadataTargetIDs(document: PersistedDisplayMetadataDocument, currentTargetIDs: Set<String>) -> [String] {
+    metadataTargetIDs(document: document).filter { !currentTargetIDs.contains($0) }
+}
+
+private func metadataTargetIDs(document: PersistedDisplayMetadataDocument) -> [String] {
+    Set(document.targetTags.keys)
+        .union(document.preferencesByTargetId.keys)
+        .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        .sorted()
+}
+
+private func metadataSources(for targetID: String, document: PersistedDisplayMetadataDocument) -> [String] {
+    var sources: [String] = []
+    if document.targetTags[targetID]?.isEmpty == false {
+        sources.append("tag-assignment")
+    }
+    if document.preferencesByTargetId[targetID] != nil {
+        sources.append("target-preference")
+    }
+    return sources
+}
+
+private func normalizedOptionalPath(_ value: String) -> String? {
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return nil }
+    return URL(fileURLWithPath: trimmed).standardizedFileURL.path
 }
 
 extension XLightsDisplayService {
@@ -816,6 +910,7 @@ private struct DisplayModelIndexArtifact: Encodable {
 
 private struct DisplayModelIndexSource: Encodable {
     let source: String
+    let showFolder: String?
 }
 
 private struct DisplayModelIndexSummary: Encodable {
@@ -823,6 +918,29 @@ private struct DisplayModelIndexSummary: Encodable {
     let modelCount: Int
     let groupCount: Int
     let submodelCount: Int
+}
+
+private struct DisplayReconciliationArtifact: Encodable {
+    let artifactType: String
+    let artifactVersion: String
+    let createdAt: String
+    let source: DisplayModelIndexSource
+    let summary: DisplayReconciliationSummary
+    let records: [DisplayReconciliationRecord]
+}
+
+private struct DisplayReconciliationSummary: Encodable {
+    let currentTargetCount: Int
+    let metadataTargetCount: Int
+    let activeMetadataCount: Int
+    let retainedOrphanedMetadataCount: Int
+}
+
+private struct DisplayReconciliationRecord: Encodable {
+    let targetId: String
+    let status: String
+    let matchedBy: String
+    let metadataSources: [String]
 }
 
 private struct DisplayModelIndexRecord: Encodable {

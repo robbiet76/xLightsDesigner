@@ -165,6 +165,64 @@ struct DisplayServiceArtifactTests {
         #expect((submodelMetadata?["nodeCoverage"] as? [String: Any])?["nodeCount"] as? Int == 0)
     }
 
+    @Test func modelIndexArtifactIncludesSourceShowFolder() throws {
+        let artifactData = try encodeDisplayModelIndexArtifact(
+            rows: [displayArtifactRow(name: "Tree", targetType: "Tree", width: 50, height: 100)],
+            submodelsByParent: [:],
+            sourceSummary: "test",
+            sourceShowFolder: "/tmp/show",
+            createdAt: "2026-05-01T00:00:00Z"
+        )
+        let artifact = try JSONSerialization.jsonObject(with: artifactData) as? [String: Any]
+        let source = artifact?["source"] as? [String: Any]
+
+        #expect(source?["source"] as? String == "test")
+        #expect(source?["showFolder"] as? String == "/tmp/show")
+    }
+
+    @Test func reconciliationArtifactRetainsOrphanedDisplayMetadata() throws {
+        let row = displayArtifactRow(name: "Tree", targetType: "Tree", width: 50, height: 100)
+        let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
+        [
+          { "fullName": "Tree/Top", "name": "Top", "parentName": "Tree" }
+        ]
+        """.data(using: .utf8)!)
+        var metadata = PersistedDisplayMetadataDocument()
+        metadata.targetTags = [
+            "Tree": ["tag-current"],
+            "Missing Arch": ["tag-old"]
+        ]
+        metadata.preferencesByTargetId = [
+            "Tree/Top": PersistedDisplayTargetPreference(rolePreference: "accent", semanticHints: nil, submodelHints: nil, effectAvoidances: nil),
+            "Missing Arch": PersistedDisplayTargetPreference(rolePreference: "background", semanticHints: nil, submodelHints: nil, effectAvoidances: nil)
+        ]
+
+        let artifactData = try encodeDisplayReconciliationArtifact(
+            rows: [row],
+            submodelsByParent: groupSubmodelsByParent(submodels),
+            metadataDocument: metadata,
+            sourceSummary: "test",
+            sourceShowFolder: "/tmp/show",
+            createdAt: "2026-05-01T00:00:00Z"
+        )
+        let artifact = try JSONSerialization.jsonObject(with: artifactData) as? [String: Any]
+        let summary = artifact?["summary"] as? [String: Any]
+        let records = artifact?["records"] as? [[String: Any]]
+        let tree = records?.first { $0["targetId"] as? String == "Tree" }
+        let top = records?.first { $0["targetId"] as? String == "Tree/Top" }
+        let missing = records?.first { $0["targetId"] as? String == "Missing Arch" }
+
+        #expect(artifact?["artifactType"] as? String == "display_reconciliation_v1")
+        #expect(summary?["currentTargetCount"] as? Int == 2)
+        #expect(summary?["metadataTargetCount"] as? Int == 3)
+        #expect(summary?["activeMetadataCount"] as? Int == 2)
+        #expect(summary?["retainedOrphanedMetadataCount"] as? Int == 1)
+        #expect(tree?["status"] as? String == "active")
+        #expect(top?["status"] as? String == "active")
+        #expect(missing?["status"] as? String == "retained-orphaned")
+        #expect(missing?["matchedBy"] as? String == "retained-project-metadata")
+    }
+
     @Test func modelIndexArtifactEmbedsSharedSubmodelRelationshipsForBuiltInModels() throws {
         let row = displayArtifactRow(name: "Built In Target", targetType: "Tree", width: 80, height: 160, submodelCount: 3)
         let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
