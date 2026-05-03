@@ -3,6 +3,12 @@ import { join, resolve } from "node:path";
 import { writeGeneratedRecordOutput } from "./generated-record-catalog.mjs";
 function str(value = "") { return String(value || "").trim(); }
 function slug(value = "") { return str(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
+function unique(values = []) {
+  return [...new Set(values
+    .filter((value) => value !== null && value !== undefined)
+    .map((value) => String(value).trim())
+    .filter((value) => value !== ""))];
+}
 const outputPath = process.argv[2] ? resolve(process.argv[2]) : resolve("scripts/sequencer-render-training/catalog/generated-record-packs/parameter-interaction-semantics-records.records.jsonl");
 const manifestsDir = resolve(process.argv[3] || "scripts/sequencer-render-training/manifests");
 const files = readdirSync(manifestsDir).filter((name) => name.endsWith("-interactions-v1.json")).sort((a,b)=>a.localeCompare(b));
@@ -22,38 +28,28 @@ for (const name of files) {
   for (const [primaryParameter, secondaryParameter] of interactionPairs) {
     const relevantSamples = samples.filter((sample) => primaryParameter in (sample.effectSettings || {}) && secondaryParameter in (sample.effectSettings || {}));
     if (!relevantSamples.length) continue;
+    const affectedSignals = unique(relevantSamples.flatMap((sample) => sample.labelHints || [])).sort((a, b) => a.localeCompare(b));
     records.push({
       artifactType: "parameter_interaction_semantics_record_v1",
       artifactVersion: "1.0",
       recordId: `${slug(effectName)}-${slug(primaryParameter)}-${slug(secondaryParameter)}-${slug(name.replace(/\.json$/, ""))}`,
-      createdAt: new Date().toISOString(),
       effectName,
       geometryProfile,
       primaryParameter,
       secondaryParameter,
-      secondarySettingKind: "effect_parameter",
       interactionRegion: {
-        primaryValueRegion: [...new Set(relevantSamples.map((sample) => String(sample.effectSettings?.[primaryParameter])))],
-        secondaryValueRegion: [...new Set(relevantSamples.map((sample) => String(sample.effectSettings?.[secondaryParameter])))],
-        sharedSettingsContext: [...new Set(relevantSamples.map((sample) => sample.sharedSettings?.renderStyle).filter(Boolean))],
-        paletteContext: [],
-        stabilityNotes: []
+        primaryValueRegion: unique(relevantSamples.map((sample) => sample.effectSettings?.[primaryParameter])).sort((a, b) => a.localeCompare(b)),
+        secondaryValueRegion: unique(relevantSamples.map((sample) => sample.effectSettings?.[secondaryParameter])).sort((a, b) => a.localeCompare(b)),
+        sharedSettingsContext: unique(relevantSamples.map((sample) => sample.sharedSettings?.renderStyle)).sort((a, b) => a.localeCompare(b))
       },
       interactionType: "planned_interaction_sweep",
-      affectedSignals: [...new Set(relevantSamples.flatMap((sample) => sample.labelHints || []))],
-      behaviorImpactSummary: [...new Set(relevantSamples.flatMap((sample) => sample.labelHints || []))].join(","),
-      geometrySensitivity: "manifest_scoped",
+      affectedSignals,
       confidence: {
         level: "low",
-        evidenceClass: "planned_manifest_only",
         coverageStatus: "narrow"
       },
       evidenceCount: relevantSamples.length,
-      traceability: {
-        sourceArtifactIds: [name],
-        sourceGeometryProfiles: [geometryProfile],
-        generatedBy: "build-parameter-interaction-semantics-records.mjs"
-      }
+      sourceManifest: name
     });
   }
 }
