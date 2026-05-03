@@ -367,7 +367,7 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
 - Additive and pairwise interaction manifests are required inputs for the training reset; single-parameter sweeps alone are not sufficient for clean regeneration.
 - Intent mapping should only be built on structurally mature effects and geometry profiles.
 - Registry planning should be geometry-profile-aware.
-- The old unified training set is now transitional and should not be treated as the long-term selector foundation.
+- The unified training set is the rich generated source catalog; app runtime should consume compact generated bundles exported from the catalog, not the raw catalog file.
 - The reset rebuild should follow:
   - `specs/sequence-agent/render-training-knowledge.md`
 - Preference learning must remain outside the rebuilt shared training records in a separate store.

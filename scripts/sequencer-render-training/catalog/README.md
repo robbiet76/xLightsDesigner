@@ -1,12 +1,29 @@
 # Render Training Catalog
 
 Status: Active
-Date: 2026-04-30
 Owner: xLightsDesigner Team
 
 This directory contains the durable catalog layer for sequencer render training.
 
 The catalog is intentionally split into lifecycle classes. Runtime code should consume generated bundles through loader APIs, not raw catalog files directly.
+
+## Layering
+
+The catalog keeps the richer source and generation layers separate from the
+compact files loaded by the app:
+
+- Promoted evidence, such as `effect-screening-record-packs/`, is the durable
+  learned render evidence approved for reuse.
+- `sequencer-unified-training-set-v1.json` is the consolidated generated source
+  catalog. It intentionally keeps richer behavior dimensions, anchors, coverage
+  status, and traceable summaries because downstream record generators, audits,
+  and tests still need that context.
+- `generated-record-packs/` contains rebuildable semantic record packs derived
+  from the unified catalog.
+- Runtime bundles under
+  `apps/xlightsdesigner-ui/agent/sequence-agent/generated/` are the compact app
+  consumption layer. They should include only the fields needed by the sequence
+  agent and should be regenerated from this catalog layer.
 
 ## Inventory
 

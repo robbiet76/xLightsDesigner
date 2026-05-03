@@ -45,7 +45,7 @@
       "id": "generated_unified_training_set",
       "match": { "paths": ["sequencer-unified-training-set-v1.json"] },
       "lifecycle": "generated_catalog",
-      "role": "rebuildable consolidated training set used by runtime bundle exporters",
+      "role": "rebuildable consolidated source catalog used by semantic record generators, audits, tests, and runtime bundle exporters",
       "runtimeConsumable": false
     },
     {
