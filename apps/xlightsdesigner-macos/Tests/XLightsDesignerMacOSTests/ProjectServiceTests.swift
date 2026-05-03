@@ -439,6 +439,7 @@ struct ProjectServiceTests {
         #expect(sequenceRecord.sequencePath == oldSequencePath.path)
         #expect(sequenceRecord.showFolderAtLastUse == newShowFolder.path)
         #expect(sequenceRecord.availabilityStatus == "unavailable")
+        #expect(model.screenModel.hints.contains { $0.id == "sequence-unavailable" && $0.text.contains("was not found in the linked show folder") })
     }
 
     private func makeService() throws -> LocalProjectService {

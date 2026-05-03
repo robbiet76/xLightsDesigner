@@ -453,11 +453,32 @@ final class ProjectScreenViewModel {
 
     private func downstreamHints(for project: ActiveProjectModel) -> [ProjectDownstreamHint] {
         let displayHint = readinessLevel(for: project) == .ready ? "Display can be reviewed now." : "Display is blocked by project context."
-        return [
+        var hints = [
             ProjectDownstreamHint(id: "display", text: displayHint),
             ProjectDownstreamHint(id: "audio", text: "Audio remains available as a standalone workflow."),
             ProjectDownstreamHint(id: "sequence-media", text: "Sequence-specific media selection happens later when working on a specific sequence.")
         ]
+        if let sequenceHint = activeSequenceAvailabilityHint(for: project) {
+            hints.append(sequenceHint)
+        }
+        return hints
+    }
+
+    private func activeSequenceAvailabilityHint(for project: ActiveProjectModel) -> ProjectDownstreamHint? {
+        let rows = (project.snapshot["projectSequences"]?.value as? [[String: Any]]) ?? []
+        guard let active = rows.first(where: { bool($0["isActive"]) }) else { return nil }
+        let name = string(active["displayName"])
+        let displayName = name.isEmpty ? "Active project sequence" : name
+        switch string(active["availabilityStatus"]) {
+        case "available":
+            return ProjectDownstreamHint(id: "sequence-available", text: "\(displayName) is available in the linked show folder.")
+        case "unavailable":
+            return ProjectDownstreamHint(id: "sequence-unavailable", text: "\(displayName) was not found in the linked show folder. Sequence will stay blocked until it is selected or created there.")
+        case "referenced":
+            return ProjectDownstreamHint(id: "sequence-referenced", text: "\(displayName) is referenced by this project but has not been verified in the linked show folder.")
+        default:
+            return nil
+        }
     }
 
     private func isGeneratedTestProject(_ project: ActiveProjectModel) -> Bool {
@@ -469,6 +490,14 @@ final class ProjectScreenViewModel {
             return string.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         return ""
+    }
+
+    private func bool(_ value: Any?) -> Bool {
+        if let bool = value as? Bool { return bool }
+        if let string = value as? String {
+            return ["true", "yes", "1"].contains(string.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
+        }
+        return false
     }
 
 }

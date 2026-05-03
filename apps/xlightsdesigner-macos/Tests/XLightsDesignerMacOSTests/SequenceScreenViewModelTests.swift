@@ -271,3 +271,43 @@ private final class ProjectArtifactNotificationRecorder {
     #expect(proposalService.callCount == 1)
     #expect(model.transientBanner?.state == .ready)
 }
+
+@MainActor
+@Test func sequenceShowsUnavailableActiveSequenceAfterRelink() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-sequence-unavailable-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let projectService = LocalProjectService(projectsRootPath: root.path)
+    var project = try projectService.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Unavailable Sequence \(UUID().uuidString.prefix(6))",
+            showFolder: "/tmp/new-show",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    project.snapshot["projectSequences"] = AnyCodable([
+        [
+            "sequenceId": "holiday-road-1",
+            "sequencePath": "/tmp/old-show/HolidayRoad.xsq",
+            "displayName": "HolidayRoad",
+            "showFolderAtLastUse": "/tmp/new-show",
+            "availabilityStatus": "unavailable",
+            "isActive": true
+        ] as [String: Any]
+    ])
+    let workspace = ProjectWorkspace(sessionStore: SequenceTestProjectSessionStore())
+    workspace.setProject(project)
+    let model = SequenceScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: projectService
+    )
+
+    model.refresh()
+    try await xldWaitUntil { model.isRefreshing == false }
+
+    #expect(model.screenModel.activeSequence.boundTrackSummary.contains("HolidayRoad is unavailable"))
+    #expect(model.screenModel.validationIssues.contains { $0.code == "project_sequence_unavailable_after_show_relink" && $0.severity == .blocked })
+    #expect(model.screenModel.banners.contains { $0.id == "sequence-unavailable-after-relink" && $0.state == .blocked })
+}

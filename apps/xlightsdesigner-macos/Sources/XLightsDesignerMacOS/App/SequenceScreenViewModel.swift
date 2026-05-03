@@ -392,14 +392,7 @@ final class SequenceScreenViewModel {
         let activeSequencePath = liveSequenceOpen
             ? session.activeSequencePathSummary
             : "No live sequence is currently open in xLights."
-        let projectSequenceSummary: String
-        if let pendingWork {
-            projectSequenceSummary = pendingWork.recentSequenceCount > 0
-                ? "\(pendingWork.recentSequenceCount) recent project sequence\(pendingWork.recentSequenceCount == 1 ? "" : "s") available."
-                : "No project sequence history is recorded yet."
-        } else {
-            projectSequenceSummary = "No project sequence history is available."
-        }
+        let projectSequenceSummary = projectSequenceStatusSummary(project: project, pendingWork: pendingWork)
         let targetSummary: String
         if let pendingWork, !pendingWork.intentTargetIDs.isEmpty {
             let preview = pendingWork.intentTargetIDs.prefix(4).joined(separator: ", ")
@@ -611,6 +604,7 @@ final class SequenceScreenViewModel {
         let projectTarget = ProjectTargetContext.resolve(project: project)
         let sequencePathInput = string(projectTarget.sequencePath, fallback: string(snapshot["sequencePathInput"]))
         let projectSequenceName = string(projectTarget.sequenceName, fallback: string(snapshot["activeSequence"]))
+        let activeProjectSequenceStatus = activeProjectSequenceAvailabilityStatus(project)
         let showFolder = project.showFolder
         let liveSequencePath = openSequence.path
         let liveSequenceAllowed = isPathWithinShowFolder(liveSequencePath, showFolder)
@@ -666,6 +660,14 @@ final class SequenceScreenViewModel {
                 message: "Generated proposal is stale after the show-folder relink. Regenerate it before review or apply."
             ))
         }
+        if activeProjectSequenceStatus == "unavailable" {
+            validationIssues.append(SequenceValidationIssueModel(
+                id: "project-sequence-unavailable-after-relink",
+                severity: .blocked,
+                code: "project_sequence_unavailable_after_show_relink",
+                message: "The active project sequence was not found in the linked show folder. Select or create the sequence in the new show folder before sequencing."
+            ))
+        }
 
         let overallState: PendingWorkState
         if validationIssues.contains(where: { $0.severity == .blocked }) {
@@ -701,6 +703,13 @@ final class SequenceScreenViewModel {
             banners.append(WorkflowBannerModel(
                 id: "sequence-proposal-stale-after-relink",
                 text: "The generated proposal predates the show-folder relink. Regenerate the sequencing proposal before review or apply.",
+                state: .blocked
+            ))
+        }
+        if activeProjectSequenceStatus == "unavailable" {
+            banners.append(WorkflowBannerModel(
+                id: "sequence-unavailable-after-relink",
+                text: "The active project sequence is unavailable in the linked show folder. Select or create the sequence there before sequencing.",
                 state: .blocked
             ))
         }
@@ -846,6 +855,37 @@ final class SequenceScreenViewModel {
         guard !candidate.isEmpty, !root.isEmpty else { return false }
         if candidate == root { return true }
         return candidate.hasPrefix(root + "/")
+    }
+
+    nonisolated private static func projectSequenceStatusSummary(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> String {
+        guard let project else {
+            return "No project sequence history is available."
+        }
+        let rows = (project.snapshot["projectSequences"]?.value as? [[String: Any]]) ?? []
+        if let active = rows.first(where: { bool($0["isActive"]) }) {
+            let name = string(active["displayName"], fallback: "Active sequence")
+            let status = string(active["availabilityStatus"], fallback: "referenced")
+            switch status {
+            case "available":
+                return "\(name) is available in the linked show folder."
+            case "unavailable":
+                return "\(name) is unavailable in the linked show folder."
+            default:
+                return "\(name) is referenced by this project."
+            }
+        }
+        if let pendingWork {
+            return pendingWork.recentSequenceCount > 0
+                ? "\(pendingWork.recentSequenceCount) recent project sequence\(pendingWork.recentSequenceCount == 1 ? "" : "s") recorded."
+                : "No project sequence history is recorded yet."
+        }
+        return "No project sequence history is available."
+    }
+
+    nonisolated private static func activeProjectSequenceAvailabilityStatus(_ project: ActiveProjectModel?) -> String {
+        let rows = (project?.snapshot["projectSequences"]?.value as? [[String: Any]]) ?? []
+        guard let active = rows.first(where: { bool($0["isActive"]) }) else { return "" }
+        return string(active["availabilityStatus"])
     }
 
     nonisolated private static func normalizePath(_ value: String) -> String {
