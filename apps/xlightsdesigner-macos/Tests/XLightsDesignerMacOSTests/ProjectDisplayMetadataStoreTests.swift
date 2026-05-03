@@ -169,6 +169,37 @@ struct ProjectDisplayMetadataStoreTests {
         #expect(try String(contentsOf: reconciliationURL).contains("reconciled"))
     }
 
+    @Test func storeRefreshArtifactsDoNotOverwriteDisplayMetadata() throws {
+        let project = try makeProject(name: "DisplayMetadataStoreRefreshPreservesKnowledge")
+        let store = LocalDisplayMetadataStore()
+
+        try store.updateTargetPreference(
+            project: project,
+            targetIDs: ["Tree"],
+            rolePreference: "lead",
+            semanticHints: ["centerpiece"],
+            submodelHints: ["mouth"],
+            effectAvoidances: ["Bars"]
+        )
+        let before = try store.load(for: project)
+
+        try store.writeRefreshArtifacts(
+            project: project,
+            targetMetadata: #"{"artifactType":"target_metadata_index_v1","records":[]}"#.data(using: .utf8),
+            reconciliation: nil
+        )
+
+        let after = try store.load(for: project)
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        let modelIndexURL = projectDir.appendingPathComponent("display/model-index.json")
+
+        #expect(FileManager.default.fileExists(atPath: modelIndexURL.path))
+        #expect(after.preferencesByTargetId == before.preferencesByTargetId)
+        #expect(after.preferencesByTargetId["Tree"]?.rolePreference == "lead")
+        #expect(after.preferencesByTargetId["Tree"]?.semanticHints == ["centerpiece"])
+        #expect(after.preferencesByTargetId["Tree"]?.submodelHints == ["mouth"])
+    }
+
     @Test func storeUpdatesTargetPreferences() throws {
         let project = try makeProject(name: "DisplayMetadataStoreE")
         let store = LocalDisplayMetadataStore()
