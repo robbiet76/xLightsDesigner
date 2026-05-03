@@ -33,8 +33,8 @@ export function resolveProjectsRootPath(rootPath = "") {
   return resolveAppProjectsRootInput(rootPath);
 }
 
-function projectKey(projectName = "", showFolder = "") {
-  return `${String(projectName || "").trim()}::${String(showFolder || "").trim()}`;
+function projectKey(projectName = "") {
+  return String(projectName || "").trim();
 }
 
 function projectIdFromKey(key = "") {
@@ -95,7 +95,7 @@ export function readProjectFileRecord({ filePath = "" } = {}) {
   const layout = validateProjectFileLocation(targetPath, projectName);
   if (!layout.ok) return { ok: false, code: layout.code, error: layout.error };
   ensureProjectStructure(path.dirname(targetPath));
-  const key = str(parsed?.key || projectKey(projectName, showFolder));
+  const key = str(parsed?.key || projectKey(projectName));
   const appRootPath = inferAppRootFromProjectFile(targetPath);
   return {
     ok: true,
@@ -139,6 +139,18 @@ export function writeProjectFileRecord({
   const targetResolved = normalizePathForCompare(filePath);
   const currentDir = currentResolved ? path.dirname(currentResolved) : "";
   const targetDir = path.dirname(targetResolved);
+  let priorProjectId = "";
+  let priorCreatedAt = "";
+  if (currentResolved && fs.existsSync(currentResolved)) {
+    try {
+      const previousCurrent = JSON.parse(fs.readFileSync(currentResolved, "utf8"));
+      priorProjectId = str(previousCurrent?.id);
+      priorCreatedAt = str(previousCurrent?.createdAt || previousCurrent?.updatedAt || "");
+    } catch {
+      priorProjectId = "";
+      priorCreatedAt = "";
+    }
+  }
 
   if (writeMode === "save" && currentResolved && currentResolved !== targetResolved) {
     return {
@@ -176,18 +188,21 @@ export function writeProjectFileRecord({
     fs.renameSync(currentDir, targetDir);
   }
 
-  const key = projectKey(name, show);
-  const id = projectIdFromKey(key);
-  let createdAt = "";
+  const key = projectKey(name);
+  let createdAt = priorCreatedAt;
+  let existingId = priorProjectId;
   if (fs.existsSync(targetResolved)) {
     try {
       const previous = JSON.parse(fs.readFileSync(targetResolved, "utf8"));
-      createdAt = str(previous?.createdAt || previous?.updatedAt || "");
+      createdAt = str(previous?.createdAt || previous?.updatedAt || createdAt);
+      existingId = str(previous?.id || existingId);
     } catch {
       createdAt = "";
+      existingId = "";
     }
   }
   if (!createdAt) createdAt = new Date().toISOString();
+  const id = existingId || projectIdFromKey(key);
   const doc = {
     version: 1,
     projectName: name,
@@ -221,7 +236,7 @@ function normalizeSequencePathToken(sequencePath = "") {
   return String(sequencePath || "").trim().replace(/\\/g, "/").toLowerCase();
 }
 
-function sequenceIdFromPath(sequencePath = "") {
+export function sequenceIdFromPath(sequencePath = "") {
   const token = normalizeSequencePathToken(sequencePath);
   if (!token) return "";
   let hash = 2166136261;
@@ -230,6 +245,135 @@ function sequenceIdFromPath(sequencePath = "") {
     hash = Math.imul(hash, 16777619);
   }
   return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function projectDirForFile(projectFilePath = "") {
+  const projectPath = normalizePathForCompare(projectFilePath);
+  return projectPath ? path.dirname(projectPath) : "";
+}
+
+function sequenceWorkspaceId({ sequencePath = "", contentFingerprint = "", trackFingerprint = "" } = {}) {
+  const strongIdentity = str(contentFingerprint || trackFingerprint);
+  if (strongIdentity) {
+    return crypto.createHash("sha1").update(strongIdentity.toLowerCase()).digest("hex").slice(0, 16);
+  }
+  return sequenceIdFromPath(sequencePath);
+}
+
+export function buildProjectSequencePaths({
+  projectFilePath = "",
+  sequencePath = "",
+  sequenceId = "",
+  contentFingerprint = "",
+  trackFingerprint = ""
+} = {}) {
+  const projectDir = projectDirForFile(projectFilePath);
+  const id = str(sequenceId) || sequenceWorkspaceId({ sequencePath, contentFingerprint, trackFingerprint });
+  const sequenceDir = projectDir && id ? path.join(projectDir, "sequences", id) : "";
+  return {
+    projectDir,
+    sequenceId: id,
+    sequenceDir,
+    sequenceRecordPath: sequenceDir ? path.join(sequenceDir, "sequence.json") : "",
+    currentContextPath: sequenceDir ? path.join(sequenceDir, "current-context.json") : "",
+    revisionFeedbackPath: sequenceDir ? path.join(sequenceDir, "revision-feedback.json") : "",
+    visualDesignDir: sequenceDir ? path.join(sequenceDir, "visual-design") : "",
+    referencesDir: sequenceDir ? path.join(sequenceDir, "references") : ""
+  };
+}
+
+export function buildSequenceRecord({
+  sequencePath = "",
+  showFolder = "",
+  contentFingerprint = "",
+  trackFingerprint = "",
+  mediaPath = "",
+  displayName = "",
+  previousRecord = null
+} = {}) {
+  const previous = previousRecord && typeof previousRecord === "object" && !Array.isArray(previousRecord) ? previousRecord : {};
+  const now = new Date().toISOString();
+  const identity = previous.identity && typeof previous.identity === "object" ? previous.identity : {};
+  const linkage = previous.linkage && typeof previous.linkage === "object" ? previous.linkage : {};
+  const id = str(previous.sequenceId) || sequenceWorkspaceId({ sequencePath, contentFingerprint, trackFingerprint });
+  return {
+    artifactType: "project_sequence_record_v1",
+    artifactVersion: "1.0",
+    sequenceId: id,
+    displayName: str(displayName || previous.displayName || path.basename(str(sequencePath), path.extname(str(sequencePath))) || id),
+    identity: {
+      contentFingerprint: str(contentFingerprint || identity.contentFingerprint),
+      trackFingerprint: str(trackFingerprint || identity.trackFingerprint),
+      fallbackPathId: sequenceIdFromPath(sequencePath || linkage.sequencePath || "")
+    },
+    linkage: {
+      sequencePath: str(sequencePath || linkage.sequencePath),
+      showFolderAtLastUse: str(showFolder || linkage.showFolderAtLastUse),
+      mediaPath: str(mediaPath || linkage.mediaPath),
+      priorSequencePaths: [...new Set([
+        ...(Array.isArray(linkage.priorSequencePaths) ? linkage.priorSequencePaths : []),
+        str(linkage.sequencePath && sequencePath && linkage.sequencePath !== sequencePath ? linkage.sequencePath : "")
+      ].map((row) => str(row)).filter(Boolean))]
+    },
+    availability: {
+      status: "active",
+      lastSeenAt: now
+    },
+    createdAt: str(previous.createdAt || now),
+    updatedAt: now
+  };
+}
+
+export function readProjectSequenceRecord({
+  projectFilePath = "",
+  sequencePath = "",
+  sequenceId = "",
+  contentFingerprint = "",
+  trackFingerprint = ""
+} = {}) {
+  const paths = buildProjectSequencePaths({ projectFilePath, sequencePath, sequenceId, contentFingerprint, trackFingerprint });
+  if (!paths.projectDir || !paths.sequenceId) return { ok: false, error: "Missing projectFilePath and sequence identity" };
+  if (!fs.existsSync(paths.sequenceRecordPath)) {
+    return { ok: true, exists: false, ...paths, record: null };
+  }
+  return {
+    ok: true,
+    exists: true,
+    ...paths,
+    record: JSON.parse(fs.readFileSync(paths.sequenceRecordPath, "utf8"))
+  };
+}
+
+export function writeProjectSequenceRecord({
+  projectFilePath = "",
+  sequencePath = "",
+  showFolder = "",
+  contentFingerprint = "",
+  trackFingerprint = "",
+  mediaPath = "",
+  displayName = ""
+} = {}) {
+  const existing = readProjectSequenceRecord({ projectFilePath, sequencePath, contentFingerprint, trackFingerprint });
+  if (existing.ok === false) return existing;
+  const record = buildSequenceRecord({
+    sequencePath,
+    showFolder,
+    contentFingerprint,
+    trackFingerprint,
+    mediaPath,
+    displayName,
+    previousRecord: existing.record
+  });
+  const paths = buildProjectSequencePaths({ projectFilePath, sequenceId: record.sequenceId });
+  if (!paths.projectDir || !paths.sequenceId) return { ok: false, error: "Missing projectFilePath and sequence identity" };
+  ensureProjectStructure(paths.projectDir);
+  fs.mkdirSync(paths.sequenceDir, { recursive: true });
+  fs.writeFileSync(paths.sequenceRecordPath, JSON.stringify(record, null, 2), "utf8");
+  return {
+    ok: true,
+    ...paths,
+    record
+  };
 }
 
 function appManagedSidecarPathForSequence(sequencePath = "", appRootPath = "") {

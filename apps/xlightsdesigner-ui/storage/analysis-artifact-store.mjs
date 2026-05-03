@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
 
-const PROJECT_REQUIRED_SUBDIRS = ["analysis", "sequencing", "diagnostics", "display"];
+const PROJECT_REQUIRED_SUBDIRS = ["analysis", "sequencing", "diagnostics", "display", "sequences", "artifacts"];
 const TRACK_LIBRARY_DIR_PARTS = ["library", "tracks"];
 
 function normalizePathForCompare(filePath) {

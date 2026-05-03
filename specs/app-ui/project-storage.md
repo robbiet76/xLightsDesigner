@@ -43,16 +43,27 @@ Project files live under:
 ```text
 <app-root>/projects/<project-name>/
   <project-name>.xdproj
-  sequencing/
-    sequences/
-      <sequence-id>/
-        sequence.xdmeta
-        draft.json
-        handoffs.json
-        ownership.json
-        apply-history.jsonl
-        verification.json
+  display/
+    metadata.json
+    model-index.json
+    reconciliation.json
+    target-behavior.json
+    discovery.json
+  sequences/
+    <sequence-id>/
+      sequence.json
+      current-context.json
+      revision-feedback.json
+      visual-design/
+      references/
   artifacts/
+    intent-handoffs/
+    sequencing-design-handoffs/
+    proposals/
+    plans/
+    apply-results/
+    render-observations/
+    render-critique-contexts/
     visual-design/
       <sequence-id-or-song-id>/
         visual-design-manifest.json
@@ -60,6 +71,12 @@ Project files live under:
         images/
         videos/
         thumbnails/
+    backups/
+    history/
+  sequencing/
+    sequences/
+      <legacy-sequence-id>/
+        sequence.xdmeta
   diagnostics/
 ```
 
@@ -68,11 +85,11 @@ Project folder name and `.xdproj` filename must match the project name.
 Minimum `.xdproj` fields:
 
 - `projectName`
-- `showFolderPath`
+- `showFolder` or `showFolderPath`
 - `mediaPath`
 - `snapshot`
 
-`showFolderPath` and `mediaPath` are references only.
+`showFolder`/`showFolderPath` and `mediaPath` are references only. They do not define project identity.
 
 ## Ownership
 
@@ -84,7 +101,9 @@ Track records are keyed by content identity and can be reused across projects.
 
 `sequence_agent` owns project-specific sequencing state under:
 
-- `<project-root>/sequencing/sequences/<sequence-id>/`
+- `<project-root>/sequences/<sequence-id>/`
+
+Legacy sidecars may still be read from `<project-root>/sequencing/sequences/<legacy-sequence-id>/` while product data is moved into the canonical `sequences/` domain.
 
 Designer-owned visual inspiration boards, palettes, and generated media asset packs live under:
 
@@ -96,9 +115,23 @@ Stable identifiers:
 
 - `contentFingerprint`: full media file content hash; canonical cross-project track identity.
 - `mediaId`: normalized media path plus file metadata; locator for a specific file instance.
-- `sequenceId`: normalized sequence path; project-local sequencing state key.
+- `projectId`: stable project identity derived from the project name at creation and preserved across show-folder relinks.
+- `sequenceId`: project-local sequence state key. Prefer sequence content fingerprint or track/content identity when available; fall back to normalized sequence path only when no stronger identity exists.
 - display/model metadata fingerprints: durable target identity for retaining user metadata when show folders or xLights layouts change.
 - display/target behavior learning: project-local observations about how effects render on specific model and submodel fingerprints.
+
+Project identity must not be derived from the current show folder. Changing `showFolder` inside a project is a linkage update, not a new project.
+
+Sequence records must carry source linkage:
+
+- current `sequencePath`
+- `showFolderAtLastUse`
+- media/track fingerprint
+- sequence/content fingerprint when available
+- prior sequence paths
+- availability status
+
+When the show folder changes, sequence records are re-evaluated by identity. Matching sequences are reattached and keep their project-owned state. Missing sequences become inactive/unavailable; they are not deleted.
 
 The model fingerprint and reconciliation contract is defined in `../sequence-agent/model-metadata.md`.
 
@@ -115,6 +148,21 @@ Creating a new project from an existing project should copy the project metadata
 Creating a new project without migration starts with blank project metadata. Users may manually import or copy metadata files when they intentionally want to reuse mature metadata outside the app migration flow.
 
 Display metadata records are retained by fingerprint and are not deleted automatically when a show folder changes.
+
+Show-folder changes inside an existing project:
+
+1. Update the project linkage (`showFolder`).
+2. Regenerate derived display artifacts:
+   - `display/model-index.json`
+   - `display/reconciliation.json`
+3. Preserve durable display artifacts:
+   - `display/metadata.json`
+   - `display/target-behavior.json`
+   - `display/discovery.json`
+4. Reconcile preserved display records by fingerprint first, then by target id/name only as lower-confidence hints.
+5. Re-evaluate `sequences/<sequence-id>/sequence.json` records against the new show folder by sequence/content/track identity.
+6. Mark unmatched display and sequence records inactive or orphaned instead of deleting them.
+7. Invalidate active proposals/plans that were built against the previous display snapshot.
 
 ## Rename And Validation Rules
 
