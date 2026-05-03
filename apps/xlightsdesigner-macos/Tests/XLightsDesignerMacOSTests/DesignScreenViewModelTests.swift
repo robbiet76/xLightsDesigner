@@ -411,6 +411,69 @@ private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) asy
 }
 
 @MainActor
+@Test func designScreenScopesVisualInspirationToCanonicalSequenceRecord() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-canonical-scope-tests-\(UUID().uuidString)", isDirectory: true)
+    let showFolder = root.appendingPathComponent("show", isDirectory: true)
+    let sequencePath = showFolder.appendingPathComponent("Canonical/Canonical.xsq")
+    try FileManager.default.createDirectory(at: sequencePath.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try Data("<sequence/>".utf8).write(to: sequencePath)
+    let service = LocalProjectService(projectsRootPath: root.appendingPathComponent("projects", isDirectory: true).path)
+    let workspace = ProjectWorkspace(sessionStore: InMemoryProjectSessionStore())
+    var project = try service.createProject(
+        draft: ProjectDraftModel(
+            projectName: "Canonical Scope \(UUID().uuidString.prefix(6))",
+            showFolder: showFolder.path,
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: ""
+        )
+    )
+    try LocalProjectSequenceStore().upsertActiveSequence(project: &project, sequencePath: sequencePath.path, audioPath: nil)
+    project.snapshot["sequencePathInput"] = AnyCodable("/tmp/stale/Stale.xsq")
+    project.snapshot["activeSequence"] = AnyCodable("Stale")
+    let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+    let visualDir = projectDir.appendingPathComponent("artifacts/visual-design/Canonical", isDirectory: true)
+    try FileManager.default.createDirectory(at: visualDir, withIntermediateDirectories: true)
+    try Data("fixture".utf8).write(to: visualDir.appendingPathComponent("inspiration-board.png"))
+    let manifest = """
+    {
+      "artifactType": "visual_design_asset_pack_v1",
+      "artifactId": "visual-pack-canonical",
+      "sequenceId": "Canonical",
+      "creativeIntent": {
+        "themeSummary": "Canonical board"
+      },
+      "displayAsset": {
+        "kind": "inspiration_board",
+        "relativePath": "inspiration-board.png",
+        "currentRevisionId": "board-r001"
+      },
+      "imageRevisions": [
+        {
+          "revisionId": "board-r001",
+          "mode": "generate",
+          "relativePath": "inspiration-board.png",
+          "paletteLocked": false,
+          "changeSummary": "Initial board."
+        }
+      ]
+    }
+    """
+    try Data(manifest.utf8).write(to: visualDir.appendingPathComponent("visual-design-manifest.json"))
+
+    workspace.setProject(project)
+    let model = DesignScreenViewModel(
+        workspace: workspace,
+        pendingWorkService: LocalPendingWorkService(),
+        projectService: service
+    )
+
+    #expect(model.screenModel.activeSequenceID == "Canonical")
+    #expect(model.screenModel.visualInspiration.sequenceId == "Canonical")
+    #expect(model.screenModel.visualInspiration.summary == "Canonical board")
+}
+
+@MainActor
 @Test func designScreenBlocksVisualInspirationWithoutSelectedSong() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-design-missing-song-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

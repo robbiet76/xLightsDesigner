@@ -387,8 +387,11 @@ final class DesignScreenViewModel {
     }
 
     private static func visualSequenceID(from project: ActiveProjectModel) -> String {
+        let target = ProjectTargetContext.resolve(project: project)
         let snapshot = project.snapshot
         let candidates = [
+            target.sequencePath,
+            target.sequenceName,
             string(snapshot["sequencePathInput"]?.value),
             string(snapshot["activeSequence"]?.value),
             string(snapshot["mediaPath"]?.value)
