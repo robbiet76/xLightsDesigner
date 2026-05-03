@@ -179,6 +179,11 @@ final class ProjectScreenViewModel {
             previousShowFolder: previousShowFolder,
             newShowFolder: trimmedPath
         )
+        relinkMediaSnapshotPaths(
+            in: &active,
+            previousShowFolder: previousShowFolder,
+            newShowFolder: trimmedPath
+        )
         var flags = (active.snapshot["flags"]?.value as? [String: Any]) ?? [:]
         let proposedRows = active.snapshot["proposed"]?.value as? [Any] ?? []
         flags["proposalStale"] = true
@@ -304,6 +309,53 @@ final class ProjectScreenViewModel {
         project.snapshot["projectSequences"] = AnyCodable(projectSequences)
     }
 
+    private func relinkMediaSnapshotPaths(in project: inout ActiveProjectModel, previousShowFolder: String, newShowFolder: String) {
+        let audioPath = string(project.snapshot["audioPathInput"]?.value)
+        if let resolved = resolveRelinkedMediaPath(audioPath, previousShowFolder: previousShowFolder, newShowFolder: newShowFolder, shouldExist: true) {
+            project.snapshot["audioPathInput"] = AnyCodable(resolved)
+        } else if pathIsWithin(audioPath, root: previousShowFolder) {
+            project.snapshot["audioPathInput"] = AnyCodable("")
+        }
+
+        let sequenceMediaFile = string(project.snapshot["sequenceMediaFile"]?.value)
+        if let resolved = resolveRelinkedMediaPath(sequenceMediaFile, previousShowFolder: previousShowFolder, newShowFolder: newShowFolder, shouldExist: true) {
+            project.snapshot["sequenceMediaFile"] = AnyCodable(resolved)
+        } else if pathIsWithin(sequenceMediaFile, root: previousShowFolder) {
+            project.snapshot["sequenceMediaFile"] = AnyCodable("")
+        }
+
+        let mediaPath = project.mediaPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? string(project.snapshot["mediaPath"]?.value)
+            : project.mediaPath
+        if let resolved = resolveRelinkedMediaPath(mediaPath, previousShowFolder: previousShowFolder, newShowFolder: newShowFolder, shouldExist: false) {
+            project.mediaPath = resolved
+            project.snapshot["mediaPath"] = AnyCodable(resolved)
+        } else if pathIsWithin(mediaPath, root: previousShowFolder) {
+            project.mediaPath = ""
+            project.snapshot["mediaPath"] = AnyCodable("")
+        }
+    }
+
+    private func resolveRelinkedMediaPath(_ mediaPath: String, previousShowFolder: String, newShowFolder: String, shouldExist: Bool) -> String? {
+        let previousPath = normalizedPath(mediaPath)
+        guard !previousPath.isEmpty else { return nil }
+        let previousRoot = normalizedPath(previousShowFolder)
+        let newRoot = normalizedPath(newShowFolder)
+        guard !previousRoot.isEmpty, !newRoot.isEmpty, previousPath.hasPrefix(previousRoot + "/") else {
+            return nil
+        }
+        let relativePath = String(previousPath.dropFirst(previousRoot.count + 1))
+        let candidate = URL(fileURLWithPath: newRoot).appendingPathComponent(relativePath).path
+        if shouldExist {
+            return FileManager.default.fileExists(atPath: candidate) ? candidate : nil
+        }
+        var isDirectory: ObjCBool = false
+        if FileManager.default.fileExists(atPath: candidate, isDirectory: &isDirectory), isDirectory.boolValue {
+            return candidate
+        }
+        return nil
+    }
+
     private func resolveRelinkedSequencePath(_ sequencePath: String, previousShowFolder: String, newShowFolder: String) -> String? {
         let previousPath = normalizedPath(sequencePath)
         guard !previousPath.isEmpty else { return nil }
@@ -344,6 +396,13 @@ final class ProjectScreenViewModel {
         value.trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "\\", with: "/")
             .replacingOccurrences(of: #"/+$"#, with: "", options: .regularExpression)
+    }
+
+    private func pathIsWithin(_ path: String, root: String) -> Bool {
+        let normalized = normalizedPath(path)
+        let normalizedRoot = normalizedPath(root)
+        guard !normalized.isEmpty, !normalizedRoot.isEmpty else { return false }
+        return normalized == normalizedRoot || normalized.hasPrefix(normalizedRoot + "/")
     }
 
     private func projectBrief(for project: ActiveProjectModel) -> ProjectBriefModel {

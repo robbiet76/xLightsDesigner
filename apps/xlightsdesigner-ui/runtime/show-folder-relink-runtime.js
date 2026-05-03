@@ -6,6 +6,26 @@ function isObject(value) {
   return value && typeof value === "object" && !Array.isArray(value);
 }
 
+function normalizePath(value = "") {
+  return str(value).replace(/\\/g, "/").replace(/\/+$/g, "");
+}
+
+function pathWithinRoot(candidatePath = "", rootPath = "") {
+  const candidate = normalizePath(candidatePath);
+  const root = normalizePath(rootPath);
+  if (!candidate || !root) return false;
+  return candidate === root || candidate.startsWith(`${root}/`);
+}
+
+function remapPathBetweenShowFolders(candidatePath = "", previousShowFolder = "", showFolder = "") {
+  const candidate = normalizePath(candidatePath);
+  const previous = normalizePath(previousShowFolder);
+  const next = normalizePath(showFolder);
+  if (!candidate || !previous || !next || !pathWithinRoot(candidate, previous)) return "";
+  if (candidate === previous) return next;
+  return `${next}/${candidate.slice(previous.length + 1)}`;
+}
+
 export async function relinkProjectShowFolder({
   state = {},
   showFolder = "",
@@ -41,6 +61,10 @@ export async function relinkProjectShowFolder({
   } = deps;
 
   state.showFolder = targetShowFolder;
+  for (const key of ["mediaPath", "audioPathInput", "sequenceMediaFile"]) {
+    const remapped = remapPathBetweenShowFolders(state[key], previousShowFolder, targetShowFolder);
+    if (remapped) state[key] = remapped;
+  }
   state.sequenceAgentRuntime = isObject(state.sequenceAgentRuntime) ? state.sequenceAgentRuntime : {};
   state.sequenceAgentRuntime.displayRelink = {
     previousShowFolder,

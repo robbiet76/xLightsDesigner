@@ -196,15 +196,21 @@ struct ProjectServiceTests {
         let newShowFolder = showRoot.appendingPathComponent("NewShow", isDirectory: true)
         let oldSequencePath = oldShowFolder.appendingPathComponent("OldSong/OldSong.xsq")
         let newSequencePath = newShowFolder.appendingPathComponent("OldSong/OldSong.xsq")
+        let oldAudioPath = oldShowFolder.appendingPathComponent("Audio/OldSong.mp3")
+        let newAudioPath = newShowFolder.appendingPathComponent("Audio/OldSong.mp3")
         try FileManager.default.createDirectory(at: oldSequencePath.deletingLastPathComponent(), withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: newSequencePath.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: oldAudioPath.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: newAudioPath.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data("<sequence/>".utf8).write(to: oldSequencePath)
         try Data("<sequence/>".utf8).write(to: newSequencePath)
+        try Data("audio".utf8).write(to: oldAudioPath)
+        try Data("audio".utf8).write(to: newAudioPath)
         let project = try service.createProject(
             draft: ProjectDraftModel(
                 projectName: name,
                 showFolder: oldShowFolder.path,
-                mediaPath: "",
+                mediaPath: oldAudioPath.deletingLastPathComponent().path,
                 migrateMetadata: false,
                 migrationSourceProjectPath: ""
             )
@@ -216,6 +222,8 @@ struct ProjectServiceTests {
         projectWithSequenceState.snapshot["projectSequences"] = AnyCodable([
             ["sequencePath": oldSequencePath.path, "isActive": true]
         ])
+        projectWithSequenceState.snapshot["audioPathInput"] = AnyCodable(oldAudioPath.path)
+        projectWithSequenceState.snapshot["sequenceMediaFile"] = AnyCodable(oldAudioPath.path)
         projectWithSequenceState.snapshot["proposed"] = AnyCodable([
             ["summary": "Existing proposal row"]
         ])
@@ -260,6 +268,10 @@ struct ProjectServiceTests {
         #expect(active.id == project.id)
         #expect(active.projectFilePath == project.projectFilePath)
         #expect(active.showFolder == newShowFolder.path)
+        #expect(active.mediaPath == newAudioPath.deletingLastPathComponent().path)
+        #expect(active.snapshot["mediaPath"]?.value as? String == newAudioPath.deletingLastPathComponent().path)
+        #expect(active.snapshot["audioPathInput"]?.value as? String == newAudioPath.path)
+        #expect(active.snapshot["sequenceMediaFile"]?.value as? String == newAudioPath.path)
         #expect(active.snapshot["sequencePathInput"]?.value as? String == newSequencePath.path)
         #expect(recentSequences == [newSequencePath.path])
         #expect(projectSequences?.first?["sequencePath"] as? String == newSequencePath.path)
@@ -273,6 +285,48 @@ struct ProjectServiceTests {
         #expect((timingTrackProvenance?["track-1"] as? [String: Any])?["trackName"] as? String == "XD: Song Structure")
         #expect(relinkNotificationCapture.object == active.projectFilePath)
         #expect(workspace.projectBanner?.id == "show-folder-relinked")
+    }
+
+    @MainActor
+    @Test func projectScreenRelinkClearsOldShowAudioWhenNoCounterpartExists() throws {
+        let service = try makeService()
+        let name = "App Test Project \(UUID().uuidString.prefix(6))"
+        let showRoot = FileManager.default.temporaryDirectory.appendingPathComponent("xld-project-relink-audio-\(UUID().uuidString)", isDirectory: true)
+        let oldShowFolder = showRoot.appendingPathComponent("OldShow", isDirectory: true)
+        let newShowFolder = showRoot.appendingPathComponent("NewShow", isDirectory: true)
+        let oldAudioPath = oldShowFolder.appendingPathComponent("Audio/MissingInNewShow.mp3")
+        try FileManager.default.createDirectory(at: oldAudioPath.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: newShowFolder, withIntermediateDirectories: true)
+        try Data("audio".utf8).write(to: oldAudioPath)
+        let project = try service.createProject(
+            draft: ProjectDraftModel(
+                projectName: name,
+                showFolder: oldShowFolder.path,
+                mediaPath: oldAudioPath.deletingLastPathComponent().path,
+                migrateMetadata: false,
+                migrationSourceProjectPath: ""
+            )
+        )
+        var projectWithAudio = project
+        projectWithAudio.snapshot["audioPathInput"] = AnyCodable(oldAudioPath.path)
+        projectWithAudio.snapshot["sequenceMediaFile"] = AnyCodable(oldAudioPath.path)
+        let workspace = ProjectWorkspace(sessionStore: ProjectServiceTestSessionStore())
+        workspace.setProject(projectWithAudio)
+        let model = ProjectScreenViewModel(
+            workspace: workspace,
+            projectService: service,
+            fileSelectionService: ProjectServiceTestFileSelectionService(folderPath: newShowFolder.path),
+            sessionStore: ProjectServiceTestSessionStore()
+        )
+
+        model.chooseShowFolderForActiveProject()
+
+        let active = try #require(workspace.activeProject)
+        #expect(active.showFolder == newShowFolder.path)
+        #expect(active.mediaPath == "")
+        #expect(active.snapshot["mediaPath"]?.value as? String == "")
+        #expect(active.snapshot["audioPathInput"]?.value as? String == "")
+        #expect(active.snapshot["sequenceMediaFile"]?.value as? String == "")
     }
 
     private func makeService() throws -> LocalProjectService {

@@ -7,6 +7,9 @@ test("relinkProjectShowFolder refreshes derived display state and preserves dura
   const calls = [];
   const state = {
     showFolder: "/shows/A",
+    mediaPath: "/shows/A/Audio",
+    audioPathInput: "/shows/A/Audio/song.mp3",
+    sequenceMediaFile: "/shows/A/Audio/song.mp3",
     proposed: ["stale proposal"],
     flags: { proposalStale: false, hasDraftProposal: true },
     metadata: {
@@ -69,6 +72,9 @@ test("relinkProjectShowFolder refreshes derived display state and preserves dura
   assert.equal(out.previousShowFolder, "/shows/A");
   assert.equal(out.showFolder, "/shows/B");
   assert.equal(state.showFolder, "/shows/B");
+  assert.equal(state.mediaPath, "/shows/B/Audio");
+  assert.equal(state.audioPathInput, "/shows/B/Audio/song.mp3");
+  assert.equal(state.sequenceMediaFile, "/shows/B/Audio/song.mp3");
   assert.deepEqual(state.metadata.assignments, [{ targetId: "Tree", tags: ["focal"] }]);
   assert.deepEqual(state.metadata.preferencesByTargetId, { Tree: { rolePreference: "lead" } });
   assert.equal(state.metadata.displayBinding.status, "reconciled");
