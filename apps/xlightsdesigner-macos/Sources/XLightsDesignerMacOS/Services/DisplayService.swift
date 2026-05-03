@@ -119,6 +119,7 @@ struct XLightsDisplayService: DisplayService {
                     }
                     .sorted { $0.targetName.localizedCaseInsensitiveCompare($1.targetName) == .orderedAscending }
                 let nodeLayoutsByModel = await fetchNodeLayouts(for: rows)
+                let previousModelIndex = (try? LocalDisplayModelIndexStore().load(for: project)) ?? DisplayModelIndexDocument()
                 let modelIndexArtifact = try? encodeDisplayModelIndexArtifactInternal(
                     rows: rows,
                     nodeLayoutsByModel: nodeLayoutsByModel,
@@ -130,6 +131,8 @@ struct XLightsDisplayService: DisplayService {
                     rows: rows,
                     submodelsByParent: submodelsByParent,
                     metadataDocument: metadataDocument,
+                    previousModelIndex: previousModelIndex,
+                    nodeLayoutsByModel: nodeLayoutsByModel,
                     sourceSummary: "xLights owned API",
                     sourceShowFolder: project?.showFolder ?? ""
                 )
@@ -144,7 +147,13 @@ struct XLightsDisplayService: DisplayService {
                 unresolvedCount = rows.count - taggedCount
                 orphanedCount = orphanedMetadataTargetIDs(
                     document: metadataDocument,
-                    currentTargetIDs: currentDisplayTargetIDs(rows: rows, submodelsByParent: submodelsByParent)
+                    currentTargetIDs: currentDisplayTargetIDs(rows: rows, submodelsByParent: submodelsByParent),
+                    currentTargetFingerprints: currentTargetFingerprints(
+                        rows: rows,
+                        submodelsByParent: submodelsByParent,
+                        nodeLayoutsByModel: nodeLayoutsByModel
+                    ),
+                    previousModelIndex: previousModelIndex
                 ).count
 
                 if unresolvedCount > 0 {
@@ -353,18 +362,53 @@ func encodeDisplayReconciliationArtifact(
     rows: [DisplayLayoutRowModel],
     submodelsByParent: [String: [XLightsSubmodel]],
     metadataDocument: PersistedDisplayMetadataDocument,
+    previousModelIndex: DisplayModelIndexDocument = DisplayModelIndexDocument(),
+    sourceSummary: String,
+    sourceShowFolder: String = "",
+    createdAt: String = ISO8601DateFormatter().string(from: Date())
+) throws -> Data {
+    try encodeDisplayReconciliationArtifact(
+        rows: rows,
+        submodelsByParent: submodelsByParent,
+        metadataDocument: metadataDocument,
+        previousModelIndex: previousModelIndex,
+        nodeLayoutsByModel: [:],
+        sourceSummary: sourceSummary,
+        sourceShowFolder: sourceShowFolder,
+        createdAt: createdAt
+    )
+}
+
+private func encodeDisplayReconciliationArtifact(
+    rows: [DisplayLayoutRowModel],
+    submodelsByParent: [String: [XLightsSubmodel]],
+    metadataDocument: PersistedDisplayMetadataDocument,
+    previousModelIndex: DisplayModelIndexDocument,
+    nodeLayoutsByModel: [String: XLightsModelNodeLayout],
     sourceSummary: String,
     sourceShowFolder: String = "",
     createdAt: String = ISO8601DateFormatter().string(from: Date())
 ) throws -> Data {
     let currentTargetIDs = currentDisplayTargetIDs(rows: rows, submodelsByParent: submodelsByParent)
+    let currentFingerprintIndex = currentTargetFingerprints(
+        rows: rows,
+        submodelsByParent: submodelsByParent,
+        nodeLayoutsByModel: nodeLayoutsByModel
+    )
+    let previousFingerprintIndex = previousTargetFingerprints(from: previousModelIndex)
+    let currentTargetByFingerprint = uniqueTargetByFingerprint(currentFingerprintIndex)
     let metadataTargetIDs = metadataTargetIDs(document: metadataDocument)
-    let records = metadataTargetIDs.map { targetID in
-        DisplayReconciliationRecord(
+    let records: [DisplayReconciliationRecord] = metadataTargetIDs.map { targetID in
+        let directMatch = currentTargetIDs.contains(targetID)
+        let previousFingerprint = previousFingerprintIndex[targetID]
+        let fingerprintMatch = previousFingerprint.flatMap { currentTargetByFingerprint[$0] }
+        return DisplayReconciliationRecord(
             targetId: targetID,
-            status: currentTargetIDs.contains(targetID) ? "active" : "retained-orphaned",
-            matchedBy: currentTargetIDs.contains(targetID) ? "target-id" : "retained-project-metadata",
-            metadataSources: metadataSources(for: targetID, document: metadataDocument)
+            status: directMatch || fingerprintMatch != nil ? "active" : "retained-orphaned",
+            matchedBy: directMatch ? "target-id" : (fingerprintMatch != nil ? "fingerprint" : "retained-project-metadata"),
+            metadataSources: metadataSources(for: targetID, document: metadataDocument),
+            currentTargetId: directMatch ? targetID : fingerprintMatch,
+            previousFingerprint: previousFingerprint
         )
     }
     let artifact = DisplayReconciliationArtifact(
@@ -396,8 +440,72 @@ func currentDisplayTargetIDs(rows: [DisplayLayoutRowModel], submodelsByParent: [
     return ids
 }
 
-func orphanedMetadataTargetIDs(document: PersistedDisplayMetadataDocument, currentTargetIDs: Set<String>) -> [String] {
-    metadataTargetIDs(document: document).filter { !currentTargetIDs.contains($0) }
+func currentTargetFingerprints(
+    rows: [DisplayLayoutRowModel],
+    submodelsByParent: [String: [XLightsSubmodel]]
+) -> [String: String] {
+    currentTargetFingerprints(rows: rows, submodelsByParent: submodelsByParent, nodeLayoutsByModel: [:])
+}
+
+private func currentTargetFingerprints(
+    rows: [DisplayLayoutRowModel],
+    submodelsByParent: [String: [XLightsSubmodel]],
+    nodeLayoutsByModel: [String: XLightsModelNodeLayout]
+) -> [String: String] {
+    var index: [String: String] = [:]
+    for row in rows {
+        let targetId = row.targetName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !targetId.isEmpty else { continue }
+        index[targetId] = displayModelFingerprint(
+            row: row,
+            nodeLayout: nodeLayoutsByModel[row.targetName],
+            submodels: submodelsByParent[row.targetName] ?? []
+        )
+    }
+    for submodel in submodelsByParent.values.flatMap({ $0 }) {
+        let targetId = (submodel.id ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !targetId.isEmpty else { continue }
+        index[targetId] = displaySubmodelFingerprint(submodel: submodel)
+    }
+    return index
+}
+
+func previousTargetFingerprints(from document: DisplayModelIndexDocument) -> [String: String] {
+    var index: [String: String] = [:]
+    for record in document.records {
+        let targetId = record.targetId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fingerprint = record.identity?.fingerprint?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !targetId.isEmpty, !fingerprint.isEmpty else { continue }
+        index[targetId] = fingerprint
+    }
+    return index
+}
+
+private func uniqueTargetByFingerprint(_ targetFingerprints: [String: String]) -> [String: String] {
+    var buckets: [String: [String]] = [:]
+    for (targetId, fingerprint) in targetFingerprints where !fingerprint.isEmpty {
+        buckets[fingerprint, default: []].append(targetId)
+    }
+    var unique: [String: String] = [:]
+    for (fingerprint, targetIds) in buckets where targetIds.count == 1 {
+        unique[fingerprint] = targetIds[0]
+    }
+    return unique
+}
+
+func orphanedMetadataTargetIDs(
+    document: PersistedDisplayMetadataDocument,
+    currentTargetIDs: Set<String>,
+    currentTargetFingerprints: [String: String] = [:],
+    previousModelIndex: DisplayModelIndexDocument = DisplayModelIndexDocument()
+) -> [String] {
+    let currentTargetByFingerprint = uniqueTargetByFingerprint(currentTargetFingerprints)
+    let previousFingerprintIndex = previousTargetFingerprints(from: previousModelIndex)
+    return metadataTargetIDs(document: document).filter { targetID in
+        if currentTargetIDs.contains(targetID) { return false }
+        guard let previousFingerprint = previousFingerprintIndex[targetID] else { return true }
+        return currentTargetByFingerprint[previousFingerprint] == nil
+    }
 }
 
 private func metadataTargetIDs(document: PersistedDisplayMetadataDocument) -> [String] {
@@ -941,6 +1049,8 @@ private struct DisplayReconciliationRecord: Encodable {
     let status: String
     let matchedBy: String
     let metadataSources: [String]
+    let currentTargetId: String?
+    let previousFingerprint: String?
 }
 
 private struct DisplayModelIndexRecord: Encodable {

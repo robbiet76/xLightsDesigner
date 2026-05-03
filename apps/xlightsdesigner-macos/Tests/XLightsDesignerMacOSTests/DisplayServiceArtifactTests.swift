@@ -223,6 +223,50 @@ struct DisplayServiceArtifactTests {
         #expect(missing?["matchedBy"] as? String == "retained-project-metadata")
     }
 
+    @Test func reconciliationArtifactMatchesRenamedMetadataByFingerprint() throws {
+        let renamedRow = displayArtifactRow(name: "RenamedFace", targetType: "Custom", width: 50, height: 100)
+        let currentFingerprint = try #require(currentTargetFingerprints(rows: [renamedRow], submodelsByParent: [:])["RenamedFace"])
+        let previousIndex = DisplayModelIndexDocument(
+            artifactType: "target_metadata_index_v1",
+            records: [
+                PersistedDisplayModelIndexRecord(
+                    targetId: "OldFace",
+                    targetKind: "model",
+                    identity: PersistedDisplayModelIndexIdentity(
+                        fingerprint: currentFingerprint,
+                        fingerprintVersion: "target-metadata-fingerprint-v1",
+                        displayName: "Old Face",
+                        parentId: nil,
+                        parentName: nil
+                    ),
+                    structure: nil
+                )
+            ]
+        )
+        var metadata = PersistedDisplayMetadataDocument()
+        metadata.targetTags = ["OldFace": ["tag-face"]]
+
+        let artifactData = try encodeDisplayReconciliationArtifact(
+            rows: [renamedRow],
+            submodelsByParent: [:],
+            metadataDocument: metadata,
+            previousModelIndex: previousIndex,
+            sourceSummary: "test",
+            createdAt: "2026-05-01T00:00:00Z"
+        )
+        let artifact = try JSONSerialization.jsonObject(with: artifactData) as? [String: Any]
+        let summary = artifact?["summary"] as? [String: Any]
+        let records = artifact?["records"] as? [[String: Any]]
+        let oldFace = records?.first { $0["targetId"] as? String == "OldFace" }
+
+        #expect(summary?["activeMetadataCount"] as? Int == 1)
+        #expect(summary?["retainedOrphanedMetadataCount"] as? Int == 0)
+        #expect(oldFace?["status"] as? String == "active")
+        #expect(oldFace?["matchedBy"] as? String == "fingerprint")
+        #expect(oldFace?["currentTargetId"] as? String == "RenamedFace")
+        #expect(oldFace?["previousFingerprint"] as? String == currentFingerprint)
+    }
+
     @Test func modelIndexArtifactEmbedsSharedSubmodelRelationshipsForBuiltInModels() throws {
         let row = displayArtifactRow(name: "Built In Target", targetType: "Tree", width: 80, height: 160, submodelCount: 3)
         let submodels = try JSONDecoder().decode([XLightsSubmodel].self, from: """
