@@ -13,12 +13,34 @@ struct PersistedDisplayModelIndexRecord: Codable, Sendable {
     var targetId: String
     var targetKind: String?
     var identity: PersistedDisplayModelIndexIdentity?
+    var structure: PersistedDisplayModelIndexStructure?
 }
 
 struct PersistedDisplayModelIndexIdentity: Codable, Sendable {
     var fingerprint: String?
     var fingerprintVersion: String?
     var displayName: String?
+    var parentId: String?
+    var parentName: String?
+}
+
+struct PersistedDisplayModelIndexStructure: Codable, Sendable {
+    var submodelMetadata: PersistedDisplaySubmodelMetadata?
+}
+
+struct PersistedDisplaySubmodelMetadata: Codable, Sendable {
+    var parentId: String?
+    var parentName: String?
+    var nodeCoverage: PersistedDisplaySubmodelNodeCoverage?
+    var siblingIds: [String]?
+    var overlappingSiblingIds: [String]?
+    var structureHints: [String]?
+}
+
+struct PersistedDisplaySubmodelNodeCoverage: Codable, Sendable {
+    var nodeCount: Int?
+    var parentNodeCount: Int?
+    var ratio: Double?
 }
 
 struct LocalDisplayModelIndexStore: DisplayModelIndexStore {

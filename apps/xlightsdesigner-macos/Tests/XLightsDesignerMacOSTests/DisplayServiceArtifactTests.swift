@@ -3,6 +3,45 @@ import Testing
 @testable import XLightsDesignerMacOS
 
 struct DisplayServiceArtifactTests {
+    @Test func displayModelIndexStoreDecodesSubmodelIdentityAndStructure() throws {
+        let data = """
+        {
+          "artifactType": "display_model_index_v1",
+          "records": [
+            {
+              "targetId": "Custom Target A/@Mouth1",
+              "targetKind": "submodel",
+              "identity": {
+                "displayName": "Custom Target A / @Mouth1",
+                "fingerprint": "tmf1:abcd1234",
+                "fingerprintVersion": "target-metadata-fingerprint-v1",
+                "parentId": "Custom Target A",
+                "parentName": "Custom Target A"
+              },
+              "structure": {
+                "submodelMetadata": {
+                  "parentId": "Custom Target A",
+                  "parentName": "Custom Target A",
+                  "nodeCoverage": { "nodeCount": 8, "parentNodeCount": 143, "ratio": 0.0559 },
+                  "siblingIds": ["Custom Target A/@Eye"],
+                  "overlappingSiblingIds": [],
+                  "structureHints": ["feature_mouth"]
+                }
+              }
+            }
+          ]
+        }
+        """.data(using: .utf8)!
+
+        let document = try JSONDecoder().decode(DisplayModelIndexDocument.self, from: data)
+        let record = try #require(document.records.first)
+
+        #expect(record.identity?.parentId == "Custom Target A")
+        #expect(record.identity?.parentName == "Custom Target A")
+        #expect(record.structure?.submodelMetadata?.nodeCoverage?.nodeCount == 8)
+        #expect(record.structure?.submodelMetadata?.structureHints == ["feature_mouth"])
+    }
+
     @Test func submodelDecoderAcceptsOwnedApiParentNamePayload() throws {
         let data = """
         [

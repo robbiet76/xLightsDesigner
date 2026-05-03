@@ -210,10 +210,15 @@ export function createMetadataRuntime(deps = {}) {
       if (!includeSubmodels) return;
       const id = String(submodel?.id || '').trim();
       if (!id) return;
-      const parentId = String(submodel?.parentId || parseSubmodelParentId(id)).trim();
-      const rawName = String(submodel?.name || id);
-      const displayName = parentId ? `${parentId} / ${rawName}` : rawName;
       const structural = structuralIndex.get(id);
+      const parentId = String(
+        structural?.identity?.parentId
+        || structural?.structure?.submodelMetadata?.parentId
+        || submodel?.parentId
+        || parseSubmodelParentId(id)
+      ).trim();
+      const rawName = String(submodel?.name || id);
+      const displayName = String(structural?.identity?.displayName || (parentId ? `${parentId} / ${rawName}` : rawName));
       const parentStructural = structuralIndex.get(parentId);
       byId.set(id, {
         id,
@@ -480,6 +485,8 @@ export function createMetadataRuntime(deps = {}) {
   function resolveAssignmentParentId(assignment) {
     const explicit = String(assignment?.targetParentId || '').trim();
     if (explicit) return explicit;
+    const target = getMetadataTargetById(assignment?.targetId);
+    if (target?.parentId) return target.parentId;
     const type = normalizeElementType(assignment?.targetType || '');
     if (type === 'submodel') return parseSubmodelParentId(assignment?.targetId);
     const id = String(assignment?.targetId || '');

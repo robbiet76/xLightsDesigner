@@ -273,6 +273,32 @@ test("metadata runtime refreshes custom model catalog during display reconciliat
   assert.equal(state.sceneGraph.customModelCatalog.models[0].construction.nodeMap.nodeCount, 4);
 });
 
+test("metadata runtime prefers structural submodel identity over parsed names", () => {
+  const state = buildState();
+  state.models = [{ id: "CustomFace", name: "Custom Face", type: "Custom" }];
+  state.submodels = [{ id: "mouth-node-set", name: "@Mouth" }];
+  state.sceneGraph = {
+    modelsById: {
+      CustomFace: { id: "CustomFace", name: "Custom Face", displayAs: "Custom" }
+    },
+    submodelsById: {
+      "mouth-node-set": {
+        id: "mouth-node-set",
+        name: "@Mouth",
+        parentId: "CustomFace",
+        membership: { nodeCount: 8 }
+      }
+    }
+  };
+  const runtime = buildRuntime(state);
+
+  const target = runtime.getMetadataTargetById("mouth-node-set");
+
+  assert.equal(target.parentId, "CustomFace");
+  assert.equal(target.displayName, "CustomFace / @Mouth");
+  assert.match(target.fingerprint, /^tmf1:[0-9a-f]{8}$/);
+});
+
 test("metadata runtime persists display refresh artifacts when project file is available", () => {
   const state = buildState();
   state.projectFilePath = "/projects/demo/Demo.xdproj";
