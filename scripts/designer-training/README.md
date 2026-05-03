@@ -19,17 +19,13 @@ Start a run:
 ```bash
 nohup bash scripts/designer-training/run-overnight-training.sh \
   --iterations 6 \
-  --canary-live-every 1 \
-  --baseline-live-every 0 \
-  --extended-live-every 2 \
   > /tmp/xld-overnight-launch.log 2>&1 &
 ```
 
 Recommended cadence:
-- one-prompt canary suite: every iteration
-- smoke comparative suite: checkpoint only
-- promoted baseline suite: checkpoint only
-- extended suite: every second iteration or slower
+- run offline designer eval on every iteration
+- run live app validation separately with `apps/xlightsdesigner-ui/eval/run-live-practical-benchmark.mjs` after offline changes are green
+- keep live validation attended unless a specific run is known to be stable in the current app/xLights environment
 
 Add a queued follow-up:
 
