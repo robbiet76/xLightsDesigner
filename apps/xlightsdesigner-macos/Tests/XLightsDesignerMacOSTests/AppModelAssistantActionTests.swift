@@ -81,6 +81,7 @@ import Testing
             "targetIds": "MegaTree, Roofline",
             "rolePreference": "lead",
             "semanticHints": "centerpiece, sparkle",
+            "submodelHints": "mouth, eyes",
             "effectAvoidances": "Bars"
         ],
         reason: "User approved target intent."
@@ -89,6 +90,7 @@ import Testing
     let document = try LocalDisplayMetadataStore().load(for: project)
     #expect(document.preferencesByTargetId["MegaTree"]?.rolePreference == "lead")
     #expect(document.preferencesByTargetId["MegaTree"]?.semanticHints == ["centerpiece", "sparkle"])
+    #expect(document.preferencesByTargetId["MegaTree"]?.submodelHints == ["mouth", "eyes"])
     #expect(document.preferencesByTargetId["MegaTree"]?.effectAvoidances == ["Bars"])
     #expect(document.preferencesByTargetId["Roofline"]?.rolePreference == "lead")
 }

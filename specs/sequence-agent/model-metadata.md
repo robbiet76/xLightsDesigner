@@ -230,6 +230,8 @@ Custom model records remain normal `targetKind: "model"` records. They are ident
 
 These fields are structural hints, not user semantics. Core code must not infer face, mouth, spoke, ring, or similar semantic meaning from user-defined model or submodel names. Those meanings should come from user/display metadata such as semantic hints and target preferences. Submodel names are still preserved as data so users and diagnostics can recognize what xLights exposed.
 
+User-authored submodel semantics belong in `display/metadata.json` under `preferencesByTargetId[<targetId>].submodelHints`. Examples include labels such as mouth, eyes, outline, spokes, rings, segments, or layers when the user wants the sequencer to understand how a target's internal regions should be used. `semanticHints` describe the broader target meaning; `submodelHints` describe important internal regions or sequencing surfaces.
+
 Submodel records are first-class records and should place their specific submodel facts under `structure.submodelMetadata`, including:
 
 - submodel id and name

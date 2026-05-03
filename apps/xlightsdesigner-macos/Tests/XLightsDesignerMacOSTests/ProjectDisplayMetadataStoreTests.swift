@@ -124,6 +124,7 @@ struct ProjectDisplayMetadataStoreTests {
             targetIDs: ["Tree"],
             rolePreference: "lead",
             semanticHints: ["centerpiece"],
+            submodelHints: ["mouth"],
             effectAvoidances: ["Bars"]
         )
         let updated = try store.load(for: project)
@@ -131,6 +132,7 @@ struct ProjectDisplayMetadataStoreTests {
         #expect(updated.tags.first?.name == "Focal")
         #expect(updated.targetTags["Tree"] == ["tag-focal"])
         #expect(updated.preferencesByTargetId["Tree"]?.rolePreference == "lead")
+        #expect(updated.preferencesByTargetId["Tree"]?.submodelHints == ["mouth"])
         #expect(updated.visualHintDefinitions.isEmpty)
     }
 
@@ -176,16 +178,18 @@ struct ProjectDisplayMetadataStoreTests {
             targetIDs: ["Tree", "Tree", "Star"],
             rolePreference: " lead ",
             semanticHints: [" sparkle ", "Sparkle", "centerpiece"],
+            submodelHints: [" mouth ", "Mouth", "eyes"],
             effectAvoidances: [" Bars "]
         )
         let updated = try store.load(for: project)
 
         #expect(updated.preferencesByTargetId["Tree"]?.rolePreference == "lead")
         #expect(updated.preferencesByTargetId["Tree"]?.semanticHints == ["sparkle", "centerpiece"])
+        #expect(updated.preferencesByTargetId["Tree"]?.submodelHints == ["mouth", "eyes"])
         #expect(updated.preferencesByTargetId["Tree"]?.effectAvoidances == ["Bars"])
         #expect(updated.preferencesByTargetId["Star"]?.rolePreference == "lead")
 
-        try store.updateTargetPreference(project: project, targetIDs: ["Tree"], rolePreference: nil, semanticHints: [], effectAvoidances: [])
+        try store.updateTargetPreference(project: project, targetIDs: ["Tree"], rolePreference: nil, semanticHints: [], submodelHints: [], effectAvoidances: [])
         let cleared = try store.load(for: project)
 
         #expect(cleared.preferencesByTargetId["Tree"] == nil)

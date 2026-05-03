@@ -317,6 +317,7 @@ final class AppAutomationServer: @unchecked Sendable {
                     targetIDs: targetIDs,
                     rolePreference: (payload["rolePreference"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
                     semanticHints: splitPayloadList(String(payload["semanticHints"] as? String ?? "")),
+                    submodelHints: splitPayloadList(String(payload["submodelHints"] as? String ?? "")),
                     effectAvoidances: splitPayloadList(String(payload["effectAvoidances"] as? String ?? ""))
                 )
                 return .json(200, body: [

@@ -468,6 +468,7 @@ final class AppModel {
                     targetIDs: targetIDs,
                     rolePreference: request.payload["rolePreference"],
                     semanticHints: splitAssistantPayloadList(request.payload["semanticHints"] ?? ""),
+                    submodelHints: splitAssistantPayloadList(request.payload["submodelHints"] ?? ""),
                     effectAvoidances: splitAssistantPayloadList(request.payload["effectAvoidances"] ?? "")
                 )
             } catch {

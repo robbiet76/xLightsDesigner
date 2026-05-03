@@ -27,7 +27,7 @@ function buildHelpers() {
           inferredSemanticTraits: ["character", "focal"]
         },
         training: { trainedSupportState: "out_of_stage1_model_support" },
-        user: { rolePreference: "support", semanticHints: ["face", "hat"] },
+        user: { rolePreference: "support", semanticHints: ["character", "hat"], submodelHints: ["mouth", "eyes"] },
         structure: {
           densityMetadata: {
             basis: "area",
@@ -144,13 +144,15 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.reconciliation.summary.reviewNeeded, false);
   assert.equal(dashboard.data.rows[0].canonicalType, "custom");
   assert.equal(dashboard.data.rows[0].rolePreference, "support");
-  assert.equal(dashboard.data.rows[0].visualHints.join(","), "face,hat");
+  assert.equal(dashboard.data.rows[0].visualHints.join(","), "character,eyes,hat,mouth");
   assert.equal(dashboard.data.rows[0].effectAvoidances.join(","), "");
   assert.equal(dashboard.data.activeTarget.displayName, "Snowman");
   assert.equal(dashboard.data.activeTarget.metadataCompleteness, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.metadataCompletenessDetail.semantic, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.rolePreference, "support");
-  assert.equal(dashboard.data.activeTarget.semanticHints.join(","), "face,hat");
+  assert.equal(dashboard.data.activeTarget.semanticHints.join(","), "character,hat");
+  assert.equal(dashboard.data.activeTarget.submodelHints.join(","), "eyes,mouth");
+  assert.equal(dashboard.data.activeTarget.smartOptions.submodelHints.includes("mouth"), true);
   assert.equal(dashboard.data.activeTarget.submodelMetadata.hasSubmodels, false);
   assert.equal(dashboard.data.activeTarget.recommendations.length, 2);
   assert.equal(dashboard.data.activeTarget.recommendations[1].priority, "high");
@@ -315,7 +317,7 @@ test("metadata dashboard applies visual hints filter to target rows", () => {
         metadataSelectionIds: [],
         metadataFilterName: "",
         metadataFilterType: "",
-        metadataFilterVisualHints: "face"
+        metadataFilterVisualHints: "mouth"
       },
       health: {}
     },

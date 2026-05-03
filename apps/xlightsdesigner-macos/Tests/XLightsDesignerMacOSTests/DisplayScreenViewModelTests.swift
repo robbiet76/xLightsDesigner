@@ -9,7 +9,7 @@ private struct DisplayTestProjectSessionStore: ProjectSessionStore {
 
 private final class StubDisplayService: DisplayService, @unchecked Sendable {
     var result: DisplayServiceResult
-    var savedTargetPreference: (targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String])?
+    var savedTargetPreference: (targetIDs: [String], rolePreference: String?, semanticHints: [String], submodelHints: [String], effectAvoidances: [String])?
 
     init(result: DisplayServiceResult) {
         self.result = result
@@ -21,8 +21,8 @@ private final class StubDisplayService: DisplayService, @unchecked Sendable {
 
     func addTag(for project: ActiveProjectModel?, targetIDs: [String], tagName: String, description: String) async throws {}
     func removeTag(for project: ActiveProjectModel?, targetIDs: [String], tagID: String) async throws {}
-    func saveTargetPreference(for project: ActiveProjectModel?, targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) async throws {
-        savedTargetPreference = (targetIDs, rolePreference, semanticHints, effectAvoidances)
+    func saveTargetPreference(for project: ActiveProjectModel?, targetIDs: [String], rolePreference: String?, semanticHints: [String], submodelHints: [String], effectAvoidances: [String]) async throws {
+        savedTargetPreference = (targetIDs, rolePreference, semanticHints, submodelHints, effectAvoidances)
     }
     func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: DisplayLabelColor) async throws {}
     func deleteTagDefinition(for project: ActiveProjectModel?, tagID: String) async throws {}
@@ -136,7 +136,7 @@ private struct StubDisplayModelIndexStore: DisplayModelIndexStore {
             "MegaTree": PersistedDisplayTargetPreference(
                 rolePreference: "lead",
                 semanticHints: ["centerpiece", "sparkle"],
-                submodelHints: nil,
+                submodelHints: ["mouth", "eyes"],
                 effectAvoidances: ["Bars"]
             )
         ],
@@ -157,6 +157,7 @@ private struct StubDisplayModelIndexStore: DisplayModelIndexStore {
     #expect(row.category == "Target Intent")
     #expect(row.value.contains("Role: lead"))
     #expect(row.value.contains("Hints: centerpiece, sparkle"))
+    #expect(row.value.contains("Submodels: mouth, eyes"))
     #expect(row.value.contains("Avoid: Bars"))
 }
 
@@ -206,6 +207,7 @@ private struct StubDisplayModelIndexStore: DisplayModelIndexStore {
     model.metadataEditor.value = "Primary visual anchor"
     model.metadataEditor.rolePreference = "lead"
     model.metadataEditor.semanticHintsText = "centerpiece, sparkle"
+    model.metadataEditor.submodelHintsText = "mouth, eyes"
     model.metadataEditor.effectAvoidancesText = "Bars"
     model.metadataEditor.targetNames = ["MegaTree"]
     model.saveMetadataEditor()
@@ -214,6 +216,7 @@ private struct StubDisplayModelIndexStore: DisplayModelIndexStore {
     #expect(service.savedTargetPreference?.targetIDs == ["MegaTree"])
     #expect(service.savedTargetPreference?.rolePreference == "lead")
     #expect(service.savedTargetPreference?.semanticHints == ["centerpiece", "sparkle"])
+    #expect(service.savedTargetPreference?.submodelHints == ["mouth", "eyes"])
     #expect(service.savedTargetPreference?.effectAvoidances == ["Bars"])
 }
 

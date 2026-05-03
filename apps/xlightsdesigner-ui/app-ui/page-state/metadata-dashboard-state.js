@@ -120,6 +120,17 @@ function buildSmartSuggestionOptions({
       "tree-like",
       "face"
     ],
+    submodelHints: [
+      "mouth",
+      "eyes",
+      "outline",
+      "spokes",
+      "rings",
+      "segments",
+      "layers",
+      "left/right",
+      "top/bottom"
+    ],
     effectAvoidances: [
       "dense texture",
       "fast motion",
@@ -494,10 +505,8 @@ export function buildMetadataDashboardState({
         inferredRole: str(activeNormalized?.semantics?.inferredRole),
         inferredSemanticTraits: escapeTagList(activeNormalized?.semantics?.inferredSemanticTraits),
         rolePreference: str(activeNormalized?.user?.rolePreference),
-        semanticHints: escapeTagList([
-          ...escapeTagList(activeNormalized?.user?.semanticHints),
-          ...escapeTagList(activeNormalized?.user?.submodelHints)
-        ]),
+        semanticHints: escapeTagList(activeNormalized?.user?.semanticHints),
+        submodelHints: escapeTagList(activeNormalized?.user?.submodelHints),
         effectAvoidances: escapeTagList(activeNormalized?.user?.effectAvoidances),
         confidence: Number(activeNormalized?.provenance?.confidence || 0),
         groupMemberships: escapeTagList(activeNormalized?.structure?.groupMemberships),
@@ -568,6 +577,11 @@ export function buildMetadataDashboardState({
         field: "effectAvoidances",
         active: activeTargetData,
         projectValues: buildCommonPreferenceValues(preferencesByTargetId, "effectAvoidances")
+      }),
+      submodelHints: buildSmartSuggestionOptions({
+        field: "submodelHints",
+        active: activeTargetData,
+        projectValues: buildCommonPreferenceValues(preferencesByTargetId, "submodelHints")
       })
     };
     activeTargetData.summaryText = buildActiveTargetSummary(activeTargetData);
@@ -623,6 +637,11 @@ export function buildMetadataDashboardState({
           field: "semanticHints",
           active: {},
           projectValues: buildCommonPreferenceValues(preferencesByTargetId, "semanticHints")
+        }),
+        submodelHints: buildSmartSuggestionOptions({
+          field: "submodelHints",
+          active: {},
+          projectValues: buildCommonPreferenceValues(preferencesByTargetId, "submodelHints")
         }),
         effectAvoidances: buildSmartSuggestionOptions({
           field: "effectAvoidances",

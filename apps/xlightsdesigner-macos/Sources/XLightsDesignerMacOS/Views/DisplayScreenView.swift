@@ -351,6 +351,11 @@ struct DisplayScreenView: View {
                         .lineLimit(2...3)
                 }
                 GridRow {
+                    Text("Submodels")
+                    TextField("mouth, eyes, outline, spokes", text: $model.metadataEditor.submodelHintsText, axis: .vertical)
+                        .lineLimit(2...3)
+                }
+                GridRow {
                     Text("Avoid")
                     TextField("effects or looks to avoid", text: $model.metadataEditor.effectAvoidancesText, axis: .vertical)
                         .lineLimit(2...3)

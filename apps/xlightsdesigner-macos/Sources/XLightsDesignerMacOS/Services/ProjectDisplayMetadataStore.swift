@@ -5,7 +5,7 @@ protocol DisplayMetadataStore: Sendable {
     func writeRefreshArtifacts(project: ActiveProjectModel, targetMetadata: Data?, reconciliation: Data?) throws
     func createOrAssignTag(project: ActiveProjectModel, targetIDs: [String], tagName: String, description: String) throws
     func removeTag(project: ActiveProjectModel, targetIDs: [String], tagID: String) throws
-    func updateTargetPreference(project: ActiveProjectModel, targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) throws
+    func updateTargetPreference(project: ActiveProjectModel, targetIDs: [String], rolePreference: String?, semanticHints: [String], submodelHints: [String], effectAvoidances: [String]) throws
     func updateTagDefinition(project: ActiveProjectModel, tagID: String?, name: String, description: String, colorName: String?) throws
     func deleteTagDefinition(project: ActiveProjectModel, tagID: String) throws
 }
@@ -137,20 +137,21 @@ struct LocalDisplayMetadataStore: DisplayMetadataStore {
         try save(document, for: project)
     }
 
-    func updateTargetPreference(project: ActiveProjectModel, targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) throws {
+    func updateTargetPreference(project: ActiveProjectModel, targetIDs: [String], rolePreference: String?, semanticHints: [String], submodelHints: [String], effectAvoidances: [String]) throws {
         var document = try load(for: project)
         let normalizedRole = rolePreference?.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedHints = normalizedStrings(semanticHints)
+        let normalizedSubmodelHints = normalizedStrings(submodelHints)
         let normalizedAvoidances = normalizedStrings(effectAvoidances)
 
         for targetID in normalizedStrings(targetIDs) {
-            if (normalizedRole ?? "").isEmpty && normalizedHints.isEmpty && normalizedAvoidances.isEmpty {
+            if (normalizedRole ?? "").isEmpty && normalizedHints.isEmpty && normalizedSubmodelHints.isEmpty && normalizedAvoidances.isEmpty {
                 document.preferencesByTargetId.removeValue(forKey: targetID)
             } else {
                 document.preferencesByTargetId[targetID] = PersistedDisplayTargetPreference(
                     rolePreference: (normalizedRole ?? "").isEmpty ? nil : normalizedRole,
                     semanticHints: normalizedHints.isEmpty ? nil : normalizedHints,
-                    submodelHints: nil,
+                    submodelHints: normalizedSubmodelHints.isEmpty ? nil : normalizedSubmodelHints,
                     effectAvoidances: normalizedAvoidances.isEmpty ? nil : normalizedAvoidances
                 )
             }

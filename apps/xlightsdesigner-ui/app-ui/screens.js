@@ -2172,6 +2172,21 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         </div>
                       </div>
                       <div>
+                        <strong>Submodel Hints</strong>
+                        <div class="metadata-value-list">
+                          ${(Array.isArray(data.activeTarget.submodelHints) ? data.activeTarget.submodelHints : []).map((value) => `<button class="artifact-chip" data-metadata-remove-item="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" data-metadata-value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")} ×</button>`).join("") || `<span class="banner">None selected</span>`}
+                        </div>
+                        <div class="metadata-add-row">
+                          <select data-metadata-suggestion-select="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
+                            <option value="">Choose one...</option>
+                            ${((data.activeTarget.smartOptions?.submodelHints || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
+                            <option value="__other__">Other...</option>
+                          </select>
+                          <input data-metadata-other-input="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" placeholder="Add submodel hint" disabled />
+                          <button data-metadata-add-item="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">Add</button>
+                        </div>
+                      </div>
+                      <div>
                         <strong>Effect Avoidances</strong>
                         <div class="metadata-value-list">
                           ${(Array.isArray(data.activeTarget.effectAvoidances) ? data.activeTarget.effectAvoidances : []).map((value) => `<button class="artifact-chip" data-metadata-remove-item="effectAvoidances" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" data-metadata-value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")} ×</button>`).join("") || `<span class="banner">None selected</span>`}

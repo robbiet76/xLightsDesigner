@@ -36,6 +36,7 @@ final class DisplayScreenViewModel {
         var rationale: String = ""
         var rolePreference: String = ""
         var semanticHintsText: String = ""
+        var submodelHintsText: String = ""
         var effectAvoidancesText: String = ""
         var targetNames: Set<String> = []
         var targetSearchText: String = ""
@@ -440,6 +441,7 @@ final class DisplayScreenViewModel {
             rationale: row.rationale,
             rolePreference: targetPreferenceSummary(for: row.linkedTargets, field: \.rolePreference),
             semanticHintsText: targetPreferenceListSummary(for: row.linkedTargets, field: \.semanticHints),
+            submodelHintsText: targetPreferenceListSummary(for: row.linkedTargets, field: \.submodelHints),
             effectAvoidancesText: targetPreferenceListSummary(for: row.linkedTargets, field: \.effectAvoidances),
             targetNames: Set(row.linkedTargets)
         )
@@ -508,10 +510,12 @@ final class DisplayScreenViewModel {
             try displayDiscoveryStore.upsertInsight(insight, for: workspace.activeProject)
             let rolePreference = metadataEditor.rolePreference.trimmingCharacters(in: .whitespacesAndNewlines)
             let semanticHints = splitList(metadataEditor.semanticHintsText)
+            let submodelHints = splitList(metadataEditor.submodelHintsText)
             let effectAvoidances = splitList(metadataEditor.effectAvoidancesText)
             let editsTargetIntent = metadataEditor.originalID?.hasPrefix("target-preference::") == true
                 || !rolePreference.isEmpty
                 || !semanticHints.isEmpty
+                || !submodelHints.isEmpty
                 || !effectAvoidances.isEmpty
             if editsTargetIntent {
                 Task {
@@ -521,6 +525,7 @@ final class DisplayScreenViewModel {
                             targetIDs: selectedTargets,
                             rolePreference: rolePreference.isEmpty ? nil : rolePreference,
                             semanticHints: semanticHints,
+                            submodelHints: submodelHints,
                             effectAvoidances: effectAvoidances
                         )
                         loadDisplay()
@@ -537,24 +542,26 @@ final class DisplayScreenViewModel {
         }
     }
 
-    func saveTargetIntent(targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) async throws {
+    func saveTargetIntent(targetIDs: [String], rolePreference: String?, semanticHints: [String], submodelHints: [String] = [], effectAvoidances: [String]) async throws {
         try await displayService.saveTargetPreference(
             for: workspace.activeProject,
             targetIDs: targetIDs,
             rolePreference: rolePreference,
             semanticHints: semanticHints,
+            submodelHints: submodelHints,
             effectAvoidances: effectAvoidances
         )
         await reloadDisplay()
     }
 
-    func saveTargetIntentFromUI(targetIDs: [String], rolePreference: String?, semanticHints: [String], effectAvoidances: [String]) {
+    func saveTargetIntentFromUI(targetIDs: [String], rolePreference: String?, semanticHints: [String], submodelHints: [String] = [], effectAvoidances: [String]) {
         Task {
             do {
                 try await saveTargetIntent(
                     targetIDs: targetIDs,
                     rolePreference: rolePreference,
                     semanticHints: semanticHints,
+                    submodelHints: submodelHints,
                     effectAvoidances: effectAvoidances
                 )
             } catch {
@@ -653,10 +660,12 @@ final class DisplayScreenViewModel {
             guard knownTargets.contains(targetID) else { return nil }
             let role = preference.rolePreference?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let semanticHints = (preference.semanticHints ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            let submodelHints = (preference.submodelHints ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
             let effectAvoidances = (preference.effectAvoidances ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
             let valueParts = [
                 role.isEmpty ? "" : "Role: \(role)",
                 semanticHints.isEmpty ? "" : "Hints: \(semanticHints.joined(separator: ", "))",
+                submodelHints.isEmpty ? "" : "Submodels: \(submodelHints.joined(separator: ", "))",
                 effectAvoidances.isEmpty ? "" : "Avoid: \(effectAvoidances.joined(separator: ", "))"
             ].filter { !$0.isEmpty }
             guard !valueParts.isEmpty else { return nil }
