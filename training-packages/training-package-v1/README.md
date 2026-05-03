@@ -8,7 +8,8 @@ Modules:
 - `xlights_sequencer_execution`
 
 Notes:
-- This package stores prompts, rubric data, eval configuration, and references to local corpora.
+- This package stores prompts, rubric data, eval configuration, compact datasets, and references to runtime/spec assets.
 - API keys are not stored in this package.
 - Packaged corpora used at runtime should live under module `datasets/`.
+- Portable datasets should retain durable features and labels, not raw generated intermediates or bulky source artifacts.
 - Machine-specific eval inputs (for example local audio path case files) must stay outside package assets.

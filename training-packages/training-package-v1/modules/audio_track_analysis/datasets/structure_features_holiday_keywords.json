@@ -1,0 +1,2863 @@
+{
+  "artifactType": "audio_structure_feature_corpus_v1",
+  "artifactVersion": "1.0",
+  "source": {
+    "originalSource": "lrclib",
+    "subset": "first-50-holiday-keyword-unique-title-matched",
+    "songCount": 50,
+    "matchedCount": 226,
+    "matchRate": 0.565,
+    "retainedFields": [
+      "track identity metadata",
+      "duration and stanza counts",
+      "stanza timing windows",
+      "draft structure labels",
+      "title-hit and repetition ratios",
+      "pattern recurrence indicators"
+    ],
+    "removedFields": [
+      "stanza lyric lines",
+      "stanza lyric text"
+    ]
+  },
+  "songs": [
+    {
+      "title": "Christmas (Baby Please Come Home)",
+      "artist": "Mariah Carey",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 970093,
+      "albumName": "Merry Christmas (Deluxe Anniversary Edition)",
+      "duration": 155,
+      "stanzaCount": 4,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 1920,
+          "endMs": 7140,
+          "durationMs": 5220,
+          "draftLabel": "Verse",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 11970,
+          "endMs": 73980,
+          "durationMs": 62010,
+          "draftLabel": "Chorus",
+          "lineCount": 29,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.655,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 90930,
+          "endMs": 135750,
+          "durationMs": 44820,
+          "draftLabel": "Chorus",
+          "lineCount": 21,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.81,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 139520,
+          "endMs": 144770,
+          "durationMs": 5250,
+          "draftLabel": "Chorus",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Santa Claus Is Comin' to Town",
+      "artist": "Frank Sinatra",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 970479,
+      "albumName": "Christmas Songs By Frank Sinatra",
+      "duration": 153,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 6960,
+          "endMs": 55960,
+          "durationMs": 49000,
+          "draftLabel": "Chorus",
+          "lineCount": 13,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.231,
+          "globallyRepeatedLineRatio": 0.769,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 91770,
+          "endMs": 141390,
+          "durationMs": 49620,
+          "draftLabel": "Chorus",
+          "lineCount": 13,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.231,
+          "globallyRepeatedLineRatio": 0.692,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "It's Beginning to Look a Lot Like Christmas (with Mitchell Ayres and His Orchestra)",
+      "artist": "Perry Como & The Fontane Sisters",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 15846758,
+      "albumName": "The Christmas Album 2015",
+      "duration": 155.976,
+      "stanzaCount": 4,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 12270,
+          "endMs": 59380,
+          "durationMs": 47110,
+          "draftLabel": "Chorus",
+          "lineCount": 16,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.562,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 63800,
+          "endMs": 95210,
+          "durationMs": 31410,
+          "draftLabel": "Chorus",
+          "lineCount": 10,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.7,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 115020,
+          "endMs": 127270,
+          "durationMs": 12250,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 131710,
+          "endMs": 145720,
+          "durationMs": 14010,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "All I Want for Christmas Is You",
+      "artist": "Mariah Carey",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 970072,
+      "albumName": "All I Want For Christmas Is You",
+      "duration": 242,
+      "stanzaCount": 4,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 6850,
+          "endMs": 8050,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 15050,
+          "endMs": 41930,
+          "durationMs": 26880,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.167,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 51530,
+          "endMs": 197250,
+          "durationMs": 145720,
+          "draftLabel": "Verse",
+          "lineCount": 34,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.088,
+          "globallyRepeatedLineRatio": 0.324,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 204540,
+          "endMs": 235750,
+          "durationMs": 31210,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.5,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Let It Snow! Let It Snow! Let It Snow! (with The B. Swanson Quartet)",
+      "artist": "Frank Sinatra",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 2181270,
+      "albumName": "Let It Snow! Let It Snow! Let It Snow!",
+      "duration": 156,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 6440,
+          "endMs": 84700,
+          "durationMs": 78260,
+          "draftLabel": "Verse",
+          "lineCount": 24,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.375,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 93970,
+          "endMs": 145670,
+          "durationMs": 51700,
+          "draftLabel": "Chorus",
+          "lineCount": 16,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "This Christmas",
+      "artist": "Chris Brown",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1557660,
+      "albumName": "This Christmas",
+      "duration": 198,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 930,
+          "endMs": 125460,
+          "durationMs": 124530,
+          "draftLabel": "Verse",
+          "lineCount": 25,
+          "titleLineHits": 6,
+          "titleLineRatio": 0.24,
+          "globallyRepeatedLineRatio": 0.24,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 152750,
+          "endMs": 186350,
+          "durationMs": 33600,
+          "draftLabel": "Verse",
+          "lineCount": 9,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.222,
+          "globallyRepeatedLineRatio": 0.222,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas (Baby, Please Come Home) [feat. Darlene Love]",
+      "artist": "Cher",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 4693685,
+      "albumName": "Christmas Songs and Holiday Music",
+      "duration": 163,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 15440,
+          "endMs": 72820,
+          "durationMs": 57380,
+          "draftLabel": "Verse",
+          "lineCount": 16,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.438,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 90710,
+          "endMs": 136380,
+          "durationMs": 45670,
+          "draftLabel": "Chorus",
+          "lineCount": 17,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.765,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 143380,
+          "endMs": 149290,
+          "durationMs": 5910,
+          "draftLabel": "Verse",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Noel (feat. Lauren Daigle) [Live]",
+      "artist": "Chris Tomlin",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 11683244,
+      "albumName": "Behold: The Complete Set",
+      "duration": 258,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 10560,
+          "endMs": 170530,
+          "durationMs": 159970,
+          "draftLabel": "Chorus",
+          "lineCount": 24,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.583,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 204370,
+          "endMs": 246960,
+          "durationMs": 42590,
+          "draftLabel": "Chorus",
+          "lineCount": 7,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "My Grown-Up Christmas List",
+      "artist": "David Foster & Katharine McPhee",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 21911537,
+      "albumName": "Christmas Songs",
+      "duration": 221.596735,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 10620,
+          "endMs": 97530,
+          "durationMs": 86910,
+          "draftLabel": "Verse",
+          "lineCount": 19,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.105,
+          "globallyRepeatedLineRatio": 0.368,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 107150,
+          "endMs": 120600,
+          "durationMs": 13450,
+          "draftLabel": "Verse",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 141080,
+          "endMs": 189950,
+          "durationMs": 48870,
+          "draftLabel": "Chorus",
+          "lineCount": 10,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.2,
+          "globallyRepeatedLineRatio": 0.8,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Let It Snow",
+      "artist": "Diana Krall & The Clayton-Hamilton Jazz Orchestra",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 12557936,
+      "albumName": "Christmas Songs",
+      "duration": 241.24,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 20650,
+          "endMs": 72040,
+          "durationMs": 51390,
+          "draftLabel": "Chorus",
+          "lineCount": 17,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.176,
+          "globallyRepeatedLineRatio": 0.882,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 153050,
+          "endMs": 210450,
+          "durationMs": 57400,
+          "draftLabel": "Chorus",
+          "lineCount": 19,
+          "titleLineHits": 7,
+          "titleLineRatio": 0.368,
+          "globallyRepeatedLineRatio": 0.842,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Frosty the Snowman",
+      "artist": "Kidsongs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 23280771,
+      "albumName": "Kidsongs: We Wish You a Merry Christmas",
+      "duration": 123,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 5660,
+          "endMs": 53630,
+          "durationMs": 47970,
+          "draftLabel": "Verse",
+          "lineCount": 19,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.158,
+          "globallyRepeatedLineRatio": 0.158,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 57740,
+          "endMs": 118500,
+          "durationMs": 60760,
+          "draftLabel": "Verse",
+          "lineCount": 25,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.08,
+          "globallyRepeatedLineRatio": 0.24,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "We Wish You a Merry Christmas",
+      "artist": "Kidsongs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 13394822,
+      "albumName": "Kidsongs: We Wish You a Merry Christmas",
+      "duration": 110,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 4890,
+          "endMs": 56740,
+          "durationMs": 51850,
+          "draftLabel": "Chorus",
+          "lineCount": 18,
+          "titleLineHits": 5,
+          "titleLineRatio": 0.278,
+          "globallyRepeatedLineRatio": 0.833,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 62580,
+          "endMs": 89280,
+          "durationMs": 26700,
+          "draftLabel": "Chorus",
+          "lineCount": 9,
+          "titleLineHits": 7,
+          "titleLineRatio": 0.778,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Jingle Bells",
+      "artist": "Kidsongs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 9679398,
+      "albumName": "Kid's Christmas Songs-The Best!",
+      "duration": 101,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 2450,
+          "endMs": 88150,
+          "durationMs": 85700,
+          "draftLabel": "Chorus",
+          "lineCount": 21,
+          "titleLineHits": 6,
+          "titleLineRatio": 0.286,
+          "globallyRepeatedLineRatio": 0.619,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Santa Claus Is Coming to Town",
+      "artist": "Kidsongs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 15367285,
+      "albumName": "Christmas Songs for Kids",
+      "duration": 112,
+      "stanzaCount": 5,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 5940,
+          "endMs": 14580,
+          "durationMs": 8640,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.2,
+          "globallyRepeatedLineRatio": 0.8,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 20750,
+          "endMs": 29310,
+          "durationMs": 8560,
+          "draftLabel": "Verse",
+          "lineCount": 5,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.2,
+          "globallyRepeatedLineRatio": 0.2,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 35290,
+          "endMs": 59040,
+          "durationMs": 23750,
+          "draftLabel": "Chorus",
+          "lineCount": 9,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.111,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 64940,
+          "endMs": 77050,
+          "durationMs": 12110,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 81940,
+          "endMs": 101260,
+          "durationMs": 19320,
+          "draftLabel": "Chorus",
+          "lineCount": 8,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.875,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Mistletoe",
+      "artist": "Justin Bieber",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1534350,
+      "albumName": "Under The Mistletoe",
+      "duration": 183,
+      "stanzaCount": 8,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 3790,
+          "endMs": 34120,
+          "durationMs": 30330,
+          "draftLabel": "Chorus",
+          "lineCount": 11,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.273,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 39470,
+          "endMs": 69750,
+          "durationMs": 30280,
+          "draftLabel": "Verse",
+          "lineCount": 11,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.273,
+          "globallyRepeatedLineRatio": 0.455,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 74580,
+          "endMs": 81720,
+          "durationMs": 7140,
+          "draftLabel": "Chorus",
+          "lineCount": 3,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.333,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 85970,
+          "endMs": 103490,
+          "durationMs": 17520,
+          "draftLabel": "Verse",
+          "lineCount": 7,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 107780,
+          "endMs": 141150,
+          "durationMs": 33370,
+          "draftLabel": "Chorus",
+          "lineCount": 12,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.25,
+          "globallyRepeatedLineRatio": 0.833,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 5,
+          "startMs": 146500,
+          "endMs": 153080,
+          "durationMs": 6580,
+          "draftLabel": "Chorus",
+          "lineCount": 3,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.333,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 6,
+          "startMs": 157360,
+          "endMs": 161470,
+          "durationMs": 4110,
+          "draftLabel": "Chorus",
+          "lineCount": 2,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.5,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 7,
+          "startMs": 169360,
+          "endMs": 173120,
+          "durationMs": 3760,
+          "draftLabel": "Chorus",
+          "lineCount": 2,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.5,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "It's Beginning To Look a Lot Like Christmas",
+      "artist": "Michael Bublé",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 970150,
+      "albumName": "Christmas",
+      "duration": 207,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 34630,
+          "endMs": 129060,
+          "durationMs": 94430,
+          "draftLabel": "Verse",
+          "lineCount": 25,
+          "titleLineHits": 4,
+          "titleLineRatio": 0.16,
+          "globallyRepeatedLineRatio": 0.4,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 152910,
+          "endMs": 183450,
+          "durationMs": 30540,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.167,
+          "globallyRepeatedLineRatio": 0.833,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Santa Shark",
+      "artist": "Super Simple Songs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 10923026,
+      "albumName": "Ho Ho Ho & Away We Go!",
+      "duration": 158,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 14660,
+          "endMs": 150690,
+          "durationMs": 136030,
+          "draftLabel": "Chorus",
+          "lineCount": 42,
+          "titleLineHits": 8,
+          "titleLineRatio": 0.19,
+          "globallyRepeatedLineRatio": 0.81,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Must Be Santa",
+      "artist": "Raffi",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 15185849,
+      "albumName": "Singable Songs for the Very Young",
+      "duration": 143,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 3850,
+          "endMs": 137250,
+          "durationMs": 133400,
+          "draftLabel": "Chorus",
+          "lineCount": 40,
+          "titleLineHits": 14,
+          "titleLineRatio": 0.35,
+          "globallyRepeatedLineRatio": 0.575,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "All I Want for Christmas Is My Two Front Teeth",
+      "artist": "Kidsongs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 12696330,
+      "albumName": "Kidsongs: We Wish You a Merry Christmas",
+      "duration": 112,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 9030,
+          "endMs": 48120,
+          "durationMs": 39090,
+          "draftLabel": "Chorus",
+          "lineCount": 12,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.167,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 55620,
+          "endMs": 101780,
+          "durationMs": 46160,
+          "draftLabel": "Chorus",
+          "lineCount": 14,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.143,
+          "globallyRepeatedLineRatio": 0.714,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "(There's No Place Like) Home for the Holidays (1954 Version)",
+      "artist": "Perry Como",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1614517,
+      "albumName": "Greatest Christmas Songs",
+      "duration": 171,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 9840,
+          "endMs": 84610,
+          "durationMs": 74770,
+          "draftLabel": "Chorus",
+          "lineCount": 15,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 95950,
+          "endMs": 97150,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 107760,
+          "endMs": 158260,
+          "durationMs": 50500,
+          "draftLabel": "Chorus",
+          "lineCount": 11,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas Dreaming",
+      "artist": "Frank Sinatra",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 3679234,
+      "albumName": "Christmas Dreaming",
+      "duration": 177,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 13270,
+          "endMs": 94860,
+          "durationMs": 81590,
+          "draftLabel": "Verse",
+          "lineCount": 13,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.154,
+          "globallyRepeatedLineRatio": 0.462,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 118370,
+          "endMs": 153240,
+          "durationMs": 34870,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.2,
+          "globallyRepeatedLineRatio": 0.8,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas Is Coming",
+      "artist": "Kidsongs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 25675361,
+      "albumName": "Christmas Songs for Kids",
+      "duration": 96,
+      "stanzaCount": 4,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 7900,
+          "endMs": 18700,
+          "durationMs": 10800,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 27770,
+          "endMs": 39300,
+          "durationMs": 11530,
+          "draftLabel": "Verse",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 47550,
+          "endMs": 58710,
+          "durationMs": 11160,
+          "draftLabel": "Verse",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 67460,
+          "endMs": 84100,
+          "durationMs": 16640,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        }
+      ]
+    },
+    {
+      "title": "Let It Snow! Let It Snow! Let It Snow!",
+      "artist": "Dean Martin",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 970166,
+      "albumName": "A Winter Romance",
+      "duration": 117,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 7470,
+          "endMs": 61540,
+          "durationMs": 54070,
+          "draftLabel": "Verse",
+          "lineCount": 16,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.062,
+          "globallyRepeatedLineRatio": 0.375,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 78440,
+          "endMs": 104150,
+          "durationMs": 25710,
+          "draftLabel": "Chorus",
+          "lineCount": 8,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.125,
+          "globallyRepeatedLineRatio": 0.75,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Have Yourself a Merry Little Christmas",
+      "artist": "Luther Vandross",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 7953040,
+      "albumName": "Christmas Hits 2007",
+      "duration": 306,
+      "stanzaCount": 8,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 2800,
+          "endMs": 20660,
+          "durationMs": 17860,
+          "draftLabel": "Verse",
+          "lineCount": 3,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.333,
+          "globallyRepeatedLineRatio": 0.333,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 37460,
+          "endMs": 55350,
+          "durationMs": 17890,
+          "draftLabel": "Verse",
+          "lineCount": 3,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.333,
+          "globallyRepeatedLineRatio": 0.333,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 71940,
+          "endMs": 125210,
+          "durationMs": 53270,
+          "draftLabel": "Verse",
+          "lineCount": 7,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.429,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 139270,
+          "endMs": 140470,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 1,
+          "titleLineRatio": 1,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 203070,
+          "endMs": 221980,
+          "durationMs": 18910,
+          "draftLabel": "Chorus",
+          "lineCount": 3,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 5,
+          "startMs": 237240,
+          "endMs": 238440,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 1,
+          "titleLineRatio": 1,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 6,
+          "startMs": 255900,
+          "endMs": 257100,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 1,
+          "titleLineRatio": 1,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 7,
+          "startMs": 278330,
+          "endMs": 279530,
+          "durationMs": 1200,
+          "draftLabel": "Verse",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "The Twelve Days of Christmas",
+      "artist": "Kidsongs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 14974290,
+      "albumName": "Kidsongs: We Wish You a Merry Christmas",
+      "duration": 252,
+      "stanzaCount": 22,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 7720,
+          "endMs": 13570,
+          "durationMs": 5850,
+          "draftLabel": "Verse",
+          "lineCount": 3,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.333,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 16460,
+          "endMs": 23710,
+          "durationMs": 7250,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.75,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 26560,
+          "endMs": 35330,
+          "durationMs": 8770,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.8,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 38840,
+          "endMs": 49130,
+          "durationMs": 10290,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.833,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 52280,
+          "endMs": 58160,
+          "durationMs": 5880,
+          "draftLabel": "Chorus",
+          "lineCount": 3,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 5,
+          "startMs": 60950,
+          "endMs": 66750,
+          "durationMs": 5800,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 6,
+          "startMs": 69430,
+          "endMs": 77200,
+          "durationMs": 7770,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.75,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 7,
+          "startMs": 80100,
+          "endMs": 85830,
+          "durationMs": 5730,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 8,
+          "startMs": 89290,
+          "endMs": 98300,
+          "durationMs": 9010,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.8,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 9,
+          "startMs": 101030,
+          "endMs": 106990,
+          "durationMs": 5960,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 10,
+          "startMs": 109680,
+          "endMs": 120790,
+          "durationMs": 11110,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.833,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 11,
+          "startMs": 123590,
+          "endMs": 129160,
+          "durationMs": 5570,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 12,
+          "startMs": 132290,
+          "endMs": 144400,
+          "durationMs": 12110,
+          "draftLabel": "Chorus",
+          "lineCount": 7,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.857,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 13,
+          "startMs": 147410,
+          "endMs": 153230,
+          "durationMs": 5820,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 14,
+          "startMs": 156550,
+          "endMs": 170000,
+          "durationMs": 13450,
+          "draftLabel": "Chorus",
+          "lineCount": 8,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.875,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 15,
+          "startMs": 173490,
+          "endMs": 178590,
+          "durationMs": 5100,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 16,
+          "startMs": 182050,
+          "endMs": 187540,
+          "durationMs": 5490,
+          "draftLabel": "Chorus",
+          "lineCount": 3,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 17,
+          "startMs": 189840,
+          "endMs": 198870,
+          "durationMs": 9030,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 18,
+          "startMs": 201720,
+          "endMs": 207660,
+          "durationMs": 5940,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 19,
+          "startMs": 210570,
+          "endMs": 228760,
+          "durationMs": 18190,
+          "draftLabel": "Chorus",
+          "lineCount": 10,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.8,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 20,
+          "startMs": 231930,
+          "endMs": 237650,
+          "durationMs": 5720,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 21,
+          "startMs": 240850,
+          "endMs": 242050,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Winter Wonderland (feat. The Clayton-Hamilton Jazz Orchestra)",
+      "artist": "Diana Krall",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 15348386,
+      "albumName": "The Best Christmas Songs (Jazz Gold)",
+      "duration": 194.011,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 4230,
+          "endMs": 72100,
+          "durationMs": 67870,
+          "draftLabel": "Verse",
+          "lineCount": 18,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.222,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 143120,
+          "endMs": 182970,
+          "durationMs": 39850,
+          "draftLabel": "Verse",
+          "lineCount": 10,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.3,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Please Come Home for Christmas",
+      "artist": "Eagles",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 812276,
+      "albumName": "Please Come Home for Christmas / Funky New Year - Single",
+      "duration": 178,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 7650,
+          "endMs": 127610,
+          "durationMs": 119960,
+          "draftLabel": "Verse",
+          "lineCount": 17,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.118,
+          "globallyRepeatedLineRatio": 0.118,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 149750,
+          "endMs": 159080,
+          "durationMs": 9330,
+          "draftLabel": "Verse",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas Day",
+      "artist": "Chris Tomlin & We The Kingdom",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 4879340,
+      "albumName": "Miracle Of Love: Christmas Songs Of Worship",
+      "duration": 263,
+      "stanzaCount": 4,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 16220,
+          "endMs": 25520,
+          "durationMs": 9300,
+          "draftLabel": "Verse",
+          "lineCount": 3,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 32490,
+          "endMs": 77380,
+          "durationMs": 44890,
+          "draftLabel": "Chorus",
+          "lineCount": 12,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.083,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 86420,
+          "endMs": 137250,
+          "durationMs": 50830,
+          "draftLabel": "Chorus",
+          "lineCount": 14,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.071,
+          "globallyRepeatedLineRatio": 0.571,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 146740,
+          "endMs": 243370,
+          "durationMs": 96630,
+          "draftLabel": "Chorus",
+          "lineCount": 30,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.067,
+          "globallyRepeatedLineRatio": 0.867,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "O Christmas Tree",
+      "artist": "Kidsongs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 12245252,
+      "albumName": "Kidsongs: We Wish You a Merry Christmas",
+      "duration": 140,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 16590,
+          "endMs": 45580,
+          "durationMs": 28990,
+          "draftLabel": "Chorus",
+          "lineCount": 8,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.375,
+          "globallyRepeatedLineRatio": 0.75,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 56240,
+          "endMs": 85130,
+          "durationMs": 28890,
+          "draftLabel": "Chorus",
+          "lineCount": 8,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.375,
+          "globallyRepeatedLineRatio": 0.75,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 95960,
+          "endMs": 116900,
+          "durationMs": 20940,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.333,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "The Christmas Song",
+      "artist": "Toni Braxton",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1266011,
+      "albumName": "Snowflakes",
+      "duration": 203,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 17180,
+          "endMs": 140250,
+          "durationMs": 123070,
+          "draftLabel": "Verse",
+          "lineCount": 18,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "If I Had a Pony for Christmas",
+      "artist": "Kidsongs",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 5202432,
+      "albumName": "Kids Songs: The 100 Best by Kidsongs",
+      "duration": 144,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 8260,
+          "endMs": 133590,
+          "durationMs": 125330,
+          "draftLabel": "Chorus",
+          "lineCount": 33,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.758,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Someday At Christmas",
+      "artist": "Stevie Wonder",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1548107,
+      "albumName": "Someday At Christmas",
+      "duration": 171,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 4910,
+          "endMs": 158360,
+          "durationMs": 153450,
+          "draftLabel": "Verse",
+          "lineCount": 33,
+          "titleLineHits": 9,
+          "titleLineRatio": 0.273,
+          "globallyRepeatedLineRatio": 0.364,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "I'll Be Home For Christmas (feat. The Clayton-Hamilton Jazz Orchestra)",
+      "artist": "Diana Krall",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 17115990,
+      "albumName": "Christmas Songs",
+      "duration": 185,
+      "stanzaCount": 6,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 1500,
+          "endMs": 45460,
+          "durationMs": 43960,
+          "draftLabel": "Verse",
+          "lineCount": 9,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.222,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 56330,
+          "endMs": 79750,
+          "durationMs": 23420,
+          "draftLabel": "Chorus",
+          "lineCount": 3,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 90570,
+          "endMs": 91770,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 127950,
+          "endMs": 140190,
+          "durationMs": 12240,
+          "draftLabel": "Chorus",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 151380,
+          "endMs": 152580,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 5,
+          "startMs": 169930,
+          "endMs": 171130,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        }
+      ]
+    },
+    {
+      "title": "Silent Night, Holy Night (with The Ken Lane Singers)",
+      "artist": "Frank Sinatra",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1964025,
+      "albumName": "Let It Snow! Let It Snow! Let It Snow!",
+      "duration": 196,
+      "stanzaCount": 9,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 8860,
+          "endMs": 10060,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 22980,
+          "endMs": 24180,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 36150,
+          "endMs": 37350,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 49720,
+          "endMs": 50920,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 62320,
+          "endMs": 63520,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 5,
+          "startMs": 75380,
+          "endMs": 76580,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 6,
+          "startMs": 109870,
+          "endMs": 145450,
+          "durationMs": 35580,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 7,
+          "startMs": 156850,
+          "endMs": 158050,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 8,
+          "startMs": 169000,
+          "endMs": 170200,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        }
+      ]
+    },
+    {
+      "title": "Christmas Time Is Here",
+      "artist": "Diana Krall",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1447792,
+      "albumName": "Christmas Songs",
+      "duration": 213,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 16340,
+          "endMs": 59790,
+          "durationMs": 43450,
+          "draftLabel": "Verse",
+          "lineCount": 10,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.1,
+          "globallyRepeatedLineRatio": 0.1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 74790,
+          "endMs": 118940,
+          "durationMs": 44150,
+          "draftLabel": "Chorus",
+          "lineCount": 8,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.125,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 133210,
+          "endMs": 193020,
+          "durationMs": 59810,
+          "draftLabel": "Chorus",
+          "lineCount": 10,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.1,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        }
+      ]
+    },
+    {
+      "title": "Here Comes Santa Claus (Down Santa Claus Lane)",
+      "artist": "Doris Day",
+      "status": "ok",
+      "lyricsSource": "plain",
+      "lrclibId": 1764200,
+      "albumName": "Personal Christmas Collection",
+      "duration": 156,
+      "stanzaCount": 9,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Verse",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Verse",
+          "lineCount": 8,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.375,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.6,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 5,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.6,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 6,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 3,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 7,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.6,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 8,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 3,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Under The Mistletoe",
+      "artist": "Kelly Clarkson & Brett Eldredge",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1871369,
+      "albumName": "NOW That's What I Call Country Christmas",
+      "duration": 226,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 5570,
+          "endMs": 70890,
+          "durationMs": 65320,
+          "draftLabel": "Chorus",
+          "lineCount": 25,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.12,
+          "globallyRepeatedLineRatio": 0.56,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 74970,
+          "endMs": 137330,
+          "durationMs": 62360,
+          "draftLabel": "Chorus",
+          "lineCount": 26,
+          "titleLineHits": 3,
+          "titleLineRatio": 0.115,
+          "globallyRepeatedLineRatio": 0.615,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 141140,
+          "endMs": 213990,
+          "durationMs": 72850,
+          "draftLabel": "Chorus",
+          "lineCount": 25,
+          "titleLineHits": 4,
+          "titleLineRatio": 0.16,
+          "globallyRepeatedLineRatio": 0.52,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Cozy Little Christmas",
+      "artist": "Katy Perry",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 948323,
+      "albumName": "Cozy Little Christmas - Single",
+      "duration": 183,
+      "stanzaCount": 8,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 4620,
+          "endMs": 34840,
+          "durationMs": 30220,
+          "draftLabel": "Verse",
+          "lineCount": 9,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.111,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 40540,
+          "endMs": 41740,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 47340,
+          "endMs": 48540,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 54340,
+          "endMs": 61180,
+          "durationMs": 6840,
+          "draftLabel": "Chorus",
+          "lineCount": 2,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.5,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 67040,
+          "endMs": 97680,
+          "durationMs": 30640,
+          "draftLabel": "Verse",
+          "lineCount": 14,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.071,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 5,
+          "startMs": 103300,
+          "endMs": 111100,
+          "durationMs": 7800,
+          "draftLabel": "Chorus",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 6,
+          "startMs": 117260,
+          "endMs": 149770,
+          "durationMs": 32510,
+          "draftLabel": "Chorus",
+          "lineCount": 8,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.125,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 7,
+          "startMs": 155460,
+          "endMs": 178550,
+          "durationMs": 23090,
+          "draftLabel": "Verse",
+          "lineCount": 6,
+          "titleLineHits": 2,
+          "titleLineRatio": 0.333,
+          "globallyRepeatedLineRatio": 0.333,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "What Christmas Means to Me (feat. Stevie Wonder)",
+      "artist": "John Legend",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 6141150,
+      "albumName": "A Legendary Christmas",
+      "duration": 161,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 8070,
+          "endMs": 121570,
+          "durationMs": 113500,
+          "draftLabel": "Verse",
+          "lineCount": 40,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.125,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "You Make It Feel Like Christmas (feat. Blake Shelton)",
+      "artist": "Gwen Stefani",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 4818015,
+      "albumName": "You Make It Feel Like Christmas",
+      "duration": 158,
+      "stanzaCount": 4,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 2170,
+          "endMs": 19690,
+          "durationMs": 17520,
+          "draftLabel": "Chorus",
+          "lineCount": 6,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 26200,
+          "endMs": 40350,
+          "durationMs": 14150,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 45450,
+          "endMs": 112600,
+          "durationMs": 67150,
+          "draftLabel": "Chorus",
+          "lineCount": 22,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.773,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 119060,
+          "endMs": 143510,
+          "durationMs": 24450,
+          "draftLabel": "Verse",
+          "lineCount": 8,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.375,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Silent Night (feat. Kristyn Getty) [Live]",
+      "artist": "Chris Tomlin",
+      "status": "ok",
+      "lyricsSource": "plain",
+      "lrclibId": 27654541,
+      "albumName": "Adore - Christmas Songs Of Worship",
+      "duration": 242,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 18,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas (Baby, Please Come Home) [with Darlene Love]",
+      "artist": "Cher",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 4220024,
+      "albumName": "Christmas",
+      "duration": 163,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 15440,
+          "endMs": 72820,
+          "durationMs": 57380,
+          "draftLabel": "Verse",
+          "lineCount": 16,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.438,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 90710,
+          "endMs": 136380,
+          "durationMs": 45670,
+          "draftLabel": "Chorus",
+          "lineCount": 17,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.765,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 143380,
+          "endMs": 149290,
+          "durationMs": 5910,
+          "draftLabel": "Verse",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "White Christmas",
+      "artist": "Diana Krall",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 11692204,
+      "albumName": "Christmas Songs [2023 HDtracks]",
+      "duration": 270,
+      "stanzaCount": 8,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 1570,
+          "endMs": 2770,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 1,
+          "titleLineRatio": 1,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 48090,
+          "endMs": 74230,
+          "durationMs": 26140,
+          "draftLabel": "Verse",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 86220,
+          "endMs": 87420,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 1,
+          "titleLineRatio": 1,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 99300,
+          "endMs": 100500,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 112290,
+          "endMs": 113490,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 5,
+          "startMs": 126760,
+          "endMs": 139660,
+          "durationMs": 12900,
+          "draftLabel": "Chorus",
+          "lineCount": 2,
+          "titleLineHits": 1,
+          "titleLineRatio": 0.5,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 6,
+          "startMs": 202840,
+          "endMs": 212910,
+          "durationMs": 10070,
+          "draftLabel": "Chorus",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 7,
+          "startMs": 228270,
+          "endMs": 229470,
+          "durationMs": 1200,
+          "draftLabel": "Chorus",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Santa Claus Is Comin' to Town (Live at C.W. Post College, Greenvale, NY - December 1975)",
+      "artist": "Bruce Springsteen",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 4186486,
+      "albumName": "My Hometown",
+      "duration": 268,
+      "stanzaCount": 5,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 5680,
+          "endMs": 66330,
+          "durationMs": 60650,
+          "draftLabel": "Verse",
+          "lineCount": 17,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.235,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 73460,
+          "endMs": 89780,
+          "durationMs": 16320,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.6,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 96280,
+          "endMs": 134760,
+          "durationMs": 38480,
+          "draftLabel": "Chorus",
+          "lineCount": 11,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.818,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 155700,
+          "endMs": 187370,
+          "durationMs": 31670,
+          "draftLabel": "Chorus",
+          "lineCount": 10,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.7,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 205770,
+          "endMs": 243920,
+          "durationMs": 38150,
+          "draftLabel": "Chorus",
+          "lineCount": 12,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.833,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas / Sarajevo 12/24 (Instrumental)",
+      "artist": "Trans-Siberian Orchestra",
+      "status": "ok",
+      "lyricsSource": "plain",
+      "lrclibId": 15718027,
+      "albumName": "Christmas Eve and Other Stories",
+      "duration": 205.374694,
+      "stanzaCount": 0,
+      "stanzas": []
+    },
+    {
+      "title": "Snowman",
+      "artist": "Sia",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 701267,
+      "albumName": "Everyday Is Christmas (Deluxe)",
+      "duration": 166,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 6190,
+          "endMs": 151440,
+          "durationMs": 145250,
+          "draftLabel": "Chorus",
+          "lineCount": 34,
+          "titleLineHits": 8,
+          "titleLineRatio": 0.235,
+          "globallyRepeatedLineRatio": 0.647,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Frosty the Snowman (with The Cass County Boys) [78rpm Version]",
+      "artist": "Gene Autry",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 6760708,
+      "albumName": "Christmas Pop",
+      "duration": 173,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 5840,
+          "endMs": 48200,
+          "durationMs": 42360,
+          "draftLabel": "Verse",
+          "lineCount": 13,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.385,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 94530,
+          "endMs": 95730,
+          "durationMs": 1200,
+          "draftLabel": "Verse",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 99850,
+          "endMs": 171140,
+          "durationMs": 71290,
+          "draftLabel": "Verse",
+          "lineCount": 24,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.292,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "White Christmas (1959 Version)",
+      "artist": "Perry Como",
+      "status": "ok",
+      "lyricsSource": "plain",
+      "lrclibId": 9434159,
+      "albumName": "Greatest Christmas Songs",
+      "duration": 191,
+      "stanzaCount": 7,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.8,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 3,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Chorus",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": true
+        },
+        {
+          "index": 5,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Verse",
+          "lineCount": 1,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 6,
+          "startMs": null,
+          "endMs": null,
+          "draftLabel": "Verse",
+          "lineCount": 2,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Santa Claus Is Coming To Town (feat. The Clayton-Hamilton Jazz Orchestra)",
+      "artist": "Diana Krall",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 17164673,
+      "albumName": "Christmas Songs",
+      "duration": 172,
+      "stanzaCount": 5,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 12060,
+          "endMs": 38390,
+          "durationMs": 26330,
+          "draftLabel": "Verse",
+          "lineCount": 8,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 47020,
+          "endMs": 55550,
+          "durationMs": 8530,
+          "draftLabel": "Chorus",
+          "lineCount": 5,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.8,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 60230,
+          "endMs": 66850,
+          "durationMs": 6620,
+          "draftLabel": "Verse",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.25,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 73560,
+          "endMs": 94940,
+          "durationMs": 21380,
+          "draftLabel": "Chorus",
+          "lineCount": 9,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 1,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 124980,
+          "endMs": 152810,
+          "durationMs": 27830,
+          "draftLabel": "Chorus",
+          "lineCount": 11,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.909,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "It's Christmas (Medley) [Live]",
+      "artist": "Chris Tomlin",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 4879522,
+      "albumName": "Adore: Christmas Songs Of Worship (Live)",
+      "duration": 239,
+      "stanzaCount": 5,
+      "stanzas": [
+        {
+          "index": 0,
+          "startMs": 7110,
+          "endMs": 30200,
+          "durationMs": 23090,
+          "draftLabel": "Verse",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 1,
+          "startMs": 38360,
+          "endMs": 61650,
+          "durationMs": 23290,
+          "draftLabel": "Verse",
+          "lineCount": 4,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 2,
+          "startMs": 69780,
+          "endMs": 122950,
+          "durationMs": 53170,
+          "draftLabel": "Chorus",
+          "lineCount": 12,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 3,
+          "startMs": 130690,
+          "endMs": 169380,
+          "durationMs": 38690,
+          "draftLabel": "Chorus",
+          "lineCount": 11,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.727,
+          "patternSeenBefore": false
+        },
+        {
+          "index": 4,
+          "startMs": 189710,
+          "endMs": 222300,
+          "durationMs": 32590,
+          "draftLabel": "Chorus",
+          "lineCount": 10,
+          "titleLineHits": 0,
+          "titleLineRatio": 0,
+          "globallyRepeatedLineRatio": 0.9,
+          "patternSeenBefore": false
+        }
+      ]
+    }
+  ]
+}

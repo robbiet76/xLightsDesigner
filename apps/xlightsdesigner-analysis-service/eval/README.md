@@ -12,7 +12,7 @@ Evaluation and probe tooling for the analysis service.
 
 ## Canonical Data Ownership
 - Runtime packaged corpus source of truth:
-  - `training-packages/training-package-v1/modules/audio_track_analysis/datasets/structure_corpus_top50_holiday_keywords.json`
+  - `training-packages/training-package-v1/modules/audio_track_analysis/datasets/structure_features_holiday_keywords.json`
 - Files under `eval/corpus/` are reference material, not the runtime canonical dataset.
 
 ## Active Runners

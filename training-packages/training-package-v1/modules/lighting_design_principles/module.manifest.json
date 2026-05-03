@@ -8,6 +8,7 @@
     ],
     "contracts": [
       "contracts/designer_dialog_input_v1.json",
+      "contracts/designer_cloud_response_v1.json",
       "contracts/creative_brief_v1.json",
       "contracts/proposal_bundle_v1.json",
       "contracts/designer_dialog_result_v1.json",

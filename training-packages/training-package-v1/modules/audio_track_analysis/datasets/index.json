@@ -1,10 +1,10 @@
 {
   "sources": [
     {
-      "id": "packaged_christmas_top50_holiday_keywords",
-      "type": "stanza-corpus",
-      "path": "datasets/structure_corpus_top50_holiday_keywords.json",
-      "description": "Packaged weak-supervision stanza corpus used for runtime few-shot retrieval."
+      "id": "packaged_holiday_structure_features",
+      "type": "stanza-feature-corpus",
+      "path": "datasets/structure_features_holiday_keywords.json",
+      "description": "Packaged weak-supervision stanza feature corpus for runtime retrieval. Raw lyric lines/text are intentionally excluded from the portable package."
     },
     {
       "id": "audio_analyst_runtime_contracts",
