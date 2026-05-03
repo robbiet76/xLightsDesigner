@@ -112,11 +112,11 @@ async function persistTargetBehaviorLearning({
     return { ok: false, skipped: true, reason: "missing_target_behavior_store", recordCount: 0 };
   }
 
-  const targetRecords = mergeTargetBehaviorTargetRecords(buildNormalizedTargetMetadataRecords({
+  const targetRecords = mergeTargetBehaviorTargetRecords(loadModelIndexTargetRecords({ state, deps }), buildNormalizedTargetMetadataRecords({
     sceneGraph: state.sceneGraph || {},
     metadataAssignments,
     metadataPreferencesByTargetId: state.metadata?.preferencesByTargetId || {}
-  }), loadModelIndexTargetRecords({ state, deps }));
+  }));
   const observedAt = new Date().toISOString();
   const records = buildTargetBehaviorLearningRecordsForApply({
     commands: rawPlan,

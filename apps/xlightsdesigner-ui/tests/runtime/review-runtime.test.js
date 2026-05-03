@@ -696,8 +696,29 @@ test("executeApplyCore persists target behavior learning after successful render
       buildEffectiveMetadataAssignments: () => [],
       readTargetBehaviorLearningDocument: async () => ({
         ok: true,
-        exists: false,
-        document: { artifactType: "project_target_behavior_learning_v1", artifactVersion: "1.0", records: [] }
+        exists: true,
+        document: {
+          artifactType: "project_target_behavior_learning_v1",
+          artifactVersion: "1.0",
+          records: [
+            {
+              recordId: "tbl1:legacy-mouth-on",
+              targetId: "CustomFaceOld/@Mouth",
+              targetKind: "submodel",
+              targetFingerprint: "tmf1:test-mouth",
+              fingerprintVersion: "target-metadata-fingerprint-v1",
+              effectName: "On",
+              effectFamily: "On",
+              probeScope: "submodel",
+              stats: {
+                sampleCount: 2,
+                positiveCount: 1,
+                negativeCount: 1,
+                lastObservedAt: "2026-05-01T12:00:00.000Z"
+              }
+            }
+          ]
+        }
       }),
       readDisplayRefreshArtifact: () => ({
         ok: true,
@@ -772,15 +793,18 @@ test("executeApplyCore persists target behavior learning after successful render
   assert.equal(writtenDocument?.records?.length, 1);
   assert.equal(writtenDocument.records[0].targetId, "CustomFace/@Mouth");
   assert.equal(writtenDocument.records[0].targetKind, "submodel");
-  assert.match(writtenDocument.records[0].targetFingerprint, /^tmf1:[0-9a-f]{8}$/);
+  assert.equal(writtenDocument.records[0].targetFingerprint, "tmf1:test-mouth");
   assert.equal(writtenDocument.records[0].effectName, "On");
+  assert.equal(writtenDocument.records[0].stats.sampleCount, 3);
+  assert.equal(writtenDocument.records[0].stats.positiveCount, 1);
+  assert.equal(writtenDocument.records[0].stats.negativeCount, 2);
   assert.equal(writtenDocument.records[0].evidenceRefs.renderObservationRef, "render-target-behavior");
   assert.deepEqual(state.sequenceAgentRuntime.renderValidationEvidence.targetIds, ["CustomFace/@Mouth"]);
   assert.equal(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].targetId, "CustomFace/@Mouth");
   assert.equal(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].nodeCoverage.nodeCount, 2);
   assert.deepEqual(state.sequenceAgentRuntime.renderValidationEvidence.submodelEvidence[0].structureHints, ["range_defined_region", "node_scoped_region", "partial_region", "sibling_region", "overlapping_region"]);
   assert.equal(writtenDocument.records[0].submodelContext.nodeCoverage.nodeCount, 2);
-  assert.match(writtenDocument.records[0].parentContext.targetFingerprint, /^tmf1:[0-9a-f]{8}$/);
+  assert.equal(writtenDocument.records[0].parentContext.targetFingerprint, "tmf1:test-face");
   assert.equal(writtenDocument.records[0].parentContext.customStructure.profile, "custom_linear_like");
   assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.recordCount, 1);
   assert.equal(state.sequenceAgentRuntime.targetBehaviorLearning.submodelRecordCount, 1);
