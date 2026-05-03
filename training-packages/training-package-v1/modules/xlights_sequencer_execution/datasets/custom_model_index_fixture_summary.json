@@ -1,0 +1,92 @@
+{
+  "datasetId": "custom_model_index_fixture_summary",
+  "version": "1.0",
+  "source": {
+    "fixture": "render-training-vendor-fixture/xlights_rgbeffects.xml",
+    "derivedFrom": "display/model-index.json",
+    "privacy": "anonymized_compact_summary"
+  },
+  "purpose": "Portable training summary for custom-model and submodel reasoning from the shared display/model-index artifact.",
+  "examples": [
+    {
+      "id": "custom_model_with_first_class_submodel",
+      "displayModelIndexShape": {
+        "artifactType": "target_metadata_index_v1",
+        "artifactVersion": "1.0",
+        "recordCount": 2,
+        "records": [
+          {
+            "targetId": "custom_model_a",
+            "targetKind": "model",
+            "identity": {
+              "displayName": "Custom Model A",
+              "rawType": "Custom",
+              "canonicalType": "custom",
+              "fingerprint": "tmf1:custom-model-a",
+              "fingerprintVersion": "target-metadata-fingerprint-v1"
+            },
+            "structure": {
+              "customStructure": {
+                "profile": "custom_sparse_shape",
+                "traits": [
+                  "custom_grid",
+                  "api_node_layout",
+                  "sparse_custom_grid"
+                ],
+                "confidence": 0.7,
+                "nodeCount": 143,
+                "submodels": {
+                  "count": 11
+                },
+                "construction": {
+                  "source": "layout.getModelNodes",
+                  "dimensions": {
+                    "width": 50,
+                    "height": 69,
+                    "layers": 1
+                  }
+                }
+              }
+            }
+          },
+          {
+            "targetId": "custom_model_a/submodel_region_1",
+            "targetKind": "submodel",
+            "identity": {
+              "displayName": "Custom Model A / Region 1",
+              "canonicalType": "submodel",
+              "fingerprint": "tmf1:custom-model-a-region-1",
+              "fingerprintVersion": "target-metadata-fingerprint-v1",
+              "parentId": "custom_model_a",
+              "parentName": "Custom Model A"
+            },
+            "structure": {
+              "submodelMetadata": {
+                "parentId": "custom_model_a",
+                "parentName": "Custom Model A",
+                "siblingCount": 11,
+                "nodeCoverage": {
+                  "nodeCount": 12,
+                  "parentNodeCount": 143,
+                  "ratio": 0.12
+                },
+                "structureHints": [
+                  "custom_submodel",
+                  "partial_region",
+                  "sibling_region"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "trainingAssertions": [
+        "Use display/model-index records as one shared target collection.",
+        "Treat the submodel record as a first-class target with parent context.",
+        "Use node coverage, sibling count, and structural hints when deciding whether to preserve submodel-level targeting.",
+        "Do not infer user-specific prop semantics from displayName or targetId.",
+        "Use project display metadata and target-behavior evidence when semantic region meaning or effect suitability is needed."
+      ]
+    }
+  ]
+}

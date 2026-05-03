@@ -49,6 +49,11 @@
       "id": "production-2d-functionality-index",
       "type": "corpus-index",
       "path": "training-packages/training-package-v1/modules/xlights_sequencer_execution/datasets/production_2d_functionality_index.json"
+    },
+    {
+      "id": "custom-model-index-fixture-summary",
+      "type": "fixture-summary",
+      "path": "training-packages/training-package-v1/modules/xlights_sequencer_execution/datasets/custom_model_index_fixture_summary.json"
     }
   ]
 }
