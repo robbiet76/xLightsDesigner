@@ -127,6 +127,40 @@ import Testing
     #expect(detail.warnings.contains("Practical validation summary indicates this pass needs review."))
 }
 
+@Test func historyProjectSnapshotUsesCanonicalActiveSequenceRecord() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-history-canonical-\(UUID().uuidString)", isDirectory: true)
+    let projectDir = root.appendingPathComponent("Project", isDirectory: true)
+    let showFolder = root.appendingPathComponent("show", isDirectory: true)
+    let sequencePath = showFolder.appendingPathComponent("Canonical/Canonical.xsq")
+    try FileManager.default.createDirectory(at: projectDir, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: sequencePath.deletingLastPathComponent(), withIntermediateDirectories: true)
+    let projectFile = projectDir.appendingPathComponent("Christmas 2026.xdproj")
+    try Data("{}".utf8).write(to: projectFile)
+    try Data("<sequence/>".utf8).write(to: sequencePath)
+    var project = ActiveProjectModel(
+        id: "project-1",
+        projectName: "Christmas 2026",
+        projectFilePath: projectFile.path,
+        showFolder: showFolder.path,
+        mediaPath: "",
+        appRootPath: AppEnvironment.canonicalAppRoot,
+        createdAt: "2026-04-24T00:00:00Z",
+        updatedAt: "2026-04-24T00:00:00Z",
+        snapshot: [
+            "activeSequence": AnyCodable("StaleSnapshot"),
+            "sequencePathInput": AnyCodable("/tmp/stale/StaleSnapshot.xsq")
+        ]
+    )
+    try LocalProjectSequenceStore().upsertActiveSequence(project: &project, sequencePath: sequencePath.path, audioPath: nil)
+    project.snapshot["activeSequence"] = AnyCodable("StaleSnapshot")
+    project.snapshot["sequencePathInput"] = AnyCodable("/tmp/stale/StaleSnapshot.xsq")
+
+    let result = try LocalHistoryService().loadHistory(for: project)
+    let row = try #require(result.rows.first { $0.eventType == "Project Snapshot" })
+
+    #expect(row.sequenceSummary == "Canonical")
+}
+
 @Test func historyFlagsRepeatedReviewPassInstability() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-history-instability-\(UUID().uuidString)", isDirectory: true)
     let projectDir = root.appendingPathComponent("Project", isDirectory: true)

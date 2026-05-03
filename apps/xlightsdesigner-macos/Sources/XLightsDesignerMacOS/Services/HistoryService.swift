@@ -93,13 +93,12 @@ struct LocalHistoryService: HistoryService {
     private func buildProjectFileEvent(project: ActiveProjectModel, projectFileURL: URL) throws -> HistoryEventRecord {
         let values = try projectFileURL.resourceValues(forKeys: [.contentModificationDateKey])
         let date = values.contentModificationDate ?? .distantPast
-        let activeSequenceName = string(project.snapshot["activeSequence"]?.value, fallback: "No active sequence")
         return HistoryEventRecord(
             id: "project-file::\(projectFileURL.path)",
             date: date,
             eventType: "Project Snapshot",
             summary: "Project file updated",
-            sequenceSummary: activeSequenceName,
+            sequenceSummary: activeSequenceSummary(project: project),
             resultState: .recorded,
             resultSummary: "Saved project snapshot at \(project.fileName).",
             changeSummary: "Project settings, sequence references, and durable project state were updated.",
@@ -124,7 +123,7 @@ struct LocalHistoryService: HistoryService {
             let folder = fileURL.deletingLastPathComponent().lastPathComponent
             let eventType = eventTypeLabel(for: folder)
             let summary = buildSummary(for: folder, object: object)
-            let sequenceSummary = string(project.snapshot["activeSequence"]?.value, fallback: "No active sequence")
+            let sequenceSummary = activeSequenceSummary(project: project)
             let resultState: HistoryEventResultState = folder == "analysis" ? .ready : .recorded
             let resultSummary = buildResultSummary(for: folder, object: object)
             let changeSummary = buildChangeSummary(for: folder, object: object)
@@ -175,7 +174,7 @@ struct LocalHistoryService: HistoryService {
                 date: date,
                 eventType: "Review Pass",
                 summary: string(object["summary"], fallback: "Review pass recorded"),
-                sequenceSummary: string(object["sequencePath"], fallback: string(project.snapshot["activeSequence"]?.value, fallback: "No active sequence")),
+                sequenceSummary: string(object["sequencePath"], fallback: activeSequenceSummary(project: project)),
                 resultState: needsValidationReview ? .warning : (status == "applied" ? .ready : .recorded),
                 resultSummary: "Review pass \(status). \(revisionSummary).",
                 changeSummary: commandCount > 0 ? "Applied proof-loop pass with \(commandCount) commands." : "Recorded proof-loop pass.",
@@ -191,6 +190,11 @@ struct LocalHistoryService: HistoryService {
     private func readJSONObject(at url: URL) throws -> [String: Any] {
         let data = try Data(contentsOf: url)
         return (try JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
+    }
+
+    private func activeSequenceSummary(project: ActiveProjectModel) -> String {
+        let target = ProjectTargetContext.resolve(project: project)
+        return string(target.sequenceName, fallback: "No active sequence")
     }
 
     private func eventTypeLabel(for folder: String) -> String {
