@@ -369,6 +369,47 @@ function buildSamplingAudit({
   };
 }
 
+function compactParameterAuditRow(row = {}) {
+  const paletteSummaries = Array.isArray(row.paletteSummaries) ? row.paletteSummaries : [];
+  return {
+    effectName: row.effectName,
+    parameterName: row.parameterName,
+    parameterType: row.parameterType,
+    importance: row.importance,
+    practicalPriority: row.practicalPriority,
+    stopRule: row.stopRule,
+    expectedAnchors: row.expectedAnchors,
+    observedFocusedAnchors: row.observedFocusedAnchors,
+    missingFocusedAnchors: row.missingFocusedAnchors,
+    paletteSummaryCount: paletteSummaries.length,
+    focusedPaletteSummaryCount: paletteSummaries.filter((summary) => summary.evidenceClass === "focused_anchor").length,
+    maxBehaviorRuleCount: Math.max(0, ...paletteSummaries.map((summary) => Number(summary.behaviorRuleCount || 0))),
+    maxBlankRecordShare: Math.max(0, ...paletteSummaries.map((summary) => Number(summary.blankRecordShare || 0))),
+    status: row.status,
+    recommendation: row.recommendation,
+    score: row.score
+  };
+}
+
+function compactSamplingAuditForCatalog(audit = {}) {
+  const effects = (Array.isArray(audit.effects) ? audit.effects : []).map((effect) => {
+    const parameters = (Array.isArray(effect.parameters) ? effect.parameters : []).map(compactParameterAuditRow);
+    return {
+      effectName: effect.effectName,
+      complexityClass: effect.complexityClass,
+      parameterCount: effect.parameterCount,
+      statusCounts: effect.statusCounts,
+      topSamplingNeeds: parameters.filter((row) => row.status !== "causal_ready").slice(0, 8),
+      parameters
+    };
+  });
+  return {
+    ...audit,
+    compactionPolicy: "catalog_report_omits_rebuildable_per_palette_diagnostics",
+    effects
+  };
+}
+
 function argValue(name, fallback = "") {
   const index = process.argv.indexOf(name);
   return index >= 0 ? normText(process.argv[index + 1]) : fallback;
@@ -384,7 +425,8 @@ function main() {
     trainingSet: readJson(trainingSetPath, {}),
     records: loadScreeningRecords(recordsDir)
   });
-  writeFileSync(outPath, `${JSON.stringify(audit, null, 2)}\n`, "utf8");
+  const catalogAudit = compactSamplingAuditForCatalog(audit);
+  writeFileSync(outPath, `${JSON.stringify(catalogAudit, null, 2)}\n`, "utf8");
   process.stdout.write(`${JSON.stringify({
     ok: true,
     output: outPath,
