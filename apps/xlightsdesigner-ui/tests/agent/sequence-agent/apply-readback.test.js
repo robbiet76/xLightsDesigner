@@ -1082,6 +1082,53 @@ test("apply readback flags submodel-targeted effect that broadened to parent", a
   );
 });
 
+test("apply readback uses submodel graph parent identity before slash parsing", async () => {
+  const plan = [
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "mouth-target-1",
+        layerIndex: 0,
+        effectName: "On",
+        startMs: 0,
+        endMs: 500
+      }
+    }
+  ];
+
+  const queriedModels = [];
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    submodelsById: {
+      "mouth-target-1": {
+        id: "mouth-target-1",
+        parentId: "CustomFace",
+        nodeChannels: []
+      }
+    },
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => {
+      queriedModels.push(modelName);
+      return {
+        data: {
+          effects: modelName === "mouth-target-1"
+            ? [{ modelName, layerIndex, startMs, endMs, effectName: "On" }]
+            : []
+        }
+      };
+    }
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.deepEqual(queriedModels, ["mouth-target-1", "CustomFace"]);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [
+      ["effect", "mouth-target-1@0", true],
+      ["submodel-precision", "mouth-target-1->CustomFace@0", true]
+    ]
+  );
+});
+
 test("apply readback does not flag explicit parent-plus-submodel writes as broadening", async () => {
   const plan = [
     {

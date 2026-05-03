@@ -6,6 +6,7 @@ import path from "node:path";
 
 import {
   buildAppApplyVerification,
+  buildSubmodelsByIdFromModelIndexTargetRecords,
   buildReviewIntentHandoff,
   createSequenceBackup,
   hydrateAnalysisSectionsFromSelectedTimingTrack,
@@ -16,6 +17,40 @@ import {
 } from "../../../../scripts/sequencing/app/apply-app-review.mjs";
 import { buildSequenceAgentPlan } from "../../agent/sequence-agent/sequence-agent.js";
 import { buildEffectDefinitionCatalog } from "../../agent/sequence-agent/effect-definition-catalog.js";
+
+test("buildSubmodelsByIdFromModelIndexTargetRecords preserves persisted submodel identity", () => {
+  const submodelsById = buildSubmodelsByIdFromModelIndexTargetRecords([
+    {
+      targetId: "CustomFace/@Mouth",
+      targetKind: "submodel",
+      identity: {
+        displayName: "CustomFace / @Mouth",
+        canonicalType: "submodel",
+        fingerprint: "tmf1:mouth001",
+        fingerprintVersion: "target-metadata-fingerprint-v1",
+        parentId: "CustomFace",
+        parentName: "CustomFace"
+      },
+      structure: {
+        nodeCount: 12,
+        submodelMetadata: {
+          name: "@Mouth",
+          parentId: "CustomFace",
+          type: "ranges",
+          siblingCount: 4,
+          siblingIds: ["CustomFace/@Eye"],
+          nodeCoverage: { nodeCount: 12, parentNodeCount: 200, ratio: 0.06 },
+          structureHints: ["feature_mouth"]
+        }
+      }
+    }
+  ]);
+
+  assert.equal(submodelsById["CustomFace/@Mouth"].parentId, "CustomFace");
+  assert.equal(submodelsById["CustomFace/@Mouth"].nodeCoverage.nodeCount, 12);
+  assert.deepEqual(submodelsById["CustomFace/@Mouth"].structureHints, ["feature_mouth"]);
+  assert.equal(submodelsById["CustomFace/@Mouth"].identity.fingerprint, "tmf1:mouth001");
+});
 
 test("createSequenceBackup copies xsq into project artifact backups", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-app-review-"));
@@ -217,6 +252,9 @@ test("buildAppApplyVerification wires display-order readback dependency", async 
     ],
     planHandoff: { metadata: {} },
     applyResult: { currentRevision: "rev-1", nextRevision: "rev-2" },
+    submodelsById: {
+      "CustomFace/@Mouth": { id: "CustomFace/@Mouth", parentId: "CustomFace" }
+    },
     readDisplayElementOrder: async () => ({
       data: {
         elements: ["Lyrics", "AllModels", "MegaTree"]
@@ -224,6 +262,7 @@ test("buildAppApplyVerification wires display-order readback dependency", async 
     }),
     verifyReadback: async (_commands, deps) => {
       assert.equal(typeof deps.getDisplayElementOrder, "function");
+      assert.equal(deps.submodelsById["CustomFace/@Mouth"].parentId, "CustomFace");
       const order = await deps.getDisplayElementOrder(deps.endpoint);
       assert.deepEqual(order.data.elements, ["Lyrics", "AllModels", "MegaTree"]);
       return {

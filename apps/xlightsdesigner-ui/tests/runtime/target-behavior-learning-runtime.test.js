@@ -90,6 +90,106 @@ test("target behavior learning document upserts compact aggregates", () => {
   assert.equal(second.records[0].stats.lastObservedAt, "2026-05-01T12:05:00Z");
 });
 
+test("target behavior learning key stays stable when submodel metadata becomes richer", () => {
+  const base = buildTargetBehaviorLearningRecord({
+    targetRecord: {
+      targetId: "CustomFace/@Mouth",
+      targetKind: "submodel",
+      identity: {
+        fingerprint: "tmf1:mouth001",
+        fingerprintVersion: "target-metadata-fingerprint-v1",
+        displayName: "CustomFace / @Mouth"
+      },
+      structure: {}
+    },
+    effectName: "On",
+    observedAt: "2026-05-01T12:00:00Z"
+  });
+  const enriched = buildTargetBehaviorLearningRecord({
+    targetRecord: {
+      targetId: "CustomFace/@Mouth",
+      targetKind: "submodel",
+      identity: {
+        fingerprint: "tmf1:mouth001",
+        fingerprintVersion: "target-metadata-fingerprint-v1",
+        displayName: "CustomFace / @Mouth",
+        parentId: "CustomFace"
+      },
+      structure: {
+        submodelMetadata: {
+          parentId: "CustomFace",
+          structureHints: ["feature_mouth"],
+          nodeCoverage: { nodeCount: 12, parentNodeCount: 200, ratio: 0.06 }
+        }
+      }
+    },
+    effectName: "On",
+    observedAt: "2026-05-01T12:05:00Z"
+  });
+
+  assert.equal(enriched.recordId, base.recordId);
+  assert.equal(enriched.parentId, "CustomFace");
+  assert.equal(enriched.submodelContext.nodeCoverage.nodeCount, 12);
+  assert.deepEqual(enriched.structureHints, ["feature_mouth"]);
+});
+
+test("target behavior learning upsert consolidates legacy duplicate records by semantic identity", () => {
+  const incoming = buildTargetBehaviorLearningRecord({
+    targetRecord: {
+      targetId: "CustomFace/@Mouth",
+      targetKind: "submodel",
+      identity: {
+        fingerprint: "tmf1:mouth001",
+        fingerprintVersion: "target-metadata-fingerprint-v1",
+        displayName: "CustomFace / @Mouth",
+        parentId: "CustomFace"
+      },
+      structure: {
+        submodelMetadata: {
+          parentId: "CustomFace",
+          nodeCoverage: { nodeCount: 12, parentNodeCount: 200, ratio: 0.06 }
+        }
+      }
+    },
+    effectName: "On",
+    outcome: { readability: "poor" },
+    observedAt: "2026-05-01T12:10:00Z"
+  });
+  const document = upsertTargetBehaviorLearningRecord({
+    artifactType: "project_target_behavior_learning_v1",
+    artifactVersion: "1.0",
+    records: [
+      {
+        recordId: "tbl1:legacy-empty",
+        targetId: "CustomFace/@Mouth",
+        targetKind: "submodel",
+        targetFingerprint: "tmf1:mouth001",
+        effectName: "On",
+        effectFamily: "On",
+        probeScope: "submodel",
+        stats: { sampleCount: 1, positiveCount: 0, negativeCount: 1 }
+      },
+      {
+        recordId: "tbl1:legacy-rich",
+        targetId: "CustomFace/@Mouth",
+        targetKind: "submodel",
+        targetFingerprint: "tmf1:mouth001",
+        effectName: "On",
+        effectFamily: "On",
+        probeScope: "submodel",
+        stats: { sampleCount: 2, positiveCount: 1, negativeCount: 1 }
+      }
+    ]
+  }, incoming, { now: "2026-05-01T12:10:00Z" });
+
+  assert.equal(document.records.length, 1);
+  assert.equal(document.records[0].recordId, incoming.recordId);
+  assert.equal(document.records[0].parentId, "CustomFace");
+  assert.equal(document.records[0].stats.sampleCount, 4);
+  assert.equal(document.records[0].stats.positiveCount, 1);
+  assert.equal(document.records[0].stats.negativeCount, 3);
+});
+
 test("target behavior learning records can be derived from applied effect commands", () => {
   const records = buildTargetBehaviorLearningRecordsForApply({
     commands: [

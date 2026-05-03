@@ -80,15 +80,28 @@ function normalizeOutcome({ outcome = {}, renderObservation = null } = {}) {
 }
 
 function behaviorKeyPayload(record = {}) {
+  const stableTargetIdentity = str(record.targetFingerprint) || str(record.targetId);
   return {
-    targetFingerprint: str(record.targetFingerprint),
-    targetId: str(record.targetId),
+    targetFingerprint: stableTargetIdentity,
+    targetId: stableTargetIdentity,
     targetKind: str(record.targetKind),
     effectName: str(record.effectName),
     effectFamily: str(record.effectFamily),
-    probeScope: str(record.probeScope),
-    structureHints: unique(record.structureHints).sort()
+    probeScope: str(record.probeScope)
   };
+}
+
+function behaviorSemanticMatch(left = {}, right = {}) {
+  const leftFingerprint = str(left.targetFingerprint);
+  const rightFingerprint = str(right.targetFingerprint);
+  const sameTarget = leftFingerprint && rightFingerprint
+    ? leftFingerprint === rightFingerprint
+    : str(left.targetId) === str(right.targetId);
+  return sameTarget
+    && str(left.targetKind) === str(right.targetKind)
+    && str(left.effectName) === str(right.effectName)
+    && str(left.effectFamily || left.effectName) === str(right.effectFamily || right.effectName)
+    && str(left.probeScope) === str(right.probeScope);
 }
 
 export function buildTargetBehaviorLearningRecord({
@@ -115,7 +128,9 @@ export function buildTargetBehaviorLearningRecord({
         parentName: str(targetIdentity.parentName)
       }
     : targetIdentityFromRecord(obj(targetRecord));
-  const submodel = obj(submodelEvidence);
+  const submodel = Object.keys(obj(submodelEvidence)).length
+    ? obj(submodelEvidence)
+    : obj(targetRecord?.structure?.submodelMetadata);
   const structureHints = unique([
     ...arr(targetRecord?.structure?.submodelMetadata?.structureHints),
     ...arr(submodel?.structureHints)
@@ -164,9 +179,12 @@ export function upsertTargetBehaviorLearningRecord(document = null, record = nul
     };
   }
 
-  const index = records.findIndex((row) => str(row.recordId) === str(incoming.recordId));
-  const prior = index >= 0 ? records[index] : null;
-  const sampleCount = Number(prior?.stats?.sampleCount || 0) + 1;
+  const matchingRecords = records.filter((row) => str(row.recordId) === str(incoming.recordId) || behaviorSemanticMatch(row, incoming));
+  const prior = matchingRecords.at(-1) || null;
+  const priorSampleCount = matchingRecords.reduce((sum, row) => sum + Number(row?.stats?.sampleCount || 0), 0);
+  const priorPositiveCount = matchingRecords.reduce((sum, row) => sum + Number(row?.stats?.positiveCount || 0), 0);
+  const priorNegativeCount = matchingRecords.reduce((sum, row) => sum + Number(row?.stats?.negativeCount || 0), 0);
+  const sampleCount = priorSampleCount + 1;
   const next = {
     ...prior,
     ...incoming,
@@ -175,18 +193,18 @@ export function upsertTargetBehaviorLearningRecord(document = null, record = nul
     stats: {
       sampleCount,
       lastObservedAt: str(incoming.observedAt || now),
-      positiveCount: Number(prior?.stats?.positiveCount || 0) + (str(incoming.outcome?.readability).toLowerCase() === "good" ? 1 : 0),
-      negativeCount: Number(prior?.stats?.negativeCount || 0) + (["poor", "blank", "confusing"].includes(str(incoming.outcome?.readability).toLowerCase()) ? 1 : 0)
+      positiveCount: priorPositiveCount + (str(incoming.outcome?.readability).toLowerCase() === "good" ? 1 : 0),
+      negativeCount: priorNegativeCount + (["poor", "blank", "confusing"].includes(str(incoming.outcome?.readability).toLowerCase()) ? 1 : 0)
     }
   };
-  if (index >= 0) records[index] = next;
-  else records.push(next);
+  const nextRecords = records.filter((row) => !(str(row.recordId) === str(incoming.recordId) || behaviorSemanticMatch(row, incoming)));
+  nextRecords.push(next);
 
   return {
     artifactType: "project_target_behavior_learning_v1",
     artifactVersion: "1.0",
     updatedAt: str(now),
-    records: records.sort((left, right) => str(left.recordId).localeCompare(str(right.recordId)))
+    records: nextRecords.sort((left, right) => str(left.recordId).localeCompare(str(right.recordId)))
   };
 }
 

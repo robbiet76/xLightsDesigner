@@ -157,7 +157,8 @@ export async function buildAppApplyVerification({
   verifyReadback = verifyAppliedPlanReadback,
   readTimingMarks = getTimingMarks,
   readDisplayElementOrder = getDisplayElementOrder,
-  readEffects = listEffects
+  readEffects = listEffects,
+  submodelsById = {}
 } = {}) {
   let verification = {};
   try {
@@ -167,7 +168,8 @@ export async function buildAppApplyVerification({
         planMetadata: planHandoff?.metadata || {},
         getTimingMarks: readTimingMarks,
         getDisplayElementOrder: readDisplayElementOrder,
-        listEffects: readEffects
+        listEffects: readEffects,
+        submodelsById
       })
       : {};
   } catch (error) {
@@ -239,6 +241,50 @@ function loadModelIndexTargetRecords(projectFile = '') {
   } catch {
     return [];
   }
+}
+
+export function buildSubmodelsByIdFromModelIndexTargetRecords(targetRecords = []) {
+  const out = {};
+  for (const record of Array.isArray(targetRecords) ? targetRecords : []) {
+    if (str(record?.targetKind) !== 'submodel') continue;
+    const targetId = str(record?.targetId);
+    if (!targetId) continue;
+    const identity = record?.identity && typeof record.identity === 'object' ? record.identity : {};
+    const structure = record?.structure && typeof record.structure === 'object' ? record.structure : {};
+    const submodelMetadata = structure?.submodelMetadata && typeof structure.submodelMetadata === 'object'
+      ? structure.submodelMetadata
+      : {};
+    const nodeCoverage = submodelMetadata?.nodeCoverage && typeof submodelMetadata.nodeCoverage === 'object'
+      ? submodelMetadata.nodeCoverage
+      : {};
+    out[targetId] = {
+      id: targetId,
+      name: str(submodelMetadata.name || identity.displayName || targetId),
+      parentId: str(identity.parentId || submodelMetadata.parentId),
+      parentName: str(identity.parentName || submodelMetadata.parentId),
+      type: str(submodelMetadata.type || identity.canonicalType || 'submodel'),
+      layoutGroup: str(submodelMetadata.layoutGroup),
+      startChannel: Number.isFinite(Number(submodelMetadata.startChannel)) ? Number(submodelMetadata.startChannel) : null,
+      endChannel: Number.isFinite(Number(submodelMetadata.endChannel)) ? Number(submodelMetadata.endChannel) : null,
+      lines: str(submodelMetadata.lines),
+      siblingCount: Number(submodelMetadata.siblingCount || 0),
+      siblingIds: Array.isArray(submodelMetadata.siblingIds) ? submodelMetadata.siblingIds.map((row) => str(row)).filter(Boolean) : [],
+      overlappingSiblingIds: Array.isArray(submodelMetadata.overlappingSiblingIds) ? submodelMetadata.overlappingSiblingIds.map((row) => str(row)).filter(Boolean) : [],
+      overlapsSibling: Boolean(submodelMetadata.overlapsSibling),
+      structureHints: Array.isArray(submodelMetadata.structureHints) ? submodelMetadata.structureHints.map((row) => str(row)).filter(Boolean) : [],
+      nodeCoverage: {
+        nodeCount: Number(nodeCoverage.nodeCount || structure.nodeCount || 0),
+        parentNodeCount: Number.isFinite(Number(nodeCoverage.parentNodeCount)) ? Number(nodeCoverage.parentNodeCount) : null,
+        ratio: Number.isFinite(Number(nodeCoverage.ratio)) ? Number(nodeCoverage.ratio) : null
+      },
+      identity: {
+        displayName: str(identity.displayName || targetId),
+        fingerprint: str(identity.fingerprint),
+        fingerprintVersion: str(identity.fingerprintVersion)
+      }
+    };
+  }
+  return out;
 }
 
 async function persistAppTargetBehaviorLearning({
@@ -562,6 +608,8 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
   ]);
   const groupMemberships = groupMembershipsRes?.ok === false ? { data: { groups: [] } } : groupMembershipsRes;
   const groupsById = buildGroupsById(groupMemberships);
+  const modelIndexTargetRecords = loadModelIndexTargetRecords(projectFile);
+  const modelIndexSubmodelsById = buildSubmodelsByIdFromModelIndexTargetRecords(modelIndexTargetRecords);
   const displayElements = mergeDisplayElementsWithLayoutModels(
     normalizeDisplayElements(displayElementsRes),
     Array.isArray(layoutModelsRes?.data?.models) ? layoutModelsRes.data.models : []
@@ -600,7 +648,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     displayElements,
     groupIds: Object.keys(groupsById),
     groupsById,
-    submodelsById: {},
+    submodelsById: modelIndexSubmodelsById,
     metadataAssignments,
     timingOwnership: [],
     allowTimingWrites: true
@@ -665,7 +713,8 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
         applyResult: {
           currentRevision: str(revisionRes?.data?.revision || 'unknown'),
           nextRevision: str(fallback.nextRevision)
-        }
+        },
+        submodelsById: modelIndexSubmodelsById
       })
     });
     applyResult.sequenceBackupPath = sequenceBackupPath;
@@ -683,7 +732,8 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       sequencingDesignHandoff: commandsPlan?.metadata?.sequencingDesignHandoff || inputs.reviewIntentHandoff?.sequencingDesignHandoff || null,
       compositionPlan: commandsPlan?.metadata?.effectStrategy?.compositionPlan || null,
       musicDesignContext: commandsPlan?.metadata?.sequencingDesignHandoff?.musicDesignContext || null,
-      metadataAssignments
+      metadataAssignments,
+      submodelsById: modelIndexSubmodelsById
     });
     const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
     const targetBehaviorLearning = await persistAppTargetBehaviorLearning({
@@ -748,7 +798,8 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       applyResult: {
         currentRevision: str(revisionRes?.data?.revision || 'unknown'),
         nextRevision: str(applyRes?.nextRevision || '')
-      }
+      },
+      submodelsById: modelIndexSubmodelsById
     })
   });
   applyResult.sequenceBackupPath = sequenceBackupPath;
@@ -766,7 +817,8 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     sequencingDesignHandoff: commandsPlan?.metadata?.sequencingDesignHandoff || inputs.reviewIntentHandoff?.sequencingDesignHandoff || null,
     compositionPlan: commandsPlan?.metadata?.effectStrategy?.compositionPlan || null,
     musicDesignContext: commandsPlan?.metadata?.sequencingDesignHandoff?.musicDesignContext || null,
-    metadataAssignments
+    metadataAssignments,
+    submodelsById: modelIndexSubmodelsById
   });
   const renderFeedbackCapabilities = await probeOwnedRenderFeedbackCapabilities(endpoint);
   const targetBehaviorLearning = await persistAppTargetBehaviorLearning({
@@ -887,11 +939,12 @@ async function buildAppRenderFeedbackArtifacts({
   sequencingDesignHandoff = null,
   compositionPlan = null,
   musicDesignContext = null,
-  metadataAssignments = []
+  metadataAssignments = [],
+  submodelsById = {}
 } = {}) {
   try {
     currentStage = 'build_render_feedback';
-    const sceneGraph = await buildAppSceneGraph({ endpoint, showDir });
+    const sceneGraph = await buildAppSceneGraph({ endpoint, showDir, submodelsById });
     const targetIds = Array.isArray(intentHandoff?.scope?.targetIds)
       ? intentHandoff.scope.targetIds.map((row) => str(row)).filter(Boolean)
       : [];
@@ -1014,7 +1067,7 @@ async function probeOwnedRoute(endpoint = '', routePath = '', { method = 'GET', 
   }
 }
 
-async function buildAppSceneGraph({ endpoint = '' } = {}) {
+async function buildAppSceneGraph({ endpoint = '', submodelsById = {} } = {}) {
   const modelRes = await getModels(endpoint);
   const sceneModels = Array.isArray(modelRes?.data?.models) ? modelRes.data.models : [];
   const modelsById = {};
@@ -1059,15 +1112,15 @@ async function buildAppSceneGraph({ endpoint = '' } = {}) {
 
   return {
     loaded: true,
-    source: 'layout.getModels',
+    source: Object.keys(submodelsById || {}).length ? 'layout.getModels+display/model-index.json' : 'layout.getModels',
     loadedAt: new Date().toISOString(),
     modelsById,
     groupsById: {},
-    submodelsById: {},
+    submodelsById: submodelsById && typeof submodelsById === 'object' && !Array.isArray(submodelsById) ? submodelsById : {},
     stats: {
       modelCount: Object.keys(modelsById).length,
       groupCount: 0,
-      submodelCount: 0,
+      submodelCount: Object.keys(submodelsById || {}).length,
       layoutMode: '2d'
     }
   };

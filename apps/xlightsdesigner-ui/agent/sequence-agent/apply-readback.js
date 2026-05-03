@@ -827,7 +827,7 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
   for (const effect of expectedFinalEffects) {
     if (effect?.modelName && listEffects) {
       const modelName = effect.modelName;
-      const parentId = parseSubmodelParentId(modelName);
+      const parentId = submodelGraph[modelName]?.parentId || parseSubmodelParentId(modelName);
       const layerIndex = Number(effect.layerIndex);
       const startMs = Number(effect.startMs);
       const endMs = Number(effect.endMs);
