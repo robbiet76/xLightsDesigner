@@ -40,11 +40,11 @@ Developer validation may use an accessible bootstrap show folder to satisfy xLig
 ```bash
 node scripts/xlights/launch-owned-xlights.mjs \
   --app <xLights.app> \
-  --bootstrap-show-dir <sandbox-accessible-show-folder> \
+  --bootstrap-show-dir auto \
   --api-show-dir <target-show-folder>
 ```
 
-`--show-dir` remains the direct pre-API startup path for legacy validation cases. New validation should prefer `--bootstrap-show-dir` plus `--api-show-dir` when testing real show-folder switching or macOS access failures.
+`--bootstrap-show-dir auto` creates or refreshes a minimal show folder under the xLights container. `--show-dir` remains the direct pre-API startup path for legacy validation cases. New validation should prefer `--bootstrap-show-dir auto` plus `--api-show-dir` when testing real show-folder switching or macOS access failures.
 
 ## Show Folder Access
 

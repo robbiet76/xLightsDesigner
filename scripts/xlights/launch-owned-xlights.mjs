@@ -5,6 +5,8 @@ import path from 'node:path';
 import os from 'node:os';
 import http from 'node:http';
 
+import { ensureOwnedBootstrapShowFolder } from './owned-bootstrap-show-folder.mjs';
+
 function resolveAppBinary(appPath) {
   const resolvedApp = path.resolve(appPath);
   const binaryPath = path.join(resolvedApp, 'Contents/MacOS/xLights');
@@ -36,7 +38,10 @@ function parseArgs(argv) {
       if (index >= argv.length) {
         throw new Error('Missing value for --bootstrap-show-dir');
       }
-      bootstrapShowDir = path.resolve(argv[index]);
+      const value = String(argv[index] || '').trim();
+      bootstrapShowDir = value.toLowerCase() === 'auto'
+        ? ensureOwnedBootstrapShowFolder().path
+        : path.resolve(value);
     } else if (arg === '--api-show-dir') {
       index += 1;
       if (index >= argv.length) {

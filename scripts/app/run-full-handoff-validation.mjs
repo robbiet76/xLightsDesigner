@@ -286,7 +286,9 @@ async function ensureXlights(args) {
   }
 
   const showDir = path.resolve(args.showDir);
-  const bootstrapShowDir = str(DEFAULT_BOOTSTRAP_SHOW_DIR) ? path.resolve(DEFAULT_BOOTSTRAP_SHOW_DIR) : '';
+  const bootstrapShowDir = str(DEFAULT_BOOTSTRAP_SHOW_DIR)
+    ? (str(DEFAULT_BOOTSTRAP_SHOW_DIR).toLowerCase() === 'auto' ? 'auto' : path.resolve(DEFAULT_BOOTSTRAP_SHOW_DIR))
+    : '';
   const launchShowDirArgs = bootstrapShowDir
     ? ['--bootstrap-show-dir', bootstrapShowDir, '--api-show-dir', showDir]
     : ['--show-dir', showDir];
