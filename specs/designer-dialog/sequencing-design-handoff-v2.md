@@ -72,14 +72,11 @@ Internal contract:
 
 - `sequencing_design_handoff_v2`
 
-This can either:
-- replace `intent_handoff_v1` for designer-driven sequencing
-or
-- sit alongside it during migration
-
-Recommended approach:
-- keep `intent_handoff_v1` for compatibility
-- add `sequencing_design_handoff_v2` as the richer contract consumed by the sequencer when available
+Current policy:
+- `intent_handoff_v1` remains the broad compatibility envelope for app and sequence-agent entry.
+- `sequencing_design_handoff_v2` is the richer designer-driven sequencing contract.
+- Designer-driven paths should attach `sequencing_design_handoff_v2` when enough creative context exists.
+- The sequencer should prefer `sequencing_design_handoff_v2` over vague goal text when both are present.
 
 ## Required Fields
 
@@ -264,16 +261,12 @@ That will make sequencer behavior:
 - less stylistically generic
 - less dependent on fragile prompt inference
 
-## Migration Plan
-1. define `sequencing_design_handoff_v2` schema
-2. add validator support
-3. teach `designer_dialog` to emit it in parallel with `intent_handoff_v1`
-4. update `sequence_agent` to prefer `sequencing_design_handoff_v2`
-5. update tests and training packages to use the new contract
-6. de-emphasize direct sequencer reliance on vague `goal` + `directorPreferences`
+## Adoption Requirements
 
-## Immediate Next Steps
-1. create the machine-readable contract file
-2. add app/runtime validators
-3. add designer tests that reject vague-only handoff payloads
-4. update sequence-agent input validation to require the richer contract on the designer-driven path
+Designer-driven sequencing paths should produce:
+- a valid `intent_handoff_v1` compatibility envelope
+- a valid `sequencing_design_handoff_v2` internal handoff when the request includes creative or display-specific direction
+
+Runtime validation should reject malformed `sequencing_design_handoff_v2` payloads instead of silently falling back to vague-only intent.
+
+Training and evaluation examples for designer-driven sequencing should use `sequencing_design_handoff_v2` as the target contract. `intent_handoff_v1` remains useful for direct technical requests, compatibility tests, and app-level routing.
