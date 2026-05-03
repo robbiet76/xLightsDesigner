@@ -104,6 +104,8 @@ The model fingerprint and reconciliation contract is defined in `../sequence-age
 
 Project-local target behavior learning belongs under `display/target-behavior.json`. Records are keyed by target or submodel fingerprint plus effect/probe scope, not only by the current xLights name. This file should migrate with a project and should not be replaced by central training packages; shared training may provide priors, while this file preserves observations from the user's own display.
 
+`display/model-index.json` is the project-local structural target index generated from xLights layout refresh. Runtime scene graphs should enrich `sceneGraph.submodelsById` from this model index before planning, review, render validation, or automation diagnostics. That lets transient scene data keep live membership/render-policy details while target identity, parent relationships, fingerprints, node coverage, sibling context, and structure hints come from one canonical project artifact.
+
 ## Project Migration
 
 Creating a new project from an existing project should copy the project metadata into the new project folder.

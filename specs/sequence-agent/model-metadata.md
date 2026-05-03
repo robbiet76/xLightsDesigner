@@ -36,6 +36,8 @@ Each current display target should expose:
 - `targetKind`: model, group, submodel, display element, or other supported target category.
 - `fingerprint`: stable identity derived from structural layout data.
 - `fingerprintVersion`: version of the fingerprint algorithm.
+- `parentId`: parent target id for submodel records; empty or absent for top-level model and group records.
+- `parentName`: current parent display name for submodel records when it differs from or clarifies `parentId`.
 - `sourceShowFolder`: current show-folder identity used for diagnostics.
 - `lastSeenAt`: refresh timestamp.
 
@@ -123,8 +125,11 @@ Each group record should support:
 
 Each submodel record should support:
 
-- parent target id and parent fingerprint
-- submodel id/name
+- `targetId` and `identity.displayName` for current sequencing references.
+- `targetKind: "submodel"` so consumers do not infer submodel status from slash-delimited names.
+- `identity.parentId` and `identity.parentName` for the parent relationship.
+- parent target id and parent fingerprint when available.
+- submodel id/name.
 - stable submodel fingerprint when possible
 - node or range membership summary
 - render geometry or bounds when available
@@ -134,6 +139,8 @@ Each submodel record should support:
 - sequencing constraints when applicable
 
 Submodels are first-class sequencing targets for every model type, not a custom-model-only concept. The app should use the same identity, fingerprinting, metadata, targeting, render evidence, and review framework for submodels regardless of whether the parent is custom, built-in, or imported. Parent model targeting remains useful for whole-prop fills and fallback behavior, but submodel-level sequencing should be supported consistently across the display.
+
+Consumers should not parse `targetId` or display names to determine parentage when model-index identity exists. Slash-shaped identifiers are allowed because xLights commonly exposes submodels that way, but parent lookup should prefer `identity.parentId` or `structure.submodelMetadata.parentId`.
 
 ## Custom Models
 
@@ -192,6 +199,76 @@ Recommended project artifact split:
 Large raw API payloads should stay out of durable semantic metadata unless they are compacted into a stable project artifact.
 
 On Display refresh, `display/model-index.json` is the primary shared artifact. It should compact `layout.getModels`, `layout.getSubmodels`, model group membership, any available `layout.getModelNodes` output, and custom-model-specific interpretation into stable target records. Custom-specific interpretation belongs under each record's `structure.customStructure`. Separate filtered custom-model project artifacts should not be written or read as part of normal app behavior; if a custom-only collection is useful for diagnostics, tests, or training exports, it should be derived from `model-index.json` at export time.
+
+### `display/model-index.json`
+
+`display/model-index.json` is the current structural target index. It is regenerated from xLights-derived layout facts and should be treated as the canonical source for current target identity in the project.
+
+Each record should follow this shape:
+
+- `targetId`: current sequencing/API id.
+- `targetKind`: `model`, `group`, or `submodel`.
+- `identity.displayName`: current user-visible target label.
+- `identity.rawType`: raw xLights model/group/submodel type.
+- `identity.canonicalType`: normalized type used by app reasoning.
+- `identity.fingerprint`: durable target fingerprint.
+- `identity.fingerprintVersion`: fingerprint algorithm version.
+- `identity.parentId`: parent target id for submodels.
+- `identity.parentName`: parent display name for submodels.
+- `structure`: compact structural details for the target.
+
+Model and group records place whole-target data under `structure`, including node count, position, dimensions, group membership, embedded submodel summaries, optional `nodeLayout`, and optional `customStructure`.
+
+Submodel records are first-class records and should place their specific submodel facts under `structure.submodelMetadata`, including:
+
+- submodel id and name
+- parent id
+- type and layout group when available
+- line/range membership when available
+- node coverage against the parent
+- sibling count and sibling ids
+- overlapping sibling ids
+- semantic structure hints
+
+`structure.submodels` remains the embedded submodel summary list for parent model records. It should not be the only place submodels exist.
+
+### `sceneGraph.submodelsById`
+
+Runtime scene graphs may contain live submodel information from XML, API readback, or other transient sources. Before sequence planning, review/apply validation, render evidence construction, or automation diagnostics use `sceneGraph.submodelsById`, the app should enrich it from `display/model-index.json`.
+
+The merge rule is:
+
+- preserve live-only fields such as membership arrays and render policy when they exist.
+- prefer model-index identity fields such as `parentId`, display name, fingerprint, sibling context, node coverage, and structure hints.
+- include submodels that exist in model-index even if the transient scene graph did not include them.
+- update `stats.submodelCount` to reflect the effective merged graph.
+
+This keeps runtime reasoning grounded in one project-level identity contract while still allowing live readback to provide details that are too volatile or too large for the compact model index.
+
+### `display/target-behavior.json`
+
+`display/target-behavior.json` stores project-local observations about how effects behave on the user's current target fingerprints. It is not central training data and should migrate with the project.
+
+Records are keyed semantically by:
+
+- target or submodel fingerprint, falling back to current target id only when no fingerprint exists
+- `targetKind`
+- effect name/family
+- probe scope such as `target` or `submodel`
+
+The record id should remain stable as metadata becomes richer. Adding parent identity, structure hints, sibling context, or node coverage must enrich the existing aggregate rather than create a duplicate learning record.
+
+Target behavior records should keep:
+
+- `targetId`, `targetKind`, `targetFingerprint`, and `fingerprintVersion`
+- display name and parent id/name when applicable
+- effect name/family and probe scope
+- compact structure hints and submodel context
+- evidence artifact references
+- observed coverage/readability outcomes
+- aggregate sample, positive, and negative counts
+
+When older records exist with the same fingerprint/effect/scope but different record ids, upsert should consolidate them into the current semantic aggregate instead of preserving duplicates.
 
 ## User Experience
 

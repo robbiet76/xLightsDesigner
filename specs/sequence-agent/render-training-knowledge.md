@@ -105,6 +105,8 @@ Local custom-model learning should be stored with the project or user installati
 
 Project-local target and submodel behavior learning is stored in `display/target-behavior.json`. Each record is keyed by target/submodel fingerprint, effect family/name, and probe scope. Records keep compact evidence references, structure hints, submodel context, observed coverage/readability outcomes, and aggregate sample counts. This is the durable project layer where accepted render/probe outcomes can accumulate before any optional shared-training promotion.
 
+The submodel context in behavior learning should come from the effective runtime scene graph after enrichment from `display/model-index.json`. This means target behavior learning can retain parent identity, node coverage, sibling context, and structure hints even when the live scene graph only provided partial submodel data. If a later refresh enriches the submodel metadata, the behavior record should be updated under the same fingerprint/effect/scope aggregate rather than creating a new record id.
+
 ## Current Learnings
 
 - Generated record packs replaced thousands of loose semantic files.
