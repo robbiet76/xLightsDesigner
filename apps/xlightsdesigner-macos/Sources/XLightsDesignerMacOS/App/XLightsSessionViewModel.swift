@@ -8,6 +8,8 @@ final class XLightsSessionViewModel {
     private let service: XLightsSessionService
     private var refreshTask: Task<Void, Never>?
     var onSignificantChange: ((XLightsSessionSnapshotModel, XLightsSessionSnapshotModel) -> Void)?
+    var lastShowFolderReconcileSummary = ""
+    var lastShowFolderReconcileError = ""
 
     var snapshot = XLightsSessionSnapshotModel(
         runtimeState: "unknown",
@@ -61,15 +63,24 @@ final class XLightsSessionViewModel {
         guard refreshed.isReachable,
               !projectShowFolder.isEmpty,
               !refreshed.projectShowMatches else {
+            lastShowFolderReconcileError = ""
+            if refreshed.isReachable, !projectShowFolder.isEmpty, refreshed.projectShowMatches {
+                lastShowFolderReconcileSummary = "xLights is open to the project show folder."
+            }
             return refreshed
         }
         if refreshed.isSequenceOpen && refreshed.hasUnsavedChanges != false {
+            lastShowFolderReconcileSummary = ""
+            lastShowFolderReconcileError = "xLights has an open sequence with unsaved changes. Save or close it before switching show folders."
             return refreshed
         }
         do {
-            _ = try await service.setShowDirectory(projectShowFolder, force: true, permanent: false)
+            lastShowFolderReconcileError = ""
+            lastShowFolderReconcileSummary = try await service.setShowDirectory(projectShowFolder, force: true, permanent: false)
             return await refreshNow()
         } catch {
+            lastShowFolderReconcileSummary = ""
+            lastShowFolderReconcileError = error.localizedDescription
             return refreshed
         }
     }

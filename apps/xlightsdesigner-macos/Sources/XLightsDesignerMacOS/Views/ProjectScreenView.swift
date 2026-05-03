@@ -79,10 +79,23 @@ struct ProjectScreenView: View {
                         Text(mismatchText)
                             .foregroundStyle(.orange)
                             .textSelection(.enabled)
+                        Button("Set xLights To Project Show Folder") {
+                            Task { await xlightsSessionModel.reconcileProjectShowFolder() }
+                        }
+                    }
+                    if !xlightsSessionModel.lastShowFolderReconcileError.isEmpty {
+                        Text(xlightsSessionModel.lastShowFolderReconcileError)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    } else if !xlightsSessionModel.lastShowFolderReconcileSummary.isEmpty {
+                        Text(xlightsSessionModel.lastShowFolderReconcileSummary)
+                            .foregroundStyle(.secondary)
                     }
                     HStack(spacing: 10) {
                         Button("Change Show Folder…") { model.chooseShowFolderForActiveProject() }
-                        Button("Refresh xLights") { xlightsSessionModel.refresh() }
+                        Button("Refresh xLights") {
+                            Task { await xlightsSessionModel.reconcileProjectShowFolder() }
+                        }
                         Spacer()
                     }
                     detailRow(label: "Readiness", value: summary.readinessExplanation)

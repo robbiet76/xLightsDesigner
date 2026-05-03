@@ -113,11 +113,34 @@ struct SequenceScreenView: View {
                 detailRow(label: "Sequence Settings", value: sequenceSettingsText)
                 detailRow(label: "Unsaved State", value: xlightsSessionModel.snapshot.dirtyStateReason)
                 detailRow(label: "Sequence Switching", value: sequenceSwitchPolicyText)
+                if let showFolderMismatchText {
+                    Text(showFolderMismatchText)
+                        .foregroundStyle(.orange)
+                        .textSelection(.enabled)
+                }
+                if !xlightsSessionModel.lastShowFolderReconcileError.isEmpty {
+                    Text(xlightsSessionModel.lastShowFolderReconcileError)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                } else if !xlightsSessionModel.lastShowFolderReconcileSummary.isEmpty {
+                    Text(xlightsSessionModel.lastShowFolderReconcileSummary)
+                        .foregroundStyle(.secondary)
+                }
                 HStack(spacing: 10) {
                     Button("Refresh xLights") {
-                        xlightsSessionModel.refresh()
-                        model.refresh()
+                        Task {
+                            await xlightsSessionModel.reconcileProjectShowFolder()
+                            model.refresh()
+                        }
                     }
+
+                    Button("Set xLights Show Folder") {
+                        Task {
+                            await xlightsSessionModel.reconcileProjectShowFolder()
+                            model.refresh()
+                        }
+                    }
+                    .disabled(showFolderMismatchText == nil)
 
                     Button("Save Sequence") {
                         Task {
