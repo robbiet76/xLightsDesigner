@@ -7,6 +7,7 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../.
 const DEFAULT_APP_BASE_URL = 'http://127.0.0.1:49916';
 const DEFAULT_XLIGHTS_BASE_URL = 'http://127.0.0.1:49915/xlightsdesigner/api';
 const DEFAULT_SHOW_DIR = process.env.XLIGHTS_SHOW_DIR || path.join(process.env.HOME || '', 'Desktop', 'Show');
+const DEFAULT_BOOTSTRAP_SHOW_DIR = process.env.XLIGHTS_BOOTSTRAP_SHOW_DIR || '';
 const DEFAULT_TARGET_IDS = 'Star';
 const DEFAULT_SELECTED_TAGS = 'lead';
 const APP_LOG_PATH = '/tmp/xld-app-app.log';
@@ -284,11 +285,15 @@ async function ensureXlights(args) {
     throw new Error('Owned xLights API is not ready and --skip-launch-xlights was set.');
   }
 
+  const showDir = path.resolve(args.showDir);
+  const bootstrapShowDir = str(DEFAULT_BOOTSTRAP_SHOW_DIR) ? path.resolve(DEFAULT_BOOTSTRAP_SHOW_DIR) : '';
+  const launchShowDirArgs = bootstrapShowDir
+    ? ['--bootstrap-show-dir', bootstrapShowDir, '--api-show-dir', showDir]
+    : ['--show-dir', showDir];
   const launched = await run('node', [
     'scripts/xlights/launch-owned-xlights.mjs',
     ...(process.env.XLIGHTS_APP_PATH ? ['--app', path.resolve(process.env.XLIGHTS_APP_PATH)] : []),
-    '--show-dir',
-    path.resolve(args.showDir),
+    ...launchShowDirArgs,
     '--modal-policy',
     'fail',
     '--api-timeout-ms',

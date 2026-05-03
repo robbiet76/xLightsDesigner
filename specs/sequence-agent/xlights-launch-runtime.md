@@ -35,6 +35,17 @@ The app should prefer this sequence:
 
 Passing a show folder through command-line `-s` should be a fallback for controlled validation only. It happens before the owned API exists, so any prompt, permission failure, or show-folder validation failure cannot be represented by `/health`.
 
+Developer validation may use an accessible bootstrap show folder to satisfy xLights startup before the owned API exists, then switch to the real target show folder through the API:
+
+```bash
+node scripts/xlights/launch-owned-xlights.mjs \
+  --app <xLights.app> \
+  --bootstrap-show-dir <sandbox-accessible-show-folder> \
+  --api-show-dir <target-show-folder>
+```
+
+`--show-dir` remains the direct pre-API startup path for legacy validation cases. New validation should prefer `--bootstrap-show-dir` plus `--api-show-dir` when testing real show-folder switching or macOS access failures.
+
 ## Show Folder Access
 
 xLightsDesigner may know a show-folder path, but xLights must also have permission to access it. On macOS sandboxed builds, a path supplied by command-line argument or environment variable is not enough to grant filesystem access.
@@ -88,6 +99,7 @@ Launcher scripts should include this evidence in failure output so failures can 
 - The older runnable debug build can expose `/health` but may lack newer layout routes such as `/layout/submodels` and `/layout/model-nodes`.
 - The rebuilt source app suppresses the pre-frame command-line information dialog, but exits when xLights cannot establish the requested show folder. The spdlog evidence indicates show-folder access/validation failure rather than an unexplained crash.
 - Command-line `-s` is brittle for real user folders because it runs before API health and before any structured modal reporting.
+- Launching with a sandbox-accessible bootstrap show folder and switching to the target show folder through `/media/show-directory` works for bookmarked folders. Unbookmarked folders now fail as structured `SHOW_DIRECTORY_ACCESS_DENIED` responses instead of being misclassified as startup crashes.
 
 ## Target Fixes
 

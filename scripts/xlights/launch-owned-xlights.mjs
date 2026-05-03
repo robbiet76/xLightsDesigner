@@ -17,6 +17,8 @@ function resolveAppBinary(appPath) {
 function parseArgs(argv) {
   const passthroughArgs = [];
   let showDir = '';
+  let bootstrapShowDir = '';
+  let apiShowDir = '';
   let appPath = String(process.env.XLIGHTS_APP_PATH || '').trim();
   let waitForApi = true;
   let apiTimeoutMs = 45000;
@@ -29,6 +31,18 @@ function parseArgs(argv) {
         throw new Error('Missing value for --show-dir');
       }
       showDir = path.resolve(argv[index]);
+    } else if (arg === '--bootstrap-show-dir') {
+      index += 1;
+      if (index >= argv.length) {
+        throw new Error('Missing value for --bootstrap-show-dir');
+      }
+      bootstrapShowDir = path.resolve(argv[index]);
+    } else if (arg === '--api-show-dir') {
+      index += 1;
+      if (index >= argv.length) {
+        throw new Error('Missing value for --api-show-dir');
+      }
+      apiShowDir = path.resolve(argv[index]);
     } else if (arg === '--app') {
       index += 1;
       if (index >= argv.length) {
@@ -53,13 +67,16 @@ function parseArgs(argv) {
       passthroughArgs.push(arg);
     }
   }
+  if (bootstrapShowDir) {
+    passthroughArgs.push('-s', bootstrapShowDir);
+  }
   if (showDir) {
     passthroughArgs.push('-s', showDir);
   }
-  return { passthroughArgs, showDir, appPath, waitForApi, apiTimeoutMs, modalPolicy };
+  return { passthroughArgs, showDir, bootstrapShowDir, apiShowDir, appPath, waitForApi, apiTimeoutMs, modalPolicy };
 }
 
-const { passthroughArgs: args, showDir, appPath, waitForApi, apiTimeoutMs, modalPolicy } = parseArgs(process.argv.slice(2));
+const { passthroughArgs: args, showDir, bootstrapShowDir, apiShowDir, appPath, waitForApi, apiTimeoutMs, modalPolicy } = parseArgs(process.argv.slice(2));
 if (!appPath) {
   console.error('xLights app path is required. Pass --app <xLights.app> or set XLIGHTS_APP_PATH.');
   process.exit(1);
@@ -72,6 +89,8 @@ const trustedRoots = [
     .split(path.delimiter)
     .map((entry) => entry.trim())
     .filter(Boolean),
+  bootstrapShowDir,
+  apiShowDir,
   showDir
 ].filter(Boolean);
 const env = {
@@ -112,6 +131,39 @@ function requestJson(url, timeoutMs = 2000) {
     req.on('error', (error) => {
       resolve({ ok: false, statusCode: 0, error: String(error?.message || error) });
     });
+  });
+}
+
+function postJson(url, body = {}, timeoutMs = 90000) {
+  return new Promise((resolve) => {
+    const payload = JSON.stringify(body);
+    const req = http.request(url, {
+      method: 'POST',
+      timeout: timeoutMs,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    }, (res) => {
+      let responseBody = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => { responseBody += chunk; });
+      res.on('end', () => {
+        try {
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, statusCode: res.statusCode, json: JSON.parse(responseBody) });
+        } catch {
+          resolve({ ok: false, statusCode: res.statusCode, body: responseBody });
+        }
+      });
+    });
+    req.on('timeout', () => {
+      req.destroy(new Error('timeout'));
+    });
+    req.on('error', (error) => {
+      resolve({ ok: false, statusCode: 0, error: String(error?.message || error) });
+    });
+    req.write(payload);
+    req.end();
   });
 }
 
@@ -412,6 +464,23 @@ async function waitForOwnedApi(processInfo, timeoutMs = 45000) {
   throw error;
 }
 
+async function switchShowDirectoryAfterReady(endpoint, targetShowDir) {
+  if (!targetShowDir) {
+    return null;
+  }
+  const switched = await postJson(`${endpoint.replace(/\/health$/, '')}/media/show-directory`, {
+    showDirectory: targetShowDir,
+    force: true,
+    permanent: false
+  }, 90000);
+  if (!switched.ok || switched.json?.ok === false) {
+    const error = new Error(`Unable to switch xLights show folder through owned API: ${targetShowDir}`);
+    error.details = { endpoint, targetShowDir, response: switched, launchEvidence: collectLaunchEvidence() };
+    throw error;
+  }
+  return switched.json;
+}
+
 fs.writeFileSync(logPath, '', 'utf8');
 if (env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG) {
   fs.writeFileSync(env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG, '', 'utf8');
@@ -421,6 +490,8 @@ console.log(JSON.stringify({
   binary,
   targetSource: process.env.XLIGHTS_APP_PATH ? 'environment-app-path' : 'explicit-app-path',
   args,
+  bootstrapShowDir,
+  apiShowDir,
   logPath,
   modalPolicy,
   env: {
@@ -454,12 +525,13 @@ const result = { launched: true, pid: processInfo.pid, command: processInfo.comm
 if (waitForApi) {
   try {
     result.ownedApi = await waitForOwnedApi(processInfo, apiTimeoutMs);
+    result.apiShowDirectorySwitch = await switchShowDirectoryAfterReady(result.ownedApi.endpoint, apiShowDir);
   } catch (error) {
     console.error(JSON.stringify({
       launched: true,
       pid: processInfo.pid,
       command: processInfo.command,
-      ownedApiReady: false,
+      ownedApiReady: Boolean(result.ownedApi),
       error: String(error?.message || error),
       details: error?.details || {}
     }, null, 2));
