@@ -5,7 +5,8 @@
     "03-sequencer-mutation-smoke.sh",
     "08-plan-execution-smoke.sh",
     "09-async-jobs-smoke.sh",
-    "node scripts/sequencer-render-training/tooling/validate-display-model-index-training-fixture.mjs"
+    "node scripts/sequencer-render-training/tooling/validate-display-model-index-training-fixture.mjs",
+    "node scripts/sequencer-render-training/tooling/validate-target-behavior-training-fixture.mjs"
   ],
   "automatedCoverage": [
     {
@@ -82,6 +83,15 @@
         "fixture coverage includes at least one custom model record and one first-class submodel record",
         "fixture assertions preserve shared target collection behavior and forbid semantic inference from target names"
       ]
+    },
+    {
+      "id": "target_behavior_training_fixture_contract",
+      "source": "scripts/sequencer-render-training/tooling/validate-target-behavior-training-fixture.mjs",
+      "asserts": [
+        "target behavior fixture summaries satisfy target_behavior_evidence_v1 required fields",
+        "fixture coverage includes a submodel behavior record with enriched parent and node coverage context",
+        "fixture assertions keep project-local behavior evidence advisory and validation authoritative"
+      ]
     }
   ],
   "corpusBackedCoverage": {
@@ -149,7 +159,8 @@
       "id": "target_behavior_evidence_support",
       "asserts": [
         "sequence_agent treats display/target-behavior evidence as advisory local learning for target and submodel suitability",
-        "planning keeps render/apply validation authoritative when local evidence is missing, stale, or low confidence"
+        "planning keeps render/apply validation authoritative when local evidence is missing, stale, or low confidence",
+        "target_behavior_evidence_v1 contract fields are present when project-local target behavior summaries are used in eval inputs"
       ]
     },
     {

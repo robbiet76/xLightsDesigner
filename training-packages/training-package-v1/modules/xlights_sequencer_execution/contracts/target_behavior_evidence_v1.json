@@ -1,0 +1,75 @@
+{
+  "contract": "target_behavior_evidence_v1",
+  "version": "1.0",
+  "source": "specs/sequence-agent/model-metadata.md",
+  "artifactPath": "display/target-behavior.json",
+  "purpose": "Compact project-local target and submodel behavior evidence used by sequencing agents as advisory learning for effect suitability, readability, and safe probe planning.",
+  "documentFields": [
+    "artifactType",
+    "artifactVersion",
+    "updatedAt",
+    "records"
+  ],
+  "requiredRecordFields": [
+    "artifactType",
+    "artifactVersion",
+    "recordId",
+    "targetId",
+    "targetKind",
+    "targetFingerprint",
+    "fingerprintVersion",
+    "displayName",
+    "effectName",
+    "effectFamily",
+    "probeScope",
+    "evidenceRefs",
+    "outcome",
+    "stats"
+  ],
+  "submodelRecordFields": [
+    "parentId",
+    "parentName",
+    "submodelContext.siblingCount",
+    "submodelContext.nodeCoverage",
+    "submodelContext.nodeCoverage.nodeCount",
+    "submodelContext.nodeCoverage.parentNodeCount",
+    "submodelContext.nodeCoverage.ratio",
+    "structureHints"
+  ],
+  "parentContextFields": [
+    "parentContext.targetId",
+    "parentContext.targetKind",
+    "parentContext.displayName",
+    "parentContext.canonicalType",
+    "parentContext.rawType",
+    "parentContext.targetFingerprint",
+    "parentContext.fingerprintVersion"
+  ],
+  "customParentContextFields": [
+    "parentContext.customStructure.profile",
+    "parentContext.customStructure.traits",
+    "parentContext.customStructure.nodeCount",
+    "parentContext.customStructure.submodelCount",
+    "parentContext.customStructure.constructionSource"
+  ],
+  "statFields": [
+    "stats.sampleCount",
+    "stats.positiveCount",
+    "stats.negativeCount",
+    "stats.lastObservedAt"
+  ],
+  "planningRules": [
+    "Treat display/target-behavior.json as project-local advisory evidence, not central/shared ground truth.",
+    "Key behavior learning by target or submodel fingerprint plus target kind, effect name/family, and probe scope.",
+    "Use records to choose safer targets, submodels, probes, and effect settings, but keep review/apply validation authoritative.",
+    "Preserve submodel records as first-class evidence for every parent model type.",
+    "Carry enriched parent and submodel context from display/model-index.json into behavior records.",
+    "Consolidate richer records under the same semantic aggregate instead of creating duplicates when metadata improves.",
+    "Do not infer user-specific semantic prop meaning from hard-coded target names."
+  ],
+  "notes": [
+    "This contract describes curated portable training summaries and the project-local artifact shape. It is not a raw render observation export.",
+    "Central/shared training packages may consume anonymized summaries from this artifact, but user installations should retain their own project-local behavior evidence.",
+    "Custom models need this local learning because their structures are user-specific, but the same target/submodel framework applies to built-in models, groups, and custom models."
+  ]
+}

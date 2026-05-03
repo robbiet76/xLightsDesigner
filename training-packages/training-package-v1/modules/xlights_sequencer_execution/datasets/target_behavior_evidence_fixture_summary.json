@@ -1,0 +1,110 @@
+{
+  "datasetId": "target_behavior_evidence_fixture_summary",
+  "version": "1.0",
+  "source": {
+    "fixture": "render-training-vendor-fixture/xlights_rgbeffects.xml",
+    "derivedFrom": "display/target-behavior.json",
+    "privacy": "anonymized_compact_summary"
+  },
+  "purpose": "Portable training summary for project-local target and submodel behavior evidence generated after successful render/apply validation.",
+  "examples": [
+    {
+      "id": "submodel_behavior_evidence_with_parent_context",
+      "targetBehaviorShape": {
+        "artifactType": "project_target_behavior_learning_v1",
+        "artifactVersion": "1.0",
+        "recordCount": 1,
+        "records": [
+          {
+            "artifactType": "target_behavior_learning_record_v1",
+            "artifactVersion": "1.0",
+            "recordId": "tbl1:custom-region-on-probe",
+            "targetId": "custom_model_a/submodel_region_1",
+            "targetKind": "submodel",
+            "targetFingerprint": "tmf1:custom-model-a-region-1",
+            "fingerprintVersion": "target-metadata-fingerprint-v1",
+            "displayName": "Custom Model A / Region 1",
+            "parentId": "custom_model_a",
+            "parentName": "Custom Model A",
+            "effectName": "On",
+            "effectFamily": "On",
+            "probeScope": "submodel",
+            "structureHints": [
+              "custom_submodel",
+              "partial_region",
+              "sibling_region"
+            ],
+            "submodelContext": {
+              "siblingCount": 11,
+              "overlappingSiblingIds": [],
+              "nodeCoverage": {
+                "nodeCount": 12,
+                "parentNodeCount": 143,
+                "ratio": 0.12
+              }
+            },
+            "parentContext": {
+              "targetId": "custom_model_a",
+              "targetKind": "model",
+              "displayName": "Custom Model A",
+              "canonicalType": "custom",
+              "rawType": "Custom",
+              "targetFingerprint": "tmf1:custom-model-a",
+              "fingerprintVersion": "target-metadata-fingerprint-v1",
+              "customStructure": {
+                "profile": "custom_sparse_shape",
+                "traits": [
+                  "custom_grid",
+                  "api_node_layout",
+                  "sparse_custom_grid"
+                ],
+                "confidence": 0.7,
+                "nodeCount": 143,
+                "submodelCount": 11,
+                "constructionSource": "layout.getModelNodes",
+                "dimensions": {
+                  "width": 50,
+                  "height": 69,
+                  "layers": 1
+                }
+              }
+            },
+            "evidenceRefs": {
+              "renderObservationRef": "render-observation-custom-region",
+              "renderCritiqueContextRef": "render-critique-custom-region",
+              "sequenceCritiqueRef": "",
+              "planHandoffRef": "plan-custom-region-probe",
+              "applyResultRef": "apply-custom-region-probe"
+            },
+            "outcome": {
+              "coverageRead": "partial",
+              "temporalRead": "flat",
+              "readability": "good",
+              "blankRisk": "",
+              "activeCoverageRatio": 0.12,
+              "confidence": "observed",
+              "notes": []
+            },
+            "observedAt": "2026-05-03T13:45:01.702Z",
+            "createdAt": "2026-05-03T13:45:01.702Z",
+            "updatedAt": "2026-05-03T13:45:01.702Z",
+            "stats": {
+              "sampleCount": 1,
+              "positiveCount": 1,
+              "negativeCount": 0,
+              "lastObservedAt": "2026-05-03T13:45:01.702Z"
+            }
+          }
+        ]
+      },
+      "trainingAssertions": [
+        "Use display/target-behavior records as project-local advisory learning, not centralized user-style ground truth.",
+        "Treat submodel behavior records as first-class target evidence keyed by target fingerprint, target kind, effect family/name, and probe scope.",
+        "Use enriched parentContext and submodelContext from display/model-index when judging whether an effect is suitable for a target.",
+        "Keep render/apply validation authoritative even when local behavior evidence is positive.",
+        "Consolidate richer metadata under the same semantic aggregate rather than creating duplicate records.",
+        "Do not infer user-specific prop semantics from displayName or targetId."
+      ]
+    }
+  ]
+}
