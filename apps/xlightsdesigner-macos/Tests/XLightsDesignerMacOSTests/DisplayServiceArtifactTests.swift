@@ -221,6 +221,8 @@ struct DisplayServiceArtifactTests {
         #expect(top?["status"] as? String == "active")
         #expect(missing?["status"] as? String == "retained-orphaned")
         #expect(missing?["matchedBy"] as? String == "retained-project-metadata")
+        #expect(missing?["confidence"] as? String == "none")
+        #expect(missing?["needsReview"] as? Bool == false)
     }
 
     @Test func reconciliationArtifactMatchesRenamedMetadataByFingerprint() throws {
@@ -261,10 +263,62 @@ struct DisplayServiceArtifactTests {
 
         #expect(summary?["activeMetadataCount"] as? Int == 1)
         #expect(summary?["retainedOrphanedMetadataCount"] as? Int == 0)
+        #expect(summary?["fingerprintMatchCount"] as? Int == 1)
+        #expect(summary?["needsReviewCount"] as? Int == 0)
         #expect(oldFace?["status"] as? String == "active")
         #expect(oldFace?["matchedBy"] as? String == "fingerprint")
+        #expect(oldFace?["confidence"] as? String == "high")
+        #expect(oldFace?["needsReview"] as? Bool == false)
         #expect(oldFace?["currentTargetId"] as? String == "RenamedFace")
         #expect(oldFace?["previousFingerprint"] as? String == currentFingerprint)
+    }
+
+    @Test func reconciliationArtifactMarksDuplicateFingerprintMatchesForReview() throws {
+        let rowA = displayArtifactRow(name: "Duplicate Target A", targetType: "Single Line", width: 50, height: 10)
+        let rowB = displayArtifactRow(name: "Duplicate Target B", targetType: "Single Line", width: 50, height: 10)
+        let duplicateFingerprint = try #require(currentTargetFingerprints(rows: [rowA], submodelsByParent: [:])["Duplicate Target A"])
+        let previousIndex = DisplayModelIndexDocument(
+            artifactType: "target_metadata_index_v1",
+            records: [
+                PersistedDisplayModelIndexRecord(
+                    targetId: "Old Duplicate Target",
+                    targetKind: "model",
+                    identity: PersistedDisplayModelIndexIdentity(
+                        fingerprint: duplicateFingerprint,
+                        fingerprintVersion: "target-metadata-fingerprint-v1",
+                        displayName: "Old Duplicate Target",
+                        parentId: nil,
+                        parentName: nil
+                    ),
+                    structure: nil
+                )
+            ]
+        )
+        var metadata = PersistedDisplayMetadataDocument()
+        metadata.targetTags = ["Old Duplicate Target": ["tag-duplicate"]]
+
+        let artifactData = try encodeDisplayReconciliationArtifact(
+            rows: [rowA, rowB],
+            submodelsByParent: [:],
+            metadataDocument: metadata,
+            previousModelIndex: previousIndex,
+            sourceSummary: "test",
+            createdAt: "2026-05-01T00:00:00Z"
+        )
+        let artifact = try JSONSerialization.jsonObject(with: artifactData) as? [String: Any]
+        let summary = artifact?["summary"] as? [String: Any]
+        let records = artifact?["records"] as? [[String: Any]]
+        let old = records?.first { $0["targetId"] as? String == "Old Duplicate Target" }
+
+        #expect(summary?["activeMetadataCount"] as? Int == 0)
+        #expect(summary?["retainedOrphanedMetadataCount"] as? Int == 0)
+        #expect(summary?["needsReviewCount"] as? Int == 1)
+        #expect(summary?["ambiguousFingerprintCount"] as? Int == 1)
+        #expect(old?["status"] as? String == "needs-review")
+        #expect(old?["matchedBy"] as? String == "ambiguous-fingerprint")
+        #expect(old?["confidence"] as? String == "ambiguous")
+        #expect(old?["needsReview"] as? Bool == true)
+        #expect(old?["candidateTargetIds"] as? [String] == ["Duplicate Target A", "Duplicate Target B"])
     }
 
     @Test func modelIndexArtifactEmbedsSharedSubmodelRelationshipsForBuiltInModels() throws {

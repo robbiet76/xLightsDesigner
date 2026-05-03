@@ -397,17 +397,25 @@ private func encodeDisplayReconciliationArtifact(
     )
     let previousFingerprintIndex = previousTargetFingerprints(from: previousModelIndex)
     let currentTargetByFingerprint = uniqueTargetByFingerprint(currentFingerprintIndex)
+    let currentTargetsByFingerprint = targetsByFingerprint(currentFingerprintIndex)
     let metadataTargetIDs = metadataTargetIDs(document: metadataDocument)
     let records: [DisplayReconciliationRecord] = metadataTargetIDs.map { targetID in
         let directMatch = currentTargetIDs.contains(targetID)
         let previousFingerprint = previousFingerprintIndex[targetID]
         let fingerprintMatch = previousFingerprint.flatMap { currentTargetByFingerprint[$0] }
+        let fingerprintCandidates = previousFingerprint.flatMap { currentTargetsByFingerprint[$0] } ?? []
+        let isAmbiguous = !directMatch && fingerprintMatch == nil && fingerprintCandidates.count > 1
+        let status = directMatch || fingerprintMatch != nil ? "active" : (isAmbiguous ? "needs-review" : "retained-orphaned")
+        let matchedBy = directMatch ? "target-id" : (fingerprintMatch != nil ? "fingerprint" : (isAmbiguous ? "ambiguous-fingerprint" : "retained-project-metadata"))
         return DisplayReconciliationRecord(
             targetId: targetID,
-            status: directMatch || fingerprintMatch != nil ? "active" : "retained-orphaned",
-            matchedBy: directMatch ? "target-id" : (fingerprintMatch != nil ? "fingerprint" : "retained-project-metadata"),
+            status: status,
+            matchedBy: matchedBy,
+            confidence: directMatch ? "exact" : (fingerprintMatch != nil ? "high" : (isAmbiguous ? "ambiguous" : "none")),
+            needsReview: isAmbiguous,
             metadataSources: metadataSources(for: targetID, document: metadataDocument),
             currentTargetId: directMatch ? targetID : fingerprintMatch,
+            candidateTargetIds: fingerprintCandidates,
             previousFingerprint: previousFingerprint
         )
     }
@@ -420,7 +428,10 @@ private func encodeDisplayReconciliationArtifact(
             currentTargetCount: currentTargetIDs.count,
             metadataTargetCount: metadataTargetIDs.count,
             activeMetadataCount: records.filter { $0.status == "active" }.count,
-            retainedOrphanedMetadataCount: records.filter { $0.status == "retained-orphaned" }.count
+            retainedOrphanedMetadataCount: records.filter { $0.status == "retained-orphaned" }.count,
+            needsReviewCount: records.filter(\.needsReview).count,
+            fingerprintMatchCount: records.filter { $0.matchedBy == "fingerprint" }.count,
+            ambiguousFingerprintCount: records.filter { $0.matchedBy == "ambiguous-fingerprint" }.count
         ),
         records: records
     )
@@ -482,15 +493,20 @@ func previousTargetFingerprints(from document: DisplayModelIndexDocument) -> [St
 }
 
 private func uniqueTargetByFingerprint(_ targetFingerprints: [String: String]) -> [String: String] {
-    var buckets: [String: [String]] = [:]
-    for (targetId, fingerprint) in targetFingerprints where !fingerprint.isEmpty {
-        buckets[fingerprint, default: []].append(targetId)
-    }
+    let buckets = targetsByFingerprint(targetFingerprints)
     var unique: [String: String] = [:]
     for (fingerprint, targetIds) in buckets where targetIds.count == 1 {
         unique[fingerprint] = targetIds[0]
     }
     return unique
+}
+
+private func targetsByFingerprint(_ targetFingerprints: [String: String]) -> [String: [String]] {
+    var buckets: [String: [String]] = [:]
+    for (targetId, fingerprint) in targetFingerprints where !fingerprint.isEmpty {
+        buckets[fingerprint, default: []].append(targetId)
+    }
+    return buckets.mapValues { $0.sorted() }
 }
 
 func orphanedMetadataTargetIDs(
@@ -500,10 +516,12 @@ func orphanedMetadataTargetIDs(
     previousModelIndex: DisplayModelIndexDocument = DisplayModelIndexDocument()
 ) -> [String] {
     let currentTargetByFingerprint = uniqueTargetByFingerprint(currentTargetFingerprints)
+    let currentTargetsByFingerprint = targetsByFingerprint(currentTargetFingerprints)
     let previousFingerprintIndex = previousTargetFingerprints(from: previousModelIndex)
     return metadataTargetIDs(document: document).filter { targetID in
         if currentTargetIDs.contains(targetID) { return false }
         guard let previousFingerprint = previousFingerprintIndex[targetID] else { return true }
+        if (currentTargetsByFingerprint[previousFingerprint]?.count ?? 0) > 1 { return false }
         return currentTargetByFingerprint[previousFingerprint] == nil
     }
 }
@@ -1042,14 +1060,20 @@ private struct DisplayReconciliationSummary: Encodable {
     let metadataTargetCount: Int
     let activeMetadataCount: Int
     let retainedOrphanedMetadataCount: Int
+    let needsReviewCount: Int
+    let fingerprintMatchCount: Int
+    let ambiguousFingerprintCount: Int
 }
 
 private struct DisplayReconciliationRecord: Encodable {
     let targetId: String
     let status: String
     let matchedBy: String
+    let confidence: String
+    let needsReview: Bool
     let metadataSources: [String]
     let currentTargetId: String?
+    let candidateTargetIds: [String]
     let previousFingerprint: String?
 }
 
