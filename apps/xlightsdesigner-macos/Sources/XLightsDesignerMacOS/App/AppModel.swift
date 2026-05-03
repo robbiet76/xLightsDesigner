@@ -612,6 +612,19 @@ final class AppModel {
 
     func refreshAll() {
         syncProjectTargetFromXLightsSession()
+        refreshScreens()
+        xlightsSessionModel.refresh()
+    }
+
+    func refreshAllAfterProjectRelink() {
+        Task { @MainActor in
+            await xlightsSessionModel.refreshNow()
+            syncProjectTargetFromXLightsSession()
+            refreshScreens()
+        }
+    }
+
+    private func refreshScreens() {
         projectScreenModel.loadInitialProject()
         displayScreenModel.loadDisplay()
         audioScreenModel.loadLibrary()
@@ -620,7 +633,6 @@ final class AppModel {
         reviewScreenModel.refresh()
         historyScreenModel.loadHistory()
         settingsScreenModel.load()
-        xlightsSessionModel.refresh()
     }
 
     func syncProjectTargetFromXLightsSession() {

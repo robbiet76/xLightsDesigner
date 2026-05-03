@@ -64,7 +64,7 @@ struct RootContentView: View {
             model.xlightsSessionModel.refresh()
         }
         .onReceive(NotificationCenter.default.publisher(for: .projectShowFolderDidRelink)) { _ in
-            model.refreshAll()
+            model.refreshAllAfterProjectRelink()
         }
         .onReceive(NotificationCenter.default.publisher(for: .projectArtifactsDidChange)) { _ in
             model.designScreenModel.refresh()
