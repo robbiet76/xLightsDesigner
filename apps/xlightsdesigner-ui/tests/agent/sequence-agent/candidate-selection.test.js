@@ -317,3 +317,71 @@ test("candidate selection uses project target behavior learning as advisory evid
   assert.ok(good.selectionScore > poor.selectionScore);
   assert.equal(out.selectionContext.targetBehaviorLearning.recordCount, 2);
 });
+
+test("candidate selection matches project target behavior by fingerprint before target name", () => {
+  const out = buildCandidateSelectionV1({
+    intentEnvelope: {
+      artifactId: "intent-behavior-fingerprint",
+      novelty: { explorationPressure: "medium", reuseTolerance: "medium" }
+    },
+    realizationCandidates: {
+      artifactId: "candidates-behavior-fingerprint",
+      candidates: [
+        {
+          candidateId: "candidate-renamed-target",
+          realizationRefs: [
+            { targetIds: ["RenamedFace/@Mouth"], targetFingerprints: ["tmf1:mouth001"], effectName: "On" }
+          ],
+          fitSignals: { overallFit: "medium" },
+          revisionSignals: { revisionScore: 0.6 },
+          noveltySignals: { noveltyScore: 0.5, memoryPenalty: 0, oscillationPenalty: 0, oscillationRisk: "low" },
+          riskSignals: {
+            attentionConflictRisk: "medium",
+            layeringConflictRisk: "medium",
+            complexityRisk: "medium",
+            renderUncertainty: "medium"
+          }
+        },
+        {
+          candidateId: "candidate-wrong-fingerprint",
+          realizationRefs: [
+            { targetIds: ["OldFace/@Mouth"], targetFingerprints: ["tmf1:other"], effectName: "On" }
+          ],
+          fitSignals: { overallFit: "medium" },
+          revisionSignals: { revisionScore: 0.6 },
+          noveltySignals: { noveltyScore: 0.5, memoryPenalty: 0, oscillationPenalty: 0, oscillationRisk: "low" },
+          riskSignals: {
+            attentionConflictRisk: "medium",
+            layeringConflictRisk: "medium",
+            complexityRisk: "medium",
+            renderUncertainty: "medium"
+          }
+        }
+      ]
+    },
+    targetBehaviorLearning: {
+      artifactPath: "/project/display/target-behavior.json",
+      records: [
+        {
+          recordId: "tbl1:fingerprint-good",
+          targetId: "OldFace/@Mouth",
+          targetFingerprint: "tmf1:mouth001",
+          effectName: "On",
+          stats: { sampleCount: 3, positiveCount: 3, negativeCount: 0 }
+        }
+      ]
+    },
+    selectionContext: {
+      phase: "proposal",
+      seed: "proposal::behavior-fingerprint",
+      explorationEnabled: true
+    }
+  });
+
+  const renamed = out.scoredCandidates.find((row) => row.candidateId === "candidate-renamed-target");
+  const wrong = out.scoredCandidates.find((row) => row.candidateId === "candidate-wrong-fingerprint");
+  assert.equal(renamed.behaviorEvidenceCount, 1);
+  assert.equal(renamed.behaviorScore, 1);
+  assert.equal(wrong.behaviorEvidenceCount, 0);
+  assert.ok(renamed.selectionScore > wrong.selectionScore);
+});

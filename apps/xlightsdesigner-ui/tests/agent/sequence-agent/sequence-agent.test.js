@@ -1667,6 +1667,17 @@ test("sequence_agent plan metadata carries advisory target behavior learning", (
     sourceLines: ["Chorus 1 / MegaTree / add Color Wash"],
     baseRevision: "rev-behavior",
     effectCatalog: sampleCatalog(),
+    displayElements: [
+      {
+        id: "MegaTree",
+        name: "MegaTree",
+        type: "model",
+        identity: {
+          fingerprint: "tmf1:mega",
+          fingerprintVersion: "target-metadata-fingerprint-v1"
+        }
+      }
+    ],
     targetBehaviorLearning: {
       artifactType: "project_target_behavior_learning_v1",
       artifactPath: "/project/display/target-behavior.json",
@@ -1688,6 +1699,10 @@ test("sequence_agent plan metadata carries advisory target behavior learning", (
   assert.equal(out.metadata.targetBehaviorLearning.records[0].recordId, "tbl1:megagood");
   assert.equal(out.metadata.candidateSelection.source.targetBehaviorLearningRef, "/project/display/target-behavior.json");
   assert.ok(out.metadata.candidateSelection.scoredCandidates.some((row) => row.behaviorEvidenceCount >= 1));
+  assert.equal(
+    out.metadata.realizationCandidates.candidates[0].realizationRefs[0].targetFingerprints[0],
+    "tmf1:mega"
+  );
 });
 
 test("sequence_agent exposes bounded parameter prior guidance for matched target geometry", () => {

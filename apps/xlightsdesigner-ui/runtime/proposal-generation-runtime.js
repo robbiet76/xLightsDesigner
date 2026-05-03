@@ -9,7 +9,7 @@ import {
   readTargetBehaviorLearningDocument as readProjectTargetBehaviorLearningDocument
 } from "../storage/display-metadata-store.mjs";
 import { normalizeModelIndexTargetRecords } from "./target-behavior-learning-runtime.js";
-import { mergeModelIndexSubmodelsIntoSceneGraph } from "./model-index-scene-graph-runtime.js";
+import { mergeModelIndexSubmodelsIntoSceneGraph, mergeModelIndexTargetsIntoDisplayElements } from "./model-index-scene-graph-runtime.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -57,6 +57,13 @@ function loadModelIndexTargetRecords({ state = {}, deps = {} } = {}) {
 function buildEffectiveSceneGraph({ state = {}, deps = {} } = {}) {
   return mergeModelIndexSubmodelsIntoSceneGraph(
     state.sceneGraph || {},
+    loadModelIndexTargetRecords({ state, deps })
+  );
+}
+
+function buildEffectiveDisplayElements({ state = {}, deps = {} } = {}) {
+  return mergeModelIndexTargetsIntoDisplayElements(
+    state.displayElements || [],
     loadModelIndexTargetRecords({ state, deps })
   );
 }
@@ -421,6 +428,7 @@ export function createProposalGenerationRuntime(deps = {}) {
         : explicitSelectedTagNames.length
         ? explicitSelectedTagNames
         : (state.ui.metadataSelectedTags || []);
+      const effectiveDisplayElements = buildEffectiveDisplayElements({ state, deps });
       let designerCloudResponse = null;
       if (!directSequenceMode && !disableDesignerCloud && bridge && typeof bridge.runDesignerConversation === "function") {
         const cloud = await bridge.runDesignerConversation({
@@ -451,7 +459,7 @@ export function createProposalGenerationRuntime(deps = {}) {
             analysisHandoff,
             models: state.models || [],
             submodels: state.submodels || [],
-            displayElements: state.displayElements || [],
+            displayElements: effectiveDisplayElements,
             effectCatalog: state.effectCatalog,
             metadataAssignments: buildEffectiveMetadataAssignments(),
             existingDesignIds: collectCurrentDesignIds(),
@@ -477,7 +485,7 @@ export function createProposalGenerationRuntime(deps = {}) {
             cloudResponse: designerCloudResponse,
             models: state.models || [],
             submodels: state.submodels || [],
-            displayElements: state.displayElements || [],
+            displayElements: effectiveDisplayElements,
             metadataAssignments: buildEffectiveMetadataAssignments(),
             elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
           });
@@ -659,7 +667,7 @@ export function createProposalGenerationRuntime(deps = {}) {
               selectedSections: selected,
               selectedTargets: selectedTargetIds,
               selectedTags: selectedTagNames,
-              displayElements: state.displayElements || []
+              displayElements: effectiveDisplayElements
             });
             if (context?.artifactId) {
               markOrchestrationStage(
@@ -682,7 +690,7 @@ export function createProposalGenerationRuntime(deps = {}) {
         sequenceRevision: str(state.draftBaseRevision || state.revision || "unknown"),
         sequenceSettings: state.sequenceSettings,
         layoutMode: currentLayoutMode(),
-        displayElements: state.displayElements,
+        displayElements: effectiveDisplayElements,
         groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
         groupsById: effectiveSceneGraph?.groupsById || {},
         submodelsById: effectiveSceneGraph?.submodelsById || {},
@@ -748,7 +756,7 @@ export function createProposalGenerationRuntime(deps = {}) {
           effectCatalog: state.effectCatalog,
           sequenceSettings: state.sequenceSettings,
           layoutMode: currentLayoutMode(),
-          displayElements: state.displayElements,
+          displayElements: effectiveDisplayElements,
           groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
           groupsById: effectiveSceneGraph?.groupsById || {},
           submodelsById: effectiveSceneGraph?.submodelsById || {},

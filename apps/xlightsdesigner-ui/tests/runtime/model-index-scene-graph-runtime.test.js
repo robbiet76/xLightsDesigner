@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   buildSubmodelsByIdFromModelIndexTargetRecords,
+  mergeModelIndexTargetsIntoDisplayElements,
   mergeModelIndexSubmodelsIntoSceneGraph,
   normalizeModelIndexArtifactSubmodels
 } from "../../runtime/model-index-scene-graph-runtime.js";
@@ -88,4 +89,34 @@ test("buildSubmodelsByIdFromModelIndexTargetRecords ignores non-submodel records
   assert.deepEqual(buildSubmodelsByIdFromModelIndexTargetRecords([
     { targetId: "Tree", targetKind: "model", identity: { fingerprint: "tmf1:tree" } }
   ]), {});
+});
+
+test("mergeModelIndexTargetsIntoDisplayElements enriches live display elements with fingerprints", () => {
+  const rows = mergeModelIndexTargetsIntoDisplayElements([
+    { id: "RenamedFace/@Mouth", name: "RenamedFace/@Mouth", type: "submodel" }
+  ], [
+    {
+      targetId: "RenamedFace/@Mouth",
+      targetKind: "submodel",
+      identity: {
+        displayName: "Renamed Face / @Mouth",
+        rawType: "SubModel",
+        canonicalType: "submodel",
+        fingerprint: "tmf1:mouth",
+        fingerprintVersion: "target-metadata-fingerprint-v1",
+        parentId: "RenamedFace"
+      },
+      structure: {
+        submodelMetadata: {
+          structureHints: ["feature_mouth"]
+        }
+      }
+    }
+  ]);
+
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].id, "RenamedFace/@Mouth");
+  assert.equal(rows[0].targetFingerprint, "tmf1:mouth");
+  assert.equal(rows[0].identity.parentId, "RenamedFace");
+  assert.deepEqual(rows[0].structure.submodelMetadata.structureHints, ["feature_mouth"]);
 });

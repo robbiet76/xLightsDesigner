@@ -19,7 +19,7 @@ import {
   normalizeModelIndexTargetRecords,
   upsertTargetBehaviorLearningRecord
 } from "./target-behavior-learning-runtime.js";
-import { mergeModelIndexSubmodelsIntoSceneGraph } from "./model-index-scene-graph-runtime.js";
+import { mergeModelIndexSubmodelsIntoSceneGraph, mergeModelIndexTargetsIntoDisplayElements } from "./model-index-scene-graph-runtime.js";
 import {
   readDisplayRefreshArtifact,
   readTargetBehaviorLearningDocument as readProjectTargetBehaviorLearningDocument,
@@ -52,6 +52,13 @@ function loadModelIndexTargetRecords({ state = {}, deps = {} } = {}) {
 function buildEffectiveSceneGraph({ state = {}, deps = {} } = {}) {
   return mergeModelIndexSubmodelsIntoSceneGraph(
     state.sceneGraph || {},
+    loadModelIndexTargetRecords({ state, deps })
+  );
+}
+
+function buildEffectiveDisplayElements({ state = {}, deps = {} } = {}) {
+  return mergeModelIndexTargetsIntoDisplayElements(
+    state.displayElements || [],
     loadModelIndexTargetRecords({ state, deps })
   );
 }
@@ -248,6 +255,7 @@ export async function executeApplyCore({
     };
     const targetBehaviorLearning = await loadTargetBehaviorLearning({ state, deps });
     const effectiveSceneGraph = buildEffectiveSceneGraph({ state, deps });
+    const effectiveDisplayElements = buildEffectiveDisplayElements({ state, deps });
     let currentSequenceContext = null;
     try {
       currentSequenceContext = await buildCurrentSequenceContextFromReadback({
@@ -258,7 +266,7 @@ export async function executeApplyCore({
         selectedSections: planningScope.sections,
         selectedTargets: planningScope.targetIds,
         selectedTags: planningScope.tagNames,
-        displayElements: state.displayElements || []
+        displayElements: effectiveDisplayElements
       });
       if (currentSequenceContext?.artifactId) {
         markOrchestrationStage(
@@ -279,7 +287,7 @@ export async function executeApplyCore({
       sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
       sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
-      displayElements: state.displayElements,
+      displayElements: effectiveDisplayElements,
       groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
       groupsById: effectiveSceneGraph?.groupsById || {},
       submodelsById: effectiveSceneGraph?.submodelsById || {},
@@ -356,7 +364,7 @@ export async function executeApplyCore({
       effectCatalog: state.effectCatalog,
       sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
-      displayElements: state.displayElements,
+      displayElements: effectiveDisplayElements,
       groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
       groupsById: effectiveSceneGraph?.groupsById || {},
       submodelsById: effectiveSceneGraph?.submodelsById || {},

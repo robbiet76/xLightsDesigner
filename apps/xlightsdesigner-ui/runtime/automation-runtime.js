@@ -2,7 +2,7 @@ import { buildEffectiveMetadataAssignments } from "./effective-metadata-assignme
 import { mergeVisualHintDefinitions } from "./visual-hint-definitions.js";
 import { readDisplayRefreshArtifact } from "../storage/display-metadata-store.mjs";
 import { normalizeModelIndexTargetRecords } from "./target-behavior-learning-runtime.js";
-import { mergeModelIndexSubmodelsIntoSceneGraph } from "./model-index-scene-graph-runtime.js";
+import { mergeModelIndexSubmodelsIntoSceneGraph, mergeModelIndexTargetsIntoDisplayElements } from "./model-index-scene-graph-runtime.js";
 
 export function createAutomationRuntime(deps = {}) {
   const {
@@ -52,23 +52,28 @@ export function createAutomationRuntime(deps = {}) {
     getPageStates
   } = deps;
 
-  function buildEffectiveSceneGraph() {
+  function loadModelIndexTargetRecords() {
     const projectFilePath = String(state?.projectFilePath || "").trim();
-    let modelIndexTargetRecords = [];
-    if (projectFilePath) {
-      const reader = deps.readDisplayRefreshArtifact || readDisplayRefreshArtifact;
-      try {
-        const result = typeof reader === "function"
-          ? reader({ projectFilePath, kind: "model-index" })
-          : null;
-        modelIndexTargetRecords = result?.ok === true
-          ? normalizeModelIndexTargetRecords(result.artifact)
-          : [];
-      } catch {
-        modelIndexTargetRecords = [];
-      }
+    if (!projectFilePath) return [];
+    const reader = deps.readDisplayRefreshArtifact || readDisplayRefreshArtifact;
+    try {
+      const result = typeof reader === "function"
+        ? reader({ projectFilePath, kind: "model-index" })
+        : null;
+      return result?.ok === true
+        ? normalizeModelIndexTargetRecords(result.artifact)
+        : [];
+    } catch {
+      return [];
     }
-    return mergeModelIndexSubmodelsIntoSceneGraph(state.sceneGraph || {}, modelIndexTargetRecords);
+  }
+
+  function buildEffectiveSceneGraph() {
+    return mergeModelIndexSubmodelsIntoSceneGraph(state.sceneGraph || {}, loadModelIndexTargetRecords());
+  }
+
+  function buildEffectiveDisplayElements() {
+    return mergeModelIndexTargetsIntoDisplayElements(state.displayElements || [], loadModelIndexTargetRecords());
   }
 
   function setAutomationRenderObservation(payload = {}) {
@@ -281,7 +286,7 @@ export function createAutomationRuntime(deps = {}) {
           musicDesignContext,
           models: state.models || [],
           submodels: state.submodels || [],
-          displayElements: state.displayElements || [],
+          displayElements: buildEffectiveDisplayElements(),
           metadataAssignments: buildEffectiveMetadataAssignments(
             state.metadata?.assignments || [],
             state.metadata?.preferencesByTargetId || {},
@@ -393,6 +398,7 @@ export function createAutomationRuntime(deps = {}) {
     let rawPlan = [];
     let graph = null;
     const effectiveSceneGraph = buildEffectiveSceneGraph();
+    const effectiveDisplayElements = buildEffectiveDisplayElements();
     const generated = buildSequenceAgentPlan({
       analysisHandoff,
       intentHandoff,
@@ -402,7 +408,7 @@ export function createAutomationRuntime(deps = {}) {
       effectCatalog: state.effectCatalog,
       sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
-      displayElements: state.displayElements,
+      displayElements: effectiveDisplayElements,
       groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
       groupsById: effectiveSceneGraph?.groupsById || {},
       submodelsById: effectiveSceneGraph?.submodelsById || {},
@@ -565,6 +571,7 @@ export function createAutomationRuntime(deps = {}) {
     let planSource = "generated";
     let rawPlan = [];
     const effectiveSceneGraph = buildEffectiveSceneGraph();
+    const effectiveDisplayElements = buildEffectiveDisplayElements();
     const generated = buildSequenceAgentPlan({
       analysisHandoff,
       intentHandoff,
@@ -574,7 +581,7 @@ export function createAutomationRuntime(deps = {}) {
       effectCatalog: state.effectCatalog,
       sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
-      displayElements: state.displayElements,
+      displayElements: effectiveDisplayElements,
       groupIds: Object.keys(effectiveSceneGraph?.groupsById || {}),
       groupsById: effectiveSceneGraph?.groupsById || {},
       submodelsById: effectiveSceneGraph?.submodelsById || {},

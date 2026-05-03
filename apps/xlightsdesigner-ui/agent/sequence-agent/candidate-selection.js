@@ -101,13 +101,17 @@ function targetBehaviorSignal(candidate = null, targetBehaviorLearning = null) {
   const matched = [];
   for (const ref of refs) {
     const targetIds = arr(ref?.targetIds).map((row) => str(row).toLowerCase()).filter(Boolean);
+    const targetFingerprints = arr(ref?.targetFingerprints).map((row) => str(row).toLowerCase()).filter(Boolean);
     const effectName = str(ref?.effectName).toLowerCase();
-    if (!targetIds.length || !effectName) continue;
+    if ((!targetIds.length && !targetFingerprints.length) || !effectName) continue;
     for (const record of records) {
       const recordTarget = str(record?.targetId).toLowerCase();
+      const recordFingerprint = str(record?.targetFingerprint).toLowerCase();
       const recordEffect = str(record?.effectName || record?.effectFamily).toLowerCase();
-      if (!recordTarget || !recordEffect) continue;
-      if (targetIds.includes(recordTarget) && recordEffect === effectName) matched.push(record);
+      if ((!recordTarget && !recordFingerprint) || !recordEffect) continue;
+      const fingerprintMatched = recordFingerprint && targetFingerprints.includes(recordFingerprint);
+      const targetIdMatched = (!recordFingerprint || !targetFingerprints.length) && recordTarget && targetIds.includes(recordTarget);
+      if ((fingerprintMatched || targetIdMatched) && recordEffect === effectName) matched.push(record);
     }
   }
   const uniqueMatched = matched.filter((row, index, list) => list.findIndex((other) => str(other?.recordId) === str(row?.recordId)) === index);

@@ -20,6 +20,25 @@ function unique(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
+function buildTargetIdentityIndex(displayElements = []) {
+  const index = new Map();
+  for (const row of arr(displayElements)) {
+    if (!row || typeof row !== 'object') continue;
+    const keys = unique([row?.id, row?.name]);
+    if (!keys.length) continue;
+    const identity = {
+      targetFingerprint: str(row?.targetFingerprint || row?.fingerprint || row?.identity?.fingerprint),
+      fingerprintVersion: str(row?.fingerprintVersion || row?.identity?.fingerprintVersion)
+    };
+    for (const key of keys) index.set(key, identity);
+  }
+  return index;
+}
+
+function targetFingerprintsFor(targetIds = [], targetIdentityIndex = new Map()) {
+  return unique(targetIds.map((targetId) => targetIdentityIndex.get(str(targetId))?.targetFingerprint));
+}
+
 function overlapRatio(left = [], right = []) {
   const a = new Set(unique(left));
   const b = new Set(unique(right));
@@ -112,7 +131,8 @@ function buildCandidate({
   priorPassMemory = null,
   sequencerRevisionBrief = null,
   temporalProfileOverride = '',
-  layeringProfileOverride = null
+  layeringProfileOverride = null,
+  targetIdentityIndex = new Map()
 } = {}) {
   const allTargets = unique(seeds.flatMap((row) => arr(row?.targetIds)));
   const allEffects = unique(seeds.map((row) => row?.effectName));
@@ -179,6 +199,7 @@ function buildCandidate({
     seedRecommendations: seeds.map((row) => ({
       section: str(row?.section),
       targetIds: unique(row?.targetIds),
+      targetFingerprints: targetFingerprintsFor(row?.targetIds, targetIdentityIndex),
       effectName: str(row?.effectName),
       executionLine: str(row?.executionLine),
       parameterPriorGuidance: row?.parameterPriorGuidance && typeof row.parameterPriorGuidance === 'object'
@@ -192,6 +213,7 @@ function buildCandidate({
       realizationId: `${id}:realization:${index + 1}`,
       section: str(row?.section),
       targetIds: unique(row?.targetIds),
+      targetFingerprints: targetFingerprintsFor(row?.targetIds, targetIdentityIndex),
       effectName: str(row?.effectName),
       timingRole: 'section_window',
       settingsRef: null,
@@ -334,6 +356,7 @@ export function buildRealizationCandidatesV1({
     ? new Set(Object.keys(effectCatalog.byName))
     : null;
   const primarySeeds = seeds.length ? seeds : [{ section: unique(scope?.sectionNames).join(', '), targetIds: scopeTargets, effectName: 'Color Wash' }];
+  const targetIdentityIndex = buildTargetIdentityIndex(displayElements);
 
   const translationLayer = resolveTranslationLayer({
     translationIntent,
@@ -368,7 +391,8 @@ export function buildRealizationCandidatesV1({
     noveltyScore: 0.35,
     riskBias: 'medium',
     priorPassMemory,
-    sequencerRevisionBrief
+    sequencerRevisionBrief,
+    targetIdentityIndex
   });
 
   const focusedSeeds = primarySeeds.map((row) => ({
@@ -384,7 +408,8 @@ export function buildRealizationCandidatesV1({
     noveltyScore: 0.55,
     riskBias: 'low',
     priorPassMemory,
-    sequencerRevisionBrief
+    sequencerRevisionBrief,
+    targetIdentityIndex
   });
 
   const alternateSeeds = alternativeBySection.map(({ seed, alternatives }) => ({
@@ -400,7 +425,8 @@ export function buildRealizationCandidatesV1({
     noveltyScore: 0.75,
     riskBias: 'medium',
     priorPassMemory,
-    sequencerRevisionBrief
+    sequencerRevisionBrief,
+    targetIdentityIndex
   });
 
   const feedbackShape = buildFeedbackShapedCandidateShape({
@@ -421,7 +447,8 @@ export function buildRealizationCandidatesV1({
         priorPassMemory,
         sequencerRevisionBrief,
         temporalProfileOverride: feedbackShape.temporalProfileOverride,
-        layeringProfileOverride: feedbackShape.layeringProfileOverride
+        layeringProfileOverride: feedbackShape.layeringProfileOverride,
+        targetIdentityIndex
       })
     : null;
 
