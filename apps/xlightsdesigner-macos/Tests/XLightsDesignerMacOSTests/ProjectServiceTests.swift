@@ -2,6 +2,10 @@ import Foundation
 import Testing
 @testable import XLightsDesignerMacOS
 
+private final class ProjectRelinkNotificationCapture: @unchecked Sendable {
+    var object: String?
+}
+
 struct ProjectServiceTests {
     @Test func createProjectStoresExpectedFileName() throws {
         let service = try makeService()
@@ -204,6 +208,17 @@ struct ProjectServiceTests {
             fileSelectionService: ProjectServiceTestFileSelectionService(folderPath: "/tmp/new-show"),
             sessionStore: ProjectServiceTestSessionStore()
         )
+        let relinkNotificationCapture = ProjectRelinkNotificationCapture()
+        let observer = NotificationCenter.default.addObserver(
+            forName: .projectShowFolderDidRelink,
+            object: nil,
+            queue: nil
+        ) { notification in
+            relinkNotificationCapture.object = notification.object as? String
+        }
+        defer {
+            NotificationCenter.default.removeObserver(observer)
+        }
 
         model.chooseShowFolderForActiveProject()
 
@@ -214,6 +229,7 @@ struct ProjectServiceTests {
         #expect(active.showFolder == "/tmp/new-show")
         #expect(relink?["previousShowFolder"] as? String == "/tmp/show")
         #expect(relink?["showFolder"] as? String == "/tmp/new-show")
+        #expect(relinkNotificationCapture.object == active.projectFilePath)
         #expect(workspace.projectBanner?.id == "show-folder-relinked")
     }
 

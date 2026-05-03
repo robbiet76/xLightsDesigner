@@ -3,6 +3,7 @@ import Observation
 
 extension Notification.Name {
     static let projectWorkspaceDidChange = Notification.Name("ProjectWorkspaceDidChange")
+    static let projectShowFolderDidRelink = Notification.Name("ProjectShowFolderDidRelink")
     static let projectArtifactsDidChange = Notification.Name("ProjectArtifactsDidChange")
     static let displayDiscoveryDidChange = Notification.Name("DisplayDiscoveryDidChange")
 }

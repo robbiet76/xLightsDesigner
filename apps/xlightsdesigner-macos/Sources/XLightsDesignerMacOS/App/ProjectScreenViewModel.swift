@@ -177,6 +177,7 @@ final class ProjectScreenViewModel {
         do {
             let saved = try projectService.saveProject(active)
             workspace.setProject(saved)
+            NotificationCenter.default.post(name: .projectShowFolderDidRelink, object: saved.projectFilePath)
             workspace.projectBanner = ProjectBannerModel(id: "show-folder-relinked", level: .ready, text: "Relinked show folder. Existing project metadata was kept; Display, Sequence, Design, and Review will refresh against the new folder.")
             loadAvailableProjects()
             syncSelectedProjectFromActive()
