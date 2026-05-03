@@ -370,7 +370,7 @@ const plan = {
   },
   paletteProtocol: {
     profiles: ["mono_white", "rgb_primary"],
-    defaultPalettePath: process.env.TRAINING_DEFAULT_PALETTE_PATH || `${process.env.HOME || ""}/xLights-2026.06/resources/palettes/Default.xpalette`,
+    defaultPalettePath: process.env.TRAINING_DEFAULT_PALETTE_PATH || `${process.env.HOME || ""}/xLights-2026.07/resources/palettes/Default.xpalette`,
     profileActivation: {
       mono_white: [1],
       rgb_primary: [2, 3, 4]

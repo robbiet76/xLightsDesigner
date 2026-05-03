@@ -14,22 +14,6 @@ function resolveAppBinary(appPath) {
   return { app: resolvedApp, binary: binaryPath };
 }
 
-function listDerivedDataCandidates() {
-  const derivedRoot = path.join(os.homedir(), 'Library/Developer/Xcode/DerivedData');
-  if (!fs.existsSync(derivedRoot)) {
-    return [];
-  }
-  return fs.readdirSync(derivedRoot, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && d.name.startsWith('xLights-'))
-    .map((d) => path.join(derivedRoot, d.name, 'Build/Products/Debug/xLights.app'))
-    .filter((p) => fs.existsSync(path.join(p, 'Contents/MacOS/xLights')))
-    .map((p) => ({
-      app: p,
-      mtimeMs: fs.statSync(p).mtimeMs
-    }))
-    .sort((a, b) => b.mtimeMs - a.mtimeMs);
-}
-
 function parseArgs(argv) {
   const passthroughArgs = [];
   let showDir = '';
@@ -76,13 +60,11 @@ function parseArgs(argv) {
 }
 
 const { passthroughArgs: args, showDir, appPath, waitForApi, apiTimeoutMs, modalPolicy } = parseArgs(process.argv.slice(2));
-const explicitTarget = appPath ? resolveAppBinary(appPath) : null;
-const derivedCandidates = explicitTarget ? [] : listDerivedDataCandidates();
-if (!explicitTarget && !derivedCandidates.length) {
-  console.error('No xLights DerivedData debug build found. Pass --app <xLights.app> or set XLIGHTS_APP_PATH.');
+if (!appPath) {
+  console.error('xLights app path is required. Pass --app <xLights.app> or set XLIGHTS_APP_PATH.');
   process.exit(1);
 }
-const targetInfo = explicitTarget || resolveAppBinary(derivedCandidates[0].app);
+const targetInfo = resolveAppBinary(appPath);
 const target = targetInfo.app;
 const binary = targetInfo.binary;
 const trustedRoots = [
@@ -437,7 +419,7 @@ if (env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG) {
 console.log(JSON.stringify({
   target,
   binary,
-  targetSource: explicitTarget ? 'explicit-app-path' : 'derived-data-latest-debug-build',
+  targetSource: process.env.XLIGHTS_APP_PATH ? 'environment-app-path' : 'explicit-app-path',
   args,
   logPath,
   modalPolicy,

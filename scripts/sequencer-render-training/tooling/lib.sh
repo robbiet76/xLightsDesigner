@@ -24,6 +24,12 @@ resolve_xlights_app_path() {
     return 0
   fi
 
+  local repo_debug_app="${HOME}/xLights-2026.07/build/XLD-CodexDerivedData/Build/Products/Debug/xLights.app"
+  if [[ -d "${repo_debug_app}" ]]; then
+    printf '%s\n' "${repo_debug_app}"
+    return 0
+  fi
+
   local running_binary running_app
   running_binary="$(ps -ax -o command= | awk '/xLights\.app\/Contents\/MacOS\/xLights$/ && $0 !~ /awk/ {print; exit}')"
   if [[ -n "${running_binary}" ]]; then
@@ -39,14 +45,7 @@ resolve_xlights_app_path() {
     return 0
   fi
 
-  local derived_app
-  derived_app="$(find "${HOME}/Library/Developer/Xcode/DerivedData" -path '*/Build/Products/Debug/xLights.app' -type d 2>/dev/null | head -n 1 || true)"
-  if [[ -n "${derived_app}" && -d "${derived_app}" ]]; then
-    printf '%s\n' "${derived_app}"
-    return 0
-  fi
-
-  echo "Unable to resolve xLights app path." >&2
+  echo "Unable to resolve xLights app path. Set XLIGHTS_APP_PATH or build ${repo_debug_app}." >&2
   return 1
 }
 

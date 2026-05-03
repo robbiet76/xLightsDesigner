@@ -366,11 +366,11 @@ const outputDir = process.argv[2]
   : resolve("scripts/sequencer-render-training/catalog/upstream-effectmetadata");
 const sourceDir = process.argv[3]
   ? resolve(process.argv[3])
-  : resolve(process.env.XLIGHTS_EFFECT_METADATA_DIR || join(process.env.HOME || "", "xLights-2026.06", "resources", "effectmetadata"));
+  : resolve(process.env.XLIGHTS_EFFECT_METADATA_DIR || join(process.env.HOME || "", "xLights-2026.07", "resources", "effectmetadata"));
 const registryPath = process.argv[4]
   ? resolve(process.argv[4])
   : resolve("scripts/sequencer-render-training/catalog/effect-parameter-registry.json");
-const xlightsVersion = process.argv[5] || "2026.06";
+const xlightsVersion = process.argv[5] || "2026.07";
 
 mkdirSync(outputDir, { recursive: true });
 
