@@ -488,6 +488,188 @@ test("proposal generation annotates next proposal lines with preservation correc
   assert.match(state.agentPlan.executionLines[0], /preserve existing overlapping effects/i);
 });
 
+test("proposal generation loads model index and target behavior into sequence-agent context", async () => {
+  const state = buildState();
+  state.projectFilePath = "/project/TestProject/TestProject.xdproj";
+  state.flags.planOnlyMode = true;
+  state.health.capabilityCommands = [];
+  state.sequenceSettings = {};
+  state.displayElements = [
+    { id: "CustomFaceCurrent", name: "CustomFaceCurrent", type: "model" }
+  ];
+  state.models = [{ id: "CustomFaceCurrent", name: "CustomFaceCurrent", type: "Model" }];
+  state.submodels = [];
+  state.sceneGraph = { groupsById: {}, submodelsById: {} };
+
+  let sequenceInput = null;
+  let planInput = null;
+  let readbackInput = null;
+
+  const modelIndexArtifact = {
+    artifactType: "target_metadata_index_v1",
+    records: [
+      {
+        targetId: "CustomFaceCurrent",
+        targetKind: "model",
+        identity: {
+          displayName: "CustomFaceCurrent",
+          rawType: "Custom",
+          canonicalType: "custom",
+          fingerprint: "tmf1:custom-face-current",
+          fingerprintVersion: "target-metadata-fingerprint-v1"
+        },
+        structure: {
+          customStructure: {
+            profile: "custom_sparse_shape",
+            traits: ["custom_grid", "api_node_layout"],
+            construction: { source: "layout.getModelNodes" }
+          }
+        }
+      },
+      {
+        targetId: "CustomFaceCurrent/@Mouth",
+        targetKind: "submodel",
+        identity: {
+          displayName: "CustomFaceCurrent / @Mouth",
+          rawType: "SubModel",
+          canonicalType: "submodel",
+          fingerprint: "tmf1:custom-mouth",
+          fingerprintVersion: "target-metadata-fingerprint-v1",
+          parentId: "CustomFaceCurrent",
+          parentName: "CustomFaceCurrent"
+        },
+        structure: {
+          submodelMetadata: {
+            parentId: "CustomFaceCurrent",
+            parentName: "CustomFaceCurrent",
+            siblingCount: 11,
+            nodeCoverage: { nodeCount: 12, parentNodeCount: 143, ratio: 0.12 },
+            structureHints: ["custom_submodel", "partial_region"]
+          }
+        }
+      }
+    ]
+  };
+  const targetBehaviorDocument = {
+    artifactType: "project_target_behavior_learning_v1",
+    artifactVersion: "1.0",
+    records: [
+      {
+        recordId: "tbl1:previous-mouth-on",
+        targetId: "CustomFacePrevious/@Mouth",
+        targetKind: "submodel",
+        targetFingerprint: "tmf1:custom-mouth",
+        fingerprintVersion: "target-metadata-fingerprint-v1",
+        effectName: "On",
+        effectFamily: "On",
+        probeScope: "submodel",
+        stats: { sampleCount: 3, positiveCount: 3, negativeCount: 0, lastObservedAt: "2026-05-03T13:45:01.702Z" }
+      }
+    ]
+  };
+
+  const runtime = createProposalGenerationRuntime({
+    state,
+    buildSequenceSession: () => ({
+      canGenerateSequence: true,
+      planOnlyMode: true,
+      xlightsConnected: false
+    }),
+    beginOrchestrationRun: () => ({ id: "orch-target-context" }),
+    executeDirectSequenceRequestOrchestration: () => ({
+      ok: true,
+      proposalLines: ["Chorus 1 / CustomFaceCurrent/@Mouth / apply On effect"],
+      guidedQuestions: [],
+      proposalBundle: {
+        bundleType: "proposal_bundle_v1",
+        scope: { sections: ["Chorus 1"], targetIds: ["CustomFaceCurrent/@Mouth"], tagNames: [] },
+        lifecycle: { status: "draft" }
+      },
+      intentHandoff: {
+        artifactType: "intent_handoff_v1",
+        goal: "Use the mouth submodel for a clean accent.",
+        mode: "revise",
+        scope: { sections: ["Chorus 1"], targetIds: ["CustomFaceCurrent/@Mouth"], tagNames: [] }
+      }
+    }),
+    applyDesignerDraftSuccessState: (targetState, payload) => {
+      targetState.creative.proposalBundle = payload.proposalBundle;
+    },
+    hydrateIntentHandoffExecutionStrategy: (intent) => intent,
+    readDisplayRefreshArtifact: ({ projectFilePath, kind }) => {
+      assert.equal(projectFilePath, state.projectFilePath);
+      assert.equal(kind, "model-index");
+      return { ok: true, artifactPath: "/project/TestProject/display/model-index.json", artifact: modelIndexArtifact };
+    },
+    readTargetBehaviorLearningDocument: async ({ projectFilePath }) => {
+      assert.equal(projectFilePath, state.projectFilePath);
+      return {
+        ok: true,
+        artifactPath: "/project/TestProject/display/target-behavior.json",
+        document: targetBehaviorDocument
+      };
+    },
+    setAgentHandoff: () => ({ ok: true, errors: [] }),
+    buildSequenceAgentInput: (input) => {
+      sequenceInput = input;
+      return { ...input, ok: true };
+    },
+    buildCurrentSequenceContextFromReadback: async (input) => {
+      readbackInput = input;
+      return {
+        artifactType: "current_sequence_context_v1",
+        artifactId: "current_sequence_context_v1-target-context",
+        summary: { timingTrackCount: 1, effectCount: 1 }
+      };
+    },
+    validateSequenceAgentContractGate: () => ({ ok: true, report: {} }),
+    buildSequenceAgentPlan: (input) => {
+      planInput = input;
+      return {
+        agentRole: "sequence_agent",
+        contractVersion: "1.0",
+        planId: "plan-target-context",
+        summary: "Sequence plan",
+        estimatedImpact: 1,
+        warnings: [],
+        commands: [],
+        baseRevision: "rev-1",
+        validationReady: true,
+        executionLines: ["Chorus 1 / CustomFaceCurrent/@Mouth / apply On effect"],
+        metadata: {
+          targetBehaviorLearning: {
+            recordCount: input.targetBehaviorLearning.records.length
+          },
+          scope: { sections: ["Chorus 1"], targetIds: ["CustomFaceCurrent/@Mouth"], tagNames: [] }
+        }
+      };
+    },
+    buildArtifactId: (type) => `${type}-target-context`,
+    validateCommandGraph: () => ({ ok: true, nodeCount: 0, errors: [] }),
+    normalizeMetadataSelectedTags: (values) => values,
+    normalizeMetadataSelectionIds: (values) => values,
+    persist: () => {},
+    render: () => {}
+  });
+
+  await runtime.generateProposal("Use the mouth submodel for a clean accent.", {
+    requestedRole: "sequence_agent",
+    selectedSections: ["Chorus 1"],
+    selectedTargetIds: ["CustomFaceCurrent/@Mouth"]
+  });
+
+  assert.equal(sequenceInput.displayElements.find((row) => row.id === "CustomFaceCurrent").identity.fingerprint, "tmf1:custom-face-current");
+  assert.equal(sequenceInput.submodelsById["CustomFaceCurrent/@Mouth"].identity.fingerprint, "tmf1:custom-mouth");
+  assert.equal(sequenceInput.submodelsById["CustomFaceCurrent/@Mouth"].nodeCoverage.ratio, 0.12);
+  assert.equal(sequenceInput.targetBehaviorLearning.artifactPath, "/project/TestProject/display/target-behavior.json");
+  assert.equal(sequenceInput.targetBehaviorLearning.records[0].targetFingerprint, "tmf1:custom-mouth");
+  assert.equal(planInput.displayElements.find((row) => row.id === "CustomFaceCurrent").identity.fingerprint, "tmf1:custom-face-current");
+  assert.equal(planInput.submodelsById["CustomFaceCurrent/@Mouth"].parentId, "CustomFaceCurrent");
+  assert.equal(planInput.targetBehaviorLearning.records[0].recordId, "tbl1:previous-mouth-on");
+  assert.equal(readbackInput.displayElements.find((row) => row.id === "CustomFaceCurrent").identity.fingerprint, "tmf1:custom-face-current");
+  assert.equal(state.agentPlan.handoff.metadata.targetBehaviorLearning.recordCount, 1);
+});
+
 test("proposal generation reconstructs preservation correction from prior practical validation snapshot", async () => {
   const state = buildState();
   state.flags.planOnlyMode = true;
