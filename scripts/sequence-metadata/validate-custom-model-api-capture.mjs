@@ -136,17 +136,33 @@ function submodelRowsFrom(body = {}) {
 async function main() {
   const args = parseArgs();
   let showDirectorySwitch = null;
-  if (args.showDir) {
-    showDirectorySwitch = await setShowDirectory(args.endpoint, path.resolve(args.showDir), {
-      force: args.forceShowDir,
-      permanent: args.permanentShowDir
-    });
-  }
   let mediaStatus = null;
   try {
     mediaStatus = await getMediaStatus(args.endpoint);
   } catch {
     mediaStatus = null;
+  }
+  if (args.showDir) {
+    const requestedShowDir = path.resolve(args.showDir);
+    const activeShowDir = mediaStatus?.data?.showDirectory ? path.resolve(mediaStatus.data.showDirectory) : "";
+    if (activeShowDir === requestedShowDir) {
+      showDirectorySwitch = {
+        ok: true,
+        skipped: true,
+        reason: "already-active",
+        data: { showDirectory: activeShowDir }
+      };
+    } else {
+      showDirectorySwitch = await setShowDirectory(args.endpoint, requestedShowDir, {
+        force: args.forceShowDir,
+        permanent: args.permanentShowDir
+      });
+      try {
+        mediaStatus = await getMediaStatus(args.endpoint);
+      } catch {
+        mediaStatus = null;
+      }
+    }
   }
   const modelBody = await getModels(args.endpoint);
   const models = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : [];
