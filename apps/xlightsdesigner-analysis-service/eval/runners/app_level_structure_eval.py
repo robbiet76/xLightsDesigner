@@ -371,7 +371,11 @@ def profile_song(song: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         "chorusRatio": (c / len(st)) if st else 0.0,
         "avgRepeat": mean_num(st, "globallyRepeatedLineRatio"),
         "avgTitle": mean_num(st, "titleLineRatio"),
-        "avgLines": mean_num([{"lineCount": len(x.get("lines") or [])} for x in st], "lineCount"),
+        "avgLines": mean_num([
+            {"lineCount": int(x.get("lineCount", len(x.get("lines") or [])))}
+            for x in st
+            if isinstance(x, dict)
+        ], "lineCount"),
     }
 
 
@@ -418,7 +422,10 @@ def select_few_shot(corpus_songs: List[Dict[str, Any]], evidence: List[Dict[str,
                 {
                     "index": int(x.get("index", i)),
                     "label": str(x.get("draftLabel", "")).strip() or "Verse",
-                    "text": str(x.get("text", "")).strip()[:220],
+                    "lineCount": int(x.get("lineCount", len(x.get("lines") or []))),
+                    "titleLineRatio": float(x.get("titleLineRatio", 0) or 0),
+                    "globallyRepeatedLineRatio": float(x.get("globallyRepeatedLineRatio", 0) or 0),
+                    "patternSeenBefore": bool(x.get("patternSeenBefore", False)),
                 }
                 for i, x in enumerate(st[:8])
             ],
@@ -573,7 +580,8 @@ def load_training_package_audio_bundle(root_dir: Path) -> Dict[str, Any]:
         idx = json.loads(di.read_text(encoding="utf-8"))
         datasets.append(di)
         for src in idx.get("sources") or []:
-            if str(src.get("type", "")).strip() != "stanza-corpus":
+            source_type = str(src.get("type", "")).strip()
+            if source_type not in ("stanza-corpus", "stanza-feature-corpus"):
                 continue
             cp = mod_path.parent / str(src.get("path", "")).strip()
             if not cp.exists():

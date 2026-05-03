@@ -528,7 +528,9 @@ export function createAudioAnalysisPipelineRuntime(deps = {}) {
     const verseCount = labels.filter((l) => l.toLowerCase() === "verse").length;
     const avgRepeat = meanNumber(stanzas, "globallyRepeatedLineRatio");
     const avgTitleRatio = meanNumber(stanzas, "titleLineRatio");
-    const avgLineCount = meanNumber(stanzas.map((s) => ({ lineCount: Array.isArray(s?.lines) ? s.lines.length : 0 })), "lineCount");
+    const avgLineCount = meanNumber(stanzas.map((s) => ({
+      lineCount: Number.isFinite(Number(s?.lineCount)) ? Number(s.lineCount) : (Array.isArray(s?.lines) ? s.lines.length : 0)
+    })), "lineCount");
     return { stanzaCount: stanzas.length, chorusCount, verseCount, chorusRatio: stanzas.length ? chorusCount / stanzas.length : 0, avgRepeat, avgTitleRatio, avgLineCount };
   }
 
@@ -565,7 +567,14 @@ export function createAudioAnalysisPipelineRuntime(deps = {}) {
         lyricsSource: String(c.song?.lyricsSource || "").trim(),
         stanzaCount: stanzas.length,
         labels: stanzas.map((s) => String(s?.draftLabel || "").trim() || "Verse"),
-        stanzas: stanzas.slice(0, 8).map((s, idx) => ({ index: Number(s?.index ?? idx), label: String(s?.draftLabel || "").trim() || "Verse", text: String(s?.text || "").trim().slice(0, 220) })),
+        stanzas: stanzas.slice(0, 8).map((s, idx) => ({
+          index: Number(s?.index ?? idx),
+          label: String(s?.draftLabel || "").trim() || "Verse",
+          lineCount: Number.isFinite(Number(s?.lineCount)) ? Number(s.lineCount) : (Array.isArray(s?.lines) ? s.lines.length : 0),
+          titleLineRatio: Number(s?.titleLineRatio || 0),
+          globallyRepeatedLineRatio: Number(s?.globallyRepeatedLineRatio || 0),
+          patternSeenBefore: Boolean(s?.patternSeenBefore)
+        })),
         profile: { chorusRatio: Number(c.profile.chorusRatio.toFixed(3)), avgRepeat: Number(c.profile.avgRepeat.toFixed(3)), avgTitleRatio: Number(c.profile.avgTitleRatio.toFixed(3)) }
       };
     });

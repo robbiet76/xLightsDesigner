@@ -104,7 +104,8 @@ export function createAnalysisServiceRuntime(deps = {}) {
         if (!datasetRes?.ok || !datasetRes?.data || typeof datasetRes.data !== 'object') continue;
         const sources = Array.isArray(datasetRes.data.sources) ? datasetRes.data.sources : [];
         for (const src of sources) {
-          if (String(src?.type || '').trim() !== 'stanza-corpus') continue;
+          const sourceType = String(src?.type || '').trim();
+          if (sourceType !== 'stanza-corpus' && sourceType !== 'stanza-feature-corpus') continue;
           const srcPath = String(src?.path || '').trim();
           if (!srcPath) continue;
           const corpusPath = joinRelPath(moduleDir, srcPath);
