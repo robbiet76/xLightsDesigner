@@ -1701,8 +1701,21 @@ test("sequence_agent plan metadata carries advisory target behavior learning", (
 
   assert.equal(out.metadata.targetBehaviorLearning.recordCount, 1);
   assert.equal(out.metadata.targetBehaviorLearning.records[0].recordId, "tbl1:megagood");
+  assert.equal(out.metadata.artifactRefs.targetBehaviorLearningRef, "/project/display/target-behavior.json");
   assert.equal(out.metadata.candidateSelection.source.targetBehaviorLearningRef, "/project/display/target-behavior.json");
   assert.ok(out.metadata.candidateSelection.scoredCandidates.some((row) => row.behaviorEvidenceCount >= 1));
+  assert.equal(out.metadata.generativeSummary.targetContext.targetBehaviorAvailable, true);
+  assert.equal(out.metadata.generativeSummary.targetContext.targetBehaviorRecordCount, 1);
+  assert.deepEqual(out.metadata.generativeSummary.targetContext.targetBehaviorMatchedRecordIds, ["tbl1:megagood"]);
+  assert.ok(out.metadata.generativeSummary.targetContext.targetBehaviorEvidenceCandidateIds.length >= 1);
+  assert.deepEqual(
+    out.metadata.generativeSummary.targetContext.targetBehaviorEvidenceCandidateIds,
+    out.metadata.candidateSelection.scoredCandidates
+      .filter((row) => row.behaviorEvidenceCount >= 1)
+      .map((row) => row.candidateId)
+  );
+  assert.equal(out.metadata.generativeSummary.targetContext.targetBehaviorStats.positiveCount, 3);
+  assert.deepEqual(out.metadata.generativeSummary.targetContext.targetFingerprints, ["tmf1:mega"]);
   assert.equal(
     out.metadata.realizationCandidates.candidates[0].realizationRefs[0].targetFingerprints[0],
     "tmf1:mega"

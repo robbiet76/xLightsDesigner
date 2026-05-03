@@ -690,7 +690,8 @@ function buildPlanArtifactRefs(metadata = {}) {
     intentEnvelopeRef: normText(metadata?.intentEnvelope?.artifactId),
     realizationCandidatesRef: normText(metadata?.realizationCandidates?.artifactId),
     candidateSelectionRef: normText(metadata?.candidateSelection?.artifactId),
-    currentSequenceContextRef: normText(metadata?.currentSequenceContext?.artifactId)
+    currentSequenceContextRef: normText(metadata?.currentSequenceContext?.artifactId),
+    targetBehaviorLearningRef: normText(metadata?.targetBehaviorLearning?.artifactPath || metadata?.targetBehaviorLearning?.artifactId)
   };
 }
 
@@ -704,8 +705,19 @@ function buildCompactGenerativeSummary(metadata = {}) {
   const revisionRetryPressure = metadata?.revisionRetryPressure && typeof metadata.revisionRetryPressure === "object" ? metadata.revisionRetryPressure : {};
   const revisionFeedback = metadata?.revisionFeedback && typeof metadata.revisionFeedback === "object" ? metadata.revisionFeedback : {};
   const priorPassMemory = metadata?.priorPassMemory && typeof metadata.priorPassMemory === "object" ? metadata.priorPassMemory : {};
+  const targetBehaviorLearning = metadata?.targetBehaviorLearning && typeof metadata.targetBehaviorLearning === "object" ? metadata.targetBehaviorLearning : {};
   const candidates = normArray(realizationCandidates?.candidates).filter((row) => row && typeof row === "object");
   const scoredCandidates = normArray(candidateSelection?.scoredCandidates).filter((row) => row && typeof row === "object");
+  const targetBehaviorRecords = normArray(targetBehaviorLearning?.records).filter((row) => row && typeof row === "object");
+  const behaviorMatchedRecordIds = uniqueNormTexts(scoredCandidates.flatMap((row) => normArray(row?.behaviorRecordIds))).slice(0, 12);
+  const behaviorEvidenceCandidates = scoredCandidates.filter((row) => Number(row?.behaviorEvidenceCount || 0) > 0);
+  const behaviorStats = targetBehaviorRecords.reduce((totals, row) => {
+    const stats = row?.stats && typeof row.stats === "object" ? row.stats : {};
+    totals.sampleCount += Number(stats.sampleCount || 0);
+    totals.positiveCount += Number(stats.positiveCount || 0);
+    totals.negativeCount += Number(stats.negativeCount || 0);
+    return totals;
+  }, { sampleCount: 0, positiveCount: 0, negativeCount: 0 });
   const selectedBandIds = uniqueNormTexts(candidateSelection?.selectedBand?.candidateIds).slice(0, 4);
   const chosenCandidateId = normText(candidateChoice?.chosenCandidateId || effectStrategy?.selectedCandidateId);
   const chosenCandidate = chosenCandidateId
@@ -780,6 +792,15 @@ function buildCompactGenerativeSummary(metadata = {}) {
       rejectionReasons: uniqueNormTexts(revisionFeedback?.rejectionReasons).slice(0, 5),
       executionObjective: normText(revisionFeedback?.nextDirection?.executionObjective),
       artisticCorrection: normText(revisionFeedback?.nextDirection?.artisticCorrection)
+    },
+    targetContext: {
+      targetBehaviorAvailable: targetBehaviorRecords.length > 0,
+      targetBehaviorArtifactPath: normText(targetBehaviorLearning?.artifactPath),
+      targetBehaviorRecordCount: Number(targetBehaviorLearning?.recordCount || targetBehaviorRecords.length || 0),
+      targetBehaviorMatchedRecordIds: behaviorMatchedRecordIds,
+      targetBehaviorEvidenceCandidateIds: behaviorEvidenceCandidates.map((row) => normText(row?.candidateId)).filter(Boolean).slice(0, 8),
+      targetBehaviorStats: behaviorStats,
+      targetFingerprints: uniqueNormTexts(targetBehaviorRecords.map((row) => row?.targetFingerprint)).slice(0, 12)
     }
   };
 }
