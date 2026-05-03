@@ -29,6 +29,72 @@ test("project catalog runtime refreshes sequence catalog", async () => {
   assert.equal(state.showDirectoryStats.xsqCount, 1);
 });
 
+test("project catalog runtime preserves matching sequence after show folder relink", async () => {
+  const state = {
+    showFolder: "/show/B",
+    sequenceCatalog: [],
+    showDirectoryStats: {},
+    sequencePathInput: "/show/A/Song/Song.xsq",
+    ui: { sequenceMode: "existing" },
+    sequenceAgentRuntime: {
+      displayRelink: {
+        previousShowFolder: "/show/A",
+        showFolder: "/show/B"
+      }
+    }
+  };
+  const runtime = createProjectCatalogRuntime({
+    state,
+    getAppSequenceBridge: () => ({
+      listSequencesInShowFolder: async () => ({
+        ok: true,
+        sequences: [
+          { path: "/show/B/First/First.xsq" },
+          { path: "/show/B/Song/Song.xsq" }
+        ],
+        stats: { xsqCount: 2, xdmetaCount: 0 }
+      })
+    })
+  });
+
+  await runtime.refreshSequenceCatalog({ silent: true });
+
+  assert.equal(state.sequencePathInput, "/show/B/Song/Song.xsq");
+});
+
+test("project catalog runtime preserves unique filename match after show folder relink", async () => {
+  const state = {
+    showFolder: "/show/B",
+    sequenceCatalog: [],
+    showDirectoryStats: {},
+    sequencePathInput: "/show/A/OldPath/HolidayRoad.xsq",
+    ui: { sequenceMode: "existing" },
+    sequenceAgentRuntime: {
+      displayRelink: {
+        previousShowFolder: "/show/A",
+        showFolder: "/show/B"
+      }
+    }
+  };
+  const runtime = createProjectCatalogRuntime({
+    state,
+    getAppSequenceBridge: () => ({
+      listSequencesInShowFolder: async () => ({
+        ok: true,
+        sequences: [
+          { path: "/show/B/First/First.xsq" },
+          { path: "/show/B/NewPath/HolidayRoad.xsq" }
+        ],
+        stats: { xsqCount: 2, xdmetaCount: 0 }
+      })
+    })
+  });
+
+  await runtime.refreshSequenceCatalog({ silent: true });
+
+  assert.equal(state.sequencePathInput, "/show/B/NewPath/HolidayRoad.xsq");
+});
+
 test("project catalog runtime refreshes media catalog and adopts exact-path match", async () => {
   const calls = [];
   const state = {

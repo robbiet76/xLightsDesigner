@@ -174,6 +174,11 @@ final class ProjectScreenViewModel {
             "updatedAt": ISO8601DateFormatter().string(from: Date()),
             "behavior": "Preserve project metadata and refresh display, sequence, design, and review state against the new show folder."
         ])
+        relinkSequenceSnapshotPaths(
+            in: &active,
+            previousShowFolder: previousShowFolder,
+            newShowFolder: trimmedPath
+        )
         var flags = (active.snapshot["flags"]?.value as? [String: Any]) ?? [:]
         let proposedRows = active.snapshot["proposed"]?.value as? [Any] ?? []
         flags["proposalStale"] = true
@@ -270,6 +275,75 @@ final class ProjectScreenViewModel {
         } else if selectedOpenProjectPath.isEmpty {
             selectedOpenProjectPath = availableProjects.first?.projectFolderPath ?? ""
         }
+    }
+
+    private func relinkSequenceSnapshotPaths(in project: inout ActiveProjectModel, previousShowFolder: String, newShowFolder: String) {
+        let previousPath = string(project.snapshot["sequencePathInput"]?.value)
+        if let resolved = resolveRelinkedSequencePath(previousPath, previousShowFolder: previousShowFolder, newShowFolder: newShowFolder) {
+            project.snapshot["sequencePathInput"] = AnyCodable(resolved)
+            let sequenceName = ProjectTargetContext.nameWithoutExtension(resolved)
+            if !sequenceName.isEmpty {
+                project.snapshot["activeSequence"] = AnyCodable(sequenceName)
+            }
+        }
+
+        if let recentSequences = project.snapshot["recentSequences"]?.value as? [Any] {
+            project.snapshot["recentSequences"] = AnyCodable(recentSequences.map { value in
+                let path = string(value)
+                return resolveRelinkedSequencePath(path, previousShowFolder: previousShowFolder, newShowFolder: newShowFolder) ?? path
+            })
+        }
+
+        guard var projectSequences = project.snapshot["projectSequences"]?.value as? [[String: Any]] else { return }
+        for index in projectSequences.indices {
+            let path = string(projectSequences[index]["sequencePath"])
+            if let resolved = resolveRelinkedSequencePath(path, previousShowFolder: previousShowFolder, newShowFolder: newShowFolder) {
+                projectSequences[index]["sequencePath"] = resolved
+            }
+        }
+        project.snapshot["projectSequences"] = AnyCodable(projectSequences)
+    }
+
+    private func resolveRelinkedSequencePath(_ sequencePath: String, previousShowFolder: String, newShowFolder: String) -> String? {
+        let previousPath = normalizedPath(sequencePath)
+        guard !previousPath.isEmpty else { return nil }
+
+        let previousRoot = normalizedPath(previousShowFolder)
+        let newRoot = normalizedPath(newShowFolder)
+        if !previousRoot.isEmpty, !newRoot.isEmpty, previousPath.hasPrefix(previousRoot + "/") {
+            let relativePath = String(previousPath.dropFirst(previousRoot.count + 1))
+            let candidate = URL(fileURLWithPath: newRoot).appendingPathComponent(relativePath).path
+            if FileManager.default.fileExists(atPath: candidate) {
+                return candidate
+            }
+        }
+
+        if previousPath.hasPrefix(newRoot + "/"), FileManager.default.fileExists(atPath: previousPath) {
+            return previousPath
+        }
+
+        let fileName = URL(fileURLWithPath: previousPath).lastPathComponent
+        guard !fileName.isEmpty else { return nil }
+        let matches = sequenceFiles(in: newRoot).filter { URL(fileURLWithPath: $0).lastPathComponent == fileName }
+        return matches.count == 1 ? matches[0] : nil
+    }
+
+    private func sequenceFiles(in showFolder: String) -> [String] {
+        guard !showFolder.isEmpty,
+              let enumerator = FileManager.default.enumerator(atPath: showFolder) else {
+            return []
+        }
+        var matches: [String] = []
+        for case let relativePath as String in enumerator where relativePath.hasSuffix(".xsq") {
+            matches.append(URL(fileURLWithPath: showFolder).appendingPathComponent(relativePath).path)
+        }
+        return matches.sorted()
+    }
+
+    private func normalizedPath(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\\", with: "/")
+            .replacingOccurrences(of: #"/+$"#, with: "", options: .regularExpression)
     }
 
     private func projectBrief(for project: ActiveProjectModel) -> ProjectBriefModel {

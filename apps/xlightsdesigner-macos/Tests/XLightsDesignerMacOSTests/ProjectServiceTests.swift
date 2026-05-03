@@ -191,10 +191,19 @@ struct ProjectServiceTests {
     @Test func projectScreenRelinksShowFolderWithoutChangingProjectIdentity() throws {
         let service = try makeService()
         let name = "App Test Project \(UUID().uuidString.prefix(6))"
+        let showRoot = FileManager.default.temporaryDirectory.appendingPathComponent("xld-project-relink-show-\(UUID().uuidString)", isDirectory: true)
+        let oldShowFolder = showRoot.appendingPathComponent("OldShow", isDirectory: true)
+        let newShowFolder = showRoot.appendingPathComponent("NewShow", isDirectory: true)
+        let oldSequencePath = oldShowFolder.appendingPathComponent("OldSong/OldSong.xsq")
+        let newSequencePath = newShowFolder.appendingPathComponent("OldSong/OldSong.xsq")
+        try FileManager.default.createDirectory(at: oldSequencePath.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: newSequencePath.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("<sequence/>".utf8).write(to: oldSequencePath)
+        try Data("<sequence/>".utf8).write(to: newSequencePath)
         let project = try service.createProject(
             draft: ProjectDraftModel(
                 projectName: name,
-                showFolder: "/tmp/show",
+                showFolder: oldShowFolder.path,
                 mediaPath: "",
                 migrateMetadata: false,
                 migrationSourceProjectPath: ""
@@ -202,7 +211,11 @@ struct ProjectServiceTests {
         )
         let workspace = ProjectWorkspace(sessionStore: ProjectServiceTestSessionStore())
         var projectWithSequenceState = project
-        projectWithSequenceState.snapshot["sequencePathInput"] = AnyCodable("/tmp/show/OldSong/OldSong.xsq")
+        projectWithSequenceState.snapshot["sequencePathInput"] = AnyCodable(oldSequencePath.path)
+        projectWithSequenceState.snapshot["recentSequences"] = AnyCodable([oldSequencePath.path])
+        projectWithSequenceState.snapshot["projectSequences"] = AnyCodable([
+            ["sequencePath": oldSequencePath.path, "isActive": true]
+        ])
         projectWithSequenceState.snapshot["proposed"] = AnyCodable([
             ["summary": "Existing proposal row"]
         ])
@@ -219,7 +232,7 @@ struct ProjectServiceTests {
         let model = ProjectScreenViewModel(
             workspace: workspace,
             projectService: service,
-            fileSelectionService: ProjectServiceTestFileSelectionService(folderPath: "/tmp/new-show"),
+            fileSelectionService: ProjectServiceTestFileSelectionService(folderPath: newShowFolder.path),
             sessionStore: ProjectServiceTestSessionStore()
         )
         let relinkNotificationCapture = ProjectRelinkNotificationCapture()
@@ -242,17 +255,21 @@ struct ProjectServiceTests {
         let runtime = active.snapshot["sequenceAgentRuntime"]?.value as? [String: Any]
         let displayRelink = runtime?["displayRelink"] as? [String: Any]
         let timingTrackProvenance = runtime?["timingTrackProvenance"] as? [String: Any]
+        let recentSequences = active.snapshot["recentSequences"]?.value as? [String]
+        let projectSequences = active.snapshot["projectSequences"]?.value as? [[String: Any]]
         #expect(active.id == project.id)
         #expect(active.projectFilePath == project.projectFilePath)
-        #expect(active.showFolder == "/tmp/new-show")
-        #expect(active.snapshot["sequencePathInput"]?.value as? String == "/tmp/show/OldSong/OldSong.xsq")
+        #expect(active.showFolder == newShowFolder.path)
+        #expect(active.snapshot["sequencePathInput"]?.value as? String == newSequencePath.path)
+        #expect(recentSequences == [newSequencePath.path])
+        #expect(projectSequences?.first?["sequencePath"] as? String == newSequencePath.path)
         #expect((active.snapshot["proposed"]?.value as? [[String: Any]])?.count == 1)
-        #expect(relink?["previousShowFolder"] as? String == "/tmp/show")
-        #expect(relink?["showFolder"] as? String == "/tmp/new-show")
+        #expect(relink?["previousShowFolder"] as? String == oldShowFolder.path)
+        #expect(relink?["showFolder"] as? String == newShowFolder.path)
         #expect(flags?["proposalStale"] as? Bool == true)
         #expect(flags?["hasDraftProposal"] as? Bool == true)
-        #expect(displayRelink?["previousShowFolder"] as? String == "/tmp/show")
-        #expect(displayRelink?["showFolder"] as? String == "/tmp/new-show")
+        #expect(displayRelink?["previousShowFolder"] as? String == oldShowFolder.path)
+        #expect(displayRelink?["showFolder"] as? String == newShowFolder.path)
         #expect((timingTrackProvenance?["track-1"] as? [String: Any])?["trackName"] as? String == "XD: Song Structure")
         #expect(relinkNotificationCapture.object == active.projectFilePath)
         #expect(workspace.projectBanner?.id == "show-folder-relinked")

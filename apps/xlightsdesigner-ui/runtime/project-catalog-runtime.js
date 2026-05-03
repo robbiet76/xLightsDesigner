@@ -46,6 +46,44 @@ function scoreMediaCatalogIdentityMatch(mediaRow = {}, targetIdentity = null) {
   return { matched: true, score, matchBasis };
 }
 
+function normalizeCatalogPath(value = "") {
+  return str(value).replace(/\\/g, "/").replace(/\/+$/g, "");
+}
+
+function pathFileName(value = "") {
+  const normalized = normalizeCatalogPath(value);
+  return normalized.split("/").filter(Boolean).pop() || "";
+}
+
+function relativePathWithinRoot(candidatePath = "", rootPath = "") {
+  const candidate = normalizeCatalogPath(candidatePath);
+  const root = normalizeCatalogPath(rootPath);
+  if (!candidate || !root) return "";
+  if (candidate === root) return "";
+  return candidate.startsWith(`${root}/`) ? candidate.slice(root.length + 1) : "";
+}
+
+function resolveRelinkedSequencePath(sequences = [], previousPath = "", previousShowFolder = "", showFolder = "") {
+  const rows = Array.isArray(sequences) ? sequences : [];
+  const previous = normalizeCatalogPath(previousPath);
+  if (!rows.length || !previous) return "";
+
+  const exact = rows.find((row) => normalizeCatalogPath(row?.path) === previous);
+  if (exact) return str(exact.path);
+
+  const relative = relativePathWithinRoot(previous, previousShowFolder);
+  if (relative) {
+    const expectedPath = `${normalizeCatalogPath(showFolder)}/${relative}`;
+    const relativeMatch = rows.find((row) => normalizeCatalogPath(row?.path) === expectedPath);
+    if (relativeMatch) return str(relativeMatch.path);
+  }
+
+  const previousFileName = pathFileName(previous);
+  if (!previousFileName) return "";
+  const nameMatches = rows.filter((row) => pathFileName(row?.path) === previousFileName);
+  return nameMatches.length === 1 ? str(nameMatches[0].path) : "";
+}
+
 
 export function createProjectCatalogRuntime({
   state,
@@ -183,7 +221,16 @@ export function createProjectCatalogRuntime({
       if (state.ui.sequenceMode === "existing") {
         const exists = sequences.some((s) => str(s?.path) === state.sequencePathInput);
         if (!exists && sequences.length) {
-          state.sequencePathInput = str(sequences[0].path);
+          const relink = state.sequenceAgentRuntime?.displayRelink && typeof state.sequenceAgentRuntime.displayRelink === "object"
+            ? state.sequenceAgentRuntime.displayRelink
+            : {};
+          state.sequencePathInput =
+            resolveRelinkedSequencePath(
+              sequences,
+              state.sequencePathInput,
+              relink.previousShowFolder,
+              showFolder
+            ) || str(sequences[0].path);
         }
       }
       if (!silent) {
