@@ -59,6 +59,46 @@ test("direct sequence orchestrator bypasses designer scaffolding and emits canon
   assert.deepEqual(validateAgentHandoff("intent_handoff_v1", result.intentHandoff), []);
 });
 
+test("direct sequence orchestrator preserves explicit submodel-only target scope", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-submodel-scope",
+    sequenceRevision: "rev-1",
+    promptText: "Create a short readable pulse for the selected mouth submodel only.",
+    selectedSections: [],
+    selectedTargetIds: ["Singing Bulb 1/@Mouth1"],
+    selectedTagNames: [],
+    models: [
+      { id: "Arches", name: "Arches", type: "Model" },
+      { id: "Singing Bulb 1", name: "Singing Bulb 1", type: "Custom" }
+    ],
+    submodels: [
+      {
+        id: "Singing Bulb 1/@Mouth1",
+        name: "@Mouth1",
+        parentId: "Singing Bulb 1",
+        type: "ranges"
+      }
+    ],
+    displayElements: [
+      { id: "Arches", name: "Arches", type: "model" },
+      { id: "Singing Bulb 1", name: "Singing Bulb 1", type: "model" }
+    ],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: null
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.proposalBundle.scope.targetIds, ["Singing Bulb 1/@Mouth1"]);
+  assert.deepEqual(result.proposalBundle.executionPlan.sectionPlans[0].targetIds, ["Singing Bulb 1/@Mouth1"]);
+  assert.deepEqual(result.intentHandoff.scope.targetIds, ["Singing Bulb 1/@Mouth1"]);
+  assert.deepEqual(result.intentHandoff.executionStrategy.translationIntent.scope.targetScope, ["Singing Bulb 1/@Mouth1"]);
+  assert.equal(
+    result.proposalLines.some((line) => /Arches/i.test(line)),
+    false
+  );
+});
+
 test("direct sequence orchestrator allocates the next short design id from existing concepts", () => {
   const result = executeDirectSequenceRequestOrchestration({
     requestId: "req-direct-next-id",

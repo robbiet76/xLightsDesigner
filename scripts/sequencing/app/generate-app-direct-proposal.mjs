@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getModels, getDisplayElements, getEffectDefinitions, getLayoutGroupMemberships, getRevision } from '../../../apps/xlightsdesigner-ui/api.js';
+import { getModels, getDisplayElements, getEffectDefinitions, getLayoutGroupMemberships, getRevision, getSubmodels } from '../../../apps/xlightsdesigner-ui/api.js';
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
 import { buildEffectDefinitionCatalog } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/effect-definition-catalog.js';
 import { executeDirectSequenceRequestOrchestration } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/direct-sequence-orchestrator.js';
@@ -21,6 +21,7 @@ const DEFAULT_DEPS = {
   getDisplayElements,
   getEffectDefinitions,
   getLayoutGroupMemberships,
+  getSubmodels,
   buildAnalysisHandoffFromArtifact,
   buildEffectDefinitionCatalog,
   executeDirectSequenceRequestOrchestration,
@@ -478,10 +479,14 @@ export async function runAppDirectProposal(options = {}, deps = DEFAULT_DEPS) {
   const modelsRes = await deps.getModels(args.endpoint).catch(() => ({ ok: false, data: { models: [] } }));
   const displayRes = await deps.getDisplayElements(args.endpoint).catch(() => ({ ok: false, data: { elements: [] } }));
   const effectsRes = await deps.getEffectDefinitions(args.endpoint).catch(() => ({ ok: false, data: { effects: [] } }));
+  const submodelsRes = typeof deps.getSubmodels === 'function'
+    ? await deps.getSubmodels(args.endpoint).catch(() => ({ ok: false, data: { submodels: [] } }))
+    : { data: { submodels: [] } };
   const groupMembershipsRes = typeof deps.getLayoutGroupMemberships === 'function'
     ? await deps.getLayoutGroupMemberships(args.endpoint).catch(() => ({ ok: false, data: { groups: [] } }))
     : { data: { groups: [] } };
   const models = Array.isArray(modelsRes?.data?.models) ? modelsRes.data.models : [];
+  const submodels = Array.isArray(submodelsRes?.data?.submodels) ? submodelsRes.data.submodels : [];
   const displayElements = mergeDisplayElementsWithLayoutModels(normalizeDisplayElements(displayRes), models);
   const effectDefinitions = Array.isArray(effectsRes?.data?.effects) ? effectsRes.data.effects : [];
   const effectCatalog = buildAppEffectCatalog(effectDefinitions, deps);
@@ -503,7 +508,7 @@ export async function runAppDirectProposal(options = {}, deps = DEFAULT_DEPS) {
     selectedTargetIds: args.selectedTargetIds,
     analysisHandoff,
     models,
-    submodels: [],
+    submodels,
     displayElements,
     groupIds: Object.keys(groupsById),
     groupsById,
