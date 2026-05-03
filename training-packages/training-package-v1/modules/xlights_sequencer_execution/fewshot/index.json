@@ -93,6 +93,21 @@
       ]
     },
     {
+      "id": "custom_model_index_structural_targeting",
+      "intent": "Sequence a custom model and its submodels using display/model-index structure rather than target-name guesses.",
+      "focus": [
+        "read custom model identity, fingerprint, nodeLayout, and customStructure from displayModelIndex",
+        "preserve explicit submodel targets with parent, sibling, overlap, and node coverage context",
+        "use display metadata or target-behavior evidence for user-specific semantic meaning"
+      ],
+      "expectedBehavior": [
+        "plans against the same target collection used for built-in models, groups, and submodels",
+        "does not route custom models through a separate custom-only artifact",
+        "does not infer prop family from user/vendor model names",
+        "emits warnings or safer probes when structure/evidence is insufficient for confident effect choice"
+      ]
+    },
+    {
       "id": "revision_conflict_block",
       "intent": "Sequence changed in xLights after plan generation and before apply.",
       "focus": [

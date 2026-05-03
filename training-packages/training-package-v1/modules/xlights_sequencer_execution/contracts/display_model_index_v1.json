@@ -1,0 +1,51 @@
+{
+  "contract": "display_model_index_v1",
+  "version": "1.0",
+  "source": "specs/sequence-agent/model-metadata.md",
+  "artifactPath": "display/model-index.json",
+  "purpose": "Compact project display/model index used by sequencing agents for current target identity, fingerprints, model/group/submodel structure, custom model construction, and node layout summaries.",
+  "recordKinds": [
+    "model",
+    "group",
+    "submodel"
+  ],
+  "requiredRecordFields": [
+    "targetId",
+    "targetKind",
+    "identity.displayName",
+    "identity.rawType",
+    "identity.canonicalType",
+    "identity.fingerprint",
+    "identity.fingerprintVersion",
+    "structure"
+  ],
+  "submodelRecordFields": [
+    "identity.parentId",
+    "identity.parentName",
+    "structure.submodelMetadata.parentId",
+    "structure.submodelMetadata.nodeCoverage",
+    "structure.submodelMetadata.siblingCount",
+    "structure.submodelMetadata.structureHints"
+  ],
+  "customModelFields": [
+    "identity.canonicalType",
+    "structure.nodeLayout",
+    "structure.customStructure.profile",
+    "structure.customStructure.traits",
+    "structure.customStructure.construction",
+    "structure.customStructure.submodels"
+  ],
+  "planningRules": [
+    "Use target fingerprints and parent linkage before display-name-only reasoning.",
+    "Treat custom models as normal model records with optional customStructure enrichment, not as a separate target collection.",
+    "Treat submodels as first-class targets for every parent model type.",
+    "Preserve explicit submodel targets unless the request safely collapses to a broader parent or group target.",
+    "Use nodeLayout and customStructure as structural evidence only; do not infer user/vendor semantic prop meaning from hard-coded model names.",
+    "Use display metadata and target-behavior evidence for user-specific semantics and learned effect suitability."
+  ],
+  "notes": [
+    "This contract describes the portable training shape, not a raw xLights API payload.",
+    "Training examples should include built-in models, groups, custom model records, and submodel records in the same target collection.",
+    "If a custom-only diagnostic export is needed, derive it from display/model-index.json at export time."
+  ]
+}

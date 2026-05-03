@@ -14,3 +14,4 @@ Notes:
 - Portable datasets should retain durable features and labels, not raw generated intermediates or bulky source artifacts.
 - Real song lyrics belong to runtime/user project analysis artifacts, not the portable package. Package datasets may retain compact lyric-derived features only.
 - Machine-specific eval inputs (for example local audio path case files) must stay outside package assets.
+- Sequence training should use project `display/model-index.json` as the structural target source for built-in models, groups, custom models, node layout, and submodels. Custom-only training exports, when useful, should be derived from that shared index rather than maintained as a parallel artifact.
