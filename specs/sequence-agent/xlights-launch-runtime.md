@@ -46,6 +46,8 @@ node scripts/xlights/launch-owned-xlights.mjs \
 
 `--bootstrap-show-dir auto` creates or refreshes a minimal show folder under the xLights container. `--show-dir` remains the direct pre-API startup path for legacy validation cases. New validation should prefer `--bootstrap-show-dir auto` plus `--api-show-dir` when testing real show-folder switching or macOS access failures.
 
+Within the app, the active project show folder is the source of truth. When xLights is reachable and its current show folder differs from the active project, xLightsDesigner should reconcile xLights to the project folder through `media.setShowDirectory`. The app should not switch folders while an open xLights sequence has unsaved changes unless a separate save/discard policy has been explicitly applied.
+
 ## Show Folder Access
 
 xLightsDesigner may know a show-folder path, but xLights must also have permission to access it. On macOS sandboxed builds, a path supplied by command-line argument or environment variable is not enough to grant filesystem access.

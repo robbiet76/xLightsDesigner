@@ -9,6 +9,7 @@ private struct StubXLightsSessionProjectStore: ProjectSessionStore {
 
 private final class StubXLightsSessionService: XLightsSessionService, @unchecked Sendable {
     var nextLoad: (@Sendable (String) async throws -> XLightsSessionSnapshotModel)?
+    var setShowDirectoryCalls: [String] = []
 
     func loadSession(projectShowFolder: String) async throws -> XLightsSessionSnapshotModel {
         if let nextLoad {
@@ -17,11 +18,48 @@ private final class StubXLightsSessionService: XLightsSessionService, @unchecked
         throw XLightsSessionServiceError.invalidResponse("unconfigured session stub")
     }
 
+    func setShowDirectory(_ showDirectory: String, force: Bool, permanent: Bool) async throws -> String {
+        setShowDirectoryCalls.append(showDirectory)
+        return "set"
+    }
+
     func saveCurrentSequence() async throws -> String { "saved" }
     func closeCurrentSequence() async throws -> String { "closed" }
     func renderCurrentSequence() async throws -> String { "rendered" }
     func openSequence(filePath: String, saveBeforeSwitch: Bool) async throws -> String { "opened" }
     func createSequence(filePath: String, mediaFile: String?, durationMs: Int?, frameMs: Int?, saveBeforeSwitch: Bool) async throws -> String { "created" }
+}
+
+private func sessionSnapshot(
+    projectShowFolder: String,
+    showDirectory: String,
+    sequenceOpen: Bool = false,
+    hasUnsavedChanges: Bool? = false
+) -> XLightsSessionSnapshotModel {
+    XLightsSessionSnapshotModel(
+        runtimeState: "ready",
+        supportedCommands: ["media.setShowDirectory"],
+        isReachable: true,
+        isSequenceOpen: sequenceOpen,
+        sequencePath: sequenceOpen ? "\(showDirectory)/Current.xsq" : "",
+        revision: "rev-1",
+        mediaFile: "",
+        showDirectory: showDirectory,
+        projectShowMatches: URL(fileURLWithPath: showDirectory).standardizedFileURL.path == URL(fileURLWithPath: projectShowFolder).standardizedFileURL.path,
+        sequenceType: "Media",
+        durationMs: 0,
+        frameMs: 25,
+        dirtyState: hasUnsavedChanges == true ? "dirty" : "clean",
+        dirtyStateReason: "",
+        hasUnsavedChanges: hasUnsavedChanges,
+        saveSupported: true,
+        renderSupported: true,
+        openSupported: true,
+        createSupported: true,
+        closeSupported: true,
+        lastSaveSummary: "",
+        lastRenderSummary: ""
+    )
 }
 
 private actor XLightsSessionLoadGate {
@@ -127,4 +165,63 @@ private actor XLightsSessionLoadGate {
     #expect(model.snapshot.isReachable == true)
     #expect(model.snapshot.isSequenceOpen == true)
     #expect(model.snapshot.sequencePath == "/tmp/show/HolidayRoad.xsq")
+}
+
+@MainActor
+@Test func xlightsSessionReconcileSwitchesToProjectShowFolderWhenMismatchIsClean() async throws {
+    let workspace = ProjectWorkspace(sessionStore: StubXLightsSessionProjectStore())
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: "/tmp/Christmas 2026.xdproj",
+            showFolder: "/tmp/show-b",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [:]
+        )
+    )
+    let service = StubXLightsSessionService()
+    service.nextLoad = { projectShowFolder in
+        let current = service.setShowDirectoryCalls.isEmpty ? "/tmp/show-a" : projectShowFolder
+        return sessionSnapshot(projectShowFolder: projectShowFolder, showDirectory: current)
+    }
+    let model = XLightsSessionViewModel(workspace: workspace, service: service)
+
+    let refreshed = await model.reconcileProjectShowFolder()
+
+    #expect(service.setShowDirectoryCalls == ["/tmp/show-b"])
+    #expect(refreshed.projectShowMatches == true)
+    #expect(refreshed.showDirectory == "/tmp/show-b")
+}
+
+@MainActor
+@Test func xlightsSessionReconcileDoesNotSwitchWhenOpenSequenceIsDirty() async throws {
+    let workspace = ProjectWorkspace(sessionStore: StubXLightsSessionProjectStore())
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: "/tmp/Christmas 2026.xdproj",
+            showFolder: "/tmp/show-b",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [:]
+        )
+    )
+    let service = StubXLightsSessionService()
+    service.nextLoad = { projectShowFolder in
+        sessionSnapshot(projectShowFolder: projectShowFolder, showDirectory: "/tmp/show-a", sequenceOpen: true, hasUnsavedChanges: true)
+    }
+    let model = XLightsSessionViewModel(workspace: workspace, service: service)
+
+    let refreshed = await model.reconcileProjectShowFolder()
+
+    #expect(service.setShowDirectoryCalls.isEmpty)
+    #expect(refreshed.projectShowMatches == false)
+    #expect(refreshed.showDirectory == "/tmp/show-a")
 }

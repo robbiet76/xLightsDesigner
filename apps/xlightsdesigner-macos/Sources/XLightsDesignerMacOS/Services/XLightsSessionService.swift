@@ -13,6 +13,7 @@ enum XLightsSessionServiceError: LocalizedError {
 
 protocol XLightsSessionService: Sendable {
     func loadSession(projectShowFolder: String) async throws -> XLightsSessionSnapshotModel
+    func setShowDirectory(_ showDirectory: String, force: Bool, permanent: Bool) async throws -> String
     func saveCurrentSequence() async throws -> String
     func closeCurrentSequence() async throws -> String
     func renderCurrentSequence() async throws -> String
@@ -120,6 +121,27 @@ struct LocalXLightsSessionService: XLightsSessionService {
             lastSaveSummary: "",
             lastRenderSummary: ""
         )
+    }
+
+    func setShowDirectory(_ showDirectory: String, force: Bool = true, permanent: Bool = false) async throws -> String {
+        let normalizedPath = normalizePath(showDirectory)
+        guard !normalizedPath.isEmpty else {
+            throw XLightsSessionServiceError.invalidResponse("Show folder path is required.")
+        }
+        _ = try await ensureOwnedRuntimeReady(command: "media.setShowDirectory")
+        let json = try await postJSON(to: "/media/show-directory", body: [
+            "showDirectory": normalizedPath,
+            "force": force,
+            "permanent": permanent
+        ])
+        let data = dictionary(json["data"])
+        let confirmed = normalizePath(string(data["showDirectory"]))
+        guard confirmed == normalizedPath else {
+            throw XLightsSessionServiceError.invalidResponse("xLights did not confirm the requested show folder.")
+        }
+        return string(data["changed"]).lowercased() == "false"
+            ? "xLights was already open to the project show folder."
+            : "Set xLights show folder: \(normalizedPath)"
     }
 
     func saveCurrentSequence() async throws -> String {

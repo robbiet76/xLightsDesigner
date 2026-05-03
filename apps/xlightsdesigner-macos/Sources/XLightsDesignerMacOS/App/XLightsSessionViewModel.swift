@@ -55,6 +55,26 @@ final class XLightsSessionViewModel {
     }
 
     @discardableResult
+    func reconcileProjectShowFolder() async -> XLightsSessionSnapshotModel {
+        let refreshed = await refreshNow()
+        let projectShowFolder = workspace.activeProject?.showFolder.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard refreshed.isReachable,
+              !projectShowFolder.isEmpty,
+              !refreshed.projectShowMatches else {
+            return refreshed
+        }
+        if refreshed.isSequenceOpen && refreshed.hasUnsavedChanges != false {
+            return refreshed
+        }
+        do {
+            _ = try await service.setShowDirectory(projectShowFolder, force: true, permanent: false)
+            return await refreshNow()
+        } catch {
+            return refreshed
+        }
+    }
+
+    @discardableResult
     func refreshNow() async -> XLightsSessionSnapshotModel {
         let projectShowFolder = workspace.activeProject?.showFolder ?? ""
         let previous = snapshot

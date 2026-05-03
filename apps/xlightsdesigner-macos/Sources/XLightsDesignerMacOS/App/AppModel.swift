@@ -611,14 +611,17 @@ final class AppModel {
     }
 
     func refreshAll() {
-        syncProjectTargetFromXLightsSession()
-        refreshScreens()
-        xlightsSessionModel.refresh()
+        Task { @MainActor in
+            projectScreenModel.loadInitialProject()
+            await xlightsSessionModel.reconcileProjectShowFolder()
+            syncProjectTargetFromXLightsSession()
+            refreshScreens()
+        }
     }
 
     func refreshAllAfterProjectRelink() {
         Task { @MainActor in
-            await xlightsSessionModel.refreshNow()
+            await xlightsSessionModel.reconcileProjectShowFolder()
             syncProjectTargetFromXLightsSession()
             refreshScreens()
         }
