@@ -35,6 +35,9 @@ function parseArgs(argv = []) {
     projectDirs: [],
     discoverUnder: [],
     skipCommands: false,
+    runLiveProbes: false,
+    endpoint: process.env.XLIGHTS_ENDPOINT || 'http://127.0.0.1:49915/xlightsdesigner/api',
+    showDir: '',
     continueOnFailure: false
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -49,6 +52,9 @@ function parseArgs(argv = []) {
     else if (token === '--project-dir') args.projectDirs.push(next());
     else if (token === '--discover-under') args.discoverUnder.push(next());
     else if (token === '--skip-commands') args.skipCommands = true;
+    else if (token === '--run-live-probes') args.runLiveProbes = true;
+    else if (token === '--endpoint') args.endpoint = next();
+    else if (token === '--show-dir') args.showDir = next();
     else if (token === '--continue-on-failure') args.continueOnFailure = true;
     else if (token === '--help') args.help = true;
     else throw new Error(`Unknown argument: ${token}`);
@@ -59,6 +65,7 @@ function parseArgs(argv = []) {
 function usage() {
   return `Usage:
   node scripts/designer-training/run-self-improvement-cycle.mjs [--project-dir <project-dir>] [--discover-under <dir>] [--out-dir <dir>]
+  node scripts/designer-training/run-self-improvement-cycle.mjs --run-live-probes [--endpoint <url>] [--show-dir <path>]
 
 The current runner validates readiness, exports anonymized target-behavior summaries from project-local artifacts, and evaluates promotion-gate metrics. Live apply/render probe execution is intentionally manifest-driven so it can be added without changing the promotion/export contract.
 `;
@@ -83,6 +90,37 @@ function runCommand(commandText, { outDir, phaseId }) {
       fs.writeFileSync(result.stdoutPath, stdout || '', 'utf8');
       fs.writeFileSync(result.stderrPath, stderr || '', 'utf8');
       resolve(result);
+    });
+  });
+}
+
+function runNodeJson(scriptPath, args, { outDir, phaseId, label }) {
+  return new Promise((resolve) => {
+    const startedAt = new Date().toISOString();
+    execFile(process.execPath, [scriptPath, ...args], { cwd: REPO_ROOT, maxBuffer: 1024 * 1024 * 20 }, (error, stdout, stderr) => {
+      const safeLabel = str(label || phaseId).replace(/[^a-z0-9_.-]+/gi, '-').replace(/^-|-$/g, '') || phaseId;
+      const stdoutPath = path.join(outDir, `${safeLabel}.stdout.txt`);
+      const stderrPath = path.join(outDir, `${safeLabel}.stderr.txt`);
+      fs.writeFileSync(stdoutPath, stdout || '', 'utf8');
+      fs.writeFileSync(stderrPath, stderr || '', 'utf8');
+      let json = null;
+      try {
+        json = stdout ? JSON.parse(stdout) : null;
+      } catch {
+        json = null;
+      }
+      resolve({
+        id: phaseId,
+        label: safeLabel,
+        type: 'node',
+        ok: !error,
+        exitCode: error?.code ?? 0,
+        startedAt,
+        completedAt: new Date().toISOString(),
+        stdoutPath,
+        stderrPath,
+        json
+      });
     });
   });
 }
@@ -120,6 +158,62 @@ function collectProjectDirs(args) {
     }
   }
   return [...dirs].filter((projectDir) => fs.existsSync(path.join(projectDir, 'display', 'target-behavior.json'))).sort();
+}
+
+function projectDirFromTargetBehaviorPath(filePath = '') {
+  const resolved = path.resolve(filePath);
+  return path.basename(path.dirname(resolved)) === 'display'
+    ? path.dirname(path.dirname(resolved))
+    : '';
+}
+
+async function runLiveCustomModelProbePhase({ phase, manifest, outDir, endpoint, showDir }) {
+  const phaseId = str(phase.id || 'live_custom_submodel_probes');
+  const blocked = new Set(arr(manifest?.initialScope?.blockedEffects).map((effect) => str(effect).toLowerCase()));
+  const effects = arr(phase.effects).length ? arr(phase.effects) : arr(manifest?.initialScope?.effects);
+  const allowedEffects = effects.map((effect) => str(effect)).filter((effect) => effect && !blocked.has(effect.toLowerCase()));
+  const durationMs = Number(phase.durationMs || 8000);
+  const results = [];
+  const projectDirs = [];
+  for (const effect of allowedEffects) {
+    const runId = `self-improve-${new Date().toISOString().replace(/[:.]/g, '-')}-${effect.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
+    const outputPath = path.join(outDir, 'live-probes', `${runId}.json`);
+    const args = [
+      'scripts/xlights/validate-custom-model-regression.mjs',
+      '--endpoint', endpoint,
+      '--effect-name', effect,
+      '--duration-ms', String(Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 8000),
+      '--run-id', runId,
+      '--output', outputPath
+    ];
+    if (showDir) args.push('--show-dir', showDir);
+    const result = await runNodeJson(args[0], args.slice(1), {
+      outDir,
+      phaseId,
+      label: `${phaseId}-${effect}`
+    });
+    result.effectName = effect;
+    result.outputPath = outputPath;
+    if (result.ok && fs.existsSync(outputPath)) {
+      try {
+        const report = readJson(outputPath);
+        result.reportSummary = report.summary || {};
+        const projectDir = projectDirFromTargetBehaviorPath(report.persistenceArtifactPath);
+        if (projectDir) projectDirs.push(projectDir);
+      } catch {
+        // Report parsing is useful for exports, but the probe result still carries stdout/stderr.
+      }
+    }
+    results.push(result);
+  }
+  return {
+    id: phaseId,
+    type: 'live_custom_model_probe',
+    ok: results.every((result) => result.ok),
+    effects: allowedEffects,
+    results,
+    projectDirs: [...new Set(projectDirs)].sort()
+  };
 }
 
 function exportTargetBehaviorSummaries({ projectDirs, outDir }) {
@@ -215,6 +309,9 @@ export async function runSelfImprovementCycle({
   projectDirs = [],
   discoverUnder = [],
   skipCommands = false,
+  runLiveProbes = false,
+  endpoint = process.env.XLIGHTS_ENDPOINT || 'http://127.0.0.1:49915/xlightsdesigner/api',
+  showDir = '',
   continueOnFailure = false
 } = {}) {
   const resolvedManifestPath = path.resolve(REPO_ROOT, manifestPath);
@@ -247,9 +344,28 @@ export async function runSelfImprovementCycle({
       }
     }
   }
+  const liveProjectDirs = [];
+  if (runLiveProbes) {
+    for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'live_custom_model_probe')) {
+      const result = await runLiveCustomModelProbePhase({
+        phase,
+        manifest,
+        outDir: resolvedOutDir,
+        endpoint: str(endpoint),
+        showDir: str(showDir)
+      });
+      phases.push(result);
+      liveProjectDirs.push(...arr(result.projectDirs));
+      if (!result.ok && phase.required !== false && !continueOnFailure) {
+        const output = { ok: false, manifestPath: resolvedManifestPath, outDir: resolvedOutDir, phases, errors: [`phase failed: ${phase.id}`] };
+        writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
+        return output;
+      }
+    }
+  }
 
   const resolvedProjectDirs = collectProjectDirs({
-    projectDirs,
+    projectDirs: [...arr(projectDirs), ...liveProjectDirs],
     discoverUnder
   });
   const exportedSummaries = exportTargetBehaviorSummaries({ projectDirs: resolvedProjectDirs, outDir: resolvedOutDir });

@@ -120,7 +120,7 @@ function selectCustomSubmodel({ requestedTarget = '', customModels = [], submode
   return str(match?.id);
 }
 
-async function runProjectPersistenceFixture({ outputRoot = '', parentModel = null, targetModel = '' } = {}) {
+async function runProjectPersistenceFixture({ outputRoot = '', parentModel = null, targetModel = '', effectName = 'On' } = {}) {
   const projectDir = fs.mkdtempSync(path.join(outputRoot || os.tmpdir(), 'xld-custom-model-project-'));
   const displayDir = path.join(projectDir, 'display');
   fs.mkdirSync(displayDir, { recursive: true });
@@ -185,7 +185,7 @@ async function runProjectPersistenceFixture({ outputRoot = '', parentModel = nul
   const write = await persistAppTargetBehaviorLearning({
     projectFile,
     commands: [
-      { id: 'effect-custom-submodel', cmd: 'effects.create', params: { modelName: targetId, effectName: 'On', startMs: 0, endMs: 1000 } }
+      { id: 'effect-custom-submodel', cmd: 'effects.create', params: { modelName: targetId, effectName: str(effectName) || 'On', startMs: 0, endMs: 1000 } }
     ],
     renderObservation: {
       artifactId: 'render-custom-model-regression',
@@ -281,7 +281,8 @@ async function main() {
   const persistence = await runProjectPersistenceFixture({
     outputRoot: root,
     parentModel,
-    targetModel: liveTarget
+    targetModel: liveTarget,
+    effectName: args.effectName
   });
   if (!persistence.ok) {
     throw new Error('Project target behavior persistence fixture failed.');

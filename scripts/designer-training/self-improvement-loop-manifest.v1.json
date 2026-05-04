@@ -41,6 +41,18 @@
       "required": true
     },
     {
+      "id": "live_custom_submodel_probes",
+      "type": "live_custom_model_probe",
+      "required": false,
+      "effects": [
+        "On",
+        "Bars",
+        "Color Wash",
+        "SingleStrand"
+      ],
+      "durationMs": 8000
+    },
+    {
       "id": "target_behavior_summary_export",
       "type": "target_behavior_export",
       "required": false

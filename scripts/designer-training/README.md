@@ -19,7 +19,7 @@ Operational scripts for unattended designer training and validation loops.
   - manifest-driven training loop runner for readiness checks, anonymized target-behavior exports, and promotion-gate metrics
   - starts with `On`, `Bars`, `Color Wash`, and `SingleStrand`
   - excludes `Shimmer` from the initial validation scope
-  - designed so live apply/render probe phases can be added to the manifest without changing the export or promotion contract
+  - includes an opt-in live custom-submodel probe phase for generating accepted apply/render outcomes through the owned xLights API
 
 ## Recommended Use
 
@@ -70,3 +70,15 @@ node scripts/designer-training/run-self-improvement-cycle.mjs \
   --skip-commands \
   --project-dir /path/to/xLightsDesignerProject
 ```
+
+Run live custom-submodel probes when the owned xLights API is already reachable:
+
+```bash
+node scripts/designer-training/run-self-improvement-cycle.mjs \
+  --run-live-probes \
+  --endpoint http://127.0.0.1:49915/xlightsdesigner/api \
+  --show-dir /path/to/show-folder \
+  --discover-under var/reports
+```
+
+Live probes are intentionally opt-in. They use the manifest effect list, skip blocked effects, write project-local `display/target-behavior.json`, export anonymized summaries, and run the same promotion gate.

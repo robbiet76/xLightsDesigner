@@ -54,6 +54,18 @@ test('self-improvement cycle exports target behavior summaries and blocks early 
   assert.equal(fs.existsSync(path.join(root, 'run', 'cycle-summary.json')), true);
 });
 
+test('self-improvement cycle keeps live probes opt-in', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-live-opt-in-'));
+  const result = await runSelfImprovementCycle({
+    skipCommands: true,
+    runLiveProbes: false,
+    outDir: path.join(root, 'run')
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.phases.some((phase) => phase.type === 'live_custom_model_probe'), false);
+});
+
 test('self-improvement cycle rejects manifests that include Shimmer', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-shimmer-'));
   const manifestPath = path.join(root, 'manifest.json');
