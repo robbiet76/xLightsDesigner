@@ -279,6 +279,11 @@ Use `run-sequencing-quality-loop.mjs` to bind the controller checkpoint to a
 filtered layer-composition plan and execution scaffold. Default mode is
 scaffold-only; add `--apply-render --max-passes 1` only after reviewing the
 checkpoint and scaffold.
+Use `run-sequencing-quality-unattended.mjs` after the loop has been proven in
+small live runs. It repeats controller-selected loops, advances the latest run
+root after each executed loop, writes `unattended-run-summary.json` after every
+iteration, and stops on controller idle, missing evidence, blockers, or
+`--max-loops`.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \
@@ -314,6 +319,16 @@ node scripts/sequencer-render-training/tooling/run-sequencing-quality-controller
 node scripts/sequencer-render-training/tooling/run-sequencing-quality-loop.mjs \
   --latest-run-root var/logs/sequencer-layer-composition-training-runs/<completed-run-id> \
   --loop-root var/logs/sequencing-quality-controller/loop-000001
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \
+  --latest-run-root var/logs/sequencing-quality-controller/loop-000001 \
+  --previous-state var/logs/sequencing-quality-controller/loop-000001/controller-state.json \
+  --model-catalog scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json \
+  --out-root var/logs/sequencing-quality-controller/unattended \
+  --max-loops 20 \
+  --max-passes 5
 ```
 
 ```bash

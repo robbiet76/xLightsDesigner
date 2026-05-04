@@ -124,6 +124,26 @@ This writes `controller-state.json`, `training-plan.json`,
 `execution-scaffold-result.json`, `checkpoints.json`, `retention-ledger.json`,
 and `loop-summary.json`. Live rendering is opt-in through `--apply-render`.
 
+After a coverage path has been proven with small live runs, use the unattended
+runner:
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \
+  --latest-run-root /tmp/xld-quality-controller-loop-live-music-000002 \
+  --previous-state /tmp/xld-quality-controller-after-music-000002.json \
+  --model-catalog /tmp/xld-vendor-fixture-model-catalog.json \
+  --max-loops 20 \
+  --max-passes 5
+```
+
+The unattended runner writes `unattended-run-summary.json` after every iteration
+and advances from one loop root to the next only after an executed loop. It
+stops on `controller_idle`, `awaiting_evidence`, `blocked_no_controller_queue`,
+or `max_loops_reached`. When it stops on idle, the next curriculum expansion
+should be chosen deliberately; current preferred expansion order is creative
+intent revision comparison, broader effect/model coverage, then stronger
+video-level aesthetic scoring.
+
 ## Selection Rules
 
 The controller should prefer:
