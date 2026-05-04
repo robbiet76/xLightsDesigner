@@ -36,6 +36,8 @@ test('render review artifact scores ordered frame metrics against section intent
   assert.equal(artifact.deterministicMetrics.sampledFrameCount, 4);
   assert.ok(artifact.qualityScores.overallQuality > 0.5);
   assert.ok(['accept', 'revise', 'reject'].includes(artifact.critique.decision));
+  assert.equal(artifact.evidenceQualification.eligible, artifact.critique.decision === 'accept');
+  assert.equal(artifact.evidenceQualification.plannedEffectCount, 1);
 });
 
 test('render review artifact flags blank or flat sections for revision', () => {
@@ -60,5 +62,36 @@ test('render review artifact flags blank or flat sections for revision', () => {
 
   assert.equal(artifact.critique.decision, 'reject');
   assert.ok(artifact.critique.issues.some((issue) => /blank/i.test(issue)));
+  assert.equal(artifact.promotion.eligible, false);
+});
+
+test('render review artifact separates baseline render health from quality evidence', () => {
+  const artifact = buildRenderReviewArtifact({
+    frameFeatures: {
+      sampledFrameCount: 4,
+      nonBlankSampledFrameRatio: 1,
+      temporalMotionMean: 0.08,
+      temporalMotionPeak: 0.15,
+      previewWindowSignals: {
+        maxActiveModelCount: 1,
+        maxActiveNodeCount: 240,
+        meanActiveModelCount: 1,
+        meanActiveNodeCount: 200
+      },
+      sampledFrameMetrics: [
+        { frameActivePixelRatio: 0.01, frameAverageBrightness: 0.01, frameDominantPixelRatio: 0, frameUniqueColorCount: 3 },
+        { frameActivePixelRatio: 0.01, frameAverageBrightness: 0.01, frameDominantPixelRatio: 0, frameUniqueColorCount: 4 },
+        { frameActivePixelRatio: 0.01, frameAverageBrightness: 0.01, frameDominantPixelRatio: 0, frameUniqueColorCount: 5 },
+        { frameActivePixelRatio: 0.01, frameAverageBrightness: 0.01, frameDominantPixelRatio: 0, frameUniqueColorCount: 4 }
+      ]
+    },
+    intent: {
+      renderPlan: { plannedEffectCount: 0, plannedTargetCount: 0 }
+    }
+  });
+
+  assert.equal(artifact.evidenceQualification.status, 'render_health_observation');
+  assert.equal(artifact.evidenceQualification.eligible, false);
+  assert.equal(artifact.evidenceQualification.reasons.includes('no_planned_effects'), true);
   assert.equal(artifact.promotion.eligible, false);
 });

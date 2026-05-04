@@ -105,6 +105,7 @@ Options:
 function normalizeFrameFeatures(features = {}) {
   const sampled = arr(features.sampledFrameMetrics);
   const transitions = arr(features.sampledFrameTransitions);
+  const preview = obj(features.previewWindowSignals);
   return {
     source: features,
     sampled,
@@ -123,7 +124,8 @@ function normalizeFrameFeatures(features = {}) {
     meanActiveRatio: average(sampled.map((row) => row.frameActivePixelRatio)),
     meanBrightness: average(sampled.map((row) => row.frameAverageBrightness)),
     meanDominantRatio: average(sampled.map((row) => row.frameDominantPixelRatio)),
-    meanUniqueColorCount: average(sampled.map((row) => row.frameUniqueColorCount))
+    meanUniqueColorCount: average(sampled.map((row) => row.frameUniqueColorCount)),
+    previewWindowSignals: preview
   };
 }
 
@@ -162,6 +164,14 @@ function buildDeterministicMetrics(normalized = {}) {
     temporalColorDeltaMean: round(normalized.temporalColorDeltaMean),
     temporalBrightnessDeltaMean: round(normalized.temporalBrightnessDeltaMean),
     temporalActiveDeltaMean: round(normalized.temporalActiveDeltaMean),
+    activeModelCountMean: round(normalized.previewWindowSignals.meanActiveModelCount),
+    activeModelCountPeak: round(normalized.previewWindowSignals.maxActiveModelCount),
+    activeNodeCountMean: round(normalized.previewWindowSignals.meanActiveNodeCount),
+    activeNodeCountPeak: round(normalized.previewWindowSignals.maxActiveNodeCount),
+    activeNodeRatioMean: round(normalized.previewWindowSignals.meanActiveNodeRatio),
+    activeNodeRatioPeak: round(normalized.previewWindowSignals.maxActiveNodeRatio),
+    activeTargetNodeRatioMean: round(normalized.previewWindowSignals.meanActiveTargetNodeRatio),
+    activeTargetNodeRatioPeak: round(normalized.previewWindowSignals.maxActiveTargetNodeRatio),
     blankRisk: round(blankRisk),
     overexposureRisk: round(overexposureRisk),
     flatnessRisk: round(flatnessRisk),
@@ -220,6 +230,35 @@ function buildQualityScores(metrics = {}, intent = {}) {
   };
 }
 
+function buildEvidenceQualification(metrics = {}, intent = {}, critique = {}) {
+  const effectName = str(intent.effectName || intent.effect?.name || intent.effect);
+  const targetHierarchy = obj(intent.targetHierarchy);
+  const renderPlan = obj(intent.renderPlan);
+  const plannedEffectCount = number(renderPlan.plannedEffectCount, effectName ? 1 : 0);
+  const plannedTargetCount = number(
+    renderPlan.plannedTargetCount,
+    arr(targetHierarchy.leadTargets).length + arr(targetHierarchy.supportTargets).length
+  );
+  const reasons = [];
+  if (metrics.sampledFrameCount < 2) reasons.push('insufficient_sampled_frames');
+  if (plannedEffectCount <= 0) reasons.push('no_planned_effects');
+  if (plannedTargetCount <= 0) reasons.push('no_planned_targets');
+  if (metrics.blankRisk > 0.35) reasons.push('high_blank_risk');
+  if (metrics.activeNodeCountPeak <= 0 && metrics.activeCoveragePeak <= 0.0003) reasons.push('no_active_nodes_or_pixels');
+  if (arr(critique.issues).length) reasons.push('open_quality_issues');
+  const eligible = reasons.length === 0 && str(critique.decision) === 'accept';
+  return {
+    status: eligible ? 'quality_evidence' : 'render_health_observation',
+    eligible,
+    reasons,
+    plannedEffectCount,
+    plannedTargetCount,
+    confidence: metrics.sampledFrameCount >= 3 && (metrics.activeNodeCountPeak > 0 || metrics.activeCoveragePeak > 0.001)
+      ? 'measured'
+      : 'weak'
+  };
+}
+
 function buildCritique(metrics = {}, scores = {}) {
   const strengths = [];
   const issues = [];
@@ -266,6 +305,7 @@ export function buildRenderReviewArtifact({
   const deterministicMetrics = buildDeterministicMetrics(normalized);
   const qualityScores = buildQualityScores(deterministicMetrics, intent);
   const critique = buildCritique(deterministicMetrics, qualityScores);
+  const evidenceQualification = buildEvidenceQualification(deterministicMetrics, intent, critique);
   return {
     artifactType: 'render_review_v1',
     artifactVersion: '1.0',
@@ -282,7 +322,8 @@ export function buildRenderReviewArtifact({
       musicRole: obj(intent.musicRole),
       targetHierarchy: obj(intent.targetHierarchy),
       paletteIntent: obj(intent.paletteIntent),
-      rawSummary: str(intent.summary || intent.intent || '')
+      renderPlan: obj(intent.renderPlan),
+      rawSummary: str(intent.rawSummary || intent.summary || intent.intent || '')
     },
     evidence: {
       videoPath: str(evidence.videoPath),
@@ -295,11 +336,15 @@ export function buildRenderReviewArtifact({
     deterministicMetrics,
     qualityScores,
     critique,
+    evidenceQualification,
     promotion: {
-      eligible: critique.decision === 'accept',
-      blockers: critique.decision === 'accept'
+      eligible: evidenceQualification.eligible,
+      blockers: evidenceQualification.eligible
         ? []
-        : ['render review requires revision or additional repeated evidence before promotion']
+        : [
+          'render review requires revision or additional repeated evidence before promotion',
+          ...evidenceQualification.reasons
+        ]
     }
   };
 }

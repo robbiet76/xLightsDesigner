@@ -47,6 +47,15 @@ function unique(values = []) {
   return [...new Set(arr(values).map(str).filter(Boolean))];
 }
 
+function average(values = []) {
+  const rows = arr(values).map((value) => number(value, NaN)).filter(Number.isFinite);
+  return rows.length ? rows.reduce((sum, value) => sum + value, 0) / rows.length : 0;
+}
+
+function round6(value) {
+  return Math.round(number(value) * 1_000_000) / 1_000_000;
+}
+
 export function mergeIntentForRenderReview(base = {}, overlay = {}) {
   const effectName = str(overlay.effectName || overlay.effect?.name || overlay.effect)
     || str(base.effectName || base.effect?.name || base.effect);
@@ -102,6 +111,46 @@ function readSiblingApplyContext(fseqPath = '') {
     }
   }
   return { intent: {}, renderObservationPath: '' };
+}
+
+function summarizePreviewWindowSignals(windowDoc = {}, geometryDoc = {}) {
+  const frames = arr(windowDoc.frames);
+  const geometryModelCount = number(windowDoc?.geometryReference?.modelCount, 0);
+  const geometryNodesByModel = new Map(arr(geometryDoc?.scene?.models).map((model) => [
+    str(model.name || model.id),
+    arr(model.nodes).length
+  ]).filter(([name]) => name));
+  const activeTargetNodeUniverse = new Map();
+  for (const frame of frames) {
+    for (const model of arr(frame.models)) {
+      const name = str(model.modelName);
+      if (!name) continue;
+      activeTargetNodeUniverse.set(name, number(geometryNodesByModel.get(name), number(model.activeNodeCount, arr(model.activeNodes).length)));
+    }
+  }
+  const displayNodeTotal = [...geometryNodesByModel.values()].reduce((sum, count) => sum + count, 0);
+  const activeTargetNodeTotal = [...activeTargetNodeUniverse.values()].reduce((sum, count) => sum + count, 0);
+  const activeModelCounts = frames.map((frame) => number(frame.activeModelCount, arr(frame.models).filter((model) => number(model.activeNodeCount) > 0).length));
+  const activeNodeCounts = frames.map((frame) => number(frame.activeNodeCount, arr(frame.models).reduce((sum, model) => sum + number(model.activeNodeCount), 0)));
+  const maxActiveModelCount = activeModelCounts.length ? Math.max(...activeModelCounts) : 0;
+  const maxActiveNodeCount = activeNodeCounts.length ? Math.max(...activeNodeCounts) : 0;
+  return {
+    artifactType: 'preview_window_quality_signals_v1',
+    frameCount: frames.length,
+    geometryModelCount,
+    displayNodeCount: displayNodeTotal,
+    activeTargetNodeUniverseCount: activeTargetNodeTotal,
+    meanActiveModelCount: round6(average(activeModelCounts)),
+    maxActiveModelCount,
+    meanActiveNodeCount: round6(average(activeNodeCounts)),
+    maxActiveNodeCount,
+    meanActiveModelRatio: geometryModelCount > 0 ? round6(average(activeModelCounts) / geometryModelCount) : 0,
+    maxActiveModelRatio: geometryModelCount > 0 ? round6(maxActiveModelCount / geometryModelCount) : 0,
+    meanActiveNodeRatio: displayNodeTotal > 0 ? round6(average(activeNodeCounts) / displayNodeTotal) : 0,
+    maxActiveNodeRatio: displayNodeTotal > 0 ? round6(maxActiveNodeCount / displayNodeTotal) : 0,
+    meanActiveTargetNodeRatio: activeTargetNodeTotal > 0 ? round6(average(activeNodeCounts) / activeTargetNodeTotal) : 0,
+    maxActiveTargetNodeRatio: activeTargetNodeTotal > 0 ? round6(maxActiveNodeCount / activeTargetNodeTotal) : 0
+  };
 }
 
 export function buildFrameOffsets({ startMs = 0, endMs = 0, stepMs = 50, sampleCount = 8, frameOffsets = '' } = {}) {
@@ -262,11 +311,16 @@ export function buildRenderReviewFromFseq({
     outDir: path.join(resolvedOutDir, 'render-review-media'),
     sampleCount
   });
+  const frameFeatures = {
+    ...readJson(mediaExtraction.frameFeaturesPath),
+    previewWindowSignals: summarizePreviewWindowSignals(readJson(previewWindowPath), readJson(resolvedGeometryPath))
+  };
+  writeJson(mediaExtraction.frameFeaturesPath, frameFeatures);
   const siblingContext = readSiblingApplyContext(resolvedFseqPath);
   const fileIntent = intentPath && fs.existsSync(resolvePath(intentPath)) ? readJson(resolvePath(intentPath)) : {};
   const reviewIntent = mergeIntentForRenderReview(mergeIntentForRenderReview(siblingContext.intent, fileIntent), intent);
   const review = buildRenderReviewArtifact({
-    frameFeatures: readJson(mediaExtraction.frameFeaturesPath),
+    frameFeatures,
     intent: reviewIntent,
     evidence: {
       videoPath: previewMediaPath,

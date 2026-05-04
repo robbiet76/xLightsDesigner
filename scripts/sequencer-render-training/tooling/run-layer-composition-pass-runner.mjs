@@ -36,6 +36,15 @@ function unique(values = []) {
   return [...new Set(arr(values).map(str).filter(Boolean))];
 }
 
+function average(values = []) {
+  const rows = arr(values).map((value) => Number(value)).filter(Number.isFinite);
+  return rows.length ? rows.reduce((sum, value) => sum + value, 0) / rows.length : 0;
+}
+
+function round6(value) {
+  return Math.round(Number(value || 0) * 1_000_000) / 1_000_000;
+}
+
 function passWindow(passExecution = {}) {
   const effects = arr(passExecution?.ownedBatchPayload?.effects);
   const marks = arr(passExecution?.ownedBatchPayload?.marks);
@@ -223,6 +232,12 @@ function buildRenderReviewQuality({
         leadTargets: targets.slice(0, 1),
         supportTargets: targets.slice(1)
       },
+      renderPlan: {
+        plannedEffectCount: effects.length,
+        plannedTargetCount: targets.length,
+        effectNames,
+        targets
+      },
       section: {
         id: sectionId,
         label: sectionId,
@@ -254,7 +269,10 @@ function buildRenderReviewQuality({
     frameFeaturesRef: run.frameFeaturesPath,
     contactSheetRef: run.contactSheetPath,
     decision: str(review?.critique?.decision || run.decision),
-    overallQuality: Number(review?.qualityScores?.overallQuality ?? run.overallQuality ?? 0)
+    overallQuality: Number(review?.qualityScores?.overallQuality ?? run.overallQuality ?? 0),
+    evidenceQualification: review?.evidenceQualification || {},
+    evidenceEligible: Boolean(review?.evidenceQualification?.eligible),
+    measurementStatus: str(review?.evidenceQualification?.status)
   };
   writeJson(summaryPath, summary);
   return {
@@ -302,6 +320,8 @@ function refreshCheckpointBundle(root, plan = {}) {
       renderReviewQualityRef: str(checkpoint.renderReviewQualityRef || ""),
       renderReviewRef: str(checkpoint.renderReviewRef || ""),
       renderReviewDecision: str(checkpoint.renderReviewDecision || ""),
+      renderReviewEvidenceEligible: Boolean(checkpoint.renderReviewEvidenceEligible),
+      renderReviewMeasurementStatus: str(checkpoint.renderReviewMeasurementStatus || ""),
       failureSummaryRef: str(checkpoint.failureSummaryRef || "")
     };
   });
@@ -717,6 +737,8 @@ export async function runLayerCompositionPasses({
         renderReviewRef: str(renderReviewQualityResult?.renderReviewRef),
         renderReviewDecision: str(renderReviewQualityResult?.decision),
         renderReviewOverallQuality: Number(renderReviewQualityResult?.overallQuality ?? 0),
+        renderReviewEvidenceEligible: Boolean(renderReviewQualityResult?.evidenceEligible),
+        renderReviewMeasurementStatus: str(renderReviewQualityResult?.measurementStatus),
         rawArtifactsSummarized: true,
         cleanupApplied: false
       });
@@ -810,7 +832,9 @@ export async function runLayerCompositionPasses({
         status: "completed",
         renderReviewDecision: str(renderReviewQualityResult?.decision),
         renderReviewOverallQuality: Number(renderReviewQualityResult?.overallQuality ?? 0),
-        renderReviewQualityRef: str(renderReviewQualityResult?.summaryPath)
+        renderReviewQualityRef: str(renderReviewQualityResult?.summaryPath),
+        renderReviewEvidenceEligible: Boolean(renderReviewQualityResult?.evidenceEligible),
+        renderReviewMeasurementStatus: str(renderReviewQualityResult?.measurementStatus)
       });
       bundle = refreshCheckpointBundle(root, plan);
     } catch (error) {
@@ -866,6 +890,9 @@ export async function runLayerCompositionPasses({
   }
   bundle = refreshCheckpointBundle(root, plan);
   const elapsedRuntimeMinutes = Number(((now() - startedAtMs) / 60000).toFixed(3));
+  const renderReviewResults = results.filter((result) => str(result.renderReviewQualityRef));
+  const eligibleRenderReviewResults = renderReviewResults.filter((result) => result.renderReviewEvidenceEligible);
+  const eligibleQualityScores = eligibleRenderReviewResults.map((result) => Number(result.renderReviewOverallQuality)).filter(Number.isFinite);
   const summary = {
     artifactType: "layer_composition_pass_runner_summary_v1",
     artifactVersion: 1,
@@ -880,10 +907,16 @@ export async function runLayerCompositionPasses({
     pendingPassesSelected: pending.length,
     elapsedRuntimeMinutes,
     renderReviewQualityEnabled: Boolean(renderReviewQuality),
-    renderReviewQualityCount: results.filter((result) => str(result.renderReviewQualityRef)).length,
-    renderReviewAcceptedCount: results.filter((result) => str(result.renderReviewDecision) === "accept").length,
-    renderReviewReviseCount: results.filter((result) => str(result.renderReviewDecision) === "revise").length,
-    renderReviewRejectedCount: results.filter((result) => str(result.renderReviewDecision) === "reject").length,
+    renderReviewQualityCount: renderReviewResults.length,
+    renderReviewAcceptedCount: renderReviewResults.filter((result) => str(result.renderReviewDecision) === "accept").length,
+    renderReviewEvidenceEligibleCount: eligibleRenderReviewResults.length,
+    renderReviewObservationOnlyCount: renderReviewResults.filter((result) => str(result.renderReviewMeasurementStatus) === "render_health_observation").length,
+    renderReviewAcceptedEvidenceCount: eligibleRenderReviewResults.filter((result) => str(result.renderReviewDecision) === "accept").length,
+    renderReviewReviseCount: renderReviewResults.filter((result) => str(result.renderReviewDecision) === "revise").length,
+    renderReviewRejectedCount: renderReviewResults.filter((result) => str(result.renderReviewDecision) === "reject").length,
+    renderReviewEligibleQualityMean: round6(average(eligibleQualityScores)),
+    renderReviewEligibleQualityMin: eligibleQualityScores.length ? round6(Math.min(...eligibleQualityScores)) : 0,
+    renderReviewEligibleQualityMax: eligibleQualityScores.length ? round6(Math.max(...eligibleQualityScores)) : 0,
     stopStatus,
     stopReason,
     refillAttempts: refillResults.length,

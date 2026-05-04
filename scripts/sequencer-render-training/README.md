@@ -243,6 +243,9 @@ TRAINING_API_STAGING_ROOT="$XLIGHTS_SHOW_DIR/_xlightsdesigner_api_training/layer
 `--render-review-quality` keeps the existing composition observation flow and adds
 `render_review_v1` evidence for completed passes so layer-composition runs can be
 judged by display-level visual quality, not only by whether an effect rendered.
+Pass summaries distinguish `quality_evidence` from `render_health_observation`
+so baselines and other non-effect checks can verify the render path without being
+counted as promotable creative-quality evidence.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \

@@ -168,7 +168,9 @@ test("pass runner can attach render review quality evidence to a completed pass"
           previewMediaRef,
           contactSheetRef,
           decision: "accept",
-          overallQuality: 0.9
+          overallQuality: 0.9,
+          evidenceEligible: true,
+          measurementStatus: "quality_evidence"
         };
       }
     })
@@ -178,11 +180,17 @@ test("pass runner can attach render review quality evidence to a completed pass"
   assert.equal(summary.renderReviewQualityEnabled, true);
   assert.equal(summary.renderReviewQualityCount, 1);
   assert.equal(summary.renderReviewAcceptedCount, 1);
+  assert.equal(summary.renderReviewEvidenceEligibleCount, 1);
+  assert.equal(summary.renderReviewAcceptedEvidenceCount, 1);
+  assert.equal(summary.renderReviewEligibleQualityMean, 0.9);
   assert.equal(summary.results[0].renderReviewDecision, "accept");
   assert.equal(summary.results[0].renderReviewOverallQuality, 0.9);
+  assert.equal(summary.results[0].renderReviewEvidenceEligible, true);
+  assert.equal(summary.results[0].renderReviewMeasurementStatus, "quality_evidence");
 
   const checkpoints = JSON.parse(fs.readFileSync(path.join(runRoot, "checkpoints.json"), "utf8"));
   assert.equal(checkpoints.checkpoints[0].renderReviewDecision, "accept");
+  assert.equal(checkpoints.checkpoints[0].renderReviewEvidenceEligible, true);
   assert.equal(Boolean(checkpoints.checkpoints[0].renderReviewQualityRef), true);
   assert.equal(Boolean(checkpoints.checkpoints[0].renderReviewRef), true);
   const checkpoint = JSON.parse(fs.readFileSync(checkpoints.checkpoints[0].checkpointRef, "utf8"));
