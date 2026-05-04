@@ -121,6 +121,7 @@
       ],
       "completionCriteria": {
         "minimumSelectorReadyPriorCount": 8,
+        "minimumDurableCandidateCount": 8,
         "maximumRegressingRecords": 0
       }
     },
@@ -190,7 +191,11 @@
       "nextSelectionHints": [
         "Start with group_then_model and same-target one/two-layer stack repeats.",
         "Compare color spread and multicolor frame ratio against mono-white priors."
-      ]
+      ],
+      "completionCriteria": {
+        "minimumDurableCandidateCount": 5,
+        "maximumRegressingRecords": 0
+      }
     },
     {
       "goalId": "submodel.vendor_fixture.basic",
@@ -226,7 +231,11 @@
       "nextSelectionHints": [
         "Use display/model-index.json submodel structure rather than name inference.",
         "Probe parent, important submodel, and sibling-pair cases separately."
-      ]
+      ],
+      "completionCriteria": {
+        "minimumDurableCandidateCount": 2,
+        "maximumRegressingRecords": 0
+      }
     },
     {
       "goalId": "effect_fit.core_effects.v1",
@@ -335,7 +344,11 @@
       },
       "blockedBy": [
         "needs display-level and musical-structure evidence first"
-      ]
+      ],
+      "completionCriteria": {
+        "minimumDurableCandidateCount": 2,
+        "maximumRegressingRecords": 0
+      }
     }
   ]
 }

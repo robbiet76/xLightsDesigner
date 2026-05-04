@@ -663,6 +663,57 @@ test("controller advances past goals with durable evidence and no repeat queue",
   assert.equal(state.nextQueue[0].goalId, "submodel.vendor_fixture.basic");
 });
 
+test("controller treats durable completion criteria as covered evidence", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [
+    {
+      ...record("one_layer_foundation", 0.84, []),
+      sampleCount: 2,
+      trendStatus: "stable"
+    },
+    {
+      ...record("two_layer_default", 0.85, []),
+      sampleCount: 2,
+      trendStatus: "stable"
+    }
+  ]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "layer.same_target.mono_white.basic",
+        areaId: "layer_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["same_target_layer_stack"],
+          paletteProfiles: ["mono_white"],
+          effects: ["Color Wash"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }, {
+        goalId: "effect_fit.core_effects.v1",
+        areaId: "effect_behavior",
+        priority: 2,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          effects: ["Single Strand"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].evidenceStatus, "covered");
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+  assert.equal(state.nextQueue[0].goalId, "effect_fit.core_effects.v1");
+});
+
 test("controller increments loop index from a previous state", () => {
   const runRoot = tempDir();
   const previousStatePath = path.join(runRoot, "previous-state.json");

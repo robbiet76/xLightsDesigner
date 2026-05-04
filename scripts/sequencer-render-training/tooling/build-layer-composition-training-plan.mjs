@@ -118,6 +118,7 @@ export const RUNTIME_SELECTION_TIERS = [
   "high_value_geometry_retest",
   "broad_layer_composition",
   "group_model_ordering",
+  "core_effect_fit",
   "interaction_deepening",
   "deferred_low_yield_retest"
 ];
@@ -823,6 +824,89 @@ function makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHor
   };
 }
 
+function makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, archGroup, star }) {
+  const lineSingleStrand = placement({
+    id: `ef-${paletteProfile}-line-single-strand`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { effect: "Chase", cycles: 3, colorSpeed: 5 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "linear_motion_baseline"
+    }
+  });
+  const archBars = placement({
+    id: `ef-${paletteProfile}-arch-bars`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { direction: "left", cycles: 2 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "group_motion_baseline"
+    }
+  });
+  const starWash = placement({
+    id: `ef-${paletteProfile}-star-color-wash`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "radial_fill_baseline"
+    }
+  });
+
+  return {
+    experimentId: `core-effect-fit-${paletteProfile}`,
+    family: "core_effect_fit",
+    paletteProfile,
+    curriculumStage: "family_contrast_survey",
+    layeringTaxonomy: ["effect_fit", "single_effect_baseline", "geometry_family_contrast"],
+    targetSets: [
+      { scope: "model", targets: [singleLineHorizontal, star] },
+      { scope: "group", targets: [archGroup] }
+    ],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [singleLineHorizontal.modelName, archGroup.modelName, star.modelName]
+      },
+      {
+        passId: "single_strand_linear_motion",
+        compositionPass: "effect_fit",
+        placements: [lineSingleStrand],
+        displayElementOrder: [singleLineHorizontal.modelName, archGroup.modelName, star.modelName]
+      },
+      {
+        passId: "bars_group_motion",
+        compositionPass: "effect_fit",
+        placements: [archBars],
+        displayElementOrder: [singleLineHorizontal.modelName, archGroup.modelName, star.modelName]
+      },
+      {
+        passId: "color_wash_radial_fill",
+        compositionPass: "effect_fit",
+        placements: [starWash],
+        displayElementOrder: [singleLineHorizontal.modelName, archGroup.modelName, star.modelName]
+      }
+    ]
+  };
+}
+
 function makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target }) {
   const foundation = placementFromSample({
     id: `ss-${paletteProfile}-foundation`,
@@ -1522,6 +1606,16 @@ function runtimeSelectionForExperiment(experiment, runType) {
       reason: "Measures deterministic mood, palette, pace, emphasis, style, and negative-space intent signals."
     };
   }
+  if (experiment.family === "core_effect_fit") {
+    return {
+      ...common,
+      tier: "core_effect_fit",
+      queueRank: 57,
+      budgetWeight: 1,
+      selectionRole: "single_effect_geometry_fit_baseline",
+      reason: "Starts core-effect fit with single-effect probes across line, group, and radial targets."
+    };
+  }
   if (experiment.family === "setting_sensitivity_edge_probe") {
     return {
       ...common,
@@ -1648,6 +1742,27 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
           {
             experimentId: `creative-intent-probe-${paletteProfile}`,
             passId: "emphasis_negative_space",
+            generatedFromCoverageGap: goalId
+          }
+        );
+      }
+    }
+    if (goalId === "effect_fit.core_effects.v1") {
+      for (const paletteProfile of ["mono_white"]) {
+        rows.push(
+          {
+            experimentId: `core-effect-fit-${paletteProfile}`,
+            passId: "single_strand_linear_motion",
+            generatedFromCoverageGap: goalId
+          },
+          {
+            experimentId: `core-effect-fit-${paletteProfile}`,
+            passId: "bars_group_motion",
+            generatedFromCoverageGap: goalId
+          },
+          {
+            experimentId: `core-effect-fit-${paletteProfile}`,
+            passId: "color_wash_radial_fill",
             generatedFromCoverageGap: goalId
           }
         );
@@ -1789,6 +1904,7 @@ export function buildLayerCompositionTrainingPlan({
     makeSameTargetLayerExperiment({ paletteProfile, star }),
     makeSubmodelStructureExperiment({ paletteProfile, target: vendorBasicSubmodel }),
     makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHorizontal }),
+    makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, archGroup, star }),
     makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target: archGroup }),
     makeSettingAttributionProbeExperiment({ paletteProfile, target: singleLineHorizontal }),
     makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target: archSingle }),
@@ -1831,6 +1947,7 @@ export function buildLayerCompositionTrainingPlan({
       "same_target_layer_stack",
       "submodel_structure",
       "creative_intent_probe",
+      "core_effect_fit",
       "setting_sensitivity_edge_probe",
       "setting_attribution_probe",
       "low_movement_setting_geometry_probe"

@@ -170,6 +170,22 @@ function activeGoals(curriculum = {}) {
     .sort(goalSort);
 }
 
+function finiteCriteriaNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function completionCriteriaForGoal(goal = {}) {
+  const criteria = goal.completionCriteria || {};
+  const minimumSelectorReadyPriorCount = finiteCriteriaNumber(criteria.minimumSelectorReadyPriorCount);
+  return {
+    minimumSelectorReadyPriorCount,
+    minimumDurableCandidateCount: finiteCriteriaNumber(criteria.minimumDurableCandidateCount)
+      || minimumSelectorReadyPriorCount
+      || null
+  };
+}
+
 function recordMatchesGoal(record = {}, goal = {}) {
   const coverage = goal.coverage || {};
   const families = coverageList(coverage, "families");
@@ -291,6 +307,16 @@ function durableRecordCountForGoal(records = [], goal = {}) {
   return recordsForGoal(records, goal).filter((record) => bool(record?.promotion?.durableCandidate)).length;
 }
 
+function goalEvidenceCovered(goal = {}, artifacts = {}, curriculum = {}) {
+  const blockers = goalBlockers(goal, artifacts, curriculum);
+  if (blockers.length) return false;
+  const criteria = completionCriteriaForGoal(goal);
+  const selectorReadyPriorCount = promotedPriorsForGoal(arr(artifacts?.promotedPriors?.priors), goal).length;
+  const durableCandidateCount = durableRecordCountForGoal(arr(artifacts?.qualityRecords?.records), goal);
+  return (criteria.minimumSelectorReadyPriorCount !== null && selectorReadyPriorCount >= criteria.minimumSelectorReadyPriorCount)
+    || (criteria.minimumDurableCandidateCount !== null && durableCandidateCount >= criteria.minimumDurableCandidateCount);
+}
+
 function hasNonRepeatableBlockedRecord(records = [], goal = {}, policy = {}) {
   return recordsForGoal(records, goal).some((record) => {
     const blockers = arr(record?.promotion?.blockers).map(str).filter(Boolean);
@@ -310,13 +336,19 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
     const blockedPromisingCount = goalRecords.filter((record) => isPromisingBlockedRecord(record, goal, policy)).length;
     const selectorReadyPriorCount = promotedPriorsForGoal(priors, goal).length;
     const blockers = new Set(goalBlockers(goal, artifacts, curriculum));
+    const criteria = completionCriteriaForGoal(goal);
+    const coveredByDeclaredStatus = str(goal.status) === "covered";
+    const coveredBySelectorReadyPriors = criteria.minimumSelectorReadyPriorCount !== null
+      && selectorReadyPriorCount >= criteria.minimumSelectorReadyPriorCount;
+    const coveredByDurableEvidence = criteria.minimumDurableCandidateCount !== null
+      && durableCandidateCount >= criteria.minimumDurableCandidateCount;
     if (artifacts.missingArtifacts?.length && !goalRecords.length && !selectorReadyPriorCount) blockers.add("latest evidence artifacts unavailable");
     return {
       goalId: str(goal.goalId),
       areaId: str(goal.areaId),
       status: str(goal.status),
       priority: num(goal.priority),
-      evidenceStatus: selectorReadyPriorCount >= num(goal?.completionCriteria?.minimumSelectorReadyPriorCount, Infinity)
+      evidenceStatus: coveredByDeclaredStatus || coveredBySelectorReadyPriors || coveredByDurableEvidence
         ? "covered"
         : blockedPromisingCount
           ? "in_progress"
@@ -373,7 +405,7 @@ function cleanupSummary(curriculum = {}, artifacts = {}) {
 function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_MAX_QUEUE } = {}) {
   const policy = promotionPolicy(curriculum);
   const records = arr(artifacts?.qualityRecords?.records);
-  const goals = activeGoals(curriculum);
+  const goals = activeGoals(curriculum).filter((goal) => !goalEvidenceCovered(goal, artifacts, curriculum));
   if (artifacts.missingArtifacts?.length) {
     return {
       selectedGoal: goals[0] || null,
