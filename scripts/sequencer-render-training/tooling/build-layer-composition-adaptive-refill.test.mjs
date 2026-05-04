@@ -64,6 +64,52 @@ test("adaptive refill adds broad manifest sample effect survey experiments", () 
   assert.equal(new Set(surveyExperiments.map((experiment) => experiment.paletteProfile)).has("rgb_primary"), true);
 });
 
+test("adaptive refill prioritizes weak quality evidence for revalidation", () => {
+  const plan = buildLayerCompositionTrainingPlan({ modelCatalog, runId: "refill-run", runType: "overnight" });
+  const qualityTrend = {
+    artifactType: "layer_composition_quality_trend_v1",
+    groups: [
+      {
+        experimentId: "group-model-interplay-mono_white",
+        passId: "foundation_group_only",
+        trendStatus: "regressing",
+        latestDecision: "accept",
+        latestOverallQuality: 0.61,
+        latestRenderReviewRef: "/tmp/render-review.json"
+      }
+    ]
+  };
+  const refill = buildLayerCompositionAdaptiveRefillPlan({ plan, refillAttempt: 1, qualityTrend });
+  const qualityExperiment = refill.experiments.find((experiment) => experiment.adaptiveRefill?.policy === "quality_trend_revalidation");
+
+  assert.equal(refill.adaptiveRefill.qualityRevalidationExperimentCount, 1);
+  assert.equal(qualityExperiment.experimentId, "group-model-interplay-mono_white-quality-refill_001");
+  assert.equal(qualityExperiment.passes.some((pass) => pass.passId === "empty_baseline_refill_001"), true);
+  const recheck = qualityExperiment.passes.find((pass) => pass.refillPolicy === "quality_trend_revalidation");
+  assert.equal(recheck.passId, "foundation_group_only_refill_001_quality_recheck");
+  assert.equal(recheck.learningSeed.evidenceFingerprintInputs.qualityTrendStatus, "regressing");
+  assert.equal(recheck.placements[0].layerIntent.attributionRole, "quality_trend_revalidation");
+});
+
+test("adaptive refill ignores stable accepted quality evidence", () => {
+  const plan = buildLayerCompositionTrainingPlan({ modelCatalog, runId: "refill-run", runType: "overnight" });
+  const qualityTrend = {
+    groups: [
+      {
+        experimentId: "group-model-interplay-mono_white",
+        passId: "foundation_group_only",
+        trendStatus: "stable",
+        latestDecision: "accept",
+        latestOverallQuality: 0.86
+      }
+    ]
+  };
+  const refill = buildLayerCompositionAdaptiveRefillPlan({ plan, refillAttempt: 1, qualityTrend });
+
+  assert.equal(refill.adaptiveRefill.qualityRevalidationExperimentCount, 0);
+  assert.equal(refill.experiments.some((experiment) => experiment.adaptiveRefill?.policy === "quality_trend_revalidation"), false);
+});
+
 test("adaptive refill stops when deterministic variant values are exhausted", () => {
   const plan = buildLayerCompositionTrainingPlan({ modelCatalog, runId: "refill-run", runType: "overnight" });
   const refill = buildLayerCompositionAdaptiveRefillPlan({ plan, refillAttempt: 17 });

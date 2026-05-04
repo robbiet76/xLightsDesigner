@@ -22,6 +22,8 @@ const RENDER_SETTING_REFILL_VARIANTS = {
 };
 
 const MANIFEST_SAMPLE_CHUNK_SIZE = 36;
+const QUALITY_REVALIDATION_LIMIT = 12;
+const QUALITY_REVALIDATION_THRESHOLD = 0.72;
 const DEFAULT_MANIFEST_DIR = "scripts/sequencer-render-training/manifests";
 
 function arr(value) {
@@ -99,6 +101,39 @@ function cloneBaselinePass(pass = {}, suffix = "") {
     refillSourcePassId: pass.passId,
     refillSuffix: suffix
   };
+  return next;
+}
+
+function cloneQualityRevalidationPass(pass = {}, suffix = "", group = {}) {
+  const next = JSON.parse(JSON.stringify(pass));
+  next.passId = `${pass.passId}_${suffix}_quality_recheck`;
+  next.comparisonBasePassId = pass.comparisonBasePassId ? `${pass.comparisonBasePassId}_${suffix}` : "";
+  next.refillSourcePassId = pass.passId;
+  next.refillPolicy = "quality_trend_revalidation";
+  next.learningSeed.learningId = `${pass.learningSeed.learningId}:adaptive_refill:${suffix}:quality_recheck`;
+  next.learningSeed.coverageKey = `${pass.learningSeed.coverageKey}|adaptive_refill:${suffix}|quality_recheck`;
+  next.learningSeed.evidenceFingerprintInputs = {
+    ...(next.learningSeed.evidenceFingerprintInputs || {}),
+    adaptiveRefill: true,
+    refillSourcePassId: pass.passId,
+    refillSuffix: suffix,
+    qualityRevalidation: true,
+    qualityTrendStatus: str(group.trendStatus),
+    latestOverallQuality: Number(group.latestOverallQuality) || 0,
+    latestRenderReviewRef: str(group.latestRenderReviewRef)
+  };
+  for (const placement of arr(next.placements)) {
+    placement.layerIntent = {
+      ...(placement.layerIntent || {}),
+      attributionRole: "quality_trend_revalidation",
+      adaptiveRefill: {
+        sourcePassId: pass.passId,
+        policy: "quality_trend_revalidation",
+        qualityTrendStatus: str(group.trendStatus),
+        latestOverallQuality: Number(group.latestOverallQuality) || 0
+      }
+    };
+  }
   return next;
 }
 
@@ -443,9 +478,55 @@ function buildManifestSampleRefillExperiments(sourcePlan = {}, suffix = "", refi
     .map((paletteProfile) => buildManifestSampleExperiment({ spec, paletteProfile, suffix, refillAttempt })));
 }
 
-export function buildLayerCompositionAdaptiveRefillPlan({ plan, refillAttempt = 1 } = {}) {
+function qualityGroupsForRevalidation(qualityTrend = {}) {
+  return arr(qualityTrend?.groups)
+    .filter((group) => str(group.experimentId) && str(group.passId))
+    .filter((group) => (
+      str(group.trendStatus) === "regressing"
+      || str(group.latestDecision) === "revise"
+      || str(group.latestDecision) === "reject"
+      || Number(group.latestOverallQuality) < QUALITY_REVALIDATION_THRESHOLD
+    ))
+    .sort((left, right) => (
+      Number(left.latestOverallQuality || 0) - Number(right.latestOverallQuality || 0)
+      || str(left.experimentId).localeCompare(str(right.experimentId))
+      || str(left.passId).localeCompare(str(right.passId))
+    ))
+    .slice(0, QUALITY_REVALIDATION_LIMIT);
+}
+
+function buildQualityRevalidationExperiments(sourcePlan = {}, qualityTrend = {}, suffix = "", refillAttempt = 1) {
+  return qualityGroupsForRevalidation(qualityTrend).map((group) => {
+    const sourceExperiment = arr(sourcePlan.experiments).find((experiment) => str(experiment.experimentId) === str(group.experimentId));
+    const sourcePass = arr(sourceExperiment?.passes).find((pass) => str(pass.passId) === str(group.passId));
+    if (!sourceExperiment || !sourcePass) return null;
+    const comparisonBasePassId = str(sourcePass.comparisonBasePassId || "empty_baseline");
+    const baseline = arr(sourceExperiment.passes).find((pass) => str(pass.passId) === comparisonBasePassId)
+      || arr(sourceExperiment.passes).find((pass) => str(pass.passId) === "empty_baseline");
+    const baselinePasses = baseline ? [cloneBaselinePass(baseline, suffix)] : [];
+    const targetPass = cloneQualityRevalidationPass(sourcePass, suffix, group);
+    return {
+      ...JSON.parse(JSON.stringify(sourceExperiment)),
+      experimentId: `${sourceExperiment.experimentId}-quality-${suffix}`,
+      refillSourceExperimentId: sourceExperiment.experimentId,
+      adaptiveRefill: {
+        refillAttempt,
+        policy: "quality_trend_revalidation",
+        sourceExperimentId: sourceExperiment.experimentId,
+        sourcePassId: sourcePass.passId,
+        qualityTrendStatus: str(group.trendStatus),
+        latestOverallQuality: Number(group.latestOverallQuality) || 0,
+        latestRenderReviewRef: str(group.latestRenderReviewRef)
+      },
+      passes: [...baselinePasses, targetPass]
+    };
+  }).filter(Boolean);
+}
+
+export function buildLayerCompositionAdaptiveRefillPlan({ plan, refillAttempt = 1, qualityTrend = null } = {}) {
   const sourcePlan = typeof plan === "string" ? readJson(plan) : plan;
   const suffix = refillSuffix(refillAttempt);
+  const qualityRevalidationExperiments = buildQualityRevalidationExperiments(sourcePlan, qualityTrend, suffix, refillAttempt);
   const effectSettingExperiments = arr(sourcePlan?.experiments)
     .filter(selectedEffectSettingExperiment)
     .map((experiment) => buildEffectSettingRefillExperiment(experiment, suffix, refillAttempt))
@@ -455,7 +536,12 @@ export function buildLayerCompositionAdaptiveRefillPlan({ plan, refillAttempt = 
     .map((experiment) => buildRenderSettingRefillExperiment(experiment, suffix, refillAttempt))
     .filter((experiment) => arr(experiment.passes).length > 0);
   const manifestSampleExperiments = buildManifestSampleRefillExperiments(sourcePlan, suffix, refillAttempt);
-  const experiments = [...effectSettingExperiments, ...renderSettingExperiments, ...manifestSampleExperiments];
+  const experiments = [
+    ...qualityRevalidationExperiments,
+    ...effectSettingExperiments,
+    ...renderSettingExperiments,
+    ...manifestSampleExperiments
+  ];
   return {
     ...JSON.parse(JSON.stringify(sourcePlan)),
     artifactType: "layer_composition_experiment_manifest_v1",
@@ -465,7 +551,8 @@ export function buildLayerCompositionAdaptiveRefillPlan({ plan, refillAttempt = 
     adaptiveRefill: {
       refillAttempt,
       policy: "multi_source_deterministic_refill",
-      sourceRunId: sourcePlan.runId
+      sourceRunId: sourcePlan.runId,
+      qualityRevalidationExperimentCount: qualityRevalidationExperiments.length
     },
     experiments
   };
@@ -476,7 +563,8 @@ export function appendLayerCompositionAdaptiveRefill({ runRoot, plan, planPath =
   if (!root) throw new Error("runRoot is required");
   const sourcePlanPath = planPath || path.join(root, "training-plan.json");
   const sourcePlan = plan || readJson(sourcePlanPath);
-  const refillPlan = buildLayerCompositionAdaptiveRefillPlan({ plan: sourcePlan, refillAttempt });
+  const qualityTrend = readOptionalJson(path.join(root, "layer-composition-quality-trend.json"));
+  const refillPlan = buildLayerCompositionAdaptiveRefillPlan({ plan: sourcePlan, refillAttempt, qualityTrend });
   if (!arr(refillPlan.experiments).length) {
     return {
       artifactType: "layer_composition_adaptive_refill_result_v1",

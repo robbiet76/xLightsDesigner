@@ -249,6 +249,9 @@ counted as promotable creative-quality evidence.
 Quality-enabled runs also write `layer-composition-quality-trend.json`; pass one
 or more run roots to `build-layer-composition-quality-trend.mjs` to compare
 eligible quality evidence across repeated unattended runs.
+Adaptive refill consumes that trend file when present and queues conservative
+`quality_trend_revalidation` passes only for weak, regressing, revised, or
+rejected quality evidence.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \
