@@ -210,6 +210,41 @@ function model(catalog, key) {
   };
 }
 
+function submodelTarget(catalog, key) {
+  const row = catalog?.submodelTargets?.[key];
+  if (!row) return null;
+  const parent = row.parentModel || {};
+  const submodels = arr(row.submodels)
+    .map((submodel, index) => ({
+      key: submodel.key || `${key}_submodel_${index + 1}`,
+      modelName: submodel.fullName || submodel.modelName,
+      submodelName: submodel.name || "",
+      parentModelName: submodel.parentModelName || parent.modelName || row.parentModelName || "",
+      modelType: submodel.modelType || row.modelType || parent.modelType || "custom",
+      geometryProfile: submodel.geometryProfile || row.geometryProfile || "submodel_structural",
+      analyzerFamily: submodel.analyzerFamily || row.analyzerFamily || "submodel",
+      nodeCount: Number(submodel.nodeCount) || 0,
+      lines: submodel.lines || "",
+      submodelType: submodel.type || ""
+    }))
+    .filter((submodel) => str(submodel.modelName));
+  if (!str(parent.modelName) || submodels.length < 2) return null;
+  return {
+    key,
+    parent: {
+      key: parent.key || `${key}_parent`,
+      modelName: parent.modelName,
+      modelType: parent.modelType || row.modelType || "custom",
+      geometryProfile: parent.geometryProfile || row.geometryProfile || "custom_parent",
+      analyzerFamily: parent.analyzerFamily || row.analyzerFamily || "submodel"
+    },
+    submodels,
+    modelType: row.modelType || parent.modelType || "custom",
+    geometryProfile: row.geometryProfile || "submodel_structural",
+    analyzerFamily: row.analyzerFamily || "submodel"
+  };
+}
+
 function paletteSettings(profile) {
   const base = {
     C_BUTTON_Palette1: "#FFFFFF",
@@ -602,6 +637,105 @@ function makeSameTargetLayerExperiment({ paletteProfile, star }) {
         displayElementOrder: [star.modelName],
         comparisonBasePassId: "three_layer_default",
         changeType: "layer_render_setting"
+      }
+    ]
+  };
+}
+
+function makeSubmodelStructureExperiment({ paletteProfile, target }) {
+  if (!target) return null;
+  const [primarySubmodel, siblingSubmodel] = target.submodels;
+  if (!primarySubmodel || !siblingSubmodel) return null;
+
+  const parentFoundation = placement({
+    id: `sm-${paletteProfile}-parent-foundation`,
+    target: target.parent,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "foundation",
+    layerIndex: 0,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "foundation",
+      structuralRole: "parent_model_reference"
+    }
+  });
+  const submodelFoundation = placement({
+    id: `sm-${paletteProfile}-submodel-foundation`,
+    target: primarySubmodel,
+    targetScope: "submodel",
+    effectName: "Color Wash",
+    compositionPass: "foundation",
+    layerIndex: 0,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "foundation",
+      structuralRole: "single_submodel_reference",
+      parentModelName: primarySubmodel.parentModelName,
+      submodelName: primarySubmodel.submodelName,
+      nodeCount: primarySubmodel.nodeCount,
+      lines: primarySubmodel.lines
+    }
+  });
+  const siblingAccent = placement({
+    id: `sm-${paletteProfile}-sibling-accent`,
+    target: siblingSubmodel,
+    targetScope: "submodel",
+    effectName: "SingleStrand",
+    compositionPass: "detail",
+    layerIndex: 1,
+    effectSettings: { effect: "Chase", cycles: 3, colorSpeed: 4 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "detail",
+      structuralRole: "sibling_submodel_contrast",
+      parentModelName: siblingSubmodel.parentModelName,
+      submodelName: siblingSubmodel.submodelName,
+      nodeCount: siblingSubmodel.nodeCount,
+      lines: siblingSubmodel.lines
+    }
+  });
+
+  return {
+    experimentId: `submodel-structure-${target.key}-${paletteProfile}`,
+    family: "submodel_structure",
+    paletteProfile,
+    curriculumStage: "family_contrast_survey",
+    layeringTaxonomy: ["parent_submodel_overlap", "submodel_targeting", "sibling_submodel_layering"],
+    targetSets: [
+      { scope: "model", targets: [target.parent] },
+      { scope: "submodel", targets: [primarySubmodel, siblingSubmodel] }
+    ],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [target.parent.modelName]
+      },
+      {
+        passId: "parent_model_foundation",
+        compositionPass: "foundation",
+        placements: [parentFoundation],
+        displayElementOrder: [target.parent.modelName]
+      },
+      {
+        passId: "single_submodel_foundation",
+        compositionPass: "foundation",
+        placements: [submodelFoundation],
+        displayElementOrder: [target.parent.modelName],
+        comparisonBasePassId: "parent_model_foundation",
+        changeType: "target_scope"
+      },
+      {
+        passId: "sibling_submodels_split",
+        compositionPass: "detail",
+        placements: [submodelFoundation, siblingAccent],
+        displayElementOrder: [target.parent.modelName],
+        comparisonBasePassId: "single_submodel_foundation",
+        changeType: "sibling_submodel_layer_added"
       }
     ]
   };
@@ -1286,6 +1420,16 @@ function runtimeSelectionForExperiment(experiment, runType) {
       reason: "Covers broad-to-specific target interaction and display element order effects."
     };
   }
+  if (experiment.family === "submodel_structure") {
+    return {
+      ...common,
+      tier: "submodel_structure",
+      queueRank: 45,
+      budgetWeight: 2,
+      selectionRole: "parent_submodel_and_sibling_submodel_baseline",
+      reason: "Covers model, submodel, and sibling submodel targeting through the same composition/evidence loop."
+    };
+  }
   if (experiment.family === "setting_sensitivity_edge_probe") {
     return {
       ...common,
@@ -1379,6 +1523,27 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
           generatedFromCoverageGap: goalId
         }
       );
+    }
+    if (goalId === "submodel.vendor_fixture.basic") {
+      for (const paletteProfile of ["mono_white"]) {
+        rows.push(
+          {
+            experimentId: `submodel-structure-vendor_basic-${paletteProfile}`,
+            passId: "parent_model_foundation",
+            generatedFromCoverageGap: goalId
+          },
+          {
+            experimentId: `submodel-structure-vendor_basic-${paletteProfile}`,
+            passId: "single_submodel_foundation",
+            generatedFromCoverageGap: goalId
+          },
+          {
+            experimentId: `submodel-structure-vendor_basic-${paletteProfile}`,
+            passId: "sibling_submodels_split",
+            generatedFromCoverageGap: goalId
+          }
+        );
+      }
     }
   }
   const available = new Set(arr(experiments).flatMap((experiment) => arr(experiment.passes)
@@ -1510,14 +1675,16 @@ export function buildLayerCompositionTrainingPlan({
   const treeFlat = model(modelCatalog, "tree_flat");
   const spinner = model(modelCatalog, "spinner");
   const star = model(modelCatalog, "star_triple_layer");
+  const vendorBasicSubmodel = submodelTarget(modelCatalog, "vendor_basic");
   const baseExperiments = (paletteProfile) => [
     makeGroupModelExperiment({ paletteProfile, archGroup, archSingle, spinner }),
     makeSameTargetLayerExperiment({ paletteProfile, star }),
+    makeSubmodelStructureExperiment({ paletteProfile, target: vendorBasicSubmodel }),
     makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target: archGroup }),
     makeSettingAttributionProbeExperiment({ paletteProfile, target: singleLineHorizontal }),
     makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target: archSingle }),
     makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target: treeFlat })
-  ];
+  ].filter(Boolean);
 
   const priorCoverage = buildPriorCoverage(existingPriors);
   const plannedExperiments = paletteProfiles.flatMap(baseExperiments)
@@ -1553,6 +1720,7 @@ export function buildLayerCompositionTrainingPlan({
     experimentFamilies: [
       "group_model_interplay",
       "same_target_layer_stack",
+      "submodel_structure",
       "setting_sensitivity_edge_probe",
       "setting_attribution_probe",
       "low_movement_setting_geometry_probe"

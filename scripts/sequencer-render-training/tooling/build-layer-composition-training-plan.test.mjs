@@ -47,6 +47,37 @@ const modelCatalog = {
       geometryProfile: "tree_flat_single_layer",
       analyzerFamily: "tree"
     }
+  },
+  submodelTargets: {
+    vendor_basic: {
+      modelType: "custom",
+      geometryProfile: "custom_structural",
+      analyzerFamily: "submodel",
+      parentModel: {
+        modelName: "CustomFace",
+        modelType: "custom",
+        geometryProfile: "custom_parent",
+        analyzerFamily: "submodel"
+      },
+      submodels: [
+        {
+          name: "Face",
+          fullName: "CustomFace/Face",
+          parentModelName: "CustomFace",
+          nodeCount: 40,
+          type: "ranges",
+          lines: "1-40"
+        },
+        {
+          name: "Mouth",
+          fullName: "CustomFace/Mouth",
+          parentModelName: "CustomFace",
+          nodeCount: 12,
+          type: "ranges",
+          lines: "41-52"
+        }
+      ]
+    }
   }
 };
 
@@ -70,6 +101,8 @@ test("layer composition training plan includes group/model and same-target layer
   assert.equal(experimentIds.includes("group-model-interplay-rgb_primary"), true);
   assert.equal(experimentIds.includes("same-target-layer-stack-mono_white"), true);
   assert.equal(experimentIds.includes("same-target-layer-stack-rgb_primary"), true);
+  assert.equal(experimentIds.includes("submodel-structure-vendor_basic-mono_white"), true);
+  assert.equal(experimentIds.includes("submodel-structure-vendor_basic-rgb_primary"), true);
   assert.equal(experimentIds.includes("setting-sensitivity-edge-probe-mono_white"), true);
   assert.equal(experimentIds.includes("setting-sensitivity-edge-probe-rgb_primary"), true);
   assert.equal(experimentIds.includes("setting-attribution-probe-mono_white"), true);
@@ -432,6 +465,48 @@ test("layer composition plan expands rgb coverage-gap controller queue", () => {
       .find((experiment) => experiment.experimentId === "group-model-interplay-rgb_primary")
       .passes
       .some((pass) => pass.passId === "model_only" && pass.controllerSelection.reason === "comparison_dependency"),
+    true
+  );
+});
+
+test("layer composition plan expands submodel coverage-gap controller queue from catalog structure", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-submodel-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 7,
+      controllerDecision: {
+        selectedGoalId: "submodel.vendor_fixture.basic",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:submodel.vendor_fixture.basic:coverage-gap",
+        goalId: "submodel.vendor_fixture.basic",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.explicitQueueCount, 0);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["submodel-structure-vendor_basic-mono_white"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "parent_model_foundation", "single_submodel_foundation", "sibling_submodels_split"]
+  );
+  const placements = plan.experiments[0].passes.flatMap((pass) => pass.placements);
+  assert.equal(placements.some((placement) => placement.target === "CustomFace" && placement.targetScope === "model"), true);
+  assert.equal(placements.some((placement) => placement.target === "CustomFace/Face" && placement.targetScope === "submodel"), true);
+  assert.equal(placements.some((placement) => placement.target === "CustomFace/Mouth" && placement.targetScope === "submodel"), true);
+  assert.equal(
+    plan.experiments[0].passes.find((pass) => pass.passId === "sibling_submodels_split").controllerSelection.selectedByController,
     true
   );
 });

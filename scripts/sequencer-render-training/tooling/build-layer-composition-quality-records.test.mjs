@@ -16,6 +16,11 @@ function trendGroup(overrides = {}) {
     key: "experiment::foundation_group_only::Bars::Arches",
     experimentId: "experiment",
     passId: "foundation_group_only",
+    family: "submodel_structure",
+    targetScopes: ["submodel"],
+    modelTypes: ["custom"],
+    geometryProfiles: ["custom_submodel_structural"],
+    changeType: "sibling_submodel_layer_added",
     effectName: "Bars",
     leadTargets: ["Arches"],
     sampleCount: 2,
@@ -71,6 +76,8 @@ test("quality records promote repeated accepted stable or improving evidence", (
   assert.equal(record.artifactType, "layer_composition_quality_record_v1");
   assert.equal(record.promotion.durableCandidate, true);
   assert.equal(record.sampleCount, 2);
+  assert.deepEqual(record.targetScopes, ["submodel"]);
+  assert.deepEqual(record.modelTypes, ["custom"]);
   assert.equal(record.quality.meanOverallQuality, 0.84);
   assert.equal(record.observedMetrics.meanActiveTargetNodeRatioPeak, 0.45);
   assert.equal(record.evidence.samples.length, 2);

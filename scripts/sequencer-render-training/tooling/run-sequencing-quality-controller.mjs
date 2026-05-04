@@ -64,6 +64,34 @@ function stableQueueId(record = {}) {
   ].join(":");
 }
 
+function normalizedToken(value = "") {
+  return str(value).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
+function normalizedValues(values = []) {
+  return arr(values).map(normalizedToken).filter(Boolean);
+}
+
+function targetScopesForRecord(record = {}) {
+  const scopes = new Set(normalizedValues(record.targetScopes));
+  const passId = normalizedToken(record.passId);
+  if (passId.includes("parent_model")) scopes.add("parent_model");
+  if (passId.includes("single_submodel")) scopes.add("submodel");
+  if (passId.includes("sibling_submodels")) scopes.add("sibling_submodels");
+  if (arr(record.leadTargets).some((target) => str(target).includes("/"))) scopes.add("submodel");
+  return [...scopes];
+}
+
+function coverageList(coverage = {}, key = "") {
+  return normalizedValues(coverage?.[key]);
+}
+
+function matchesCoverage(values = [], expected = []) {
+  if (!expected.length) return true;
+  const actual = new Set(normalizedValues(values));
+  return expected.some((value) => actual.has(value));
+}
+
 function promotionPolicy(curriculum = {}) {
   const requires = curriculum?.selectionPolicy?.promotionRequires || {};
   return {
@@ -120,18 +148,24 @@ function activeGoals(curriculum = {}) {
 
 function recordMatchesGoal(record = {}, goal = {}) {
   const coverage = goal.coverage || {};
-  const families = arr(coverage.families).map(str).filter(Boolean);
-  const paletteProfiles = arr(coverage.paletteProfiles).map(str).filter(Boolean);
-  const effects = arr(coverage.effects).map(str).filter(Boolean);
-  if (!families.length) return false;
+  const families = coverageList(coverage, "families");
+  const paletteProfiles = coverageList(coverage, "paletteProfiles");
+  const effects = coverageList(coverage, "effects");
+  const targetScopes = coverageList(coverage, "targetScopes");
+  const modelTypes = coverageList(coverage, "modelTypes");
+  const hasStructuredCoverage = families.length || paletteProfiles.length || effects.length || targetScopes.length || modelTypes.length;
+  if (!hasStructuredCoverage) return false;
   const experimentId = str(record.experimentId);
 
-  const normalizedFamily = experimentId.split("-").slice(0, -1).join("_").replaceAll("-", "_");
-  const normalizedExperiment = experimentId.replaceAll("-", "_");
+  const normalizedFamily = normalizedToken(record.family)
+    || experimentId.split("-").slice(0, -1).join("_").replaceAll("-", "_");
+  const normalizedExperiment = normalizedToken(experimentId);
   const familyMatch = !families.length || families.some((family) => normalizedExperiment.includes(family) || normalizedFamily.includes(family));
   const paletteMatch = !paletteProfiles.length || paletteProfiles.some((palette) => normalizedExperiment.includes(palette));
-  const effectMatch = !effects.length || effects.includes(str(record.effectName));
-  return familyMatch && paletteMatch && effectMatch;
+  const effectMatch = !effects.length || effects.includes(normalizedToken(record.effectName));
+  const targetScopeMatch = matchesCoverage(targetScopesForRecord(record), targetScopes);
+  const modelTypeMatch = !modelTypes.length || !arr(record.modelTypes).length || matchesCoverage(record.modelTypes, modelTypes);
+  return familyMatch && paletteMatch && effectMatch && targetScopeMatch && modelTypeMatch;
 }
 
 function isPromisingBlockedRecord(record = {}, goal = {}, policy = {}) {

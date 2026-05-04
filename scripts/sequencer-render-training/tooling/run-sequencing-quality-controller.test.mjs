@@ -257,6 +257,43 @@ test("controller status does not count layer records for non-family submodel goa
   assert.equal(state.goalStatuses[0].evidenceStatus, "not_started");
 });
 
+test("controller counts durable structured submodel records for submodel goals", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("sibling_submodels_split", 0.85, []),
+    experimentId: "submodel-structure-vendor_basic-mono_white",
+    family: "submodel_structure",
+    targetScopes: ["submodel"],
+    modelTypes: ["custom"],
+    leadTargets: ["CustomFace/Face"],
+    sampleCount: 2,
+    trendStatus: "stable"
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "submodel.vendor_fixture.basic",
+        areaId: "layer_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          targetScopes: ["submodel"],
+          modelTypes: ["custom"],
+          effects: ["Color Wash"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 1);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
+});
+
 test("controller advances past goals with durable evidence and no repeat queue", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [

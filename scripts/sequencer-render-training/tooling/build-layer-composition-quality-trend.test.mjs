@@ -12,7 +12,22 @@ function writeJson(filePath, value) {
 }
 
 function writeRun(root, { runId, quality = 0.8, eligible = true, generatedAt = "2026-05-04T00:00:00.000Z" } = {}) {
-  writeJson(path.join(root, "training-plan.json"), { runId });
+  writeJson(path.join(root, "training-plan.json"), {
+    runId,
+    experiments: [{
+      experimentId: "experiment",
+      family: "submodel_structure",
+      passes: [{
+        passId: "pass",
+        changeType: "sibling_submodel_layer_added",
+        placements: [{
+          targetScope: "submodel",
+          modelType: "custom",
+          geometryProfile: "custom_submodel_structural"
+        }]
+      }]
+    }]
+  });
   const passDir = path.join(root, "passes", "experiment__pass");
   const reviewPath = path.join(passDir, "render-review.json");
   const qualityPath = path.join(passDir, "render-review-quality-summary.json");
@@ -78,6 +93,9 @@ test("quality trend summarizes a single run as a baseline", () => {
   assert.equal(artifact.summary.evidenceRecordCount, 1);
   assert.equal(artifact.summary.qualityTrendStatus, "single_run_baseline");
   assert.equal(artifact.groups[0].latestOverallQuality, 0.81);
+  assert.equal(artifact.groups[0].family, "submodel_structure");
+  assert.deepEqual(artifact.groups[0].targetScopes, ["submodel"]);
+  assert.deepEqual(artifact.groups[0].modelTypes, ["custom"]);
 });
 
 test("quality trend compares matching quality evidence across runs", () => {

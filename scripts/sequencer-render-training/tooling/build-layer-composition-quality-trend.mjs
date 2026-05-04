@@ -68,6 +68,19 @@ function recordKey(record = {}) {
   ].join("::");
 }
 
+function passMetadata(plan = {}, experimentId = "", passId = "") {
+  const experiment = arr(plan.experiments).find((row) => str(row.experimentId) === str(experimentId)) || {};
+  const pass = arr(experiment.passes).find((row) => str(row.passId) === str(passId)) || {};
+  const placements = arr(pass.placements);
+  return {
+    family: str(experiment.family),
+    targetScopes: [...new Set(placements.map((placement) => str(placement.targetScope)).filter(Boolean))],
+    modelTypes: [...new Set(placements.map((placement) => str(placement.modelType)).filter(Boolean))],
+    geometryProfiles: [...new Set(placements.map((placement) => str(placement.geometryProfile)).filter(Boolean))],
+    changeType: str(pass.changeType)
+  };
+}
+
 function loadRunRecords(runRoot = "", runIndex = 0) {
   const root = resolvePath(runRoot);
   const summaryPath = path.join(root, "pass-runner-summary.json");
@@ -84,6 +97,7 @@ function loadRunRecords(runRoot = "", runIndex = 0) {
       const metrics = review.deterministicMetrics || {};
       const qualification = review.evidenceQualification || quality.evidenceQualification || {};
       const evidenceEligible = Boolean(result.renderReviewEvidenceEligible || quality.evidenceEligible || qualification.eligible);
+      const metadata = passMetadata(plan, result.experimentId || quality.experimentId, result.passId || quality.passId);
       return {
         runIndex,
         runRoot: root,
@@ -91,6 +105,11 @@ function loadRunRecords(runRoot = "", runIndex = 0) {
         runGeneratedAt: generatedAt,
         experimentId: str(result.experimentId || quality.experimentId),
         passId: str(result.passId || quality.passId),
+        family: metadata.family,
+        targetScopes: metadata.targetScopes,
+        modelTypes: metadata.modelTypes,
+        geometryProfiles: metadata.geometryProfiles,
+        changeType: metadata.changeType,
         decision: str(result.renderReviewDecision || quality.decision || review.critique?.decision),
         measurementStatus: str(result.renderReviewMeasurementStatus || quality.measurementStatus || qualification.status),
         evidenceEligible,
@@ -141,6 +160,11 @@ function groupEvidence(records = []) {
       key,
       experimentId: str(latest.experimentId),
       passId: str(latest.passId),
+      family: str(latest.family),
+      targetScopes: arr(latest.targetScopes),
+      modelTypes: arr(latest.modelTypes),
+      geometryProfiles: arr(latest.geometryProfiles),
+      changeType: str(latest.changeType),
       effectName: str(latest.effectName),
       leadTargets: arr(latest.leadTargets),
       sampleCount: sortedRows.length,
