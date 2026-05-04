@@ -113,6 +113,8 @@ If a review points at `mediaPath` or `videoPath` and does not provide frame feat
 
 The self-improvement loop can also run `fseq_render_review` phases. These point at a preview-scene geometry artifact and one or more rendered `.fseq` files; the cycle reconstructs the display window, rasterizes it into review media, extracts frame metrics, and writes `render_review_v1` output for each section.
 
+`fseq_render_review` reviews can include a `windows` array to review multiple named windows from the same FSEQ. Each window may provide `id`, `label`, `startMs`, `endMs`, and optional intent fields such as `creativeObjective`, `musicRole`, and `paletteIntent`. The cycle expands each source review into one render review per window and includes all windows in `renderReviewGate`.
+
 Render-review phases produce a separate `renderReviewGate` in `cycle-summary.json`. Promotion is blocked until every render review is accepted; sections marked `revise` or `reject` become revision-loop input.
 
 Add a `render_review_revision_objectives` phase after review phases to write `render-review-revision-objectives.json`. The artifact converts review critiques into concrete revision roles, target quality thresholds, and sequencer actions for the next apply/render attempt.

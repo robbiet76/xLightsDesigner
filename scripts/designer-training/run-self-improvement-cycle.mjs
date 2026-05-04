@@ -283,10 +283,20 @@ async function runFseqRenderReviewPhase({ phase, outDir, buildFseqReview }) {
   const results = [];
   const reviewRoot = path.join(outDir, 'fseq-render-reviews');
   fs.mkdirSync(reviewRoot, { recursive: true });
-  reviews.forEach((review, index) => {
-    const label = str(review.id || review.sectionId || `${phaseId}-${index + 1}`)
+  const reviewWindows = (review) => {
+    const windows = arr(review.windows).length ? arr(review.windows) : arr(phase.windows);
+    if (!windows.length) return [{ id: '', row: {} }];
+    return windows.map((window, windowIndex) => ({
+      id: str(window.id || window.sectionId || window.label || `window-${windowIndex + 1}`),
+      row: window
+    }));
+  };
+  reviews.flatMap((review, index) => reviewWindows(review).map((window) => ({ review, index, window }))).forEach(({ review, index, window }) => {
+    const baseLabel = str(review.id || review.sectionId || `${phaseId}-${index + 1}`);
+    const label = [baseLabel, window.id].filter(Boolean).join('-')
       .replace(/[^a-z0-9_.-]+/gi, '-')
       .replace(/^-|-$/g, '') || `${phaseId}-${index + 1}`;
+    const windowRow = window.row || {};
     const result = {
       id: label,
       type: 'fseq_render_review',
@@ -306,28 +316,40 @@ async function runFseqRenderReviewPhase({ phase, outDir, buildFseqReview }) {
         intent: {
           effectName: str(review.effectName || review.effect),
           targetHierarchy: review.targetHierarchy || {},
-          creativeObjective: review.creativeObjective || {},
-          musicRole: review.musicRole || {},
-          paletteIntent: review.paletteIntent || {},
-          summary: str(review.summary || review.intentSummary)
+          creativeObjective: windowRow.creativeObjective || review.creativeObjective || {},
+          musicRole: windowRow.musicRole || review.musicRole || {},
+          paletteIntent: windowRow.paletteIntent || review.paletteIntent || {},
+          summary: str(windowRow.summary || windowRow.intentSummary || review.summary || review.intentSummary),
+          section: {
+            id: str(windowRow.sectionId || windowRow.id || review.sectionId || review.id || 'fseq-window'),
+            label: str(windowRow.sectionLabel || windowRow.label || review.sectionLabel || review.label),
+            startMs: Number(windowRow.windowStartMs ?? windowRow.startMs ?? review.windowStartMs ?? review.startMs ?? phase.windowStartMs ?? 0),
+            endMs: Number(windowRow.windowEndMs ?? windowRow.endMs ?? review.windowEndMs ?? review.endMs ?? phase.windowEndMs ?? 8000)
+          }
         },
         outDir: resolveRepoPath(review.outDir || path.join(reviewRoot, label)),
-        windowStartMs: Number(review.windowStartMs ?? review.startMs ?? phase.windowStartMs ?? 0),
-        windowEndMs: Number(review.windowEndMs ?? review.endMs ?? phase.windowEndMs ?? 8000),
-        stepMs: Number(review.stepMs ?? phase.stepMs ?? 50),
-        sampleCount: Number(review.sampleCount ?? phase.sampleCount ?? 8),
-        frameOffsets: str(review.frameOffsets || phase.frameOffsets),
-        width: Number(review.width ?? phase.width ?? 1280),
-        height: Number(review.height ?? phase.height ?? 720),
-        fps: Number(review.fps ?? phase.fps ?? 20),
-        nodeRadius: Number(review.nodeRadius ?? phase.nodeRadius ?? 3),
-        includeAuditExcluded: review.includeAuditExcluded === true || phase.includeAuditExcluded === true
+        windowStartMs: Number(windowRow.windowStartMs ?? windowRow.startMs ?? review.windowStartMs ?? review.startMs ?? phase.windowStartMs ?? 0),
+        windowEndMs: Number(windowRow.windowEndMs ?? windowRow.endMs ?? review.windowEndMs ?? review.endMs ?? phase.windowEndMs ?? 8000),
+        stepMs: Number(windowRow.stepMs ?? review.stepMs ?? phase.stepMs ?? 50),
+        sampleCount: Number(windowRow.sampleCount ?? review.sampleCount ?? phase.sampleCount ?? 8),
+        frameOffsets: str(windowRow.frameOffsets || review.frameOffsets || phase.frameOffsets),
+        width: Number(windowRow.width ?? review.width ?? phase.width ?? 1280),
+        height: Number(windowRow.height ?? review.height ?? phase.height ?? 720),
+        fps: Number(windowRow.fps ?? review.fps ?? phase.fps ?? 20),
+        nodeRadius: Number(windowRow.nodeRadius ?? review.nodeRadius ?? phase.nodeRadius ?? 3),
+        includeAuditExcluded: windowRow.includeAuditExcluded === true || review.includeAuditExcluded === true || phase.includeAuditExcluded === true
       });
       result.ok = run.ok === true;
       result.run = run;
       result.renderReviewPath = str(run.renderReviewPath);
       result.decision = str(run.decision);
       result.overallQuality = run.overallQuality ?? null;
+      result.window = {
+        id: str(windowRow.id || windowRow.sectionId || window.id),
+        label: str(windowRow.label || windowRow.sectionLabel),
+        startMs: Number(windowRow.windowStartMs ?? windowRow.startMs ?? review.windowStartMs ?? review.startMs ?? phase.windowStartMs ?? 0),
+        endMs: Number(windowRow.windowEndMs ?? windowRow.endMs ?? review.windowEndMs ?? review.endMs ?? phase.windowEndMs ?? 8000)
+      };
     } catch (error) {
       result.error = error?.message || String(error);
     }
