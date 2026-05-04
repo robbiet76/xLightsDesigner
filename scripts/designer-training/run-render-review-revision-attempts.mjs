@@ -201,6 +201,8 @@ export async function runRenderReviewRevisionAttempt({
     skipped: false,
     attemptId: str(attempt.attemptId),
     revisionObjectiveId: str(attempt.source?.revisionObjectiveId),
+    originalRenderReviewRef: str(attempt.source?.renderReviewRef),
+    sourceEvidence: attempt.source?.evidence || {},
     endpoint,
     sequencePath: sequence,
     fseqPath,

@@ -121,6 +121,8 @@ Add a `render_review_revision_attempts` phase after objective generation to writ
 
 Add a `render_review_revision_execution` phase after attempt planning to apply planned payloads through the owned xLights API, save the working sequence, render the revised FSEQ, and write `render-review-revision-execution.json`. Blocked attempts are skipped with a recorded reason; failed executions block the cycle unless the phase is marked `required: false`.
 
+Add a `render_review_revision_comparison` phase after execution to rebuild render reviews for revised FSEQ outputs and compare them to the original review. The comparison records decision changes, score deltas, metric deltas, regressions, and whether the revised sequence should be retained for the next training iteration.
+
 For xLights render output, use the existing FSEQ reconstruction path to create a `preview_scene_window_v1`, then rasterize it into reviewable media:
 
 ```bash

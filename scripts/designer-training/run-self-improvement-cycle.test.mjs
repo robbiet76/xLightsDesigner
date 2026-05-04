@@ -516,6 +516,12 @@ test('self-improvement cycle builds render-review revision objectives after revi
         id: 'execute_revision_attempts',
         type: 'render_review_revision_execution',
         required: false
+      },
+      {
+        id: 'compare_revision_attempts',
+        type: 'render_review_revision_comparison',
+        geometryPath,
+        required: false
       }
     ],
     promotionGate: {}
@@ -567,4 +573,8 @@ test('self-improvement cycle builds render-review revision objectives after revi
   assert.equal(executionPhase.ok, true);
   assert.equal(executionPhase.executionCount, 1);
   assert.equal(executionPhase.skippedCount, 1);
+
+  const comparisonPhase = result.phases.find((row) => row.id === 'compare_revision_attempts');
+  assert.equal(comparisonPhase.ok, false);
+  assert.equal(comparisonPhase.comparisonCount, 0);
 });

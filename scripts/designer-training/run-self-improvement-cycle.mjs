@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { buildRenderReviewArtifact } from './build-render-review-artifact.mjs';
 import { buildRenderReviewFromFseq } from './build-render-review-from-fseq.mjs';
+import { buildRenderReviewRevisionComparisons } from './build-render-review-revision-comparisons.mjs';
 import { buildRenderReviewRevisionAttempts } from './build-render-review-revision-attempts.mjs';
 import { buildRenderReviewRevisionObjectives } from './build-render-review-revision-objectives.mjs';
 import { extractRenderReviewMedia } from './extract-render-review-media.mjs';
@@ -613,6 +614,44 @@ async function runRenderReviewRevisionExecutionPhase({ phase, phases, outDir, en
   };
 }
 
+function runRenderReviewRevisionComparisonPhase({ phase, phases, outDir, buildFseqReview }) {
+  const phaseId = str(phase.id || 'render_review_revision_comparison');
+  const executionPhase = [...arr(phases)]
+    .reverse()
+    .find((row) => str(row.type) === 'render_review_revision_execution' && str(row.outputPath));
+  const reviewPhase = [...arr(phases)]
+    .reverse()
+    .find((row) => str(row.type) === 'fseq_render_review');
+  const executionPath = resolveRepoPath(phase.executionPath || executionPhase?.outputPath || path.join(outDir, 'render-review-revision-execution.json'));
+  const outputPath = resolveRepoPath(phase.outPath || path.join(outDir, 'render-review-revision-comparisons.json'));
+  const artifact = buildRenderReviewRevisionComparisons({
+    executionPath,
+    geometryPath: resolveRepoPath(phase.geometryPath || reviewPhase?.results?.[0]?.geometryPath || phase.geometry),
+    outPath: outputPath,
+    outDir: resolveRepoPath(phase.outDir || path.join(outDir, 'render-review-revision-comparison')),
+    windowStartMs: Number(phase.windowStartMs ?? 0),
+    windowEndMs: Number(phase.windowEndMs ?? 8000),
+    stepMs: Number(phase.stepMs ?? 50),
+    sampleCount: Number(phase.sampleCount ?? 8),
+    width: Number(phase.width ?? 1280),
+    height: Number(phase.height ?? 720),
+    fps: Number(phase.fps ?? 20),
+    nodeRadius: Number(phase.nodeRadius ?? 3),
+    buildFseqReview
+  });
+  return {
+    id: phaseId,
+    type: str(phase.type || 'render_review_revision_comparison'),
+    ok: artifact.summary.regressionCount === 0 && artifact.summary.comparisonCount > 0,
+    outputPath,
+    summary: artifact.summary,
+    comparisonCount: artifact.summary.comparisonCount,
+    improvedCount: artifact.summary.improvedCount,
+    acceptedAfterRevisionCount: artifact.summary.acceptedAfterRevisionCount,
+    regressionCount: artifact.summary.regressionCount
+  };
+}
+
 export async function runSelfImprovementCycle({
   manifestPath = DEFAULT_MANIFEST,
   outDir = '',
@@ -683,6 +722,15 @@ export async function runSelfImprovementCycle({
   }
   for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'render_review_revision_execution')) {
     const result = await runRenderReviewRevisionExecutionPhase({ phase, phases, outDir: resolvedOutDir, endpoint: str(endpoint) });
+    phases.push(result);
+    if (!result.ok && phase.required !== false && !continueOnFailure) {
+      const output = { ok: false, manifestPath: resolvedManifestPath, outDir: resolvedOutDir, phases, errors: [`phase failed: ${phase.id}`] };
+      writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
+      return output;
+    }
+  }
+  for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'render_review_revision_comparison')) {
+    const result = runRenderReviewRevisionComparisonPhase({ phase, phases, outDir: resolvedOutDir, buildFseqReview });
     phases.push(result);
     if (!result.ok && phase.required !== false && !continueOnFailure) {
       const output = { ok: false, manifestPath: resolvedManifestPath, outDir: resolvedOutDir, phases, errors: [`phase failed: ${phase.id}`] };

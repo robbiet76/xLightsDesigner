@@ -29,6 +29,7 @@ function attempt(sequencePath) {
     status: 'planned',
     source: {
       revisionObjectiveId: 'rrro1:test',
+      renderReviewRef: '/tmp/original-render-review.json',
       sequencePath
     },
     targets: [{ targetId: 'target-1', element: 'Lead Target' }],
@@ -68,6 +69,7 @@ test('runRenderReviewRevisionAttempt applies, saves, renders, and resolves FSEQ'
 
   assert.equal(result.ok, true);
   assert.equal(result.fseqPath, fseqPath);
+  assert.equal(result.originalRenderReviewRef, '/tmp/original-render-review.json');
   assert.deepEqual(
     calls.map((call) => call.route).filter((route) => route !== '/health' && route !== '/media/current'),
     [
