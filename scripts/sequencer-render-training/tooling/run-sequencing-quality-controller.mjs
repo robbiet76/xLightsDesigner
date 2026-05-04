@@ -92,7 +92,12 @@ function latestRunArtifacts(latestRunRoot = "") {
     cleanupResult: artifactPath(latestRunRoot, "final-retention-cleanup-result.json")
   };
   const artifacts = Object.fromEntries(Object.entries(files).map(([key, filePath]) => [key, readJsonIfExists(filePath)]));
-  const missingArtifacts = Object.entries(files)
+  const requiredFiles = {
+    qualityRecords: files.qualityRecords,
+    passRunnerSummary: files.passRunnerSummary,
+    cleanupResult: files.cleanupResult
+  };
+  const missingArtifacts = Object.entries(requiredFiles)
     .filter(([, filePath]) => !fs.existsSync(filePath))
     .map(([key]) => key);
   return {

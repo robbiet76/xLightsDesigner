@@ -8,11 +8,14 @@ import { buildSequencingQualityControllerState } from "./run-sequencing-quality-
 import { buildLayerCompositionTrainingPlan } from "./build-layer-composition-training-plan.mjs";
 import { buildLayerCompositionExecutionScaffold } from "./run-layer-composition-execution-scaffold.mjs";
 import { runLayerCompositionPasses } from "./run-layer-composition-pass-runner.mjs";
+import { buildLayerCompositionQualityTrend } from "./build-layer-composition-quality-trend.mjs";
+import { buildLayerCompositionQualityRecords } from "./build-layer-composition-quality-records.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const DEFAULT_MODEL_CATALOG = "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json";
 const DEFAULT_CURRICULUM = "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json";
 const DEFAULT_OUT_ROOT = "var/logs/sequencing-quality-controller";
+const DEFAULT_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -56,6 +59,39 @@ function summarizePlan(plan = {}) {
   };
 }
 
+function previousCrossRunRoots(latestRunRoot = "") {
+  const latest = resolvePath(latestRunRoot);
+  if (!latest) return [];
+  const recordsPath = path.join(latest, "cross-run-quality-records.json");
+  if (!fs.existsSync(recordsPath)) return [latest];
+  const records = readJson(recordsPath);
+  return [...new Set([...arr(records.sourceRunRoots).map(resolvePath), latest].filter(Boolean))];
+}
+
+function buildCrossRunQualityArtifacts({ latestRunRoot = "", loopRoot = "", deps = {} } = {}) {
+  const roots = [...new Set([...previousCrossRunRoots(latestRunRoot), resolvePath(loopRoot)].filter(Boolean))];
+  if (!roots.length) return null;
+  const trendPath = path.join(resolvePath(loopRoot), "cross-run-quality-trend.json");
+  const recordsPath = path.join(resolvePath(loopRoot), "cross-run-quality-records.json");
+  const trend = (deps.buildQualityTrend || buildLayerCompositionQualityTrend)({
+    runRoots: roots,
+    outPath: trendPath
+  });
+  const records = (deps.buildQualityRecords || buildLayerCompositionQualityRecords)({
+    qualityTrend: trend,
+    qualityTrendPath: trendPath,
+    outPath: recordsPath
+  });
+  return {
+    trendRef: trendPath,
+    recordsRef: recordsPath,
+    runRootCount: roots.length,
+    recordCount: Number(records.recordCount) || 0,
+    durableCandidateCount: Number(records.durableCandidateCount) || 0,
+    blockedRecordCount: Number(records.blockedRecordCount) || 0
+  };
+}
+
 function nextLoopDir(outRoot = "", loopIndex = 1) {
   return path.join(resolvePath(outRoot || DEFAULT_OUT_ROOT), `loop-${String(loopIndex).padStart(6, "0")}`);
 }
@@ -73,7 +109,7 @@ export async function runSequencingQualityLoop({
   maxPasses = 1,
   applyRender = false,
   renderReviewQuality = true,
-  endpoint = "http://127.0.0.1:49913",
+  endpoint = DEFAULT_ENDPOINT,
   deps = {}
 } = {}) {
   const controllerState = buildSequencingQualityControllerState({
@@ -144,6 +180,7 @@ export async function runSequencingQualityLoop({
   }
 
   let passRunnerSummary = null;
+  let crossRunQuality = null;
   if (applyRender) {
     passRunnerSummary = await (deps.runPasses || runLayerCompositionPasses)({
       runRoot: root,
@@ -151,6 +188,7 @@ export async function runSequencingQualityLoop({
       maxPasses,
       renderReviewQuality
     });
+    crossRunQuality = buildCrossRunQualityArtifacts({ latestRunRoot, loopRoot: root, deps });
   }
 
   const summary = {
@@ -171,6 +209,7 @@ export async function runSequencingQualityLoop({
       stopReason: str(passRunnerSummary.stopReason),
       renderReviewAcceptedEvidenceCount: num(passRunnerSummary.renderReviewAcceptedEvidenceCount)
     } : null,
+    crossRunQuality,
     nextStep: applyRender
       ? "Build cross-run trend/records from this loop, promote eligible priors, clean up, then run the controller again."
       : "Review scaffolded checkpoints, then rerun with --apply-render for a small live controller-driven loop."
@@ -193,7 +232,7 @@ function parseArgs(argv = []) {
     maxPasses: 1,
     applyRender: false,
     renderReviewQuality: true,
-    endpoint: "http://127.0.0.1:49913"
+    endpoint: DEFAULT_ENDPOINT
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = str(argv[index]);

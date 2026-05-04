@@ -159,3 +159,60 @@ test("sequencing quality loop blocks cleanly when evidence is missing", async ()
   assert.equal(summary.controllerDecision.nextAction, "await_evidence");
   assert.equal(summary.nextQueueCount, 0);
 });
+
+test("sequencing quality loop writes cross-run quality summary after live execution", async () => {
+  const root = tempDir();
+  const latestRunRoot = path.join(root, "latest");
+  const loopRoot = path.join(root, "loop");
+  const modelCatalogPath = path.join(root, "model-catalog.json");
+  writeLatestEvidence(latestRunRoot);
+  writeJson(modelCatalogPath, modelCatalog());
+
+  const summary = await runSequencingQualityLoop({
+    latestRunRoot,
+    loopRoot,
+    modelCatalogPath,
+    runId: "loop-test",
+    maxQueue: 1,
+    applyRender: true,
+    deps: {
+      runPasses: async ({ runRoot }) => {
+        writeJson(path.join(runRoot, "pass-runner-summary.json"), {
+          artifactType: "layer_composition_pass_runner_summary_v1",
+          processedPasses: 1,
+          stopStatus: "pass_limit_reached",
+          stopReason: "requested_max_passes_reached",
+          renderReviewAcceptedEvidenceCount: 1
+        });
+        return {
+          processedPasses: 1,
+          stopStatus: "pass_limit_reached",
+          stopReason: "requested_max_passes_reached",
+          renderReviewAcceptedEvidenceCount: 1
+        };
+      },
+      buildQualityTrend: ({ runRoots, outPath }) => {
+        const artifact = { artifactType: "layer_composition_quality_trend_v1", runRoots };
+        writeJson(outPath, artifact);
+        return artifact;
+      },
+      buildQualityRecords: ({ outPath }) => {
+        const artifact = {
+          artifactType: "layer_composition_quality_records_v1",
+          recordCount: 2,
+          durableCandidateCount: 1,
+          blockedRecordCount: 1,
+          records: []
+        };
+        writeJson(outPath, artifact);
+        return artifact;
+      }
+    }
+  });
+
+  assert.equal(summary.status, "executed");
+  assert.equal(summary.crossRunQuality.recordCount, 2);
+  assert.equal(summary.crossRunQuality.durableCandidateCount, 1);
+  assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-trend.json")), true);
+  assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-records.json")), true);
+});

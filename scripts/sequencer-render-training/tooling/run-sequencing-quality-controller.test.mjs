@@ -166,6 +166,21 @@ test("controller plans a coverage gap when no promising repeat exists", () => {
   assert.equal(state.nextQueue[0].goalId, "layer.same_target.mono_white.basic");
 });
 
+test("controller can plan from quality evidence when promoted priors are not present yet", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [record("three_layer_default", 0.84)]);
+  fs.rmSync(path.join(runRoot, "cross-run-quality-priors-promoted.json"));
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: curriculum(),
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.nextAction, "plan_quality_repeats");
+  assert.equal(state.nextQueue[0].passId, "three_layer_default");
+  assert.equal(state.promotionSummary.selectorReadyPriorCount, 0);
+});
+
 test("controller increments loop index from a previous state", () => {
   const runRoot = tempDir();
   const previousStatePath = path.join(runRoot, "previous-state.json");
