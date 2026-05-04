@@ -87,7 +87,7 @@ Options:
 }
 
 function run(command, args, options = {}) {
-  return execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], ...options });
+  return execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1024 * 1024 * 256, ...options });
 }
 
 function probeMedia(mediaPath) {

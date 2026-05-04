@@ -114,6 +114,13 @@ If a review points at `mediaPath` or `videoPath` and does not provide frame feat
 For xLights render output, use the existing FSEQ reconstruction path to create a `preview_scene_window_v1`, then rasterize it into reviewable media:
 
 ```bash
+node scripts/designer-training/build-render-review-from-fseq.mjs \
+  --geometry /path/to/preview-scene-geometry.json \
+  --fseq /path/to/sequence.fseq \
+  --out-dir var/tmp/fseq-render-review \
+  --window-start-ms 0 \
+  --window-end-ms 8000
+
 node scripts/designer-training/render-preview-window-media.mjs \
   --window /path/to/preview-scene-window.json \
   --out var/tmp/preview-window.mp4
