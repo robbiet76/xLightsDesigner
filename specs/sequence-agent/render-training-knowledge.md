@@ -118,6 +118,9 @@ The sequencer execution training module documents the current package contracts,
 - Proof fixtures were compacted; full geometry dumps are local/generated except for the retained render-training proof input.
 - Runtime training bundles are compact generated JavaScript behind `trained-effect-knowledge.js`; exporters should not emit pretty-printed payloads.
 - Training records should be consolidated into reusable effect semantics and priors before additional broad training runs.
+- Sequencer execution training now has a package-level readiness validator plus compact model-index, target-behavior, and combined target-context fixtures.
+- Built-in and custom parent submodels are covered by the same model-index and target-behavior framework in both package fixtures and runtime candidate-selection tests.
+- The sequence-agent prompt now defines target-context precedence: live xLights readback, `display/model-index.json`, project display metadata, `display/target-behavior.json`, then names only as labels or fallback identifiers.
 
 ## Current Gaps
 

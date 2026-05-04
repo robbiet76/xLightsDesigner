@@ -36,6 +36,18 @@ The module evals and linked tests cover:
 - candidate selection using behavior evidence by fingerprint before target name
 - compact plan metadata traceability for target behavior evidence
 - accepted render/apply outcomes updating `display/target-behavior.json` under the same fingerprint/effect/probe aggregate
+- built-in and custom parent submodels using the same model-index and target-behavior framework
+
+## Readiness Checkpoint
+
+Current training readiness for display/model context is green when these pass:
+
+```bash
+node scripts/designer-training/validate-training-package.mjs
+node --test $(find apps/xlightsdesigner-ui/tests/agent/sequence-agent -maxdepth 1 -type f -name '*.test.js' | sort) apps/xlightsdesigner-ui/tests/runtime/proposal-generation-runtime.test.js apps/xlightsdesigner-ui/tests/runtime/target-behavior-learning-runtime.test.js
+```
+
+This checkpoint covers portable package contracts, compact fixture validity, sequence-agent target-context behavior, project-local target behavior learning, proposal context loading, and fingerprint-backed behavior selection for custom and built-in submodels.
 
 ## Promotion Rules
 
