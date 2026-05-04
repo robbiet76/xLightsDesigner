@@ -97,8 +97,11 @@ test("pass runner completes one pass and updates checkpoint and ledger", async (
 
   assert.equal(summary.processedPasses, 1);
   assert.equal(summary.results[0].status, "completed");
+  assert.equal(summary.finalRetentionCleanup.deletedCount > 0, true);
   assert.equal(observedSequencePath.startsWith(path.join(runRoot, "show")), true);
   assert.equal(observedSequencePath.includes(`${path.sep}passes${path.sep}`), false);
+  assert.equal(fs.existsSync(fseqPath), false);
+  assert.equal(fs.existsSync(path.join(runRoot, "final-retention-cleanup-result.json")), true);
   const checkpoints = JSON.parse(fs.readFileSync(path.join(runRoot, "checkpoints.json"), "utf8"));
   assert.equal(checkpoints.checkpoints[0].status, "completed");
   assert.equal(Boolean(checkpoints.checkpoints[0].observationRef), true);

@@ -147,7 +147,7 @@ export function applyLayerCompositionRetentionCleanup(plan) {
   for (const row of arr(plan?.deletions)) {
     if (!row.path || (!row.insideRunRoot && !row.insideAllowedExternalRoot)) continue;
     if (!fs.existsSync(row.path)) continue;
-    fs.rmSync(row.path, { force: true });
+    fs.rmSync(row.path, { force: true, recursive: true });
     deleted.push(row);
   }
   return {

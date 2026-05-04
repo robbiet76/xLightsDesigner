@@ -268,6 +268,7 @@ function buildRenderReviewQuality({
     renderReviewRef: run.renderReviewPath,
     previewWindowRef: run.previewWindowPath,
     previewMediaRef: run.previewMediaPath,
+    previewMediaFramesRef: str(run.mediaExtraction?.framesDir),
     frameFeaturesRef: run.frameFeaturesPath,
     contactSheetRef: run.contactSheetPath,
     decision: str(review?.critique?.decision || run.decision),
@@ -524,6 +525,36 @@ function summarizeLearningCheckpoint({
     priorCount: priors.priorCount,
     cleanupDeletedCount: retentionResult.deletedCount ?? 0,
     cleanupDeletedBytes: retentionResult.deletedBytes ?? 0
+  };
+}
+
+function applyEndOfLoopRetentionCleanup({ runRoot, ledgerPath } = {}) {
+  if (!fs.existsSync(ledgerPath)) return null;
+  const retentionPath = path.join(runRoot, "final-retention-cleanup-result.json");
+  const ledger = readJson(ledgerPath);
+  const retentionPlan = planLayerCompositionRetentionCleanup({
+    runRoot,
+    ledger,
+    retentionPolicy: ledger.retentionPolicy
+  });
+  const retentionResult = applyLayerCompositionRetentionCleanup(retentionPlan);
+  writeJson(retentionPath, retentionResult);
+  appendLedgerArtifacts(ledgerPath, [
+    {
+      path: retentionPath,
+      artifactClass: "run_summary",
+      summarized: true,
+      retain: true
+    }
+  ]);
+  return {
+    artifactType: "layer_composition_end_of_loop_retention_summary_v1",
+    artifactVersion: 1,
+    resultRef: retentionPath,
+    deletedCount: retentionResult.deletedCount ?? 0,
+    deletedBytes: retentionResult.deletedBytes ?? 0,
+    deletionCount: retentionResult.deletionCount ?? 0,
+    deletionBytes: retentionResult.deletionBytes ?? 0
   };
 }
 
@@ -911,6 +942,12 @@ export async function runLayerCompositionPasses({
             purgeEligible: true
           },
           {
+            path: renderReviewQualityResult.previewMediaFramesRef,
+            artifactClass: "preview_media_directory",
+            summarized: true,
+            purgeEligible: true
+          },
+          {
             path: renderReviewQualityResult.contactSheetRef,
             artifactClass: "preview_media",
             summarized: true,
@@ -918,7 +955,7 @@ export async function runLayerCompositionPasses({
           }
         );
       }
-      appendLedgerArtifacts(ledgerPath, ledgerRows, {
+      appendLedgerArtifacts(ledgerPath, ledgerRows.filter((row) => str(row.path)), {
         externalDeleteRoots: [path.dirname(sequencePath)]
       });
       results.push({
@@ -985,6 +1022,11 @@ export async function runLayerCompositionPasses({
   }
   bundle = refreshCheckpointBundle(root, plan);
   const summary = writeCurrentSummary({ includeQualityTrend: renderReviewQuality });
+  const finalRetentionCleanup = applyEndOfLoopRetentionCleanup({ runRoot: root, ledgerPath });
+  if (finalRetentionCleanup) {
+    summary.finalRetentionCleanup = finalRetentionCleanup;
+    writeJson(passRunnerSummaryPath, summary);
+  }
   writeExecutionSummary({
     root,
     plan,

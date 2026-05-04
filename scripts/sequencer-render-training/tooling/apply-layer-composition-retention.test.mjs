@@ -90,6 +90,29 @@ test("retention cleanup can delete explicitly allowed external staged artifacts"
   assert.equal(fs.existsSync(outside), true);
 });
 
+test("retention cleanup deletes summarized purge-eligible directories", () => {
+  const runRoot = makeTempRun();
+  const framesDir = path.join(runRoot, "pass", "render-review-quality", "preview-media-frames");
+  const frame = writeFile(path.join(framesDir, "frame-0001.ppm"), "frame");
+
+  const plan = planLayerCompositionRetentionCleanup({
+    runRoot,
+    ledger: {
+      artifacts: [
+        { path: framesDir, artifactClass: "preview_media_directory", summarized: true, purgeEligible: true }
+      ]
+    }
+  });
+
+  assert.equal(plan.deletionCount, 1);
+  assert.equal(plan.deletions[0].path, framesDir);
+  assert.equal(fs.existsSync(frame), true);
+
+  const result = applyLayerCompositionRetentionCleanup(plan);
+  assert.equal(result.deletedCount, 1);
+  assert.equal(fs.existsSync(framesDir), false);
+});
+
 test("retention cleanup preserves proof-critical and unreviewed failure artifacts", () => {
   const runRoot = makeTempRun();
   const proofRaw = writeFile(path.join(runRoot, "raw", "proof.gif"), "proof");
