@@ -98,3 +98,7 @@ node scripts/designer-training/build-render-review-artifact.mjs \
 ```
 
 Render review is the next training direction. It should evaluate whole-display section quality over time, then feed critique and revision back into the self-improvement loop.
+
+The self-improvement loop can also run manifest-defined render reviews. Add a `render_review` phase with one or more `reviews`, each pointing at a frame-features JSON file and optional intent/video/contact-sheet evidence. The cycle writes `render_review_v1` artifacts under `render-reviews/` and includes accept/revise/reject counts in `cycle-summary.json`.
+
+Promotion requires repeated evidence across compatible sections or targets. One attractive render is not enough to promote a generalized training rule.

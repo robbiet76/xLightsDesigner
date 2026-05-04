@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { buildRenderReviewArtifact } from './build-render-review-artifact.mjs';
 import { buildTargetBehaviorTrainingSummary } from './export-target-behavior-training-summary.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -165,6 +166,86 @@ function projectDirFromTargetBehaviorPath(filePath = '') {
   return path.basename(path.dirname(resolved)) === 'display'
     ? path.dirname(path.dirname(resolved))
     : '';
+}
+
+function resolveRepoPath(filePath = '') {
+  const trimmed = str(filePath);
+  if (!trimmed) return '';
+  return path.isAbsolute(trimmed) ? trimmed : path.resolve(REPO_ROOT, trimmed);
+}
+
+async function runRenderReviewPhase({ phase, outDir }) {
+  const phaseId = str(phase.id || 'render_review');
+  const reviews = arr(phase.reviews).length ? arr(phase.reviews) : [phase];
+  const reviewDir = path.join(outDir, 'render-reviews');
+  const results = [];
+  fs.mkdirSync(reviewDir, { recursive: true });
+
+  reviews.forEach((review, index) => {
+    const frameFeaturesPath = resolveRepoPath(review.frameFeaturesPath || review.frameFeatures || review.featuresPath);
+    const intentPath = resolveRepoPath(review.intentPath || review.intent);
+    const label = str(review.id || review.sectionId || `${phaseId}-${index + 1}`)
+      .replace(/[^a-z0-9_.-]+/gi, '-')
+      .replace(/^-|-$/g, '') || `${phaseId}-${index + 1}`;
+    const outputPath = resolveRepoPath(review.outPath || path.join(reviewDir, `${label}.json`));
+    const result = {
+      id: label,
+      type: 'render_review',
+      ok: false,
+      frameFeaturesPath,
+      intentPath,
+      outputPath,
+      decision: '',
+      overallQuality: null,
+      error: ''
+    };
+    try {
+      if (!frameFeaturesPath || !fs.existsSync(frameFeaturesPath)) {
+        throw new Error(`frame features file not found: ${frameFeaturesPath || '(missing)'}`);
+      }
+      const frameFeatures = readJson(frameFeaturesPath);
+      const intent = intentPath && fs.existsSync(intentPath) ? readJson(intentPath) : {};
+      const artifact = buildRenderReviewArtifact({
+        frameFeatures,
+        intent,
+        evidence: {
+          videoPath: resolveRepoPath(review.videoPath || review.video),
+          contactSheetPath: resolveRepoPath(review.contactSheetPath || review.contactSheet),
+          frameDirectory: resolveRepoPath(review.frameDirectory || review.frameDir),
+          sequencePath: resolveRepoPath(review.sequencePath || review.sequence),
+          renderObservationPath: resolveRepoPath(review.renderObservationPath),
+          frameFeaturesPath
+        },
+        section: {
+          id: str(review.sectionId || review.id),
+          label: str(review.sectionLabel || review.label),
+          startMs: Number(review.startMs || 0),
+          endMs: Number(review.endMs || 0)
+        }
+      });
+      writeJson(outputPath, artifact);
+      result.ok = true;
+      result.decision = artifact.critique.decision;
+      result.overallQuality = artifact.qualityScores.overallQuality;
+      result.promotionEligible = artifact.promotion.eligible;
+    } catch (error) {
+      result.error = error?.message || String(error);
+    }
+    results.push(result);
+  });
+
+  return {
+    id: phaseId,
+    type: str(phase.type || 'render_review'),
+    ok: results.every((result) => result.ok),
+    totals: {
+      reviewCount: results.length,
+      acceptedCount: results.filter((result) => result.decision === 'accept').length,
+      reviseCount: results.filter((result) => result.decision === 'revise').length,
+      rejectedCount: results.filter((result) => result.decision === 'reject').length
+    },
+    results
+  };
 }
 
 async function runLiveTargetBehaviorProbePhase({ phase, manifest, outDir, endpoint, showDir }) {
@@ -369,6 +450,15 @@ export async function runSelfImprovementCycle({
         writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
         return output;
       }
+    }
+  }
+  for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'render_review')) {
+    const result = await runRenderReviewPhase({ phase, outDir: resolvedOutDir });
+    phases.push(result);
+    if (!result.ok && phase.required !== false && !continueOnFailure) {
+      const output = { ok: false, manifestPath: resolvedManifestPath, outDir: resolvedOutDir, phases, errors: [`phase failed: ${phase.id}`] };
+      writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
+      return output;
     }
   }
   const liveProjectDirs = [];

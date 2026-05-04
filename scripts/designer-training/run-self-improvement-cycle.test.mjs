@@ -188,3 +188,64 @@ test('self-improvement cycle rejects manifests that include Shimmer', async () =
   assert.equal(result.ok, false);
   assert.equal(result.errors.some((error) => /Shimmer/i.test(error)), true);
 });
+
+test('self-improvement cycle builds render review artifacts from manifest phases', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-render-review-'));
+  const frameFeaturesPath = path.join(root, 'features.json');
+  const intentPath = path.join(root, 'intent.json');
+  const manifestPath = path.join(root, 'manifest.json');
+  writeJson(frameFeaturesPath, {
+    sampledFrameCount: 4,
+    nonBlankSampledFrameRatio: 1,
+    temporalMotionMean: 0.08,
+    temporalMotionPeak: 0.15,
+    sampledFrameMetrics: [
+      { frameActivePixelRatio: 0.25, frameAverageBrightness: 0.18, frameDominantPixelRatio: 0.02, frameUniqueColorCount: 12 },
+      { frameActivePixelRatio: 0.34, frameAverageBrightness: 0.23, frameDominantPixelRatio: 0.03, frameUniqueColorCount: 18 },
+      { frameActivePixelRatio: 0.41, frameAverageBrightness: 0.28, frameDominantPixelRatio: 0.04, frameUniqueColorCount: 20 },
+      { frameActivePixelRatio: 0.31, frameAverageBrightness: 0.21, frameDominantPixelRatio: 0.02, frameUniqueColorCount: 16 }
+    ]
+  });
+  writeJson(intentPath, {
+    section: { id: 'chorus-1', label: 'Chorus 1', startMs: 10000, endMs: 18000 },
+    creativeObjective: { coverage: 'wide', motion: 'active' },
+    musicRole: { energy: 'high' }
+  });
+  writeJson(manifestPath, {
+    artifactType: 'xlightsdesigner_self_improvement_loop_manifest_v1',
+    initialScope: {
+      effects: ['On', 'Bars', 'Color Wash', 'SingleStrand'],
+      blockedEffects: ['Shimmer']
+    },
+    cyclePhases: [
+      {
+        id: 'review_seed_section',
+        type: 'render_review',
+        reviews: [
+          {
+            id: 'chorus-1',
+            frameFeaturesPath,
+            intentPath,
+            videoPath: path.join(root, 'chorus-1.mp4')
+          }
+        ]
+      }
+    ],
+    promotionGate: {}
+  });
+
+  const result = await runSelfImprovementCycle({
+    manifestPath,
+    skipCommands: true,
+    outDir: path.join(root, 'run')
+  });
+
+  const phase = result.phases.find((row) => row.type === 'render_review');
+  assert.equal(result.ok, true);
+  assert.equal(phase.ok, true);
+  assert.equal(phase.totals.reviewCount, 1);
+  assert.equal(fs.existsSync(phase.results[0].outputPath), true);
+  const review = JSON.parse(fs.readFileSync(phase.results[0].outputPath, 'utf8'));
+  assert.equal(review.artifactType, 'render_review_v1');
+  assert.equal(review.section.id, 'chorus-1');
+});

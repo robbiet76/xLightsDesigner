@@ -107,8 +107,9 @@ The self-improvement loop should add a render-review phase after live apply/rend
 
 ## Current Implementation Path
 
-1. Add a deterministic `render_review_v1` builder from sampled frame metrics.
-2. Add `ffmpeg`-based video/contact-sheet extraction around rendered sequence windows.
-3. Attach section intent and music context to review artifacts.
-4. Add vision review as an optional second-pass evaluator.
-5. Use review decisions to drive revision loops before promotion.
+1. Deterministic `render_review_v1` artifacts can be built from sampled frame metrics.
+2. The self-improvement cycle can run manifest-defined `render_review` phases and summarize accept/revise/reject decisions.
+3. Add `ffmpeg`-based video/contact-sheet extraction around rendered sequence windows.
+4. Attach richer section intent and music context to generated review artifacts.
+5. Add vision review as an optional second-pass evaluator.
+6. Use review decisions to drive revision loops before promotion.
