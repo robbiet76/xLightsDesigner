@@ -425,3 +425,67 @@ test('self-improvement cycle blocks render-review promotion when reviews need re
   assert.equal(result.renderReviewGate.totals.reviseCount, 1);
   assert.equal(result.nextActions[0], 'revise render-review sections and rerun FSEQ/media review before promotion');
 });
+
+test('self-improvement cycle builds render-review revision objectives after review phases', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-review-objectives-'));
+  const geometryPath = path.join(root, 'geometry.json');
+  const fseqPath = path.join(root, 'section.fseq');
+  const manifestPath = path.join(root, 'manifest.json');
+  writeJson(geometryPath, { artifactType: 'preview_scene_geometry_v1' });
+  fs.writeFileSync(fseqPath, 'fake-fseq');
+  writeJson(manifestPath, {
+    artifactType: 'xlightsdesigner_self_improvement_loop_manifest_v1',
+    initialScope: {
+      effects: ['On', 'Bars', 'Color Wash', 'SingleStrand'],
+      blockedEffects: ['Shimmer']
+    },
+    cyclePhases: [
+      {
+        id: 'review_fseq_section',
+        type: 'fseq_render_review',
+        geometryPath,
+        reviews: [{ id: 'needs-revision', fseqPath }]
+      },
+      {
+        id: 'build_revision_objectives',
+        type: 'render_review_revision_objectives'
+      }
+    ],
+    promotionGate: {}
+  });
+
+  const result = await runSelfImprovementCycle({
+    manifestPath,
+    skipCommands: true,
+    outDir: path.join(root, 'run'),
+    buildFseqReview: ({ outDir }) => {
+      const renderReviewPath = path.join(outDir, 'render-review.json');
+      writeJson(renderReviewPath, {
+        artifactType: 'render_review_v1',
+        section: { id: 'verse-1', startMs: 0, endMs: 8000 },
+        deterministicMetrics: { blankRisk: 0.75, activeCoverageMean: 0.01 },
+        qualityScores: { visualReadability: 0.5, intentMatch: 0.6 },
+        critique: {
+          decision: 'revise',
+          issues: ['blank-span risk is high'],
+          strengths: [],
+          revisionRecommendations: []
+        }
+      });
+      return {
+        ok: true,
+        renderReviewPath,
+        decision: 'revise',
+        overallQuality: 0.62
+      };
+    }
+  });
+
+  const objectivePhase = result.phases.find((row) => row.id === 'build_revision_objectives');
+  assert.equal(objectivePhase.ok, true);
+  assert.equal(objectivePhase.objectiveCount, 1);
+  assert.equal(fs.existsSync(objectivePhase.outputPath), true);
+  const objectives = JSON.parse(fs.readFileSync(objectivePhase.outputPath, 'utf8'));
+  assert.equal(objectives.objectives[0].scope.sectionId, 'verse-1');
+  assert.ok(objectives.objectives[0].scope.revisionRoles.includes('increase_section_coverage'));
+});

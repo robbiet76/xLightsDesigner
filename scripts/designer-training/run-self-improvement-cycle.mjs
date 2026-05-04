@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { buildRenderReviewArtifact } from './build-render-review-artifact.mjs';
 import { buildRenderReviewFromFseq } from './build-render-review-from-fseq.mjs';
+import { buildRenderReviewRevisionObjectives } from './build-render-review-revision-objectives.mjs';
 import { extractRenderReviewMedia } from './extract-render-review-media.mjs';
 import { buildTargetBehaviorTrainingSummary } from './export-target-behavior-training-summary.mjs';
 
@@ -520,6 +521,33 @@ function evaluateRenderReviewGate({ phases = [] } = {}) {
   };
 }
 
+function runRenderReviewRevisionObjectivesPhase({ phase, phases, outDir }) {
+  const phaseId = str(phase.id || 'render_review_revision_objectives');
+  const reviewPaths = [
+    ...arr(phase.reviewPaths),
+    ...arr(phases)
+      .filter((row) => ['render_review', 'fseq_render_review'].includes(str(row.type)))
+      .flatMap((row) => arr(row.results))
+      .map((result) => str(result.renderReviewPath || result.outputPath))
+      .filter(Boolean)
+  ];
+  const outputPath = resolveRepoPath(phase.outPath || path.join(outDir, 'render-review-revision-objectives.json'));
+  const artifact = buildRenderReviewRevisionObjectives({
+    reviewPaths,
+    cycleSummaryPath: '',
+    outPath: outputPath
+  });
+  return {
+    id: phaseId,
+    type: str(phase.type || 'render_review_revision_objectives'),
+    ok: true,
+    outputPath,
+    summary: artifact.summary,
+    objectiveCount: artifact.summary.objectiveCount,
+    skippedCount: artifact.summary.skippedCount
+  };
+}
+
 export async function runSelfImprovementCycle({
   manifestPath = DEFAULT_MANIFEST,
   outDir = '',
@@ -579,6 +607,10 @@ export async function runSelfImprovementCycle({
       writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
       return output;
     }
+  }
+  for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'render_review_revision_objectives')) {
+    const result = runRenderReviewRevisionObjectivesPhase({ phase, phases, outDir: resolvedOutDir });
+    phases.push(result);
   }
   const liveProjectDirs = [];
   if (runLiveProbes) {

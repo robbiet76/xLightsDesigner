@@ -115,7 +115,8 @@ The self-improvement loop should add a render-review phase after live apply/rend
 6. FSEQ render review can run as a single command from geometry + FSEQ + section window to preview media, frame metrics, contact sheet, and `render_review_v1`.
 7. The self-improvement loop can run `fseq_render_review` phases that reconstruct and review one or more rendered `.fseq` files from a manifest.
 8. Render-review phases produce a dedicated render-review gate; `revise` and `reject` outcomes block promotion and become revision-loop input.
-9. Wire live xLights render jobs directly into FSEQ-backed render-review phases.
-10. Attach richer section intent and music context to generated review artifacts.
-11. Add vision review as an optional second-pass evaluator.
-12. Use review decisions to drive revision loops before promotion.
+9. Render-review revision objectives can be generated from `revise` and `reject` artifacts, turning metrics and critique into concrete coverage/readability/motion actions.
+10. Wire live xLights render jobs directly into FSEQ-backed render-review phases.
+11. Attach richer section intent and music context to generated review artifacts.
+12. Add vision review as an optional second-pass evaluator.
+13. Use review decisions to drive revision loops before promotion.
