@@ -378,6 +378,8 @@ test("controller counts durable music timing records for music-structure goals",
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
     ...record("section_energy_build", 0.86, []),
+    experimentId: "music-structure-review-mono_white",
+    family: "music_structure_review",
     sampleCount: 2,
     trendStatus: "stable",
     timingSources: ["section"],
@@ -394,6 +396,7 @@ test("controller counts durable music timing records for music-structure goals",
         status: "not_started",
         requiredStableSamples: 2,
         coverage: {
+          families: ["music_structure_review"],
           timingSources: ["section", "beat"],
           qualityDimensions: ["energy_progression", "timing_alignment"]
         }
@@ -410,6 +413,8 @@ test("controller does not advance past explicitly blocked curriculum goals", () 
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
     ...record("section_energy_build", 0.86, []),
+    experimentId: "music-structure-review-mono_white",
+    family: "music_structure_review",
     sampleCount: 2,
     trendStatus: "stable",
     timingSources: ["section"],
@@ -426,6 +431,7 @@ test("controller does not advance past explicitly blocked curriculum goals", () 
         status: "not_started",
         blockedBy: ["needs broader full-sequence review loop"],
         coverage: {
+          families: ["music_structure_review"],
           timingSources: ["section"],
           qualityDimensions: ["energy_progression"]
         }
@@ -482,6 +488,8 @@ test("controller resolves full-sequence loop blocker when review loop artifact i
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
     ...record("section_energy_build", 0.86, []),
+    experimentId: "music-structure-review-mono_white",
+    family: "music_structure_review",
     sampleCount: 2,
     trendStatus: "stable",
     timingSources: ["section"],
@@ -499,6 +507,7 @@ test("controller resolves full-sequence loop blocker when review loop artifact i
         status: "not_started",
         blockedBy: ["needs broader full-sequence review loop"],
         coverage: {
+          families: ["music_structure_review"],
           timingSources: ["section"],
           qualityDimensions: ["energy_progression"]
         }
@@ -533,6 +542,8 @@ test("controller resolves creative prerequisite blocker from display and music e
     },
     {
       ...record("music_review", 0.84, []),
+      experimentId: "music-structure-review-mono_white",
+      family: "music_structure_review",
       sampleCount: 2,
       trendStatus: "stable",
       timingSources: ["section"],
@@ -561,6 +572,7 @@ test("controller resolves creative prerequisite blocker from display and music e
         status: "not_started",
         blockedBy: ["needs broader full-sequence review loop"],
         coverage: {
+          families: ["music_structure_review"],
           timingSources: ["section"],
           qualityDimensions: ["energy_progression"]
         }

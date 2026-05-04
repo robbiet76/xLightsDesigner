@@ -63,6 +63,26 @@ function creativeIntentFromEffects(effects = []) {
   };
 }
 
+function musicRoleFromEffects(effects = []) {
+  const roles = arr(effects).map((effect) => obj(effect?.metadata?.layerIntent?.musicRole)).filter((role) => Object.keys(role).length);
+  const timingContexts = roles.map((role) => obj(role.timingContext)).filter((context) => Object.keys(context).length);
+  const firstValue = (key) => str(roles.find((role) => str(role[key]))?.[key]);
+  const firstTimingValue = (key) => str(timingContexts.find((context) => str(context[key]))?.[key]);
+  return {
+    energy: firstValue("energy"),
+    phrase: firstValue("phrase") || firstTimingValue("phrase"),
+    beat: firstValue("beat") || firstTimingValue("beat"),
+    lyric: firstValue("lyric") || firstTimingValue("lyric"),
+    accent: firstValue("accent") || firstTimingValue("accent"),
+    timingContext: {
+      phrase: firstTimingValue("phrase"),
+      beat: firstTimingValue("beat"),
+      lyric: firstTimingValue("lyric"),
+      accent: firstTimingValue("accent")
+    }
+  };
+}
+
 function average(values = []) {
   const rows = arr(values).map((value) => Number(value)).filter(Number.isFinite);
   return rows.length ? rows.reduce((sum, value) => sum + value, 0) / rows.length : 0;
@@ -247,6 +267,7 @@ function buildRenderReviewQuality({
   const targets = unique(effects.map((effect) => effect?.element));
   const sectionId = str(passExecution.passId || "layer-composition-pass");
   const creativeIntent = creativeIntentFromEffects(effects);
+  const musicRole = musicRoleFromEffects(effects);
   const run = buildFseqReview({
     geometryPath,
     fseqPath,
@@ -268,6 +289,7 @@ function buildRenderReviewQuality({
       },
       creativeObjective: creativeIntent.creativeObjective,
       paletteIntent: creativeIntent.paletteIntent,
+      musicRole,
       section: {
         id: sectionId,
         label: sectionId,

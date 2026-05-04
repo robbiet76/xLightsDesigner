@@ -359,6 +359,9 @@
       "description": "Learn how generated effects align with section energy, beat/phrase timing, lyrics, and accents.",
       "requiredStableSamples": 2,
       "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
         "timingSources": [
           "section",
           "phrase",
@@ -375,7 +378,11 @@
       },
       "blockedBy": [
         "needs broader full-sequence review loop"
-      ]
+      ],
+      "completionCriteria": {
+        "minimumDurableCandidateCount": 2,
+        "maximumRegressingRecords": 0
+      }
     },
     {
       "goalId": "creative.intent_match.v1",

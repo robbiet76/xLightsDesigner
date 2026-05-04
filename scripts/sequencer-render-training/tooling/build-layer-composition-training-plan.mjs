@@ -120,6 +120,7 @@ export const RUNTIME_SELECTION_TIERS = [
   "group_model_ordering",
   "core_effect_fit",
   "display_quality_review",
+  "music_structure_review",
   "interaction_deepening",
   "deferred_low_yield_retest"
 ];
@@ -1096,6 +1097,129 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
   };
 }
 
+function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner }) {
+  const sectionBuild = placement({
+    id: `mq-${paletteProfile}-section-build`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "music_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { direction: "up", cycles: 2 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "foundation",
+      musicRole: {
+        energy: "section_build",
+        timingContext: {
+          phrase: "intro_phrase_a"
+        }
+      }
+    }
+  });
+  const beatPulse = placement({
+    id: `mq-${paletteProfile}-beat-pulse`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 1,
+    startMs: 1000,
+    endMs: 6000,
+    effectSettings: { effect: "Chase", cycles: 4, colorSpeed: 6 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "beat_pulse",
+      musicRole: {
+        beat: "four_count_pulse",
+        timingContext: {
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const lyricAccent = placement({
+    id: `mq-${paletteProfile}-lyric-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 2500,
+    endMs: 4200,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "lyric_accent",
+      musicRole: {
+        lyric: "hook_keyword",
+        accent: "lyric_hit",
+        timingContext: {
+          lyric: "hook_keyword",
+          accent: "vocal_accent"
+        }
+      }
+    }
+  });
+  const accentMotion = placement({
+    id: `mq-${paletteProfile}-accent-motion`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 4200,
+    endMs: 6000,
+    effectSettings: { arms: 4, twists: 1, rotation: 20 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "accent_motion",
+      musicRole: {
+        accent: "section_turnaround",
+        timingContext: {
+          accent: "section_turnaround"
+        }
+      }
+    }
+  });
+
+  return {
+    experimentId: `music-structure-review-${paletteProfile}`,
+    family: "music_structure_review",
+    paletteProfile,
+    curriculumStage: "sequence_pattern_validation",
+    layeringTaxonomy: ["music_structure_alignment", "section_energy", "beat_phrase_lyric_accent"],
+    targetSets: [
+      { scope: "group", targets: [archGroup] },
+      { scope: "model", targets: [singleLineHorizontal, star, spinner] }
+    ],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "section_phrase_energy",
+        compositionPass: "music_review",
+        placements: [sectionBuild, beatPulse],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "lyric_accent_response",
+        compositionPass: "music_review",
+        placements: [sectionBuild, beatPulse, lyricAccent, accentMotion],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        comparisonBasePassId: "section_phrase_energy",
+        changeType: "music_lyric_accent_added"
+      }
+    ]
+  };
+}
+
 function makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target }) {
   const foundation = placementFromSample({
     id: `ss-${paletteProfile}-foundation`,
@@ -1815,6 +1939,16 @@ function runtimeSelectionForExperiment(experiment, runType) {
       reason: "Measures whole-display balance, regional variety, foreground/background separation, and motion coherence with dedicated review passes."
     };
   }
+  if (experiment.family === "music_structure_review") {
+    return {
+      ...common,
+      tier: "music_structure_review",
+      queueRank: 59,
+      budgetWeight: 1,
+      selectionRole: "music_timing_structure_baseline",
+      reason: "Measures section energy, phrase/beat alignment, lyric readability, and accent response with dedicated review passes."
+    };
+  }
   if (experiment.family === "setting_sensitivity_edge_probe") {
     return {
       ...common,
@@ -1993,6 +2127,22 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         );
       }
     }
+    if (goalId === "music.structure_alignment.v1") {
+      for (const paletteProfile of ["mono_white"]) {
+        rows.push(
+          {
+            experimentId: `music-structure-review-${paletteProfile}`,
+            passId: "section_phrase_energy",
+            generatedFromCoverageGap: goalId
+          },
+          {
+            experimentId: `music-structure-review-${paletteProfile}`,
+            passId: "lyric_accent_response",
+            generatedFromCoverageGap: goalId
+          }
+        );
+      }
+    }
   }
   const available = new Set(arr(experiments).flatMap((experiment) => arr(experiment.passes)
     .map((pass) => queueKey({ experimentId: experiment.experimentId, passId: pass.passId }))));
@@ -2131,6 +2281,7 @@ export function buildLayerCompositionTrainingPlan({
     makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHorizontal }),
     makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
     makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
+    makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner }),
     makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target: archGroup }),
     makeSettingAttributionProbeExperiment({ paletteProfile, target: singleLineHorizontal }),
     makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target: archSingle }),
@@ -2175,6 +2326,7 @@ export function buildLayerCompositionTrainingPlan({
       "creative_intent_probe",
       "core_effect_fit",
       "display_quality_review",
+      "music_structure_review",
       "setting_sensitivity_edge_probe",
       "setting_attribution_probe",
       "low_movement_setting_geometry_probe"

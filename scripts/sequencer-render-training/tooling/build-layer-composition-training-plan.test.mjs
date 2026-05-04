@@ -109,6 +109,8 @@ test("layer composition training plan includes group/model and same-target layer
   assert.equal(experimentIds.includes("core-effect-fit-rgb_primary"), true);
   assert.equal(experimentIds.includes("display-quality-review-mono_white"), true);
   assert.equal(experimentIds.includes("display-quality-review-rgb_primary"), true);
+  assert.equal(experimentIds.includes("music-structure-review-mono_white"), true);
+  assert.equal(experimentIds.includes("music-structure-review-rgb_primary"), true);
   assert.equal(experimentIds.includes("setting-sensitivity-edge-probe-mono_white"), true);
   assert.equal(experimentIds.includes("setting-sensitivity-edge-probe-rgb_primary"), true);
   assert.equal(experimentIds.includes("setting-attribution-probe-mono_white"), true);
@@ -381,6 +383,46 @@ test("layer composition plan expands display quality coverage-gap controller que
       .placements.length,
     5
   );
+});
+
+test("layer composition plan expands music structure coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-music-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 13,
+      controllerDecision: {
+        selectedGoalId: "music.structure_alignment.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.structure_alignment.v1:coverage-gap",
+        goalId: "music.structure_alignment.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 2);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["music-structure-review-mono_white"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "section_phrase_energy", "lyric_accent_response"]
+  );
+  const musicRoles = plan.experiments[0].passes
+    .flatMap((pass) => pass.placements)
+    .map((placement) => placement.layerIntent?.musicRole)
+    .filter(Boolean);
+  assert.equal(musicRoles.some((role) => role.timingContext?.beat), true);
+  assert.equal(musicRoles.some((role) => role.timingContext?.lyric), true);
+  assert.equal(musicRoles.some((role) => role.timingContext?.accent), true);
 });
 
 test("layer composition smoke run remains explicitly marked as validation only", () => {
