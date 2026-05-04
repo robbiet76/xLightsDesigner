@@ -117,7 +117,8 @@ function latestRunArtifacts(latestRunRoot = "") {
     qualityRecords: artifactPath(latestRunRoot, "cross-run-quality-records.json"),
     promotedPriors: artifactPath(latestRunRoot, "cross-run-quality-priors-promoted.json"),
     passRunnerSummary: artifactPath(latestRunRoot, "pass-runner-summary.json"),
-    cleanupResult: artifactPath(latestRunRoot, "final-retention-cleanup-result.json")
+    cleanupResult: artifactPath(latestRunRoot, "final-retention-cleanup-result.json"),
+    fullSequenceReviewLoop: artifactPath(latestRunRoot, "full-sequence-review-loop.json")
   };
   const artifacts = Object.fromEntries(Object.entries(files).map(([key, filePath]) => [key, readJsonIfExists(filePath)]));
   const requiredFiles = {
@@ -134,6 +135,29 @@ function latestRunArtifacts(latestRunRoot = "") {
     refs: files,
     missingArtifacts
   };
+}
+
+function prerequisiteGoalReady(goalId = "", curriculum = {}, artifacts = {}) {
+  const goal = arr(curriculum.goals).find((row) => str(row.goalId) === goalId);
+  if (!goal) return false;
+  if (goalBlockers(goal, artifacts, curriculum).length) return false;
+  return durableRecordCountForGoal(arr(artifacts?.qualityRecords?.records), goal) > 0;
+}
+
+function goalBlockers(goal = {}, artifacts = {}, curriculum = {}) {
+  const blockers = arr(goal.blockedBy).map(str).filter(Boolean);
+  return blockers.filter((blocker) => {
+    if (blocker === "needs broader full-sequence review loop") {
+      return str(artifacts?.fullSequenceReviewLoop?.status) !== "ready";
+    }
+    if (blocker === "needs display-level and musical-structure evidence first") {
+      return !(
+        prerequisiteGoalReady("display.full_sequence.quality_v1", curriculum, artifacts)
+        && prerequisiteGoalReady("music.structure_alignment.v1", curriculum, artifacts)
+      );
+    }
+    return true;
+  });
 }
 
 function goalSort(left = {}, right = {}) {
@@ -261,7 +285,7 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
     const durableCandidateCount = goalRecords.filter((record) => bool(record?.promotion?.durableCandidate)).length;
     const blockedPromisingCount = goalRecords.filter((record) => isPromisingBlockedRecord(record, goal, policy)).length;
     const selectorReadyPriorCount = promotedPriorsForGoal(priors, goal).length;
-    const blockers = new Set(arr(goal.blockedBy).map(str).filter(Boolean));
+    const blockers = new Set(goalBlockers(goal, artifacts, curriculum));
     if (artifacts.missingArtifacts?.length && !goalRecords.length && !selectorReadyPriorCount) blockers.add("latest evidence artifacts unavailable");
     return {
       goalId: str(goal.goalId),
@@ -355,9 +379,9 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     }
   }
 
-  const blockedGoal = goals.find((goal) => arr(goal.blockedBy).map(str).filter(Boolean).length);
+  const blockedGoal = goals.find((goal) => goalBlockers(goal, artifacts, curriculum).length);
   if (blockedGoal) {
-    const blockers = arr(blockedGoal.blockedBy).map(str).filter(Boolean);
+    const blockers = goalBlockers(blockedGoal, artifacts, curriculum);
     return {
       selectedGoal: blockedGoal,
       nextQueue: [{

@@ -123,6 +123,18 @@ function writeRunRoot(runRoot, records) {
   });
 }
 
+function writeFullSequenceReview(runRoot, overrides = {}) {
+  writeJson(path.join(runRoot, "full-sequence-review-loop.json"), {
+    artifactType: "full_sequence_review_loop_v1",
+    status: "ready",
+    windowCount: 2,
+    evidenceEligibleWindowCount: 2,
+    timingSources: ["section"],
+    qualityDimensions: ["energy_progression", "timing_alignment", "repetition_with_variation"],
+    ...overrides
+  });
+}
+
 test("controller queues blocked promising records for the active curriculum goal", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [
@@ -430,6 +442,109 @@ test("controller does not advance past explicitly blocked curriculum goals", () 
   assert.equal(state.controllerDecision.nextAction, "resolve_blocker");
   assert.deepEqual(state.controllerDecision.blockedBy, ["needs broader full-sequence review loop"]);
   assert.equal(state.nextQueue[0].blockedBy[0], "needs broader full-sequence review loop");
+});
+
+test("controller resolves full-sequence loop blocker when review loop artifact is ready", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("section_energy_build", 0.86, []),
+    sampleCount: 2,
+    trendStatus: "stable",
+    timingSources: ["section"],
+    musicQualityDimensions: ["energy_progression", "timing_alignment"]
+  }]);
+  writeFullSequenceReview(runRoot);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "music.structure_alignment.v1",
+        areaId: "musical_structure",
+        priority: 1,
+        status: "not_started",
+        blockedBy: ["needs broader full-sequence review loop"],
+        coverage: {
+          timingSources: ["section"],
+          qualityDimensions: ["energy_progression"]
+        }
+      }, {
+        goalId: "creative.intent_match.v1",
+        areaId: "creative_intent_matching",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          reviewScopes: ["whole_sequence_window"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.deepEqual(state.goalStatuses[0].blockers, []);
+  assert.equal(state.controllerDecision.selectedGoalId, "creative.intent_match.v1");
+});
+
+test("controller resolves creative prerequisite blocker from display and music evidence", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [
+    {
+      ...record("display_review", 0.86, []),
+      sampleCount: 2,
+      trendStatus: "stable",
+      reviewScopes: ["whole_sequence_window"],
+      qualityDimensions: ["motion_coherence"]
+    },
+    {
+      ...record("music_review", 0.84, []),
+      sampleCount: 2,
+      trendStatus: "stable",
+      timingSources: ["section"],
+      musicQualityDimensions: ["energy_progression"]
+    }
+  ]);
+  writeFullSequenceReview(runRoot);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          reviewScopes: ["whole_sequence_window"],
+          qualityDimensions: ["motion_coherence"]
+        }
+      }, {
+        goalId: "music.structure_alignment.v1",
+        areaId: "musical_structure",
+        priority: 2,
+        status: "not_started",
+        blockedBy: ["needs broader full-sequence review loop"],
+        coverage: {
+          timingSources: ["section"],
+          qualityDimensions: ["energy_progression"]
+        }
+      }, {
+        goalId: "creative.intent_match.v1",
+        areaId: "creative_intent_matching",
+        priority: 3,
+        status: "not_started",
+        blockedBy: ["needs display-level and musical-structure evidence first"],
+        coverage: {
+          reviewMethods: ["deterministic_metrics"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  const creativeStatus = state.goalStatuses.find((row) => row.goalId === "creative.intent_match.v1");
+  assert.deepEqual(creativeStatus.blockers, []);
+  assert.equal(state.controllerDecision.selectedGoalId, "creative.intent_match.v1");
+  assert.equal(state.controllerDecision.selectionReason, "coverage_gap");
 });
 
 test("controller advances past goals with durable evidence and no repeat queue", () => {

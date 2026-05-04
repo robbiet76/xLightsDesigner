@@ -206,13 +206,28 @@ test("sequencing quality loop writes cross-run quality summary after live execut
         };
         writeJson(outPath, artifact);
         return artifact;
+      },
+      buildFullSequenceReview: ({ outPath }) => {
+        const artifact = {
+          artifactType: "full_sequence_review_loop_v1",
+          status: "ready",
+          windowCount: 2,
+          evidenceEligibleWindowCount: 1,
+          timingSources: ["section"],
+          qualityDimensions: ["energy_progression", "timing_alignment"]
+        };
+        writeJson(outPath, artifact);
+        return artifact;
       }
     }
   });
 
   assert.equal(summary.status, "executed");
   assert.equal(summary.crossRunQuality.recordCount, 2);
+  assert.equal(summary.fullSequenceReview.status, "ready");
+  assert.equal(summary.fullSequenceReview.windowCount, 2);
   assert.equal(summary.crossRunQuality.durableCandidateCount, 1);
   assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-trend.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-records.json")), true);
+  assert.equal(fs.existsSync(path.join(loopRoot, "full-sequence-review-loop.json")), true);
 });

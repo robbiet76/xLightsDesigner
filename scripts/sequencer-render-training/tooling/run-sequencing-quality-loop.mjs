@@ -10,6 +10,7 @@ import { buildLayerCompositionExecutionScaffold } from "./run-layer-composition-
 import { runLayerCompositionPasses } from "./run-layer-composition-pass-runner.mjs";
 import { buildLayerCompositionQualityTrend } from "./build-layer-composition-quality-trend.mjs";
 import { buildLayerCompositionQualityRecords } from "./build-layer-composition-quality-records.mjs";
+import { buildFullSequenceReviewLoop } from "./build-full-sequence-review-loop.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const DEFAULT_MODEL_CATALOG = "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json";
@@ -181,12 +182,17 @@ export async function runSequencingQualityLoop({
 
   let passRunnerSummary = null;
   let crossRunQuality = null;
+  let fullSequenceReview = null;
   if (applyRender) {
     passRunnerSummary = await (deps.runPasses || runLayerCompositionPasses)({
       runRoot: root,
       endpoint,
       maxPasses,
       renderReviewQuality
+    });
+    fullSequenceReview = (deps.buildFullSequenceReview || buildFullSequenceReviewLoop)({
+      runRoot: root,
+      outPath: path.join(root, "full-sequence-review-loop.json")
     });
     crossRunQuality = buildCrossRunQualityArtifacts({ latestRunRoot, loopRoot: root, deps });
   }
@@ -208,6 +214,14 @@ export async function runSequencingQualityLoop({
       stopStatus: str(passRunnerSummary.stopStatus),
       stopReason: str(passRunnerSummary.stopReason),
       renderReviewAcceptedEvidenceCount: num(passRunnerSummary.renderReviewAcceptedEvidenceCount)
+    } : null,
+    fullSequenceReview: fullSequenceReview ? {
+      status: str(fullSequenceReview.status),
+      windowCount: num(fullSequenceReview.windowCount),
+      evidenceEligibleWindowCount: num(fullSequenceReview.evidenceEligibleWindowCount),
+      timingSources: arr(fullSequenceReview.timingSources).map(str).filter(Boolean),
+      qualityDimensions: arr(fullSequenceReview.qualityDimensions).map(str).filter(Boolean),
+      ref: path.join(root, "full-sequence-review-loop.json")
     } : null,
     crossRunQuality,
     nextStep: applyRender
