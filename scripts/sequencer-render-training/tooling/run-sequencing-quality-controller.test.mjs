@@ -714,6 +714,40 @@ test("controller treats durable completion criteria as covered evidence", () => 
   assert.equal(state.nextQueue[0].goalId, "effect_fit.core_effects.v1");
 });
 
+test("controller matches xLights internal SingleStrand name to single strand coverage", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("single_strand_linear_motion", 0.84),
+    experimentId: "core-effect-fit-mono_white",
+    family: "core_effect_fit",
+    effectName: "SingleStrand",
+    modelTypes: ["single_line"],
+    targetScopes: ["model"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "effect_fit.core_effects.v1",
+        areaId: "effect_behavior",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          effects: ["Single Strand"],
+          modelTypes: ["single_line"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "effect_fit.core_effects.v1");
+  assert.equal(state.nextQueue[0].passId, "single_strand_linear_motion");
+  assert.equal(state.nextQueue[0].reason, "repeat_blocked_promising_record");
+});
+
 test("controller increments loop index from a previous state", () => {
   const runRoot = tempDir();
   const previousStatePath = path.join(runRoot, "previous-state.json");

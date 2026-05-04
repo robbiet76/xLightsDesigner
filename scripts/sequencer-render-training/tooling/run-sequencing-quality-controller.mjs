@@ -65,7 +65,9 @@ function stableQueueId(record = {}) {
 }
 
 function normalizedToken(value = "") {
-  return str(value).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  const token = str(value).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  if (token === "singlestrand") return "single_strand";
+  return token;
 }
 
 function normalizedValues(values = []) {
