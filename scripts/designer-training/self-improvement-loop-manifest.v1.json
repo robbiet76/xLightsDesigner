@@ -83,6 +83,7 @@
     "minCustomParentRecords": 3,
     "minBuiltInParentRecords": 3,
     "minEffectsCovered": 3,
+    "minPromotablePatterns": 3,
     "minSamplesPerPromotablePattern": 3,
     "requirePositiveAndNegativeCoverage": false
   },

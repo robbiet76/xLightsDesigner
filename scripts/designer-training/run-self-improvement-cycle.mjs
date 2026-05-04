@@ -236,7 +236,8 @@ function exportTargetBehaviorSummaries({ projectDirs, outDir }) {
       ok: true,
       projectDirHash: `pdh1:${stableHash(projectDir)}`,
       outputPath: outPath,
-      summary: summary.summary
+      summary: summary.summary,
+      records: summary.records
     });
   });
   return summaries;
@@ -274,13 +275,18 @@ function validateManifest(manifest) {
 
 function evaluatePromotionGate({ manifest, exportedSummaries }) {
   const gate = manifest.promotionGate || {};
+  const minSamplesPerPromotablePattern = Number(gate.minSamplesPerPromotablePattern || 0);
+  const minPromotablePatterns = Number(gate.minPromotablePatterns || gate.minEffectsCovered || 0);
   const totals = {
     recordCount: 0,
+    sampleCount: 0,
     submodelRecordCount: 0,
     customParentRecordCount: 0,
     builtInParentRecordCount: 0,
-    effectFamilies: new Set()
+    effectFamilies: new Set(),
+    promotablePatternCount: 0
   };
+  const patternSamples = new Map();
   for (const exported of exportedSummaries) {
     const summary = exported.summary || {};
     totals.recordCount += Number(summary.recordCount || 0);
@@ -289,13 +295,29 @@ function evaluatePromotionGate({ manifest, exportedSummaries }) {
     const builtIn = Number(summary.builtInParentRecordCount || 0) + Number(summary.builtInTargetRecordCount || 0);
     totals.builtInParentRecordCount += Math.max(0, builtIn);
     for (const effect of Object.keys(summary.effectFamilyCounts || {})) totals.effectFamilies.add(effect);
+    for (const record of arr(exported.records || exported.document?.records)) {
+      const sampleCount = Number(record?.stats?.sampleCount || 0);
+      totals.sampleCount += Math.max(0, sampleCount);
+      const canonicalType = str(record?.targetCanonicalType || record?.parentContext?.canonicalType || 'unknown');
+      const patternKey = [
+        canonicalType,
+        str(record?.targetKind || 'unknown'),
+        str(record?.probeScope || 'unknown'),
+        str(record?.effectFamily || record?.effectName || 'unknown')
+      ].join('|');
+      patternSamples.set(patternKey, Number(patternSamples.get(patternKey) || 0) + Math.max(0, sampleCount));
+    }
   }
+  totals.promotablePatternCount = [...patternSamples.values()]
+    .filter((sampleCount) => sampleCount >= minSamplesPerPromotablePattern)
+    .length;
   const checks = [
     { id: 'minTotalRecords', actual: totals.recordCount, expected: Number(gate.minTotalRecords || 0) },
     { id: 'minSubmodelRecords', actual: totals.submodelRecordCount, expected: Number(gate.minSubmodelRecords || 0) },
     { id: 'minCustomParentRecords', actual: totals.customParentRecordCount, expected: Number(gate.minCustomParentRecords || 0) },
     { id: 'minBuiltInParentRecords', actual: totals.builtInParentRecordCount, expected: Number(gate.minBuiltInParentRecords || 0) },
-    { id: 'minEffectsCovered', actual: totals.effectFamilies.size, expected: Number(gate.minEffectsCovered || 0) }
+    { id: 'minEffectsCovered', actual: totals.effectFamilies.size, expected: Number(gate.minEffectsCovered || 0) },
+    { id: 'minPromotablePatterns', actual: totals.promotablePatternCount, expected: minPromotablePatterns }
   ].map((check) => ({ ...check, ok: check.actual >= check.expected }));
   return {
     promoteReady: checks.every((check) => check.ok),
@@ -303,6 +325,7 @@ function evaluatePromotionGate({ manifest, exportedSummaries }) {
       ...totals,
       effectFamilies: [...totals.effectFamilies].sort()
     },
+    patternSamples: Object.fromEntries([...patternSamples.entries()].sort((left, right) => left[0].localeCompare(right[0]))),
     checks
   };
 }
