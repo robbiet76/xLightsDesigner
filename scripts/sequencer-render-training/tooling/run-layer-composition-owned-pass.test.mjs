@@ -158,3 +158,24 @@ test("owned pass executor skips display-order no-op commands with fewer than two
   assert.equal(result.fseqPath, fseq);
   assert.equal(calls.some((row) => row.route === "/elements/display-order"), false);
 });
+
+test("owned pass executor deduplicates display-order ids before transport", async () => {
+  const { sequence, fseq } = tempSequence();
+  const { calls, request } = makeRequestRecorder();
+  const result = await runLayerCompositionOwnedPass({
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    sequencePath: sequence,
+    passExecution: {
+      ...passExecution,
+      directCommands: [
+        { cmd: "sequencer.setDisplayElementOrder", params: { orderedIds: ["Arches", "Arches", "Spinner"] } }
+      ]
+    },
+    deps: { request, pollMs: 1, timeoutMs: 1000 }
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.fseqPath, fseq);
+  const displayOrderCall = calls.find((row) => row.route === "/elements/display-order");
+  assert.deepEqual(JSON.parse(displayOrderCall.body.orderedIds), ["Arches", "Spinner"]);
+});
