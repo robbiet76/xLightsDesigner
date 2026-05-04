@@ -112,6 +112,18 @@ The layer-composition plan builder can consume that checkpoint through
 `nextQueue` and keeps required dependency passes such as `empty_baseline` and
 comparison bases so deltas remain meaningful.
 
+The first loop runner is scaffold-first:
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-loop.mjs \
+  --latest-run-root /tmp/xld-layer-composition-quality-long-20260504T182838Z \
+  --loop-root /tmp/xld-quality-controller-loop-000001
+```
+
+This writes `controller-state.json`, `training-plan.json`,
+`execution-scaffold-result.json`, `checkpoints.json`, `retention-ledger.json`,
+and `loop-summary.json`. Live rendering is opt-in through `--apply-render`.
+
 ## Selection Rules
 
 The controller should prefer:

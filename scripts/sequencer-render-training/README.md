@@ -89,6 +89,7 @@ Generated manifests under `manifests/generated/` are local run artifacts. They a
 - `tooling/run-layer-composition-execution-scaffold.mjs`
 - `tooling/run-layer-composition-owned-pass.mjs`
 - `tooling/run-sequencing-quality-controller.mjs`
+- `tooling/run-sequencing-quality-loop.mjs`
 - `tooling/harvest-effect-outcome-records.mjs`
 - `tooling/build-effect-settings-coverage-report.mjs`
 - `tooling/build-effect-training-automation-plan.mjs`
@@ -274,6 +275,10 @@ write the next controller checkpoint. The first controller pass is planning-only
 it reads the curriculum, compact evidence, promoted priors, and cleanup result,
 then queues blocked-promising repeats or the next coverage gap without launching
 xLights.
+Use `run-sequencing-quality-loop.mjs` to bind the controller checkpoint to a
+filtered layer-composition plan and execution scaffold. Default mode is
+scaffold-only; add `--apply-render --max-passes 1` only after reviewing the
+checkpoint and scaffold.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \
@@ -303,6 +308,12 @@ node scripts/sequencer-render-training/tooling/export-layer-composition-priors-b
 node scripts/sequencer-render-training/tooling/run-sequencing-quality-controller.mjs \
   --latest-run-root var/logs/sequencer-layer-composition-training-runs/<run-id> \
   --out var/logs/sequencing-quality-controller/controller-state.json
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-loop.mjs \
+  --latest-run-root var/logs/sequencer-layer-composition-training-runs/<completed-run-id> \
+  --loop-root var/logs/sequencing-quality-controller/loop-000001
 ```
 
 ```bash
