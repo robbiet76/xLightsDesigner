@@ -44,7 +44,8 @@ function writeRun(root, { runId, quality = 0.8, eligible = true, generatedAt = "
       overallQuality: quality,
       visualReadability: quality - 0.01,
       intentMatch: quality - 0.02,
-      motionCoherence: quality - 0.03
+      motionCoherence: quality - 0.03,
+      colorDiscipline: quality - 0.04
     },
     deterministicMetrics: {
       activeCoverageMean: 0.02,
@@ -61,6 +62,9 @@ function writeRun(root, { runId, quality = 0.8, eligible = true, generatedAt = "
   writeJson(qualityPath, {
     artifactType: "layer_composition_render_review_quality_v1",
     renderReviewRef: reviewPath,
+    previewMediaRef: path.join(root, "preview-window.mp4"),
+    contactSheetRef: path.join(root, "contact-sheet.jpg"),
+    passWindow: { label: "section-01", startMs: 0, endMs: 1000 },
     decision: "accept",
     overallQuality: quality,
     evidenceEligible: eligible,
@@ -96,6 +100,9 @@ test("quality trend summarizes a single run as a baseline", () => {
   assert.equal(artifact.groups[0].family, "submodel_structure");
   assert.deepEqual(artifact.groups[0].targetScopes, ["submodel"]);
   assert.deepEqual(artifact.groups[0].modelTypes, ["custom"]);
+  assert.deepEqual(artifact.groups[0].reviewScopes, ["section_video", "whole_sequence_window", "full_display_contact_sheet"]);
+  assert.equal(artifact.groups[0].qualityDimensions.includes("motion_coherence"), true);
+  assert.equal(artifact.groups[0].qualityDimensions.includes("palette_readability"), true);
 });
 
 test("quality trend compares matching quality evidence across runs", () => {

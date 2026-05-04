@@ -21,6 +21,8 @@ function trendGroup(overrides = {}) {
     modelTypes: ["custom"],
     geometryProfiles: ["custom_submodel_structural"],
     changeType: "sibling_submodel_layer_added",
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"],
     effectName: "Bars",
     leadTargets: ["Arches"],
     sampleCount: 2,
@@ -78,6 +80,8 @@ test("quality records promote repeated accepted stable or improving evidence", (
   assert.equal(record.sampleCount, 2);
   assert.deepEqual(record.targetScopes, ["submodel"]);
   assert.deepEqual(record.modelTypes, ["custom"]);
+  assert.deepEqual(record.reviewScopes, ["section_video", "whole_sequence_window", "full_display_contact_sheet"]);
+  assert.deepEqual(record.qualityDimensions, ["coverage_balance", "motion_coherence", "palette_readability"]);
   assert.equal(record.quality.meanOverallQuality, 0.84);
   assert.equal(record.observedMetrics.meanActiveTargetNodeRatioPeak, 0.45);
   assert.equal(record.evidence.samples.length, 2);

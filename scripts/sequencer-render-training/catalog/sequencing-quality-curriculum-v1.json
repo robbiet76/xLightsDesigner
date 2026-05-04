@@ -283,10 +283,7 @@
           "palette_readability",
           "regional_variety"
         ]
-      },
-      "blockedBy": [
-        "needs stable section/whole-sequence review extraction for generated sequences"
-      ]
+      }
     },
     {
       "goalId": "music.structure_alignment.v1",

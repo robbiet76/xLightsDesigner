@@ -81,6 +81,36 @@ function passMetadata(plan = {}, experimentId = "", passId = "") {
   };
 }
 
+function reviewScopesForQuality(quality = {}) {
+  const scopes = new Set();
+  if (str(quality.previewMediaRef)) scopes.add("section_video");
+  if (str(quality.passWindow?.label) || quality.passWindow) scopes.add("whole_sequence_window");
+  if (str(quality.contactSheetRef)) scopes.add("full_display_contact_sheet");
+  return [...scopes];
+}
+
+function qualityDimensionsForReview(review = {}) {
+  const scores = review.qualityScores || {};
+  const metrics = review.deterministicMetrics || {};
+  const dimensions = new Set();
+  if (Number.isFinite(num(metrics.activeCoverageMean, NaN)) || Number.isFinite(num(metrics.activeModelCountMean, NaN))) {
+    dimensions.add("coverage_balance");
+  }
+  if (Number.isFinite(num(scores.targetHierarchy, NaN)) || Number.isFinite(num(scores.clutterControl, NaN))) {
+    dimensions.add("foreground_background_separation");
+  }
+  if (Number.isFinite(num(scores.motionCoherence, NaN)) || Number.isFinite(num(metrics.temporalMotionMean, NaN))) {
+    dimensions.add("motion_coherence");
+  }
+  if (Number.isFinite(num(scores.colorDiscipline, NaN)) || Number.isFinite(num(metrics.colorDiversityMean, NaN))) {
+    dimensions.add("palette_readability");
+  }
+  if (Number.isFinite(num(metrics.activeModelCountPeak, NaN)) || Number.isFinite(num(metrics.colorDiversityMean, NaN))) {
+    dimensions.add("regional_variety");
+  }
+  return [...dimensions];
+}
+
 function loadRunRecords(runRoot = "", runIndex = 0) {
   const root = resolvePath(runRoot);
   const summaryPath = path.join(root, "pass-runner-summary.json");
@@ -110,6 +140,8 @@ function loadRunRecords(runRoot = "", runIndex = 0) {
         modelTypes: metadata.modelTypes,
         geometryProfiles: metadata.geometryProfiles,
         changeType: metadata.changeType,
+        reviewScopes: reviewScopesForQuality(quality),
+        qualityDimensions: qualityDimensionsForReview(review),
         decision: str(result.renderReviewDecision || quality.decision || review.critique?.decision),
         measurementStatus: str(result.renderReviewMeasurementStatus || quality.measurementStatus || qualification.status),
         evidenceEligible,
@@ -165,6 +197,8 @@ function groupEvidence(records = []) {
       modelTypes: arr(latest.modelTypes),
       geometryProfiles: arr(latest.geometryProfiles),
       changeType: str(latest.changeType),
+      reviewScopes: arr(latest.reviewScopes),
+      qualityDimensions: arr(latest.qualityDimensions),
       effectName: str(latest.effectName),
       leadTargets: arr(latest.leadTargets),
       sampleCount: sortedRows.length,

@@ -94,6 +94,8 @@ function buildRecord(group = {}, options = {}) {
     modelTypes: arr(group.modelTypes).map(str).filter(Boolean),
     geometryProfiles: arr(group.geometryProfiles).map(str).filter(Boolean),
     changeType: str(group.changeType),
+    reviewScopes: arr(group.reviewScopes).map(str).filter(Boolean),
+    qualityDimensions: arr(group.qualityDimensions).map(str).filter(Boolean),
     effectName: str(group.effectName),
     leadTargets: arr(group.leadTargets).map(str).filter(Boolean),
     sampleCount: num(group.sampleCount),

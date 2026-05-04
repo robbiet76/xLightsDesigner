@@ -294,6 +294,70 @@ test("controller counts durable structured submodel records for submodel goals",
   assert.equal(state.nextQueue[0].reason, "coverage_gap");
 });
 
+test("controller counts durable display review records for display-level goals", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("sibling_submodels_split", 0.86, []),
+    sampleCount: 2,
+    trendStatus: "stable",
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          reviewScopes: ["whole_sequence_window"],
+          qualityDimensions: ["motion_coherence", "palette_readability"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 1);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
+});
+
+test("controller does not repeat arbitrary blocked effect records for display-only goals", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("reversed_layer_order", 0.83),
+    effectName: "Shimmer",
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          reviewScopes: ["whole_sequence_window"],
+          qualityDimensions: ["motion_coherence"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].blockedPromisingCount, 0);
+  assert.equal(state.controllerDecision.selectionReason, "coverage_gap");
+  assert.equal(state.nextQueue[0].goalId, "display.full_sequence.quality_v1");
+});
+
 test("controller advances past goals with durable evidence and no repeat queue", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [

@@ -153,7 +153,15 @@ function recordMatchesGoal(record = {}, goal = {}) {
   const effects = coverageList(coverage, "effects");
   const targetScopes = coverageList(coverage, "targetScopes");
   const modelTypes = coverageList(coverage, "modelTypes");
-  const hasStructuredCoverage = families.length || paletteProfiles.length || effects.length || targetScopes.length || modelTypes.length;
+  const reviewScopes = coverageList(coverage, "reviewScopes");
+  const qualityDimensions = coverageList(coverage, "qualityDimensions");
+  const hasStructuredCoverage = families.length
+    || paletteProfiles.length
+    || effects.length
+    || targetScopes.length
+    || modelTypes.length
+    || reviewScopes.length
+    || qualityDimensions.length;
   if (!hasStructuredCoverage) return false;
   const experimentId = str(record.experimentId);
 
@@ -165,10 +173,18 @@ function recordMatchesGoal(record = {}, goal = {}) {
   const effectMatch = !effects.length || effects.includes(normalizedToken(record.effectName));
   const targetScopeMatch = matchesCoverage(targetScopesForRecord(record), targetScopes);
   const modelTypeMatch = !modelTypes.length || !arr(record.modelTypes).length || matchesCoverage(record.modelTypes, modelTypes);
-  return familyMatch && paletteMatch && effectMatch && targetScopeMatch && modelTypeMatch;
+  const reviewScopeMatch = matchesCoverage(record.reviewScopes, reviewScopes);
+  const qualityDimensionMatch = matchesCoverage(record.qualityDimensions, qualityDimensions);
+  return familyMatch && paletteMatch && effectMatch && targetScopeMatch && modelTypeMatch && reviewScopeMatch && qualityDimensionMatch;
 }
 
 function isPromisingBlockedRecord(record = {}, goal = {}, policy = {}) {
+  const coverage = goal.coverage || {};
+  const repeatableCoverage = coverageList(coverage, "families").length
+    || coverageList(coverage, "effects").length
+    || coverageList(coverage, "targetScopes").length
+    || coverageList(coverage, "modelTypes").length;
+  if (!repeatableCoverage) return false;
   const blockers = arr(record?.promotion?.blockers).map(str).filter(Boolean);
   if (!blockers.length) return false;
   if (!recordMatchesGoal(record, goal)) return false;
