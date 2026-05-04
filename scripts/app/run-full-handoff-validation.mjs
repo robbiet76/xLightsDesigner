@@ -365,6 +365,9 @@ function normalizeExtraValidation(row = {}, index = 0) {
     sourceModel: str(row?.sourceModel),
     targetModel: str(row?.targetModel),
     projectFile: str(row?.projectFile),
+    sourceProject: str(row?.sourceProject),
+    showDir: str(row?.showDir),
+    scratchName: str(row?.scratchName),
     appUrl: str(row?.appUrl),
     timeoutMs: Number.isFinite(Number(row?.timeoutMs)) ? Number(row.timeoutMs) : null
   };
@@ -401,6 +404,19 @@ function buildExtraValidationArgs(args, showDir, validation = {}) {
     ];
     if (validation.projectFile) validationArgs.push('--project-file', validation.projectFile);
     if (validation.timeoutMs) validationArgs.push('--timeout-ms', String(validation.timeoutMs));
+    return validationArgs;
+  }
+  if (validation.type === 'displayReconciliationRefresh') {
+    const validationArgs = [
+      'scripts/app/validate-display-reconciliation-refresh.mjs',
+      '--show-dir',
+      validation.showDir || showDir,
+      '--skip-launch-app',
+      '--skip-launch-xlights'
+    ];
+    if (validation.sourceProject) validationArgs.push('--source-project', validation.sourceProject);
+    if (validation.projectFile) validationArgs.push('--restore-project', validation.projectFile);
+    if (validation.scratchName) validationArgs.push('--scratch-name', validation.scratchName);
     return validationArgs;
   }
   if (validation.type !== 'appReviewExplicitEditSurface') {

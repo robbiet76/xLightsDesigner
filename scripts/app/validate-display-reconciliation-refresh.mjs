@@ -34,6 +34,7 @@ function parseArgs(argv) {
     xlightsApp: DEFAULT_XLIGHTS_APP,
     sourceProject: DEFAULT_SOURCE_PROJECT,
     showDir: DEFAULT_SHOW_DIR,
+    restoreProject: '',
     scratchName: DEFAULT_SCRATCH_NAME,
     keepScratch: false,
     skipLaunchXLights: false,
@@ -47,6 +48,8 @@ function parseArgs(argv) {
       options.sourceProject = argv[++index] || '';
     } else if (arg === '--show-dir') {
       options.showDir = argv[++index] || '';
+    } else if (arg === '--restore-project') {
+      options.restoreProject = argv[++index] || '';
     } else if (arg === '--scratch-name') {
       options.scratchName = argv[++index] || '';
     } else if (arg === '--keep-scratch') {
@@ -68,7 +71,8 @@ function parseArgs(argv) {
     ...options,
     xlightsApp: path.resolve(options.xlightsApp),
     sourceProject: path.resolve(options.sourceProject),
-    showDir: path.resolve(options.showDir)
+    showDir: path.resolve(options.showDir),
+    restoreProject: options.restoreProject ? path.resolve(options.restoreProject) : ''
   };
 }
 
@@ -419,7 +423,7 @@ async function main() {
     result = assertReconciliation(scratch.scratchDir);
   } finally {
     try {
-      await automationAction('openProjectAndWait', { filePath: options.sourceProject });
+      await automationAction('openProjectAndWait', { filePath: options.restoreProject || options.sourceProject });
     } catch {}
     if (!options.keepScratch) {
       fs.rmSync(scratch.scratchDir, { recursive: true, force: true });

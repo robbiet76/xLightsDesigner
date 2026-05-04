@@ -18,6 +18,10 @@
       "type": "appReviewExplicitEditSurface",
       "sourceModel": "Star",
       "targetModel": "Spinner-01"
+    },
+    {
+      "name": "display-reconciliation-refresh",
+      "type": "displayReconciliationRefresh"
     }
   ],
   "scenarios": [
