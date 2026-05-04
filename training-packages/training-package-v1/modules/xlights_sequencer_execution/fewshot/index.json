@@ -108,6 +108,21 @@
       ]
     },
     {
+      "id": "target_behavior_fingerprint_selection",
+      "intent": "Choose a target/submodel realization when project-local behavior evidence exists for renamed targets.",
+      "focus": [
+        "match targetBehaviorLearning records by targetFingerprint before displayName",
+        "use the same behavior evidence shape for built-in and custom parent submodels",
+        "treat positive behavior evidence as advisory rather than as permission to skip validation"
+      ],
+      "expectedBehavior": [
+        "prefers candidates with matching fingerprint-backed positive evidence when the intent still fits",
+        "preserves explicit submodel targets instead of collapsing them to the parent model",
+        "keeps review/apply validation authoritative",
+        "does not infer prop meaning from current or previous target names"
+      ]
+    },
+    {
       "id": "revision_conflict_block",
       "intent": "Sequence changed in xLights after plan generation and before apply.",
       "focus": [
