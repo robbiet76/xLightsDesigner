@@ -174,6 +174,59 @@ private actor XLightsSessionLoadGate {
 }
 
 @MainActor
+@Test func xlightsSessionRefreshPreservesRuntimeStateReason() async throws {
+    let workspace = ProjectWorkspace(sessionStore: StubXLightsSessionProjectStore())
+    workspace.setProject(
+        ActiveProjectModel(
+            id: "project-1",
+            projectName: "Christmas 2026",
+            projectFilePath: "/tmp/Christmas 2026.xdproj",
+            showFolder: "/tmp/show",
+            mediaPath: "",
+            appRootPath: AppEnvironment.canonicalAppRoot,
+            createdAt: "2026-04-07T00:00:00Z",
+            updatedAt: "2026-04-07T00:00:00Z",
+            snapshot: [:]
+        )
+    )
+    let service = StubXLightsSessionService()
+    service.nextLoad = { projectShowFolder in
+        XLightsSessionSnapshotModel(
+            runtimeState: "starting",
+            runtimeStateReason: "xLights is blocked by a modal dialog: Save Changes.",
+            supportedCommands: ["sequence.open"],
+            isReachable: true,
+            isSequenceOpen: false,
+            sequencePath: "",
+            revision: "",
+            mediaFile: "",
+            showDirectory: projectShowFolder,
+            projectShowMatches: true,
+            sequenceType: "unknown",
+            durationMs: 0,
+            frameMs: 0,
+            dirtyState: "unknown",
+            dirtyStateReason: "",
+            hasUnsavedChanges: nil,
+            saveSupported: false,
+            renderSupported: false,
+            openSupported: false,
+            createSupported: false,
+            closeSupported: false,
+            lastSaveSummary: "",
+            lastRenderSummary: ""
+        )
+    }
+    let model = XLightsSessionViewModel(workspace: workspace, service: service)
+
+    let refreshed = await model.refreshNow()
+
+    #expect(refreshed.runtimeState == "starting")
+    #expect(refreshed.runtimeStateReason.contains("modal dialog"))
+    #expect(model.snapshot.runtimeStateReason.contains("Save Changes"))
+}
+
+@MainActor
 @Test func xlightsSessionReconcileSwitchesToProjectShowFolderWhenMismatchIsClean() async throws {
     let workspace = ProjectWorkspace(sessionStore: StubXLightsSessionProjectStore())
     workspace.setProject(

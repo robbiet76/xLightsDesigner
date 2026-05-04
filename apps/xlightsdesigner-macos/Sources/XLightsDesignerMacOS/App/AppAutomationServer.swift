@@ -672,6 +672,7 @@ final class AppAutomationServer: @unchecked Sendable {
         let snapshot = model.xlightsSessionModel.snapshot
         return [
             "runtimeState": snapshot.runtimeState,
+            "runtimeStateReason": snapshot.runtimeStateReason,
             "supportedCommands": snapshot.supportedCommands,
             "isReachable": snapshot.isReachable,
             "isSequenceOpen": snapshot.isSequenceOpen,

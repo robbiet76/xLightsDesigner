@@ -73,6 +73,7 @@ struct ProjectScreenView: View {
                     Text(summary.projectName)
                         .font(.title2)
                         .fontWeight(.semibold)
+                    detailRow(label: "xLights Runtime", value: xlightsSessionModel.snapshot.runtimeStateReason.isEmpty ? xlightsSessionModel.snapshot.runtimeState : xlightsSessionModel.snapshot.runtimeStateReason)
                     detailRow(label: "Project Folder", value: projectFolderPath(from: summary.projectFilePath))
                     detailRow(label: "Project Show Folder", value: summary.showFolderSummary)
                     if let mismatchText = xlightsShowFolderMismatchText(projectShowFolder: summary.showFolderSummary) {

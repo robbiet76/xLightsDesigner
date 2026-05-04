@@ -51,6 +51,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
         let sequence = dictionary(openData["sequence"])
         let showDirectory = string(mediaData["showDirectory"])
         let runtimeState = string(healthData["state"], fallback: "unknown")
+        let runtimeStateReason = ownedRuntimeStateReason(healthData)
         let layoutSignature = buildLayoutSignature(modelsJSON: layoutModelsJSON, groupMembershipsJSON: groupMembershipsJSON)
         let hasUnsavedLayoutChanges = optionalBool(layoutSettingsData["hasUnsavedLayoutChanges"])
         let hasUnsavedRgbEffectsChanges = optionalBool(layoutSettingsData["hasUnsavedRgbEffectsChanges"])
@@ -91,6 +92,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
 
         return XLightsSessionSnapshotModel(
             runtimeState: runtimeState,
+            runtimeStateReason: runtimeStateReason,
             supportedCommands: supportedCommands,
             isReachable: bool(healthData["listenerReachable"]),
             isSequenceOpen: bool(openData["isOpen"]),
@@ -329,6 +331,41 @@ struct LocalXLightsSessionService: XLightsSessionService {
         throw XLightsSessionServiceError.invalidResponse("Owned xLights API not ready for \(command): \(reason).\(retryText)")
     }
 
+    private func ownedRuntimeStateReason(_ data: [String: Any]) -> String {
+        let state = string(data["state"], fallback: string(data["startupState"], fallback: "unknown")).lowercased()
+        let listenerReachable = bool(data["listenerReachable"])
+        let appReady = optionalBool(data["appReady"]) ?? true
+        let startupSettled = bool(data["startupSettled"]) || state == "ready"
+        let modalState = dictionary(data["modalState"])
+        let modalObserved = optionalBool(modalState["observed"]) ?? true
+        let modalBlocked = modalObserved && bool(modalState["blocked"])
+
+        if modalBlocked {
+            let windows = array(modalState["windows"])
+            let titles = windows
+                .map { dictionary($0) }
+                .filter { bool($0["isModal"]) }
+                .map { string($0["title"], fallback: string($0["className"])) }
+                .filter { !$0.isEmpty }
+            return titles.isEmpty
+                ? "xLights is blocked by a modal dialog."
+                : "xLights is blocked by a modal dialog: \(titles.joined(separator: ", "))."
+        }
+        if !listenerReachable {
+            return "xLights owned API listener is not reachable."
+        }
+        if !appReady {
+            return "xLights is still starting."
+        }
+        if !startupSettled {
+            let remaining = int(data["settleRemainingMs"])
+            return remaining > 0
+                ? "xLights startup is settling for \(remaining) ms."
+                : "xLights startup is not settled."
+        }
+        return "xLights owned API is ready."
+    }
+
     private func prepareForSequenceSwitch(saveBeforeSwitch: Bool) async throws {
         let openJSON = try await readJSON(from: "/sequence/open")
         let openData = dictionary(openJSON["data"])
@@ -401,6 +438,10 @@ struct LocalXLightsSessionService: XLightsSessionService {
 
     private func dictionary(_ value: Any?) -> [String: Any] {
         value as? [String: Any] ?? [:]
+    }
+
+    private func array(_ value: Any?) -> [Any] {
+        value as? [Any] ?? []
     }
 
     private func string(_ value: Any?, fallback: String = "") -> String {

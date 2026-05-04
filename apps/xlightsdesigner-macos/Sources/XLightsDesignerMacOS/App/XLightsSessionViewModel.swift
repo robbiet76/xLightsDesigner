@@ -13,6 +13,7 @@ final class XLightsSessionViewModel {
 
     var snapshot = XLightsSessionSnapshotModel(
         runtimeState: "unknown",
+        runtimeStateReason: "xLights session has not been refreshed yet.",
         supportedCommands: [],
         isReachable: false,
         isSequenceOpen: false,
@@ -125,6 +126,7 @@ final class XLightsSessionViewModel {
         }
         snapshot = XLightsSessionSnapshotModel(
             runtimeState: session.runtimeState,
+            runtimeStateReason: session.runtimeStateReason,
             supportedCommands: session.supportedCommands,
             isReachable: session.isReachable,
             isSequenceOpen: session.isSequenceOpen,
@@ -226,6 +228,7 @@ final class XLightsSessionViewModel {
     private func setLastSaveSummary(_ summary: String) {
         snapshot = XLightsSessionSnapshotModel(
             runtimeState: snapshot.runtimeState,
+            runtimeStateReason: snapshot.runtimeStateReason,
             supportedCommands: snapshot.supportedCommands,
             isReachable: snapshot.isReachable,
             isSequenceOpen: snapshot.isSequenceOpen,
@@ -262,6 +265,7 @@ final class XLightsSessionViewModel {
     private func setLastRenderSummary(_ summary: String) {
         snapshot = XLightsSessionSnapshotModel(
             runtimeState: snapshot.runtimeState,
+            runtimeStateReason: snapshot.runtimeStateReason,
             supportedCommands: snapshot.supportedCommands,
             isReachable: snapshot.isReachable,
             isSequenceOpen: snapshot.isSequenceOpen,
@@ -322,6 +326,7 @@ final class XLightsSessionViewModel {
     private func unreachableSnapshot(from previous: XLightsSessionSnapshotModel, projectShowFolder: String) -> XLightsSessionSnapshotModel {
         XLightsSessionSnapshotModel(
             runtimeState: "unreachable",
+            runtimeStateReason: "xLights owned API is not reachable. Start the API-enabled xLights build, then refresh.",
             supportedCommands: [],
             isReachable: false,
             isSequenceOpen: false,

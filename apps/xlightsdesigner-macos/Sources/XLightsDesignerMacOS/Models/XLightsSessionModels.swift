@@ -2,6 +2,7 @@ import Foundation
 
 struct XLightsSessionSnapshotModel: Sendable {
     let runtimeState: String
+    let runtimeStateReason: String
     let supportedCommands: [String]
     let isReachable: Bool
     let isSequenceOpen: Bool
@@ -35,6 +36,7 @@ struct XLightsSessionSnapshotModel: Sendable {
 
     init(
         runtimeState: String,
+        runtimeStateReason: String = "",
         supportedCommands: [String],
         isReachable: Bool,
         isSequenceOpen: Bool,
@@ -67,6 +69,7 @@ struct XLightsSessionSnapshotModel: Sendable {
         lastRenderSummary: String
     ) {
         self.runtimeState = runtimeState
+        self.runtimeStateReason = runtimeStateReason
         self.supportedCommands = supportedCommands
         self.isReachable = isReachable
         self.isSequenceOpen = isSequenceOpen

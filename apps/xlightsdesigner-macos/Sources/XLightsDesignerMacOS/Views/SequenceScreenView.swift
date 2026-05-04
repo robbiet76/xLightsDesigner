@@ -107,6 +107,7 @@ struct SequenceScreenView: View {
                 detailRow(label: "Timing Dependency", value: timingDependencyText)
                 detailRow(label: "Ready To Proceed", value: readyToProceedText)
                 Divider()
+                detailRow(label: "xLights Runtime", value: xlightsSessionModel.snapshot.runtimeStateReason.isEmpty ? xlightsSessionModel.snapshot.runtimeState : xlightsSessionModel.snapshot.runtimeStateReason)
                 detailRow(label: "Live Sequence Path", value: xlightsSessionModel.snapshot.sequencePath.isEmpty ? "No live sequence open." : xlightsSessionModel.snapshot.sequencePath)
                 detailRow(label: "Project Sequence Path", value: preferredSequencePathText)
                 detailRow(label: "Media File", value: xlightsSessionModel.snapshot.mediaFile.isEmpty ? "(not set)" : xlightsSessionModel.snapshot.mediaFile)
