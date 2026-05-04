@@ -111,4 +111,12 @@ The self-improvement loop can also run manifest-defined render reviews. Add a `r
 
 If a review points at `mediaPath` or `videoPath` and does not provide frame features, the cycle first runs media extraction into `render-review-media/`, then feeds the extracted `frame-features.json`, contact sheet, and ordered frames into the review artifact.
 
+For xLights render output, use the existing FSEQ reconstruction path to create a `preview_scene_window_v1`, then rasterize it into reviewable media:
+
+```bash
+node scripts/designer-training/render-preview-window-media.mjs \
+  --window /path/to/preview-scene-window.json \
+  --out var/tmp/preview-window.mp4
+```
+
 Promotion requires repeated evidence across compatible sections or targets. One attractive render is not enough to promote a generalized training rule.
