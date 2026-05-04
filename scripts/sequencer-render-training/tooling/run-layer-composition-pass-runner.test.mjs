@@ -185,6 +185,8 @@ test("pass runner can attach render review quality evidence to a completed pass"
   assert.equal(summary.renderReviewEligibleQualityMean, 0.9);
   assert.equal(Boolean(summary.renderReviewQualityTrendRef), true);
   assert.equal(summary.renderReviewQualityTrend.evidenceRecordCount, 1);
+  assert.equal(Boolean(summary.renderReviewQualityRecordsRef), true);
+  assert.equal(Number.isFinite(summary.renderReviewQualityRecords.recordCount), true);
   assert.equal(summary.results[0].renderReviewDecision, "accept");
   assert.equal(summary.results[0].renderReviewOverallQuality, 0.9);
   assert.equal(summary.results[0].renderReviewEvidenceEligible, true);
@@ -205,6 +207,7 @@ test("pass runner can attach render review quality evidence to a completed pass"
   const ledger = JSON.parse(fs.readFileSync(path.join(runRoot, "retention-ledger.json"), "utf8"));
   assert.equal(ledger.artifacts.some((row) => row.artifactClass === "render_review"), true);
   assert.equal(ledger.artifacts.some((row) => row.path === summary.renderReviewQualityTrendRef), true);
+  assert.equal(ledger.artifacts.some((row) => row.path === summary.renderReviewQualityRecordsRef), true);
 });
 
 test("pass runner records failure and stops after first failed pass", async () => {
@@ -556,8 +559,18 @@ test("pass runner writes quality trend before adaptive refill is requested", asy
         }));
         return { summary: { evidenceRecordCount: 1, observationRecordCount: 1 } };
       },
+      buildQualityRecords: ({ outPath }) => {
+        fs.writeFileSync(outPath, JSON.stringify({
+          artifactType: "layer_composition_quality_records_v1",
+          recordCount: 0,
+          durableCandidateCount: 0,
+          blockedRecordCount: 0
+        }));
+        return { recordCount: 0, durableCandidateCount: 0, blockedRecordCount: 0 };
+      },
       refillPendingPasses: async ({ runRoot: root }) => {
         refillSawTrend = fs.existsSync(path.join(root, "layer-composition-quality-trend.json"));
+        refillSawTrend = refillSawTrend && fs.existsSync(path.join(root, "layer-composition-quality-records.json"));
         return { status: "no_valid_non_repeated_experiment", appendedCheckpointCount: 0 };
       }
     })

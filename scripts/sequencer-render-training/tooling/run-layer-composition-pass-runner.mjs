@@ -6,6 +6,7 @@ import { runLayerCompositionOwnedPass } from "./run-layer-composition-owned-pass
 import { appendLayerCompositionAdaptiveRefill } from "./build-layer-composition-adaptive-refill.mjs";
 import { buildLayerCompositionDeltas } from "./build-layer-composition-deltas.mjs";
 import { buildLayerCompositionPriors } from "./build-layer-composition-priors.mjs";
+import { buildLayerCompositionQualityRecords } from "./build-layer-composition-quality-records.mjs";
 import { buildLayerCompositionQualityTrend } from "./build-layer-composition-quality-trend.mjs";
 import { buildRenderReviewFromFseq } from "../../designer-training/build-render-review-from-fseq.mjs";
 import {
@@ -608,12 +609,24 @@ export async function runLayerCompositionPasses({
     writeJson(passRunnerSummaryPath, summary);
     if (includeQualityTrend) {
       const qualityTrendPath = path.join(root, "layer-composition-quality-trend.json");
+      const qualityRecordsPath = path.join(root, "layer-composition-quality-records.json");
       const qualityTrend = (deps.buildQualityTrend || buildLayerCompositionQualityTrend)({
         runRoots: [root],
         outPath: qualityTrendPath
       });
+      const qualityRecords = (deps.buildQualityRecords || buildLayerCompositionQualityRecords)({
+        qualityTrend,
+        qualityTrendPath,
+        outPath: qualityRecordsPath
+      });
       summary.renderReviewQualityTrendRef = qualityTrendPath;
       summary.renderReviewQualityTrend = qualityTrend.summary || null;
+      summary.renderReviewQualityRecordsRef = qualityRecordsPath;
+      summary.renderReviewQualityRecords = {
+        recordCount: Number(qualityRecords.recordCount) || 0,
+        durableCandidateCount: Number(qualityRecords.durableCandidateCount) || 0,
+        blockedRecordCount: Number(qualityRecords.blockedRecordCount) || 0
+      };
       writeJson(passRunnerSummaryPath, summary);
       const ledger = fs.existsSync(ledgerPath) ? readJson(ledgerPath) : { artifacts: [] };
       if (!arr(ledger.artifacts).some((row) => str(row.path) === qualityTrendPath)) {
@@ -621,6 +634,17 @@ export async function runLayerCompositionPasses({
           {
             path: qualityTrendPath,
             artifactClass: "metric_summary",
+            summarized: true,
+            retain: true
+          }
+        ]);
+      }
+      const nextLedger = fs.existsSync(ledgerPath) ? readJson(ledgerPath) : { artifacts: [] };
+      if (!arr(nextLedger.artifacts).some((row) => str(row.path) === qualityRecordsPath)) {
+        appendLedgerArtifacts(ledgerPath, [
+          {
+            path: qualityRecordsPath,
+            artifactClass: "prior_bundle",
             summarized: true,
             retain: true
           }

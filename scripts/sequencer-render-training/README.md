@@ -252,6 +252,9 @@ eligible quality evidence across repeated unattended runs.
 Adaptive refill consumes that trend file when present and queues conservative
 `quality_trend_revalidation` passes only for weak, regressing, revised, or
 rejected quality evidence.
+Quality-enabled runs also write `layer-composition-quality-records.json`, which
+keeps one-off evidence blocked and marks repeated stable/improving accepted
+quality evidence as durable candidates.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \
