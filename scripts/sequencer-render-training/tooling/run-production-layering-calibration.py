@@ -80,7 +80,7 @@ def resolve_xlights_binary():
         return candidates[0][1]
     raise RuntimeError(
         f"No debug xLights 2026.06 binary found in DerivedData. Build {XLIGHTS_2026_ROOT} first; "
-        "the installed /Applications/xLights.app does not include the xLightsDesigner owned API."
+        "the current upstream /Applications/xLights.app does not include the xLightsDesigner owned API."
     )
 
 

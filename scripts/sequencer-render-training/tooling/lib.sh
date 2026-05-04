@@ -40,11 +40,6 @@ resolve_xlights_app_path() {
     fi
   fi
 
-  if [[ -d "/Applications/xLights.app" ]]; then
-    printf '%s\n' "/Applications/xLights.app"
-    return 0
-  fi
-
   echo "Unable to resolve xLights app path. Set XLIGHTS_APP_PATH or build ${repo_debug_app}." >&2
   return 1
 }

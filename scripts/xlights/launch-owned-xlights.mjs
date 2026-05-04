@@ -23,6 +23,7 @@ function parseArgs(argv) {
   let bootstrapShowDir = '';
   let apiShowDir = '';
   let appPath = String(process.env.XLIGHTS_APP_PATH || '').trim();
+  let appPathSource = appPath ? 'environment-app-path' : '';
   let waitForApi = true;
   let apiTimeoutMs = 45000;
   let modalPolicy = 'safe';
@@ -55,6 +56,7 @@ function parseArgs(argv) {
         throw new Error('Missing value for --app');
       }
       appPath = path.resolve(argv[index]);
+      appPathSource = 'explicit-app-path';
     } else if (arg === '--no-wait-api') {
       waitForApi = false;
     } else if (arg === '--api-timeout-ms') {
@@ -79,10 +81,20 @@ function parseArgs(argv) {
   if (showDir) {
     passthroughArgs.push('-s', showDir);
   }
-  return { passthroughArgs, showDir, bootstrapShowDir, apiShowDir, appPath, waitForApi, apiTimeoutMs, modalPolicy };
+  return { passthroughArgs, showDir, bootstrapShowDir, apiShowDir, appPath, appPathSource, waitForApi, apiTimeoutMs, modalPolicy };
 }
 
-const { passthroughArgs: args, showDir, bootstrapShowDir, apiShowDir, appPath, waitForApi, apiTimeoutMs, modalPolicy } = parseArgs(process.argv.slice(2));
+const {
+  passthroughArgs: args,
+  showDir,
+  bootstrapShowDir,
+  apiShowDir,
+  appPath,
+  appPathSource,
+  waitForApi,
+  apiTimeoutMs,
+  modalPolicy
+} = parseArgs(process.argv.slice(2));
 if (!appPath) {
   console.error('xLights app path is required. Pass --app <xLights.app> or set XLIGHTS_APP_PATH.');
   process.exit(1);
@@ -449,6 +461,38 @@ async function waitForOwnedApi(processInfo, timeoutMs = 45000) {
   throw error;
 }
 
+async function probeOwnedApiCapabilities(endpoint) {
+  const base = endpoint.replace(/\/health$/, '');
+  const checks = [];
+  const required = async (id, pathAndQuery) => {
+    const url = `${base}${pathAndQuery}`;
+    const response = await requestJson(url, 5000);
+    const ok = response.ok && response.json?.ok !== false;
+    checks.push({ id, url, ok, statusCode: response.statusCode, error: response.error || response.json?.error?.message || '' });
+    if (!ok) {
+      const error = new Error(`xLights runtime is missing required owned API capability: ${id}`);
+      error.details = { endpoint, checks, failed: checks[checks.length - 1], launchEvidence: collectLaunchEvidence() };
+      throw error;
+    }
+    return response.json;
+  };
+
+  const models = await required('layout.getModels', '/layout/models');
+  await required('layout.getSubmodels', '/layout/submodels');
+  await required('media.getCurrent', '/media/current');
+
+  const modelRows = Array.isArray(models?.data?.models) ? models.data.models : [];
+  const firstModelName = modelRows
+    .map((model) => String(model?.name || model?.id || '').trim())
+    .find(Boolean);
+  if (firstModelName) {
+    await required('layout.getModelNodes', `/layout/model-nodes?name=${encodeURIComponent(firstModelName)}`);
+  } else {
+    checks.push({ id: 'layout.getModelNodes', ok: false, skipped: true, reason: 'no layout model available for route probe' });
+  }
+  return { ok: true, checks };
+}
+
 async function switchShowDirectoryAfterReady(endpoint, targetShowDir) {
   if (!targetShowDir) {
     return null;
@@ -473,7 +517,7 @@ if (env.XLIGHTS_DESIGNER_DIAGNOSTIC_LOG) {
 console.log(JSON.stringify({
   target,
   binary,
-  targetSource: process.env.XLIGHTS_APP_PATH ? 'environment-app-path' : 'explicit-app-path',
+  targetSource: appPathSource,
   args,
   bootstrapShowDir,
   apiShowDir,
@@ -512,6 +556,7 @@ const result = { launched: true, pid: processInfo.pid, command: processInfo.comm
 if (waitForApi) {
   try {
     result.ownedApi = await waitForOwnedApi(processInfo, apiTimeoutMs);
+    result.capabilities = await probeOwnedApiCapabilities(result.ownedApi.endpoint);
     result.apiShowDirectorySwitch = await switchShowDirectoryAfterReady(result.ownedApi.endpoint, apiShowDir);
   } catch (error) {
     console.error(JSON.stringify({
