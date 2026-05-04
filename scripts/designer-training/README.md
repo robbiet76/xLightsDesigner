@@ -123,6 +123,8 @@ Add a `render_review_revision_execution` phase after attempt planning to apply p
 
 Add a `render_review_revision_comparison` phase after execution to rebuild render reviews for revised FSEQ outputs and compare them to the original review. The comparison records decision changes, score deltas, metric deltas, regressions, and whether the revised sequence should be retained for the next training iteration.
 
+Use `run-render-review-revision-loop.mjs` to run the same objective, attempt, execution, and comparison chain iteratively until all revised reviews are accepted, a regression is detected, no attempt can be planned, execution fails, or `--max-iterations` is reached.
+
 For xLights render output, use the existing FSEQ reconstruction path to create a `preview_scene_window_v1`, then rasterize it into reviewable media:
 
 ```bash
