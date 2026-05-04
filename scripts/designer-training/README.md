@@ -90,10 +90,18 @@ Live probes are intentionally opt-in. They use the manifest effect list, skip bl
 Build a first-pass section render review from frame/video metrics:
 
 ```bash
+node scripts/designer-training/extract-render-review-media.mjs \
+  --media /path/to/section-review.mp4 \
+  --out-dir var/tmp/render-review-media \
+  --start-ms 0 \
+  --end-ms 8000
+
 node scripts/designer-training/build-render-review-artifact.mjs \
-  --frame-features /path/to/frame-features.json \
+  --frame-features var/tmp/render-review-media/frame-features.json \
   --intent /path/to/section-intent.json \
   --video /path/to/section-review.mp4 \
+  --contact-sheet var/tmp/render-review-media/contact-sheet.jpg \
+  --frame-dir var/tmp/render-review-media/frames \
   --out var/tmp/render-review.json
 ```
 
