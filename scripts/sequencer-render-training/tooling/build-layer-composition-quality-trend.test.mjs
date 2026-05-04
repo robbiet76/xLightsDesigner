@@ -42,6 +42,16 @@ function writeRun(root, { runId, quality = 0.8, eligible = true, generatedAt = "
     intent: {
       effectName: eligible ? "Bars" : "",
       musicRole: { energy: "build" },
+      creativeObjective: {
+        mood: "warm_build",
+        pace: "slow_build",
+        emphasis: "late_section_accent",
+        style: "smooth_wash",
+        negativeSpace: "preserve_opening_space",
+        dimensions: ["mood", "pace", "emphasis", "style", "negative_space"],
+        reviewMethods: ["deterministic_metrics"]
+      },
+      paletteIntent: { palette: "mono_white" },
       targetHierarchy: eligible ? { leadTargets: ["Arches"] } : {},
       renderPlan: eligible
         ? { plannedEffectCount: 1, plannedTargetCount: 1 }
@@ -65,6 +75,10 @@ function writeRun(root, { runId, quality = 0.8, eligible = true, generatedAt = "
       temporalBrightnessDeltaMean: 0.02,
       temporalActiveDeltaMean: 0.02,
       blankRisk: 0
+    },
+    evidence: {
+      videoPath: path.join(root, "preview-window.mp4"),
+      frameDirectory: path.join(root, "frames")
     },
     critique: { decision: "accept" },
     evidenceQualification: eligible
@@ -119,6 +133,11 @@ test("quality trend summarizes a single run as a baseline", () => {
   assert.equal(artifact.groups[0].musicQualityDimensions.includes("energy_progression"), true);
   assert.equal(artifact.groups[0].musicQualityDimensions.includes("timing_alignment"), true);
   assert.equal(artifact.groups[0].musicQualityDimensions.includes("repetition_with_variation"), true);
+  assert.equal(artifact.groups[0].intentDimensions.includes("mood"), true);
+  assert.equal(artifact.groups[0].intentDimensions.includes("palette"), true);
+  assert.equal(artifact.groups[0].intentDimensions.includes("negative_space"), true);
+  assert.equal(artifact.groups[0].reviewMethods.includes("deterministic_metrics"), true);
+  assert.equal(artifact.groups[0].reviewMethods.includes("vision_review"), true);
 });
 
 test("quality trend compares matching quality evidence across runs", () => {

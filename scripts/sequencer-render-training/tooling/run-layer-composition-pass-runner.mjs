@@ -38,6 +38,31 @@ function unique(values = []) {
   return [...new Set(arr(values).map(str).filter(Boolean))];
 }
 
+function obj(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function creativeIntentFromEffects(effects = []) {
+  const intents = arr(effects).map((effect) => obj(effect?.metadata?.layerIntent?.creativeIntent)).filter((intent) => Object.keys(intent).length);
+  const dimensions = unique(intents.flatMap((intent) => arr(intent.dimensions)));
+  const reviewMethods = unique(intents.flatMap((intent) => arr(intent.reviewMethods)));
+  const firstValue = (key) => str(intents.find((intent) => str(intent[key]))?.[key]);
+  return {
+    creativeObjective: {
+      mood: firstValue("mood"),
+      pace: firstValue("pace"),
+      emphasis: firstValue("emphasis"),
+      style: firstValue("style"),
+      negativeSpace: firstValue("negativeSpace"),
+      dimensions,
+      reviewMethods
+    },
+    paletteIntent: {
+      palette: firstValue("palette")
+    }
+  };
+}
+
 function average(values = []) {
   const rows = arr(values).map((value) => Number(value)).filter(Number.isFinite);
   return rows.length ? rows.reduce((sum, value) => sum + value, 0) / rows.length : 0;
@@ -221,6 +246,7 @@ function buildRenderReviewQuality({
   const effectNames = unique(effects.map((effect) => effect?.effectName));
   const targets = unique(effects.map((effect) => effect?.element));
   const sectionId = str(passExecution.passId || "layer-composition-pass");
+  const creativeIntent = creativeIntentFromEffects(effects);
   const run = buildFseqReview({
     geometryPath,
     fseqPath,
@@ -240,6 +266,8 @@ function buildRenderReviewQuality({
         effectNames,
         targets
       },
+      creativeObjective: creativeIntent.creativeObjective,
+      paletteIntent: creativeIntent.paletteIntent,
       section: {
         id: sectionId,
         label: sectionId,

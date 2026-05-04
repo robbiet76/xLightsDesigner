@@ -98,6 +98,8 @@ function buildRecord(group = {}, options = {}) {
     qualityDimensions: arr(group.qualityDimensions).map(str).filter(Boolean),
     timingSources: arr(group.timingSources).map(str).filter(Boolean),
     musicQualityDimensions: arr(group.musicQualityDimensions).map(str).filter(Boolean),
+    intentDimensions: arr(group.intentDimensions).map(str).filter(Boolean),
+    reviewMethods: arr(group.reviewMethods).map(str).filter(Boolean),
     effectName: str(group.effectName),
     leadTargets: arr(group.leadTargets).map(str).filter(Boolean),
     sampleCount: num(group.sampleCount),

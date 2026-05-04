@@ -180,6 +180,8 @@ function recordMatchesGoal(record = {}, goal = {}) {
   const reviewScopes = coverageList(coverage, "reviewScopes");
   const qualityDimensions = coverageList(coverage, "qualityDimensions");
   const timingSources = coverageList(coverage, "timingSources");
+  const intentDimensions = coverageList(coverage, "intentDimensions");
+  const reviewMethods = coverageList(coverage, "reviewMethods");
   const hasStructuredCoverage = families.length
     || paletteProfiles.length
     || effects.length
@@ -187,13 +189,22 @@ function recordMatchesGoal(record = {}, goal = {}) {
     || modelTypes.length
     || reviewScopes.length
     || qualityDimensions.length
-    || timingSources.length;
+    || timingSources.length
+    || intentDimensions.length
+    || reviewMethods.length;
   if (!hasStructuredCoverage) return false;
   const experimentId = str(record.experimentId);
 
   const normalizedFamily = normalizedToken(record.family)
     || experimentId.split("-").slice(0, -1).join("_").replaceAll("-", "_");
   const normalizedExperiment = normalizedToken(experimentId);
+  const recordIntentDimensions = normalizedValues(record.intentDimensions);
+  const recordReviewMethods = normalizedValues(record.reviewMethods);
+  if ((normalizedFamily.includes("creative_intent") || recordIntentDimensions.length)
+    && !intentDimensions.length
+    && !reviewMethods.length) {
+    return false;
+  }
   const familyMatch = !families.length || families.some((family) => normalizedExperiment.includes(family) || normalizedFamily.includes(family));
   const paletteMatch = !paletteProfiles.length || paletteProfiles.some((palette) => normalizedExperiment.includes(palette));
   const effectMatch = !effects.length || effects.includes(normalizedToken(record.effectName));
@@ -202,7 +213,18 @@ function recordMatchesGoal(record = {}, goal = {}) {
   const reviewScopeMatch = matchesCoverage(record.reviewScopes, reviewScopes);
   const qualityDimensionMatch = matchesCoverage([...arr(record.qualityDimensions), ...arr(record.musicQualityDimensions)], qualityDimensions);
   const timingSourceMatch = matchesCoverage(record.timingSources, timingSources);
-  return familyMatch && paletteMatch && effectMatch && targetScopeMatch && modelTypeMatch && reviewScopeMatch && qualityDimensionMatch && timingSourceMatch;
+  const intentDimensionMatch = matchesCoverage(record.intentDimensions, intentDimensions);
+  const reviewMethodMatch = matchesCoverage(record.reviewMethods, reviewMethods);
+  return familyMatch
+    && paletteMatch
+    && effectMatch
+    && targetScopeMatch
+    && modelTypeMatch
+    && reviewScopeMatch
+    && qualityDimensionMatch
+    && timingSourceMatch
+    && intentDimensionMatch
+    && reviewMethodMatch;
 }
 
 function isPromisingBlockedRecord(record = {}, goal = {}, policy = {}) {
@@ -210,7 +232,9 @@ function isPromisingBlockedRecord(record = {}, goal = {}, policy = {}) {
   const repeatableCoverage = coverageList(coverage, "families").length
     || coverageList(coverage, "effects").length
     || coverageList(coverage, "targetScopes").length
-    || coverageList(coverage, "modelTypes").length;
+    || coverageList(coverage, "modelTypes").length
+    || coverageList(coverage, "intentDimensions").length
+    || coverageList(coverage, "reviewMethods").length;
   if (!repeatableCoverage) return false;
   const blockers = arr(record?.promotion?.blockers).map(str).filter(Boolean);
   if (!blockers.length) return false;

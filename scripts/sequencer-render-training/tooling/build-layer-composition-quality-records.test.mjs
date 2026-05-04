@@ -25,6 +25,8 @@ function trendGroup(overrides = {}) {
     qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"],
     timingSources: ["section"],
     musicQualityDimensions: ["energy_progression", "timing_alignment", "repetition_with_variation"],
+    intentDimensions: ["mood", "palette", "pace", "emphasis", "style", "negative_space"],
+    reviewMethods: ["deterministic_metrics", "vision_review"],
     effectName: "Bars",
     leadTargets: ["Arches"],
     sampleCount: 2,
@@ -86,6 +88,8 @@ test("quality records promote repeated accepted stable or improving evidence", (
   assert.deepEqual(record.qualityDimensions, ["coverage_balance", "motion_coherence", "palette_readability"]);
   assert.deepEqual(record.timingSources, ["section"]);
   assert.deepEqual(record.musicQualityDimensions, ["energy_progression", "timing_alignment", "repetition_with_variation"]);
+  assert.deepEqual(record.intentDimensions, ["mood", "palette", "pace", "emphasis", "style", "negative_space"]);
+  assert.deepEqual(record.reviewMethods, ["deterministic_metrics", "vision_review"]);
   assert.equal(record.quality.meanOverallQuality, 0.84);
   assert.equal(record.observedMetrics.meanActiveTargetNodeRatioPeak, 0.45);
   assert.equal(record.evidence.samples.length, 2);

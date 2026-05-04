@@ -103,6 +103,8 @@ test("layer composition training plan includes group/model and same-target layer
   assert.equal(experimentIds.includes("same-target-layer-stack-rgb_primary"), true);
   assert.equal(experimentIds.includes("submodel-structure-vendor_basic-mono_white"), true);
   assert.equal(experimentIds.includes("submodel-structure-vendor_basic-rgb_primary"), true);
+  assert.equal(experimentIds.includes("creative-intent-probe-mono_white"), true);
+  assert.equal(experimentIds.includes("creative-intent-probe-rgb_primary"), true);
   assert.equal(experimentIds.includes("setting-sensitivity-edge-probe-mono_white"), true);
   assert.equal(experimentIds.includes("setting-sensitivity-edge-probe-rgb_primary"), true);
   assert.equal(experimentIds.includes("setting-attribution-probe-mono_white"), true);
@@ -220,6 +222,45 @@ test("layer composition training plan includes group/model and same-target layer
   );
   assert.equal(plan.curriculum.strategy, "broad_to_specific");
   assert.equal(plan.curriculum.activeStage, "broad_composition_survey");
+});
+
+test("layer composition plan expands creative intent coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-creative-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 8,
+      controllerDecision: {
+        selectedGoalId: "creative.intent_match.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:creative.intent_match.v1:coverage-gap",
+        goalId: "creative.intent_match.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 2);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["creative-intent-probe-mono_white"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "mood_palette_pace", "emphasis_negative_space"]
+  );
+  const intents = plan.experiments[0].passes
+    .flatMap((pass) => pass.placements)
+    .map((placement) => placement.layerIntent?.creativeIntent)
+    .filter(Boolean);
+  assert.equal(intents.some((intent) => intent.dimensions.includes("mood") && intent.dimensions.includes("palette")), true);
+  assert.equal(intents.some((intent) => intent.dimensions.includes("emphasis") && intent.dimensions.includes("negative_space")), true);
 });
 
 test("layer composition smoke run remains explicitly marked as validation only", () => {

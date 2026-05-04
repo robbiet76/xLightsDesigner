@@ -547,6 +547,79 @@ test("controller resolves creative prerequisite blocker from display and music e
   assert.equal(state.controllerDecision.selectionReason, "coverage_gap");
 });
 
+test("controller counts durable creative intent records for creative goals", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("emphasis_negative_space", 0.84, []),
+    experimentId: "creative-intent-probe-mono_white",
+    sampleCount: 2,
+    trendStatus: "stable",
+    intentDimensions: ["mood", "palette", "pace", "emphasis", "style", "negative_space"],
+    reviewMethods: ["deterministic_metrics", "vision_review"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "creative.intent_match.v1",
+        areaId: "creative_intent_matching",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          intentDimensions: ["mood", "palette", "negative_space"],
+          reviewMethods: ["deterministic_metrics"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 1);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
+});
+
+test("controller keeps blocked creative intent records out of effect-fit queues", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("mood_palette_pace", 0.85),
+    experimentId: "creative-intent-probe-mono_white",
+    sampleCount: 1,
+    trendStatus: "single_run_baseline",
+    intentDimensions: ["mood", "palette", "pace"],
+    reviewMethods: ["deterministic_metrics"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "effect_fit.core_effects.v1",
+        areaId: "effect_behavior",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          effects: ["Color Wash"]
+        }
+      }, {
+        goalId: "creative.intent_match.v1",
+        areaId: "creative_intent_matching",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          intentDimensions: ["mood", "palette"],
+          reviewMethods: ["deterministic_metrics"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "creative.intent_match.v1");
+  assert.equal(state.nextQueue[0].reason, "repeat_blocked_promising_record");
+  assert.equal(state.nextQueue[0].experimentId, "creative-intent-probe-mono_white");
+});
+
 test("controller advances past goals with durable evidence and no repeat queue", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [

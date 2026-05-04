@@ -741,6 +741,88 @@ function makeSubmodelStructureExperiment({ paletteProfile, target }) {
   };
 }
 
+function makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHorizontal }) {
+  const moodPalettePace = placement({
+    id: `ci-${paletteProfile}-mood-palette-pace`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "foundation",
+    layerIndex: 0,
+    startMs: 1000,
+    endMs: 5000,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "foundation",
+      creativeIntent: {
+        mood: "warm_build",
+        palette: paletteProfile === "rgb_primary" ? "rgb_primary" : "mono_white",
+        pace: "slow_build",
+        style: "smooth_wash",
+        dimensions: ["mood", "palette", "pace", "style"],
+        reviewMethods: ["deterministic_metrics"]
+      }
+    }
+  });
+  const emphasisAccent = placement({
+    id: `ci-${paletteProfile}-emphasis-accent`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "detail",
+    layerIndex: 1,
+    startMs: 3000,
+    endMs: 5000,
+    effectSettings: { effect: "Chase", cycles: 2, colorSpeed: 5 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "accent",
+      creativeIntent: {
+        emphasis: "late_section_accent",
+        negativeSpace: "preserve_opening_space",
+        pace: "accent_lift",
+        style: "linear_chase",
+        dimensions: ["emphasis", "negative_space", "pace", "style"],
+        reviewMethods: ["deterministic_metrics"]
+      }
+    }
+  });
+
+  return {
+    experimentId: `creative-intent-probe-${paletteProfile}`,
+    family: "creative_intent_probe",
+    paletteProfile,
+    curriculumStage: "sequence_pattern_validation",
+    layeringTaxonomy: ["creative_intent_match", "section_energy_shape", "negative_space"],
+    targetSets: [
+      { scope: "model", targets: [star, singleLineHorizontal] }
+    ],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [star.modelName, singleLineHorizontal.modelName]
+      },
+      {
+        passId: "mood_palette_pace",
+        compositionPass: "foundation",
+        placements: [moodPalettePace],
+        displayElementOrder: [star.modelName, singleLineHorizontal.modelName]
+      },
+      {
+        passId: "emphasis_negative_space",
+        compositionPass: "detail",
+        placements: [moodPalettePace, emphasisAccent],
+        displayElementOrder: [star.modelName, singleLineHorizontal.modelName],
+        comparisonBasePassId: "mood_palette_pace",
+        changeType: "creative_intent_dimension_added"
+      }
+    ]
+  };
+}
+
 function makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target }) {
   const foundation = placementFromSample({
     id: `ss-${paletteProfile}-foundation`,
@@ -1430,6 +1512,16 @@ function runtimeSelectionForExperiment(experiment, runType) {
       reason: "Covers model, submodel, and sibling submodel targeting through the same composition/evidence loop."
     };
   }
+  if (experiment.family === "creative_intent_probe") {
+    return {
+      ...common,
+      tier: "creative_intent_probe",
+      queueRank: 55,
+      budgetWeight: 1,
+      selectionRole: "creative_intent_dimension_baseline",
+      reason: "Measures deterministic mood, palette, pace, emphasis, style, and negative-space intent signals."
+    };
+  }
   if (experiment.family === "setting_sensitivity_edge_probe") {
     return {
       ...common,
@@ -1540,6 +1632,22 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
           {
             experimentId: `submodel-structure-vendor_basic-${paletteProfile}`,
             passId: "sibling_submodels_split",
+            generatedFromCoverageGap: goalId
+          }
+        );
+      }
+    }
+    if (goalId === "creative.intent_match.v1") {
+      for (const paletteProfile of ["mono_white"]) {
+        rows.push(
+          {
+            experimentId: `creative-intent-probe-${paletteProfile}`,
+            passId: "mood_palette_pace",
+            generatedFromCoverageGap: goalId
+          },
+          {
+            experimentId: `creative-intent-probe-${paletteProfile}`,
+            passId: "emphasis_negative_space",
             generatedFromCoverageGap: goalId
           }
         );
@@ -1680,6 +1788,7 @@ export function buildLayerCompositionTrainingPlan({
     makeGroupModelExperiment({ paletteProfile, archGroup, archSingle, spinner }),
     makeSameTargetLayerExperiment({ paletteProfile, star }),
     makeSubmodelStructureExperiment({ paletteProfile, target: vendorBasicSubmodel }),
+    makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHorizontal }),
     makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target: archGroup }),
     makeSettingAttributionProbeExperiment({ paletteProfile, target: singleLineHorizontal }),
     makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target: archSingle }),
@@ -1721,6 +1830,7 @@ export function buildLayerCompositionTrainingPlan({
       "group_model_interplay",
       "same_target_layer_stack",
       "submodel_structure",
+      "creative_intent_probe",
       "setting_sensitivity_edge_probe",
       "setting_attribution_probe",
       "low_movement_setting_geometry_probe"

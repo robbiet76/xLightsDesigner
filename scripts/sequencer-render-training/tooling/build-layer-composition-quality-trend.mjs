@@ -142,6 +142,27 @@ function musicQualityDimensionsForReview(review = {}) {
   return [...dimensions];
 }
 
+function intentDimensionsForReview(review = {}) {
+  const objective = review.intent?.creativeObjective || {};
+  const paletteIntent = review.intent?.paletteIntent || {};
+  const dimensions = new Set(arr(objective.dimensions).map(str).filter(Boolean));
+  if (str(objective.mood)) dimensions.add("mood");
+  if (str(paletteIntent.palette) || str(objective.palette)) dimensions.add("palette");
+  if (str(objective.pace)) dimensions.add("pace");
+  if (str(objective.emphasis)) dimensions.add("emphasis");
+  if (str(objective.style)) dimensions.add("style");
+  if (str(objective.negativeSpace)) dimensions.add("negative_space");
+  return [...dimensions];
+}
+
+function reviewMethodsForReview(review = {}) {
+  const objective = review.intent?.creativeObjective || {};
+  const methods = new Set(arr(objective.reviewMethods).map(str).filter(Boolean));
+  if (review.deterministicMetrics || review.qualityScores) methods.add("deterministic_metrics");
+  if (review.evidence?.videoPath || review.evidence?.frameDirectory) methods.add("vision_review");
+  return [...methods];
+}
+
 function loadRunRecords(runRoot = "", runIndex = 0) {
   const root = resolvePath(runRoot);
   const summaryPath = path.join(root, "pass-runner-summary.json");
@@ -175,6 +196,8 @@ function loadRunRecords(runRoot = "", runIndex = 0) {
         qualityDimensions: qualityDimensionsForReview(review),
         timingSources: timingSourcesForReview(review),
         musicQualityDimensions: musicQualityDimensionsForReview(review),
+        intentDimensions: intentDimensionsForReview(review),
+        reviewMethods: reviewMethodsForReview(review),
         decision: str(result.renderReviewDecision || quality.decision || review.critique?.decision),
         measurementStatus: str(result.renderReviewMeasurementStatus || quality.measurementStatus || qualification.status),
         evidenceEligible,
@@ -234,6 +257,8 @@ function groupEvidence(records = []) {
       qualityDimensions: arr(latest.qualityDimensions),
       timingSources: arr(latest.timingSources),
       musicQualityDimensions: arr(latest.musicQualityDimensions),
+      intentDimensions: arr(latest.intentDimensions),
+      reviewMethods: arr(latest.reviewMethods),
       effectName: str(latest.effectName),
       leadTargets: arr(latest.leadTargets),
       sampleCount: sortedRows.length,
