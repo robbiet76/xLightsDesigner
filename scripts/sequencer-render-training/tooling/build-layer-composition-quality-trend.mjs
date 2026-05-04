@@ -81,7 +81,16 @@ function passMetadata(plan = {}, experimentId = "", passId = "") {
   };
 }
 
-function reviewScopesForQuality(quality = {}) {
+function isDisplayQualityReview(metadata = {}) {
+  return str(metadata.family) === "display_quality_review";
+}
+
+function isMusicQualityReview(metadata = {}) {
+  return str(metadata.family) === "music_structure_review";
+}
+
+function reviewScopesForQuality(quality = {}, metadata = {}) {
+  if (!isDisplayQualityReview(metadata)) return [];
   const scopes = new Set();
   if (str(quality.previewMediaRef)) scopes.add("section_video");
   if (str(quality.passWindow?.label) || quality.passWindow) scopes.add("whole_sequence_window");
@@ -89,7 +98,8 @@ function reviewScopesForQuality(quality = {}) {
   return [...scopes];
 }
 
-function qualityDimensionsForReview(review = {}) {
+function qualityDimensionsForReview(review = {}, metadata = {}) {
+  if (!isDisplayQualityReview(metadata)) return [];
   const scores = review.qualityScores || {};
   const metrics = review.deterministicMetrics || {};
   const dimensions = new Set();
@@ -111,7 +121,8 @@ function qualityDimensionsForReview(review = {}) {
   return [...dimensions];
 }
 
-function timingSourcesForReview(review = {}) {
+function timingSourcesForReview(review = {}, metadata = {}) {
+  if (!isMusicQualityReview(metadata)) return [];
   const sources = new Set();
   const section = review.section || {};
   const musicRole = review.intent?.musicRole || {};
@@ -124,10 +135,11 @@ function timingSourcesForReview(review = {}) {
   return [...sources];
 }
 
-function musicQualityDimensionsForReview(review = {}) {
+function musicQualityDimensionsForReview(review = {}, metadata = {}) {
+  if (!isMusicQualityReview(metadata)) return [];
   const scores = review.qualityScores || {};
   const metrics = review.deterministicMetrics || {};
-  const timingSources = timingSourcesForReview(review);
+  const timingSources = timingSourcesForReview(review, metadata);
   const dimensions = new Set();
   if (Number.isFinite(num(scores.musicalFit, NaN)) || Number.isFinite(num(metrics.temporalMotionMean, NaN))) {
     dimensions.add("energy_progression");
@@ -192,10 +204,10 @@ function loadRunRecords(runRoot = "", runIndex = 0) {
         modelTypes: metadata.modelTypes,
         geometryProfiles: metadata.geometryProfiles,
         changeType: metadata.changeType,
-        reviewScopes: reviewScopesForQuality(quality),
-        qualityDimensions: qualityDimensionsForReview(review),
-        timingSources: timingSourcesForReview(review),
-        musicQualityDimensions: musicQualityDimensionsForReview(review),
+        reviewScopes: reviewScopesForQuality(quality, metadata),
+        qualityDimensions: qualityDimensionsForReview(review, metadata),
+        timingSources: timingSourcesForReview(review, metadata),
+        musicQualityDimensions: musicQualityDimensionsForReview(review, metadata),
         intentDimensions: intentDimensionsForReview(review),
         reviewMethods: reviewMethodsForReview(review),
         decision: str(result.renderReviewDecision || quality.decision || review.critique?.decision),

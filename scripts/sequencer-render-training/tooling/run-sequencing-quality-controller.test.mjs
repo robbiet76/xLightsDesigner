@@ -303,13 +303,15 @@ test("controller counts durable structured submodel records for submodel goals",
 
   assert.equal(state.goalStatuses[0].durableCandidateCount, 1);
   assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
-  assert.equal(state.nextQueue[0].reason, "coverage_gap");
+  assert.equal(state.controllerDecision.nextAction, "idle");
 });
 
 test("controller counts durable display review records for display-level goals", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
     ...record("sibling_submodels_split", 0.86, []),
+    experimentId: "display-quality-review-mono_white",
+    family: "display_quality_review",
     sampleCount: 2,
     trendStatus: "stable",
     reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
@@ -325,9 +327,10 @@ test("controller counts durable display review records for display-level goals",
         priority: 1,
         status: "not_started",
         requiredStableSamples: 2,
-        coverage: {
-          reviewScopes: ["whole_sequence_window"],
-          qualityDimensions: ["motion_coherence", "palette_readability"]
+      coverage: {
+        families: ["display_quality_review"],
+        reviewScopes: ["whole_sequence_window"],
+        qualityDimensions: ["motion_coherence", "palette_readability"]
         }
       }]
     },
@@ -357,6 +360,7 @@ test("controller does not repeat arbitrary blocked effect records for display-on
         status: "not_started",
         requiredStableSamples: 2,
         coverage: {
+          families: ["display_quality_review"],
           reviewScopes: ["whole_sequence_window"],
           qualityDimensions: ["motion_coherence"]
         }
@@ -425,14 +429,6 @@ test("controller does not advance past explicitly blocked curriculum goals", () 
           timingSources: ["section"],
           qualityDimensions: ["energy_progression"]
         }
-      }, {
-        goalId: "creative.intent_match.v1",
-        areaId: "creative_intent_matching",
-        priority: 2,
-        status: "not_started",
-        coverage: {
-          reviewScopes: ["whole_sequence_window"]
-        }
       }]
     },
     latestRunRoot: runRoot
@@ -442,6 +438,44 @@ test("controller does not advance past explicitly blocked curriculum goals", () 
   assert.equal(state.controllerDecision.nextAction, "resolve_blocker");
   assert.deepEqual(state.controllerDecision.blockedBy, ["needs broader full-sequence review loop"]);
   assert.equal(state.nextQueue[0].blockedBy[0], "needs broader full-sequence review loop");
+});
+
+test("controller plans earlier unblocked coverage before later blocked goals", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+  writeFullSequenceReview(runRoot);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["display_quality_review"],
+          reviewScopes: ["whole_sequence_window"],
+          qualityDimensions: ["motion_coherence"]
+        }
+      }, {
+        goalId: "creative.intent_match.v1",
+        areaId: "creative_intent_matching",
+        priority: 2,
+        status: "not_started",
+        blockedBy: ["needs display-level and musical-structure evidence first"],
+        coverage: {
+          intentDimensions: ["mood"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.full_sequence.quality_v1");
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
 });
 
 test("controller resolves full-sequence loop blocker when review loop artifact is ready", () => {
@@ -490,6 +524,8 @@ test("controller resolves creative prerequisite blocker from display and music e
   writeRunRoot(runRoot, [
     {
       ...record("display_review", 0.86, []),
+      experimentId: "display-quality-review-mono_white",
+      family: "display_quality_review",
       sampleCount: 2,
       trendStatus: "stable",
       reviewScopes: ["whole_sequence_window"],
@@ -514,6 +550,7 @@ test("controller resolves creative prerequisite blocker from display and music e
         priority: 1,
         status: "not_started",
         coverage: {
+          families: ["display_quality_review"],
           reviewScopes: ["whole_sequence_window"],
           qualityDimensions: ["motion_coherence"]
         }

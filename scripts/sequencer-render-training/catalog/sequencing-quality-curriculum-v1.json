@@ -330,6 +330,9 @@
       "description": "Evaluate generated section and whole-sequence output for display-level quality rather than isolated effect success.",
       "requiredStableSamples": 2,
       "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
         "reviewScopes": [
           "section_video",
           "whole_sequence_window",
@@ -342,6 +345,10 @@
           "palette_readability",
           "regional_variety"
         ]
+      },
+      "completionCriteria": {
+        "minimumDurableCandidateCount": 2,
+        "maximumRegressingRecords": 0
       }
     },
     {

@@ -107,6 +107,8 @@ test("layer composition training plan includes group/model and same-target layer
   assert.equal(experimentIds.includes("creative-intent-probe-rgb_primary"), true);
   assert.equal(experimentIds.includes("core-effect-fit-mono_white"), true);
   assert.equal(experimentIds.includes("core-effect-fit-rgb_primary"), true);
+  assert.equal(experimentIds.includes("display-quality-review-mono_white"), true);
+  assert.equal(experimentIds.includes("display-quality-review-rgb_primary"), true);
   assert.equal(experimentIds.includes("setting-sensitivity-edge-probe-mono_white"), true);
   assert.equal(experimentIds.includes("setting-sensitivity-edge-probe-rgb_primary"), true);
   assert.equal(experimentIds.includes("setting-attribution-probe-mono_white"), true);
@@ -339,6 +341,45 @@ test("layer composition plan expands missing core effect coverage units", () => 
   assert.deepEqual(
     plan.experiments[0].passes.flatMap((pass) => pass.placements).map((placement) => placement.effectName),
     ["Marquee", "Pinwheel"]
+  );
+});
+
+test("layer composition plan expands display quality coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-display-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 12,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:coverage-gap",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 2);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-mono_white"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety"]
+  );
+  assert.equal(
+    plan.experiments[0].passes
+      .find((pass) => pass.passId === "display_motion_variety")
+      .placements.length,
+    5
   );
 });
 

@@ -119,6 +119,7 @@ export const RUNTIME_SELECTION_TIERS = [
   "broad_layer_composition",
   "group_model_ordering",
   "core_effect_fit",
+  "display_quality_review",
   "interaction_deepening",
   "deferred_low_yield_retest"
 ];
@@ -993,6 +994,108 @@ function makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, arc
   };
 }
 
+function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }) {
+  const archFoundation = placement({
+    id: `dq-${paletteProfile}-arch-foundation`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { direction: "left", cycles: 2 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "foundation", displayReviewRole: "foreground_background_base" }
+  });
+  const starFocus = placement({
+    id: `dq-${paletteProfile}-star-focus`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 1000,
+    endMs: 5000,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "focus", displayReviewRole: "central_readability_anchor" }
+  });
+  const lineAccent = placement({
+    id: `dq-${paletteProfile}-line-accent`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "Marquee",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 2500,
+    endMs: 6000,
+    effectSettings: { bandSize: 4, skipSize: 3, speed: 6 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "accent", displayReviewRole: "regional_motion_contrast" }
+  });
+  const spinnerMotion = placement({
+    id: `dq-${paletteProfile}-spinner-motion`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 1500,
+    endMs: 5500,
+    effectSettings: { arms: 4, twists: 1, rotation: 20 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "regional_motion", displayReviewRole: "motion_coherence_probe" }
+  });
+  const treeTexture = placement({
+    id: `dq-${paletteProfile}-tree-texture`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Fire",
+    compositionPass: "display_review",
+    layerIndex: 4,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { height: 50, hueShift: 0, growthCycles: 2 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "background_texture", displayReviewRole: "regional_variety_probe" }
+  });
+
+  return {
+    experimentId: `display-quality-review-${paletteProfile}`,
+    family: "display_quality_review",
+    paletteProfile,
+    curriculumStage: "sequence_pattern_validation",
+    layeringTaxonomy: ["display_level_quality", "whole_display_balance", "regional_variety"],
+    targetSets: [
+      { scope: "group", targets: [archGroup] },
+      { scope: "model", targets: [star, singleLineHorizontal, spinner, treeFlat] }
+    ],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName]
+      },
+      {
+        passId: "display_balance_foundation",
+        compositionPass: "display_review",
+        placements: [archFoundation, starFocus, lineAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName]
+      },
+      {
+        passId: "display_motion_variety",
+        compositionPass: "display_review",
+        placements: [archFoundation, starFocus, lineAccent, spinnerMotion, treeTexture],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_balance_foundation",
+        changeType: "display_level_regional_variety_added"
+      }
+    ]
+  };
+}
+
 function makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target }) {
   const foundation = placementFromSample({
     id: `ss-${paletteProfile}-foundation`,
@@ -1702,6 +1805,16 @@ function runtimeSelectionForExperiment(experiment, runType) {
       reason: "Starts core-effect fit with single-effect probes across line, group, and radial targets."
     };
   }
+  if (experiment.family === "display_quality_review") {
+    return {
+      ...common,
+      tier: "display_quality_review",
+      queueRank: 58,
+      budgetWeight: 1,
+      selectionRole: "whole_display_quality_baseline",
+      reason: "Measures whole-display balance, regional variety, foreground/background separation, and motion coherence with dedicated review passes."
+    };
+  }
   if (experiment.family === "setting_sensitivity_edge_probe") {
     return {
       ...common,
@@ -1864,6 +1977,22 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         }
       }
     }
+    if (goalId === "display.full_sequence.quality_v1") {
+      for (const paletteProfile of ["mono_white"]) {
+        rows.push(
+          {
+            experimentId: `display-quality-review-${paletteProfile}`,
+            passId: "display_balance_foundation",
+            generatedFromCoverageGap: goalId
+          },
+          {
+            experimentId: `display-quality-review-${paletteProfile}`,
+            passId: "display_motion_variety",
+            generatedFromCoverageGap: goalId
+          }
+        );
+      }
+    }
   }
   const available = new Set(arr(experiments).flatMap((experiment) => arr(experiment.passes)
     .map((pass) => queueKey({ experimentId: experiment.experimentId, passId: pass.passId }))));
@@ -2001,6 +2130,7 @@ export function buildLayerCompositionTrainingPlan({
     makeSubmodelStructureExperiment({ paletteProfile, target: vendorBasicSubmodel }),
     makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHorizontal }),
     makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
+    makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
     makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target: archGroup }),
     makeSettingAttributionProbeExperiment({ paletteProfile, target: singleLineHorizontal }),
     makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target: archSingle }),
@@ -2044,6 +2174,7 @@ export function buildLayerCompositionTrainingPlan({
       "submodel_structure",
       "creative_intent_probe",
       "core_effect_fit",
+      "display_quality_review",
       "setting_sensitivity_edge_probe",
       "setting_attribution_probe",
       "low_movement_setting_geometry_probe"

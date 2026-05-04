@@ -505,7 +505,9 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     };
   }
 
-  for (const goal of goals) {
+  const unblockedGoals = goals.filter((goal) => !goalBlockers(goal, artifacts, curriculum).length);
+
+  for (const goal of unblockedGoals) {
     const queue = queueFromBlockedRecords({ records, goal, policy, maxQueue });
     if (queue.length) {
       return {
@@ -519,6 +521,31 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
         }
       };
     }
+  }
+
+  const nextGoal = unblockedGoals.find((goal) => missingDesiredCoverageUnits(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || unblockedGoals.find((goal) => !recordsForGoal(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || unblockedGoals.find((goal) => !durableRecordCountForGoal(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || null;
+  if (nextGoal) {
+    const missingCoverageUnits = missingDesiredCoverageUnits(records, nextGoal);
+    return {
+      selectedGoal: nextGoal,
+      nextQueue: [{
+        queueId: `quality-controller:${str(nextGoal.goalId) || "none"}:coverage-gap`,
+        goalId: str(nextGoal.goalId),
+        priority: 1,
+        reason: "coverage_gap",
+        missingCoverageUnits,
+        selectionHint: arr(nextGoal.nextSelectionHints)[0] || "create the first bounded coverage run for this curriculum goal"
+      }],
+      decision: {
+        selectedGoalId: str(nextGoal?.goalId),
+        selectionReason: "coverage_gap",
+        blockedBy: [],
+        nextAction: "plan_goal_coverage"
+      }
+    };
   }
 
   const blockedGoal = goals.find((goal) => goalBlockers(goal, artifacts, curriculum).length);
@@ -543,26 +570,14 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     };
   }
 
-  const nextGoal = goals.find((goal) => !recordsForGoal(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
-    || goals.find((goal) => !durableRecordCountForGoal(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
-    || goals[0]
-    || null;
-  const missingCoverageUnits = nextGoal ? missingDesiredCoverageUnits(records, nextGoal) : [];
   return {
-    selectedGoal: nextGoal,
-    nextQueue: nextGoal ? [{
-      queueId: `quality-controller:${str(nextGoal.goalId) || "none"}:coverage-gap`,
-      goalId: str(nextGoal.goalId),
-      priority: 1,
-      reason: "coverage_gap",
-      missingCoverageUnits,
-      selectionHint: arr(nextGoal.nextSelectionHints)[0] || "create the first bounded coverage run for this curriculum goal"
-    }] : [],
+    selectedGoal: null,
+    nextQueue: [],
     decision: {
-      selectedGoalId: str(nextGoal?.goalId),
-      selectionReason: nextGoal ? "coverage_gap" : "no_active_goals",
+      selectedGoalId: "",
+      selectionReason: "no_active_goals",
       blockedBy: [],
-      nextAction: nextGoal ? "plan_goal_coverage" : "idle"
+      nextAction: "idle"
     }
   };
 }

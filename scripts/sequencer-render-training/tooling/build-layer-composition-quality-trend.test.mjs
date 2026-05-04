@@ -16,7 +16,7 @@ function writeRun(root, { runId, quality = 0.8, eligible = true, generatedAt = "
     runId,
     experiments: [{
       experimentId: "experiment",
-      family: "submodel_structure",
+      family: "display_quality_review",
       passes: [{
         passId: "pass",
         changeType: "sibling_submodel_layer_added",
@@ -123,21 +123,37 @@ test("quality trend summarizes a single run as a baseline", () => {
   assert.equal(artifact.summary.evidenceRecordCount, 1);
   assert.equal(artifact.summary.qualityTrendStatus, "single_run_baseline");
   assert.equal(artifact.groups[0].latestOverallQuality, 0.81);
-  assert.equal(artifact.groups[0].family, "submodel_structure");
+  assert.equal(artifact.groups[0].family, "display_quality_review");
   assert.deepEqual(artifact.groups[0].targetScopes, ["submodel"]);
   assert.deepEqual(artifact.groups[0].modelTypes, ["custom"]);
   assert.deepEqual(artifact.groups[0].reviewScopes, ["section_video", "whole_sequence_window", "full_display_contact_sheet"]);
   assert.equal(artifact.groups[0].qualityDimensions.includes("motion_coherence"), true);
   assert.equal(artifact.groups[0].qualityDimensions.includes("palette_readability"), true);
-  assert.deepEqual(artifact.groups[0].timingSources, ["section"]);
-  assert.equal(artifact.groups[0].musicQualityDimensions.includes("energy_progression"), true);
-  assert.equal(artifact.groups[0].musicQualityDimensions.includes("timing_alignment"), true);
-  assert.equal(artifact.groups[0].musicQualityDimensions.includes("repetition_with_variation"), true);
+  assert.deepEqual(artifact.groups[0].timingSources, []);
+  assert.deepEqual(artifact.groups[0].musicQualityDimensions, []);
   assert.equal(artifact.groups[0].intentDimensions.includes("mood"), true);
   assert.equal(artifact.groups[0].intentDimensions.includes("palette"), true);
   assert.equal(artifact.groups[0].intentDimensions.includes("negative_space"), true);
   assert.equal(artifact.groups[0].reviewMethods.includes("deterministic_metrics"), true);
   assert.equal(artifact.groups[0].reviewMethods.includes("vision_review"), true);
+});
+
+test("quality trend assigns music dimensions only to dedicated music review records", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-quality-trend-music-"));
+  writeRun(root, { runId: "music-run", quality: 0.83 });
+  const planPath = path.join(root, "training-plan.json");
+  const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
+  plan.experiments[0].family = "music_structure_review";
+  fs.writeFileSync(planPath, `${JSON.stringify(plan, null, 2)}\n`);
+
+  const artifact = buildLayerCompositionQualityTrend({ runRoots: [root] });
+
+  assert.deepEqual(artifact.groups[0].reviewScopes, []);
+  assert.deepEqual(artifact.groups[0].qualityDimensions, []);
+  assert.deepEqual(artifact.groups[0].timingSources, ["section"]);
+  assert.equal(artifact.groups[0].musicQualityDimensions.includes("energy_progression"), true);
+  assert.equal(artifact.groups[0].musicQualityDimensions.includes("timing_alignment"), true);
+  assert.equal(artifact.groups[0].musicQualityDimensions.includes("repetition_with_variation"), true);
 });
 
 test("quality trend compares matching quality evidence across runs", () => {
@@ -167,4 +183,20 @@ test("quality trend keeps observation-only records out of quality evidence", () 
   assert.equal(artifact.summary.observationRecordCount, 1);
   assert.equal(artifact.summary.qualityGroupCount, 0);
   assert.equal(artifact.observationRecords[0].qualificationReasons.includes("no_planned_effects"), true);
+});
+
+test("quality trend does not assign display or music dimensions to generic render reviews", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-quality-trend-generic-"));
+  writeRun(root, { runId: "generic-run", quality: 0.82 });
+  const planPath = path.join(root, "training-plan.json");
+  const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
+  plan.experiments[0].family = "core_effect_fit";
+  fs.writeFileSync(planPath, `${JSON.stringify(plan, null, 2)}\n`);
+
+  const artifact = buildLayerCompositionQualityTrend({ runRoots: [root] });
+
+  assert.deepEqual(artifact.groups[0].reviewScopes, []);
+  assert.deepEqual(artifact.groups[0].qualityDimensions, []);
+  assert.deepEqual(artifact.groups[0].timingSources, []);
+  assert.deepEqual(artifact.groups[0].musicQualityDimensions, []);
 });
