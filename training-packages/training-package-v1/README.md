@@ -16,3 +16,11 @@ Notes:
 - Machine-specific eval inputs (for example local audio path case files) must stay outside package assets.
 - The sequencer execution module README is the stable guide for how package contracts and fixtures use project `display/model-index.json` and `display/target-behavior.json`.
 - Some module source references still point to `apps/xlightsdesigner-ui` because those files are the existing shared JS agent/runtime and eval corpus, not Electron UI code. Native macOS app behavior should be referenced through `apps/xlightsdesigner-macos` tests/specs when the package describes current app persistence, project metadata, or display/model-index behavior.
+
+Validation:
+
+```bash
+node scripts/designer-training/validate-training-package.mjs
+```
+
+This verifies module manifest asset paths, package path references, and the compact sequencer fixture contracts.
