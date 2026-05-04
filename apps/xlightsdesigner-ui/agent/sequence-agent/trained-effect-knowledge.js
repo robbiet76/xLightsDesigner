@@ -849,6 +849,16 @@ export function getLayerCompositionPriorsBundle() {
   return LAYER_COMPOSITION_PRIORS_BUNDLE;
 }
 
+function layerCompositionPromotionGate(bundle = {}) {
+  const gate = bundle?.promotionGate && typeof bundle.promotionGate === 'object' ? bundle.promotionGate : {};
+  return {
+    selectorRuntimeReady: gate.selectorRuntimeReady === true,
+    qualityBackedPriorCount: Number(gate.qualityBackedPriorCount || 0),
+    selectorReadyPriorCount: Number(gate.selectorReadyPriorCount || 0),
+    blockers: unique(gate.blockers || [])
+  };
+}
+
 export function recommendLayerCompositionPriors({
   compositionIntent = '',
   family = '',
@@ -859,23 +869,28 @@ export function recommendLayerCompositionPriors({
   effectNames = [],
   layerIndexes = [],
   desiredOutcomeTags = [],
-  includeStaged = true,
+  includeStaged = false,
+  bundleOverride = null,
   limit = 5
 } = {}) {
-  const bundle = getLayerCompositionPriorsBundle();
+  const bundle = bundleOverride || getLayerCompositionPriorsBundle();
+  const promotionGate = layerCompositionPromotionGate(bundle);
   const records = bundle?.records && typeof bundle.records === 'object' ? bundle.records : {};
   const indexes = bundle?.indexes && typeof bundle.indexes === 'object' ? bundle.indexes : {};
+  const runtimeUseBlocked = promotionGate.selectorRuntimeReady !== true && includeStaged !== true;
   const candidateIds = new Set();
-  for (const ids of [
-    indexedRecordsForLayerCompositionFacet(indexes.byCompositionIntent, [compositionIntent]),
-    indexedRecordsForLayerCompositionFacet(indexes.byFamily, [family]),
-    indexedRecordsForLayerCompositionFacet(indexes.byPaletteProfile, [paletteProfile]),
-    indexedRecordsForLayerCompositionFacet(indexes.byOutcomeTag, desiredOutcomeTags)
-  ]) {
-    for (const id of ids) candidateIds.add(id);
-  }
-  if (!candidateIds.size) {
-    for (const id of Object.keys(records)) candidateIds.add(id);
+  if (!runtimeUseBlocked) {
+    for (const ids of [
+      indexedRecordsForLayerCompositionFacet(indexes.byCompositionIntent, [compositionIntent]),
+      indexedRecordsForLayerCompositionFacet(indexes.byFamily, [family]),
+      indexedRecordsForLayerCompositionFacet(indexes.byPaletteProfile, [paletteProfile]),
+      indexedRecordsForLayerCompositionFacet(indexes.byOutcomeTag, desiredOutcomeTags)
+    ]) {
+      for (const id of ids) candidateIds.add(id);
+    }
+    if (!candidateIds.size) {
+      for (const id of Object.keys(records)) candidateIds.add(id);
+    }
   }
 
   const normalizedLayerIndexes = unique(layerIndexes.map((row) => String(row)));
@@ -959,6 +974,8 @@ export function recommendLayerCompositionPriors({
     sourceArtifactType: normText(bundle?.artifactType),
     recordType: normText(bundle?.recordType),
     retrievalPolicy: normText(bundle?.retrievalContract?.consumptionPolicy) || 'advisory_evidence_not_recipe',
+    runtimeUseBlocked,
+    promotionGate,
     context: {
       compositionIntent: normText(compositionIntent),
       family: normText(family),
@@ -982,6 +999,7 @@ export function buildLayerCompositionKnowledgeMetadata() {
     generatedAt: normText(LAYER_COMPOSITION_PRIORS_BUNDLE.generatedAt),
     recordCount: Number(LAYER_COMPOSITION_PRIORS_BUNDLE.recordCount || 0),
     selectorReadyCount: Number(LAYER_COMPOSITION_PRIORS_BUNDLE.selectorReadyCount || 0),
+    promotionGate: layerCompositionPromotionGate(LAYER_COMPOSITION_PRIORS_BUNDLE),
     retrievalContract: LAYER_COMPOSITION_PRIORS_BUNDLE.retrievalContract || {}
   };
 }

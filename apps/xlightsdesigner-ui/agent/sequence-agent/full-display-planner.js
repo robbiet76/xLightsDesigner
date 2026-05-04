@@ -975,7 +975,7 @@ function layerCompositionGuidanceForPlacement({
     effectNames: [row.effectName],
     layerIndexes: [row.layerIndex],
     desiredOutcomeTags,
-    includeStaged: true,
+    includeStaged: false,
     limit: 3
   });
 }

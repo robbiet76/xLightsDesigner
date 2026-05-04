@@ -114,9 +114,99 @@ test("trained effect knowledge retrieves layer composition guidance by sequencer
   assert.equal(bundle.retrievalContract.consumptionPolicy, "advisory_evidence_not_recipe");
   assert.equal(guidance.artifactType, "sequencer_layer_composition_guidance_v1");
   assert.equal(guidance.retrievalPolicy, "advisory_evidence_not_recipe");
+  assert.equal(guidance.runtimeUseBlocked, false);
   assert.ok(guidance.recommendations.length > 0);
   assert.equal(guidance.recommendations[0].scope.family, "group_model_interplay");
   assert.ok(guidance.recommendations[0].reasons.includes("compositionIntent"));
   assert.ok(guidance.recommendations[0].outcomeTags.includes("scene_spread_increased"));
   assert.ok(guidance.recommendations[0].safeguards.some((row) => /fixed sequencing recipe/i.test(row)));
+});
+
+test("trained effect knowledge blocks runtime layer composition guidance until promotion gate is ready", () => {
+  const guidance = recommendLayerCompositionPriors({
+    compositionIntent: "foundation",
+    family: "group_model_interplay",
+    paletteProfile: "mono_white",
+    includeStaged: false,
+    bundleOverride: {
+      artifactType: "sequencer_layer_composition_priors_bundle",
+      recordType: "layer_composition_prior_v1",
+      retrievalContract: { consumptionPolicy: "advisory_evidence_not_recipe_until_promotion_gate_ready" },
+      promotionGate: {
+        selectorRuntimeReady: false,
+        qualityBackedPriorCount: 1,
+        selectorReadyPriorCount: 0,
+        blockers: ["no_selector_ready_priors"]
+      },
+      indexes: {
+        byCompositionIntent: { foundation: ["prior-1"] },
+        byFamily: { group_model_interplay: ["prior-1"] },
+        byPaletteProfile: { mono_white: ["prior-1"] },
+        byOutcomeTag: {}
+      },
+      records: {
+        "prior-1": {
+          priorId: "prior-1",
+          confidence: "quality_backed",
+          selectorReady: false,
+          promotionState: "staged",
+          scope: {
+            compositionIntent: "foundation",
+            family: "group_model_interplay",
+            paletteProfile: "mono_white"
+          }
+        }
+      }
+    }
+  });
+
+  assert.equal(guidance.runtimeUseBlocked, true);
+  assert.equal(guidance.recommendationCount, 0);
+  assert.deepEqual(guidance.promotionGate.blockers, ["no_selector_ready_priors"]);
+});
+
+test("trained effect knowledge allows selector-ready layer composition guidance after promotion gate is ready", () => {
+  const guidance = recommendLayerCompositionPriors({
+    compositionIntent: "foundation",
+    family: "group_model_interplay",
+    paletteProfile: "mono_white",
+    includeStaged: false,
+    bundleOverride: {
+      artifactType: "sequencer_layer_composition_priors_bundle",
+      recordType: "layer_composition_prior_v1",
+      retrievalContract: { consumptionPolicy: "advisory_evidence_not_recipe_until_promotion_gate_ready" },
+      promotionGate: {
+        selectorRuntimeReady: true,
+        qualityBackedPriorCount: 1,
+        selectorReadyPriorCount: 1,
+        blockers: []
+      },
+      indexes: {
+        byCompositionIntent: { foundation: ["prior-1"] },
+        byFamily: { group_model_interplay: ["prior-1"] },
+        byPaletteProfile: { mono_white: ["prior-1"] },
+        byOutcomeTag: {}
+      },
+      records: {
+        "prior-1": {
+          priorId: "prior-1",
+          confidence: "quality_backed",
+          selectorReady: true,
+          promotionState: "selector_ready",
+          scope: {
+            compositionIntent: "foundation",
+            family: "group_model_interplay",
+            paletteProfile: "mono_white"
+          },
+          guidance: ["quality-backed foundation prior"],
+          safeguards: ["Use only in compatible context."]
+        }
+      }
+    }
+  });
+
+  assert.equal(guidance.runtimeUseBlocked, false);
+  assert.equal(guidance.recommendationCount, 1);
+  assert.equal(guidance.recommendations[0].selectorReady, true);
+  assert.equal(guidance.recommendations[0].promotionState, "selector_ready");
 });

@@ -372,7 +372,8 @@ test("sequence_agent uses deterministic trained effect portfolio for full-displa
   assert.ok(effectCommands.some((command) => command.intent?.parameterPriorGuidance?.configuredBehaviorRecordId));
   assert.ok(effectCommands.some((command) => command.intent?.parameterPriorGuidance?.priors?.some((prior) => prior.sourceRecordId)));
   assert.ok(out.metadata.effectPlacements.some((placement) => placement.layerCompositionGuidance?.artifactType === "sequencer_layer_composition_guidance_v1"));
-  assert.ok(out.metadata.effectPlacements.some((placement) => placement.settingsIntent?.layerCompositionPriorIds?.length > 0));
+  assert.ok(out.metadata.effectPlacements.some((placement) => placement.layerCompositionGuidance?.runtimeUseBlocked === true));
+  assert.ok(out.metadata.effectPlacements.every((placement) => (placement.settingsIntent?.layerCompositionPriorIds?.length || 0) === 0));
   assert.ok(out.metadata.effectPlacementCount >= 12);
   assert.ok(out.metadata.effectPlacements.every((placement) => placement.sourceSectionLabel));
   assert.ok(out.metadata.effectPlacements.some((placement) => placement.targetGranularity === "member"));
