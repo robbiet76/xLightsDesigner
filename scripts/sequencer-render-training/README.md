@@ -88,6 +88,7 @@ Generated manifests under `manifests/generated/` are local run artifacts. They a
 - `tooling/export-layer-composition-priors-bundle.mjs`
 - `tooling/run-layer-composition-execution-scaffold.mjs`
 - `tooling/run-layer-composition-owned-pass.mjs`
+- `tooling/run-sequencing-quality-controller.mjs`
 - `tooling/harvest-effect-outcome-records.mjs`
 - `tooling/build-effect-settings-coverage-report.mjs`
 - `tooling/build-effect-training-automation-plan.mjs`
@@ -268,6 +269,11 @@ Use `promote-layer-composition-priors.mjs` as the explicit promotion step after
 reviewing quality records. The staged prior builder does not mark selector-ready
 records by default; promotion requires durable repeated quality evidence and
 writes a compact per-prior promotion review.
+Use `run-sequencing-quality-controller.mjs` after a summarized quality run to
+write the next controller checkpoint. The first controller pass is planning-only:
+it reads the curriculum, compact evidence, promoted priors, and cleanup result,
+then queues blocked-promising repeats or the next coverage gap without launching
+xLights.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \
@@ -291,6 +297,12 @@ node scripts/sequencer-render-training/tooling/promote-layer-composition-priors.
 node scripts/sequencer-render-training/tooling/export-layer-composition-priors-bundle.mjs \
   --priors var/logs/sequencer-layer-composition-training-runs/<run-id>/layer-composition-priors-promoted.json \
   --out apps/xlightsdesigner-ui/agent/sequence-agent/generated/layer-composition-priors-bundle.js
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-controller.mjs \
+  --latest-run-root var/logs/sequencer-layer-composition-training-runs/<run-id> \
+  --out var/logs/sequencing-quality-controller/controller-state.json
 ```
 
 ```bash

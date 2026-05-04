@@ -76,7 +76,10 @@ Each loop should:
 
 ## Controller State
 
-The controller should write a durable state artifact after every loop:
+The controller writes a durable state artifact after every loop. The current
+implementation is planning-only: it reads the curriculum, compact quality
+records, promoted priors, pass summary, and cleanup result, then chooses the next
+bounded queue without launching xLights.
 
 ```json
 {
@@ -95,6 +98,14 @@ The controller should write a durable state artifact after every loop:
 The state should be compact and portable. Raw frames, full videos, generated
 sequence copies, and decoded media should remain local run artifacts and be
 deleted after summarization unless explicitly retained as proof evidence.
+
+Current entry point:
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-controller.mjs \
+  --latest-run-root /tmp/xld-layer-composition-quality-long-20260504T182838Z \
+  --out /tmp/xld-layer-composition-quality-long-20260504T182838Z/controller-state.json
+```
 
 ## Selection Rules
 
