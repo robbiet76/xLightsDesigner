@@ -357,9 +357,10 @@ test('self-improvement cycle runs FSEQ render review phases', async () => {
     manifestPath,
     skipCommands: true,
     outDir: path.join(root, 'run'),
-    buildFseqReview: ({ outDir }) => {
+    buildFseqReview: ({ outDir, intent }) => {
       const renderReviewPath = path.join(outDir, 'render-review.json');
       writeJson(renderReviewPath, { artifactType: 'render_review_v1' });
+      assert.equal(intent.effectName, '');
       return {
         ok: true,
         renderReviewPath,
@@ -377,6 +378,62 @@ test('self-improvement cycle runs FSEQ render review phases', async () => {
   assert.equal(phase.results[0].overallQuality, 0.91);
   assert.equal(fs.existsSync(phase.results[0].renderReviewPath), true);
   assert.equal(result.renderReviewGate.promoteReady, true);
+});
+
+test('self-improvement cycle passes manifest target context into FSEQ review builder', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-fseq-context-'));
+  const geometryPath = path.join(root, 'geometry.json');
+  const fseqPath = path.join(root, 'section.fseq');
+  const manifestPath = path.join(root, 'manifest.json');
+  writeJson(geometryPath, { artifactType: 'preview_scene_geometry_v1' });
+  fs.writeFileSync(fseqPath, 'fake-fseq');
+  writeJson(manifestPath, {
+    artifactType: 'xlightsdesigner_self_improvement_loop_manifest_v1',
+    initialScope: {
+      effects: ['On', 'Bars', 'Color Wash', 'SingleStrand'],
+      blockedEffects: ['Shimmer']
+    },
+    cyclePhases: [
+      {
+        id: 'review_fseq_section',
+        type: 'fseq_render_review',
+        geometryPath,
+        reviews: [
+          {
+            id: 'context-proof',
+            fseqPath,
+            effectName: 'Bars',
+            targetHierarchy: {
+              leadTargets: ['Lead Target'],
+              supportTargets: ['Support Target']
+            }
+          }
+        ]
+      }
+    ],
+    promotionGate: {}
+  });
+
+  const result = await runSelfImprovementCycle({
+    manifestPath,
+    skipCommands: true,
+    outDir: path.join(root, 'run'),
+    buildFseqReview: ({ outDir, intent }) => {
+      const renderReviewPath = path.join(outDir, 'render-review.json');
+      writeJson(renderReviewPath, { artifactType: 'render_review_v1' });
+      assert.equal(intent.effectName, 'Bars');
+      assert.deepEqual(intent.targetHierarchy.leadTargets, ['Lead Target']);
+      assert.deepEqual(intent.targetHierarchy.supportTargets, ['Support Target']);
+      return {
+        ok: true,
+        renderReviewPath,
+        decision: 'accept',
+        overallQuality: 0.91
+      };
+    }
+  });
+
+  assert.equal(result.ok, true);
 });
 
 test('self-improvement cycle blocks render-review promotion when reviews need revision', async () => {

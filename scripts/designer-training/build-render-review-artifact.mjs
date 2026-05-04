@@ -277,6 +277,7 @@ export function buildRenderReviewArtifact({
       endMs: number(section.endMs ?? intent?.section?.endMs, 0)
     },
     intent: {
+      effectName: str(intent.effectName || intent.effect?.name || intent.effect),
       creativeObjective: obj(intent.creativeObjective),
       musicRole: obj(intent.musicRole),
       targetHierarchy: obj(intent.targetHierarchy),

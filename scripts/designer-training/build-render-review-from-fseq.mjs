@@ -35,6 +35,75 @@ function writeJson(filePath, value) {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
 
+function arr(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function obj(value) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
+function unique(values = []) {
+  return [...new Set(arr(values).map(str).filter(Boolean))];
+}
+
+export function mergeIntentForRenderReview(base = {}, overlay = {}) {
+  const effectName = str(overlay.effectName || overlay.effect?.name || overlay.effect)
+    || str(base.effectName || base.effect?.name || base.effect);
+  const summary = str(overlay.summary || overlay.intent || overlay.rawSummary)
+    || str(base.summary || base.intent || base.rawSummary);
+  return {
+    ...obj(base),
+    ...obj(overlay),
+    effectName,
+    creativeObjective: { ...obj(base.creativeObjective), ...obj(overlay.creativeObjective) },
+    musicRole: { ...obj(base.musicRole), ...obj(overlay.musicRole) },
+    targetHierarchy: { ...obj(base.targetHierarchy), ...obj(overlay.targetHierarchy) },
+    paletteIntent: { ...obj(base.paletteIntent), ...obj(overlay.paletteIntent) },
+    rawSummary: summary
+  };
+}
+
+export function deriveIntentFromOwnedApplyPayload(report = {}) {
+  const effects = arr(report.applyPayload?.effects);
+  const effectNames = unique([report.effectName, ...effects.map((effect) => effect?.effectName)]);
+  const targets = unique([report.targetModel, ...effects.map((effect) => effect?.element)]);
+  if (!effectNames.length && !targets.length) return {};
+  return {
+    effectName: effectNames[0] || str(report.effectName),
+    targetHierarchy: {
+      leadTargets: targets.slice(0, 1),
+      supportTargets: targets.slice(1)
+    },
+    rawSummary: [
+      effectNames[0] ? `effect:${effectNames[0]}` : '',
+      targets.length ? `targets:${targets.length}` : ''
+    ].filter(Boolean).join(' ')
+  };
+}
+
+function readSiblingApplyContext(fseqPath = '') {
+  const dir = path.dirname(fseqPath);
+  const base = path.basename(fseqPath, path.extname(fseqPath));
+  const candidates = [
+    path.join(dir, `${base}-result.json`),
+    path.join(dir, 'owned-api-validation-result.json')
+  ];
+  for (const candidate of candidates) {
+    if (!fs.existsSync(candidate)) continue;
+    try {
+      const report = readJson(candidate);
+      return {
+        intent: deriveIntentFromOwnedApplyPayload(report),
+        renderObservationPath: candidate
+      };
+    } catch {
+      return { intent: {}, renderObservationPath: candidate };
+    }
+  }
+  return { intent: {}, renderObservationPath: '' };
+}
+
 export function buildFrameOffsets({ startMs = 0, endMs = 0, stepMs = 50, sampleCount = 8, frameOffsets = '' } = {}) {
   const explicit = str(frameOffsets)
     .split(',')
@@ -146,6 +215,7 @@ export function buildRenderReviewFromFseq({
   geometryPath,
   fseqPath,
   intentPath = '',
+  intent = {},
   outDir = '',
   windowStartMs = 0,
   windowEndMs = 8000,
@@ -192,20 +262,23 @@ export function buildRenderReviewFromFseq({
     outDir: path.join(resolvedOutDir, 'render-review-media'),
     sampleCount
   });
-  const intent = intentPath && fs.existsSync(resolvePath(intentPath)) ? readJson(resolvePath(intentPath)) : {};
+  const siblingContext = readSiblingApplyContext(resolvedFseqPath);
+  const fileIntent = intentPath && fs.existsSync(resolvePath(intentPath)) ? readJson(resolvePath(intentPath)) : {};
+  const reviewIntent = mergeIntentForRenderReview(mergeIntentForRenderReview(siblingContext.intent, fileIntent), intent);
   const review = buildRenderReviewArtifact({
     frameFeatures: readJson(mediaExtraction.frameFeaturesPath),
-    intent,
+    intent: reviewIntent,
     evidence: {
       videoPath: previewMediaPath,
       contactSheetPath: mediaExtraction.contactSheetPath,
       frameDirectory: mediaExtraction.framesDir,
       frameFeaturesPath: mediaExtraction.frameFeaturesPath,
-      sequencePath: resolvedFseqPath
+      sequencePath: resolvedFseqPath,
+      renderObservationPath: siblingContext.renderObservationPath
     },
     section: {
-      id: str(intent?.section?.id || 'fseq-window'),
-      label: str(intent?.section?.label || ''),
+      id: str(reviewIntent?.section?.id || 'fseq-window'),
+      label: str(reviewIntent?.section?.label || ''),
       startMs: Number(windowStartMs || 0),
       endMs: Number(windowEndMs || 0)
     }

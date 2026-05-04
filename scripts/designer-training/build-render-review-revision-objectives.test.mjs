@@ -19,6 +19,7 @@ function review(decision = 'revise') {
     artifactType: 'render_review_v1',
     section: { id: 'chorus-1', label: 'Chorus 1', startMs: 1000, endMs: 9000 },
     intent: {
+      effectName: 'On',
       targetHierarchy: {
         leadTargets: ['Tree'],
         supportTargets: ['Arches']
@@ -46,6 +47,7 @@ function review(decision = 'revise') {
 test('buildRenderReviewRevisionObjective converts blank-span critique into coverage actions', () => {
   const objective = buildRenderReviewRevisionObjective({ review: review(), reviewPath: '/tmp/render-review.json' });
   assert.equal(objective.artifactType, 'render_review_revision_objective_v1');
+  assert.equal(objective.source.effectName, 'On');
   assert.equal(objective.scope.sectionId, 'chorus-1');
   assert.ok(objective.scope.revisionRoles.includes('increase_section_coverage'));
   assert.ok(objective.scope.revisionRoles.includes('strengthen_visual_readability'));

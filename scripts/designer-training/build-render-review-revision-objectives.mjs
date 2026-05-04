@@ -135,6 +135,7 @@ export function buildRenderReviewRevisionObjective({ review, reviewPath = '', ob
     source: {
       renderReviewRef: str(reviewPath),
       decision,
+      effectName: str(review?.intent?.effectName),
       evidence: review?.evidence || {}
     },
     scope: {

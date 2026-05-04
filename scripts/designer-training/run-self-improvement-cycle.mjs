@@ -301,6 +301,14 @@ async function runFseqRenderReviewPhase({ phase, outDir, buildFseqReview }) {
         geometryPath: result.geometryPath,
         fseqPath: result.fseqPath,
         intentPath: resolveRepoPath(review.intentPath || review.intent),
+        intent: {
+          effectName: str(review.effectName || review.effect),
+          targetHierarchy: review.targetHierarchy || {},
+          creativeObjective: review.creativeObjective || {},
+          musicRole: review.musicRole || {},
+          paletteIntent: review.paletteIntent || {},
+          summary: str(review.summary || review.intentSummary)
+        },
         outDir: resolveRepoPath(review.outDir || path.join(reviewRoot, label)),
         windowStartMs: Number(review.windowStartMs ?? review.startMs ?? phase.windowStartMs ?? 0),
         windowEndMs: Number(review.windowEndMs ?? review.endMs ?? phase.windowEndMs ?? 8000),

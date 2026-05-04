@@ -20,6 +20,8 @@ test('render review artifact scores ordered frame metrics against section intent
     },
     intent: {
       section: { id: 'chorus-1', label: 'Chorus 1', startMs: 10000, endMs: 18000 },
+      effectName: 'Bars',
+      targetHierarchy: { leadTargets: ['Lead Target'], supportTargets: ['Support Target'] },
       creativeObjective: { coverage: 'wide', motion: 'active' },
       musicRole: { energy: 'high' }
     },
@@ -28,6 +30,8 @@ test('render review artifact scores ordered frame metrics against section intent
 
   assert.equal(artifact.artifactType, 'render_review_v1');
   assert.equal(artifact.section.id, 'chorus-1');
+  assert.equal(artifact.intent.effectName, 'Bars');
+  assert.deepEqual(artifact.intent.targetHierarchy.leadTargets, ['Lead Target']);
   assert.equal(artifact.evidence.videoPath, '/tmp/section.mp4');
   assert.equal(artifact.deterministicMetrics.sampledFrameCount, 4);
   assert.ok(artifact.qualityScores.overallQuality > 0.5);
