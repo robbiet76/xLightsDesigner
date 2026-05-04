@@ -123,6 +123,7 @@ function recordMatchesGoal(record = {}, goal = {}) {
   const families = arr(coverage.families).map(str).filter(Boolean);
   const paletteProfiles = arr(coverage.paletteProfiles).map(str).filter(Boolean);
   const effects = arr(coverage.effects).map(str).filter(Boolean);
+  if (!families.length) return false;
   const experimentId = str(record.experimentId);
 
   const normalizedFamily = experimentId.split("-").slice(0, -1).join("_").replaceAll("-", "_");
@@ -138,10 +139,8 @@ function isPromisingBlockedRecord(record = {}, goal = {}, policy = {}) {
   if (!blockers.length) return false;
   if (!recordMatchesGoal(record, goal)) return false;
   if (num(record?.quality?.latestOverallQuality) < policy.minimumOverallQuality) return false;
-  return blockers.some((blocker) => [
-    "insufficient_repeated_quality_evidence",
-    "quality_trend_not_stable_or_improving"
-  ].includes(blocker));
+  return blockers.includes("insufficient_repeated_quality_evidence")
+    || str(record.trendStatus) === "single_run_baseline";
 }
 
 function queueFromBlockedRecords({ records = [], goal = {}, policy = {}, maxQueue = DEFAULT_MAX_QUEUE } = {}) {
@@ -185,6 +184,15 @@ function promotedPriorsForGoal(priors = [], goal = {}) {
 
 function recordsForGoal(records = [], goal = {}) {
   return arr(records).filter((record) => recordMatchesGoal(record, goal));
+}
+
+function hasNonRepeatableBlockedRecord(records = [], goal = {}, policy = {}) {
+  return recordsForGoal(records, goal).some((record) => {
+    const blockers = arr(record?.promotion?.blockers).map(str).filter(Boolean);
+    return blockers.length
+      && num(record?.quality?.latestOverallQuality) >= policy.minimumOverallQuality
+      && !isPromisingBlockedRecord(record, goal, policy);
+  });
 }
 
 function buildGoalStatuses(curriculum = {}, artifacts = {}) {
@@ -290,7 +298,7 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     }
   }
 
-  const nextGoal = goals[0] || null;
+  const nextGoal = goals.find((goal) => !hasNonRepeatableBlockedRecord(records, goal, policy)) || goals[0] || null;
   return {
     selectedGoal: nextGoal,
     nextQueue: nextGoal ? [{

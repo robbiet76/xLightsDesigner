@@ -79,6 +79,14 @@ function record(passId, quality, blockers = ["insufficient_repeated_quality_evid
   };
 }
 
+function regressingRecord(passId, quality = 0.81) {
+  return {
+    ...record(passId, quality, ["quality_trend_not_stable_or_improving"]),
+    sampleCount: 3,
+    trendStatus: "regressing"
+  };
+}
+
 function writeRunRoot(runRoot, records) {
   writeJson(path.join(runRoot, "cross-run-quality-records.json"), {
     artifactType: "layer_composition_quality_records_v1",
@@ -179,6 +187,74 @@ test("controller can plan from quality evidence when promoted priors are not pre
   assert.equal(state.controllerDecision.nextAction, "plan_quality_repeats");
   assert.equal(state.nextQueue[0].passId, "three_layer_default");
   assert.equal(state.promotionSummary.selectorReadyPriorCount, 0);
+});
+
+test("controller does not repeat sufficiently sampled regressing records forever", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [regressingRecord("foundation_brightness_variant", 0.81)]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: curriculum(),
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
+  assert.equal(state.nextQueue[0].goalId, "layer.rgb_primary.basic");
+});
+
+test("controller does not map layer records onto future goals without layer coverage", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("reversed_layer_order", 0.84),
+    effectName: "Shimmer"
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "layer_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          reviewScopes: ["whole_sequence_window"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
+});
+
+test("controller status does not count layer records for non-family submodel goals", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [record("three_layer_default", 0.84, [])]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "submodel.vendor_fixture.basic",
+        areaId: "layer_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          effects: ["Color Wash"],
+          targetScopes: ["submodel"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 0);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "not_started");
 });
 
 test("controller increments loop index from a previous state", () => {
