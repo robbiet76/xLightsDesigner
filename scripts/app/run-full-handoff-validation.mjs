@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { execFile, spawn } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -128,6 +128,68 @@ function parseArgs(argv = []) {
 
 function readJson(filePath = '') {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function processList() {
+  const output = execFileSync('ps', ['-axo', 'pid=,command='], { encoding: 'utf8' });
+  return output
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const firstSpace = line.indexOf(' ');
+      return {
+        pid: Number(line.slice(0, firstSpace)),
+        command: line.slice(firstSpace + 1).trim()
+      };
+    })
+    .filter((entry) => Number.isFinite(entry.pid));
+}
+
+function pidsMatching(predicate) {
+  return processList().filter(predicate).map((entry) => entry.pid);
+}
+
+function killPid(pid, signal = 'TERM') {
+  try {
+    execFileSync('kill', [`-${signal}`, String(pid)], { stdio: 'ignore' });
+  } catch {}
+}
+
+function isPidAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function stopPids(pids) {
+  const stopped = [...pids];
+  for (const pid of pids) killPid(pid, 'TERM');
+  const started = Date.now();
+  while (Date.now() - started < 5000) {
+    if (pids.every((pid) => !isPidAlive(pid))) return stopped;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  for (const pid of pids) killPid(pid, 'KILL');
+  return stopped;
+}
+
+async function cleanupLaunchedProcesses({ app, xlights, baselineAppPids, baselineXLightsPids }) {
+  const cleanup = { stoppedAppPids: [], stoppedXLightsPids: [] };
+  if (app?.launched) {
+    const appPids = pidsMatching((entry) => /XLightsDesignerMacOS|swift run .*XLightsDesignerMacOS/.test(entry.command))
+      .filter((pid) => !baselineAppPids.has(pid));
+    cleanup.stoppedAppPids = await stopPids(appPids);
+  }
+  if (xlights?.launched) {
+    const xlightsPids = pidsMatching((entry) => /xLights\.app\/Contents\/MacOS\/xLights/.test(entry.command))
+      .filter((pid) => !baselineXLightsPids.has(pid));
+    cleanup.stoppedXLightsPids = await stopPids(xlightsPids);
+  }
+  return cleanup;
 }
 
 function normalizeScenario(row = {}, index = 0) {
@@ -459,47 +521,61 @@ async function runExtraValidation(args, showDir, validation) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const showDir = path.resolve(args.showDir);
+  const baselineAppPids = new Set(pidsMatching((entry) => /XLightsDesignerMacOS|swift run .*XLightsDesignerMacOS/.test(entry.command)));
+  const baselineXLightsPids = new Set(pidsMatching((entry) => /xLights\.app\/Contents\/MacOS\/xLights/.test(entry.command)));
+  let app = null;
+  let xlights = null;
+  let cleanup = { stoppedAppPids: [], stoppedXLightsPids: [] };
 
-  const app = await ensureApp(args);
-  const xlights = await ensureXlights({ ...args, showDir });
-  await run('node', ['scripts/app/automation.mjs', 'refresh-xlights-session']);
+  try {
+    app = await ensureApp(args);
+    xlights = await ensureXlights({ ...args, showDir });
+    await run('node', ['scripts/app/automation.mjs', 'refresh-xlights-session']);
 
-  const matrix = args.matrix ? loadMatrixScenarios(args.matrixFile) : null;
-  const scenarios = args.onlyExtraValidations
-    ? []
-    : matrix
-    ? matrix.scenarios
-    : [{ name: args.tagOnly ? 'single-tag-only' : 'single', targetIds: args.targetIds, selectedTags: args.selectedTags, tagOnly: args.tagOnly }];
-  const validations = [];
-  for (const scenario of scenarios) {
-    validations.push(await runValidationScenario(args, showDir, scenario));
-  }
-  const extraValidations = [];
-  if (matrix && args.extraValidations) {
-    for (const validation of matrix.extraValidations) {
-      extraValidations.push(await runExtraValidation(args, showDir, validation));
+    const matrix = args.matrix ? loadMatrixScenarios(args.matrixFile) : null;
+    const scenarios = args.onlyExtraValidations
+      ? []
+      : matrix
+      ? matrix.scenarios
+      : [{ name: args.tagOnly ? 'single-tag-only' : 'single', targetIds: args.targetIds, selectedTags: args.selectedTags, tagOnly: args.tagOnly }];
+    const validations = [];
+    for (const scenario of scenarios) {
+      validations.push(await runValidationScenario(args, showDir, scenario));
     }
+    const extraValidations = [];
+    if (matrix && args.extraValidations) {
+      for (const validation of matrix.extraValidations) {
+        extraValidations.push(await runExtraValidation(args, showDir, validation));
+      }
+    }
+    cleanup = await cleanupLaunchedProcesses({ app, xlights, baselineAppPids, baselineXLightsPids });
+    console.log(JSON.stringify({
+      ok: true,
+      app: {
+        launched: app.launched,
+        pid: app.pid || null,
+        logPath: app.logPath || '',
+        automationBaseURL: DEFAULT_APP_BASE_URL
+      },
+      xlights: {
+        launched: xlights.launched,
+        state: xlights.health?.data?.state || '',
+        listenerReachable: xlights.health?.data?.listenerReachable === true
+      },
+      cleanup,
+      ...(matrix ? { matrixFile: matrix.filePath } : {}),
+      ...(args.matrix ? { validations, extraValidations } : { validation: validations[0] })
+    }, null, 2));
+  } catch (error) {
+    cleanup = await cleanupLaunchedProcesses({ app, xlights, baselineAppPids, baselineXLightsPids });
+    error.cleanup = cleanup;
+    throw error;
   }
-  console.log(JSON.stringify({
-    ok: true,
-    app: {
-      launched: app.launched,
-      pid: app.pid || null,
-      logPath: app.logPath || '',
-      automationBaseURL: DEFAULT_APP_BASE_URL
-    },
-    xlights: {
-      launched: xlights.launched,
-      state: xlights.health?.data?.state || '',
-      listenerReachable: xlights.health?.data?.listenerReachable === true
-    },
-    ...(matrix ? { matrixFile: matrix.filePath } : {}),
-    ...(args.matrix ? { validations, extraValidations } : { validation: validations[0] })
-  }, null, 2));
 }
 
 main().catch((error) => {
   console.error(error.stack || String(error));
+  if (error.cleanup) console.error(`cleanup: ${JSON.stringify(error.cleanup)}`);
   if (error.stdout) console.error(error.stdout);
   if (error.stderr) console.error(error.stderr);
   process.exit(1);
