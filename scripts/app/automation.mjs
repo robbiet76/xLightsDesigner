@@ -3,7 +3,7 @@
 const BASE_URL = process.env.XLD_APP_AUTOMATION_URL || 'http://127.0.0.1:49916';
 
 function usage() {
-  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | get-sequencer-validation-snapshot | open-project <projectFilePath> | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | generate-visual-inspiration | revise-visual-inspiration <request> | revise-visual-inspiration-to-match-palette | generate-sequence-proposal [selectedTags] | propose-display-metadata-from-layout | apply-display-metadata-proposals | update-display-target-intent <targetIds> [rolePreference] [semanticHints] [effectAvoidances] | apply-assistant-action-request <actionType> [payloadJson] [reason] | reset-assistant-memory | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant\nrelated: run full handoff validation with `node scripts/app/run-full-handoff-validation.mjs`');
+  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | get-sequencer-validation-snapshot | open-project <projectFilePath> | open-project-without-refresh <projectFilePath> | open-project-and-wait <projectFilePath> | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-display-and-wait | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | generate-visual-inspiration | revise-visual-inspiration <request> | revise-visual-inspiration-to-match-palette | generate-sequence-proposal [selectedTags] | propose-display-metadata-from-layout | apply-display-metadata-proposals | update-display-target-intent <targetIds> [rolePreference] [semanticHints] [effectAvoidances] | apply-assistant-action-request <actionType> [payloadJson] [reason] | reset-assistant-memory | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant\nrelated: run full handoff validation with `node scripts/app/run-full-handoff-validation.mjs`');
   process.exit(2);
 }
 
@@ -47,11 +47,20 @@ switch (command) {
   case 'open-project':
     await request('POST', '/action', { action: 'openProject', filePath: String(rest[0] || '').trim() });
     break;
+  case 'open-project-without-refresh':
+    await request('POST', '/action', { action: 'openProjectWithoutRefresh', filePath: String(rest[0] || '').trim() });
+    break;
+  case 'open-project-and-wait':
+    await request('POST', '/action', { action: 'openProjectAndWait', filePath: String(rest[0] || '').trim() });
+    break;
   case 'select-workflow':
     await request('POST', '/action', { action: 'selectWorkflow', workflow: String(rest[0] || '').trim() });
     break;
   case 'refresh-current-workflow':
     await request('POST', '/action', { action: 'refreshCurrentWorkflow' });
+    break;
+  case 'refresh-display-and-wait':
+    await request('POST', '/action', { action: 'refreshDisplayAndWait' });
     break;
   case 'refresh-all':
     await request('POST', '/action', { action: 'refreshAll' });
@@ -78,7 +87,7 @@ switch (command) {
     break;
   }
   case 'propose-display-metadata-from-layout':
-    await request('POST', '/action', { action: 'proposeDisplayMetadataFromLayout' });
+    await request('POST', '/action', { action: 'proposeDisplayMetadataFromDisplay' });
     break;
   case 'apply-display-metadata-proposals':
     await request('POST', '/action', { action: 'applyDisplayMetadataProposals' });

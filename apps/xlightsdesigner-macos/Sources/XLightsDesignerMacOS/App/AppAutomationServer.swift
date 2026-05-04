@@ -138,9 +138,53 @@ final class AppAutomationServer: @unchecked Sendable {
             } catch {
                 return .error(statusCode: 500, message: error.localizedDescription)
             }
+        case "openProjectWithoutRefresh":
+            let filePath = String(payload["filePath"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !filePath.isEmpty else {
+                return .error(statusCode: 400, message: "Missing filePath.")
+            }
+            do {
+                let project = try projectService.openProject(filePath: filePath)
+                model.workspace.setProject(project)
+                model.workspace.projectBanner = ProjectBannerModel(id: "opened", level: .ready, text: "Opened \(project.projectName).")
+                return .json(200, body: [
+                    "ok": true,
+                    "projectName": project.projectName,
+                    "projectFilePath": project.projectFilePath
+                ])
+            } catch {
+                return .error(statusCode: 500, message: error.localizedDescription)
+            }
+        case "openProjectAndWait":
+            let filePath = String(payload["filePath"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !filePath.isEmpty else {
+                return .error(statusCode: 400, message: "Missing filePath.")
+            }
+            do {
+                let project = try projectService.openProject(filePath: filePath)
+                model.workspace.setProject(project)
+                model.workspace.projectBanner = ProjectBannerModel(id: "opened", level: .ready, text: "Opened \(project.projectName).")
+                await model.xlightsSessionModel.reconcileProjectShowFolder()
+                model.syncProjectTargetFromXLightsSession()
+                await model.displayScreenModel.reloadDisplay()
+                return .json(200, body: [
+                    "ok": true,
+                    "projectName": project.projectName,
+                    "projectFilePath": project.projectFilePath,
+                    "display": displaySnapshot()
+                ])
+            } catch {
+                return .error(statusCode: 500, message: error.localizedDescription)
+            }
         case "refreshCurrentWorkflow":
             refreshCurrentWorkflow()
             return .json(200, body: ["ok": true, "selectedWorkflow": model.selectedWorkflow.rawValue])
+        case "refreshDisplayAndWait":
+            await model.displayScreenModel.reloadDisplay()
+            return .json(200, body: [
+                "ok": true,
+                "display": displaySnapshot()
+            ])
         case "refreshAll":
             refreshAll()
             return .json(200, body: ["ok": true])
