@@ -1352,12 +1352,50 @@ function controllerQueueRows(controllerState = {}) {
     .filter((row) => str(row.experimentId) && str(row.passId));
 }
 
+function controllerCoverageGapRows(controllerState = {}) {
+  return arr(controllerState?.nextQueue)
+    .filter((row) => str(row.reason) === "coverage_gap" && str(row.goalId));
+}
+
+function coverageGapQueueRows(controllerState = {}, experiments = []) {
+  const rows = [];
+  for (const gap of controllerCoverageGapRows(controllerState)) {
+    const goalId = str(gap.goalId);
+    if (goalId === "layer.rgb_primary.basic") {
+      rows.push(
+        {
+          experimentId: "group-model-interplay-rgb_primary",
+          passId: "group_then_model",
+          generatedFromCoverageGap: goalId
+        },
+        {
+          experimentId: "same-target-layer-stack-rgb_primary",
+          passId: "one_layer_foundation",
+          generatedFromCoverageGap: goalId
+        },
+        {
+          experimentId: "same-target-layer-stack-rgb_primary",
+          passId: "two_layer_default",
+          generatedFromCoverageGap: goalId
+        }
+      );
+    }
+  }
+  const available = new Set(arr(experiments).flatMap((experiment) => arr(experiment.passes)
+    .map((pass) => queueKey({ experimentId: experiment.experimentId, passId: pass.passId }))));
+  return rows.filter((row) => available.has(queueKey(row)));
+}
+
 function controllerQueueSet(controllerState = {}) {
   return new Set(controllerQueueRows(controllerState).map(queueKey));
 }
 
 function dependencyPassIds(experiment = {}, pass = {}) {
   const ids = new Set([str(pass.passId), "empty_baseline"]);
+  if (str(experiment.family) === "group_model_interplay" && str(pass.passId) === "group_then_model") {
+    ids.add("foundation_group_only");
+    ids.add("model_only");
+  }
   let cursor = pass;
   const byId = new Map(arr(experiment.passes).map((row) => [str(row.passId), row]));
   while (str(cursor?.comparisonBasePassId)) {
@@ -1370,7 +1408,10 @@ function dependencyPassIds(experiment = {}, pass = {}) {
 }
 
 function applyControllerStateSelection(experiments = [], controllerState = null) {
-  const selectedKeys = controllerQueueSet(controllerState);
+  const explicitRows = controllerQueueRows(controllerState);
+  const generatedRows = coverageGapQueueRows(controllerState, experiments);
+  const selectedRows = [...explicitRows, ...generatedRows];
+  const selectedKeys = new Set(selectedRows.map(queueKey));
   if (!selectedKeys.size) {
     return {
       experiments,
@@ -1386,6 +1427,7 @@ function applyControllerStateSelection(experiments = [], controllerState = null)
   }
 
   const omittedQueue = [];
+  const generatedKeyReasons = new Map(generatedRows.map((row) => [queueKey(row), "controller_coverage_gap"]));
   const filteredExperiments = [];
   for (const experiment of experiments) {
     const directPasses = arr(experiment.passes)
@@ -1402,7 +1444,9 @@ function applyControllerStateSelection(experiments = [], controllerState = null)
         ...pass,
         controllerSelection: {
           selectedByController: directPassIds.has(str(pass.passId)),
-          reason: directPassIds.has(str(pass.passId)) ? "controller_next_queue" : "comparison_dependency"
+          reason: directPassIds.has(str(pass.passId))
+            ? generatedKeyReasons.get(queueKey({ experimentId: experiment.experimentId, passId: pass.passId })) || "controller_next_queue"
+            : "comparison_dependency"
         }
       }));
     filteredExperiments.push({
@@ -1419,7 +1463,7 @@ function applyControllerStateSelection(experiments = [], controllerState = null)
   const plannedKeys = new Set(filteredExperiments.flatMap((experiment) => arr(experiment.passes)
     .filter((pass) => pass.controllerSelection?.selectedByController)
     .map((pass) => queueKey({ experimentId: experiment.experimentId, passId: pass.passId }))));
-  for (const row of controllerQueueRows(controllerState)) {
+  for (const row of selectedRows) {
     if (!plannedKeys.has(queueKey(row))) omittedQueue.push(row);
   }
 
@@ -1432,6 +1476,8 @@ function applyControllerStateSelection(experiments = [], controllerState = null)
       controllerLoopIndex: Number(controllerState?.loopIndex) || 0,
       controllerDecision: controllerState?.controllerDecision || null,
       selectedQueueCount: selectedKeys.size,
+      explicitQueueCount: explicitRows.length,
+      generatedCoverageQueueCount: generatedRows.length,
       plannedExperimentCount: filteredExperiments.length,
       plannedPassCount: filteredExperiments.reduce((total, experiment) => total + arr(experiment.passes).length, 0),
       omittedQueueCount: omittedQueue.length,

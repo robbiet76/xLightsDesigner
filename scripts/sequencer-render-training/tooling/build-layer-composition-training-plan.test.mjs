@@ -383,3 +383,55 @@ test("layer composition plan can be filtered by sequencing quality controller ne
     "comparison_dependency"
   );
 });
+
+test("layer composition plan expands rgb coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-rgb-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 6,
+      controllerDecision: {
+        selectedGoalId: "layer.rgb_primary.basic",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:layer.rgb_primary.basic:coverage-gap",
+        goalId: "layer.rgb_primary.basic",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.explicitQueueCount, 0);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    [...plan.experiments.map((experiment) => experiment.experimentId)].sort(),
+    ["group-model-interplay-rgb_primary", "same-target-layer-stack-rgb_primary"]
+  );
+  const selected = plan.experiments.flatMap((experiment) => experiment.passes
+    .filter((pass) => pass.controllerSelection?.selectedByController)
+    .map((pass) => `${experiment.experimentId}:${pass.passId}:${pass.controllerSelection.reason}`));
+  assert.deepEqual(selected.sort(), [
+    "group-model-interplay-rgb_primary:group_then_model:controller_coverage_gap",
+    "same-target-layer-stack-rgb_primary:one_layer_foundation:controller_coverage_gap",
+    "same-target-layer-stack-rgb_primary:two_layer_default:controller_coverage_gap"
+  ].sort());
+  assert.equal(
+    plan.experiments
+      .find((experiment) => experiment.experimentId === "group-model-interplay-rgb_primary")
+      .passes
+      .some((pass) => pass.passId === "foundation_group_only" && pass.controllerSelection.reason === "comparison_dependency"),
+    true
+  );
+  assert.equal(
+    plan.experiments
+      .find((experiment) => experiment.experimentId === "group-model-interplay-rgb_primary")
+      .passes
+      .some((pass) => pass.passId === "model_only" && pass.controllerSelection.reason === "comparison_dependency"),
+    true
+  );
+});
