@@ -222,6 +222,22 @@ async function waitForNoXLightsProcesses(timeoutMs = 15000) {
   }
 }
 
+function terminateTargetXLightsProcesses() {
+  for (const processInfo of listXLightsProcesses()) {
+    try {
+      process.kill(processInfo.pid, 'TERM');
+    } catch {}
+  }
+}
+
+function forceTerminateTargetXLightsProcesses() {
+  for (const processInfo of listXLightsProcesses()) {
+    try {
+      process.kill(processInfo.pid, 'KILL');
+    } catch {}
+  }
+}
+
 async function waitForSingleOwnedProcess(timeoutMs = 15000) {
   const started = Date.now();
   for (;;) {
@@ -509,11 +525,13 @@ console.log(JSON.stringify({
   }
 }, null, 2));
 
+terminateTargetXLightsProcesses();
 try {
-  execFileSync('pkill', ['-f', 'xLights.app/Contents/MacOS/xLights'], { stdio: 'ignore' });
-} catch {}
-
-await waitForNoXLightsProcesses();
+  await waitForNoXLightsProcesses();
+} catch (error) {
+  forceTerminateTargetXLightsProcesses();
+  await waitForNoXLightsProcesses();
+}
 
 const stdoutFd = fs.openSync(logPath, 'a');
 const stderrFd = fs.openSync(logPath, 'a');
