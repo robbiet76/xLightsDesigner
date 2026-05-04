@@ -117,6 +117,8 @@ The self-improvement loop can also run `fseq_render_review` phases. These point 
 
 Set `windowsFrom: "source_apply_marks"` on a `fseq_render_review` phase or review to derive windows from the sibling owned apply result's timing marks. This is useful for validation sequences where the apply payload already defines the intended intro/apply/outro or section windows.
 
+When a `fseq_render_review` phase produces multiple windows, the cycle also writes a `render_review_progression_summary_v1` artifact. This summarizes adjacent-window deltas, similarity risk, quality range, and a deterministic progression score.
+
 Render-review phases produce a separate `renderReviewGate` in `cycle-summary.json`. Promotion is blocked until every render review is accepted; sections marked `revise` or `reject` become revision-loop input.
 
 Add a `render_review_revision_objectives` phase after review phases to write `render-review-revision-objectives.json`. The artifact converts review critiques into concrete revision roles, target quality thresholds, and sequencer actions for the next apply/render attempt.

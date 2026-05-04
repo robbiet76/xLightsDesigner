@@ -501,6 +501,8 @@ test('self-improvement cycle expands FSEQ reviews across multiple windows', asyn
   assert.deepEqual(calls.map((call) => [call.windowStartMs, call.windowEndMs]), [[0, 2000], [2000, 5000], [5000, 8000]]);
   assert.deepEqual(calls.map((call) => call.intent.section.id), ['intro', 'build', 'release']);
   assert.deepEqual(phase.results.map((row) => row.id), ['on-proof-intro', 'on-proof-build', 'on-proof-release']);
+  assert.equal(phase.progressionSummary.windowCount, 3);
+  assert.equal(fs.existsSync(phase.progressionPath), true);
   assert.equal(result.renderReviewGate.promoteReady, true);
 });
 

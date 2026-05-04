@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { buildRenderReviewArtifact } from './build-render-review-artifact.mjs';
 import { buildRenderReviewFromFseq } from './build-render-review-from-fseq.mjs';
+import { buildRenderReviewProgressionSummary } from './build-render-review-progression-summary.mjs';
 import { buildRenderReviewRevisionComparisons } from './build-render-review-revision-comparisons.mjs';
 import { buildRenderReviewRevisionAttempts } from './build-render-review-revision-attempts.mjs';
 import { buildRenderReviewRevisionObjectives } from './build-render-review-revision-objectives.mjs';
@@ -400,6 +401,11 @@ async function runFseqRenderReviewPhase({ phase, outDir, buildFseqReview }) {
     }
     results.push(result);
   });
+  const reviewPaths = results.map((result) => str(result.renderReviewPath)).filter(Boolean);
+  const progressionPath = reviewPaths.length > 1 ? path.join(reviewRoot, `${phaseId}-progression-summary.json`) : '';
+  const progression = progressionPath
+    ? buildRenderReviewProgressionSummary({ reviewPaths, outPath: progressionPath })
+    : null;
   return {
     id: phaseId,
     type: str(phase.type || 'fseq_render_review'),
@@ -410,6 +416,8 @@ async function runFseqRenderReviewPhase({ phase, outDir, buildFseqReview }) {
       reviseCount: results.filter((result) => result.decision === 'revise').length,
       rejectedCount: results.filter((result) => result.decision === 'reject').length
     },
+    progressionPath,
+    progressionSummary: progression?.summary || null,
     results
   };
 }
