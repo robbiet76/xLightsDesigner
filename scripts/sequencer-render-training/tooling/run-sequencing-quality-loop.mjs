@@ -11,6 +11,7 @@ import { runLayerCompositionPasses } from "./run-layer-composition-pass-runner.m
 import { buildLayerCompositionQualityTrend } from "./build-layer-composition-quality-trend.mjs";
 import { buildLayerCompositionQualityRecords } from "./build-layer-composition-quality-records.mjs";
 import { buildFullSequenceReviewLoop } from "./build-full-sequence-review-loop.mjs";
+import { buildCreativeIntentRevisionComparison } from "./build-creative-intent-revision-comparison.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const DEFAULT_MODEL_CATALOG = "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json";
@@ -183,6 +184,7 @@ export async function runSequencingQualityLoop({
   let passRunnerSummary = null;
   let crossRunQuality = null;
   let fullSequenceReview = null;
+  let creativeIntentRevisionComparison = null;
   if (applyRender) {
     passRunnerSummary = await (deps.runPasses || runLayerCompositionPasses)({
       runRoot: root,
@@ -193,6 +195,10 @@ export async function runSequencingQualityLoop({
     fullSequenceReview = (deps.buildFullSequenceReview || buildFullSequenceReviewLoop)({
       runRoot: root,
       outPath: path.join(root, "full-sequence-review-loop.json")
+    });
+    creativeIntentRevisionComparison = (deps.buildCreativeIntentRevisionComparison || buildCreativeIntentRevisionComparison)({
+      runRoot: root,
+      outPath: path.join(root, "creative-intent-revision-comparison.json")
     });
     crossRunQuality = buildCrossRunQualityArtifacts({ latestRunRoot, loopRoot: root, deps });
   }
@@ -222,6 +228,14 @@ export async function runSequencingQualityLoop({
       timingSources: arr(fullSequenceReview.timingSources).map(str).filter(Boolean),
       qualityDimensions: arr(fullSequenceReview.qualityDimensions).map(str).filter(Boolean),
       ref: path.join(root, "full-sequence-review-loop.json")
+    } : null,
+    creativeIntentRevisionComparison: creativeIntentRevisionComparison ? {
+      status: str(creativeIntentRevisionComparison.status),
+      comparisonCount: num(creativeIntentRevisionComparison.comparisonCount),
+      improvedComparisonCount: num(creativeIntentRevisionComparison.improvedComparisonCount),
+      promotionEligibleCount: num(creativeIntentRevisionComparison.promotionEligibleCount),
+      meanIntentMatchDelta: num(creativeIntentRevisionComparison.meanIntentMatchDelta),
+      ref: path.join(root, "creative-intent-revision-comparison.json")
     } : null,
     crossRunQuality,
     nextStep: applyRender

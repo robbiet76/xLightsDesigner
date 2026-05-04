@@ -120,7 +120,8 @@ function latestRunArtifacts(latestRunRoot = "") {
     promotedPriors: artifactPath(latestRunRoot, "cross-run-quality-priors-promoted.json"),
     passRunnerSummary: artifactPath(latestRunRoot, "pass-runner-summary.json"),
     cleanupResult: artifactPath(latestRunRoot, "final-retention-cleanup-result.json"),
-    fullSequenceReviewLoop: artifactPath(latestRunRoot, "full-sequence-review-loop.json")
+    fullSequenceReviewLoop: artifactPath(latestRunRoot, "full-sequence-review-loop.json"),
+    creativeIntentRevisionComparison: artifactPath(latestRunRoot, "creative-intent-revision-comparison.json")
   };
   const artifacts = Object.fromEntries(Object.entries(files).map(([key, filePath]) => [key, readJsonIfExists(filePath)]));
   const requiredFiles = {
@@ -157,6 +158,9 @@ function goalBlockers(goal = {}, artifacts = {}, curriculum = {}) {
         prerequisiteGoalReady("display.full_sequence.quality_v1", curriculum, artifacts)
         && prerequisiteGoalReady("music.structure_alignment.v1", curriculum, artifacts)
       );
+    }
+    if (blocker === "needs baseline creative-intent evidence first") {
+      return !prerequisiteGoalReady("creative.intent_match.v1", curriculum, artifacts);
     }
     return true;
   });

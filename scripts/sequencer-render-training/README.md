@@ -86,6 +86,7 @@ Generated manifests under `manifests/generated/` are local run artifacts. They a
 - `tooling/build-layer-composition-deltas.mjs`
 - `tooling/build-layer-composition-priors.mjs`
 - `tooling/export-layer-composition-priors-bundle.mjs`
+- `tooling/build-creative-intent-revision-comparison.mjs`
 - `tooling/run-layer-composition-execution-scaffold.mjs`
 - `tooling/run-layer-composition-owned-pass.mjs`
 - `tooling/run-sequencing-quality-controller.mjs`
@@ -279,6 +280,11 @@ Use `run-sequencing-quality-loop.mjs` to bind the controller checkpoint to a
 filtered layer-composition plan and execution scaffold. Default mode is
 scaffold-only; add `--apply-render --max-passes 1` only after reviewing the
 checkpoint and scaffold.
+Quality loops also write `creative-intent-revision-comparison.json` when paired
+creative baseline/revision passes exist. That compact artifact scores whether
+the targeted revision improved intent match without reducing readability or
+clutter control, so future loops can learn from before/after quality deltas
+instead of only accepting isolated sections.
 Use `run-sequencing-quality-unattended.mjs` after the loop has been proven in
 small live runs. It repeats controller-selected loops, advances the latest run
 root after each executed loop, writes `unattended-run-summary.json` after every

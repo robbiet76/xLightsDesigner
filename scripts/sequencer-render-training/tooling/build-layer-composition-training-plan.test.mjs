@@ -105,6 +105,8 @@ test("layer composition training plan includes group/model and same-target layer
   assert.equal(experimentIds.includes("submodel-structure-vendor_basic-rgb_primary"), true);
   assert.equal(experimentIds.includes("creative-intent-probe-mono_white"), true);
   assert.equal(experimentIds.includes("creative-intent-probe-rgb_primary"), true);
+  assert.equal(experimentIds.includes("creative-intent-revision-comparison-mono_white"), true);
+  assert.equal(experimentIds.includes("creative-intent-revision-comparison-rgb_primary"), true);
   assert.equal(experimentIds.includes("core-effect-fit-mono_white"), true);
   assert.equal(experimentIds.includes("core-effect-fit-rgb_primary"), true);
   assert.equal(experimentIds.includes("display-quality-review-mono_white"), true);
@@ -228,6 +230,14 @@ test("layer composition training plan includes group/model and same-target layer
   );
   assert.equal(plan.curriculum.strategy, "broad_to_specific");
   assert.equal(plan.curriculum.activeStage, "broad_composition_survey");
+  const revisionComparison = plan.experiments.find((experiment) => experiment.experimentId === "creative-intent-revision-comparison-rgb_primary");
+  assert.equal(revisionComparison.designType, "before_after_revision_pair");
+  assert.equal(revisionComparison.revisionComparisonContract.baselinePassId, "intent_first_draft");
+  assert.equal(revisionComparison.revisionComparisonContract.revisedPassId, "intent_targeted_revision");
+  assert.equal(
+    revisionComparison.passes.find((pass) => pass.passId === "intent_targeted_revision").comparisonBasePassId,
+    "intent_first_draft"
+  );
 });
 
 test("layer composition plan expands creative intent coverage-gap controller queue", () => {
@@ -267,6 +277,46 @@ test("layer composition plan expands creative intent coverage-gap controller que
     .filter(Boolean);
   assert.equal(intents.some((intent) => intent.dimensions.includes("mood") && intent.dimensions.includes("palette")), true);
   assert.equal(intents.some((intent) => intent.dimensions.includes("emphasis") && intent.dimensions.includes("negative_space")), true);
+});
+
+test("layer composition plan expands creative intent revision comparison coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-creative-revision-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 14,
+      controllerDecision: {
+        selectedGoalId: "creative.intent_revision_comparison.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:creative.intent_revision_comparison.v1:coverage-gap",
+        goalId: "creative.intent_revision_comparison.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 2);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["creative-intent-revision-comparison-mono_white"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "intent_first_draft", "intent_targeted_revision"]
+  );
+  const revised = plan.experiments[0].passes.find((pass) => pass.passId === "intent_targeted_revision");
+  assert.equal(revised.changeType, "creative_intent_revision");
+  assert.equal(revised.comparisonBasePassId, "intent_first_draft");
+  assert.equal(
+    revised.placements.some((placement) => placement.layerIntent?.creativeIntent?.reviewMethods.includes("before_after_revision_comparison")),
+    true
+  );
 });
 
 test("layer composition plan expands core effect coverage-gap controller queue", () => {

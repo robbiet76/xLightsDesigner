@@ -413,6 +413,42 @@
         "minimumDurableCandidateCount": 2,
         "maximumRegressingRecords": 0
       }
+    },
+    {
+      "goalId": "creative.intent_revision_comparison.v1",
+      "areaId": "creative_intent_matching",
+      "priority": 7,
+      "status": "not_started",
+      "description": "Measure whether targeted revisions improve creative intent match compared with the original generated section.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "creative_intent_revision_comparison"
+        ],
+        "intentDimensions": [
+          "mood",
+          "palette",
+          "pace",
+          "emphasis",
+          "style",
+          "negative_space"
+        ],
+        "reviewMethods": [
+          "deterministic_metrics",
+          "before_after_revision_comparison"
+        ]
+      },
+      "blockedBy": [
+        "needs baseline creative-intent evidence first"
+      ],
+      "nextSelectionHints": [
+        "Generate a baseline creative intent pass and a targeted revision pass with comparisonBasePassId linking the pair.",
+        "Score the revision by overall quality delta, intent match delta, readability delta, and whether the change fixed the declared issue without adding clutter."
+      ],
+      "completionCriteria": {
+        "minimumDurableCandidateCount": 2,
+        "maximumRegressingRecords": 0
+      }
     }
   ]
 }

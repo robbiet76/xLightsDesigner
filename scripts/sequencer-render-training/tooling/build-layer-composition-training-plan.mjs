@@ -832,6 +832,144 @@ function makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHor
   };
 }
 
+function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGroup, star, singleLineHorizontal }) {
+  const baselineWash = placement({
+    id: `cr-${paletteProfile}-baseline-wash`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "creative_revision",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "foundation",
+      creativeIntent: {
+        mood: "warm_build",
+        palette: paletteProfile === "rgb_primary" ? "rgb_primary" : "mono_white",
+        pace: "slow_build",
+        style: "smooth_wash",
+        negativeSpace: "opening_breath",
+        dimensions: ["mood", "palette", "pace", "style", "negative_space"],
+        reviewMethods: ["deterministic_metrics", "before_after_revision_comparison"],
+        revisionRole: "baseline_candidate",
+        revisionIssue: "section lacks a clear late emphasis and may read too flat"
+      }
+    }
+  });
+  const baselineBackground = placement({
+    id: `cr-${paletteProfile}-baseline-background`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "creative_revision",
+    layerIndex: 1,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { direction: "up", cycles: 2 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "support",
+      creativeIntent: {
+        mood: "warm_build",
+        pace: "steady_support",
+        style: "directional_background",
+        dimensions: ["mood", "pace", "style"],
+        reviewMethods: ["deterministic_metrics", "before_after_revision_comparison"],
+        revisionRole: "baseline_candidate"
+      }
+    }
+  });
+  const revisedAccent = placement({
+    id: `cr-${paletteProfile}-revised-accent`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "creative_revision",
+    layerIndex: 2,
+    startMs: 3600,
+    endMs: 6000,
+    effectSettings: { effect: "Chase", cycles: 2, colorSpeed: 6 },
+    layerSettings: { mixMethod: "Normal", fadeIn: "0.5", fadeOut: "0.5" },
+    layerIntent: {
+      blendRole: "accent",
+      creativeIntent: {
+        emphasis: "late_section_lift",
+        negativeSpace: "preserve_opening_breath",
+        pace: "accent_lift",
+        style: "clean_linear_response",
+        dimensions: ["emphasis", "negative_space", "pace", "style"],
+        reviewMethods: ["deterministic_metrics", "before_after_revision_comparison"],
+        revisionRole: "targeted_revision",
+        revisionTarget: "add a readable late accent while preserving opening negative space"
+      }
+    }
+  });
+  const revisedWash = {
+    ...baselineWash,
+    placementId: `cr-${paletteProfile}-revised-wash`,
+    startMs: 700,
+    layerIntent: {
+      ...baselineWash.layerIntent,
+      creativeIntent: {
+        ...baselineWash.layerIntent.creativeIntent,
+        negativeSpace: "preserve_opening_breath",
+        revisionRole: "targeted_revision",
+        revisionTarget: "delay the foundation slightly to create intentional opening space"
+      }
+    }
+  };
+
+  return {
+    experimentId: `creative-intent-revision-comparison-${paletteProfile}`,
+    family: "creative_intent_revision_comparison",
+    paletteProfile,
+    curriculumStage: "sequence_pattern_validation",
+    designType: "before_after_revision_pair",
+    layeringTaxonomy: ["creative_intent_match", "revision_comparison", "negative_space", "emphasis"],
+    targetSets: [
+      { scope: "group", targets: [archGroup] },
+      { scope: "model", targets: [star, singleLineHorizontal] }
+    ],
+    revisionComparisonContract: {
+      baselinePassId: "intent_first_draft",
+      revisedPassId: "intent_targeted_revision",
+      scoringSignals: [
+        "overall_quality_delta",
+        "intent_match_delta",
+        "visual_readability_delta",
+        "motion_coherence_delta",
+        "clutter_regression_guard"
+      ],
+      promotionUse: "Revision evidence is promoted only when the revised pass improves intent match without reducing readability."
+    },
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName]
+      },
+      {
+        passId: "intent_first_draft",
+        compositionPass: "creative_revision",
+        placements: [baselineWash, baselineBackground],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName]
+      },
+      {
+        passId: "intent_targeted_revision",
+        compositionPass: "creative_revision",
+        placements: [revisedWash, baselineBackground, revisedAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName],
+        comparisonBasePassId: "intent_first_draft",
+        changeType: "creative_intent_revision"
+      }
+    ]
+  };
+}
+
 function makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }) {
   const lineSingleStrand = placement({
     id: `ef-${paletteProfile}-line-single-strand`,
@@ -1919,6 +2057,16 @@ function runtimeSelectionForExperiment(experiment, runType) {
       reason: "Measures deterministic mood, palette, pace, emphasis, style, and negative-space intent signals."
     };
   }
+  if (experiment.family === "creative_intent_revision_comparison") {
+    return {
+      ...common,
+      tier: "creative_intent_revision_comparison",
+      queueRank: 56,
+      budgetWeight: 1,
+      selectionRole: "before_after_creative_revision_pair",
+      reason: "Measures whether a targeted revision improves creative intent match without degrading readability or adding clutter."
+    };
+  }
   if (experiment.family === "core_effect_fit") {
     return {
       ...common,
@@ -2075,6 +2223,22 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
           {
             experimentId: `creative-intent-probe-${paletteProfile}`,
             passId: "emphasis_negative_space",
+            generatedFromCoverageGap: goalId
+          }
+        );
+      }
+    }
+    if (goalId === "creative.intent_revision_comparison.v1") {
+      for (const paletteProfile of ["mono_white"]) {
+        rows.push(
+          {
+            experimentId: `creative-intent-revision-comparison-${paletteProfile}`,
+            passId: "intent_first_draft",
+            generatedFromCoverageGap: goalId
+          },
+          {
+            experimentId: `creative-intent-revision-comparison-${paletteProfile}`,
+            passId: "intent_targeted_revision",
             generatedFromCoverageGap: goalId
           }
         );
@@ -2279,6 +2443,7 @@ export function buildLayerCompositionTrainingPlan({
     makeSameTargetLayerExperiment({ paletteProfile, star }),
     makeSubmodelStructureExperiment({ paletteProfile, target: vendorBasicSubmodel }),
     makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHorizontal }),
+    makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGroup, star, singleLineHorizontal }),
     makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
     makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
     makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner }),
@@ -2324,6 +2489,7 @@ export function buildLayerCompositionTrainingPlan({
       "same_target_layer_stack",
       "submodel_structure",
       "creative_intent_probe",
+      "creative_intent_revision_comparison",
       "core_effect_fit",
       "display_quality_review",
       "music_structure_review",

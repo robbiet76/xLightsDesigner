@@ -628,6 +628,116 @@ test("controller counts durable creative intent records for creative goals", () 
   assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
 });
 
+test("controller blocks creative revision comparison until baseline creative evidence exists", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "creative.intent_revision_comparison.v1",
+        areaId: "creative_intent_matching",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        blockedBy: ["needs baseline creative-intent evidence first"],
+        coverage: {
+          families: ["creative_intent_revision_comparison"],
+          reviewMethods: ["before_after_revision_comparison"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.nextAction, "resolve_blocker");
+  assert.deepEqual(state.controllerDecision.blockedBy, ["needs baseline creative-intent evidence first"]);
+});
+
+test("controller plans creative revision comparison after baseline creative evidence", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("emphasis_negative_space", 0.84, []),
+    experimentId: "creative-intent-probe-mono_white",
+    family: "creative_intent_probe",
+    sampleCount: 2,
+    trendStatus: "stable",
+    intentDimensions: ["mood", "palette", "pace", "emphasis", "style", "negative_space"],
+    reviewMethods: ["deterministic_metrics"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "creative.intent_match.v1",
+        areaId: "creative_intent_matching",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["creative_intent_probe"],
+          reviewMethods: ["deterministic_metrics"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 1
+        }
+      }, {
+        goalId: "creative.intent_revision_comparison.v1",
+        areaId: "creative_intent_matching",
+        priority: 2,
+        status: "not_started",
+        requiredStableSamples: 2,
+        blockedBy: ["needs baseline creative-intent evidence first"],
+        coverage: {
+          families: ["creative_intent_revision_comparison"],
+          reviewMethods: ["before_after_revision_comparison"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "creative.intent_revision_comparison.v1");
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
+});
+
+test("controller counts durable creative revision comparison records", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("intent_targeted_revision", 0.87, []),
+    experimentId: "creative-intent-revision-comparison-mono_white",
+    family: "creative_intent_revision_comparison",
+    sampleCount: 2,
+    trendStatus: "stable",
+    intentDimensions: ["mood", "palette", "pace", "emphasis", "style", "negative_space"],
+    reviewMethods: ["deterministic_metrics", "before_after_revision_comparison"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "creative.intent_revision_comparison.v1",
+        areaId: "creative_intent_matching",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["creative_intent_revision_comparison"],
+          reviewMethods: ["before_after_revision_comparison"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 1);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
+});
+
 test("controller keeps blocked creative intent records out of effect-fit queues", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
