@@ -246,6 +246,9 @@ judged by display-level visual quality, not only by whether an effect rendered.
 Pass summaries distinguish `quality_evidence` from `render_health_observation`
 so baselines and other non-effect checks can verify the render path without being
 counted as promotable creative-quality evidence.
+Quality-enabled runs also write `layer-composition-quality-trend.json`; pass one
+or more run roots to `build-layer-composition-quality-trend.mjs` to compare
+eligible quality evidence across repeated unattended runs.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \

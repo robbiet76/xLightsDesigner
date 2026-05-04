@@ -6,6 +6,7 @@ import { runLayerCompositionOwnedPass } from "./run-layer-composition-owned-pass
 import { appendLayerCompositionAdaptiveRefill } from "./build-layer-composition-adaptive-refill.mjs";
 import { buildLayerCompositionDeltas } from "./build-layer-composition-deltas.mjs";
 import { buildLayerCompositionPriors } from "./build-layer-composition-priors.mjs";
+import { buildLayerCompositionQualityTrend } from "./build-layer-composition-quality-trend.mjs";
 import { buildRenderReviewFromFseq } from "../../designer-training/build-render-review-from-fseq.mjs";
 import {
   applyLayerCompositionRetentionCleanup,
@@ -928,6 +929,24 @@ export async function runLayerCompositionPasses({
     results
   };
   writeJson(passRunnerSummaryPath, summary);
+  if (renderReviewQuality) {
+    const qualityTrendPath = path.join(root, "layer-composition-quality-trend.json");
+    const qualityTrend = (deps.buildQualityTrend || buildLayerCompositionQualityTrend)({
+      runRoots: [root],
+      outPath: qualityTrendPath
+    });
+    summary.renderReviewQualityTrendRef = qualityTrendPath;
+    summary.renderReviewQualityTrend = qualityTrend.summary || null;
+    writeJson(passRunnerSummaryPath, summary);
+    appendLedgerArtifacts(ledgerPath, [
+      {
+        path: qualityTrendPath,
+        artifactClass: "metric_summary",
+        summarized: true,
+        retain: true
+      }
+    ]);
+  }
   writeExecutionSummary({
     root,
     plan,

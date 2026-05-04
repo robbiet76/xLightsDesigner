@@ -183,6 +183,8 @@ test("pass runner can attach render review quality evidence to a completed pass"
   assert.equal(summary.renderReviewEvidenceEligibleCount, 1);
   assert.equal(summary.renderReviewAcceptedEvidenceCount, 1);
   assert.equal(summary.renderReviewEligibleQualityMean, 0.9);
+  assert.equal(Boolean(summary.renderReviewQualityTrendRef), true);
+  assert.equal(summary.renderReviewQualityTrend.evidenceRecordCount, 1);
   assert.equal(summary.results[0].renderReviewDecision, "accept");
   assert.equal(summary.results[0].renderReviewOverallQuality, 0.9);
   assert.equal(summary.results[0].renderReviewEvidenceEligible, true);
@@ -202,6 +204,7 @@ test("pass runner can attach render review quality evidence to a completed pass"
   assert.equal(executionSummary.renderReviewQualityCount, 1);
   const ledger = JSON.parse(fs.readFileSync(path.join(runRoot, "retention-ledger.json"), "utf8"));
   assert.equal(ledger.artifacts.some((row) => row.artifactClass === "render_review"), true);
+  assert.equal(ledger.artifacts.some((row) => row.path === summary.renderReviewQualityTrendRef), true);
 });
 
 test("pass runner records failure and stops after first failed pass", async () => {
