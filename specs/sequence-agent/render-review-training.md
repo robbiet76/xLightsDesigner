@@ -110,7 +110,8 @@ The self-improvement loop should add a render-review phase after live apply/rend
 1. Deterministic `render_review_v1` artifacts can be built from sampled frame metrics.
 2. The self-improvement cycle can run manifest-defined `render_review` phases and summarize accept/revise/reject decisions.
 3. `ffmpeg`-based media extraction can produce sampled frame metrics, ordered frame images, and contact sheets for rendered section windows.
-4. Wire xLights render outputs directly into media extraction and render-review phases.
-5. Attach richer section intent and music context to generated review artifacts.
-6. Add vision review as an optional second-pass evaluator.
-7. Use review decisions to drive revision loops before promotion.
+4. The self-improvement cycle can extract review media automatically when a `render_review` manifest entry points at a media file instead of a prebuilt frame-features artifact.
+5. Wire xLights render outputs directly into media-backed render-review phases.
+6. Attach richer section intent and music context to generated review artifacts.
+7. Add vision review as an optional second-pass evaluator.
+8. Use review decisions to drive revision loops before promotion.

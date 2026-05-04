@@ -109,4 +109,6 @@ Render review is the next training direction. It should evaluate whole-display s
 
 The self-improvement loop can also run manifest-defined render reviews. Add a `render_review` phase with one or more `reviews`, each pointing at a frame-features JSON file and optional intent/video/contact-sheet evidence. The cycle writes `render_review_v1` artifacts under `render-reviews/` and includes accept/revise/reject counts in `cycle-summary.json`.
 
+If a review points at `mediaPath` or `videoPath` and does not provide frame features, the cycle first runs media extraction into `render-review-media/`, then feeds the extracted `frame-features.json`, contact sheet, and ordered frames into the review artifact.
+
 Promotion requires repeated evidence across compatible sections or targets. One attractive render is not enough to promote a generalized training rule.

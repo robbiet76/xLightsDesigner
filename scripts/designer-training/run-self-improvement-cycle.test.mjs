@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -9,6 +10,15 @@ import { runSelfImprovementCycle } from './run-self-improvement-cycle.mjs';
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function hasCommand(command) {
+  try {
+    execFileSync('which', [command], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 test('self-improvement cycle exports target behavior summaries and blocks early promotion', async () => {
@@ -248,4 +258,63 @@ test('self-improvement cycle builds render review artifacts from manifest phases
   const review = JSON.parse(fs.readFileSync(phase.results[0].outputPath, 'utf8'));
   assert.equal(review.artifactType, 'render_review_v1');
   assert.equal(review.section.id, 'chorus-1');
+});
+
+test('self-improvement cycle extracts media before render review when frame features are absent', { skip: !hasCommand('ffmpeg') || !hasCommand('ffprobe') }, async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-media-review-'));
+  const mediaPath = path.join(root, 'section.mp4');
+  const intentPath = path.join(root, 'intent.json');
+  const manifestPath = path.join(root, 'manifest.json');
+  execFileSync('ffmpeg', [
+    '-y',
+    '-v', 'error',
+    '-f', 'lavfi',
+    '-i', 'testsrc=size=96x64:rate=8:duration=2',
+    '-pix_fmt', 'yuv420p',
+    mediaPath
+  ]);
+  writeJson(intentPath, {
+    section: { id: 'verse-1', label: 'Verse 1', startMs: 0, endMs: 2000 },
+    creativeObjective: { coverage: 'wide', motion: 'active' },
+    musicRole: { energy: 'high' }
+  });
+  writeJson(manifestPath, {
+    artifactType: 'xlightsdesigner_self_improvement_loop_manifest_v1',
+    initialScope: {
+      effects: ['On', 'Bars', 'Color Wash', 'SingleStrand'],
+      blockedEffects: ['Shimmer']
+    },
+    cyclePhases: [
+      {
+        id: 'review_rendered_section',
+        type: 'render_review',
+        sampleCount: 8,
+        reviews: [
+          {
+            id: 'verse-1',
+            mediaPath,
+            intentPath,
+            startMs: 0,
+            endMs: 2000
+          }
+        ]
+      }
+    ],
+    promotionGate: {}
+  });
+
+  const result = await runSelfImprovementCycle({
+    manifestPath,
+    skipCommands: true,
+    outDir: path.join(root, 'run')
+  });
+
+  const phase = result.phases.find((row) => row.id === 'review_rendered_section');
+  assert.equal(result.ok, true);
+  assert.equal(phase.ok, true);
+  assert.equal(fs.existsSync(phase.results[0].mediaExtraction.frameFeaturesPath), true);
+  assert.equal(fs.existsSync(phase.results[0].mediaExtraction.contactSheetPath), true);
+  const review = JSON.parse(fs.readFileSync(phase.results[0].outputPath, 'utf8'));
+  assert.equal(review.evidence.videoPath, mediaPath);
+  assert.equal(review.evidence.frameFeaturesPath, phase.results[0].mediaExtraction.frameFeaturesPath);
 });

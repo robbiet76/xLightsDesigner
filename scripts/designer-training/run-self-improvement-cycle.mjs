@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildRenderReviewArtifact } from './build-render-review-artifact.mjs';
+import { extractRenderReviewMedia } from './extract-render-review-media.mjs';
 import { buildTargetBehaviorTrainingSummary } from './export-target-behavior-training-summary.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -182,17 +183,21 @@ async function runRenderReviewPhase({ phase, outDir }) {
   fs.mkdirSync(reviewDir, { recursive: true });
 
   reviews.forEach((review, index) => {
-    const frameFeaturesPath = resolveRepoPath(review.frameFeaturesPath || review.frameFeatures || review.featuresPath);
+    let frameFeaturesPath = resolveRepoPath(review.frameFeaturesPath || review.frameFeatures || review.featuresPath);
+    const mediaPath = resolveRepoPath(review.mediaPath || review.videoPath || review.video);
     const intentPath = resolveRepoPath(review.intentPath || review.intent);
     const label = str(review.id || review.sectionId || `${phaseId}-${index + 1}`)
       .replace(/[^a-z0-9_.-]+/gi, '-')
       .replace(/^-|-$/g, '') || `${phaseId}-${index + 1}`;
     const outputPath = resolveRepoPath(review.outPath || path.join(reviewDir, `${label}.json`));
+    const mediaOutDir = resolveRepoPath(review.mediaOutDir || path.join(outDir, 'render-review-media', label));
     const result = {
       id: label,
       type: 'render_review',
       ok: false,
       frameFeaturesPath,
+      mediaPath,
+      mediaExtraction: null,
       intentPath,
       outputPath,
       decision: '',
@@ -200,6 +205,25 @@ async function runRenderReviewPhase({ phase, outDir }) {
       error: ''
     };
     try {
+      if ((!frameFeaturesPath || !fs.existsSync(frameFeaturesPath)) && mediaPath) {
+        const extraction = extractRenderReviewMedia({
+          mediaPath,
+          outDir: mediaOutDir,
+          frameFeaturesOut: review.frameFeaturesOut,
+          framesDir: review.framesDir || review.frameDirectory,
+          contactSheetOut: review.contactSheetOut || review.contactSheetPath,
+          startMs: Number(review.startMs || 0),
+          endMs: Number(review.endMs || 0),
+          sampleCount: Number(review.sampleCount || phase.sampleCount || 16),
+          keepFrames: review.keepFrames !== false,
+          buildContactSheet: review.buildContactSheet !== false
+        });
+        result.mediaExtraction = extraction;
+        frameFeaturesPath = extraction.frameFeaturesPath;
+        result.frameFeaturesPath = frameFeaturesPath;
+        if (!review.contactSheetPath && extraction.contactSheetPath) review.contactSheetPath = extraction.contactSheetPath;
+        if (!review.frameDirectory && !review.frameDir && extraction.framesDir) review.frameDirectory = extraction.framesDir;
+      }
       if (!frameFeaturesPath || !fs.existsSync(frameFeaturesPath)) {
         throw new Error(`frame features file not found: ${frameFeaturesPath || '(missing)'}`);
       }
@@ -209,7 +233,7 @@ async function runRenderReviewPhase({ phase, outDir }) {
         frameFeatures,
         intent,
         evidence: {
-          videoPath: resolveRepoPath(review.videoPath || review.video),
+          videoPath: mediaPath,
           contactSheetPath: resolveRepoPath(review.contactSheetPath || review.contactSheet),
           frameDirectory: resolveRepoPath(review.frameDirectory || review.frameDir),
           sequencePath: resolveRepoPath(review.sequencePath || review.sequence),
