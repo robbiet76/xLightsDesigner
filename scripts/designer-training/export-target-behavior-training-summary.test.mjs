@@ -89,3 +89,32 @@ test('target behavior training summary anonymizes target names and ids', () => {
   assert.equal(serialized.includes('render-1'), false);
   assert.equal(serialized.includes('apply-1'), false);
 });
+
+test('target behavior training summary cli default source label is neutral', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const path = await import('node:path');
+
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-private-project-name-'));
+  const displayDir = path.join(root, 'display');
+  fs.mkdirSync(displayDir, { recursive: true });
+  fs.writeFileSync(path.join(displayDir, 'target-behavior.json'), JSON.stringify({
+    artifactType: 'project_target_behavior_learning_v1',
+    records: []
+  }));
+
+  const result = spawnSync(process.execPath, [
+    'scripts/designer-training/export-target-behavior-training-summary.mjs',
+    '--project-dir',
+    root
+  ], {
+    cwd: process.cwd(),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  const summary = JSON.parse(result.stdout);
+  assert.equal(summary.source.label, 'project display artifacts');
+  assert.equal(result.stdout.includes(path.basename(root)), false);
+});

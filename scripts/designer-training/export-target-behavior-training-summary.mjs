@@ -239,7 +239,7 @@ if (isCli) {
     const summary = buildTargetBehaviorTrainingSummary({
       targetBehavior,
       modelIndex,
-      sourceLabel: args.sourceLabel || path.basename(path.dirname(path.dirname(path.resolve(args.targetBehaviorPath))))
+      sourceLabel: args.sourceLabel || 'project display artifacts'
     });
     const output = `${JSON.stringify(summary, null, 2)}\n`;
     if (args.outPath) {
