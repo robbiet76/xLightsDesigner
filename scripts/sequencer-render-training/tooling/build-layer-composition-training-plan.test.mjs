@@ -301,6 +301,47 @@ test("layer composition plan expands core effect coverage-gap controller queue",
   assert.equal(effectNames.includes("Shimmer"), false);
 });
 
+test("layer composition plan expands missing core effect coverage units", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-effect-missing-units",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 10,
+      controllerDecision: {
+        selectedGoalId: "effect_fit.core_effects.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:effect_fit.core_effects.v1:coverage-gap",
+        goalId: "effect_fit.core_effects.v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "mono_white",
+          effect: "Marquee",
+          modelType: "single_line"
+        }, {
+          paletteProfile: "mono_white",
+          effect: "Pinwheel",
+          modelType: "spinner"
+        }]
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 2);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "marquee_linear_segments", "pinwheel_spinner_rotation"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.flatMap((pass) => pass.placements).map((placement) => placement.effectName),
+    ["Marquee", "Pinwheel"]
+  );
+});
+
 test("layer composition smoke run remains explicitly marked as validation only", () => {
   const plan = buildLayerCompositionTrainingPlan({ modelCatalog, runId: "test-run", runType: "smoke" });
 

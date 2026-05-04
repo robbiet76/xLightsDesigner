@@ -184,8 +184,83 @@ function completionCriteriaForGoal(goal = {}) {
     minimumSelectorReadyPriorCount,
     minimumDurableCandidateCount: finiteCriteriaNumber(criteria.minimumDurableCandidateCount)
       || minimumSelectorReadyPriorCount
-      || null
+      || null,
+    minimumDistinctCoverageUnitCount: finiteCriteriaNumber(criteria.minimumDistinctCoverageUnitCount),
+    distinctCoverageFields: arr(criteria.distinctCoverageFields).map(normalizedToken).filter(Boolean),
+    desiredCoverageUnits: arr(criteria.desiredCoverageUnits)
   };
+}
+
+function paletteProfilesForRecord(record = {}) {
+  const values = new Set(normalizedValues(record.paletteProfiles));
+  const experiment = normalizedToken(record.experimentId);
+  if (experiment.includes("mono_white")) values.add("mono_white");
+  if (experiment.includes("rgb_primary")) values.add("rgb_primary");
+  return [...values];
+}
+
+function coverageFieldValues(record = {}, field = "") {
+  if (field === "effect" || field === "effects" || field === "effect_name") return [normalizedToken(record.effectName)].filter(Boolean);
+  if (field === "model_type" || field === "model_types" || field === "modeltype") return normalizedValues(record.modelTypes);
+  if (field === "palette" || field === "palette_profile" || field === "palette_profiles" || field === "paletteprofile") return paletteProfilesForRecord(record);
+  if (field === "target_scope" || field === "target_scopes") return normalizedValues(targetScopesForRecord(record));
+  if (field === "family" || field === "families") return [normalizedToken(record.family)].filter(Boolean);
+  return normalizedValues(record[field]);
+}
+
+function coverageUnitKeysForRecord(record = {}, fields = []) {
+  const normalizedFields = arr(fields).map(normalizedToken).filter(Boolean);
+  if (!normalizedFields.length) return [];
+  const units = [""];
+  for (const field of normalizedFields) {
+    const values = coverageFieldValues(record, field);
+    if (!values.length) return [];
+    const next = [];
+    for (const unit of units) {
+      for (const value of values) next.push(`${unit}${unit ? "|" : ""}${field}:${value}`);
+    }
+    units.splice(0, units.length, ...next);
+  }
+  return units;
+}
+
+function coverageUnitKeyForDesiredUnit(unit = {}, fields = []) {
+  return arr(fields)
+    .map(normalizedToken)
+    .filter(Boolean)
+    .map((field) => {
+      const value = unit[field]
+        ?? unit[`${field}s`]
+        ?? (field === "paletteprofile" ? unit.paletteProfile : undefined)
+        ?? (field === "modeltype" ? unit.modelType : undefined)
+        ?? (field === "effectname" ? unit.effectName : undefined)
+        ?? unit[field.replace("_", "")]
+        ?? unit[field.replaceAll("_", "")]
+        ?? unit[field.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())]
+        ?? unit[field.replaceAll("_", "")]
+        ?? "";
+      return `${field}:${normalizedToken(value)}`;
+    })
+    .join("|");
+}
+
+function durableCoverageUnitKeysForGoal(records = [], goal = {}) {
+  const fields = completionCriteriaForGoal(goal).distinctCoverageFields;
+  if (!fields.length) return new Set();
+  const keys = new Set();
+  for (const record of recordsForGoal(records, goal)) {
+    if (!bool(record?.promotion?.durableCandidate)) continue;
+    for (const key of coverageUnitKeysForRecord(record, fields)) keys.add(key);
+  }
+  return keys;
+}
+
+function missingDesiredCoverageUnits(records = [], goal = {}) {
+  const criteria = completionCriteriaForGoal(goal);
+  if (!criteria.distinctCoverageFields.length || !criteria.desiredCoverageUnits.length) return [];
+  const covered = durableCoverageUnitKeysForGoal(records, goal);
+  return criteria.desiredCoverageUnits
+    .filter((unit) => !covered.has(coverageUnitKeyForDesiredUnit(unit, criteria.distinctCoverageFields)));
 }
 
 function recordMatchesGoal(record = {}, goal = {}) {
@@ -313,10 +388,13 @@ function goalEvidenceCovered(goal = {}, artifacts = {}, curriculum = {}) {
   const blockers = goalBlockers(goal, artifacts, curriculum);
   if (blockers.length) return false;
   const criteria = completionCriteriaForGoal(goal);
+  const records = arr(artifacts?.qualityRecords?.records);
   const selectorReadyPriorCount = promotedPriorsForGoal(arr(artifacts?.promotedPriors?.priors), goal).length;
-  const durableCandidateCount = durableRecordCountForGoal(arr(artifacts?.qualityRecords?.records), goal);
+  const durableCandidateCount = durableRecordCountForGoal(records, goal);
+  const distinctCoverageUnitCount = durableCoverageUnitKeysForGoal(records, goal).size;
   return (criteria.minimumSelectorReadyPriorCount !== null && selectorReadyPriorCount >= criteria.minimumSelectorReadyPriorCount)
-    || (criteria.minimumDurableCandidateCount !== null && durableCandidateCount >= criteria.minimumDurableCandidateCount);
+    || (criteria.minimumDurableCandidateCount !== null && durableCandidateCount >= criteria.minimumDurableCandidateCount)
+    || (criteria.minimumDistinctCoverageUnitCount !== null && distinctCoverageUnitCount >= criteria.minimumDistinctCoverageUnitCount);
 }
 
 function hasNonRepeatableBlockedRecord(records = [], goal = {}, policy = {}) {
@@ -337,6 +415,8 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
     const durableCandidateCount = goalRecords.filter((record) => bool(record?.promotion?.durableCandidate)).length;
     const blockedPromisingCount = goalRecords.filter((record) => isPromisingBlockedRecord(record, goal, policy)).length;
     const selectorReadyPriorCount = promotedPriorsForGoal(priors, goal).length;
+    const distinctCoverageUnitCount = durableCoverageUnitKeysForGoal(records, goal).size;
+    const missingCoverageUnits = missingDesiredCoverageUnits(records, goal);
     const blockers = new Set(goalBlockers(goal, artifacts, curriculum));
     const criteria = completionCriteriaForGoal(goal);
     const coveredByDeclaredStatus = str(goal.status) === "covered";
@@ -344,13 +424,15 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
       && selectorReadyPriorCount >= criteria.minimumSelectorReadyPriorCount;
     const coveredByDurableEvidence = criteria.minimumDurableCandidateCount !== null
       && durableCandidateCount >= criteria.minimumDurableCandidateCount;
+    const coveredByDistinctCoverage = criteria.minimumDistinctCoverageUnitCount !== null
+      && distinctCoverageUnitCount >= criteria.minimumDistinctCoverageUnitCount;
     if (artifacts.missingArtifacts?.length && !goalRecords.length && !selectorReadyPriorCount) blockers.add("latest evidence artifacts unavailable");
     return {
       goalId: str(goal.goalId),
       areaId: str(goal.areaId),
       status: str(goal.status),
       priority: num(goal.priority),
-      evidenceStatus: coveredByDeclaredStatus || coveredBySelectorReadyPriors || coveredByDurableEvidence
+      evidenceStatus: coveredByDeclaredStatus || coveredBySelectorReadyPriors || coveredByDurableEvidence || coveredByDistinctCoverage
         ? "covered"
         : blockedPromisingCount
           ? "in_progress"
@@ -359,6 +441,8 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
             : str(goal.status),
       selectorReadyPriorCount,
       durableCandidateCount,
+      distinctCoverageUnitCount,
+      missingCoverageUnitCount: missingCoverageUnits.length,
       blockedPromisingCount,
       blockers: [...blockers]
     };
@@ -463,6 +547,7 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     || goals.find((goal) => !durableRecordCountForGoal(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
     || goals[0]
     || null;
+  const missingCoverageUnits = nextGoal ? missingDesiredCoverageUnits(records, nextGoal) : [];
   return {
     selectedGoal: nextGoal,
     nextQueue: nextGoal ? [{
@@ -470,6 +555,7 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
       goalId: str(nextGoal.goalId),
       priority: 1,
       reason: "coverage_gap",
+      missingCoverageUnits,
       selectionHint: arr(nextGoal.nextSelectionHints)[0] || "create the first bounded coverage run for this curriculum goal"
     }] : [],
     decision: {

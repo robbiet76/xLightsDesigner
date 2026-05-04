@@ -65,9 +65,12 @@ function blockedRecord(passId, quality = 0.84) {
   return {
     recordId: `record:${passId}`,
     experimentId: "same-target-layer-stack-mono_white",
+    family: "same_target_layer_stack",
     passId,
     effectName: "Color Wash",
     leadTargets: ["StarTripleLayer"],
+    modelTypes: ["star"],
+    targetScopes: ["model"],
     sampleCount: 1,
     trendStatus: "single_run_baseline",
     quality: {

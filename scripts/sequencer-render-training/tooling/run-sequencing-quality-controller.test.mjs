@@ -748,6 +748,101 @@ test("controller matches xLights internal SingleStrand name to single strand cov
   assert.equal(state.nextQueue[0].reason, "repeat_blocked_promising_record");
 });
 
+test("controller tracks distinct effect-fit coverage units", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [
+    {
+      ...record("single_strand_linear_motion", 0.84, []),
+      experimentId: "core-effect-fit-mono_white",
+      family: "core_effect_fit",
+      effectName: "SingleStrand",
+      modelTypes: ["single_line"],
+      sampleCount: 2,
+      trendStatus: "stable"
+    },
+    {
+      ...record("bars_group_motion", 0.84, []),
+      experimentId: "core-effect-fit-mono_white",
+      family: "core_effect_fit",
+      effectName: "Bars",
+      modelTypes: ["arch"],
+      targetScopes: ["group"],
+      sampleCount: 2,
+      trendStatus: "stable"
+    },
+    {
+      ...record("color_wash_radial_fill", 0.85, []),
+      experimentId: "core-effect-fit-mono_white",
+      family: "core_effect_fit",
+      effectName: "Color Wash",
+      modelTypes: ["star"],
+      sampleCount: 2,
+      trendStatus: "stable"
+    },
+    {
+      ...record("legacy_marquee_layer", 0.85, []),
+      experimentId: "group-model-interplay-mono_white",
+      family: "group_model_interplay",
+      effectName: "Marquee",
+      modelTypes: ["single_line"],
+      sampleCount: 2,
+      trendStatus: "stable"
+    }
+  ]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "effect_fit.core_effects.v1",
+        areaId: "effect_behavior",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["core_effect_fit"],
+          effects: ["Single Strand", "Bars", "Color Wash", "Marquee"],
+          modelTypes: ["single_line", "arch", "star"],
+          paletteProfiles: ["mono_white"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 4,
+          distinctCoverageFields: ["paletteProfile", "effect", "modelType"],
+          desiredCoverageUnits: [{
+            paletteProfile: "mono_white",
+            effect: "Single Strand",
+            modelType: "single_line"
+          }, {
+            paletteProfile: "mono_white",
+            effect: "Bars",
+            modelType: "arch"
+          }, {
+            paletteProfile: "mono_white",
+            effect: "Color Wash",
+            modelType: "star"
+          }, {
+            paletteProfile: "mono_white",
+            effect: "Marquee",
+            modelType: "single_line"
+          }]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 3);
+  assert.equal(state.goalStatuses[0].distinctCoverageUnitCount, 3);
+  assert.equal(state.goalStatuses[0].missingCoverageUnitCount, 1);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
+  assert.deepEqual(state.nextQueue[0].missingCoverageUnits, [{
+    paletteProfile: "mono_white",
+    effect: "Marquee",
+    modelType: "single_line"
+  }]);
+});
+
 test("controller increments loop index from a previous state", () => {
   const runRoot = tempDir();
   const previousStatePath = path.join(runRoot, "previous-state.json");

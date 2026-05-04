@@ -245,6 +245,9 @@
       "description": "Establish core effect fit across common model families before broadening the effect set.",
       "requiredStableSamples": 2,
       "coverage": {
+        "families": [
+          "core_effect_fit"
+        ],
         "effects": [
           "On",
           "Single Strand",
@@ -259,6 +262,7 @@
         "modelTypes": [
           "arch",
           "tree",
+          "tree_flat",
           "star",
           "matrix",
           "single_line",
@@ -270,6 +274,52 @@
           "mono_white",
           "rgb_primary"
         ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 7,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "effect",
+          "modelType"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "mono_white",
+            "effect": "Single Strand",
+            "modelType": "single_line"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "effect": "Bars",
+            "modelType": "arch"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "effect": "Color Wash",
+            "modelType": "star"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "effect": "Marquee",
+            "modelType": "single_line"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "effect": "Pinwheel",
+            "modelType": "spinner"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "effect": "Fire",
+            "modelType": "tree_flat"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "effect": "Butterfly",
+            "modelType": "star"
+          }
+        ],
+        "maximumRegressingRecords": 0
       }
     },
     {
