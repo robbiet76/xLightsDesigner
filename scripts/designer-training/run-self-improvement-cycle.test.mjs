@@ -318,3 +318,110 @@ test('self-improvement cycle extracts media before render review when frame feat
   assert.equal(review.evidence.videoPath, mediaPath);
   assert.equal(review.evidence.frameFeaturesPath, phase.results[0].mediaExtraction.frameFeaturesPath);
 });
+
+test('self-improvement cycle runs FSEQ render review phases', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-fseq-review-'));
+  const geometryPath = path.join(root, 'geometry.json');
+  const fseqPath = path.join(root, 'section.fseq');
+  const manifestPath = path.join(root, 'manifest.json');
+  writeJson(geometryPath, { artifactType: 'preview_scene_geometry_v1' });
+  fs.writeFileSync(fseqPath, 'fake-fseq');
+  writeJson(manifestPath, {
+    artifactType: 'xlightsdesigner_self_improvement_loop_manifest_v1',
+    initialScope: {
+      effects: ['On', 'Bars', 'Color Wash', 'SingleStrand'],
+      blockedEffects: ['Shimmer']
+    },
+    cyclePhases: [
+      {
+        id: 'review_fseq_section',
+        type: 'fseq_render_review',
+        geometryPath,
+        windowStartMs: 0,
+        windowEndMs: 8000,
+        sampleCount: 8,
+        reviews: [
+          {
+            id: 'on-proof',
+            fseqPath,
+            startMs: 0,
+            endMs: 8000
+          }
+        ]
+      }
+    ],
+    promotionGate: {}
+  });
+
+  const result = await runSelfImprovementCycle({
+    manifestPath,
+    skipCommands: true,
+    outDir: path.join(root, 'run'),
+    buildFseqReview: ({ outDir }) => {
+      const renderReviewPath = path.join(outDir, 'render-review.json');
+      writeJson(renderReviewPath, { artifactType: 'render_review_v1' });
+      return {
+        ok: true,
+        renderReviewPath,
+        decision: 'accept',
+        overallQuality: 0.91
+      };
+    }
+  });
+
+  const phase = result.phases.find((row) => row.id === 'review_fseq_section');
+  assert.equal(result.ok, true);
+  assert.equal(phase.ok, true);
+  assert.equal(phase.totals.acceptedCount, 1);
+  assert.equal(phase.results[0].decision, 'accept');
+  assert.equal(phase.results[0].overallQuality, 0.91);
+  assert.equal(fs.existsSync(phase.results[0].renderReviewPath), true);
+  assert.equal(result.renderReviewGate.promoteReady, true);
+});
+
+test('self-improvement cycle blocks render-review promotion when reviews need revision', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-fseq-revise-'));
+  const geometryPath = path.join(root, 'geometry.json');
+  const fseqPath = path.join(root, 'section.fseq');
+  const manifestPath = path.join(root, 'manifest.json');
+  writeJson(geometryPath, { artifactType: 'preview_scene_geometry_v1' });
+  fs.writeFileSync(fseqPath, 'fake-fseq');
+  writeJson(manifestPath, {
+    artifactType: 'xlightsdesigner_self_improvement_loop_manifest_v1',
+    initialScope: {
+      effects: ['On', 'Bars', 'Color Wash', 'SingleStrand'],
+      blockedEffects: ['Shimmer']
+    },
+    cyclePhases: [
+      {
+        id: 'review_fseq_section',
+        type: 'fseq_render_review',
+        geometryPath,
+        reviews: [{ id: 'needs-revision', fseqPath }]
+      }
+    ],
+    promotionGate: {}
+  });
+
+  const result = await runSelfImprovementCycle({
+    manifestPath,
+    skipCommands: true,
+    outDir: path.join(root, 'run'),
+    buildFseqReview: ({ outDir }) => {
+      const renderReviewPath = path.join(outDir, 'render-review.json');
+      writeJson(renderReviewPath, { artifactType: 'render_review_v1' });
+      return {
+        ok: true,
+        renderReviewPath,
+        decision: 'revise',
+        overallQuality: 0.62
+      };
+    }
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.renderReviewGate.applicable, true);
+  assert.equal(result.renderReviewGate.promoteReady, false);
+  assert.equal(result.renderReviewGate.totals.reviseCount, 1);
+  assert.equal(result.nextActions[0], 'revise render-review sections and rerun FSEQ/media review before promotion');
+});

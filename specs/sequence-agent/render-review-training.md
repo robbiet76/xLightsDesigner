@@ -113,7 +113,9 @@ The self-improvement loop should add a render-review phase after live apply/rend
 4. The self-improvement cycle can extract review media automatically when a `render_review` manifest entry points at a media file instead of a prebuilt frame-features artifact.
 5. Reconstructed `preview_scene_window_v1` artifacts can be rasterized into reviewable media, bridging xLights FSEQ render output into the same media-analysis path.
 6. FSEQ render review can run as a single command from geometry + FSEQ + section window to preview media, frame metrics, contact sheet, and `render_review_v1`.
-7. Wire xLights render outputs directly into media-backed render-review phases.
-8. Attach richer section intent and music context to generated review artifacts.
-9. Add vision review as an optional second-pass evaluator.
-10. Use review decisions to drive revision loops before promotion.
+7. The self-improvement loop can run `fseq_render_review` phases that reconstruct and review one or more rendered `.fseq` files from a manifest.
+8. Render-review phases produce a dedicated render-review gate; `revise` and `reject` outcomes block promotion and become revision-loop input.
+9. Wire live xLights render jobs directly into FSEQ-backed render-review phases.
+10. Attach richer section intent and music context to generated review artifacts.
+11. Add vision review as an optional second-pass evaluator.
+12. Use review decisions to drive revision loops before promotion.

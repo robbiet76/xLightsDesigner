@@ -111,6 +111,10 @@ The self-improvement loop can also run manifest-defined render reviews. Add a `r
 
 If a review points at `mediaPath` or `videoPath` and does not provide frame features, the cycle first runs media extraction into `render-review-media/`, then feeds the extracted `frame-features.json`, contact sheet, and ordered frames into the review artifact.
 
+The self-improvement loop can also run `fseq_render_review` phases. These point at a preview-scene geometry artifact and one or more rendered `.fseq` files; the cycle reconstructs the display window, rasterizes it into review media, extracts frame metrics, and writes `render_review_v1` output for each section.
+
+Render-review phases produce a separate `renderReviewGate` in `cycle-summary.json`. Promotion is blocked until every render review is accepted; sections marked `revise` or `reject` become revision-loop input.
+
 For xLights render output, use the existing FSEQ reconstruction path to create a `preview_scene_window_v1`, then rasterize it into reviewable media:
 
 ```bash

@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildRenderReviewArtifact } from './build-render-review-artifact.mjs';
+import { buildRenderReviewFromFseq } from './build-render-review-from-fseq.mjs';
 import { extractRenderReviewMedia } from './extract-render-review-media.mjs';
 import { buildTargetBehaviorTrainingSummary } from './export-target-behavior-training-summary.mjs';
 
@@ -272,6 +273,68 @@ async function runRenderReviewPhase({ phase, outDir }) {
   };
 }
 
+async function runFseqRenderReviewPhase({ phase, outDir, buildFseqReview }) {
+  const phaseId = str(phase.id || 'fseq_render_review');
+  const reviews = arr(phase.reviews).length ? arr(phase.reviews) : [phase];
+  const results = [];
+  const reviewRoot = path.join(outDir, 'fseq-render-reviews');
+  fs.mkdirSync(reviewRoot, { recursive: true });
+  reviews.forEach((review, index) => {
+    const label = str(review.id || review.sectionId || `${phaseId}-${index + 1}`)
+      .replace(/[^a-z0-9_.-]+/gi, '-')
+      .replace(/^-|-$/g, '') || `${phaseId}-${index + 1}`;
+    const result = {
+      id: label,
+      type: 'fseq_render_review',
+      ok: false,
+      fseqPath: resolveRepoPath(review.fseqPath || review.fseq),
+      geometryPath: resolveRepoPath(review.geometryPath || phase.geometryPath || review.geometry),
+      renderReviewPath: '',
+      decision: '',
+      overallQuality: null,
+      error: ''
+    };
+    try {
+      const run = buildFseqReview({
+        geometryPath: result.geometryPath,
+        fseqPath: result.fseqPath,
+        intentPath: resolveRepoPath(review.intentPath || review.intent),
+        outDir: resolveRepoPath(review.outDir || path.join(reviewRoot, label)),
+        windowStartMs: Number(review.windowStartMs ?? review.startMs ?? phase.windowStartMs ?? 0),
+        windowEndMs: Number(review.windowEndMs ?? review.endMs ?? phase.windowEndMs ?? 8000),
+        stepMs: Number(review.stepMs ?? phase.stepMs ?? 50),
+        sampleCount: Number(review.sampleCount ?? phase.sampleCount ?? 8),
+        frameOffsets: str(review.frameOffsets || phase.frameOffsets),
+        width: Number(review.width ?? phase.width ?? 1280),
+        height: Number(review.height ?? phase.height ?? 720),
+        fps: Number(review.fps ?? phase.fps ?? 20),
+        nodeRadius: Number(review.nodeRadius ?? phase.nodeRadius ?? 3),
+        includeAuditExcluded: review.includeAuditExcluded === true || phase.includeAuditExcluded === true
+      });
+      result.ok = run.ok === true;
+      result.run = run;
+      result.renderReviewPath = str(run.renderReviewPath);
+      result.decision = str(run.decision);
+      result.overallQuality = run.overallQuality ?? null;
+    } catch (error) {
+      result.error = error?.message || String(error);
+    }
+    results.push(result);
+  });
+  return {
+    id: phaseId,
+    type: str(phase.type || 'fseq_render_review'),
+    ok: results.every((result) => result.ok),
+    totals: {
+      reviewCount: results.length,
+      acceptedCount: results.filter((result) => result.decision === 'accept').length,
+      reviseCount: results.filter((result) => result.decision === 'revise').length,
+      rejectedCount: results.filter((result) => result.decision === 'reject').length
+    },
+    results
+  };
+}
+
 async function runLiveTargetBehaviorProbePhase({ phase, manifest, outDir, endpoint, showDir }) {
   const phaseId = str(phase.id || 'live_custom_submodel_probes');
   const targetScope = str(phase.targetScope || 'custom_submodel');
@@ -435,6 +498,28 @@ function evaluatePromotionGate({ manifest, exportedSummaries }) {
   };
 }
 
+function evaluateRenderReviewGate({ phases = [] } = {}) {
+  const reviewPhases = arr(phases).filter((phase) => ['render_review', 'fseq_render_review'].includes(str(phase.type)));
+  const results = reviewPhases.flatMap((phase) => arr(phase.results));
+  const totals = {
+    reviewCount: results.length,
+    acceptedCount: results.filter((result) => str(result.decision) === 'accept').length,
+    reviseCount: results.filter((result) => str(result.decision) === 'revise').length,
+    rejectedCount: results.filter((result) => str(result.decision) === 'reject').length,
+    failedCount: results.filter((result) => result.ok !== true).length
+  };
+  return {
+    applicable: totals.reviewCount > 0,
+    promoteReady: totals.reviewCount > 0 && totals.acceptedCount === totals.reviewCount && totals.failedCount === 0,
+    totals,
+    checks: [
+      { id: 'hasRenderReviews', actual: totals.reviewCount, expected: 1, ok: totals.reviewCount > 0 },
+      { id: 'allRenderReviewsAccepted', actual: totals.acceptedCount, expected: totals.reviewCount, ok: totals.reviewCount > 0 && totals.acceptedCount === totals.reviewCount },
+      { id: 'noRenderReviewFailures', actual: totals.failedCount, expected: 0, ok: totals.failedCount === 0 }
+    ]
+  };
+}
+
 export async function runSelfImprovementCycle({
   manifestPath = DEFAULT_MANIFEST,
   outDir = '',
@@ -444,7 +529,8 @@ export async function runSelfImprovementCycle({
   runLiveProbes = false,
   endpoint = process.env.XLIGHTS_ENDPOINT || 'http://127.0.0.1:49915/xlightsdesigner/api',
   showDir = '',
-  continueOnFailure = false
+  continueOnFailure = false,
+  buildFseqReview = buildRenderReviewFromFseq
 } = {}) {
   const resolvedManifestPath = path.resolve(REPO_ROOT, manifestPath);
   const manifest = readJson(resolvedManifestPath);
@@ -485,6 +571,15 @@ export async function runSelfImprovementCycle({
       return output;
     }
   }
+  for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'fseq_render_review')) {
+    const result = await runFseqRenderReviewPhase({ phase, outDir: resolvedOutDir, buildFseqReview });
+    phases.push(result);
+    if (!result.ok && phase.required !== false && !continueOnFailure) {
+      const output = { ok: false, manifestPath: resolvedManifestPath, outDir: resolvedOutDir, phases, errors: [`phase failed: ${phase.id}`] };
+      writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
+      return output;
+    }
+  }
   const liveProjectDirs = [];
   if (runLiveProbes) {
     for (const phase of arr(manifest.cyclePhases).filter((row) => ['live_custom_model_probe', 'live_target_behavior_probe'].includes(row?.type))) {
@@ -511,6 +606,12 @@ export async function runSelfImprovementCycle({
   });
   const exportedSummaries = exportTargetBehaviorSummaries({ projectDirs: resolvedProjectDirs, outDir: resolvedOutDir });
   const promotionGate = evaluatePromotionGate({ manifest, exportedSummaries });
+  const renderReviewGate = evaluateRenderReviewGate({ phases });
+  const nextActions = renderReviewGate.applicable && !renderReviewGate.promoteReady
+    ? ['revise render-review sections and rerun FSEQ/media review before promotion']
+    : promotionGate.promoteReady
+      ? ['review anonymized summaries for shared-training promotion']
+      : ['generate more accepted apply/render outcomes for the initial effect and target scope'];
   const output = {
     ok: phases.every((phase) => phase.ok) && true,
     manifestPath: resolvedManifestPath,
@@ -519,9 +620,8 @@ export async function runSelfImprovementCycle({
     phases,
     targetBehaviorExports: exportedSummaries,
     promotionGate,
-    nextActions: promotionGate.promoteReady
-      ? ['review anonymized summaries for shared-training promotion']
-      : ['generate more accepted apply/render outcomes for the initial effect and target scope']
+    renderReviewGate,
+    nextActions
   };
   writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
   return output;
