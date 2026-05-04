@@ -116,6 +116,86 @@ test("pass runner completes one pass and updates checkpoint and ledger", async (
   assert.equal(ledger.artifacts.some((row) => row.artifactClass === "composition_stack_observation"), true);
 });
 
+test("pass runner can attach render review quality evidence to a completed pass", async () => {
+  const { runRoot } = setupRun();
+  const fseqPath = path.join(runRoot, "rendered.fseq");
+  fs.writeFileSync(fseqPath, "rendered");
+  const summary = await runLayerCompositionPasses({
+    runRoot,
+    maxPasses: 1,
+    renderReviewQuality: true,
+    deps: withTrainingShowReady({
+      runOwnedPass: async ({ sequencePath, passExecution }) => ({
+        artifactType: "layer_composition_owned_pass_result_v1",
+        ok: true,
+        sequencePath,
+        runId: passExecution.runId,
+        experimentId: passExecution.experimentId,
+        passId: passExecution.passId,
+        learningId: passExecution.learningId,
+        fseqPath,
+        steps: []
+      }),
+      extractObservation: ({ passExecution, passDir }) => {
+        const renderObservationPath = path.join(passDir, "render-observation.json");
+        const previewWindowPath = path.join(passDir, "preview-window.json");
+        const compositionObservationPath = path.join(passDir, "composition-stack-observation.json");
+        fs.writeFileSync(renderObservationPath, JSON.stringify({ artifactType: "render_observation_v1" }));
+        fs.writeFileSync(previewWindowPath, JSON.stringify({ artifactType: "preview_scene_window_v1" }));
+        fs.writeFileSync(compositionObservationPath, JSON.stringify({
+          artifactType: "composition_stack_observation_v1",
+          passId: passExecution.passId
+        }));
+        return { renderObservationPath, previewWindowPath, compositionObservationPath };
+      },
+      buildRenderReviewQuality: ({ passDir }) => {
+        const qualityDir = path.join(passDir, "render-review-quality");
+        fs.mkdirSync(qualityDir, { recursive: true });
+        const summaryPath = path.join(qualityDir, "render-review-quality-summary.json");
+        const renderReviewRef = path.join(qualityDir, "render-review.json");
+        const previewWindowRef = path.join(qualityDir, "preview-scene-window.json");
+        const previewMediaRef = path.join(qualityDir, "preview-window.mp4");
+        const contactSheetRef = path.join(qualityDir, "contact-sheet.jpg");
+        fs.writeFileSync(summaryPath, JSON.stringify({ artifactType: "layer_composition_render_review_quality_v1" }));
+        fs.writeFileSync(renderReviewRef, JSON.stringify({ artifactType: "render_review_v1" }));
+        fs.writeFileSync(previewWindowRef, JSON.stringify({ artifactType: "preview_scene_window_v1" }));
+        fs.writeFileSync(previewMediaRef, "media");
+        fs.writeFileSync(contactSheetRef, "sheet");
+        return {
+          summaryPath,
+          renderReviewRef,
+          previewWindowRef,
+          previewMediaRef,
+          contactSheetRef,
+          decision: "accept",
+          overallQuality: 0.9
+        };
+      }
+    })
+  });
+
+  assert.equal(summary.processedPasses, 1);
+  assert.equal(summary.renderReviewQualityEnabled, true);
+  assert.equal(summary.renderReviewQualityCount, 1);
+  assert.equal(summary.renderReviewAcceptedCount, 1);
+  assert.equal(summary.results[0].renderReviewDecision, "accept");
+  assert.equal(summary.results[0].renderReviewOverallQuality, 0.9);
+
+  const checkpoints = JSON.parse(fs.readFileSync(path.join(runRoot, "checkpoints.json"), "utf8"));
+  assert.equal(checkpoints.checkpoints[0].renderReviewDecision, "accept");
+  assert.equal(Boolean(checkpoints.checkpoints[0].renderReviewQualityRef), true);
+  assert.equal(Boolean(checkpoints.checkpoints[0].renderReviewRef), true);
+  const checkpoint = JSON.parse(fs.readFileSync(checkpoints.checkpoints[0].checkpointRef, "utf8"));
+  assert.equal(checkpoint.renderReviewDecision, "accept");
+  assert.equal(fs.existsSync(checkpoint.renderReviewQualityRef), true);
+  assert.equal(fs.existsSync(checkpoint.renderReviewRef), true);
+
+  const executionSummary = JSON.parse(fs.readFileSync(path.join(runRoot, "execution-summary.json"), "utf8"));
+  assert.equal(executionSummary.renderReviewQualityCount, 1);
+  const ledger = JSON.parse(fs.readFileSync(path.join(runRoot, "retention-ledger.json"), "utf8"));
+  assert.equal(ledger.artifacts.some((row) => row.artifactClass === "render_review"), true);
+});
+
 test("pass runner records failure and stops after first failed pass", async () => {
   const { runRoot } = setupRun();
   const summary = await runLayerCompositionPasses({

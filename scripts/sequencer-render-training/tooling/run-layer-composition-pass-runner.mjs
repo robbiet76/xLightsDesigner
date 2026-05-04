@@ -6,6 +6,7 @@ import { runLayerCompositionOwnedPass } from "./run-layer-composition-owned-pass
 import { appendLayerCompositionAdaptiveRefill } from "./build-layer-composition-adaptive-refill.mjs";
 import { buildLayerCompositionDeltas } from "./build-layer-composition-deltas.mjs";
 import { buildLayerCompositionPriors } from "./build-layer-composition-priors.mjs";
+import { buildRenderReviewFromFseq } from "../../designer-training/build-render-review-from-fseq.mjs";
 import {
   applyLayerCompositionRetentionCleanup,
   planLayerCompositionRetentionCleanup
@@ -29,6 +30,10 @@ function arr(value) {
 
 function str(value = "") {
   return String(value || "").trim();
+}
+
+function unique(values = []) {
+  return [...new Set(arr(values).map(str).filter(Boolean))];
 }
 
 function passWindow(passExecution = {}) {
@@ -191,6 +196,73 @@ function extractObservation({
   };
 }
 
+function buildRenderReviewQuality({
+  fseqPath,
+  passExecution,
+  passDir,
+  geometryPath = DEFAULT_GEOMETRY,
+  frameOffsets = DEFAULT_FRAME_OFFSETS,
+  buildFseqReview = buildRenderReviewFromFseq
+} = {}) {
+  const window = passWindow(passExecution);
+  const outDir = path.join(passDir, "render-review-quality");
+  const effects = arr(passExecution?.ownedBatchPayload?.effects);
+  const effectNames = unique(effects.map((effect) => effect?.effectName));
+  const targets = unique(effects.map((effect) => effect?.element));
+  const sectionId = str(passExecution.passId || "layer-composition-pass");
+  const run = buildFseqReview({
+    geometryPath,
+    fseqPath,
+    outDir,
+    windowStartMs: window.startMs,
+    windowEndMs: window.endMs,
+    frameOffsets,
+    intent: {
+      effectName: effectNames[0] || "",
+      targetHierarchy: {
+        leadTargets: targets.slice(0, 1),
+        supportTargets: targets.slice(1)
+      },
+      section: {
+        id: sectionId,
+        label: sectionId,
+        startMs: window.startMs,
+        endMs: window.endMs
+      },
+      rawSummary: [
+        effectNames.length ? `effects:${effectNames.join(",")}` : "",
+        targets.length ? `targets:${targets.length}` : ""
+      ].filter(Boolean).join(" ")
+    }
+  });
+  const review = readJson(run.renderReviewPath);
+  const summaryPath = path.join(outDir, "render-review-quality-summary.json");
+  const summary = {
+    artifactType: "layer_composition_render_review_quality_v1",
+    artifactVersion: 1,
+    generatedAt: new Date().toISOString(),
+    runId: str(passExecution.runId),
+    experimentId: str(passExecution.experimentId),
+    passId: str(passExecution.passId),
+    learningId: str(passExecution.learningId),
+    passWindow: window,
+    fseqPath,
+    renderReviewRunRef: path.join(outDir, "fseq-render-review-run.json"),
+    renderReviewRef: run.renderReviewPath,
+    previewWindowRef: run.previewWindowPath,
+    previewMediaRef: run.previewMediaPath,
+    frameFeaturesRef: run.frameFeaturesPath,
+    contactSheetRef: run.contactSheetPath,
+    decision: str(review?.critique?.decision || run.decision),
+    overallQuality: Number(review?.qualityScores?.overallQuality ?? run.overallQuality ?? 0)
+  };
+  writeJson(summaryPath, summary);
+  return {
+    ...summary,
+    summaryPath
+  };
+}
+
 function appendLedgerArtifacts(ledgerPath, rows = [], patch = {}) {
   const ledger = fs.existsSync(ledgerPath) ? readJson(ledgerPath) : { artifacts: [] };
   ledger.artifacts = [...arr(ledger.artifacts), ...rows];
@@ -227,6 +299,9 @@ function refreshCheckpointBundle(root, plan = {}) {
       observationRef: str(checkpoint.observationRef || ""),
       renderObservationRef: str(checkpoint.renderObservationRef || ""),
       ownedPassResultRef: str(checkpoint.ownedPassResultRef || ""),
+      renderReviewQualityRef: str(checkpoint.renderReviewQualityRef || ""),
+      renderReviewRef: str(checkpoint.renderReviewRef || ""),
+      renderReviewDecision: str(checkpoint.renderReviewDecision || ""),
       failureSummaryRef: str(checkpoint.failureSummaryRef || "")
     };
   });
@@ -259,6 +334,7 @@ function writeExecutionSummary({
   const failedPassCount = checkpoints.filter((row) => str(row.status) === "failed").length;
   const pendingApplyRenderCount = checkpoints.filter((row) => str(row.status) === "pending_apply_render").length;
   const observationCount = checkpoints.filter((row) => str(row.observationRef)).length;
+  const renderReviewQualityCount = checkpoints.filter((row) => str(row.renderReviewQualityRef)).length;
   const summary = {
     artifactType: "layer_composition_execution_summary_v1",
     artifactVersion: 1,
@@ -280,6 +356,7 @@ function writeExecutionSummary({
     completedPassCount,
     failedPassCount,
     observationCount,
+    renderReviewQualityCount,
     deltaCount: learningCheckpoints.length,
     retentionLedgerRef: path.join(root, "retention-ledger.json"),
     checkpointBundleRef: path.join(root, "checkpoints.json"),
@@ -435,6 +512,7 @@ export async function runLayerCompositionPasses({
   geometryPath = DEFAULT_GEOMETRY,
   frameOffsets = DEFAULT_FRAME_OFFSETS,
   experimentIds = [],
+  renderReviewQuality = false,
   dryRun = false,
   deps = {}
 } = {}) {
@@ -618,6 +696,16 @@ export async function runLayerCompositionPasses({
         frameOffsets,
         execFile: deps.execFile || execFileSync
       });
+      const renderReviewQualityResult = renderReviewQuality
+        ? (deps.buildRenderReviewQuality || buildRenderReviewQuality)({
+          fseqPath: ownedResult.fseqPath,
+          passExecution,
+          passDir,
+          geometryPath,
+          frameOffsets,
+          buildFseqReview: deps.buildFseqReview || buildRenderReviewFromFseq
+        })
+        : null;
       updateCheckpoint(row.checkpointRef, {
         status: "completed",
         workingSequenceRef: sequencePath,
@@ -625,10 +713,14 @@ export async function runLayerCompositionPasses({
         observationRef: observation.compositionObservationPath,
         renderObservationRef: observation.renderObservationPath,
         previewWindowRef: observation.previewWindowPath,
+        renderReviewQualityRef: str(renderReviewQualityResult?.summaryPath),
+        renderReviewRef: str(renderReviewQualityResult?.renderReviewRef),
+        renderReviewDecision: str(renderReviewQualityResult?.decision),
+        renderReviewOverallQuality: Number(renderReviewQualityResult?.overallQuality ?? 0),
         rawArtifactsSummarized: true,
         cleanupApplied: false
       });
-      appendLedgerArtifacts(ledgerPath, [
+      const ledgerRows = [
         {
           path: sequencePath,
           artifactClass: "temporary_sequence_copy",
@@ -674,10 +766,52 @@ export async function runLayerCompositionPasses({
           summarized: true,
           purgeEligible: true
         }
-      ], {
+      ];
+      if (renderReviewQualityResult) {
+        ledgerRows.push(
+          {
+            path: renderReviewQualityResult.summaryPath,
+            artifactClass: "metric_summary",
+            summarized: true,
+            retain: true
+          },
+          {
+            path: renderReviewQualityResult.renderReviewRef,
+            artifactClass: "render_review",
+            summarized: true,
+            retain: true
+          },
+          {
+            path: renderReviewQualityResult.previewWindowRef,
+            artifactClass: "small_preview",
+            summarized: true,
+            purgeEligible: true
+          },
+          {
+            path: renderReviewQualityResult.previewMediaRef,
+            artifactClass: "preview_media",
+            summarized: true,
+            purgeEligible: true
+          },
+          {
+            path: renderReviewQualityResult.contactSheetRef,
+            artifactClass: "preview_media",
+            summarized: true,
+            purgeEligible: true
+          }
+        );
+      }
+      appendLedgerArtifacts(ledgerPath, ledgerRows, {
         externalDeleteRoots: [path.dirname(sequencePath)]
       });
-      results.push({ experimentId: row.experimentId, passId: row.passId, status: "completed" });
+      results.push({
+        experimentId: row.experimentId,
+        passId: row.passId,
+        status: "completed",
+        renderReviewDecision: str(renderReviewQualityResult?.decision),
+        renderReviewOverallQuality: Number(renderReviewQualityResult?.overallQuality ?? 0),
+        renderReviewQualityRef: str(renderReviewQualityResult?.summaryPath)
+      });
       bundle = refreshCheckpointBundle(root, plan);
     } catch (error) {
       stopStatus = "failed";
@@ -745,6 +879,11 @@ export async function runLayerCompositionPasses({
     processedPasses: results.length,
     pendingPassesSelected: pending.length,
     elapsedRuntimeMinutes,
+    renderReviewQualityEnabled: Boolean(renderReviewQuality),
+    renderReviewQualityCount: results.filter((result) => str(result.renderReviewQualityRef)).length,
+    renderReviewAcceptedCount: results.filter((result) => str(result.renderReviewDecision) === "accept").length,
+    renderReviewReviseCount: results.filter((result) => str(result.renderReviewDecision) === "revise").length,
+    renderReviewRejectedCount: results.filter((result) => str(result.renderReviewDecision) === "reject").length,
     stopStatus,
     stopReason,
     refillAttempts: refillResults.length,
@@ -779,6 +918,7 @@ function parseArgs(argv) {
     geometryPath: DEFAULT_GEOMETRY,
     frameOffsets: DEFAULT_FRAME_OFFSETS,
     experimentIds: [],
+    renderReviewQuality: false,
     dryRun: false,
     outPath: ""
   };
@@ -792,6 +932,7 @@ function parseArgs(argv) {
     else if (arg === "--geometry") args.geometryPath = argv[++index];
     else if (arg === "--frame-offsets") args.frameOffsets = argv[++index];
     else if (arg === "--experiment-id") args.experimentIds.push(argv[++index]);
+    else if (arg === "--render-review-quality") args.renderReviewQuality = true;
     else if (arg === "--dry-run") args.dryRun = true;
     else if (arg === "--out") args.outPath = argv[++index];
     else if (arg === "--help") args.help = true;
@@ -802,7 +943,7 @@ function parseArgs(argv) {
 
 function usage() {
   return `Usage:
-  node scripts/sequencer-render-training/tooling/run-layer-composition-pass-runner.mjs --run-root <run-dir> [--max-passes 1] [--until-runtime-budget] [--max-runtime-minutes <n>] [--experiment-id <id>]
+  node scripts/sequencer-render-training/tooling/run-layer-composition-pass-runner.mjs --run-root <run-dir> [--max-passes 1] [--until-runtime-budget] [--max-runtime-minutes <n>] [--experiment-id <id>] [--render-review-quality]
 `;
 }
 

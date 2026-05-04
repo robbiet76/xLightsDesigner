@@ -14,6 +14,7 @@ PRIOR_FILES=()
 APPLY_RENDER="0"
 MAX_PASSES="1"
 UNTIL_RUNTIME_BUDGET="0"
+RENDER_REVIEW_QUALITY="0"
 STAMP="$(date -u +"%Y%m%dT%H%M%SZ")"
 
 usage() {
@@ -31,6 +32,7 @@ Options:
   --apply-render                With --execute, run real owned xLights apply/render for pending passes.
   --max-passes <n>              Limit real apply/render pass count. Default: 1.
   --until-runtime-budget        With --apply-render, process pending passes until the run budget or queue ends.
+  --render-review-quality       With --apply-render, attach render_review_v1 quality evidence to completed passes.
   --help                        Show this help.
 
 Default mode is planning only. It writes training-plan.json without running xLights.
@@ -75,6 +77,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --until-runtime-budget)
       UNTIL_RUNTIME_BUDGET="1"
+      shift
+      ;;
+    --render-review-quality)
+      RENDER_REVIEW_QUALITY="1"
       shift
       ;;
     --help)
@@ -145,6 +151,9 @@ if [[ "${MODE}" == "execute" ]]; then
       if [[ -n "${MAX_RUNTIME_MINUTES}" ]]; then
         RUNNER_ARGS+=(--max-runtime-minutes "${MAX_RUNTIME_MINUTES}")
       fi
+    fi
+    if [[ "${RENDER_REVIEW_QUALITY}" == "1" ]]; then
+      RUNNER_ARGS+=(--render-review-quality)
     fi
     node "${RUNNER_ARGS[@]}"
   else

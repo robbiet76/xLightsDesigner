@@ -236,8 +236,13 @@ bash scripts/sequencer-render-training/runners/run-layer-composition-training.sh
 TRAINING_API_STAGING_ROOT="$XLIGHTS_SHOW_DIR/_xlightsdesigner_api_training/layer-composition-smoke" \
   node scripts/sequencer-render-training/tooling/run-layer-composition-pass-runner.mjs \
   --run-root var/logs/sequencer-layer-composition-training-runs/<run-id> \
-  --max-passes 22
+  --max-passes 22 \
+  --render-review-quality
 ```
+
+`--render-review-quality` keeps the existing composition observation flow and adds
+`render_review_v1` evidence for completed passes so layer-composition runs can be
+judged by display-level visual quality, not only by whether an effect rendered.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \
