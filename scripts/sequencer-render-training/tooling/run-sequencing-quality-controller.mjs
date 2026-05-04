@@ -186,6 +186,10 @@ function recordsForGoal(records = [], goal = {}) {
   return arr(records).filter((record) => recordMatchesGoal(record, goal));
 }
 
+function durableRecordCountForGoal(records = [], goal = {}) {
+  return recordsForGoal(records, goal).filter((record) => bool(record?.promotion?.durableCandidate)).length;
+}
+
 function hasNonRepeatableBlockedRecord(records = [], goal = {}, policy = {}) {
   return recordsForGoal(records, goal).some((record) => {
     const blockers = arr(record?.promotion?.blockers).map(str).filter(Boolean);
@@ -298,7 +302,10 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     }
   }
 
-  const nextGoal = goals.find((goal) => !hasNonRepeatableBlockedRecord(records, goal, policy)) || goals[0] || null;
+  const nextGoal = goals.find((goal) => !recordsForGoal(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || goals.find((goal) => !durableRecordCountForGoal(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || goals[0]
+    || null;
   return {
     selectedGoal: nextGoal,
     nextQueue: nextGoal ? [{

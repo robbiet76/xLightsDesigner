@@ -171,7 +171,7 @@ test("controller plans a coverage gap when no promising repeat exists", () => {
 
   assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
   assert.equal(state.nextQueue[0].reason, "coverage_gap");
-  assert.equal(state.nextQueue[0].goalId, "layer.same_target.mono_white.basic");
+  assert.equal(state.nextQueue[0].goalId, "layer.rgb_primary.basic");
 });
 
 test("controller can plan from quality evidence when promoted priors are not present yet", () => {
@@ -255,6 +255,49 @@ test("controller status does not count layer records for non-family submodel goa
 
   assert.equal(state.goalStatuses[0].durableCandidateCount, 0);
   assert.equal(state.goalStatuses[0].evidenceStatus, "not_started");
+});
+
+test("controller advances past goals with durable evidence and no repeat queue", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [
+    {
+      ...record("one_layer_foundation", 0.84, []),
+      sampleCount: 2,
+      trendStatus: "stable"
+    }
+  ]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "layer.rgb_primary.basic",
+        areaId: "layer_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["same_target_layer_stack"],
+          paletteProfiles: ["mono_white"],
+          effects: ["Color Wash"]
+        }
+      }, {
+        goalId: "submodel.vendor_fixture.basic",
+        areaId: "layer_composition",
+        priority: 2,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          targetScopes: ["submodel"],
+          effects: ["Color Wash"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+  assert.equal(state.nextQueue[0].goalId, "submodel.vendor_fixture.basic");
 });
 
 test("controller increments loop index from a previous state", () => {
