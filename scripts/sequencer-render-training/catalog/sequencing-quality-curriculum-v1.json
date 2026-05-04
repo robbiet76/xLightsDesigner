@@ -1,0 +1,344 @@
+{
+  "artifactType": "sequencing_quality_curriculum_v1",
+  "artifactVersion": 1,
+  "curriculumId": "sequencing-quality-v1",
+  "status": "active",
+  "purpose": "Define the learning goals an automated training controller should work through before promoting sequencing knowledge.",
+  "selectionPolicy": {
+    "strategy": "priority_then_blocked_promising_then_coverage_gap",
+    "loopSizeDefault": 25,
+    "checkpointAfterPasses": 25,
+    "maxLoopSizeWithoutOperatorReview": 100,
+    "promotionRequires": {
+      "minimumStableSamples": 2,
+      "acceptedReviewDecision": "accept",
+      "acceptedTrendStatuses": [
+        "stable",
+        "improving"
+      ],
+      "minimumOverallQuality": 0.72
+    },
+    "cleanupRequiredAfterEveryLoop": true
+  },
+  "controllerStateContract": {
+    "artifactType": "sequencing_quality_training_controller_state_v1",
+    "requiredFields": [
+      "curriculumId",
+      "loopIndex",
+      "latestRunRoot",
+      "goalStatuses",
+      "coverageSummary",
+      "promotionSummary",
+      "cleanupSummary",
+      "nextQueue"
+    ],
+    "goalStatuses": [
+      "not_started",
+      "in_progress",
+      "blocked",
+      "covered",
+      "retired"
+    ]
+  },
+  "areas": [
+    {
+      "areaId": "core_render_validity",
+      "priority": 1,
+      "purpose": "Prove effects can render, produce visible output, and expose useful setting regions before relying on them creatively."
+    },
+    {
+      "areaId": "effect_behavior",
+      "priority": 2,
+      "purpose": "Learn each effect's visible behavior, palette handling, model fit, and high-impact parameters."
+    },
+    {
+      "areaId": "model_geometry_fit",
+      "priority": 3,
+      "purpose": "Learn which effects read well across built-in, imported, and custom model structures."
+    },
+    {
+      "areaId": "layer_composition",
+      "priority": 4,
+      "purpose": "Learn how same-target layers, group/member layers, order, blend, brightness, contrast, fade, and timing overlap affect display readability."
+    },
+    {
+      "areaId": "submodel_behavior",
+      "priority": 5,
+      "purpose": "Learn parent versus submodel targeting and sibling submodel behavior through the same framework for every model type."
+    },
+    {
+      "areaId": "display_level_composition",
+      "priority": 6,
+      "purpose": "Learn whole-display coverage, balance, foreground/background separation, regional variety, and visual readability."
+    },
+    {
+      "areaId": "musical_structure",
+      "priority": 7,
+      "purpose": "Learn section energy, phrase/beat alignment, repetition with variation, and lyric/accent timing behavior."
+    },
+    {
+      "areaId": "creative_intent_matching",
+      "priority": 8,
+      "purpose": "Learn whether generated sequences match user intent for mood, palette, pace, emphasis, and creative accuracy."
+    }
+  ],
+  "goals": [
+    {
+      "goalId": "layer.same_target.mono_white.basic",
+      "areaId": "layer_composition",
+      "priority": 1,
+      "status": "in_progress",
+      "description": "Promote stable same-target layer-stack priors in mono-white on the vendor fixture.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "paletteProfiles": [
+          "mono_white"
+        ],
+        "families": [
+          "same_target_layer_stack"
+        ],
+        "compositionIntents": [
+          "foundation",
+          "two_layer_stack",
+          "three_layer_stack",
+          "order_sensitivity",
+          "render_setting_sensitivity"
+        ],
+        "effects": [
+          "Color Wash"
+        ],
+        "modelTypes": [
+          "custom",
+          "star"
+        ],
+        "targetScopes": [
+          "model"
+        ]
+      },
+      "nextSelectionHints": [
+        "Repeat blocked high-quality same-target stack passes from the latest run.",
+        "Prioritize three_layer_default, reversed_layer_order, and setting variants with single_run_baseline status."
+      ],
+      "completionCriteria": {
+        "minimumSelectorReadyPriorCount": 8,
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "layer.group_model.mono_white.basic",
+      "areaId": "layer_composition",
+      "priority": 1,
+      "status": "covered",
+      "description": "Promote initial group/member layer-composition priors in mono-white on the vendor fixture.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "paletteProfiles": [
+          "mono_white"
+        ],
+        "families": [
+          "group_model_interplay"
+        ],
+        "compositionIntents": [
+          "foundation",
+          "model_focus",
+          "foundation_plus_model_focus",
+          "order_sensitivity"
+        ],
+        "effects": [
+          "Bars",
+          "Marquee"
+        ],
+        "modelTypes": [
+          "arch",
+          "single_line"
+        ],
+        "targetScopes": [
+          "group",
+          "model"
+        ]
+      },
+      "completionEvidence": {
+        "latestRunRoot": "/tmp/xld-layer-composition-quality-long-20260504T182838Z",
+        "selectorReadyPriorCount": 4
+      }
+    },
+    {
+      "goalId": "layer.rgb_primary.basic",
+      "areaId": "layer_composition",
+      "priority": 2,
+      "status": "not_started",
+      "description": "Repeat the promoted mono-white layer-composition families under rgb_primary palette conditions.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "families": [
+          "group_model_interplay",
+          "same_target_layer_stack"
+        ],
+        "effects": [
+          "Bars",
+          "Color Wash",
+          "Marquee"
+        ],
+        "targetScopes": [
+          "group",
+          "model"
+        ]
+      },
+      "nextSelectionHints": [
+        "Start with group_then_model and same-target one/two-layer stack repeats.",
+        "Compare color spread and multicolor frame ratio against mono-white priors."
+      ]
+    },
+    {
+      "goalId": "submodel.vendor_fixture.basic",
+      "areaId": "submodel_behavior",
+      "priority": 2,
+      "status": "not_started",
+      "description": "Learn parent versus submodel behavior on vendor custom and built-in targets using shared target/submodel metadata.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "paletteProfiles": [
+          "mono_white",
+          "rgb_primary"
+        ],
+        "targetScopes": [
+          "parent_model",
+          "submodel",
+          "sibling_submodels"
+        ],
+        "modelTypes": [
+          "custom",
+          "star",
+          "spinner",
+          "arch"
+        ],
+        "effects": [
+          "On",
+          "Single Strand",
+          "Bars",
+          "Color Wash",
+          "Marquee"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use display/model-index.json submodel structure rather than name inference.",
+        "Probe parent, important submodel, and sibling-pair cases separately."
+      ]
+    },
+    {
+      "goalId": "effect_fit.core_effects.v1",
+      "areaId": "effect_behavior",
+      "priority": 3,
+      "status": "not_started",
+      "description": "Establish core effect fit across common model families before broadening the effect set.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "effects": [
+          "On",
+          "Single Strand",
+          "Bars",
+          "Color Wash",
+          "Marquee",
+          "Pinwheel",
+          "Morph",
+          "Fire",
+          "Butterfly"
+        ],
+        "modelTypes": [
+          "arch",
+          "tree",
+          "star",
+          "matrix",
+          "single_line",
+          "spinner",
+          "cane",
+          "custom"
+        ],
+        "paletteProfiles": [
+          "mono_white",
+          "rgb_primary"
+        ]
+      }
+    },
+    {
+      "goalId": "display.full_sequence.quality_v1",
+      "areaId": "display_level_composition",
+      "priority": 4,
+      "status": "not_started",
+      "description": "Evaluate generated section and whole-sequence output for display-level quality rather than isolated effect success.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "coverage_balance",
+          "foreground_background_separation",
+          "motion_coherence",
+          "palette_readability",
+          "regional_variety"
+        ]
+      },
+      "blockedBy": [
+        "needs stable section/whole-sequence review extraction for generated sequences"
+      ]
+    },
+    {
+      "goalId": "music.structure_alignment.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Learn how generated effects align with section energy, beat/phrase timing, lyrics, and accents.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "blockedBy": [
+        "needs broader full-sequence review loop"
+      ]
+    },
+    {
+      "goalId": "creative.intent_match.v1",
+      "areaId": "creative_intent_matching",
+      "priority": 6,
+      "status": "not_started",
+      "description": "Measure whether generated sequences match user creative intent beyond mechanical rendering.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "intentDimensions": [
+          "mood",
+          "palette",
+          "pace",
+          "emphasis",
+          "style",
+          "negative_space"
+        ],
+        "reviewMethods": [
+          "deterministic_metrics",
+          "vision_review",
+          "before_after_revision_comparison"
+        ]
+      },
+      "blockedBy": [
+        "needs display-level and musical-structure evidence first"
+      ]
+    }
+  ]
+}

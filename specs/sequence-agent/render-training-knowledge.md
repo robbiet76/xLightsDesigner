@@ -146,6 +146,7 @@ The sequencer execution training module documents the current package contracts,
 - Built-in and custom parent submodels are covered by the same model-index and target-behavior framework in both package fixtures and runtime candidate-selection tests.
 - The sequence-agent prompt now defines target-context precedence: live xLights readback, `display/model-index.json`, project display metadata, `display/target-behavior.json`, then names only as labels or fallback identifiers.
 - The first self-improvement loop is manifest-driven and starts with `On`, `Bars`, `Color Wash`, and `SingleStrand`; `Shimmer` is intentionally excluded from the initial validation scope because it is lower value for proving sequencing quality. Live custom-submodel probes are opt-in and feed the same project-local target-behavior export and promotion gate.
+- The sequencing-quality curriculum is now explicit and controller-facing. The active goal map lives in `../../scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json`, with operating guidance in `sequencing-quality-curriculum.md`. Automated loops should select work from that curriculum, not from unconstrained exploration.
 
 ## Current Gaps
 

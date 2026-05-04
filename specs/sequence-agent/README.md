@@ -14,6 +14,7 @@ Active specifications and machine-readable contracts for `sequence_agent`, xLigh
 - `xlights-launch-runtime.md`
 - `render-training-knowledge.md`
 - `render-review-training.md`
+- `sequencing-quality-curriculum.md`
 
 These Markdown specs are the durable source of implementation guidance. Older `xlights-sequencer-control-*` prose specs live in `archive/` and are historical only.
 

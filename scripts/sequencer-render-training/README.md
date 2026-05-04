@@ -65,6 +65,7 @@ Generated manifests under `manifests/generated/` are local run artifacts. They a
 - `catalog/effect-settings-coverage-report-v1.json`
 - `catalog/effect-training-automation-plan-v1.json`
 - `catalog/effect-parameter-screening-plan-v1.json`
+- `catalog/sequencing-quality-curriculum-v1.json`
 
 ## Common Supporting Tools
 - `generators/generate-parameter-sweep-manifest.py`
@@ -102,6 +103,7 @@ Generated manifests under `manifests/generated/` are local run artifacts. They a
 - `tooling/resolve-controlled-designer-term.py`
 - `analysis/analyze_decoded_window.py`
 - `tooling/validate-training-catalog-inventory.mjs`
+- `tooling/validate-sequencing-quality-curriculum.mjs`
 - `tooling/pack-effect-screening-records.mjs`
 - `tooling/generated-record-catalog.mjs`
 
