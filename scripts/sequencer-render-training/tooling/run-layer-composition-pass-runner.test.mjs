@@ -493,6 +493,80 @@ test("pass runner requests append-only refill when budget mode exhausts pending 
   );
 });
 
+test("pass runner writes quality trend before adaptive refill is requested", async () => {
+  const { runRoot } = setupRun();
+  let refillSawTrend = false;
+  const summary = await runLayerCompositionPasses({
+    runRoot,
+    untilRuntimeBudget: true,
+    maxRuntimeMinutes: 10,
+    experimentIds: ["same-target-layer-stack-mono_white"],
+    renderReviewQuality: true,
+    deps: withTrainingShowReady({
+      now: () => 0,
+      runOwnedPass: async ({ sequencePath, passExecution }) => ({
+        artifactType: "layer_composition_owned_pass_result_v1",
+        ok: true,
+        sequencePath,
+        runId: passExecution.runId,
+        experimentId: passExecution.experimentId,
+        passId: passExecution.passId,
+        learningId: passExecution.learningId,
+        fseqPath: sequencePath.replace(/\.xsq$/i, ".fseq"),
+        steps: []
+      }),
+      extractObservation: ({ passExecution, passDir }) => {
+        const renderObservationPath = path.join(passDir, "render-observation.json");
+        const previewWindowPath = path.join(passDir, "preview-window.json");
+        const compositionObservationPath = path.join(passDir, "composition-stack-observation.json");
+        fs.writeFileSync(renderObservationPath, JSON.stringify({ artifactType: "render_observation_v1" }));
+        fs.writeFileSync(previewWindowPath, JSON.stringify({ artifactType: "preview_scene_window_v1" }));
+        fs.writeFileSync(compositionObservationPath, JSON.stringify({ artifactType: "composition_stack_observation_v1", passId: passExecution.passId }));
+        return { renderObservationPath, previewWindowPath, compositionObservationPath };
+      },
+      buildRenderReviewQuality: ({ passDir, passExecution }) => {
+        const qualityDir = path.join(passDir, "render-review-quality");
+        fs.mkdirSync(qualityDir, { recursive: true });
+        const summaryPath = path.join(qualityDir, "render-review-quality-summary.json");
+        const renderReviewRef = path.join(qualityDir, "render-review.json");
+        const previewWindowRef = path.join(qualityDir, "preview-scene-window.json");
+        const previewMediaRef = path.join(qualityDir, "preview-window.mp4");
+        const contactSheetRef = path.join(qualityDir, "contact-sheet.jpg");
+        fs.writeFileSync(summaryPath, JSON.stringify({ artifactType: "layer_composition_render_review_quality_v1" }));
+        fs.writeFileSync(renderReviewRef, JSON.stringify({ artifactType: "render_review_v1" }));
+        fs.writeFileSync(previewWindowRef, JSON.stringify({ artifactType: "preview_scene_window_v1" }));
+        fs.writeFileSync(previewMediaRef, "media");
+        fs.writeFileSync(contactSheetRef, "sheet");
+        return {
+          summaryPath,
+          renderReviewRef,
+          previewWindowRef,
+          previewMediaRef,
+          contactSheetRef,
+          decision: "accept",
+          overallQuality: passExecution.passId === "empty_baseline" ? 0.8 : 0.9,
+          evidenceEligible: passExecution.passId !== "empty_baseline",
+          measurementStatus: passExecution.passId === "empty_baseline" ? "render_health_observation" : "quality_evidence"
+        };
+      },
+      buildQualityTrend: ({ outPath }) => {
+        fs.writeFileSync(outPath, JSON.stringify({
+          artifactType: "layer_composition_quality_trend_v1",
+          summary: { evidenceRecordCount: 1, observationRecordCount: 1 }
+        }));
+        return { summary: { evidenceRecordCount: 1, observationRecordCount: 1 } };
+      },
+      refillPendingPasses: async ({ runRoot: root }) => {
+        refillSawTrend = fs.existsSync(path.join(root, "layer-composition-quality-trend.json"));
+        return { status: "no_valid_non_repeated_experiment", appendedCheckpointCount: 0 };
+      }
+    })
+  });
+
+  assert.equal(refillSawTrend, true);
+  assert.equal(summary.renderReviewQualityTrend.evidenceRecordCount, 1);
+});
+
 test("pass runner stages through TRAINING_API_STAGING_ROOT when provided", async () => {
   const { runRoot } = setupRun();
   const stagingRoot = path.join(runRoot, "api-staging");

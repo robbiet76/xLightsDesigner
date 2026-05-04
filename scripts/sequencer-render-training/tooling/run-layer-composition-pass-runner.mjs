@@ -563,6 +563,72 @@ export async function runLayerCompositionPasses({
   const learningCheckpoints = [];
   const diskGuardrailEvents = [];
   let pendingIndex = 0;
+  const buildCurrentSummary = () => {
+    const elapsedRuntimeMinutes = Number(((now() - startedAtMs) / 60000).toFixed(3));
+    const renderReviewResults = results.filter((result) => str(result.renderReviewQualityRef));
+    const eligibleRenderReviewResults = renderReviewResults.filter((result) => result.renderReviewEvidenceEligible);
+    const eligibleQualityScores = eligibleRenderReviewResults.map((result) => Number(result.renderReviewOverallQuality)).filter(Number.isFinite);
+    return {
+      artifactType: "layer_composition_pass_runner_summary_v1",
+      artifactVersion: 1,
+      generatedAt: new Date().toISOString(),
+      runRoot: root,
+      dryRun,
+      experimentIds: [...experimentFilter],
+      untilRuntimeBudget,
+      maxRuntimeMinutes: runtimeDeadlineMs === null ? null : resolvedMaxRuntimeMinutes,
+      requestedPasses: untilRuntimeBudget ? null : maxPasses,
+      processedPasses: results.length,
+      pendingPassesSelected: pending.length,
+      elapsedRuntimeMinutes,
+      renderReviewQualityEnabled: Boolean(renderReviewQuality),
+      renderReviewQualityCount: renderReviewResults.length,
+      renderReviewAcceptedCount: renderReviewResults.filter((result) => str(result.renderReviewDecision) === "accept").length,
+      renderReviewEvidenceEligibleCount: eligibleRenderReviewResults.length,
+      renderReviewObservationOnlyCount: renderReviewResults.filter((result) => str(result.renderReviewMeasurementStatus) === "render_health_observation").length,
+      renderReviewAcceptedEvidenceCount: eligibleRenderReviewResults.filter((result) => str(result.renderReviewDecision) === "accept").length,
+      renderReviewReviseCount: renderReviewResults.filter((result) => str(result.renderReviewDecision) === "revise").length,
+      renderReviewRejectedCount: renderReviewResults.filter((result) => str(result.renderReviewDecision) === "reject").length,
+      renderReviewEligibleQualityMean: round6(average(eligibleQualityScores)),
+      renderReviewEligibleQualityMin: eligibleQualityScores.length ? round6(Math.min(...eligibleQualityScores)) : 0,
+      renderReviewEligibleQualityMax: eligibleQualityScores.length ? round6(Math.max(...eligibleQualityScores)) : 0,
+      stopStatus,
+      stopReason,
+      refillAttempts: refillResults.length,
+      refillResults,
+      learningCheckpointCount: learningCheckpoints.length,
+      learningCheckpoints,
+      diskGuardrailEventCount: diskGuardrailEvents.length,
+      diskGuardrailEvents,
+      results
+    };
+  };
+  const writeCurrentSummary = ({ includeQualityTrend = false } = {}) => {
+    const summary = buildCurrentSummary();
+    writeJson(passRunnerSummaryPath, summary);
+    if (includeQualityTrend) {
+      const qualityTrendPath = path.join(root, "layer-composition-quality-trend.json");
+      const qualityTrend = (deps.buildQualityTrend || buildLayerCompositionQualityTrend)({
+        runRoots: [root],
+        outPath: qualityTrendPath
+      });
+      summary.renderReviewQualityTrendRef = qualityTrendPath;
+      summary.renderReviewQualityTrend = qualityTrend.summary || null;
+      writeJson(passRunnerSummaryPath, summary);
+      const ledger = fs.existsSync(ledgerPath) ? readJson(ledgerPath) : { artifacts: [] };
+      if (!arr(ledger.artifacts).some((row) => str(row.path) === qualityTrendPath)) {
+        appendLedgerArtifacts(ledgerPath, [
+          {
+            path: qualityTrendPath,
+            artifactClass: "metric_summary",
+            summarized: true,
+            retain: true
+          }
+        ]);
+      }
+    }
+    return summary;
+  };
   while (true) {
     const diskStatus = diskGuardrailStatus({ runRoot: root, plan, deps });
     if (diskStatus.status === "stop") {
@@ -618,6 +684,7 @@ export async function runLayerCompositionPasses({
           break;
         }
         bundle = refreshCheckpointBundle(root, plan);
+        if (renderReviewQuality) writeCurrentSummary({ includeQualityTrend: true });
         const refill = await deps.refillPendingPasses({
           runRoot: root,
           plan,
@@ -659,6 +726,7 @@ export async function runLayerCompositionPasses({
           break;
         }
         bundle = refreshCheckpointBundle(root, plan);
+        if (renderReviewQuality) writeCurrentSummary({ includeQualityTrend: true });
         const refill = appendLayerCompositionAdaptiveRefill({
           runRoot: root,
           plan,
@@ -890,63 +958,7 @@ export async function runLayerCompositionPasses({
     }
   }
   bundle = refreshCheckpointBundle(root, plan);
-  const elapsedRuntimeMinutes = Number(((now() - startedAtMs) / 60000).toFixed(3));
-  const renderReviewResults = results.filter((result) => str(result.renderReviewQualityRef));
-  const eligibleRenderReviewResults = renderReviewResults.filter((result) => result.renderReviewEvidenceEligible);
-  const eligibleQualityScores = eligibleRenderReviewResults.map((result) => Number(result.renderReviewOverallQuality)).filter(Number.isFinite);
-  const summary = {
-    artifactType: "layer_composition_pass_runner_summary_v1",
-    artifactVersion: 1,
-    generatedAt: new Date().toISOString(),
-    runRoot: root,
-    dryRun,
-    experimentIds: [...experimentFilter],
-    untilRuntimeBudget,
-    maxRuntimeMinutes: runtimeDeadlineMs === null ? null : resolvedMaxRuntimeMinutes,
-    requestedPasses: untilRuntimeBudget ? null : maxPasses,
-    processedPasses: results.length,
-    pendingPassesSelected: pending.length,
-    elapsedRuntimeMinutes,
-    renderReviewQualityEnabled: Boolean(renderReviewQuality),
-    renderReviewQualityCount: renderReviewResults.length,
-    renderReviewAcceptedCount: renderReviewResults.filter((result) => str(result.renderReviewDecision) === "accept").length,
-    renderReviewEvidenceEligibleCount: eligibleRenderReviewResults.length,
-    renderReviewObservationOnlyCount: renderReviewResults.filter((result) => str(result.renderReviewMeasurementStatus) === "render_health_observation").length,
-    renderReviewAcceptedEvidenceCount: eligibleRenderReviewResults.filter((result) => str(result.renderReviewDecision) === "accept").length,
-    renderReviewReviseCount: renderReviewResults.filter((result) => str(result.renderReviewDecision) === "revise").length,
-    renderReviewRejectedCount: renderReviewResults.filter((result) => str(result.renderReviewDecision) === "reject").length,
-    renderReviewEligibleQualityMean: round6(average(eligibleQualityScores)),
-    renderReviewEligibleQualityMin: eligibleQualityScores.length ? round6(Math.min(...eligibleQualityScores)) : 0,
-    renderReviewEligibleQualityMax: eligibleQualityScores.length ? round6(Math.max(...eligibleQualityScores)) : 0,
-    stopStatus,
-    stopReason,
-    refillAttempts: refillResults.length,
-    refillResults,
-    learningCheckpointCount: learningCheckpoints.length,
-    learningCheckpoints,
-    diskGuardrailEventCount: diskGuardrailEvents.length,
-    diskGuardrailEvents,
-    results
-  };
-  writeJson(passRunnerSummaryPath, summary);
-  if (renderReviewQuality) {
-    const qualityTrendPath = path.join(root, "layer-composition-quality-trend.json");
-    const qualityTrend = (deps.buildQualityTrend || buildLayerCompositionQualityTrend)({
-      runRoots: [root],
-      outPath: qualityTrendPath
-    });
-    summary.renderReviewQualityTrendRef = qualityTrendPath;
-    summary.renderReviewQualityTrend = qualityTrend.summary || null;
-    writeJson(passRunnerSummaryPath, summary);
-    appendLedgerArtifacts(ledgerPath, [
-      {
-        path: qualityTrendPath,
-        artifactClass: "metric_summary",
-        summarized: true,
-        retain: true
-      }
-    ]);
-  }
+  const summary = writeCurrentSummary({ includeQualityTrend: renderReviewQuality });
   writeExecutionSummary({
     root,
     plan,
