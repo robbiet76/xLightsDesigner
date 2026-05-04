@@ -258,6 +258,10 @@ quality evidence as durable candidates.
 When quality records are supplied to `build-layer-composition-priors.mjs`, matching
 experiment/pass priors carry compact quality evidence into the runtime bundle
 without copying raw render-review media or review paths.
+The exported runtime bundle also includes a promotion gate: selectors must treat
+the priors as advisory until at least one selector-ready prior is backed by
+durable quality evidence, and any selector-ready prior without quality evidence
+keeps runtime consumption blocked.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \

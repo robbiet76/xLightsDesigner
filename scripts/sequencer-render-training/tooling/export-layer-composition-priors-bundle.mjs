@@ -117,6 +117,52 @@ function addIndex(index, key, priorId) {
   if (!index[normalized].includes(priorId)) index[normalized].push(priorId);
 }
 
+function buildPromotionGate({ indexes = {} } = {}) {
+  const qualityBackedPriorIds = arr(indexes.qualityBackedPriorIds);
+  const selectorReadyPriorIds = arr(indexes.selectorReadyPriorIds);
+  const stagedPriorIds = arr(indexes.stagedPriorIds);
+  const qualityBackedSet = new Set(qualityBackedPriorIds);
+  const qualityBackedSelectorReadyPriorIds = selectorReadyPriorIds.filter((priorId) => qualityBackedSet.has(priorId));
+  const selectorReadyMissingQualityPriorIds = selectorReadyPriorIds.filter((priorId) => !qualityBackedSet.has(priorId));
+  const checks = [
+    {
+      id: "has_quality_backed_priors",
+      ok: qualityBackedPriorIds.length > 0,
+      actual: qualityBackedPriorIds.length,
+      required: 1
+    },
+    {
+      id: "has_selector_ready_priors",
+      ok: selectorReadyPriorIds.length > 0,
+      actual: selectorReadyPriorIds.length,
+      required: 1
+    },
+    {
+      id: "selector_ready_priors_are_quality_backed",
+      ok: selectorReadyMissingQualityPriorIds.length === 0,
+      actual: selectorReadyMissingQualityPriorIds.length,
+      required: 0,
+      priorIds: selectorReadyMissingQualityPriorIds
+    }
+  ];
+  const blockers = [];
+  if (qualityBackedPriorIds.length === 0) blockers.push("no_quality_backed_priors");
+  if (selectorReadyPriorIds.length === 0) blockers.push("no_selector_ready_priors");
+  if (selectorReadyMissingQualityPriorIds.length > 0) blockers.push("selector_ready_priors_missing_quality_evidence");
+  return {
+    artifactType: "layer_composition_prior_promotion_gate_v1",
+    selectorRuntimeReady: checks.every((check) => check.ok),
+    qualityBackedPriorCount: qualityBackedPriorIds.length,
+    selectorReadyPriorCount: selectorReadyPriorIds.length,
+    qualityBackedSelectorReadyPriorCount: qualityBackedSelectorReadyPriorIds.length,
+    stagedPriorCount: stagedPriorIds.length,
+    qualityBackedSelectorReadyPriorIds,
+    selectorReadyMissingQualityPriorIds,
+    checks,
+    blockers
+  };
+}
+
 export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "", sourceRunRoot = "" } = {}) {
   const source = typeof stagedPriors === "string" ? readJson(stagedPriors) : stagedPriors;
   const resolvedSourcePath = str(sourcePath) ? path.resolve(sourcePath) : "";
@@ -163,6 +209,7 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
     if (prior.selectorReady === true) indexes.selectorReadyPriorIds.push(priorId);
     else indexes.stagedPriorIds.push(priorId);
   }
+  const promotionGate = buildPromotionGate({ indexes });
   return {
     artifactType: "sequencer_layer_composition_priors_bundle",
     artifactVersion: "1.0",
@@ -187,8 +234,9 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
     retrievalContract: {
       primaryFacets: ["family", "paletteProfile", "compositionIntent", "outcomeTags"],
       rankingPolicy: "facet_match_confidence_then_observed_strength",
-      consumptionPolicy: "advisory_evidence_not_recipe"
+      consumptionPolicy: "advisory_evidence_not_recipe_until_promotion_gate_ready"
     },
+    promotionGate,
     indexes,
     records
   };
