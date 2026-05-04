@@ -6,7 +6,7 @@
     "derivedFrom": "display/model-index.json",
     "privacy": "anonymized_compact_summary"
   },
-  "purpose": "Portable training summary for custom-model and submodel reasoning from the shared display/model-index artifact.",
+  "purpose": "Portable training summary for custom-model and shared submodel reasoning from the display/model-index artifact.",
   "examples": [
     {
       "id": "custom_model_with_first_class_submodel",
@@ -98,6 +98,80 @@
       "trainingAssertions": [
         "Use display/model-index records as one shared target collection.",
         "Treat the submodel record as a first-class target with parent context.",
+        "Use node coverage, sibling count, and structural hints when deciding whether to preserve submodel-level targeting.",
+        "Do not infer user-specific prop semantics from displayName or targetId.",
+        "Use project display metadata and target-behavior evidence when semantic region meaning or effect suitability is needed."
+      ]
+    },
+    {
+      "id": "builtin_model_with_first_class_submodel",
+      "displayModelIndexShape": {
+        "artifactType": "target_metadata_index_v1",
+        "artifactVersion": "1.0",
+        "recordCount": 2,
+        "records": [
+          {
+            "targetId": "builtin_model_a",
+            "targetKind": "model",
+            "identity": {
+              "displayName": "Built-in Model A",
+              "rawType": "Matrix",
+              "canonicalType": "matrix",
+              "fingerprint": "tmf1:builtin-model-a",
+              "fingerprintVersion": "target-metadata-fingerprint-v1"
+            },
+            "structure": {
+              "nodeLayout": {
+                "source": "layout.getModelNodes",
+                "nodeCount": 400,
+                "coordinateCoverage": 1,
+                "bounds": {
+                  "width": 20,
+                  "height": 20,
+                  "layers": 1
+                },
+                "orderSummary": {
+                  "continuity": "continuous",
+                  "sampledNodeCount": 12
+                }
+              }
+            }
+          },
+          {
+            "targetId": "builtin_model_a/submodel_region_1",
+            "targetKind": "submodel",
+            "identity": {
+              "displayName": "Built-in Model A / Region 1",
+              "rawType": "SubModel",
+              "canonicalType": "submodel",
+              "fingerprint": "tmf1:builtin-model-a-region-1",
+              "fingerprintVersion": "target-metadata-fingerprint-v1",
+              "parentId": "builtin_model_a",
+              "parentName": "Built-in Model A"
+            },
+            "structure": {
+              "submodelMetadata": {
+                "parentId": "builtin_model_a",
+                "parentName": "Built-in Model A",
+                "siblingCount": 4,
+                "nodeCoverage": {
+                  "nodeCount": 100,
+                  "parentNodeCount": 400,
+                  "ratio": 0.25
+                },
+                "structureHints": [
+                  "builtin_submodel",
+                  "partial_region",
+                  "sibling_region"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "trainingAssertions": [
+        "Use display/model-index records as one shared target collection.",
+        "Treat built-in model submodels as first-class targets with the same parent context shape used for custom models.",
         "Use node coverage, sibling count, and structural hints when deciding whether to preserve submodel-level targeting.",
         "Do not infer user-specific prop semantics from displayName or targetId.",
         "Use project display metadata and target-behavior evidence when semantic region meaning or effect suitability is needed."

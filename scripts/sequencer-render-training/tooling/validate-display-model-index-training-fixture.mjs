@@ -56,6 +56,8 @@ export function validateDisplayModelIndexTrainingFixture({
   let recordCount = 0;
   let customRecordCount = 0;
   let submodelRecordCount = 0;
+  let customSubmodelRecordCount = 0;
+  let builtinSubmodelRecordCount = 0;
 
   examples.forEach((example, exampleIndex) => {
     const shape = example.displayModelIndexShape || {};
@@ -95,6 +97,9 @@ export function validateDisplayModelIndexTrainingFixture({
           errors,
           prefix
         });
+        const hints = normalizeArray(record.structure?.submodelMetadata?.structureHints);
+        if (hints.includes("custom_submodel")) customSubmodelRecordCount += 1;
+        if (hints.includes("builtin_submodel")) builtinSubmodelRecordCount += 1;
       }
     });
 
@@ -112,6 +117,8 @@ export function validateDisplayModelIndexTrainingFixture({
 
   if (customRecordCount === 0) errors.push("fixture must include at least one custom model record");
   if (submodelRecordCount === 0) errors.push("fixture must include at least one submodel record");
+  if (customSubmodelRecordCount === 0) errors.push("fixture must include at least one custom parent submodel record");
+  if (builtinSubmodelRecordCount === 0) errors.push("fixture must include at least one built-in parent submodel record");
 
   return {
     ok: errors.length === 0,
@@ -121,6 +128,8 @@ export function validateDisplayModelIndexTrainingFixture({
     recordCount,
     customRecordCount,
     submodelRecordCount,
+    customSubmodelRecordCount,
+    builtinSubmodelRecordCount,
     errors
   };
 }

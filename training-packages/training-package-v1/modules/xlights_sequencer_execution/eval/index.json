@@ -81,7 +81,7 @@
       "source": "scripts/sequencer-render-training/tooling/validate-display-model-index-training-fixture.mjs",
       "asserts": [
         "custom model fixture summaries satisfy display_model_index_v1 required fields",
-        "fixture coverage includes at least one custom model record and one first-class submodel record",
+        "fixture coverage includes at least one custom model record, one custom parent submodel record, and one built-in parent submodel record",
         "fixture assertions preserve shared target collection behavior and forbid semantic inference from target names"
       ]
     },
