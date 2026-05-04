@@ -262,6 +262,10 @@ The exported runtime bundle also includes a promotion gate: selectors must treat
 the priors as advisory until at least one selector-ready prior is backed by
 durable quality evidence, and any selector-ready prior without quality evidence
 keeps runtime consumption blocked.
+Use `promote-layer-composition-priors.mjs` as the explicit promotion step after
+reviewing quality records. The staged prior builder does not mark selector-ready
+records by default; promotion requires durable repeated quality evidence and
+writes a compact per-prior promotion review.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \
@@ -276,8 +280,14 @@ node scripts/sequencer-render-training/tooling/build-layer-composition-priors.mj
 ```
 
 ```bash
-node scripts/sequencer-render-training/tooling/export-layer-composition-priors-bundle.mjs \
+node scripts/sequencer-render-training/tooling/promote-layer-composition-priors.mjs \
   --priors var/logs/sequencer-layer-composition-training-runs/<run-id>/layer-composition-priors-staged.json \
+  --out var/logs/sequencer-layer-composition-training-runs/<run-id>/layer-composition-priors-promoted.json
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/export-layer-composition-priors-bundle.mjs \
+  --priors var/logs/sequencer-layer-composition-training-runs/<run-id>/layer-composition-priors-promoted.json \
   --out apps/xlightsdesigner-ui/agent/sequence-agent/generated/layer-composition-priors-bundle.js
 ```
 
