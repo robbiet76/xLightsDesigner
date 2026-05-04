@@ -109,6 +109,8 @@ The submodel and parent context in behavior learning should come from the effect
 
 Training cleanup and future training exports should derive custom-model and submodel facts from `display/model-index.json` and `display/target-behavior.json`. They should not reintroduce separate custom-model artifact paths or duplicate model parsing logic. The project-local contract is the source layer; central/shared training packages may consume curated exports from it.
 
+Use `scripts/designer-training/export-target-behavior-training-summary.mjs` to create anonymized calibration summaries from a project. These summaries remove target ids, display names, parent names, raw render refs, and full geometry payloads. They are review inputs for possible shared-training promotion, not runtime artifacts.
+
 The sequencer execution training module documents the current package contracts, compact fixtures, runtime coverage, and promotion rules in `../../training-packages/training-package-v1/modules/xlights_sequencer_execution/README.md`.
 
 ## Current Learnings

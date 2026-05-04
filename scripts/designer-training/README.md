@@ -11,6 +11,10 @@ Operational scripts for unattended designer training and validation loops.
 - `add-followup.sh`
   - appends a timestamped note to the active run's `pending-followups.md`
   - use this instead of relying on chat memory while a detached run is active
+- `export-target-behavior-training-summary.mjs`
+  - exports an anonymized compact summary from project-local `display/target-behavior.json`
+  - strips target ids, display names, parent names, raw render refs, and full geometry payloads
+  - intended for calibration review before any shared training promotion
 
 ## Recommended Use
 
@@ -37,4 +41,12 @@ Stop the current run cleanly:
 
 ```bash
 touch var/logs/designer-training-runs/latest/STOP
+```
+
+Export project-local target behavior for calibration review:
+
+```bash
+node scripts/designer-training/export-target-behavior-training-summary.mjs \
+  --project-dir /path/to/xLightsDesignerProject \
+  --out var/tmp/target-behavior-training-summary.json
 ```

@@ -49,6 +49,14 @@ node --test $(find apps/xlightsdesigner-ui/tests/agent/sequence-agent -maxdepth 
 
 This checkpoint covers portable package contracts, compact fixture validity, sequence-agent target-context behavior, project-local target behavior learning, proposal context loading, and fingerprint-backed behavior selection for custom and built-in submodels.
 
+For calibration review before shared promotion, export project-local target behavior with:
+
+```bash
+node scripts/designer-training/export-target-behavior-training-summary.mjs --project-dir <project-dir> --out <summary.json>
+```
+
+The export is anonymized and compact. It is for deciding what learning is reusable, not for replacing the project-local `display/target-behavior.json` source of truth.
+
 ## Promotion Rules
 
 - Promote compact structural and behavior facts only after they are reusable.
