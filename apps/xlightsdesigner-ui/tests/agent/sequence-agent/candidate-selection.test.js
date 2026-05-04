@@ -484,3 +484,114 @@ test("candidate selection uses model-index fingerprints to apply renamed submode
   assert.equal(nameOnlyMiss.behaviorEvidenceCount, 0);
   assert.ok(fingerprintMatched.selectionScore > nameOnlyMiss.selectionScore);
 });
+
+test("candidate selection applies fingerprint behavior evidence for built-in parent submodels", () => {
+  const modelIndexSubmodel = {
+    targetId: "MatrixCurrent/@Upper",
+    targetKind: "submodel",
+    identity: {
+      fingerprint: "tmf1:matrix-upper",
+      fingerprintVersion: "target-metadata-fingerprint-v1",
+      parentId: "MatrixCurrent",
+      parentName: "MatrixCurrent"
+    },
+    structure: {
+      submodelMetadata: {
+        parentId: "MatrixCurrent",
+        siblingCount: 4,
+        nodeCoverage: { nodeCount: 100, parentNodeCount: 400, ratio: 0.25 },
+        structureHints: ["builtin_submodel", "partial_region"]
+      }
+    }
+  };
+
+  const out = buildCandidateSelectionV1({
+    intentEnvelope: {
+      artifactId: "intent-built-in-submodel-behavior",
+      novelty: { explorationPressure: "medium", reuseTolerance: "medium" }
+    },
+    realizationCandidates: {
+      artifactId: "candidates-built-in-submodel-behavior",
+      candidates: [
+        {
+          candidateId: "candidate-built-in-submodel-fingerprint",
+          realizationRefs: [
+            {
+              targetIds: [modelIndexSubmodel.targetId],
+              targetFingerprints: [modelIndexSubmodel.identity.fingerprint],
+              effectName: "Bars"
+            }
+          ],
+          fitSignals: { overallFit: "medium" },
+          revisionSignals: { revisionScore: 0.6 },
+          noveltySignals: { noveltyScore: 0.5, memoryPenalty: 0, oscillationPenalty: 0, oscillationRisk: "low" },
+          riskSignals: {
+            attentionConflictRisk: "medium",
+            layeringConflictRisk: "medium",
+            complexityRisk: "medium",
+            renderUncertainty: "medium"
+          }
+        },
+        {
+          candidateId: "candidate-parent-collapse",
+          realizationRefs: [
+            {
+              targetIds: ["MatrixCurrent"],
+              targetFingerprints: ["tmf1:matrix-parent"],
+              effectName: "Bars"
+            }
+          ],
+          fitSignals: { overallFit: "medium" },
+          revisionSignals: { revisionScore: 0.6 },
+          noveltySignals: { noveltyScore: 0.5, memoryPenalty: 0, oscillationPenalty: 0, oscillationRisk: "low" },
+          riskSignals: {
+            attentionConflictRisk: "medium",
+            layeringConflictRisk: "medium",
+            complexityRisk: "medium",
+            renderUncertainty: "medium"
+          }
+        }
+      ]
+    },
+    targetBehaviorLearning: {
+      artifactPath: "/project/display/target-behavior.json",
+      records: [
+        {
+          recordId: "tbl1:previous-matrix-upper-bars",
+          targetId: "MatrixPrevious/@Upper",
+          targetKind: "submodel",
+          targetFingerprint: "tmf1:matrix-upper",
+          effectName: "Bars",
+          effectFamily: "Bars",
+          probeScope: "submodel",
+          parentContext: {
+            targetId: "MatrixPrevious",
+            targetKind: "model",
+            canonicalType: "matrix",
+            rawType: "Matrix",
+            targetFingerprint: "tmf1:matrix-parent"
+          },
+          submodelContext: {
+            siblingCount: 4,
+            nodeCoverage: { nodeCount: 100, parentNodeCount: 400, ratio: 0.25 }
+          },
+          stats: { sampleCount: 3, positiveCount: 3, negativeCount: 0 }
+        }
+      ]
+    },
+    selectionContext: {
+      phase: "proposal",
+      seed: "proposal::built-in-submodel-behavior",
+      explorationEnabled: true
+    }
+  });
+
+  const submodelMatched = out.scoredCandidates.find((row) => row.candidateId === "candidate-built-in-submodel-fingerprint");
+  const parentCollapse = out.scoredCandidates.find((row) => row.candidateId === "candidate-parent-collapse");
+
+  assert.equal(submodelMatched.behaviorEvidenceCount, 1);
+  assert.deepEqual(submodelMatched.behaviorRecordIds, ["tbl1:previous-matrix-upper-bars"]);
+  assert.equal(submodelMatched.behaviorScore, 1);
+  assert.equal(parentCollapse.behaviorEvidenceCount, 0);
+  assert.ok(submodelMatched.selectionScore > parentCollapse.selectionScore);
+});
