@@ -15,6 +15,11 @@ Operational scripts for unattended designer training and validation loops.
   - exports an anonymized compact summary from project-local `display/target-behavior.json`
   - strips target ids, display names, parent names, raw render refs, and full geometry payloads
   - intended for calibration review before any shared training promotion
+- `run-self-improvement-cycle.mjs`
+  - manifest-driven training loop runner for readiness checks, anonymized target-behavior exports, and promotion-gate metrics
+  - starts with `On`, `Bars`, `Color Wash`, and `SingleStrand`
+  - excludes `Shimmer` from the initial validation scope
+  - designed so live apply/render probe phases can be added to the manifest without changing the export or promotion contract
 
 ## Recommended Use
 
@@ -49,4 +54,19 @@ Export project-local target behavior for calibration review:
 node scripts/designer-training/export-target-behavior-training-summary.mjs \
   --project-dir /path/to/xLightsDesignerProject \
   --out var/tmp/target-behavior-training-summary.json
+```
+
+Run the self-improvement cycle against existing project-local behavior artifacts:
+
+```bash
+node scripts/designer-training/run-self-improvement-cycle.mjs \
+  --discover-under var/reports
+```
+
+For a safe dry run that skips command phases and only exports/evaluates existing target-behavior artifacts:
+
+```bash
+node scripts/designer-training/run-self-improvement-cycle.mjs \
+  --skip-commands \
+  --project-dir /path/to/xLightsDesignerProject
 ```

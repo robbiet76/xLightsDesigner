@@ -57,6 +57,8 @@ node scripts/designer-training/export-target-behavior-training-summary.mjs --pro
 
 The export is anonymized and compact. It is for deciding what learning is reusable, not for replacing the project-local `display/target-behavior.json` source of truth.
 
+The initial self-improvement loop is driven by `scripts/designer-training/self-improvement-loop-manifest.v1.json`. Its starting effect scope is `On`, `Bars`, `Color Wash`, and `SingleStrand`; `Shimmer` is intentionally blocked from this validation scope.
+
 ## Promotion Rules
 
 - Promote compact structural and behavior facts only after they are reusable.

@@ -1,0 +1,288 @@
+#!/usr/bin/env node
+
+import { execFile } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { buildTargetBehaviorTrainingSummary } from './export-target-behavior-training-summary.mjs';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const DEFAULT_MANIFEST = 'scripts/designer-training/self-improvement-loop-manifest.v1.json';
+const DEFAULT_LOG_ROOT = 'var/logs/self-improvement-training-runs';
+
+function str(value = '') {
+  return String(value || '').trim();
+}
+
+function arr(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function writeJson(filePath, value) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+}
+
+function parseArgs(argv = []) {
+  const args = {
+    manifestPath: DEFAULT_MANIFEST,
+    outDir: '',
+    projectDirs: [],
+    discoverUnder: [],
+    skipCommands: false,
+    continueOnFailure: false
+  };
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = str(argv[index]);
+    const next = () => {
+      index += 1;
+      if (index >= argv.length) throw new Error(`Missing value for ${token}`);
+      return argv[index];
+    };
+    if (token === '--manifest') args.manifestPath = next();
+    else if (token === '--out-dir') args.outDir = next();
+    else if (token === '--project-dir') args.projectDirs.push(next());
+    else if (token === '--discover-under') args.discoverUnder.push(next());
+    else if (token === '--skip-commands') args.skipCommands = true;
+    else if (token === '--continue-on-failure') args.continueOnFailure = true;
+    else if (token === '--help') args.help = true;
+    else throw new Error(`Unknown argument: ${token}`);
+  }
+  return args;
+}
+
+function usage() {
+  return `Usage:
+  node scripts/designer-training/run-self-improvement-cycle.mjs [--project-dir <project-dir>] [--discover-under <dir>] [--out-dir <dir>]
+
+The current runner validates readiness, exports anonymized target-behavior summaries from project-local artifacts, and evaluates promotion-gate metrics. Live apply/render probe execution is intentionally manifest-driven so it can be added without changing the promotion/export contract.
+`;
+}
+
+function runCommand(commandText, { outDir, phaseId }) {
+  const [command, ...args] = commandText.split(/\s+/).filter(Boolean);
+  return new Promise((resolve) => {
+    const startedAt = new Date().toISOString();
+    execFile(command, args, { cwd: REPO_ROOT, maxBuffer: 1024 * 1024 * 20 }, (error, stdout, stderr) => {
+      const result = {
+        id: phaseId,
+        type: 'command',
+        command: commandText,
+        ok: !error,
+        exitCode: error?.code ?? 0,
+        startedAt,
+        completedAt: new Date().toISOString(),
+        stdoutPath: path.join(outDir, `${phaseId}.stdout.txt`),
+        stderrPath: path.join(outDir, `${phaseId}.stderr.txt`)
+      };
+      fs.writeFileSync(result.stdoutPath, stdout || '', 'utf8');
+      fs.writeFileSync(result.stderrPath, stderr || '', 'utf8');
+      resolve(result);
+    });
+  });
+}
+
+function walkForTargetBehavior(dir) {
+  const found = [];
+  if (!dir || !fs.existsSync(dir)) return found;
+  const stack = [path.resolve(dir)];
+  while (stack.length) {
+    const current = stack.pop();
+    let entries = [];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const entryPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === 'DerivedData') continue;
+        stack.push(entryPath);
+      } else if (entry.name === 'target-behavior.json' && path.basename(current) === 'display') {
+        found.push(path.dirname(current));
+      }
+    }
+  }
+  return found.sort();
+}
+
+function collectProjectDirs(args) {
+  const dirs = new Set(args.projectDirs.map((row) => path.resolve(REPO_ROOT, row)));
+  for (const root of args.discoverUnder) {
+    for (const projectDir of walkForTargetBehavior(path.resolve(REPO_ROOT, root))) {
+      dirs.add(projectDir);
+    }
+  }
+  return [...dirs].filter((projectDir) => fs.existsSync(path.join(projectDir, 'display', 'target-behavior.json'))).sort();
+}
+
+function exportTargetBehaviorSummaries({ projectDirs, outDir }) {
+  const summaries = [];
+  const summaryDir = path.join(outDir, 'target-behavior-summaries');
+  fs.mkdirSync(summaryDir, { recursive: true });
+  projectDirs.forEach((projectDir, index) => {
+    const targetBehaviorPath = path.join(projectDir, 'display', 'target-behavior.json');
+    const modelIndexPath = path.join(projectDir, 'display', 'model-index.json');
+    const targetBehavior = readJson(targetBehaviorPath);
+    const modelIndex = fs.existsSync(modelIndexPath) ? readJson(modelIndexPath) : null;
+    const summary = buildTargetBehaviorTrainingSummary({ targetBehavior, modelIndex });
+    const outPath = path.join(summaryDir, `target-behavior-summary-${String(index + 1).padStart(3, '0')}.json`);
+    writeJson(outPath, summary);
+    summaries.push({
+      ok: true,
+      projectDirHash: `pdh1:${stableHash(projectDir)}`,
+      outputPath: outPath,
+      summary: summary.summary
+    });
+  });
+  return summaries;
+}
+
+function stableHash(value = '') {
+  let hash = 2166136261;
+  const text = String(value || '');
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+function validateManifest(manifest) {
+  const errors = [];
+  if (manifest?.artifactType !== 'xlightsdesigner_self_improvement_loop_manifest_v1') {
+    errors.push('manifest artifactType must be xlightsdesigner_self_improvement_loop_manifest_v1');
+  }
+  const effects = arr(manifest?.initialScope?.effects).map((effect) => str(effect));
+  const blocked = new Set(arr(manifest?.initialScope?.blockedEffects).map((effect) => str(effect).toLowerCase()));
+  if (!effects.length) errors.push('manifest initialScope.effects is required');
+  for (const effect of effects) {
+    if (blocked.has(effect.toLowerCase())) errors.push(`manifest effect is blocked for this loop: ${effect}`);
+  }
+  if (effects.some((effect) => effect.toLowerCase() === 'shimmer')) {
+    errors.push('Shimmer is intentionally excluded from the initial self-improvement validation scope');
+  }
+  if (!effects.some((effect) => effect.toLowerCase() === 'singlestrand')) {
+    errors.push('SingleStrand must be included in the initial limited validation scope');
+  }
+  return errors;
+}
+
+function evaluatePromotionGate({ manifest, exportedSummaries }) {
+  const gate = manifest.promotionGate || {};
+  const totals = {
+    recordCount: 0,
+    submodelRecordCount: 0,
+    customParentRecordCount: 0,
+    builtInParentRecordCount: 0,
+    effectFamilies: new Set()
+  };
+  for (const exported of exportedSummaries) {
+    const summary = exported.summary || {};
+    totals.recordCount += Number(summary.recordCount || 0);
+    totals.submodelRecordCount += Number(summary.submodelRecordCount || 0);
+    totals.customParentRecordCount += Number(summary.customParentRecordCount || 0);
+    const builtIn = Number(summary.submodelRecordCount || 0) - Number(summary.customParentRecordCount || 0);
+    totals.builtInParentRecordCount += Math.max(0, builtIn);
+    for (const effect of Object.keys(summary.effectFamilyCounts || {})) totals.effectFamilies.add(effect);
+  }
+  const checks = [
+    { id: 'minTotalRecords', actual: totals.recordCount, expected: Number(gate.minTotalRecords || 0) },
+    { id: 'minSubmodelRecords', actual: totals.submodelRecordCount, expected: Number(gate.minSubmodelRecords || 0) },
+    { id: 'minCustomParentRecords', actual: totals.customParentRecordCount, expected: Number(gate.minCustomParentRecords || 0) },
+    { id: 'minBuiltInParentRecords', actual: totals.builtInParentRecordCount, expected: Number(gate.minBuiltInParentRecords || 0) },
+    { id: 'minEffectsCovered', actual: totals.effectFamilies.size, expected: Number(gate.minEffectsCovered || 0) }
+  ].map((check) => ({ ...check, ok: check.actual >= check.expected }));
+  return {
+    promoteReady: checks.every((check) => check.ok),
+    totals: {
+      ...totals,
+      effectFamilies: [...totals.effectFamilies].sort()
+    },
+    checks
+  };
+}
+
+export async function runSelfImprovementCycle({
+  manifestPath = DEFAULT_MANIFEST,
+  outDir = '',
+  projectDirs = [],
+  discoverUnder = [],
+  skipCommands = false,
+  continueOnFailure = false
+} = {}) {
+  const resolvedManifestPath = path.resolve(REPO_ROOT, manifestPath);
+  const manifest = readJson(resolvedManifestPath);
+  const manifestErrors = validateManifest(manifest);
+  if (manifestErrors.length) {
+    return { ok: false, manifestPath: resolvedManifestPath, errors: manifestErrors };
+  }
+
+  const runId = new Date().toISOString().replace(/[:.]/g, '-');
+  const resolvedOutDir = path.resolve(REPO_ROOT, outDir || path.join(DEFAULT_LOG_ROOT, runId));
+  fs.mkdirSync(resolvedOutDir, { recursive: true });
+  fs.mkdirSync(path.dirname(path.join(REPO_ROOT, DEFAULT_LOG_ROOT, 'latest')), { recursive: true });
+  try {
+    fs.rmSync(path.join(REPO_ROOT, DEFAULT_LOG_ROOT, 'latest'), { force: true });
+    fs.symlinkSync(resolvedOutDir, path.join(REPO_ROOT, DEFAULT_LOG_ROOT, 'latest'), 'dir');
+  } catch {
+    // Symlink creation is helpful but not required for the cycle result.
+  }
+
+  const phases = [];
+  if (!skipCommands) {
+    for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'command')) {
+      const result = await runCommand(str(phase.command), { outDir: resolvedOutDir, phaseId: str(phase.id) });
+      phases.push(result);
+      if (!result.ok && phase.required !== false && !continueOnFailure) {
+        const output = { ok: false, manifestPath: resolvedManifestPath, outDir: resolvedOutDir, phases, errors: [`phase failed: ${phase.id}`] };
+        writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
+        return output;
+      }
+    }
+  }
+
+  const resolvedProjectDirs = collectProjectDirs({
+    projectDirs,
+    discoverUnder
+  });
+  const exportedSummaries = exportTargetBehaviorSummaries({ projectDirs: resolvedProjectDirs, outDir: resolvedOutDir });
+  const promotionGate = evaluatePromotionGate({ manifest, exportedSummaries });
+  const output = {
+    ok: phases.every((phase) => phase.ok) && true,
+    manifestPath: resolvedManifestPath,
+    outDir: resolvedOutDir,
+    initialScope: manifest.initialScope,
+    phases,
+    targetBehaviorExports: exportedSummaries,
+    promotionGate,
+    nextActions: promotionGate.promoteReady
+      ? ['review anonymized summaries for shared-training promotion']
+      : ['generate more accepted apply/render outcomes for the initial effect and target scope']
+  };
+  writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
+  return output;
+}
+
+const isCli = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isCli) {
+  try {
+    const args = parseArgs(process.argv.slice(2));
+    if (args.help) {
+      process.stdout.write(usage());
+      process.exit(0);
+    }
+    const result = await runSelfImprovementCycle(args);
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    if (!result.ok) process.exit(1);
+  } catch (error) {
+    console.error(error?.stack || String(error));
+    process.exit(1);
+  }
+}

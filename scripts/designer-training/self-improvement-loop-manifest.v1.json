@@ -1,0 +1,68 @@
+{
+  "artifactType": "xlightsdesigner_self_improvement_loop_manifest_v1",
+  "version": "1.0",
+  "status": "active",
+  "purpose": "Unattended sequencing training and validation loop for expanding project-local behavior learning before shared training promotion.",
+  "initialScope": {
+    "effects": [
+      "On",
+      "Bars",
+      "Color Wash",
+      "SingleStrand"
+    ],
+    "blockedEffects": [
+      "Shimmer"
+    ],
+    "targetScopes": [
+      "model",
+      "submodel",
+      "group"
+    ],
+    "modelTypePriorities": [
+      "custom",
+      "matrix",
+      "single_line",
+      "tree",
+      "arch",
+      "model_group"
+    ]
+  },
+  "cyclePhases": [
+    {
+      "id": "readiness_validation",
+      "type": "command",
+      "command": "node scripts/designer-training/validate-training-package.mjs",
+      "required": true
+    },
+    {
+      "id": "sequence_agent_runtime_validation",
+      "type": "command",
+      "command": "node --test apps/xlightsdesigner-ui/tests/agent/sequence-agent/candidate-selection.test.js apps/xlightsdesigner-ui/tests/runtime/target-behavior-learning-runtime.test.js apps/xlightsdesigner-ui/tests/runtime/proposal-generation-runtime.test.js",
+      "required": true
+    },
+    {
+      "id": "target_behavior_summary_export",
+      "type": "target_behavior_export",
+      "required": false
+    },
+    {
+      "id": "promotion_gate",
+      "type": "promotion_gate",
+      "required": true
+    }
+  ],
+  "promotionGate": {
+    "minTotalRecords": 12,
+    "minSubmodelRecords": 6,
+    "minCustomParentRecords": 3,
+    "minBuiltInParentRecords": 3,
+    "minEffectsCovered": 3,
+    "minSamplesPerPromotablePattern": 3,
+    "requirePositiveAndNegativeCoverage": false
+  },
+  "expansionPolicy": {
+    "addEffectsOnlyAfter": "current scope reaches promotion gate or repeated failure is explained",
+    "addModelTypesOnlyAfter": "current custom, built-in, group, and submodel scopes have stable apply/render validation",
+    "promotionRule": "promote anonymized reusable summaries only after repeated observations; keep one-off records project-local"
+  }
+}
