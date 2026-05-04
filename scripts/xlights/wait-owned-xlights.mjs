@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 
+import { commandContains, processesMatching } from './process-helpers.mjs';
+
 const timeoutMs = Number(process.argv[2] || 90000);
 const started = Date.now();
 const healthUrl = 'http://127.0.0.1:49915/xlightsdesigner/api/health';
@@ -10,19 +12,7 @@ let lastProgress = '';
 async function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 function listXLightsProcesses() {
-  const output = execFileSync('ps', ['-axo', 'pid=,command='], { encoding: 'utf8' });
-  return output
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const firstSpace = line.indexOf(' ');
-      return {
-        pid: Number(line.slice(0, firstSpace)),
-        command: line.slice(firstSpace + 1).trim()
-      };
-    })
-    .filter((entry) => entry.command.includes('xLights.app/Contents/MacOS/xLights'));
+  return processesMatching(commandContains('xLights.app/Contents/MacOS/xLights'));
 }
 
 function readTail(filePath, maxLines = 80) {

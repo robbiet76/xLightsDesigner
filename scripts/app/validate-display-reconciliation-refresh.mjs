@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
-import { execFile, execFileSync, spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
+
+import { pidsMatching, stopPids } from '../xlights/process-helpers.mjs';
 
 const execFileAsync = promisify(execFile);
 const APP_AUTOMATION_URL = process.env.XLD_APP_AUTOMATION_URL || 'http://127.0.0.1:49916';
@@ -91,59 +93,6 @@ function writeJson(filePath, value) {
 
 function sha1(value) {
   return createHash('sha1').update(value).digest('hex');
-}
-
-function processList() {
-  const output = execFileSync('ps', ['-axo', 'pid=,command='], { encoding: 'utf8' });
-  return output
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const firstSpace = line.indexOf(' ');
-      return {
-        pid: Number(line.slice(0, firstSpace)),
-        command: line.slice(firstSpace + 1).trim()
-      };
-    })
-    .filter((entry) => Number.isFinite(entry.pid));
-}
-
-function pidsMatching(predicate) {
-  return processList().filter(predicate).map((entry) => entry.pid);
-}
-
-function killPid(pid) {
-  try {
-    execFileSync('kill', ['-TERM', String(pid)], { stdio: 'ignore' });
-  } catch {}
-}
-
-function forceKillPid(pid) {
-  try {
-    execFileSync('kill', ['-KILL', String(pid)], { stdio: 'ignore' });
-  } catch {}
-}
-
-function isPidAlive(pid) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function stopPids(pids) {
-  const stopped = [...pids];
-  for (const pid of pids) killPid(pid);
-  const started = Date.now();
-  while (Date.now() - started < 5000) {
-    if (pids.every((pid) => !isPidAlive(pid))) return stopped;
-    await sleep(250);
-  }
-  for (const pid of pids) forceKillPid(pid);
-  return stopped;
 }
 
 async function requestJson(method, urlPath, body = null, timeoutMs = 90000) {

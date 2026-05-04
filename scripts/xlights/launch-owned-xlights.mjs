@@ -6,6 +6,7 @@ import os from 'node:os';
 import http from 'node:http';
 
 import { ensureOwnedBootstrapShowFolder } from './owned-bootstrap-show-folder.mjs';
+import { commandMatchesExactBinary, isPidAlive, processesMatching, stopPids } from './process-helpers.mjs';
 
 function resolveAppBinary(appPath) {
   const resolvedApp = path.resolve(appPath);
@@ -193,19 +194,7 @@ function collectLaunchEvidence() {
 }
 
 function listXLightsProcesses() {
-  const output = execFileSync('ps', ['-axo', 'pid=,command='], { encoding: 'utf8' });
-  return output
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const firstSpace = line.indexOf(' ');
-      return {
-        pid: Number(line.slice(0, firstSpace)),
-        command: line.slice(firstSpace + 1).trim()
-      };
-    })
-    .filter((entry) => entry.command === binary || entry.command.startsWith(`${binary} `));
+  return processesMatching(commandMatchesExactBinary(binary));
 }
 
 async function waitForNoXLightsProcesses(timeoutMs = 15000) {
@@ -219,22 +208,6 @@ async function waitForNoXLightsProcesses(timeoutMs = 15000) {
       throw new Error(`Timed out waiting for xLights processes to exit: ${JSON.stringify(processes)}`);
     }
     await sleep(250);
-  }
-}
-
-function terminateTargetXLightsProcesses() {
-  for (const processInfo of listXLightsProcesses()) {
-    try {
-      process.kill(processInfo.pid, 'TERM');
-    } catch {}
-  }
-}
-
-function forceTerminateTargetXLightsProcesses() {
-  for (const processInfo of listXLightsProcesses()) {
-    try {
-      process.kill(processInfo.pid, 'KILL');
-    } catch {}
   }
 }
 
@@ -262,15 +235,6 @@ function listListeningPortsForPid(pid) {
       .filter(Boolean);
   } catch {
     return [];
-  }
-}
-
-function isProcessAlive(pid) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
   }
 }
 
@@ -441,7 +405,7 @@ async function waitForOwnedApi(processInfo, timeoutMs = 45000) {
   const endpoint = `http://127.0.0.1:${env.XLIGHTS_DESIGNER_PORT}/xlightsdesigner/api/health`;
   let lastProbe = null;
   while (Date.now() - started < timeoutMs) {
-    if (!isProcessAlive(processInfo.pid)) {
+    if (!isPidAlive(processInfo.pid)) {
       const error = new Error('xLights exited before the owned Designer API became ready.');
       error.details = { endpoint, lastProbe, blocker: classifyStartupBlocker(processInfo), launchEvidence: collectLaunchEvidence() };
       throw error;
@@ -525,11 +489,11 @@ console.log(JSON.stringify({
   }
 }, null, 2));
 
-terminateTargetXLightsProcesses();
+await stopPids(listXLightsProcesses().map((processInfo) => processInfo.pid));
 try {
   await waitForNoXLightsProcesses();
 } catch (error) {
-  forceTerminateTargetXLightsProcesses();
+  await stopPids(listXLightsProcesses().map((processInfo) => processInfo.pid), { timeoutMs: 1 });
   await waitForNoXLightsProcesses();
 }
 
