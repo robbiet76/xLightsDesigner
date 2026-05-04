@@ -107,6 +107,11 @@ node scripts/sequencer-render-training/tooling/run-sequencing-quality-controller
   --out /tmp/xld-layer-composition-quality-long-20260504T182838Z/controller-state.json
 ```
 
+The layer-composition plan builder can consume that checkpoint through
+`--controller-state`. It filters the full generated manifest to the controller's
+`nextQueue` and keeps required dependency passes such as `empty_baseline` and
+comparison bases so deltas remain meaningful.
+
 ## Selection Rules
 
 The controller should prefer:

@@ -89,6 +89,15 @@ test("layer composition training plan includes group/model and same-target layer
     true
   );
   const sameTarget = plan.experiments.find((experiment) => experiment.experimentId === "same-target-layer-stack-rgb_primary");
+  const threeLayer = sameTarget.passes.find((pass) => pass.passId === "three_layer_default");
+  assert.equal(
+    threeLayer.placements.some((placement) => placement.effectName === "SingleStrand"),
+    true
+  );
+  assert.equal(
+    sameTarget.passes.flatMap((pass) => pass.placements).some((placement) => placement.effectName === "Shimmer"),
+    false
+  );
   const renderSettingPassIds = sameTarget.passes
     .filter((pass) => pass.changeType === "layer_render_setting")
     .map((pass) => pass.passId);
@@ -334,5 +343,43 @@ test("layer composition plan is shaped around sequencer retrieval knowledge", ()
   assert.equal(
     plan.targetStateKnowledgeContract.evidenceFlow.includes("layer_composition_priors_v1"),
     true
+  );
+});
+
+test("layer composition plan can be filtered by sequencing quality controller nextQueue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-filtered",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 3,
+      controllerDecision: {
+        selectedGoalId: "layer.same_target.mono_white.basic",
+        nextAction: "plan_quality_repeats"
+      },
+      nextQueue: [{
+        experimentId: "same-target-layer-stack-mono_white",
+        passId: "foundation_brightness_variant"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.selectedQueueCount, 1);
+  assert.equal(plan.experiments.length, 1);
+  assert.equal(plan.experiments[0].experimentId, "same-target-layer-stack-mono_white");
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "one_layer_foundation", "two_layer_default", "three_layer_default", "foundation_brightness_variant"]
+  );
+  assert.equal(
+    plan.experiments[0].passes.find((pass) => pass.passId === "foundation_brightness_variant").controllerSelection.selectedByController,
+    true
+  );
+  assert.equal(
+    plan.experiments[0].passes.find((pass) => pass.passId === "three_layer_default").controllerSelection.reason,
+    "comparison_dependency"
   );
 });

@@ -317,6 +317,7 @@ node scripts/sequencer-render-training/tooling/build-effect-settings-coverage-re
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-training-plan.mjs \
   --run-type overnight \
+  --controller-state var/logs/sequencing-quality-controller/controller-state.json \
   --out var/logs/sequencer-layer-composition-training-runs/manual-plan/training-plan.json
 ```
 

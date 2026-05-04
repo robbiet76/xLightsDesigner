@@ -184,6 +184,14 @@ function readOptionalJson(filePath) {
   return readJson(resolved);
 }
 
+function str(value = "") {
+  return String(value || "").trim();
+}
+
+function arr(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 function stamp() {
   return new Date().toISOString().replace(/[:.]/g, "-");
 }
@@ -438,10 +446,10 @@ function makeSameTargetLayerExperiment({ paletteProfile, star }) {
     id: `st-${paletteProfile}-detail`,
     target: star,
     targetScope: "model",
-    effectName: "Shimmer",
+    effectName: "SingleStrand",
     compositionPass: "detail",
     layerIndex: 2,
-    effectSettings: { cycles: 5, dutyFactor: 50 },
+    effectSettings: { effect: "Chase", cycles: 3, colorSpeed: 4 },
     layerSettings: { mixMethod: "Normal" },
     layerIntent: { blendRole: "detail" }
   });
@@ -1335,6 +1343,107 @@ function sortExperimentsForRunType(experiments, runType) {
   });
 }
 
+function queueKey(row = {}) {
+  return `${str(row.experimentId)}::${str(row.passId)}`;
+}
+
+function controllerQueueRows(controllerState = {}) {
+  return arr(controllerState?.nextQueue)
+    .filter((row) => str(row.experimentId) && str(row.passId));
+}
+
+function controllerQueueSet(controllerState = {}) {
+  return new Set(controllerQueueRows(controllerState).map(queueKey));
+}
+
+function dependencyPassIds(experiment = {}, pass = {}) {
+  const ids = new Set([str(pass.passId), "empty_baseline"]);
+  let cursor = pass;
+  const byId = new Map(arr(experiment.passes).map((row) => [str(row.passId), row]));
+  while (str(cursor?.comparisonBasePassId)) {
+    const baseId = str(cursor.comparisonBasePassId);
+    ids.add(baseId);
+    cursor = byId.get(baseId);
+    if (!cursor) break;
+  }
+  return ids;
+}
+
+function applyControllerStateSelection(experiments = [], controllerState = null) {
+  const selectedKeys = controllerQueueSet(controllerState);
+  if (!selectedKeys.size) {
+    return {
+      experiments,
+      summary: {
+        enabled: false,
+        selectedQueueCount: 0,
+        plannedExperimentCount: experiments.length,
+        plannedPassCount: experiments.reduce((total, experiment) => total + arr(experiment.passes).length, 0),
+        omittedQueueCount: 0,
+        omittedQueue: []
+      }
+    };
+  }
+
+  const omittedQueue = [];
+  const filteredExperiments = [];
+  for (const experiment of experiments) {
+    const directPasses = arr(experiment.passes)
+      .filter((pass) => selectedKeys.has(queueKey({ experimentId: experiment.experimentId, passId: pass.passId })));
+    if (!directPasses.length) continue;
+    const requiredPassIds = new Set();
+    for (const pass of directPasses) {
+      for (const passId of dependencyPassIds(experiment, pass)) requiredPassIds.add(passId);
+    }
+    const directPassIds = new Set(directPasses.map((pass) => str(pass.passId)));
+    const passes = arr(experiment.passes)
+      .filter((pass) => requiredPassIds.has(str(pass.passId)))
+      .map((pass) => ({
+        ...pass,
+        controllerSelection: {
+          selectedByController: directPassIds.has(str(pass.passId)),
+          reason: directPassIds.has(str(pass.passId)) ? "controller_next_queue" : "comparison_dependency"
+        }
+      }));
+    filteredExperiments.push({
+      ...experiment,
+      controllerSelection: {
+        selectedByController: true,
+        selectedPassCount: directPasses.length,
+        dependencyPassCount: passes.length - directPasses.length
+      },
+      passes
+    });
+  }
+
+  const plannedKeys = new Set(filteredExperiments.flatMap((experiment) => arr(experiment.passes)
+    .filter((pass) => pass.controllerSelection?.selectedByController)
+    .map((pass) => queueKey({ experimentId: experiment.experimentId, passId: pass.passId }))));
+  for (const row of controllerQueueRows(controllerState)) {
+    if (!plannedKeys.has(queueKey(row))) omittedQueue.push(row);
+  }
+
+  return {
+    experiments: filteredExperiments,
+    summary: {
+      enabled: true,
+      sourceControllerState: str(controllerState?.artifactType),
+      controllerCurriculumId: str(controllerState?.curriculumId),
+      controllerLoopIndex: Number(controllerState?.loopIndex) || 0,
+      controllerDecision: controllerState?.controllerDecision || null,
+      selectedQueueCount: selectedKeys.size,
+      plannedExperimentCount: filteredExperiments.length,
+      plannedPassCount: filteredExperiments.reduce((total, experiment) => total + arr(experiment.passes).length, 0),
+      omittedQueueCount: omittedQueue.length,
+      omittedQueue: omittedQueue.map((row) => ({
+        experimentId: str(row.experimentId),
+        passId: str(row.passId),
+        reason: "not_found_in_layer_composition_plan"
+      }))
+    }
+  };
+}
+
 export function buildLayerCompositionTrainingPlan({
   modelCatalog,
   runId = `layer-composition-${stamp()}`,
@@ -1342,7 +1451,8 @@ export function buildLayerCompositionTrainingPlan({
   runType = DEFAULT_RUN_TYPE,
   maxRuntimeMinutes = null,
   supportedLayerSettings = VERIFIED_OWNED_LAYER_RENDER_SETTINGS,
-  existingPriors = []
+  existingPriors = [],
+  controllerState = null
 } = {}) {
   const runtimeBudget = RUNTIME_BUDGETS[runType] || RUNTIME_BUDGETS.overnight;
   const resolvedMaxRuntimeMinutes = maxRuntimeMinutes !== null && maxRuntimeMinutes !== undefined && Number.isFinite(Number(maxRuntimeMinutes))
@@ -1369,10 +1479,12 @@ export function buildLayerCompositionTrainingPlan({
     .map((experiment) => attachRuntimeSelection(experiment, runType))
     .map((experiment) => filterPassesByPriorCoverage(experiment, priorCoverage))
     .filter((experiment) => (experiment.passes || []).length > 0);
-  const experiments = sortExperimentsForRunType(
+  const runTypeExperiments = sortExperimentsForRunType(
     plannedExperiments.filter((experiment) => includeExperimentForRunType(experiment, runType)),
     runType
   );
+  const controllerSelection = applyControllerStateSelection(runTypeExperiments, controllerState);
+  const experiments = controllerSelection.experiments;
   const runSelectionSkipCount = plannedExperiments.length - experiments.length;
   const skippedLearningCount = plannedExperiments
     .reduce((total, experiment) => total + (experiment.skippedPasses || []).length, 0);
@@ -1448,7 +1560,8 @@ export function buildLayerCompositionTrainingPlan({
         durablePriorCount: priorCoverage.durable.size,
         revalidationCandidateCount: priorCoverage.needsRevalidation.length,
         skippedLearningCount
-      }
+      },
+      controllerSelection: controllerSelection.summary
     },
     compositionPasses: [
       "empty_baseline",
@@ -1534,7 +1647,8 @@ function parseArgs(argv) {
     runId: "",
     runType: DEFAULT_RUN_TYPE,
     maxRuntimeMinutes: null,
-    priorFiles: []
+    priorFiles: [],
+    controllerStatePath: ""
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -1550,6 +1664,8 @@ function parseArgs(argv) {
       args.maxRuntimeMinutes = Number(argv[++index]);
     } else if (arg === "--prior-file") {
       args.priorFiles.push(argv[++index]);
+    } else if (arg === "--controller-state") {
+      args.controllerStatePath = argv[++index];
     } else if (arg === "--help") {
       args.help = true;
     } else {
@@ -1570,6 +1686,7 @@ Options:
   --run-type <type>             smoke, focused_evening, overnight, or extended. Default: overnight.
   --max-runtime-minutes <n>     Override run type max runtime metadata.
   --prior-file <path>           Existing layer composition priors to skip durable covered learnings. Repeatable.
+  --controller-state <path>     Optional sequencing quality controller state used to filter the plan to nextQueue.
   --help                        Show this help.
 `;
 }
@@ -1582,12 +1699,14 @@ async function main() {
   }
   const modelCatalog = readJson(args.modelCatalogPath);
   const existingPriors = args.priorFiles.flatMap((filePath) => normalizePriorRows(readJson(filePath)));
+  const controllerState = args.controllerStatePath ? readJson(args.controllerStatePath) : null;
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,
     runId: args.runId || undefined,
     runType: args.runType,
     maxRuntimeMinutes: args.maxRuntimeMinutes,
-    existingPriors
+    existingPriors,
+    controllerState
   });
   ensureDir(args.outPath);
   fs.writeFileSync(args.outPath, `${JSON.stringify(plan, null, 2)}\n`);
