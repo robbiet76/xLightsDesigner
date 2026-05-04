@@ -71,7 +71,7 @@ node scripts/designer-training/run-self-improvement-cycle.mjs \
   --project-dir /path/to/xLightsDesignerProject
 ```
 
-Run live custom-submodel probes when the owned xLights API is already reachable:
+Run live target-behavior probes when the owned xLights API is already reachable:
 
 ```bash
 node scripts/designer-training/run-self-improvement-cycle.mjs \
@@ -81,4 +81,4 @@ node scripts/designer-training/run-self-improvement-cycle.mjs \
   --discover-under var/reports
 ```
 
-Live probes are intentionally opt-in. They use the manifest effect list, skip blocked effects, write project-local `display/target-behavior.json`, export anonymized summaries, and run the same promotion gate.
+Live probes are intentionally opt-in. They use the manifest effect list, skip blocked effects, exercise both custom submodel and built-in model target scopes, write project-local `display/target-behavior.json`, export anonymized summaries, and run the same promotion gate.

@@ -172,6 +172,7 @@ export function buildTargetBehaviorLearningRecord({
     targetFingerprint: identity.targetFingerprint,
     fingerprintVersion: identity.fingerprintVersion,
     displayName: identity.displayName,
+    targetCanonicalType: str(targetRecord?.identity?.canonicalType),
     parentId: identity.parentId || str(submodel?.parentId),
     parentName: identity.parentName,
     effectName: str(effectName),

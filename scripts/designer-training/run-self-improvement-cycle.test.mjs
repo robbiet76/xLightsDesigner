@@ -66,6 +66,42 @@ test('self-improvement cycle keeps live probes opt-in', async () => {
   assert.equal(result.phases.some((phase) => phase.type === 'live_custom_model_probe'), false);
 });
 
+test('self-improvement promotion gate counts built-in model target records', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-built-in-'));
+  const projectDir = path.join(root, 'Project');
+  writeJson(path.join(projectDir, 'display', 'target-behavior.json'), {
+    artifactType: 'project_target_behavior_learning_v1',
+    records: [
+      {
+        recordId: 'tbl1:matrix-bars',
+        targetId: 'Matrix',
+        targetKind: 'model',
+        targetCanonicalType: 'matrix',
+        targetFingerprint: 'tmf1:matrix',
+        effectName: 'Bars',
+        effectFamily: 'Bars',
+        probeScope: 'target',
+        stats: { sampleCount: 1, positiveCount: 1, negativeCount: 0 }
+      }
+    ]
+  });
+  writeJson(path.join(projectDir, 'display', 'model-index.json'), {
+    artifactType: 'target_metadata_index_v1',
+    records: [
+      { targetId: 'Matrix', targetKind: 'model', identity: { canonicalType: 'matrix' } }
+    ]
+  });
+
+  const result = await runSelfImprovementCycle({
+    skipCommands: true,
+    projectDirs: [projectDir],
+    outDir: path.join(root, 'run')
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.promotionGate.totals.builtInParentRecordCount, 1);
+});
+
 test('self-improvement cycle rejects manifests that include Shimmer', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-shimmer-'));
   const manifestPath = path.join(root, 'manifest.json');

@@ -130,6 +130,7 @@ function compactBehaviorRecord(record = {}) {
   return {
     exportRecordId: `tbe1:${stableHash(str(record.recordId) || targetIdentity)}`,
     targetKind: str(record.targetKind),
+    targetCanonicalType: str(record.targetCanonicalType),
     targetFingerprintHash: targetIdentity ? `tfh1:${stableHash(targetIdentity)}` : '',
     fingerprintVersion: str(record.fingerprintVersion),
     effectName: str(record.effectName),
@@ -167,6 +168,17 @@ export function buildTargetBehaviorTrainingSummary({
   const compactRecords = records.map((record) => compactBehaviorRecord(record));
   const submodelRecords = compactRecords.filter((record) => record.targetKind === 'submodel');
   const customParentRecords = compactRecords.filter((record) => record.parentContext?.canonicalType === 'custom');
+  const builtInTargetRecords = compactRecords.filter((record) => (
+    record.targetCanonicalType &&
+    record.targetCanonicalType !== 'custom' &&
+    record.targetCanonicalType !== 'submodel' &&
+    record.targetCanonicalType !== 'model_group'
+  ));
+  const builtInParentRecords = compactRecords.filter((record) => (
+    record.parentContext?.canonicalType &&
+    record.parentContext.canonicalType !== 'custom' &&
+    record.parentContext.canonicalType !== 'model_group'
+  ));
   return {
     datasetId: 'target_behavior_training_summary',
     version: '1.0',
@@ -189,6 +201,8 @@ export function buildTargetBehaviorTrainingSummary({
       recordCount: compactRecords.length,
       submodelRecordCount: submodelRecords.length,
       customParentRecordCount: customParentRecords.length,
+      builtInTargetRecordCount: builtInTargetRecords.length,
+      builtInParentRecordCount: builtInParentRecords.length,
       targetKindCounts: countBy(compactRecords.map((record) => record.targetKind)),
       effectFamilyCounts: countBy(compactRecords.map((record) => record.effectFamily)),
       probeScopeCounts: countBy(compactRecords.map((record) => record.probeScope)),

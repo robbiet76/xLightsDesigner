@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 
-import { getSubmodels } from '../../apps/xlightsdesigner-ui/api.js';
+import { getModels, getSubmodels } from '../../apps/xlightsdesigner-ui/api.js';
 import { buildDiagnosticsDashboardState } from '../../apps/xlightsdesigner-ui/app-ui/page-state/diagnostics-dashboard-state.js';
 import { persistAppTargetBehaviorLearning } from '../sequencing/app/apply-app-review.mjs';
 
@@ -22,8 +22,9 @@ function usage() {
     '',
     'Options:',
     '  --endpoint <url>          Owned xLights API base URL.',
-    '  --show-dir <path>         Optional show folder to switch to before validation.',
-    '  --target-model <name>     Optional custom submodel target for live apply/render.',
+  '  --show-dir <path>         Optional show folder to switch to before validation.',
+  '  --target-model <name>     Optional model or submodel target for live apply/render.',
+  '  --target-scope <scope>    Target scope: custom_submodel or builtin_model. Defaults to custom_submodel.',
     '  --effect-name <name>      Effect for live apply/render. Defaults to On.',
     '  --duration-ms <number>    Sequence duration for live apply/render. Defaults to 8000.',
     '  --run-id <id>             Optional run id. Defaults to timestamp.',
@@ -37,6 +38,7 @@ function parseArgs(argv = process.argv.slice(2)) {
     endpoint: DEFAULT_ENDPOINT,
     showDir: '',
     targetModel: '',
+    targetScope: 'custom_submodel',
     effectName: 'On',
     durationMs: 8000,
     runId: `custom-model-regression-${new Date().toISOString().replace(/[:.]/g, '-')}`,
@@ -55,6 +57,7 @@ function parseArgs(argv = process.argv.slice(2)) {
     } else if (token === '--endpoint') args.endpoint = str(next()) || args.endpoint;
     else if (token === '--show-dir') args.showDir = path.resolve(str(next()));
     else if (token === '--target-model') args.targetModel = str(next());
+    else if (token === '--target-scope') args.targetScope = str(next()) || args.targetScope;
     else if (token === '--effect-name') args.effectName = str(next()) || args.effectName;
     else if (token === '--duration-ms') args.durationMs = Number(next());
     else if (token === '--run-id') args.runId = str(next()) || args.runId;
@@ -63,6 +66,9 @@ function parseArgs(argv = process.argv.slice(2)) {
   }
   if (!Number.isFinite(args.durationMs) || args.durationMs <= 0) {
     throw new Error('--duration-ms must be a positive number.');
+  }
+  if (!['custom_submodel', 'builtin_model'].includes(args.targetScope)) {
+    throw new Error('--target-scope must be one of: custom_submodel, builtin_model.');
   }
   return args;
 }
@@ -118,6 +124,31 @@ function selectCustomSubmodel({ requestedTarget = '', customModels = [], submode
   ]).filter(Boolean));
   const match = submodels.find((row) => customModelIds.has(str(row?.parentId)));
   return str(match?.id);
+}
+
+function canonicalTypeFromDisplayAs(displayAs = '') {
+  const value = str(displayAs).toLowerCase();
+  if (!value) return 'model';
+  if (value === 'single line') return 'single_line';
+  if (value === 'modelgroup') return 'model_group';
+  return value.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'model';
+}
+
+function selectBuiltInModel({ requestedTarget = '', models = [] } = {}) {
+  const rows = models
+    .map((row) => ({ ...row, name: str(row?.name || row?.id), canonicalType: canonicalTypeFromDisplayAs(row?.displayAs || row?.type) }))
+    .filter((row) => row.name && row.canonicalType !== 'custom' && row.canonicalType !== 'model_group');
+  if (requestedTarget) {
+    const match = rows.find((row) => row.name === requestedTarget || str(row?.id) === requestedTarget);
+    if (!match) throw new Error(`Requested built-in model target was not found: ${requestedTarget}`);
+    return match;
+  }
+  const priority = ['matrix', 'tree', 'single_line', 'arches', 'arch'];
+  return rows.sort((left, right) => {
+    const leftRank = priority.includes(left.canonicalType) ? priority.indexOf(left.canonicalType) : priority.length;
+    const rightRank = priority.includes(right.canonicalType) ? priority.indexOf(right.canonicalType) : priority.length;
+    return leftRank - rightRank || left.name.localeCompare(right.name);
+  })[0] || null;
 }
 
 async function runProjectPersistenceFixture({ outputRoot = '', parentModel = null, targetModel = '', effectName = 'On' } = {}) {
@@ -226,6 +257,80 @@ async function runProjectPersistenceFixture({ outputRoot = '', parentModel = nul
   };
 }
 
+async function runBuiltInModelPersistenceFixture({ outputRoot = '', targetModel = null, effectName = 'On' } = {}) {
+  const projectDir = fs.mkdtempSync(path.join(outputRoot || os.tmpdir(), 'xld-builtin-model-project-'));
+  const displayDir = path.join(projectDir, 'display');
+  fs.mkdirSync(displayDir, { recursive: true });
+  const projectFile = path.join(projectDir, 'Project.xdproj');
+  fs.writeFileSync(projectFile, JSON.stringify({ projectName: 'Built In Model Regression' }), 'utf8');
+
+  const targetId = str(targetModel?.name || targetModel?.id || 'BuiltInModel');
+  const canonicalType = canonicalTypeFromDisplayAs(targetModel?.displayAs || targetModel?.type);
+  writeJson(path.join(displayDir, 'model-index.json'), {
+    artifactType: 'target_metadata_index_v1',
+    artifactVersion: '1.0',
+    records: [
+      {
+        targetId,
+        targetKind: 'model',
+        identity: {
+          displayName: targetId,
+          rawType: str(targetModel?.displayAs || targetModel?.type || canonicalType),
+          canonicalType,
+          fingerprint: str(targetModel?.fingerprint || `tmf1:${canonicalType}:${targetId}`),
+          fingerprintVersion: str(targetModel?.fingerprintVersion || 'target-metadata-fingerprint-v1')
+        },
+        structure: {
+          modelMetadata: {
+            displayAs: str(targetModel?.displayAs),
+            nodeCount: Number(targetModel?.nodeCount || targetModel?.nodes || 0) || null,
+            dimensions: {
+              width: Number(targetModel?.width || 0) || null,
+              height: Number(targetModel?.height || 0) || null,
+              depth: Number(targetModel?.depth || 0) || null
+            }
+          }
+        }
+      }
+    ]
+  });
+
+  const write = await persistAppTargetBehaviorLearning({
+    projectFile,
+    commands: [
+      { id: 'effect-built-in-model', cmd: 'effects.create', params: { modelName: targetId, effectName: str(effectName) || 'On', startMs: 0, endMs: 1000 } }
+    ],
+    renderObservation: {
+      artifactId: 'render-built-in-model-regression',
+      macro: { coverageRead: 'broad', temporalRead: 'flat', activeCoverageRatio: 0.75 }
+    },
+    renderValidationEvidence: {
+      renderObservationRef: 'render-built-in-model-regression',
+      submodelEvidence: []
+    },
+    renderCritiqueContext: {
+      observed: { coverageRead: 'broad', temporalRead: 'flat', activeCoverageRatio: 0.75 },
+      quality: { band: 'acceptable', issues: [] }
+    },
+    planHandoff: { artifactId: 'plan-built-in-model-regression' },
+    applyResult: { artifactId: 'apply-built-in-model-regression' }
+  });
+  const document = write?.artifactPath && fs.existsSync(write.artifactPath) ? readJson(write.artifactPath) : null;
+  return {
+    ok: write?.ok === true && write?.skipped !== true && Array.isArray(document?.records) && document.records.length === 1,
+    projectFile,
+    artifactPath: write?.artifactPath || '',
+    write,
+    summary: {
+      recordCount: Number(document?.records?.length || 0),
+      targetId: str(document?.records?.[0]?.targetId),
+      targetKind: str(document?.records?.[0]?.targetKind),
+      canonicalType: str(document?.records?.[0]?.parentContext?.canonicalType || canonicalType),
+      positiveCount: Number(document?.records?.[0]?.stats?.positiveCount || 0)
+    }
+  };
+}
+
 async function main() {
   const args = parseArgs();
   const root = path.resolve('var/reports', args.runId);
@@ -248,13 +353,20 @@ async function main() {
   }
 
   const submodels = submodelRowsFrom(await getSubmodels(args.endpoint));
-  const liveTarget = selectCustomSubmodel({
-    requestedTarget: args.targetModel,
-    customModels: capture.customModels,
-    submodels
-  });
+  const modelsBody = await getModels(args.endpoint);
+  const models = Array.isArray(modelsBody?.data?.models) ? modelsBody.data.models : [];
+  const builtInModel = args.targetScope === 'builtin_model'
+    ? selectBuiltInModel({ requestedTarget: args.targetModel, models })
+    : null;
+  const liveTarget = args.targetScope === 'builtin_model'
+    ? str(builtInModel?.name || builtInModel?.id)
+    : selectCustomSubmodel({
+        requestedTarget: args.targetModel,
+        customModels: capture.customModels,
+        submodels
+      });
   if (!liveTarget) {
-    throw new Error('Could not select a custom submodel target for live apply/render validation.');
+    throw new Error(`Could not select a ${args.targetScope} target for live apply/render validation.`);
   }
 
   const showDir = args.showDir || str(capture.activeShowDirectory);
@@ -272,18 +384,25 @@ async function main() {
 
   const liveEvidencePath = path.join(showDir, '_xlightsdesigner_api_validation', args.runId, 'owned-api-validation-result.json');
   const liveEvidence = readJson(liveEvidencePath);
-  if (liveEvidence?.ok !== true || liveEvidence?.expectedFseqExists !== true || liveEvidence?.targetKind !== 'submodel') {
-    throw new Error(`Live custom submodel apply/render validation failed: ${liveEvidencePath}`);
+  const expectedTargetKind = args.targetScope === 'builtin_model' ? 'model' : 'submodel';
+  if (liveEvidence?.ok !== true || liveEvidence?.expectedFseqExists !== true || liveEvidence?.targetKind !== expectedTargetKind) {
+    throw new Error(`Live ${args.targetScope} apply/render validation failed: ${liveEvidencePath}`);
   }
 
   const selectedParentId = str(submodels.find((row) => row.id === liveTarget)?.parentId);
   const parentModel = (capture.customModels || []).find((row) => str(row?.targetId) === selectedParentId || str(row?.modelName) === selectedParentId) || capture.customModels?.[0] || null;
-  const persistence = await runProjectPersistenceFixture({
-    outputRoot: root,
-    parentModel,
-    targetModel: liveTarget,
-    effectName: args.effectName
-  });
+  const persistence = args.targetScope === 'builtin_model'
+    ? await runBuiltInModelPersistenceFixture({
+        outputRoot: root,
+        targetModel: builtInModel,
+        effectName: args.effectName
+      })
+    : await runProjectPersistenceFixture({
+        outputRoot: root,
+        parentModel,
+        targetModel: liveTarget,
+        effectName: args.effectName
+      });
   if (!persistence.ok) {
     throw new Error('Project target behavior persistence fixture failed.');
   }
@@ -304,12 +423,14 @@ async function main() {
     }
   });
   const diagnosticHealth = diagnostics?.data?.health || {};
+  const expectedSubmodelCount = args.targetScope === 'builtin_model' ? 0 : 1;
+  const expectedCustomParentCount = args.targetScope === 'builtin_model' ? 0 : 1;
   if (
     Number(diagnosticHealth.targetBehaviorLearningCount || 0) !== 1 ||
-    Number(diagnosticHealth.targetBehaviorLearningSubmodelCount || 0) !== 1 ||
-    Number(diagnosticHealth.targetBehaviorLearningCustomParentCount || 0) !== 1
+    Number(diagnosticHealth.targetBehaviorLearningSubmodelCount || 0) !== expectedSubmodelCount ||
+    Number(diagnosticHealth.targetBehaviorLearningCustomParentCount || 0) !== expectedCustomParentCount
   ) {
-    throw new Error('Diagnostics target behavior summary did not reflect persisted custom submodel learning.');
+    throw new Error(`Diagnostics target behavior summary did not reflect persisted ${args.targetScope} learning.`);
   }
 
   const report = {
@@ -318,6 +439,7 @@ async function main() {
     createdAt: new Date().toISOString(),
     endpoint: args.endpoint,
     showDir,
+    targetScope: args.targetScope,
     liveTarget,
     capturePath,
     liveEvidencePath,
@@ -345,6 +467,7 @@ async function main() {
   console.log(JSON.stringify({
     ok: true,
     outputPath,
+    targetScope: args.targetScope,
     liveTarget,
     captureCustomModelCount: Number(captureSummary.customSummaryCount || 0),
     captureSubmodelCount: Number(captureSummary.submodelCount || 0),

@@ -167,8 +167,9 @@ function projectDirFromTargetBehaviorPath(filePath = '') {
     : '';
 }
 
-async function runLiveCustomModelProbePhase({ phase, manifest, outDir, endpoint, showDir }) {
+async function runLiveTargetBehaviorProbePhase({ phase, manifest, outDir, endpoint, showDir }) {
   const phaseId = str(phase.id || 'live_custom_submodel_probes');
+  const targetScope = str(phase.targetScope || 'custom_submodel');
   const blocked = new Set(arr(manifest?.initialScope?.blockedEffects).map((effect) => str(effect).toLowerCase()));
   const effects = arr(phase.effects).length ? arr(phase.effects) : arr(manifest?.initialScope?.effects);
   const allowedEffects = effects.map((effect) => str(effect)).filter((effect) => effect && !blocked.has(effect.toLowerCase()));
@@ -181,6 +182,7 @@ async function runLiveCustomModelProbePhase({ phase, manifest, outDir, endpoint,
     const args = [
       'scripts/xlights/validate-custom-model-regression.mjs',
       '--endpoint', endpoint,
+      '--target-scope', targetScope,
       '--effect-name', effect,
       '--duration-ms', String(Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 8000),
       '--run-id', runId,
@@ -193,6 +195,7 @@ async function runLiveCustomModelProbePhase({ phase, manifest, outDir, endpoint,
       label: `${phaseId}-${effect}`
     });
     result.effectName = effect;
+    result.targetScope = targetScope;
     result.outputPath = outputPath;
     if (result.ok && fs.existsSync(outputPath)) {
       try {
@@ -208,7 +211,8 @@ async function runLiveCustomModelProbePhase({ phase, manifest, outDir, endpoint,
   }
   return {
     id: phaseId,
-    type: 'live_custom_model_probe',
+    type: str(phase.type || 'live_target_behavior_probe'),
+    targetScope,
     ok: results.every((result) => result.ok),
     effects: allowedEffects,
     results,
@@ -282,7 +286,7 @@ function evaluatePromotionGate({ manifest, exportedSummaries }) {
     totals.recordCount += Number(summary.recordCount || 0);
     totals.submodelRecordCount += Number(summary.submodelRecordCount || 0);
     totals.customParentRecordCount += Number(summary.customParentRecordCount || 0);
-    const builtIn = Number(summary.submodelRecordCount || 0) - Number(summary.customParentRecordCount || 0);
+    const builtIn = Number(summary.builtInParentRecordCount || 0) + Number(summary.builtInTargetRecordCount || 0);
     totals.builtInParentRecordCount += Math.max(0, builtIn);
     for (const effect of Object.keys(summary.effectFamilyCounts || {})) totals.effectFamilies.add(effect);
   }
@@ -346,8 +350,8 @@ export async function runSelfImprovementCycle({
   }
   const liveProjectDirs = [];
   if (runLiveProbes) {
-    for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'live_custom_model_probe')) {
-      const result = await runLiveCustomModelProbePhase({
+    for (const phase of arr(manifest.cyclePhases).filter((row) => ['live_custom_model_probe', 'live_target_behavior_probe'].includes(row?.type))) {
+      const result = await runLiveTargetBehaviorProbePhase({
         phase,
         manifest,
         outDir: resolvedOutDir,

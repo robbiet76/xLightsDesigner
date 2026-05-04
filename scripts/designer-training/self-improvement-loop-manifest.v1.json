@@ -42,8 +42,22 @@
     },
     {
       "id": "live_custom_submodel_probes",
-      "type": "live_custom_model_probe",
+      "type": "live_target_behavior_probe",
       "required": false,
+      "targetScope": "custom_submodel",
+      "effects": [
+        "On",
+        "Bars",
+        "Color Wash",
+        "SingleStrand"
+      ],
+      "durationMs": 8000
+    },
+    {
+      "id": "live_builtin_model_probes",
+      "type": "live_target_behavior_probe",
+      "required": false,
+      "targetScope": "builtin_model",
       "effects": [
         "On",
         "Bars",
