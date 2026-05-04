@@ -37,9 +37,31 @@ Durable artifacts should answer:
 1. Generate or select candidate sweeps.
 2. Run proof or render validation.
 3. Store raw run output outside the durable spec layer.
-4. Promote compact records only after they are useful for runtime planning.
-5. Regenerate derived bundles from promoted records.
-6. Update this document when durable learning changes.
+4. Review whole-display section renders with deterministic metrics and, when available, video/vision critique.
+5. Promote compact records only after they are useful for runtime planning.
+6. Regenerate derived bundles from promoted records.
+7. Update this document when durable learning changes.
+
+## Render Review Training
+
+The next training method is section-level render review. Target/effect proof is necessary, but it is not sufficient because it only proves that xLights produced output. Sequencing quality must be judged from the rendered whole-display result over time.
+
+The preferred evidence unit is a short section video or ordered frame sequence. Contact sheets and sampled frames are useful diagnostics, but the durable training artifact should represent temporal behavior: pacing, motion coherence, transitions, energy contour, color evolution, target hierarchy, and musical fit.
+
+`render_review_v1` is the compact review artifact for this layer. It should carry the section intent, local evidence refs, deterministic temporal/visual metrics, quality scores, critique, revision recommendation, and promotion blockers. Raw video and full frame images remain local/generated artifacts unless explicitly retained for a proof.
+
+The first implementation step is deterministic review from ordered frame metrics. Vision review should be added as a second pass once section video or ordered frame strips are reliably available. The long-term self-improvement loop is:
+
+1. generate candidate section
+2. apply and render in xLights
+3. capture section video or ordered frames
+4. score deterministic metrics
+5. run artistic/vision critique when available
+6. revise the plan
+7. re-render
+8. compare before/after
+9. store accepted improvements as project-local evidence
+10. promote only compact repeated patterns
 
 ## Custom Model Learning Strategy
 

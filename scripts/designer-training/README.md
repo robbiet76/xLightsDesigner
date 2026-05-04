@@ -15,6 +15,10 @@ Operational scripts for unattended designer training and validation loops.
   - exports an anonymized compact summary from project-local `display/target-behavior.json`
   - strips target ids, display names, parent names, raw render refs, and full geometry payloads
   - intended for calibration review before any shared training promotion
+- `build-render-review-artifact.mjs`
+  - builds a compact `render_review_v1` artifact from ordered frame/video metrics and section intent
+  - scores deterministic quality signals such as coverage, brightness, motion, clutter, blank risk, and flatness
+  - provides the first bridge from apply/render proof toward whole-display creative quality review
 - `run-self-improvement-cycle.mjs`
   - manifest-driven training loop runner for readiness checks, anonymized target-behavior exports, and promotion-gate metrics
   - starts with `On`, `Bars`, `Color Wash`, and `SingleStrand`
@@ -82,3 +86,15 @@ node scripts/designer-training/run-self-improvement-cycle.mjs \
 ```
 
 Live probes are intentionally opt-in. They use the manifest effect list, skip blocked effects, exercise both custom submodel and built-in model target scopes, write project-local `display/target-behavior.json`, export anonymized summaries, and run the same promotion gate.
+
+Build a first-pass section render review from frame/video metrics:
+
+```bash
+node scripts/designer-training/build-render-review-artifact.mjs \
+  --frame-features /path/to/frame-features.json \
+  --intent /path/to/section-intent.json \
+  --video /path/to/section-review.mp4 \
+  --out var/tmp/render-review.json
+```
+
+Render review is the next training direction. It should evaluate whole-display section quality over time, then feed critique and revision back into the self-improvement loop.
