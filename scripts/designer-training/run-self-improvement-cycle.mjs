@@ -180,6 +180,46 @@ function resolveRepoPath(filePath = '') {
   return path.isAbsolute(trimmed) ? trimmed : path.resolve(REPO_ROOT, trimmed);
 }
 
+function sourceApplyResultPath(fseqPath = '') {
+  const resolved = resolveRepoPath(fseqPath);
+  if (!resolved) return '';
+  const dir = path.dirname(resolved);
+  const base = path.basename(resolved, path.extname(resolved));
+  return [
+    path.join(dir, `${base}-result.json`),
+    path.join(dir, 'owned-api-validation-result.json')
+  ].find((candidate) => fs.existsSync(candidate)) || '';
+}
+
+function normalizeReviewWindow(mark = {}, index = 0) {
+  const startMs = Number(mark.windowStartMs ?? mark.startMs ?? 0);
+  const endMs = Number(mark.windowEndMs ?? mark.endMs ?? 0);
+  return {
+    id: str(mark.id || mark.sectionId || mark.label || `window-${index + 1}`)
+      .replace(/[^a-z0-9_.-]+/gi, '-')
+      .replace(/^-|-$/g, '') || `window-${index + 1}`,
+    label: str(mark.label || mark.sectionLabel || mark.id || `Window ${index + 1}`),
+    startMs,
+    endMs,
+    creativeObjective: mark.creativeObjective || {},
+    musicRole: mark.musicRole || {},
+    paletteIntent: mark.paletteIntent || {},
+    summary: str(mark.summary || mark.intentSummary)
+  };
+}
+
+function windowsFromSourceApplyMarks(review = {}) {
+  const resultPath = sourceApplyResultPath(review.fseqPath || review.fseq);
+  if (!resultPath) return [];
+  try {
+    return arr(readJson(resultPath)?.applyPayload?.marks)
+      .map(normalizeReviewWindow)
+      .filter((window) => Number(window.endMs) > Number(window.startMs));
+  } catch {
+    return [];
+  }
+}
+
 async function runRenderReviewPhase({ phase, outDir }) {
   const phaseId = str(phase.id || 'render_review');
   const reviews = arr(phase.reviews).length ? arr(phase.reviews) : [phase];
@@ -284,12 +324,17 @@ async function runFseqRenderReviewPhase({ phase, outDir, buildFseqReview }) {
   const reviewRoot = path.join(outDir, 'fseq-render-reviews');
   fs.mkdirSync(reviewRoot, { recursive: true });
   const reviewWindows = (review) => {
-    const windows = arr(review.windows).length ? arr(review.windows) : arr(phase.windows);
+    const windowSource = str(review.windowsFrom || phase.windowsFrom || review.windowSource || phase.windowSource);
+    const sourcedWindows = windowSource === 'source_apply_marks' ? windowsFromSourceApplyMarks(review) : [];
+    const windows = arr(review.windows).length ? arr(review.windows) : arr(phase.windows).length ? arr(phase.windows) : sourcedWindows;
     if (!windows.length) return [{ id: '', row: {} }];
-    return windows.map((window, windowIndex) => ({
-      id: str(window.id || window.sectionId || window.label || `window-${windowIndex + 1}`),
-      row: window
-    }));
+    return windows.map((window, windowIndex) => {
+      const normalized = normalizeReviewWindow(window, windowIndex);
+      return {
+        id: str(normalized.id || window.id || window.sectionId || window.label || `window-${windowIndex + 1}`),
+        row: { ...normalized, ...window }
+      };
+    });
   };
   reviews.flatMap((review, index) => reviewWindows(review).map((window) => ({ review, index, window }))).forEach(({ review, index, window }) => {
     const baseLabel = str(review.id || review.sectionId || `${phaseId}-${index + 1}`);

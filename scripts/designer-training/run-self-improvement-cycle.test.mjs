@@ -504,6 +504,73 @@ test('self-improvement cycle expands FSEQ reviews across multiple windows', asyn
   assert.equal(result.renderReviewGate.promoteReady, true);
 });
 
+test('self-improvement cycle can derive FSEQ review windows from source apply timing marks', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-fseq-source-marks-'));
+  const geometryPath = path.join(root, 'geometry.json');
+  const fseqPath = path.join(root, 'owned-api-validation.fseq');
+  const resultPath = path.join(root, 'owned-api-validation-result.json');
+  const manifestPath = path.join(root, 'manifest.json');
+  writeJson(geometryPath, { artifactType: 'preview_scene_geometry_v1' });
+  fs.writeFileSync(fseqPath, 'fake-fseq');
+  writeJson(resultPath, {
+    applyPayload: {
+      marks: [
+        { label: 'Intro', startMs: 0, endMs: 1000 },
+        { label: 'Apply', startMs: 1000, endMs: 3000 },
+        { label: 'Outro', startMs: 3000, endMs: 5000 }
+      ]
+    }
+  });
+  writeJson(manifestPath, {
+    artifactType: 'xlightsdesigner_self_improvement_loop_manifest_v1',
+    initialScope: {
+      effects: ['On', 'Bars', 'Color Wash', 'SingleStrand'],
+      blockedEffects: ['Shimmer']
+    },
+    cyclePhases: [
+      {
+        id: 'review_source_marks',
+        type: 'fseq_render_review',
+        geometryPath,
+        windowsFrom: 'source_apply_marks',
+        reviews: [{ id: 'on-proof', fseqPath }]
+      }
+    ],
+    promotionGate: {}
+  });
+
+  const calls = [];
+  const result = await runSelfImprovementCycle({
+    manifestPath,
+    skipCommands: true,
+    outDir: path.join(root, 'run'),
+    buildFseqReview: ({ outDir, windowStartMs, windowEndMs, intent }) => {
+      calls.push({ windowStartMs, windowEndMs, intent });
+      const renderReviewPath = path.join(outDir, 'render-review.json');
+      writeJson(renderReviewPath, {
+        artifactType: 'render_review_v1',
+        section: { id: intent.section.id, label: intent.section.label, startMs: windowStartMs, endMs: windowEndMs },
+        deterministicMetrics: { blankRisk: 0, activeCoverageMean: 0.2 },
+        qualityScores: { overallQuality: 0.9, visualReadability: 0.9, intentMatch: 0.9 },
+        critique: { decision: 'accept', issues: [], strengths: [] }
+      });
+      return {
+        ok: true,
+        renderReviewPath,
+        decision: 'accept',
+        overallQuality: 0.9
+      };
+    }
+  });
+
+  const phase = result.phases.find((row) => row.id === 'review_source_marks');
+  assert.equal(phase.ok, true);
+  assert.equal(phase.totals.reviewCount, 3);
+  assert.deepEqual(calls.map((call) => [call.windowStartMs, call.windowEndMs]), [[0, 1000], [1000, 3000], [3000, 5000]]);
+  assert.deepEqual(calls.map((call) => call.intent.section.label), ['Intro', 'Apply', 'Outro']);
+  assert.deepEqual(phase.results.map((row) => row.id), ['on-proof-Intro', 'on-proof-Apply', 'on-proof-Outro']);
+});
+
 test('self-improvement cycle blocks render-review promotion when reviews need revision', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-self-improve-fseq-revise-'));
   const geometryPath = path.join(root, 'geometry.json');
