@@ -56,6 +56,7 @@ export function validateTargetBehaviorTrainingFixture({
   let recordCount = 0;
   let submodelRecordCount = 0;
   let customParentRecordCount = 0;
+  let builtinParentRecordCount = 0;
 
   examples.forEach((example, exampleIndex) => {
     const shape = example.targetBehaviorShape || {};
@@ -107,6 +108,8 @@ export function validateTargetBehaviorTrainingFixture({
           errors,
           prefix
         });
+      } else if (record.targetKind === "submodel" && record.parentContext?.canonicalType) {
+        builtinParentRecordCount += 1;
       }
     });
 
@@ -127,6 +130,7 @@ export function validateTargetBehaviorTrainingFixture({
 
   if (submodelRecordCount === 0) errors.push("fixture must include at least one submodel behavior record");
   if (customParentRecordCount === 0) errors.push("fixture must include at least one custom parent context record");
+  if (builtinParentRecordCount === 0) errors.push("fixture must include at least one built-in parent context record");
 
   return {
     ok: errors.length === 0,
@@ -136,6 +140,7 @@ export function validateTargetBehaviorTrainingFixture({
     recordCount,
     submodelRecordCount,
     customParentRecordCount,
+    builtinParentRecordCount,
     errors
   };
 }

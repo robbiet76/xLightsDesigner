@@ -90,7 +90,7 @@
       "source": "scripts/sequencer-render-training/tooling/validate-target-behavior-training-fixture.mjs",
       "asserts": [
         "target behavior fixture summaries satisfy target_behavior_evidence_v1 required fields",
-        "fixture coverage includes a submodel behavior record with enriched parent and node coverage context",
+        "fixture coverage includes custom-parent and built-in-parent submodel behavior records with enriched parent and node coverage context",
         "fixture assertions keep project-local behavior evidence advisory and validation authoritative"
       ]
     },

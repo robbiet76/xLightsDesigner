@@ -23,7 +23,7 @@ Training assets may summarize these files, but they should not replace them. Use
 The compact fixtures intentionally mirror the runtime lifecycle:
 
 1. `custom_model_index_fixture_summary.json` proves custom models, built-in models, and their submodels are represented in the shared `display/model-index.json` target collection.
-2. `target_behavior_evidence_fixture_summary.json` proves project-local behavior records preserve parent/submodel context, outcome refs, and aggregate stats.
+2. `target_behavior_evidence_fixture_summary.json` proves project-local behavior records preserve parent/submodel context, outcome refs, and aggregate stats for custom and built-in parent models.
 3. `combined_target_context_fixture_summary.json` proves candidate realization refs can use model-index fingerprints to match target-behavior evidence after a target rename.
 
 These fixtures are anonymized summaries. They should not contain raw xLights payloads, full geometry dumps, generated report folders, or user-specific semantic model names as core training logic.

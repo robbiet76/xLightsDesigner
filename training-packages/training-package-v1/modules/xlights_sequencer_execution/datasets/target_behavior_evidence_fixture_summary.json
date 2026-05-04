@@ -13,7 +13,7 @@
       "targetBehaviorShape": {
         "artifactType": "project_target_behavior_learning_v1",
         "artifactVersion": "1.0",
-        "recordCount": 1,
+        "recordCount": 2,
         "records": [
           {
             "artifactType": "target_behavior_learning_record_v1",
@@ -94,12 +94,76 @@
               "negativeCount": 0,
               "lastObservedAt": "2026-05-03T13:45:01.702Z"
             }
+          },
+          {
+            "artifactType": "target_behavior_learning_record_v1",
+            "artifactVersion": "1.0",
+            "recordId": "tbl1:builtin-region-bars-probe",
+            "targetId": "builtin_model_a/submodel_region_1",
+            "targetKind": "submodel",
+            "targetFingerprint": "tmf1:builtin-model-a-region-1",
+            "fingerprintVersion": "target-metadata-fingerprint-v1",
+            "displayName": "Built-in Model A / Region 1",
+            "parentId": "builtin_model_a",
+            "parentName": "Built-in Model A",
+            "effectName": "Bars",
+            "effectFamily": "Bars",
+            "probeScope": "submodel",
+            "structureHints": [
+              "builtin_submodel",
+              "partial_region",
+              "sibling_region"
+            ],
+            "submodelContext": {
+              "siblingCount": 4,
+              "overlappingSiblingIds": [],
+              "nodeCoverage": {
+                "nodeCount": 100,
+                "parentNodeCount": 400,
+                "ratio": 0.25
+              }
+            },
+            "parentContext": {
+              "targetId": "builtin_model_a",
+              "targetKind": "model",
+              "displayName": "Built-in Model A",
+              "canonicalType": "matrix",
+              "rawType": "Matrix",
+              "targetFingerprint": "tmf1:builtin-model-a",
+              "fingerprintVersion": "target-metadata-fingerprint-v1"
+            },
+            "evidenceRefs": {
+              "renderObservationRef": "render-observation-builtin-region",
+              "renderCritiqueContextRef": "render-critique-builtin-region",
+              "sequenceCritiqueRef": "",
+              "planHandoffRef": "plan-builtin-region-probe",
+              "applyResultRef": "apply-builtin-region-probe"
+            },
+            "outcome": {
+              "coverageRead": "partial",
+              "temporalRead": "motion",
+              "readability": "good",
+              "blankRisk": "",
+              "activeCoverageRatio": 0.25,
+              "confidence": "observed",
+              "notes": []
+            },
+            "observedAt": "2026-05-03T13:46:01.702Z",
+            "createdAt": "2026-05-03T13:46:01.702Z",
+            "updatedAt": "2026-05-03T13:46:01.702Z",
+            "stats": {
+              "sampleCount": 1,
+              "positiveCount": 1,
+              "negativeCount": 0,
+              "lastObservedAt": "2026-05-03T13:46:01.702Z"
+            }
           }
         ]
       },
       "trainingAssertions": [
         "Use display/target-behavior records as project-local advisory learning, not centralized user-style ground truth.",
         "Treat submodel behavior records as first-class target evidence keyed by target fingerprint, target kind, effect family/name, and probe scope.",
+        "Use the same behavior evidence shape for built-in model submodels and custom model submodels.",
         "Use enriched parentContext and submodelContext from display/model-index when judging whether an effect is suitable for a target.",
         "Keep render/apply validation authoritative even when local behavior evidence is positive.",
         "Consolidate richer metadata under the same semantic aggregate rather than creating duplicate records.",
