@@ -18,7 +18,11 @@ function objective(overrides = {}) {
   return {
     artifactType: 'render_review_revision_objective_v1',
     objectiveId: 'rrro1:test',
-    source: { renderReviewRef: '/tmp/render-review.json' },
+    source: {
+      renderReviewRef: '/tmp/render-review.json',
+      effectName: 'Color Wash',
+      evidence: { sequencePath: '/tmp/source.fseq' }
+    },
     scope: {
       sectionId: 'chorus-1',
       sectionLabel: 'Chorus 1',
@@ -48,6 +52,8 @@ test('buildRenderReviewRevisionAttempt plans an owned batch payload from explici
 
   assert.equal(attempt.artifactType, 'render_review_revision_attempt_v1');
   assert.equal(attempt.status, 'planned');
+  assert.equal(attempt.source.effectName, 'Color Wash');
+  assert.equal(attempt.source.sequencePath, '/tmp/source.fseq');
   assert.deepEqual(attempt.blockedReasons, []);
   assert.equal(attempt.ownedBatchPayload.effects.length, 1);
   assert.equal(attempt.ownedBatchPayload.effects[0].element, 'Lead Model');
@@ -99,4 +105,35 @@ test('buildRenderReviewRevisionAttempts accepts manifest target policy targets',
   assert.equal(artifact.attempts[0].targets[0].targetId, 'target-1');
   assert.equal(artifact.attempts[0].ownedBatchPayload.effects[0].element, 'Provided Target');
   assert.equal(fs.existsSync(outPath), true);
+});
+
+test('buildRenderReviewRevisionAttempt preserves full source timing marks when available', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'xld-render-review-attempt-marks-'));
+  const observationPath = path.join(root, 'owned-api-validation-result.json');
+  writeJson(observationPath, {
+    applyPayload: {
+      marks: [
+        { label: 'Intro', startMs: 0, endMs: 1000 },
+        { label: 'Apply', startMs: 1000, endMs: 2000 },
+        { label: 'Outro', startMs: 2000, endMs: 3000 }
+      ]
+    }
+  });
+  const attempt = buildRenderReviewRevisionAttempt({
+    objective: objective({
+      source: {
+        ...objective().source,
+        evidence: {
+          ...objective().source.evidence,
+          renderObservationPath: observationPath
+        }
+      }
+    }),
+    defaultEffectName: 'On'
+  });
+
+  assert.equal(attempt.status, 'planned');
+  assert.equal(attempt.ownedBatchPayload.replaceExistingMarks, true);
+  assert.equal(attempt.ownedBatchPayload.subType, 'Generic');
+  assert.deepEqual(attempt.ownedBatchPayload.marks.map((mark) => mark.label), ['Intro', 'Apply', 'Outro']);
 });

@@ -119,6 +119,8 @@ Add a `render_review_revision_objectives` phase after review phases to write `re
 
 Add a `render_review_revision_attempts` phase after objective generation to write `render-review-revision-attempts.json`. This turns objectives into owned `/sequencing/apply-batch-plan` payloads only when revision targets and an effect are explicit in the objective or manifest policy. Missing target context is reported as a blocked attempt instead of inferred from user-defined model names.
 
+Add a `render_review_revision_execution` phase after attempt planning to apply planned payloads through the owned xLights API, save the working sequence, render the revised FSEQ, and write `render-review-revision-execution.json`. Blocked attempts are skipped with a recorded reason; failed executions block the cycle unless the phase is marked `required: false`.
+
 For xLights render output, use the existing FSEQ reconstruction path to create a `preview_scene_window_v1`, then rasterize it into reviewable media:
 
 ```bash

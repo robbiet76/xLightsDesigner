@@ -511,6 +511,11 @@ test('self-improvement cycle builds render-review revision objectives after revi
         id: 'build_revision_attempts',
         type: 'render_review_revision_attempts',
         defaultEffectName: 'Color Wash'
+      },
+      {
+        id: 'execute_revision_attempts',
+        type: 'render_review_revision_execution',
+        required: false
       }
     ],
     promotionGate: {}
@@ -557,4 +562,9 @@ test('self-improvement cycle builds render-review revision objectives after revi
   assert.equal(attemptPhase.blockedCount, 1);
   const attempts = JSON.parse(fs.readFileSync(attemptPhase.outputPath, 'utf8'));
   assert.ok(attempts.attempts[0].blockedReasons.includes('missing_revision_targets'));
+
+  const executionPhase = result.phases.find((row) => row.id === 'execute_revision_attempts');
+  assert.equal(executionPhase.ok, true);
+  assert.equal(executionPhase.executionCount, 1);
+  assert.equal(executionPhase.skippedCount, 1);
 });

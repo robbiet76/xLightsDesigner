@@ -145,6 +145,36 @@ function buildEffectRows({ objective = {}, targets = [], effectName = '', layer 
   }));
 }
 
+function sourceTimingMarks(objective = {}) {
+  const direct = arr(objective.source?.timingMarks || objective.source?.marks);
+  if (direct.length) return direct;
+  const observationPath = resolvePath(objective.source?.evidence?.renderObservationPath);
+  if (!observationPath || !fs.existsSync(observationPath)) return [];
+  try {
+    return arr(readJson(observationPath)?.applyPayload?.marks);
+  } catch {
+    return [];
+  }
+}
+
+function buildOwnedBatchMarks(objective = {}) {
+  const sourceMarks = sourceTimingMarks(objective)
+    .map((mark) => ({
+      label: str(mark.label),
+      startMs: number(mark.startMs),
+      endMs: number(mark.endMs)
+    }))
+    .filter((mark) => mark.endMs > mark.startMs);
+  if (sourceMarks.length) return sourceMarks;
+  return [
+    {
+      label: str(objective.scope?.sectionLabel || objective.scope?.sectionId || 'revision-section'),
+      startMs: number(objective.scope?.startMs),
+      endMs: number(objective.scope?.endMs)
+    }
+  ];
+}
+
 export function buildRenderReviewRevisionAttempt({ objective = {}, targetPolicy = {}, defaultEffectName = '', layer = 0, clearExisting = false } = {}) {
   const targets = collectTargets({ objective, targetPolicy });
   const effectName = resolveEffectName({ objective, targetPolicy, defaultEffectName });
@@ -160,7 +190,10 @@ export function buildRenderReviewRevisionAttempt({ objective = {}, targetPolicy 
     createdAt: new Date().toISOString(),
     source: {
       revisionObjectiveId: str(objective.objectiveId),
-      renderReviewRef: str(objective.source?.renderReviewRef)
+      renderReviewRef: str(objective.source?.renderReviewRef),
+      effectName: str(objective.source?.effectName),
+      evidence: objective.source?.evidence || {},
+      sequencePath: str(objective.source?.evidence?.sequencePath)
     },
     status: blockedReasons.length ? 'blocked' : 'planned',
     blockedReasons,
@@ -186,14 +219,10 @@ export function buildRenderReviewRevisionAttempt({ objective = {}, targetPolicy 
   if (!blockedReasons.length) {
     base.ownedBatchPayload = {
       track: str(targetPolicy.track || 'XD: Render Review Revision'),
+      subType: str(targetPolicy.subType || 'Generic'),
+      replaceExistingMarks: targetPolicy.replaceExistingMarks !== false,
       effects: buildEffectRows({ objective, targets, effectName, layer, clearExisting }),
-      marks: [
-        {
-          label: str(objective.scope?.sectionLabel || objective.scope?.sectionId || 'revision-section'),
-          startMs: number(objective.scope?.startMs),
-          endMs: number(objective.scope?.endMs)
-        }
-      ]
+      marks: buildOwnedBatchMarks(objective)
     };
   }
   return base;

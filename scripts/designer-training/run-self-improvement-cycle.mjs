@@ -11,6 +11,7 @@ import { buildRenderReviewRevisionAttempts } from './build-render-review-revisio
 import { buildRenderReviewRevisionObjectives } from './build-render-review-revision-objectives.mjs';
 import { extractRenderReviewMedia } from './extract-render-review-media.mjs';
 import { buildTargetBehaviorTrainingSummary } from './export-target-behavior-training-summary.mjs';
+import { runRenderReviewRevisionAttempts } from './run-render-review-revision-attempts.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const DEFAULT_MANIFEST = 'scripts/designer-training/self-improvement-loop-manifest.v1.json';
@@ -584,6 +585,34 @@ function runRenderReviewRevisionAttemptsPhase({ phase, phases, outDir }) {
   };
 }
 
+async function runRenderReviewRevisionExecutionPhase({ phase, phases, outDir, endpoint }) {
+  const phaseId = str(phase.id || 'render_review_revision_execution');
+  const attemptsPhase = [...arr(phases)]
+    .reverse()
+    .find((row) => str(row.type) === 'render_review_revision_attempts' && str(row.outputPath));
+  const attemptsPath = resolveRepoPath(phase.attemptsPath || attemptsPhase?.outputPath || path.join(outDir, 'render-review-revision-attempts.json'));
+  const outputPath = resolveRepoPath(phase.outPath || path.join(outDir, 'render-review-revision-execution.json'));
+  const artifact = await runRenderReviewRevisionAttempts({
+    attemptsPath,
+    outPath: outputPath,
+    endpoint: str(phase.endpoint || endpoint),
+    sequencePath: str(phase.sequencePath),
+    maxAttempts: Number(phase.maxAttempts || 0)
+  });
+  return {
+    id: phaseId,
+    type: str(phase.type || 'render_review_revision_execution'),
+    ok: artifact.summary.failedCount === 0,
+    outputPath,
+    summary: artifact.summary,
+    executionCount: artifact.summary.executionCount,
+    succeededCount: artifact.summary.succeededCount,
+    skippedCount: artifact.summary.skippedCount,
+    failedCount: artifact.summary.failedCount,
+    fseqPaths: arr(artifact.results).map((result) => str(result.fseqPath)).filter(Boolean)
+  };
+}
+
 export async function runSelfImprovementCycle({
   manifestPath = DEFAULT_MANIFEST,
   outDir = '',
@@ -651,6 +680,15 @@ export async function runSelfImprovementCycle({
   for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'render_review_revision_attempts')) {
     const result = runRenderReviewRevisionAttemptsPhase({ phase, phases, outDir: resolvedOutDir });
     phases.push(result);
+  }
+  for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'render_review_revision_execution')) {
+    const result = await runRenderReviewRevisionExecutionPhase({ phase, phases, outDir: resolvedOutDir, endpoint: str(endpoint) });
+    phases.push(result);
+    if (!result.ok && phase.required !== false && !continueOnFailure) {
+      const output = { ok: false, manifestPath: resolvedManifestPath, outDir: resolvedOutDir, phases, errors: [`phase failed: ${phase.id}`] };
+      writeJson(path.join(resolvedOutDir, 'cycle-summary.json'), output);
+      return output;
+    }
   }
   const liveProjectDirs = [];
   if (runLiveProbes) {
