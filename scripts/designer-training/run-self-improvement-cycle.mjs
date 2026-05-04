@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { buildRenderReviewArtifact } from './build-render-review-artifact.mjs';
 import { buildRenderReviewFromFseq } from './build-render-review-from-fseq.mjs';
+import { buildRenderReviewRevisionAttempts } from './build-render-review-revision-attempts.mjs';
 import { buildRenderReviewRevisionObjectives } from './build-render-review-revision-objectives.mjs';
 import { extractRenderReviewMedia } from './extract-render-review-media.mjs';
 import { buildTargetBehaviorTrainingSummary } from './export-target-behavior-training-summary.mjs';
@@ -548,6 +549,33 @@ function runRenderReviewRevisionObjectivesPhase({ phase, phases, outDir }) {
   };
 }
 
+function runRenderReviewRevisionAttemptsPhase({ phase, phases, outDir }) {
+  const phaseId = str(phase.id || 'render_review_revision_attempts');
+  const objectivePhase = [...arr(phases)]
+    .reverse()
+    .find((row) => str(row.type) === 'render_review_revision_objectives' && str(row.outputPath));
+  const objectivesPath = resolveRepoPath(phase.objectivesPath || objectivePhase?.outputPath || path.join(outDir, 'render-review-revision-objectives.json'));
+  const outputPath = resolveRepoPath(phase.outPath || path.join(outDir, 'render-review-revision-attempts.json'));
+  const artifact = buildRenderReviewRevisionAttempts({
+    objectivesPath,
+    outPath: outputPath,
+    targetPolicy: phase.targetPolicy || {},
+    defaultEffectName: str(phase.defaultEffectName),
+    layer: Number(phase.layer || 0),
+    clearExisting: phase.clearExisting === true
+  });
+  return {
+    id: phaseId,
+    type: str(phase.type || 'render_review_revision_attempts'),
+    ok: true,
+    outputPath,
+    summary: artifact.summary,
+    attemptCount: artifact.summary.attemptCount,
+    plannedCount: artifact.summary.plannedCount,
+    blockedCount: artifact.summary.blockedCount
+  };
+}
+
 export async function runSelfImprovementCycle({
   manifestPath = DEFAULT_MANIFEST,
   outDir = '',
@@ -610,6 +638,10 @@ export async function runSelfImprovementCycle({
   }
   for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'render_review_revision_objectives')) {
     const result = runRenderReviewRevisionObjectivesPhase({ phase, phases, outDir: resolvedOutDir });
+    phases.push(result);
+  }
+  for (const phase of arr(manifest.cyclePhases).filter((row) => row?.type === 'render_review_revision_attempts')) {
+    const result = runRenderReviewRevisionAttemptsPhase({ phase, phases, outDir: resolvedOutDir });
     phases.push(result);
   }
   const liveProjectDirs = [];

@@ -117,6 +117,8 @@ Render-review phases produce a separate `renderReviewGate` in `cycle-summary.jso
 
 Add a `render_review_revision_objectives` phase after review phases to write `render-review-revision-objectives.json`. The artifact converts review critiques into concrete revision roles, target quality thresholds, and sequencer actions for the next apply/render attempt.
 
+Add a `render_review_revision_attempts` phase after objective generation to write `render-review-revision-attempts.json`. This turns objectives into owned `/sequencing/apply-batch-plan` payloads only when revision targets and an effect are explicit in the objective or manifest policy. Missing target context is reported as a blocked attempt instead of inferred from user-defined model names.
+
 For xLights render output, use the existing FSEQ reconstruction path to create a `preview_scene_window_v1`, then rasterize it into reviewable media:
 
 ```bash
