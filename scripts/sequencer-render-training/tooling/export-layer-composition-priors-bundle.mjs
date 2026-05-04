@@ -93,6 +93,23 @@ function compactObservedEffects(observed = {}) {
   };
 }
 
+function compactQualityEvidence(evidence = {}) {
+  if (!evidence || typeof evidence !== "object" || !evidence.recordId) return null;
+  return {
+    recordId: str(evidence.recordId),
+    durableCandidate: evidence.durableCandidate === true,
+    sampleCount: Number(evidence.sampleCount || 0),
+    trendStatus: str(evidence.trendStatus),
+    effectName: str(evidence.effectName),
+    leadTargets: unique(evidence.leadTargets),
+    latestOverallQuality: Number(evidence.latestOverallQuality || 0),
+    meanOverallQuality: Number(evidence.meanOverallQuality || 0),
+    meanVisualReadability: Number(evidence.meanVisualReadability || 0),
+    meanIntentMatch: Number(evidence.meanIntentMatch || 0),
+    meanMotionCoherence: Number(evidence.meanMotionCoherence || 0)
+  };
+}
+
 function addIndex(index, key, priorId) {
   const normalized = str(key);
   if (!normalized) return;
@@ -113,6 +130,7 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
     byCompositionIntent: {},
     byOutcomeTag: {},
     byPromotionState: {},
+    qualityBackedPriorIds: [],
     selectorReadyPriorIds: [],
     stagedPriorIds: []
   };
@@ -128,6 +146,7 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
       promotionState: str(compactedPrior.promotionState),
       scope: compactScope(compactedPrior.scope || {}),
       observedEffects: compactObservedEffects(compactedPrior.observedEffects || {}),
+      qualityEvidence: compactQualityEvidence(compactedPrior.qualityEvidence),
       guidance: unique(compactedPrior.guidance),
       safeguards: unique(compactedPrior.safeguards),
       sourceObservationRef: str(compactedPrior.sourceObservationRef),
@@ -140,6 +159,7 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
     addIndex(indexes.byCompositionIntent, prior.scope?.compositionIntent, priorId);
     addIndex(indexes.byPromotionState, prior.promotionState, priorId);
     for (const tag of tags) addIndex(indexes.byOutcomeTag, tag, priorId);
+    if (prior.qualityEvidence?.durableCandidate) indexes.qualityBackedPriorIds.push(priorId);
     if (prior.selectorReady === true) indexes.selectorReadyPriorIds.push(priorId);
     else indexes.stagedPriorIds.push(priorId);
   }
@@ -161,6 +181,7 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
     sourcePath: repoRelativePath(sourcePath),
     recordType: "layer_composition_prior_v1",
     recordCount: Object.keys(records).length,
+    qualityBackedCount: indexes.qualityBackedPriorIds.length,
     selectorReadyCount: indexes.selectorReadyPriorIds.length,
     stagedCount: indexes.stagedPriorIds.length,
     retrievalContract: {

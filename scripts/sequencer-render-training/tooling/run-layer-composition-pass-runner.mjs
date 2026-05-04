@@ -475,7 +475,9 @@ function summarizeLearningCheckpoint({
   const deltaSummary = buildLayerCompositionDeltas({ runRoot });
   deltaSummary.sourceDeltaSummaryRef = deltaSummaryPath;
   writeJson(deltaSummaryPath, deltaSummary);
-  const priors = buildLayerCompositionPriors({ deltaSummary });
+  const qualityRecordsPath = path.join(runRoot, "layer-composition-quality-records.json");
+  const qualityRecords = fs.existsSync(qualityRecordsPath) ? readJson(qualityRecordsPath) : null;
+  const priors = buildLayerCompositionPriors({ deltaSummary, qualityRecords });
   writeJson(priorsPath, priors);
   appendLedgerArtifacts(ledgerPath, [
     {

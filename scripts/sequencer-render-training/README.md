@@ -255,6 +255,9 @@ rejected quality evidence.
 Quality-enabled runs also write `layer-composition-quality-records.json`, which
 keeps one-off evidence blocked and marks repeated stable/improving accepted
 quality evidence as durable candidates.
+When quality records are supplied to `build-layer-composition-priors.mjs`, matching
+experiment/pass priors carry compact quality evidence into the runtime bundle
+without copying raw render-review media or review paths.
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \

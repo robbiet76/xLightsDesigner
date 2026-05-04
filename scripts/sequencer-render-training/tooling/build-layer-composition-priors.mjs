@@ -31,6 +31,32 @@ function qualitativeDirection(value, tolerance = 0.000001) {
   return "no_measured_change";
 }
 
+function qualityRecordKey(record = {}) {
+  return [
+    str(record.experimentId),
+    str(record.passId)
+  ].join("::");
+}
+
+function qualityEvidenceSummary(record = {}) {
+  return {
+    recordId: str(record.recordId),
+    durableCandidate: Boolean(record.promotion?.durableCandidate),
+    sampleCount: num(record.sampleCount),
+    trendStatus: str(record.trendStatus),
+    effectName: str(record.effectName),
+    leadTargets: arr(record.leadTargets).map(str).filter(Boolean),
+    latestOverallQuality: num(record.quality?.latestOverallQuality),
+    meanOverallQuality: num(record.quality?.meanOverallQuality),
+    meanVisualReadability: num(record.observedMetrics?.meanVisualReadability),
+    meanIntentMatch: num(record.observedMetrics?.meanIntentMatch),
+    meanMotionCoherence: num(record.observedMetrics?.meanMotionCoherence),
+    latestRenderReviewRef: str(record.evidence?.latestRenderReviewRef),
+    latestQualityRef: str(record.evidence?.latestQualityRef),
+    promotionBlockers: arr(record.promotion?.blockers).map(str).filter(Boolean)
+  };
+}
+
 function compositionIntent(passId = "") {
   const id = str(passId);
   if (id.includes("baseline")) return "control";
@@ -62,7 +88,7 @@ function priorScope(experiment = {}, pass = {}) {
   };
 }
 
-function buildPrior(experiment = {}, pass = {}) {
+function buildPrior(experiment = {}, pass = {}, qualityRecordByPass = new Map()) {
   const baselineDelta = pass.baselineDelta || {};
   const previousDelta = pass.previousDelta || {};
   const current = baselineDelta.current || {};
@@ -78,6 +104,14 @@ function buildPrior(experiment = {}, pass = {}) {
     .map(str)
     .filter(Boolean)
     .map((label) => `${str(delta.affectedLayer?.effectName)} ${str(delta.settingName)}: ${label}`));
+  const qualityEvidence = qualityRecordByPass.get(qualityRecordKey({
+    experimentId: experiment.experimentId,
+    passId: pass.passId
+  })) || null;
+  const compactQualityEvidence = qualityEvidence ? qualityEvidenceSummary(qualityEvidence) : null;
+  const qualityGuidance = compactQualityEvidence?.durableCandidate
+    ? [`quality evidence accepted across ${compactQualityEvidence.sampleCount} samples; mean quality ${compactQualityEvidence.meanOverallQuality}`]
+    : [];
   return {
     priorId: [
       "layer_composition",
@@ -93,6 +127,7 @@ function buildPrior(experiment = {}, pass = {}) {
     confidence: noMacroChange ? "control_or_no_observed_change" : "smoke_observed",
     selectorReady: false,
     promotionState: "staged",
+    qualityEvidence: compactQualityEvidence,
     scope: priorScope(experiment, pass),
     conditions: {
       paletteProfile: str(experiment.paletteProfile),
@@ -180,8 +215,8 @@ function buildPrior(experiment = {}, pass = {}) {
         }
       }))
     },
-    guidance: [...statements, ...renderSettingGuidance, ...effectSettingGuidance].length
-      ? [...statements, ...renderSettingGuidance, ...effectSettingGuidance]
+    guidance: [...statements, ...renderSettingGuidance, ...effectSettingGuidance, ...qualityGuidance].length
+      ? [...statements, ...renderSettingGuidance, ...effectSettingGuidance, ...qualityGuidance]
       : ["No macro-level visual change was measured in the sampled window."],
     safeguards: [
       "Do not reuse as a fixed sequencing recipe.",
@@ -191,11 +226,15 @@ function buildPrior(experiment = {}, pass = {}) {
   };
 }
 
-export function buildLayerCompositionPriors({ deltaSummary } = {}) {
+export function buildLayerCompositionPriors({ deltaSummary, qualityRecords = null } = {}) {
   const summary = typeof deltaSummary === "string" ? readJson(deltaSummary) : deltaSummary;
+  const quality = typeof qualityRecords === "string" ? readJson(qualityRecords) : qualityRecords;
+  const qualityRecordByPass = new Map(arr(quality?.records)
+    .filter((record) => record.promotion?.durableCandidate)
+    .map((record) => [qualityRecordKey(record), record]));
   const priors = arr(summary?.experiments).flatMap((experiment) => arr(experiment.passDeltas)
     .filter((pass) => str(pass.passId) !== "empty_baseline")
-    .map((pass) => buildPrior(experiment, pass)));
+    .map((pass) => buildPrior(experiment, pass, qualityRecordByPass)));
   return {
     artifactType: "layer_composition_priors_v1",
     artifactVersion: 1,
@@ -203,7 +242,9 @@ export function buildLayerCompositionPriors({ deltaSummary } = {}) {
     sourceRunId: str(summary?.runId),
     sourceRunRoot: str(summary?.runRoot),
     sourceDeltaSummaryRef: str(summary?.sourceDeltaSummaryRef),
+    sourceQualityRecordsRef: str(quality?.sourceQualityRecordsRef || quality?.sourceQualityTrendRef || ""),
     priorCount: priors.length,
+    qualityBackedPriorCount: priors.filter((prior) => prior.qualityEvidence?.durableCandidate).length,
     selectorReadyCount: priors.filter((prior) => prior.selectorReady).length,
     promotionState: "staged",
     promotionBlockers: [
@@ -216,10 +257,11 @@ export function buildLayerCompositionPriors({ deltaSummary } = {}) {
 }
 
 function parseArgs(argv) {
-  const args = { deltaSummaryPath: "", outPath: "" };
+  const args = { deltaSummaryPath: "", qualityRecordsPath: "", outPath: "" };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--delta-summary") args.deltaSummaryPath = argv[++index];
+    else if (arg === "--quality-records") args.qualityRecordsPath = argv[++index];
     else if (arg === "--out") args.outPath = argv[++index];
     else if (arg === "--help") args.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
@@ -229,7 +271,7 @@ function parseArgs(argv) {
 
 function usage() {
   return `Usage:
-  node scripts/sequencer-render-training/tooling/build-layer-composition-priors.mjs --delta-summary <summary.json> --out <priors.json>
+  node scripts/sequencer-render-training/tooling/build-layer-composition-priors.mjs --delta-summary <summary.json> [--quality-records quality-records.json] --out <priors.json>
 `;
 }
 
@@ -243,7 +285,9 @@ async function main() {
   if (!args.outPath) throw new Error("--out is required");
   const summary = readJson(args.deltaSummaryPath);
   summary.sourceDeltaSummaryRef = path.resolve(args.deltaSummaryPath);
-  const priors = buildLayerCompositionPriors({ deltaSummary: summary });
+  const qualityRecords = args.qualityRecordsPath ? readJson(args.qualityRecordsPath) : null;
+  if (qualityRecords) qualityRecords.sourceQualityRecordsRef = path.resolve(args.qualityRecordsPath);
+  const priors = buildLayerCompositionPriors({ deltaSummary: summary, qualityRecords });
   writeJson(args.outPath, priors);
   process.stdout.write(`${args.outPath}\n`);
 }

@@ -123,3 +123,79 @@ test("prior builder stages conditional non-selector-ready layer composition prio
   assert.equal(prior.guidance.includes("Bars barCount: color_position_motion_increased"), true);
   assert.equal(prior.safeguards.some((text) => text.includes("fixed sequencing recipe")), true);
 });
+
+test("prior builder attaches durable quality evidence when available", () => {
+  const bundle = buildLayerCompositionPriors({
+    deltaSummary: {
+      runId: "run-1",
+      runRoot: "/tmp/run-1",
+      experiments: [{
+        experimentId: "group-model-interplay-rgb_primary",
+        family: "group_model_interplay",
+        paletteProfile: "rgb_primary",
+        passDeltas: [{
+          passId: "foundation_group_only",
+          learningId: "learning:foundation",
+          observationRef: "/tmp/obs.json",
+          passPlanRef: "/tmp/pass-plan.json",
+          placementSummary: {
+            targetScopes: ["group"],
+            modelTypes: ["arch"],
+            geometryProfiles: ["arch_grouped"],
+            effectNames: ["Bars"],
+            compositionPasses: ["foundation"],
+            layerIndexes: [0],
+            layerBlendRoles: ["foundation"]
+          },
+          baselineDelta: {
+            activeModelCountDelta: 1,
+            maxActiveNodeCountDelta: 100,
+            current: { activeModelNames: ["ArchGroup"] }
+          },
+          previousDelta: {},
+          candidateLearning: {
+            confidence: "smoke_observed",
+            statements: ["activates ArchGroup"]
+          }
+        }]
+      }]
+    },
+    qualityRecords: {
+      sourceQualityRecordsRef: "/tmp/run-1/layer-composition-quality-records.json",
+      records: [{
+        recordId: "layer_quality:group-model-interplay-rgb_primary:foundation_group_only:bars:archgroup",
+        experimentId: "group-model-interplay-rgb_primary",
+        passId: "foundation_group_only",
+        effectName: "Bars",
+        leadTargets: ["ArchGroup"],
+        sampleCount: 2,
+        trendStatus: "stable",
+        quality: {
+          latestOverallQuality: 0.86,
+          meanOverallQuality: 0.84
+        },
+        observedMetrics: {
+          meanVisualReadability: 0.82,
+          meanIntentMatch: 0.83,
+          meanMotionCoherence: 0.81
+        },
+        evidence: {
+          latestRenderReviewRef: "/tmp/render-review.json",
+          latestQualityRef: "/tmp/quality.json"
+        },
+        promotion: {
+          durableCandidate: true,
+          blockers: []
+        }
+      }]
+    }
+  });
+
+  assert.equal(bundle.qualityBackedPriorCount, 1);
+  assert.equal(bundle.sourceQualityRecordsRef, "/tmp/run-1/layer-composition-quality-records.json");
+  const prior = bundle.priors[0];
+  assert.equal(prior.qualityEvidence.durableCandidate, true);
+  assert.equal(prior.qualityEvidence.sampleCount, 2);
+  assert.equal(prior.qualityEvidence.meanOverallQuality, 0.84);
+  assert.equal(prior.guidance.some((row) => row.includes("quality evidence accepted across 2 samples")), true);
+});
