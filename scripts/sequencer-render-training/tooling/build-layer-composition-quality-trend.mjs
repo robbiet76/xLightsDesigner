@@ -111,6 +111,37 @@ function qualityDimensionsForReview(review = {}) {
   return [...dimensions];
 }
 
+function timingSourcesForReview(review = {}) {
+  const sources = new Set();
+  const section = review.section || {};
+  const musicRole = review.intent?.musicRole || {};
+  const timingContext = musicRole.timingContext || review.intent?.timingContext || {};
+  if (Number.isFinite(num(section.startMs, NaN)) && Number.isFinite(num(section.endMs, NaN))) sources.add("section");
+  if (musicRole.phrase || timingContext.phrase || timingContext.phraseId) sources.add("phrase");
+  if (musicRole.beat || timingContext.beat || timingContext.beatGrid || timingContext.beatId) sources.add("beat");
+  if (musicRole.lyric || musicRole.lyrics || timingContext.lyric || timingContext.lyrics || timingContext.lyricTrack) sources.add("lyric");
+  if (musicRole.accent || timingContext.accent || timingContext.accentId || timingContext.accentType) sources.add("accent");
+  return [...sources];
+}
+
+function musicQualityDimensionsForReview(review = {}) {
+  const scores = review.qualityScores || {};
+  const metrics = review.deterministicMetrics || {};
+  const timingSources = timingSourcesForReview(review);
+  const dimensions = new Set();
+  if (Number.isFinite(num(scores.musicalFit, NaN)) || Number.isFinite(num(metrics.temporalMotionMean, NaN))) {
+    dimensions.add("energy_progression");
+  }
+  if (Number.isFinite(num(scores.transitionQuality, NaN)) || Number.isFinite(num(scores.musicalFit, NaN))) {
+    dimensions.add("timing_alignment");
+  }
+  if (Number.isFinite(num(metrics.temporalColorDeltaMean, NaN)) || Number.isFinite(num(metrics.temporalBrightnessDeltaMean, NaN)) || Number.isFinite(num(metrics.temporalActiveDeltaMean, NaN))) {
+    dimensions.add("repetition_with_variation");
+  }
+  if (timingSources.includes("lyric")) dimensions.add("lyric_readability");
+  return [...dimensions];
+}
+
 function loadRunRecords(runRoot = "", runIndex = 0) {
   const root = resolvePath(runRoot);
   const summaryPath = path.join(root, "pass-runner-summary.json");
@@ -142,6 +173,8 @@ function loadRunRecords(runRoot = "", runIndex = 0) {
         changeType: metadata.changeType,
         reviewScopes: reviewScopesForQuality(quality),
         qualityDimensions: qualityDimensionsForReview(review),
+        timingSources: timingSourcesForReview(review),
+        musicQualityDimensions: musicQualityDimensionsForReview(review),
         decision: str(result.renderReviewDecision || quality.decision || review.critique?.decision),
         measurementStatus: str(result.renderReviewMeasurementStatus || quality.measurementStatus || qualification.status),
         evidenceEligible,
@@ -199,6 +232,8 @@ function groupEvidence(records = []) {
       changeType: str(latest.changeType),
       reviewScopes: arr(latest.reviewScopes),
       qualityDimensions: arr(latest.qualityDimensions),
+      timingSources: arr(latest.timingSources),
+      musicQualityDimensions: arr(latest.musicQualityDimensions),
       effectName: str(latest.effectName),
       leadTargets: arr(latest.leadTargets),
       sampleCount: sortedRows.length,

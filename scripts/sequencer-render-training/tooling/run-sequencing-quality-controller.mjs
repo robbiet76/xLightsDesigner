@@ -155,13 +155,15 @@ function recordMatchesGoal(record = {}, goal = {}) {
   const modelTypes = coverageList(coverage, "modelTypes");
   const reviewScopes = coverageList(coverage, "reviewScopes");
   const qualityDimensions = coverageList(coverage, "qualityDimensions");
+  const timingSources = coverageList(coverage, "timingSources");
   const hasStructuredCoverage = families.length
     || paletteProfiles.length
     || effects.length
     || targetScopes.length
     || modelTypes.length
     || reviewScopes.length
-    || qualityDimensions.length;
+    || qualityDimensions.length
+    || timingSources.length;
   if (!hasStructuredCoverage) return false;
   const experimentId = str(record.experimentId);
 
@@ -174,8 +176,9 @@ function recordMatchesGoal(record = {}, goal = {}) {
   const targetScopeMatch = matchesCoverage(targetScopesForRecord(record), targetScopes);
   const modelTypeMatch = !modelTypes.length || !arr(record.modelTypes).length || matchesCoverage(record.modelTypes, modelTypes);
   const reviewScopeMatch = matchesCoverage(record.reviewScopes, reviewScopes);
-  const qualityDimensionMatch = matchesCoverage(record.qualityDimensions, qualityDimensions);
-  return familyMatch && paletteMatch && effectMatch && targetScopeMatch && modelTypeMatch && reviewScopeMatch && qualityDimensionMatch;
+  const qualityDimensionMatch = matchesCoverage([...arr(record.qualityDimensions), ...arr(record.musicQualityDimensions)], qualityDimensions);
+  const timingSourceMatch = matchesCoverage(record.timingSources, timingSources);
+  return familyMatch && paletteMatch && effectMatch && targetScopeMatch && modelTypeMatch && reviewScopeMatch && qualityDimensionMatch && timingSourceMatch;
 }
 
 function isPromisingBlockedRecord(record = {}, goal = {}, policy = {}) {
@@ -350,6 +353,28 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
         }
       };
     }
+  }
+
+  const blockedGoal = goals.find((goal) => arr(goal.blockedBy).map(str).filter(Boolean).length);
+  if (blockedGoal) {
+    const blockers = arr(blockedGoal.blockedBy).map(str).filter(Boolean);
+    return {
+      selectedGoal: blockedGoal,
+      nextQueue: [{
+        queueId: `quality-controller:${str(blockedGoal.goalId) || "none"}:blocked-coverage-gap`,
+        goalId: str(blockedGoal.goalId),
+        priority: 1,
+        reason: "coverage_gap",
+        blockedBy: blockers,
+        selectionHint: arr(blockedGoal.nextSelectionHints)[0] || blockers[0] || "resolve the curriculum blocker before advancing"
+      }],
+      decision: {
+        selectedGoalId: str(blockedGoal.goalId),
+        selectionReason: "blocked_coverage_gap",
+        blockedBy: blockers,
+        nextAction: "resolve_blocker"
+      }
+    };
   }
 
   const nextGoal = goals.find((goal) => !recordsForGoal(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))

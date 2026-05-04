@@ -96,6 +96,8 @@ function buildRecord(group = {}, options = {}) {
     changeType: str(group.changeType),
     reviewScopes: arr(group.reviewScopes).map(str).filter(Boolean),
     qualityDimensions: arr(group.qualityDimensions).map(str).filter(Boolean),
+    timingSources: arr(group.timingSources).map(str).filter(Boolean),
+    musicQualityDimensions: arr(group.musicQualityDimensions).map(str).filter(Boolean),
     effectName: str(group.effectName),
     leadTargets: arr(group.leadTargets).map(str).filter(Boolean),
     sampleCount: num(group.sampleCount),

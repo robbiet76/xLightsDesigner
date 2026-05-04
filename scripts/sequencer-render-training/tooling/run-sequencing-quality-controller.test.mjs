@@ -358,6 +358,80 @@ test("controller does not repeat arbitrary blocked effect records for display-on
   assert.equal(state.nextQueue[0].goalId, "display.full_sequence.quality_v1");
 });
 
+test("controller counts durable music timing records for music-structure goals", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("section_energy_build", 0.86, []),
+    sampleCount: 2,
+    trendStatus: "stable",
+    timingSources: ["section"],
+    musicQualityDimensions: ["energy_progression", "timing_alignment", "repetition_with_variation"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "music.structure_alignment.v1",
+        areaId: "musical_structure",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          timingSources: ["section", "beat"],
+          qualityDimensions: ["energy_progression", "timing_alignment"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 1);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
+});
+
+test("controller does not advance past explicitly blocked curriculum goals", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("section_energy_build", 0.86, []),
+    sampleCount: 2,
+    trendStatus: "stable",
+    timingSources: ["section"],
+    musicQualityDimensions: ["energy_progression", "timing_alignment"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "music.structure_alignment.v1",
+        areaId: "musical_structure",
+        priority: 1,
+        status: "not_started",
+        blockedBy: ["needs broader full-sequence review loop"],
+        coverage: {
+          timingSources: ["section"],
+          qualityDimensions: ["energy_progression"]
+        }
+      }, {
+        goalId: "creative.intent_match.v1",
+        areaId: "creative_intent_matching",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          reviewScopes: ["whole_sequence_window"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "music.structure_alignment.v1");
+  assert.equal(state.controllerDecision.nextAction, "resolve_blocker");
+  assert.deepEqual(state.controllerDecision.blockedBy, ["needs broader full-sequence review loop"]);
+  assert.equal(state.nextQueue[0].blockedBy[0], "needs broader full-sequence review loop");
+});
+
 test("controller advances past goals with durable evidence and no repeat queue", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [

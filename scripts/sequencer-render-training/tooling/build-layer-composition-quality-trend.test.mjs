@@ -33,8 +33,15 @@ function writeRun(root, { runId, quality = 0.8, eligible = true, generatedAt = "
   const qualityPath = path.join(passDir, "render-review-quality-summary.json");
   writeJson(reviewPath, {
     artifactType: "render_review_v1",
+    section: {
+      id: "section-01",
+      label: "section-01",
+      startMs: 0,
+      endMs: 1000
+    },
     intent: {
       effectName: eligible ? "Bars" : "",
+      musicRole: { energy: "build" },
       targetHierarchy: eligible ? { leadTargets: ["Arches"] } : {},
       renderPlan: eligible
         ? { plannedEffectCount: 1, plannedTargetCount: 1 }
@@ -45,13 +52,18 @@ function writeRun(root, { runId, quality = 0.8, eligible = true, generatedAt = "
       visualReadability: quality - 0.01,
       intentMatch: quality - 0.02,
       motionCoherence: quality - 0.03,
-      colorDiscipline: quality - 0.04
+      colorDiscipline: quality - 0.04,
+      musicalFit: quality - 0.05,
+      transitionQuality: quality - 0.06
     },
     deterministicMetrics: {
       activeCoverageMean: 0.02,
       activeNodeRatioPeak: 0.1,
       activeTargetNodeRatioPeak: 0.6,
       temporalMotionMean: 0.05,
+      temporalColorDeltaMean: 0.02,
+      temporalBrightnessDeltaMean: 0.02,
+      temporalActiveDeltaMean: 0.02,
       blankRisk: 0
     },
     critique: { decision: "accept" },
@@ -103,6 +115,10 @@ test("quality trend summarizes a single run as a baseline", () => {
   assert.deepEqual(artifact.groups[0].reviewScopes, ["section_video", "whole_sequence_window", "full_display_contact_sheet"]);
   assert.equal(artifact.groups[0].qualityDimensions.includes("motion_coherence"), true);
   assert.equal(artifact.groups[0].qualityDimensions.includes("palette_readability"), true);
+  assert.deepEqual(artifact.groups[0].timingSources, ["section"]);
+  assert.equal(artifact.groups[0].musicQualityDimensions.includes("energy_progression"), true);
+  assert.equal(artifact.groups[0].musicQualityDimensions.includes("timing_alignment"), true);
+  assert.equal(artifact.groups[0].musicQualityDimensions.includes("repetition_with_variation"), true);
 });
 
 test("quality trend compares matching quality evidence across runs", () => {
