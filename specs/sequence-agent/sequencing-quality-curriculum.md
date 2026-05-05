@@ -152,9 +152,9 @@ The unattended runner writes `unattended-run-summary.json` after every iteration
 and advances from one loop root to the next only after an executed loop. It
 stops on `controller_idle`, `awaiting_evidence`, `blocked_no_controller_queue`,
 or `max_loops_reached`. When it stops on idle, the next curriculum expansion
-should be chosen deliberately. The current active expansion is creative intent
-revision comparison; next preferred expansions are broader effect/model coverage
-and then stronger video-level aesthetic scoring.
+should be chosen deliberately. After creative intent revision comparison is
+covered, the next preferred expansions are broader effect/model coverage,
+stronger video-level aesthetic scoring, and richer creative revision variants.
 
 ## Selection Rules
 

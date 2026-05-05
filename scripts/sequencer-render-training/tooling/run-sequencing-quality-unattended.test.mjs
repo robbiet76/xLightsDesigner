@@ -91,7 +91,7 @@ test("unattended quality runner advances checkpoints and stops on idle", async (
   assert.equal(calls[1].latestRunRoot, calls[0].loopRoot);
   assert.equal(calls[1].previousStatePath, path.join(calls[0].loopRoot, "controller-state.json"));
   assert.equal(fs.existsSync(path.join(root, "unattended-run-summary.json")), true);
-  assert.ok(summary.recommendedNextCurriculumExpansion.includes("creative intent revision comparison"));
+  assert.ok(summary.recommendedNextCurriculumExpansion.includes("larger effect/model coverage matrix"));
 });
 
 test("unattended quality runner stops at max loop count", async () => {

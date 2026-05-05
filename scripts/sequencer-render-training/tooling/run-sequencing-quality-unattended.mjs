@@ -155,9 +155,9 @@ export async function runSequencingQualityUnattended({
     iterations,
     recommendedNextCurriculumExpansion: stopReason === "controller_idle"
       ? [
-        "creative intent revision comparison",
         "larger effect/model coverage matrix",
-        "stronger video-level aesthetic scoring"
+        "stronger video-level aesthetic scoring",
+        "richer creative revision variants"
       ]
       : []
   };
