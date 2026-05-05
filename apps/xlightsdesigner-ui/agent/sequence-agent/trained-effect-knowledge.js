@@ -3,6 +3,7 @@ import { DERIVED_PARAMETER_PRIORS_BUNDLE } from './generated/derived-parameter-p
 import { CROSS_EFFECT_SHARED_SETTINGS_BUNDLE } from './generated/cross-effect-shared-settings-bundle.js';
 import { BEHAVIOR_CAPABILITY_RECORDS_BUNDLE } from './generated/behavior-capability-records-bundle.js';
 import { LAYER_COMPOSITION_PRIORS_BUNDLE } from './generated/layer-composition-priors-bundle.js';
+import { VIDEO_AESTHETIC_LEARNING_BUNDLE } from './generated/video-aesthetic-learning-bundle.js';
 import { classifyModelDisplayType } from './model-type-catalog.js';
 import { analyzeCustomModelStructure, mapClassificationToTrainedModelProfiles } from '../../runtime/custom-model-structure.js';
 
@@ -847,6 +848,98 @@ function indexedRecordsForLayerCompositionFacet(index = {}, keys = []) {
 
 export function getLayerCompositionPriorsBundle() {
   return LAYER_COMPOSITION_PRIORS_BUNDLE;
+}
+
+export function getVideoAestheticLearningBundle() {
+  return VIDEO_AESTHETIC_LEARNING_BUNDLE;
+}
+
+function indexedRecordsForVideoAestheticFacet(index = {}, keys = []) {
+  const ids = new Set();
+  for (const key of unique(keys)) {
+    for (const id of Array.isArray(index?.[normText(key)]) ? index[normText(key)] : []) ids.add(normText(id));
+    for (const id of Array.isArray(index?.[low(key).replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')]) ? index[low(key).replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')] : []) ids.add(normText(id));
+  }
+  return ids;
+}
+
+export function recommendVideoAestheticStrategies({
+  weakDimensions = [],
+  paletteProfile = '',
+  strategy = '',
+  includeStaged = false,
+  bundleOverride = null,
+  limit = 5
+} = {}) {
+  const bundle = bundleOverride || getVideoAestheticLearningBundle();
+  const records = bundle?.records && typeof bundle.records === 'object' ? bundle.records : {};
+  const indexes = bundle?.indexes && typeof bundle.indexes === 'object' ? bundle.indexes : {};
+  const gate = bundle?.promotionGate && typeof bundle.promotionGate === 'object' ? bundle.promotionGate : {};
+  const runtimeUseBlocked = gate.selectorRuntimeReady !== true && includeStaged !== true;
+  const candidateIds = new Set();
+  if (!runtimeUseBlocked) {
+    for (const ids of [
+      indexedRecordsForVideoAestheticFacet(indexes.byStrategy, [strategy]),
+      indexedRecordsForVideoAestheticFacet(indexes.byPaletteProfile, [paletteProfile]),
+      indexedRecordsForVideoAestheticFacet(indexes.byImprovedDimension, weakDimensions)
+    ]) {
+      for (const id of ids) candidateIds.add(id);
+    }
+    if (!candidateIds.size) {
+      for (const id of Object.keys(records)) candidateIds.add(id);
+    }
+  }
+
+  const scored = [...candidateIds]
+    .map((recordId) => records[recordId])
+    .filter((record) => record && (includeStaged || record.selectorReady === true))
+    .map((record) => {
+      const improvedMatches = intersectionCount((record.comparison?.improvedDimensions || []).map((row) => row.dimension), weakDimensions);
+      const regressedMatches = intersectionCount((record.comparison?.regressedDimensions || []).map((row) => row.dimension), weakDimensions);
+      let score = record.selectorReady === true ? 100 : 20;
+      score += Number(record.comparison?.overallAestheticScoreDelta || 0) * 100;
+      score += improvedMatches * 30;
+      score -= regressedMatches * 35;
+      if (paletteProfile && normText(record.paletteProfile) === normText(paletteProfile)) score += 20;
+      if (strategy && normText(record.strategy) === normText(strategy)) score += 25;
+      return {
+        recordId: normText(record.recordId),
+        strategy: normText(record.strategy),
+        confidence: normText(record.confidence),
+        selectorReady: record.selectorReady === true,
+        promotionState: normText(record.promotionState),
+        paletteProfile: normText(record.paletteProfile),
+        scores: record.scores || {},
+        comparison: record.comparison || {},
+        scope: record.scope || {},
+        guidance: unique(record.guidance).slice(0, 5),
+        safeguards: unique(record.safeguards).slice(0, 4),
+        score
+      };
+    })
+    .filter((row) => Number(row.score || 0) > 0)
+    .sort((a, b) => b.score - a.score || a.recordId.localeCompare(b.recordId))
+    .slice(0, Math.max(1, Number(limit) || 5));
+
+  return {
+    artifactType: 'sequencer_video_aesthetic_strategy_guidance_v1',
+    sourceArtifactType: normText(bundle?.artifactType),
+    recordType: normText(bundle?.recordType),
+    retrievalPolicy: normText(bundle?.retrievalContract?.consumptionPolicy) || 'display_level_advisory_evidence_not_recipe',
+    runtimeUseBlocked,
+    promotionGate: {
+      selectorRuntimeReady: gate.selectorRuntimeReady === true,
+      selectorReadyRecordCount: Number(gate.selectorReadyRecordCount || 0),
+      blockers: unique(gate.blockers || [])
+    },
+    context: {
+      weakDimensions: unique(weakDimensions),
+      paletteProfile: normText(paletteProfile),
+      strategy: normText(strategy)
+    },
+    recommendationCount: scored.length,
+    recommendations: scored
+  };
 }
 
 function layerCompositionPromotionGate(bundle = {}) {

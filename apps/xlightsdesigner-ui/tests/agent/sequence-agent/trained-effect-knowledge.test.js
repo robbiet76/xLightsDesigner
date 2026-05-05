@@ -6,8 +6,10 @@ import {
   getBehaviorCapabilityRecord,
   getConfiguredBehaviorCapabilitiesBundle,
   getLayerCompositionPriorsBundle,
+  getVideoAestheticLearningBundle,
   buildStage1TrainingKnowledgeMetadata,
   recommendLayerCompositionPriors,
+  recommendVideoAestheticStrategies,
   recommendConfiguredBehaviorCapabilities,
   recommendTrainedEffects,
   recommendTrainedEffectsForVisualFamilies
@@ -209,4 +211,20 @@ test("trained effect knowledge allows selector-ready layer composition guidance 
   assert.equal(guidance.recommendationCount, 1);
   assert.equal(guidance.recommendations[0].selectorReady, true);
   assert.equal(guidance.recommendations[0].promotionState, "selector_ready");
+});
+
+test("trained effect knowledge recommends selector-ready video aesthetic strategies", () => {
+  const bundle = getVideoAestheticLearningBundle();
+  const guidance = recommendVideoAestheticStrategies({
+    weakDimensions: ["focal_clarity", "pacing_variety", "motion_interest"],
+    paletteProfile: "mono_white",
+    bundleOverride: bundle
+  });
+
+  assert.equal(guidance.runtimeUseBlocked, false);
+  assert.equal(guidance.recommendationCount >= 1, true);
+  assert.equal(guidance.recommendations[0].strategy, "focal_consistency_repair");
+  assert.equal(guidance.recommendations[0].selectorReady, true);
+  assert.equal(guidance.recommendations[0].comparison.status, "improved");
+  assert.equal(guidance.recommendations[0].guidance.some((row) => row.includes("focal_clarity")), true);
 });
