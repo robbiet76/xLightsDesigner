@@ -135,6 +135,42 @@ function writeFullSequenceReview(runRoot, overrides = {}) {
   });
 }
 
+function writeVideoAestheticScore(runRoot, overrides = {}) {
+  writeJson(path.join(runRoot, "video-aesthetic-score.json"), {
+    artifactType: "video_aesthetic_score_v1",
+    status: "ready",
+    scoredWindowCount: 2,
+    evidenceEligibleWindowCount: 2,
+    qualityDimensions: [
+      "display_evolution",
+      "pacing_variety",
+      "visual_balance",
+      "motion_interest"
+    ],
+    scores: {
+      overallAestheticScore: 0.61,
+      displayEvolution: 0.59,
+      pacingVariety: 0.22,
+      transitionFlow: 0.73,
+      focalClarity: 0.8,
+      visualBalance: 0.3,
+      motionInterest: 0.48,
+      colorDiscipline: 0.7,
+      clutterControl: 0.93,
+      qualityConsistency: 0.9
+    },
+    recommendationSummary: [
+      "Add clearer variation in motion, density, or palette across repeated sections.",
+      "Rebalance coverage across the display or explicitly use negative space as an intentional choice."
+    ],
+    promotion: {
+      evidenceEligible: false,
+      blockers: ["overall_aesthetic_score_below_threshold"]
+    },
+    ...overrides
+  });
+}
+
 test("controller queues blocked promising records for the active curriculum goal", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [
@@ -526,6 +562,45 @@ test("controller resolves full-sequence loop blocker when review loop artifact i
 
   assert.deepEqual(state.goalStatuses[0].blockers, []);
   assert.equal(state.controllerDecision.selectedGoalId, "creative.intent_match.v1");
+});
+
+test("controller uses weak video aesthetic score to steer display quality coverage", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.full_sequence.quality_v1");
+  assert.equal(state.controllerDecision.selectionReason, "video_aesthetic_score_below_threshold");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
+  assert.equal(state.nextQueue[0].improvementSource, "video_aesthetic_score");
+  assert.equal(state.nextQueue[0].overallAestheticScore, 0.61);
+  assert.deepEqual(
+    state.nextQueue[0].weakDimensions.slice(0, 2).map((row) => row.dimension),
+    ["pacing_variety", "visual_balance"]
+  );
+  assert.equal(state.videoAestheticSummary.status, "ready");
+  assert.equal(state.videoAestheticSummary.overallAestheticScore, 0.61);
 });
 
 test("controller resolves creative prerequisite blocker from display and music evidence", () => {

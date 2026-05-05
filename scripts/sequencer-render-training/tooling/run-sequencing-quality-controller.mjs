@@ -121,6 +121,7 @@ function latestRunArtifacts(latestRunRoot = "") {
     passRunnerSummary: artifactPath(latestRunRoot, "pass-runner-summary.json"),
     cleanupResult: artifactPath(latestRunRoot, "final-retention-cleanup-result.json"),
     fullSequenceReviewLoop: artifactPath(latestRunRoot, "full-sequence-review-loop.json"),
+    videoAestheticScore: artifactPath(latestRunRoot, "video-aesthetic-score.json"),
     creativeIntentRevisionComparison: artifactPath(latestRunRoot, "creative-intent-revision-comparison.json")
   };
   const artifacts = Object.fromEntries(Object.entries(files).map(([key, filePath]) => [key, readJsonIfExists(filePath)]));
@@ -388,9 +389,17 @@ function durableRecordCountForGoal(records = [], goal = {}) {
   return recordsForGoal(records, goal).filter((record) => bool(record?.promotion?.durableCandidate)).length;
 }
 
+function videoAestheticGatePassed(goal = {}, artifacts = {}) {
+  if (str(goal.goalId) !== "display.full_sequence.quality_v1") return true;
+  const video = artifacts.videoAestheticScore || {};
+  if (str(video.status) !== "ready") return true;
+  return bool(video?.promotion?.evidenceEligible);
+}
+
 function goalEvidenceCovered(goal = {}, artifacts = {}, curriculum = {}) {
   const blockers = goalBlockers(goal, artifacts, curriculum);
   if (blockers.length) return false;
+  if (!videoAestheticGatePassed(goal, artifacts)) return false;
   const criteria = completionCriteriaForGoal(goal);
   const records = arr(artifacts?.qualityRecords?.records);
   const selectorReadyPriorCount = promotedPriorsForGoal(arr(artifacts?.promotedPriors?.priors), goal).length;
@@ -431,13 +440,14 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
     const coveredByDistinctCoverage = criteria.minimumDistinctCoverageUnitCount !== null
       && distinctCoverageUnitCount >= criteria.minimumDistinctCoverageUnitCount;
     if (artifacts.missingArtifacts?.length && !goalRecords.length && !selectorReadyPriorCount) blockers.add("latest evidence artifacts unavailable");
+    if (!videoAestheticGatePassed(goal, artifacts)) blockers.add("video aesthetic score below promotion threshold");
     return {
       goalId: str(goal.goalId),
       areaId: str(goal.areaId),
       status: str(goal.status),
       priority: num(goal.priority),
       evidenceStatus: coveredByDeclaredStatus || coveredBySelectorReadyPriors || coveredByDurableEvidence || coveredByDistinctCoverage
-        ? "covered"
+        ? videoAestheticGatePassed(goal, artifacts) ? "covered" : "in_progress"
         : blockedPromisingCount
           ? "in_progress"
           : goalRecords.length || selectorReadyPriorCount
@@ -492,6 +502,62 @@ function cleanupSummary(curriculum = {}, artifacts = {}) {
   };
 }
 
+function videoAestheticSummary(artifacts = {}) {
+  const artifact = artifacts.videoAestheticScore || {};
+  const scores = artifact.scores || {};
+  return {
+    status: str(artifact.status),
+    overallAestheticScore: round6(scores.overallAestheticScore),
+    scoredWindowCount: num(artifact.scoredWindowCount),
+    evidenceEligibleWindowCount: num(artifact.evidenceEligibleWindowCount),
+    promotionEligible: bool(artifact?.promotion?.evidenceEligible),
+    qualityDimensions: arr(artifact.qualityDimensions).map(str).filter(Boolean),
+    recommendationCount: arr(artifact.recommendationSummary).length,
+    ref: artifacts.refs?.videoAestheticScore || ""
+  };
+}
+
+function weakVideoAestheticDimensions(video = {}, threshold = 0.65) {
+  const scores = video.scores || {};
+  const dimensions = [
+    ["display_evolution", scores.displayEvolution],
+    ["pacing_variety", scores.pacingVariety],
+    ["transition_flow", scores.transitionFlow],
+    ["focal_clarity", scores.focalClarity],
+    ["visual_balance", scores.visualBalance],
+    ["motion_interest", scores.motionInterest],
+    ["color_discipline", scores.colorDiscipline],
+    ["clutter_control", scores.clutterControl],
+    ["quality_consistency", scores.qualityConsistency]
+  ];
+  return dimensions
+    .filter(([, value]) => value !== null && value !== undefined && value !== "" && Number.isFinite(num(value, NaN)) && num(value) < threshold)
+    .sort((left, right) => num(left[1]) - num(right[1]))
+    .map(([dimension, value]) => ({ dimension, score: round6(value) }));
+}
+
+function videoAestheticImprovementQueue(goal = {}, artifacts = {}, policy = {}) {
+  if (str(goal.goalId) !== "display.full_sequence.quality_v1") return [];
+  const video = artifacts.videoAestheticScore || {};
+  if (str(video.status) !== "ready") return [];
+  const overall = num(video.scores?.overallAestheticScore, NaN);
+  if (!Number.isFinite(overall) || overall >= policy.minimumOverallQuality || bool(video?.promotion?.evidenceEligible)) return [];
+  const weakDimensions = weakVideoAestheticDimensions(video);
+  return [{
+    queueId: `quality-controller:${str(goal.goalId)}:video-aesthetic-improvement`,
+    goalId: str(goal.goalId),
+    priority: 1,
+    reason: "coverage_gap",
+    improvementSource: "video_aesthetic_score",
+    overallAestheticScore: round6(overall),
+    weakDimensions,
+    recommendations: arr(video.recommendationSummary).map(str).filter(Boolean),
+    selectionHint: weakDimensions.length
+      ? `Generate display review passes that improve ${weakDimensions.slice(0, 3).map((row) => row.dimension).join(", ")}.`
+      : "Generate display review passes that improve the whole-display aesthetic score."
+  }];
+}
+
 function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_MAX_QUEUE } = {}) {
   const policy = promotionPolicy(curriculum);
   const records = arr(artifacts?.qualityRecords?.records);
@@ -522,6 +588,22 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
           selectionReason: "blocked_promising_records",
           blockedBy: [],
           nextAction: "plan_quality_repeats"
+        }
+      };
+    }
+  }
+
+  for (const goal of unblockedGoals) {
+    const queue = videoAestheticImprovementQueue(goal, artifacts, policy);
+    if (queue.length) {
+      return {
+        selectedGoal: goal,
+        nextQueue: queue,
+        decision: {
+          selectedGoalId: str(goal.goalId),
+          selectionReason: "video_aesthetic_score_below_threshold",
+          blockedBy: [],
+          nextAction: "plan_goal_coverage"
         }
       };
     }
@@ -611,6 +693,7 @@ export function buildSequencingQualityControllerState({
     latestRunRoot: artifacts.latestRunRoot,
     goalStatuses: buildGoalStatuses(resolvedCurriculum, artifacts),
     coverageSummary: coverageSummary(artifacts),
+    videoAestheticSummary: videoAestheticSummary(artifacts),
     promotionSummary: promotionSummary(artifacts),
     cleanupSummary: cleanup,
     nextQueue,

@@ -28,6 +28,7 @@
       "latestRunRoot",
       "goalStatuses",
       "coverageSummary",
+      "videoAestheticSummary",
       "promotionSummary",
       "cleanupSummary",
       "nextQueue"

@@ -107,6 +107,7 @@ bounded queue without launching xLights.
   "latestRunRoot": "var/logs/sequencer-training-controller/loop-000012",
   "goalStatuses": [],
   "coverageSummary": {},
+  "videoAestheticSummary": {},
   "promotionSummary": {},
   "cleanupSummary": {},
   "nextQueue": []
