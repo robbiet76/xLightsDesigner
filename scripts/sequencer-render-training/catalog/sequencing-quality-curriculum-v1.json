@@ -540,13 +540,6 @@
           "section_video",
           "whole_sequence_window",
           "full_display_contact_sheet"
-        ],
-        "qualityDimensions": [
-          "pacing_variety",
-          "motion_interest",
-          "visual_balance",
-          "quality_consistency",
-          "palette_readability"
         ]
       },
       "nextSelectionHints": [
@@ -589,12 +582,6 @@
           "section_video",
           "whole_sequence_window",
           "full_display_contact_sheet"
-        ],
-        "qualityDimensions": [
-          "pacing_variety",
-          "motion_interest",
-          "transition_flow",
-          "quality_consistency"
         ]
       },
       "completionCriteria": {
@@ -633,12 +620,6 @@
           "section_video",
           "whole_sequence_window",
           "full_display_contact_sheet"
-        ],
-        "qualityDimensions": [
-          "visual_balance",
-          "focal_clarity",
-          "clutter_control",
-          "palette_readability"
         ]
       },
       "completionCriteria": {
@@ -677,12 +658,6 @@
           "section_video",
           "whole_sequence_window",
           "full_display_contact_sheet"
-        ],
-        "qualityDimensions": [
-          "transition_flow",
-          "motion_interest",
-          "temporal_continuity",
-          "quality_consistency"
         ]
       },
       "completionCriteria": {
