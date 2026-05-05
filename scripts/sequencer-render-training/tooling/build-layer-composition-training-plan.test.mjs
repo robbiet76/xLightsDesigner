@@ -642,6 +642,47 @@ test("layer composition plan expands regional focus contrast strategy", () => {
   assert.equal(focusPass.placements.some((placement) => placement.layerIntent?.displayReviewRole === "regional_focus_contrast"), true);
 });
 
+test("layer composition plan expands rgb primary regional focus strategy", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-video-aesthetic-rgb-regional-focus",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 16,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        selectionReason: "video_aesthetic_score_below_threshold",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:video-aesthetic-improvement",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap",
+        improvementSource: "video_aesthetic_score",
+        previousAttemptStatus: "improved",
+        nextStrategy: "rgb_primary_regional_focus_contrast"
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_regional_focus_contrast"]
+  );
+  assert.equal(plan.paletteProfiles.some((profile) => profile.profile === "rgb_primary"), true);
+  assert.equal(
+    plan.experiments[0].passes.find((pass) => pass.passId === "display_regional_focus_contrast")
+      .controllerSelection.selectedByController,
+    true
+  );
+});
+
 test("layer composition plan expands music structure coverage-gap controller queue", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

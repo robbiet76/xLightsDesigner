@@ -695,6 +695,65 @@ test("controller does not repeat section-window strategy after neutral section-w
   assert.equal(state.nextQueue[0].nextStrategy, "regional_focus_contrast");
 });
 
+test("controller moves improved regional focus to rgb primary when color discipline remains weak", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot, {
+    scores: {
+      overallAestheticScore: 0.704,
+      displayEvolution: 0.92,
+      pacingVariety: 0.23,
+      transitionFlow: 0.66,
+      focalClarity: 0.77,
+      visualBalance: 0.45,
+      motionInterest: 0.56,
+      colorDiscipline: 0.636,
+      clutterControl: 1,
+      qualityConsistency: 0.97
+    }
+  });
+  writeVideoAestheticAttemptComparison(runRoot, {
+    comparisonStatus: "improved",
+    promotionEligible: true,
+    summary: {
+      overallAestheticScoreDelta: 0.012,
+      improvedDimensionCount: 4,
+      regressedDimensionCount: 0
+    }
+  });
+  writeJson(path.join(runRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      nextStrategy: "regional_focus_contrast"
+    }]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.nextQueue[0].previousAttemptStatus, "improved");
+  assert.equal(state.nextQueue[0].nextStrategy, "rgb_primary_regional_focus_contrast");
+  assert.equal(state.nextQueue[0].avoidStrategy, "");
+});
+
 test("controller resolves creative prerequisite blocker from display and music evidence", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [

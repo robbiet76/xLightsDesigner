@@ -2699,12 +2699,17 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
     }
     if (goalId === "display.full_sequence.quality_v1") {
       const isVideoAestheticImprovement = str(gap.improvementSource) === "video_aesthetic_score";
-      for (const paletteProfile of ["mono_white"]) {
+      const paletteProfiles = str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
+        ? ["rgb_primary"]
+        : ["mono_white"];
+      for (const paletteProfile of paletteProfiles) {
         const passIds = isVideoAestheticImprovement
           ? str(gap.nextStrategy) === "section_window_pacing_balance"
             ? ["display_section_window_pacing"]
             : str(gap.nextStrategy) === "regional_focus_contrast"
               ? ["display_regional_focus_contrast"]
+              : str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
+                ? ["display_regional_focus_contrast"]
             : ["display_pacing_balance_revision", "display_wide_balance_revision"]
           : ["display_balance_foundation", "display_motion_variety"];
         for (const passId of passIds) {

@@ -557,6 +557,19 @@ function videoAestheticAttemptStrategy(artifacts = {}) {
   const previousStrategy = str(arr(artifacts.controllerState?.nextQueue)[0]?.nextStrategy)
     || str(arr(artifacts.controllerState?.nextQueue)[0]?.avoidStrategy)
     || "simultaneous_display_balance_revision";
+  const weakDimensions = new Set(weakVideoAestheticDimensions(artifacts.videoAestheticScore || {}).map((row) => row.dimension));
+  if (comparisonStatus === "improved") {
+    return {
+      previousStrategy,
+      avoidStrategy: "",
+      nextStrategy: previousStrategy === "regional_focus_contrast" && weakDimensions.has("color_discipline")
+        ? "rgb_primary_regional_focus_contrast"
+        : previousStrategy || "simultaneous_display_balance",
+      reason: previousStrategy
+        ? `previous video aesthetic attempt improved with ${previousStrategy}`
+        : ""
+    };
+  }
   if (!["neutral", "regressed"].includes(comparisonStatus)) {
     return {
       previousStrategy: "",
