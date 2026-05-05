@@ -53,6 +53,9 @@ function passMetadata(plan = {}) {
   for (const experiment of arr(plan.experiments)) {
     if (str(experiment.family) !== "creative_intent_revision_comparison") continue;
     for (const pass of arr(experiment.passes)) {
+      const creativeIntents = arr(pass.placements)
+        .map((placement) => placement.layerIntent?.creativeIntent)
+        .filter(Boolean);
       rows.set(passKey(experiment.experimentId, pass.passId), {
         experimentId: str(experiment.experimentId),
         family: str(experiment.family),
@@ -62,7 +65,10 @@ function passMetadata(plan = {}) {
         passId: str(pass.passId),
         comparisonBasePassId: str(pass.comparisonBasePassId),
         changeType: str(pass.changeType),
-        placementCount: arr(pass.placements).length
+        placementCount: arr(pass.placements).length,
+        revisionVariants: [...new Set(creativeIntents.map((intent) => str(intent.revisionVariant)).filter(Boolean))],
+        supportRoles: [...new Set(creativeIntents.map((intent) => str(intent.supportRole)).filter(Boolean))],
+        revisionTargets: [...new Set(creativeIntents.map((intent) => str(intent.revisionTarget)).filter(Boolean))]
       });
     }
   }
@@ -111,9 +117,15 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
   const activeModelCountPeakDelta = round6(revised.activeModelCountPeak - baseline.activeModelCountPeak);
   const temporalActiveDeltaMeanDelta = round6(revised.temporalActiveDeltaMean - baseline.temporalActiveDeltaMean);
   const temporalColorDeltaMeanDelta = round6(revised.temporalColorDeltaMean - baseline.temporalColorDeltaMean);
+  const revisionVariants = arr(metadata.revisionVariants).map(str).filter(Boolean);
   const emphasisImproved = activeModelCountPeakDelta > 0 || temporalActiveDeltaMeanDelta > 0.0002 || temporalColorDeltaMeanDelta > 0.0002;
   const negativeSpacePreserved = activeCoverageMeanDelta <= 0.002;
-  const revisionObjectiveImproved = emphasisImproved && negativeSpacePreserved;
+  const densityReduced = activeCoverageMeanDelta <= 0;
+  const focusSimplificationImproved =
+    revisionVariants.includes("focus_simplification")
+    && densityReduced
+    && (visualReadabilityDelta >= 0 || intentMatchDelta >= 0.01 || clutterControlDelta >= 0);
+  const revisionObjectiveImproved = focusSimplificationImproved || (emphasisImproved && negativeSpacePreserved);
   const blockers = [];
   if (!baseline.evidenceEligible) blockers.push("baseline_not_evidence_eligible");
   if (!revised.evidenceEligible) blockers.push("revised_not_evidence_eligible");
@@ -127,6 +139,9 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
     baselinePassId: str(baseline.passId),
     revisedPassId: str(revised.passId),
     changeType: str(metadata.changeType),
+    revisionVariants,
+    supportRoles: arr(metadata.supportRoles).map(str).filter(Boolean),
+    revisionTargets: arr(metadata.revisionTargets).map(str).filter(Boolean),
     comparisonStatus: blockers.length ? "blocked" : "improved",
     promotionEligible: blockers.length === 0,
     blockers,
@@ -145,6 +160,8 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
       status: revisionObjectiveImproved ? "improved" : "not_improved",
       emphasisImproved,
       negativeSpacePreserved,
+      densityReduced,
+      focusSimplificationImproved,
       signals: {
         activeModelCountPeakDelta,
         temporalActiveDeltaMeanDelta,
@@ -153,7 +170,8 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
       },
       notes: [
         emphasisImproved ? "late emphasis signal increased" : "late emphasis signal did not increase",
-        negativeSpacePreserved ? "mean coverage stayed restrained" : "mean coverage increased beyond guardrail"
+        negativeSpacePreserved ? "mean coverage stayed restrained" : "mean coverage increased beyond guardrail",
+        densityReduced ? "mean coverage decreased" : "mean coverage did not decrease"
       ]
     },
     baseline: {
@@ -200,7 +218,7 @@ export function buildCreativeIntentRevisionComparison({
   const resultByPass = new Map(resultRows(root).map((row) => [passKey(row.experimentId, row.passId), row]));
   const comparisons = [];
   for (const metadata of metadataByPass.values()) {
-    if (str(metadata.changeType) !== "creative_intent_revision" || !metadata.comparisonBasePassId) continue;
+    if (!str(metadata.changeType).startsWith("creative_intent_revision") || !metadata.comparisonBasePassId) continue;
     const baseline = resultByPass.get(passKey(metadata.experimentId, metadata.comparisonBasePassId));
     const revised = resultByPass.get(passKey(metadata.experimentId, metadata.passId));
     if (!baseline || !revised) continue;

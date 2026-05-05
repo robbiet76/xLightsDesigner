@@ -704,6 +704,63 @@
         "minimumDurableCandidateCount": 2,
         "maximumRegressingRecords": 0
       }
+    },
+    {
+      "goalId": "creative.intent_revision_variants.v1",
+      "areaId": "creative_intent_matching",
+      "priority": 8,
+      "status": "not_started",
+      "description": "Compare an additional targeted creative revision variant so the selector can learn when simplifying background density improves intent match and readability.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "creative_intent_revision_comparison"
+        ],
+        "revisionVariants": [
+          "focus_simplification"
+        ],
+        "intentDimensions": [
+          "mood",
+          "palette",
+          "pace",
+          "emphasis",
+          "style",
+          "negative_space"
+        ],
+        "reviewMethods": [
+          "deterministic_metrics",
+          "before_after_revision_comparison"
+        ]
+      },
+      "blockedBy": [
+        "needs baseline creative-intent evidence first"
+      ],
+      "nextSelectionHints": [
+        "Compare the same first draft against a focus-simplification revision that reduces background density and shortens the late accent.",
+        "Promote only if intent match or readability improves without clutter or motion-coherence regression."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "mono_white",
+            "passId": "intent_first_draft"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "passId": "intent_targeted_revision"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "passId": "intent_focus_simplification_revision"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
     }
   ]
 }

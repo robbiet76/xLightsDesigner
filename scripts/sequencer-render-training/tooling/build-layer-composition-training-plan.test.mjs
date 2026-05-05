@@ -354,6 +354,55 @@ test("layer composition plan expands creative intent revision comparison coverag
   assert.equal(revised.placements.some((placement) => placement.layerIntent?.creativeIntent?.supportRole === "late_linear_accent"), true);
 });
 
+test("layer composition plan expands creative intent revision variant coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-creative-revision-variant-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 21,
+      controllerDecision: {
+        selectedGoalId: "creative.intent_revision_variants.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:creative.intent_revision_variants.v1:coverage-gap",
+        goalId: "creative.intent_revision_variants.v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "mono_white",
+          passId: "intent_focus_simplification_revision"
+        }]
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 2);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["creative-intent-revision-comparison-mono_white"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "intent_first_draft", "intent_focus_simplification_revision"]
+  );
+  const variant = plan.experiments[0].passes.find((pass) => pass.passId === "intent_focus_simplification_revision");
+  assert.equal(variant.changeType, "creative_intent_revision_variant");
+  assert.equal(variant.comparisonBasePassId, "intent_first_draft");
+  assert.equal(
+    variant.placements.every((placement) => placement.layerIntent?.creativeIntent?.revisionVariant === "focus_simplification"
+      || placement.layerIntent?.creativeIntent?.revisionTarget === "delay the foundation slightly to create intentional opening space"),
+    true
+  );
+  assert.equal(
+    variant.placements.some((placement) => placement.layerIntent?.creativeIntent?.supportRole === "reduced_density_background"),
+    true
+  );
+});
+
 test("layer composition plan expands core effect coverage-gap controller queue", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

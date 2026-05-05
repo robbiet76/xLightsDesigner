@@ -980,6 +980,40 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
       }
     }
   };
+  const focusRevisionBackground = {
+    ...baselineBackground,
+    placementId: `cr-${paletteProfile}-focus-revision-background`,
+    startMs: 1600,
+    endMs: 6000,
+    layerSettings: { ...baselineBackground.layerSettings, brightness: 55 },
+    layerIntent: {
+      ...baselineBackground.layerIntent,
+      creativeIntent: {
+        ...baselineBackground.layerIntent.creativeIntent,
+        revisionRole: "targeted_revision",
+        revisionVariant: "focus_simplification",
+        supportRole: "reduced_density_background",
+        revisionTarget: "reduce background density so the focal idea reads more clearly"
+      }
+    }
+  };
+  const focusRevisionAccent = {
+    ...revisedAccent,
+    placementId: `cr-${paletteProfile}-focus-revision-accent`,
+    startMs: 4200,
+    endMs: 5600,
+    layerSettings: { ...revisedAccent.layerSettings, brightness: 65, fadeIn: "0.35", fadeOut: "0.7" },
+    layerIntent: {
+      ...revisedAccent.layerIntent,
+      creativeIntent: {
+        ...revisedAccent.layerIntent.creativeIntent,
+        revisionRole: "targeted_revision",
+        revisionVariant: "focus_simplification",
+        supportRole: "shorter_late_linear_accent",
+        revisionTarget: "shorten the late accent so emphasis is clear without overfilling the section"
+      }
+    }
+  };
 
   return {
     experimentId: `creative-intent-revision-comparison-${paletteProfile}`,
@@ -1024,6 +1058,14 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName],
         comparisonBasePassId: "intent_first_draft",
         changeType: "creative_intent_revision"
+      },
+      {
+        passId: "intent_focus_simplification_revision",
+        compositionPass: "creative_revision",
+        placements: [revisedWash, focusRevisionBackground, focusRevisionAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName],
+        comparisonBasePassId: "intent_first_draft",
+        changeType: "creative_intent_revision_variant"
       }
     ]
   };
@@ -3093,6 +3135,30 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
             generatedFromCoverageGap: goalId
           }
         );
+      }
+    }
+    if (goalId === "creative.intent_revision_variants.v1") {
+      const missingPaletteProfiles = arr(gap.missingCoverageUnits)
+        .map((unit) => str(unit.paletteProfile || unit.palette || unit.palette_profile))
+        .filter(Boolean);
+      const missingPassIds = arr(gap.missingCoverageUnits)
+        .map((unit) => str(unit.passId || unit.pass || unit.pass_id))
+        .filter(Boolean);
+      const paletteProfiles = missingPaletteProfiles.length ? [...new Set(missingPaletteProfiles)] : ["mono_white"];
+      const passIds = missingPassIds.length ? [...new Set(missingPassIds)] : ["intent_focus_simplification_revision"];
+      for (const paletteProfile of paletteProfiles) {
+        rows.push({
+          experimentId: `creative-intent-revision-comparison-${paletteProfile}`,
+          passId: "intent_first_draft",
+          generatedFromCoverageGap: goalId
+        });
+        for (const passId of passIds) {
+          rows.push({
+            experimentId: `creative-intent-revision-comparison-${paletteProfile}`,
+            passId,
+            generatedFromCoverageGap: goalId
+          });
+        }
       }
     }
     if (goalId === "effect_fit.core_effects.v1") {

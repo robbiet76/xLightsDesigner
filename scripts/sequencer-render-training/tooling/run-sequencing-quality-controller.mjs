@@ -493,6 +493,7 @@ function supportsGeneratedCoverageGap(goal = {}) {
     || goalId === "submodel.vendor_fixture.basic"
     || goalId === "creative.intent_match.v1"
     || goalId === "creative.intent_revision_comparison.v1"
+    || goalId === "creative.intent_revision_variants.v1"
     || goalId === "effect_fit.core_effects.v1"
     || goalId === "effect_fit.expanded_model_matrix.v1"
     || goalId === "music.structure_alignment.v1"
