@@ -719,6 +719,16 @@ function videoAestheticAttemptStrategy(artifacts = {}) {
     };
   }
   recentIneffectiveStrategies.add(previousStrategy);
+  const exhaustedStrategies = VIDEO_AESTHETIC_STRATEGIES.every((strategy) => recentIneffectiveStrategies.has(strategy));
+  if (exhaustedStrategies) {
+    return {
+      previousStrategy,
+      avoidStrategy: [...recentIneffectiveStrategies].join(","),
+      nextStrategy: "",
+      exhausted: true,
+      reason: `recent video aesthetic attempts exhausted ${[...recentIneffectiveStrategies].join(", ")}`
+    };
+  }
   const nextStrategy = VIDEO_AESTHETIC_STRATEGIES.find((strategy) => !recentIneffectiveStrategies.has(strategy))
     || (previousStrategy === "section_window_pacing_balance" ? "regional_focus_contrast" : "section_window_pacing_balance");
   return {
@@ -738,6 +748,7 @@ function videoAestheticImprovementQueue(goal = {}, artifacts = {}, policy = {}) 
   const overall = num(video.scores?.overallAestheticScore, NaN);
   const weakDimensions = weakVideoAestheticDimensions(video);
   const strategy = videoAestheticAttemptStrategy(artifacts);
+  if (strategy.exhausted || !strategy.nextStrategy) return [];
   const weakDimensionKeys = new Set(weakDimensions.map((row) => row.dimension));
   const shouldContinuePromotionEligibleRgbRepair =
     strategy.nextStrategy === "rgb_primary_structure_balance_pacing_repair"
