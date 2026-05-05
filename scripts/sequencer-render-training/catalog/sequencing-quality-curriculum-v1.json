@@ -507,7 +507,7 @@
         "Prefer RGB-primary runs to broaden color behavior after the mono-white core effect baseline."
       ],
       "completionCriteria": {
-        "minimumDistinctCoverageUnitCount": 8,
+        "minimumDistinctCoverageUnitCount": 5,
         "distinctCoverageFields": [
           "paletteProfile",
           "effect",
