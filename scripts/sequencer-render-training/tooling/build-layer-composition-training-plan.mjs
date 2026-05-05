@@ -833,6 +833,17 @@ function makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHor
 }
 
 function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGroup, star, singleLineHorizontal }) {
+  const sharedRevisionIntent = {
+    mood: "warm_build",
+    palette: paletteProfile === "rgb_primary" ? "rgb_primary" : "mono_white",
+    pace: "slow_build_with_late_lift",
+    emphasis: "late_section_lift",
+    style: "smooth_wash_with_clean_linear_response",
+    negativeSpace: "preserve_opening_breath",
+    dimensions: ["mood", "palette", "pace", "emphasis", "style", "negative_space"],
+    reviewMethods: ["deterministic_metrics", "before_after_revision_comparison"],
+    revisionTarget: "add a readable late accent while preserving opening negative space"
+  };
   const baselineWash = placement({
     id: `cr-${paletteProfile}-baseline-wash`,
     target: star,
@@ -847,13 +858,7 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
     layerIntent: {
       blendRole: "foundation",
       creativeIntent: {
-        mood: "warm_build",
-        palette: paletteProfile === "rgb_primary" ? "rgb_primary" : "mono_white",
-        pace: "slow_build",
-        style: "smooth_wash",
-        negativeSpace: "opening_breath",
-        dimensions: ["mood", "palette", "pace", "style", "negative_space"],
-        reviewMethods: ["deterministic_metrics", "before_after_revision_comparison"],
+        ...sharedRevisionIntent,
         revisionRole: "baseline_candidate",
         revisionIssue: "section lacks a clear late emphasis and may read too flat"
       }
@@ -873,12 +878,9 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
     layerIntent: {
       blendRole: "support",
       creativeIntent: {
-        mood: "warm_build",
-        pace: "steady_support",
-        style: "directional_background",
-        dimensions: ["mood", "pace", "style"],
-        reviewMethods: ["deterministic_metrics", "before_after_revision_comparison"],
-        revisionRole: "baseline_candidate"
+        ...sharedRevisionIntent,
+        revisionRole: "baseline_candidate",
+        supportRole: "directional_background"
       }
     }
   });
@@ -896,14 +898,9 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
     layerIntent: {
       blendRole: "accent",
       creativeIntent: {
-        emphasis: "late_section_lift",
-        negativeSpace: "preserve_opening_breath",
-        pace: "accent_lift",
-        style: "clean_linear_response",
-        dimensions: ["emphasis", "negative_space", "pace", "style"],
-        reviewMethods: ["deterministic_metrics", "before_after_revision_comparison"],
+        ...sharedRevisionIntent,
         revisionRole: "targeted_revision",
-        revisionTarget: "add a readable late accent while preserving opening negative space"
+        supportRole: "late_linear_accent"
       }
     }
   });
@@ -915,7 +912,6 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
       ...baselineWash.layerIntent,
       creativeIntent: {
         ...baselineWash.layerIntent.creativeIntent,
-        negativeSpace: "preserve_opening_breath",
         revisionRole: "targeted_revision",
         revisionTarget: "delay the foundation slightly to create intentional opening space"
       }

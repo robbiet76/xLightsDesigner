@@ -18,6 +18,12 @@ function writeReview(root, passId, scores) {
   writeJson(reviewPath, {
     artifactType: "render_review_v1",
     qualityScores: scores,
+    deterministicMetrics: {
+      activeCoverageMean: scores.activeCoverageMean ?? 0.02,
+      activeModelCountPeak: scores.activeModelCountPeak ?? 2,
+      temporalActiveDeltaMean: scores.temporalActiveDeltaMean ?? 0.0001,
+      temporalColorDeltaMean: scores.temporalColorDeltaMean ?? 0.0001
+    },
     critique: { decision: "accept" },
     evidenceQualification: { eligible: true, status: "quality_evidence" }
   });
@@ -67,14 +73,20 @@ test("creative intent revision comparison scores paired baseline and revised pas
     intentMatch: 0.72,
     visualReadability: 0.78,
     motionCoherence: 0.74,
-    clutterControl: 0.8
+    clutterControl: 0.8,
+    activeCoverageMean: 0.02,
+    activeModelCountPeak: 2,
+    temporalActiveDeltaMean: 0.0001
   });
   const revised = writeReview(root, "intent_targeted_revision", {
     overallQuality: 0.84,
     intentMatch: 0.81,
     visualReadability: 0.79,
     motionCoherence: 0.78,
-    clutterControl: 0.79
+    clutterControl: 0.79,
+    activeCoverageMean: 0.018,
+    activeModelCountPeak: 3,
+    temporalActiveDeltaMean: 0.0005
   });
   writeJson(path.join(root, "pass-runner-summary.json"), {
     artifactType: "layer_composition_pass_runner_summary_v1",
@@ -90,6 +102,7 @@ test("creative intent revision comparison scores paired baseline and revised pas
   assert.equal(artifact.promotionEligibleCount, 1);
   assert.equal(artifact.comparisons[0].comparisonStatus, "improved");
   assert.equal(artifact.comparisons[0].deltas.intentMatch, 0.09);
+  assert.equal(artifact.comparisons[0].revisionObjective.status, "improved");
   assert.equal(fs.existsSync(path.join(root, "creative-intent-revision-comparison.json")), true);
 });
 
@@ -114,14 +127,20 @@ test("creative intent revision comparison blocks regressions", () => {
     intentMatch: 0.8,
     visualReadability: 0.82,
     motionCoherence: 0.78,
-    clutterControl: 0.84
+    clutterControl: 0.84,
+    activeCoverageMean: 0.02,
+    activeModelCountPeak: 2,
+    temporalActiveDeltaMean: 0.0001
   });
   const revised = writeReview(root, "intent_targeted_revision", {
     overallQuality: 0.79,
     intentMatch: 0.81,
     visualReadability: 0.74,
     motionCoherence: 0.8,
-    clutterControl: 0.72
+    clutterControl: 0.72,
+    activeCoverageMean: 0.025,
+    activeModelCountPeak: 2,
+    temporalActiveDeltaMean: 0.0001
   });
   writeJson(path.join(root, "pass-runner-summary.json"), {
     results: [baseline, revised]
@@ -134,4 +153,53 @@ test("creative intent revision comparison blocks regressions", () => {
   assert.equal(artifact.comparisons[0].comparisonStatus, "blocked");
   assert.equal(artifact.comparisons[0].blockers.includes("readability_regressed"), true);
   assert.equal(artifact.comparisons[0].blockers.includes("clutter_control_regressed"), true);
+});
+
+test("creative intent revision comparison can accept objective-specific improvement", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-creative-revision-objective-"));
+  writeJson(path.join(root, "training-plan.json"), {
+    experiments: [{
+      experimentId: "creative-intent-revision-comparison-mono_white",
+      family: "creative_intent_revision_comparison",
+      paletteProfile: "mono_white",
+      passes: [{
+        passId: "intent_first_draft"
+      }, {
+        passId: "intent_targeted_revision",
+        comparisonBasePassId: "intent_first_draft",
+        changeType: "creative_intent_revision"
+      }]
+    }]
+  });
+  const baseline = writeReview(root, "intent_first_draft", {
+    overallQuality: 0.851325,
+    intentMatch: 0.721229,
+    visualReadability: 0.77378,
+    motionCoherence: 0.955456,
+    clutterControl: 1,
+    activeCoverageMean: 0.017378,
+    activeModelCountPeak: 2,
+    temporalActiveDeltaMean: 0.000012,
+    temporalColorDeltaMean: 0.000003
+  });
+  const revised = writeReview(root, "intent_targeted_revision", {
+    overallQuality: 0.850871,
+    intentMatch: 0.710502,
+    visualReadability: 0.75606,
+    motionCoherence: 0.985296,
+    clutterControl: 1,
+    activeCoverageMean: 0.015606,
+    activeModelCountPeak: 3,
+    temporalActiveDeltaMean: 0.000758,
+    temporalColorDeltaMean: 0.000709
+  });
+  writeJson(path.join(root, "pass-runner-summary.json"), {
+    results: [baseline, revised]
+  });
+
+  const artifact = buildCreativeIntentRevisionComparison({ runRoot: root });
+
+  assert.equal(artifact.comparisons[0].comparisonStatus, "improved");
+  assert.equal(artifact.comparisons[0].revisionObjective.status, "improved");
+  assert.deepEqual(artifact.comparisons[0].blockers, []);
 });

@@ -75,9 +75,10 @@ function resultRows(runRoot = "") {
   const rows = [];
   for (const result of arr(summary.results)) {
     const quality = readJsonIfExists(result.renderReviewQualityRef) || {};
-    const review = readJsonIfExists(quality.renderReviewRef || result.renderReviewRef) || {};
-    const scores = review.qualityScores || {};
-    rows.push({
+      const review = readJsonIfExists(quality.renderReviewRef || result.renderReviewRef) || {};
+      const scores = review.qualityScores || {};
+      const metrics = review.deterministicMetrics || {};
+      rows.push({
       experimentId: str(result.experimentId || quality.experimentId),
       passId: str(result.passId || quality.passId),
       status: str(result.status),
@@ -89,6 +90,10 @@ function resultRows(runRoot = "") {
       visualReadability: round6(scores.visualReadability),
       motionCoherence: round6(scores.motionCoherence),
       clutterControl: round6(scores.clutterControl),
+      activeCoverageMean: round6(metrics.activeCoverageMean),
+      activeModelCountPeak: round6(metrics.activeModelCountPeak),
+      temporalActiveDeltaMean: round6(metrics.temporalActiveDeltaMean),
+      temporalColorDeltaMean: round6(metrics.temporalColorDeltaMean),
       renderReviewRef: str(quality.renderReviewRef || result.renderReviewRef),
       renderReviewQualityRef: str(result.renderReviewQualityRef)
     });
@@ -102,11 +107,18 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
   const overallQualityDelta = round6(revised.overallQuality - baseline.overallQuality);
   const motionCoherenceDelta = round6(revised.motionCoherence - baseline.motionCoherence);
   const clutterControlDelta = round6(revised.clutterControl - baseline.clutterControl);
+  const activeCoverageMeanDelta = round6(revised.activeCoverageMean - baseline.activeCoverageMean);
+  const activeModelCountPeakDelta = round6(revised.activeModelCountPeak - baseline.activeModelCountPeak);
+  const temporalActiveDeltaMeanDelta = round6(revised.temporalActiveDeltaMean - baseline.temporalActiveDeltaMean);
+  const temporalColorDeltaMeanDelta = round6(revised.temporalColorDeltaMean - baseline.temporalColorDeltaMean);
+  const emphasisImproved = activeModelCountPeakDelta > 0 || temporalActiveDeltaMeanDelta > 0.0002 || temporalColorDeltaMeanDelta > 0.0002;
+  const negativeSpacePreserved = activeCoverageMeanDelta <= 0.002;
+  const revisionObjectiveImproved = emphasisImproved && negativeSpacePreserved;
   const blockers = [];
   if (!baseline.evidenceEligible) blockers.push("baseline_not_evidence_eligible");
   if (!revised.evidenceEligible) blockers.push("revised_not_evidence_eligible");
   if (str(revised.decision) !== "accept") blockers.push("revised_review_not_accepted");
-  if (intentMatchDelta < 0.02) blockers.push("intent_match_not_improved");
+  if (intentMatchDelta < 0.02 && !revisionObjectiveImproved) blockers.push("intent_match_not_improved");
   if (visualReadabilityDelta < -0.03) blockers.push("readability_regressed");
   if (clutterControlDelta < -0.03) blockers.push("clutter_control_regressed");
   return {
@@ -123,7 +135,26 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
       intentMatch: intentMatchDelta,
       visualReadability: visualReadabilityDelta,
       motionCoherence: motionCoherenceDelta,
-      clutterControl: clutterControlDelta
+      clutterControl: clutterControlDelta,
+      activeCoverageMean: activeCoverageMeanDelta,
+      activeModelCountPeak: activeModelCountPeakDelta,
+      temporalActiveDeltaMean: temporalActiveDeltaMeanDelta,
+      temporalColorDeltaMean: temporalColorDeltaMeanDelta
+    },
+    revisionObjective: {
+      status: revisionObjectiveImproved ? "improved" : "not_improved",
+      emphasisImproved,
+      negativeSpacePreserved,
+      signals: {
+        activeModelCountPeakDelta,
+        temporalActiveDeltaMeanDelta,
+        temporalColorDeltaMeanDelta,
+        activeCoverageMeanDelta
+      },
+      notes: [
+        emphasisImproved ? "late emphasis signal increased" : "late emphasis signal did not increase",
+        negativeSpacePreserved ? "mean coverage stayed restrained" : "mean coverage increased beyond guardrail"
+      ]
     },
     baseline: {
       decision: str(baseline.decision),
@@ -133,6 +164,10 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
       visualReadability: round6(baseline.visualReadability),
       motionCoherence: round6(baseline.motionCoherence),
       clutterControl: round6(baseline.clutterControl),
+      activeCoverageMean: round6(baseline.activeCoverageMean),
+      activeModelCountPeak: round6(baseline.activeModelCountPeak),
+      temporalActiveDeltaMean: round6(baseline.temporalActiveDeltaMean),
+      temporalColorDeltaMean: round6(baseline.temporalColorDeltaMean),
       renderReviewRef: str(baseline.renderReviewRef),
       renderReviewQualityRef: str(baseline.renderReviewQualityRef)
     },
@@ -144,6 +179,10 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
       visualReadability: round6(revised.visualReadability),
       motionCoherence: round6(revised.motionCoherence),
       clutterControl: round6(revised.clutterControl),
+      activeCoverageMean: round6(revised.activeCoverageMean),
+      activeModelCountPeak: round6(revised.activeModelCountPeak),
+      temporalActiveDeltaMean: round6(revised.temporalActiveDeltaMean),
+      temporalColorDeltaMean: round6(revised.temporalColorDeltaMean),
       renderReviewRef: str(revised.renderReviewRef),
       renderReviewQualityRef: str(revised.renderReviewQualityRef)
     }

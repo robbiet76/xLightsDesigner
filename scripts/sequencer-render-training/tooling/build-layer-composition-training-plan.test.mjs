@@ -311,12 +311,19 @@ test("layer composition plan expands creative intent revision comparison coverag
     ["empty_baseline", "intent_first_draft", "intent_targeted_revision"]
   );
   const revised = plan.experiments[0].passes.find((pass) => pass.passId === "intent_targeted_revision");
+  const firstDraft = plan.experiments[0].passes.find((pass) => pass.passId === "intent_first_draft");
   assert.equal(revised.changeType, "creative_intent_revision");
   assert.equal(revised.comparisonBasePassId, "intent_first_draft");
   assert.equal(
     revised.placements.some((placement) => placement.layerIntent?.creativeIntent?.reviewMethods.includes("before_after_revision_comparison")),
     true
   );
+  assert.deepEqual(
+    firstDraft.placements[0].layerIntent.creativeIntent.dimensions,
+    revised.placements[0].layerIntent.creativeIntent.dimensions
+  );
+  assert.equal(firstDraft.placements[0].layerIntent.creativeIntent.emphasis, "late_section_lift");
+  assert.equal(revised.placements.some((placement) => placement.layerIntent?.creativeIntent?.supportRole === "late_linear_accent"), true);
 });
 
 test("layer composition plan expands core effect coverage-gap controller queue", () => {
