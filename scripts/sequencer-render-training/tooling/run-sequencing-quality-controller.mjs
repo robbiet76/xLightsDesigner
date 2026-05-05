@@ -754,6 +754,20 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     };
   }
 
+  const nonRepeatableGoal = unblockedGoals.find((goal) => hasNonRepeatableBlockedRecord(records, goal, policy));
+  if (nonRepeatableGoal) {
+    return {
+      selectedGoal: nonRepeatableGoal,
+      nextQueue: [],
+      decision: {
+        selectedGoalId: str(nonRepeatableGoal.goalId),
+        selectionReason: "nonrepeatable_regressed_evidence",
+        blockedBy: ["current evidence is blocked but not repeatable by the existing curriculum strategy"],
+        nextAction: "needs_strategy_expansion"
+      }
+    };
+  }
+
   return {
     selectedGoal: null,
     nextQueue: [],

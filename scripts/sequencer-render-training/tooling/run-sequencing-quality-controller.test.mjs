@@ -578,6 +578,52 @@ test("controller targets rgb display aesthetic records by palette and pass", () 
   assert.equal(state.nextQueue[0].passId, "display_regional_focus_contrast");
 });
 
+test("controller reports stalled goals when evidence regressed and is not repeatable", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("display_regional_focus_contrast", 0.77, ["quality_trend_not_stable_or_improving"]),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    sampleCount: 2,
+    trendStatus: "regressing",
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.rgb_regional_focus_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["display_regional_focus_contrast"],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [{
+            paletteProfile: "rgb_primary",
+            passId: "display_regional_focus_contrast"
+          }]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.video_aesthetic.rgb_regional_focus_v1");
+  assert.equal(state.controllerDecision.selectionReason, "nonrepeatable_regressed_evidence");
+  assert.equal(state.controllerDecision.nextAction, "needs_strategy_expansion");
+  assert.deepEqual(state.nextQueue, []);
+});
+
 test("controller counts durable music timing records for music-structure goals", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
