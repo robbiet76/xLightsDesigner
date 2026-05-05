@@ -569,6 +569,79 @@ test("layer composition plan expands video aesthetic improvement queue to revisi
   );
 });
 
+test("layer composition plan changes video aesthetic strategy after neutral attempt", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-video-aesthetic-section-window",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 14,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        selectionReason: "video_aesthetic_score_below_threshold",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:video-aesthetic-improvement",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap",
+        improvementSource: "video_aesthetic_score",
+        previousAttemptStatus: "neutral",
+        avoidStrategy: "simultaneous_display_balance_revision",
+        nextStrategy: "section_window_pacing_balance"
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_section_window_pacing"]
+  );
+  const sectionPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_section_window_pacing");
+  assert.equal(sectionPass.controllerSelection.selectedByController, true);
+  assert.equal(sectionPass.placements.length, 4);
+  assert.equal(sectionPass.placements.some((placement) => placement.startMs === 0 && placement.endMs === 2200), true);
+  assert.equal(sectionPass.placements.some((placement) => placement.startMs === 3800 && placement.endMs === 6000), true);
+});
+
+test("layer composition plan expands regional focus contrast strategy", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-video-aesthetic-regional-focus",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 15,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        selectionReason: "video_aesthetic_score_below_threshold",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:video-aesthetic-improvement",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap",
+        improvementSource: "video_aesthetic_score",
+        previousAttemptStatus: "neutral",
+        avoidStrategy: "section_window_pacing_balance",
+        nextStrategy: "regional_focus_contrast"
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_regional_focus_contrast"]
+  );
+  const focusPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_regional_focus_contrast");
+  assert.equal(focusPass.controllerSelection.selectedByController, true);
+  assert.equal(focusPass.placements.length, 3);
+  assert.equal(focusPass.placements.some((placement) => placement.layerIntent?.displayReviewRole === "regional_focus_contrast"), true);
+});
+
 test("layer composition plan expands music structure coverage-gap controller queue", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

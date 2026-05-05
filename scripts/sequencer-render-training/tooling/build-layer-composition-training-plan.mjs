@@ -1456,6 +1456,97 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
     layerSettings: { mixMethod: "Normal" },
     layerIntent: { blendRole: "wide_balance_fill", displayReviewRole: "visual_balance_revision" }
   });
+  const archOpeningWindow = placement({
+    id: `dq-${paletteProfile}-arch-opening-window`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 2200,
+    effectSettings: { direction: "up", cycles: 3 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "opening_region", displayReviewRole: "section_window_pacing_balance" }
+  });
+  const lineMiddleWindow = placement({
+    id: `dq-${paletteProfile}-line-middle-window`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 1800,
+    endMs: 4200,
+    effectSettings: { effect: "Chase", cycles: 6, colorSpeed: 8 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "middle_motion_region", displayReviewRole: "section_window_pacing_balance" }
+  });
+  const spinnerClosingWindow = placement({
+    id: `dq-${paletteProfile}-spinner-closing-window`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 3800,
+    endMs: 6000,
+    effectSettings: { arms: 6, twists: 2, rotation: 45 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "closing_motion_region", displayReviewRole: "section_window_pacing_balance" }
+  });
+  const starAccentWindow = placement({
+    id: `dq-${paletteProfile}-star-accent-window`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 2800,
+    endMs: 4400,
+    effectSettings: { cycles: 2, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "short_focal_accent", displayReviewRole: "section_window_focal_anchor" }
+  });
+  const archFocusBase = placement({
+    id: `dq-${paletteProfile}-arch-focus-base`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { direction: "left", cycles: 1 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "restrained_foundation", displayReviewRole: "regional_focus_contrast" }
+  });
+  const starFocusContrast = placement({
+    id: `dq-${paletteProfile}-star-focus-contrast`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 1600,
+    endMs: 4600,
+    effectSettings: { arms: 5, twists: 1, rotation: 30 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "high_contrast_focus", displayReviewRole: "regional_focus_contrast" }
+  });
+  const lineReleaseAccent = placement({
+    id: `dq-${paletteProfile}-line-release-accent`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "Marquee",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 4200,
+    endMs: 6000,
+    effectSettings: { bandSize: 6, skipSize: 5, speed: 9 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "release_accent", displayReviewRole: "regional_focus_contrast" }
+  });
 
   return {
     experimentId: `display-quality-review-${paletteProfile}`,
@@ -1503,6 +1594,22 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
         comparisonBasePassId: "display_balance_foundation",
         changeType: "video_aesthetic_visual_balance_revision"
+      },
+      {
+        passId: "display_section_window_pacing",
+        compositionPass: "display_review",
+        placements: [archOpeningWindow, lineMiddleWindow, spinnerClosingWindow, starAccentWindow],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, spinner.modelName, star.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_motion_variety",
+        changeType: "video_aesthetic_section_window_pacing_revision"
+      },
+      {
+        passId: "display_regional_focus_contrast",
+        compositionPass: "display_review",
+        placements: [archFocusBase, starFocusContrast, lineReleaseAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_motion_variety",
+        changeType: "video_aesthetic_regional_focus_contrast_revision"
       }
     ]
   };
@@ -2594,7 +2701,11 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
       const isVideoAestheticImprovement = str(gap.improvementSource) === "video_aesthetic_score";
       for (const paletteProfile of ["mono_white"]) {
         const passIds = isVideoAestheticImprovement
-          ? ["display_pacing_balance_revision", "display_wide_balance_revision"]
+          ? str(gap.nextStrategy) === "section_window_pacing_balance"
+            ? ["display_section_window_pacing"]
+            : str(gap.nextStrategy) === "regional_focus_contrast"
+              ? ["display_regional_focus_contrast"]
+            : ["display_pacing_balance_revision", "display_wide_balance_revision"]
           : ["display_balance_foundation", "display_motion_variety"];
         for (const passId of passIds) {
           rows.push({

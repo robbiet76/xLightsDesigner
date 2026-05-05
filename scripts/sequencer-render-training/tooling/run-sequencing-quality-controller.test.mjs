@@ -121,6 +121,10 @@ function writeRunRoot(runRoot, records) {
     deletionBytes: 2048,
     keptCount: 30
   });
+  writeJson(path.join(runRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: []
+  });
 }
 
 function writeFullSequenceReview(runRoot, overrides = {}) {
@@ -166,6 +170,21 @@ function writeVideoAestheticScore(runRoot, overrides = {}) {
     promotion: {
       evidenceEligible: false,
       blockers: ["overall_aesthetic_score_below_threshold"]
+    },
+    ...overrides
+  });
+}
+
+function writeVideoAestheticAttemptComparison(runRoot, overrides = {}) {
+  writeJson(path.join(runRoot, "video-aesthetic-attempt-comparison.json"), {
+    artifactType: "video_aesthetic_attempt_comparison_v1",
+    status: "ready",
+    comparisonStatus: "neutral",
+    promotionEligible: false,
+    summary: {
+      overallAestheticScoreDelta: -0.001,
+      improvedDimensionCount: 3,
+      regressedDimensionCount: 2
     },
     ...overrides
   });
@@ -601,6 +620,79 @@ test("controller uses weak video aesthetic score to steer display quality covera
   );
   assert.equal(state.videoAestheticSummary.status, "ready");
   assert.equal(state.videoAestheticSummary.overallAestheticScore, 0.61);
+});
+
+test("controller changes video aesthetic strategy after neutral attempt", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot);
+  writeVideoAestheticAttemptComparison(runRoot);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectionReason, "video_aesthetic_score_below_threshold");
+  assert.equal(state.nextQueue[0].previousAttemptStatus, "neutral");
+  assert.equal(state.nextQueue[0].avoidStrategy, "simultaneous_display_balance_revision");
+  assert.equal(state.nextQueue[0].nextStrategy, "section_window_pacing_balance");
+  assert.equal(state.videoAestheticAttemptSummary.comparisonStatus, "neutral");
+  assert.equal(state.videoAestheticAttemptSummary.overallAestheticScoreDelta, -0.001);
+});
+
+test("controller does not repeat section-window strategy after neutral section-window attempt", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot);
+  writeVideoAestheticAttemptComparison(runRoot);
+  writeJson(path.join(runRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      nextStrategy: "section_window_pacing_balance"
+    }]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.nextQueue[0].previousAttemptStatus, "neutral");
+  assert.equal(state.nextQueue[0].avoidStrategy, "section_window_pacing_balance");
+  assert.equal(state.nextQueue[0].nextStrategy, "regional_focus_contrast");
 });
 
 test("controller resolves creative prerequisite blocker from display and music evidence", () => {
