@@ -222,6 +222,37 @@ test("sequencing quality loop writes cross-run quality summary after live execut
         writeJson(outPath, artifact);
         return artifact;
       },
+      buildDeltas: () => ({
+        artifactType: "layer_composition_delta_summary_v1",
+        experiments: []
+      }),
+      buildPriors: () => ({
+        artifactType: "layer_composition_priors_v1",
+        priorCount: 1,
+        priors: [{
+          priorId: "layer_composition:display_quality_review:rgb_primary:display_motion_variety",
+          selectorReady: false,
+          qualityEvidence: {
+            durableCandidate: true,
+            sampleCount: 2,
+            trendStatus: "stable",
+            latestOverallQuality: 0.78,
+            meanOverallQuality: 0.78,
+            promotionBlockers: []
+          }
+        }]
+      }),
+      promotePriors: ({ priors }) => ({
+        ...priors,
+        promotionState: "reviewed_with_selector_ready_priors",
+        qualityBackedPriorCount: 1,
+        selectorReadyCount: 1,
+        blockedPromotionCount: 0,
+        promotionSummary: {
+          selectorReadyPriorIds: ["layer_composition:display_quality_review:rgb_primary:display_motion_variety"]
+        },
+        priors: priors.priors.map((prior) => ({ ...prior, selectorReady: true }))
+      }),
       buildFullSequenceReview: ({ outPath }) => {
         const artifact = {
           artifactType: "full_sequence_review_loop_v1",
@@ -273,8 +304,15 @@ test("sequencing quality loop writes cross-run quality summary after live execut
   assert.equal(summary.videoAestheticAttemptComparison.comparisonStatus, "improved");
   assert.equal(summary.videoAestheticAttemptComparison.overallAestheticScoreDelta, 0.04);
   assert.equal(summary.crossRunQuality.durableCandidateCount, 1);
+  assert.equal(summary.promotionArtifacts.selectorReadyPriorCount, 1);
+  assert.deepEqual(summary.promotionArtifacts.selectorReadyPriorIds, [
+    "layer_composition:display_quality_review:rgb_primary:display_motion_variety"
+  ]);
   assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-trend.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-records.json")), true);
+  assert.equal(fs.existsSync(path.join(loopRoot, "layer-composition-delta-summary.json")), true);
+  assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-priors-staged.json")), true);
+  assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-priors-promoted.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "full-sequence-review-loop.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "video-aesthetic-score.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "video-aesthetic-attempt-comparison.json")), true);

@@ -14,6 +14,9 @@ import { buildFullSequenceReviewLoop } from "./build-full-sequence-review-loop.m
 import { buildVideoAestheticScore } from "./build-video-aesthetic-score.mjs";
 import { buildVideoAestheticAttemptComparison } from "./build-video-aesthetic-attempt-comparison.mjs";
 import { buildCreativeIntentRevisionComparison } from "./build-creative-intent-revision-comparison.mjs";
+import { buildLayerCompositionDeltas } from "./build-layer-composition-deltas.mjs";
+import { buildLayerCompositionPriors } from "./build-layer-composition-priors.mjs";
+import { promoteLayerCompositionPriors } from "./promote-layer-composition-priors.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const DEFAULT_MODEL_CATALOG = "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json";
@@ -93,6 +96,33 @@ function buildCrossRunQualityArtifacts({ latestRunRoot = "", loopRoot = "", deps
     recordCount: Number(records.recordCount) || 0,
     durableCandidateCount: Number(records.durableCandidateCount) || 0,
     blockedRecordCount: Number(records.blockedRecordCount) || 0
+  };
+}
+
+function buildPromotionArtifacts({ loopRoot = "", crossRunQuality = null, deps = {} } = {}) {
+  const root = resolvePath(loopRoot);
+  if (!root || !crossRunQuality?.recordsRef || !fs.existsSync(path.join(root, "checkpoints.json"))) return null;
+  const deltaSummaryPath = path.join(root, "layer-composition-delta-summary.json");
+  const stagedPriorsPath = path.join(root, "cross-run-quality-priors-staged.json");
+  const promotedPriorsPath = path.join(root, "cross-run-quality-priors-promoted.json");
+  const deltaSummary = (deps.buildDeltas || buildLayerCompositionDeltas)({ runRoot: root });
+  deltaSummary.sourceDeltaSummaryRef = deltaSummaryPath;
+  writeJson(deltaSummaryPath, deltaSummary);
+  const qualityRecords = readJson(crossRunQuality.recordsRef);
+  qualityRecords.sourceQualityRecordsRef = crossRunQuality.recordsRef;
+  const stagedPriors = (deps.buildPriors || buildLayerCompositionPriors)({ deltaSummary, qualityRecords });
+  writeJson(stagedPriorsPath, stagedPriors);
+  const promotedPriors = (deps.promotePriors || promoteLayerCompositionPriors)({ priors: stagedPriors });
+  writeJson(promotedPriorsPath, promotedPriors);
+  return {
+    deltaSummaryRef: deltaSummaryPath,
+    stagedPriorsRef: stagedPriorsPath,
+    promotedPriorsRef: promotedPriorsPath,
+    priorCount: num(promotedPriors.priorCount),
+    qualityBackedPriorCount: num(promotedPriors.qualityBackedPriorCount),
+    selectorReadyPriorCount: num(promotedPriors.selectorReadyCount),
+    blockedPromotionCount: num(promotedPriors.blockedPromotionCount),
+    selectorReadyPriorIds: arr(promotedPriors.promotionSummary?.selectorReadyPriorIds).map(str).filter(Boolean)
   };
 }
 
@@ -189,6 +219,7 @@ export async function runSequencingQualityLoop({
   let videoAestheticScore = null;
   let videoAestheticAttemptComparison = null;
   let creativeIntentRevisionComparison = null;
+  let promotionArtifacts = null;
   if (applyRender) {
     passRunnerSummary = await (deps.runPasses || runLayerCompositionPasses)({
       runRoot: root,
@@ -215,6 +246,7 @@ export async function runSequencingQualityLoop({
       outPath: path.join(root, "creative-intent-revision-comparison.json")
     });
     crossRunQuality = buildCrossRunQualityArtifacts({ latestRunRoot, loopRoot: root, deps });
+    promotionArtifacts = buildPromotionArtifacts({ loopRoot: root, crossRunQuality, deps });
   }
 
   const summary = {
@@ -269,8 +301,9 @@ export async function runSequencingQualityLoop({
       ref: path.join(root, "creative-intent-revision-comparison.json")
     } : null,
     crossRunQuality,
+    promotionArtifacts,
     nextStep: applyRender
-      ? "Build cross-run trend/records from this loop, promote eligible priors, clean up, then run the controller again."
+      ? "Review promoted priors and controller state, then run the controller again."
       : "Review scaffolded checkpoints, then rerun with --apply-render for a small live controller-driven loop."
   };
   writeJson(path.join(root, "loop-summary.json"), summary);
