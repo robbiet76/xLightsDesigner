@@ -2801,12 +2801,28 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         changeType: "video_aesthetic_palette_motion_pacing_variation"
       },
       {
+        passId: "display_palette_motion_pacing_reprise",
+        compositionPass: "display_review",
+        placements: [pacingOpeningStructure, pacingMiddleMotion, pacingMiddleFocal, pacingReleaseSupport],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_palette_motion_pacing_variation",
+        changeType: "video_aesthetic_palette_motion_pacing_reprise"
+      },
+      {
         passId: "display_palette_spatial_negative_space",
         compositionPass: "display_review",
         placements: [spatialLeftStructure, spatialCenterFocal, spatialLineBridge, safeLocalStarAccent],
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
         comparisonBasePassId: "display_palette_spatial_balance_focal_repair",
         changeType: "video_aesthetic_palette_spatial_negative_space"
+      },
+      {
+        passId: "display_palette_spatial_negative_space_reprise",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialCenterFocal, spatialLineBridge, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_negative_space",
+        changeType: "video_aesthetic_palette_spatial_negative_space_reprise"
       },
       {
         passId: "display_palette_transition_motion_bridge",

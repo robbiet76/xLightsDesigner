@@ -638,10 +638,86 @@
       }
     },
     {
-      "goalId": "display.video_aesthetic.palette_transition_motion_bridge_v1",
+      "goalId": "display.video_aesthetic.palette_motion_pacing_reprise_v1",
       "areaId": "display_level_composition",
       "priority": 8,
       "status": "not_started",
+      "description": "Repeat the successful RGB motion pacing structure under a new pass key so the runner can collect additional durable evidence without re-entering the regressing transition bridge path.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_motion_pacing_reprise"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_motion_pacing_reprise"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_spatial_negative_space_reprise_v1",
+      "areaId": "display_level_composition",
+      "priority": 9,
+      "status": "not_started",
+      "description": "Repeat the successful RGB spatial negative-space structure under a new pass key to collect additional stable balance evidence for selector use.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_spatial_negative_space_reprise"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_spatial_negative_space_reprise"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_transition_motion_bridge_v1",
+      "areaId": "display_level_composition",
+      "priority": 8,
+      "status": "covered",
       "description": "Learn RGB transition motion bridges that connect sections while preserving palette harmony and temporal continuity.",
       "requiredStableSamples": 2,
       "coverage": {
