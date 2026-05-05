@@ -481,6 +481,12 @@ function hasNonRepeatableBlockedRecord(records = [], goal = {}, policy = {}) {
   });
 }
 
+function durableCriteriaStillNeedsCoverage(records = [], goal = {}) {
+  const criteria = completionCriteriaForGoal(goal);
+  return criteria.minimumDurableCandidateCount !== null
+    && durableRecordCountForGoal(records, goal) < criteria.minimumDurableCandidateCount;
+}
+
 function supportsGeneratedCoverageGap(goal = {}) {
   const goalId = str(goal.goalId);
   return goalId === "layer.rgb_primary.basic"
@@ -800,6 +806,7 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
   const coverageGapGoals = unblockedGoals.filter(supportsGeneratedCoverageGap);
   const nextGoal = coverageGapGoals.find((goal) => missingDesiredCoverageUnits(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
     || coverageGapGoals.find((goal) => !recordsForGoal(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || coverageGapGoals.find((goal) => durableCriteriaStillNeedsCoverage(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
     || coverageGapGoals.find((goal) => !durableRecordCountForGoal(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
     || null;
   if (nextGoal) {

@@ -1770,6 +1770,46 @@ test("controller keeps recent stalled coverage gaps on cooldown", () => {
   assert.equal(state.controllerDecision.selectedGoalId, "music.structure_alignment.v1");
 });
 
+test("controller continues bounded coverage when durable evidence count is still short", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("group_then_model", 0.85, []),
+    experimentId: "group-model-interplay-rgb_primary",
+    family: "group_model_interplay",
+    effectName: "Bars",
+    targetScopes: ["group"],
+    sampleCount: 2,
+    trendStatus: "stable"
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "layer.rgb_primary.basic",
+        areaId: "layer_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          paletteProfiles: ["rgb_primary"],
+          families: ["group_model_interplay", "same_target_layer_stack"],
+          effects: ["Bars", "Color Wash", "Marquee"],
+          targetScopes: ["group", "model"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 5
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 1);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
+  assert.equal(state.controllerDecision.selectedGoalId, "layer.rgb_primary.basic");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
+});
+
 test("controller increments loop index from a previous state", () => {
   const runRoot = tempDir();
   const previousStatePath = path.join(runRoot, "previous-state.json");
