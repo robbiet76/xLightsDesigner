@@ -1061,6 +1061,52 @@ test("layer composition plan expands palette spatial balance focal repair strate
   );
 });
 
+test("layer composition plan expands palette section pacing consistency repair strategy", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-video-aesthetic-palette-section-pacing",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 21,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        selectionReason: "video_aesthetic_score_below_threshold",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:video-aesthetic-improvement",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap",
+        improvementSource: "video_aesthetic_score",
+        previousAttemptStatus: "improved",
+        nextStrategy: "palette_section_pacing_consistency_repair"
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_palette_depth_contrast_motion_repair", "display_palette_transition_harmony_repair", "display_palette_spatial_balance_focal_repair", "display_palette_section_pacing_consistency_repair"]
+  );
+  const repairPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_palette_section_pacing_consistency_repair");
+  assert.equal(repairPass.controllerSelection.selectedByController, true);
+  assert.equal(repairPass.placements.length, 5);
+  assert.equal(
+    repairPass.placements.every((placement) => placement.layerIntent?.displayReviewRole === "palette_section_pacing_consistency_repair"),
+    true
+  );
+  assert.deepEqual(
+    repairPass.placements.map((placement) => placement.layerIntent?.colorPurpose),
+    ["background_structure", "transition_motion_bridge", "focal_accent", "counterweight_structure", "motion_support"]
+  );
+});
+
 test("layer composition plan expands targeted display aesthetic coverage units", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

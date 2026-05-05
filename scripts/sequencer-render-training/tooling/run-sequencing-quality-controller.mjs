@@ -18,7 +18,8 @@ const VIDEO_AESTHETIC_STRATEGIES = [
   "focal_consistency_repair",
   "palette_depth_contrast_motion_repair",
   "palette_transition_harmony_repair",
-  "palette_spatial_balance_focal_repair"
+  "palette_spatial_balance_focal_repair",
+  "palette_section_pacing_consistency_repair"
 ];
 
 function arr(value) {
@@ -712,6 +713,17 @@ function videoAestheticAttemptStrategy(artifacts = {}) {
         avoidStrategy: "",
         nextStrategy: "palette_spatial_balance_focal_repair",
         reason: "previous palette transition attempt improved, but visual balance, focal clarity, or pacing remained weak"
+      };
+    }
+    if (
+      previousStrategy === "palette_spatial_balance_focal_repair"
+      && (weakDimensions.has("pacing_variety") || weakDimensions.has("quality_consistency") || weakDimensions.has("visual_balance"))
+    ) {
+      return {
+        previousStrategy,
+        avoidStrategy: "",
+        nextStrategy: "palette_section_pacing_consistency_repair",
+        reason: "previous palette spatial/focal attempt improved, but pacing, consistency, or visual balance remained weak"
       };
     }
     return {
