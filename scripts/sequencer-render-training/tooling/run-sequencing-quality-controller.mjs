@@ -12,7 +12,8 @@ const VIDEO_AESTHETIC_STRATEGIES = [
   "section_window_pacing_balance",
   "regional_focus_contrast",
   "rgb_primary_regional_focus_contrast",
-  "simultaneous_display_balance_revision"
+  "simultaneous_display_balance_revision",
+  "focal_consistency_repair"
 ];
 
 function arr(value) {

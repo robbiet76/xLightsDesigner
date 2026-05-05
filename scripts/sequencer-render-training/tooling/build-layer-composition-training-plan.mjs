@@ -1547,6 +1547,45 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
     layerSettings: { mixMethod: "Normal" },
     layerIntent: { blendRole: "release_accent", displayReviewRole: "regional_focus_contrast" }
   });
+  const archConsistencyBase = placement({
+    id: `dq-${paletteProfile}-arch-consistency-base`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "steady_context", displayReviewRole: "focal_consistency_repair" }
+  });
+  const starFocalHold = placement({
+    id: `dq-${paletteProfile}-star-focal-hold`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 1200,
+    endMs: 5200,
+    effectSettings: { arms: 4, twists: 1, rotation: 15 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "stable_focal_anchor", displayReviewRole: "focal_consistency_repair" }
+  });
+  const lineMotionThread = placement({
+    id: `dq-${paletteProfile}-line-motion-thread`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 1800,
+    endMs: 6000,
+    effectSettings: { effect: "Chase", cycles: 4, colorSpeed: 4 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "low_variance_motion_thread", displayReviewRole: "focal_consistency_repair" }
+  });
 
   return {
     experimentId: `display-quality-review-${paletteProfile}`,
@@ -1610,6 +1649,14 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
         comparisonBasePassId: "display_motion_variety",
         changeType: "video_aesthetic_regional_focus_contrast_revision"
+      },
+      {
+        passId: "display_focal_consistency_repair",
+        compositionPass: "display_review",
+        placements: [archConsistencyBase, starFocalHold, lineMotionThread],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_motion_variety",
+        changeType: "video_aesthetic_focal_consistency_repair"
       }
     ]
   };
@@ -2710,6 +2757,8 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
               ? ["display_regional_focus_contrast"]
               : str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
                 ? ["display_regional_focus_contrast"]
+                : str(gap.nextStrategy) === "focal_consistency_repair"
+                  ? ["display_focal_consistency_repair"]
             : ["display_pacing_balance_revision", "display_wide_balance_revision"]
           : ["display_balance_foundation", "display_motion_variety"];
         for (const passId of passIds) {

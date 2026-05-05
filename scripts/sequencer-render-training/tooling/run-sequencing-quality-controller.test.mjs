@@ -750,6 +750,55 @@ test("controller avoids recently ineffective video aesthetic strategies", () => 
   assert.equal(state.nextQueue[0].nextStrategy, "rgb_primary_regional_focus_contrast");
 });
 
+test("controller selects focal consistency repair after all current video strategies are ineffective", () => {
+  const roots = [tempDir(), tempDir(), tempDir(), tempDir()];
+  const strategies = [
+    "section_window_pacing_balance",
+    "regional_focus_contrast",
+    "rgb_primary_regional_focus_contrast",
+    "simultaneous_display_balance_revision"
+  ];
+  roots.forEach((root, index) => {
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: index === 0 ? "regressed" : "neutral" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{ nextStrategy: strategies[index] }]
+    });
+  });
+  const latestRoot = roots[roots.length - 1];
+  const records = JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8"));
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...records,
+    sourceRunRoots: roots
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.nextQueue[0].previousAttemptStatus, "neutral");
+  assert.equal(state.nextQueue[0].nextStrategy, "focal_consistency_repair");
+});
+
 test("controller moves improved regional focus to rgb primary when color discipline remains weak", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, []);
