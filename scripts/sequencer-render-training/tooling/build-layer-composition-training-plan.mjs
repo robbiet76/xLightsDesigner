@@ -2227,6 +2227,286 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       colorPurpose: "focal_accent"
     }
   });
+  const transitionBackground = placement({
+    id: `dq-${paletteProfile}-transition-background`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 42,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "cool_background_harmony",
+      displayReviewRole: "palette_transition_harmony_repair",
+      colorPurpose: "background_structure"
+    }
+  });
+  const transitionArchWarmEntry = placement({
+    id: `dq-${paletteProfile}-transition-arch-warm-entry`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 0,
+    endMs: 2200,
+    effectSettings: { direction: "up", cycles: 2 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 58,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "warm_opening_motion_support",
+      displayReviewRole: "palette_transition_harmony_repair",
+      colorPurpose: "warm_motion_support"
+    }
+  });
+  const transitionLineBridge = placement({
+    id: `dq-${paletteProfile}-transition-line-bridge`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 1600,
+    endMs: 4600,
+    effectSettings: { effect: "Chase", cycles: 3, colorSpeed: 3 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 62,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "mid_section_palette_bridge",
+      displayReviewRole: "palette_transition_harmony_repair",
+      colorPurpose: "transition_motion_bridge"
+    }
+  });
+  const transitionSpinnerCounterpoint = placement({
+    id: `dq-${paletteProfile}-transition-spinner-counterpoint`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Butterfly",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 3000,
+    endMs: 6000,
+    effectSettings: { chunks: 2, skip: 1 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 50,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "late_cool_counterpoint",
+      displayReviewRole: "palette_transition_harmony_repair",
+      colorPurpose: "cool_counterpoint_motion_support"
+    }
+  });
+  const transitionStarAccent = placement({
+    id: `dq-${paletteProfile}-transition-star-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 4,
+    startMs: 3600,
+    endMs: 5200,
+    effectSettings: { arms: 4, twists: 1, rotation: 20 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 56,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: true,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "resolved_focal_accent",
+      displayReviewRole: "palette_transition_harmony_repair",
+      colorPurpose: "focal_accent"
+    }
+  });
+  const spatialLeftStructure = placement({
+    id: `dq-${paletteProfile}-spatial-left-structure`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { direction: "up", cycles: 1 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 48,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "left_weight_structure",
+      displayReviewRole: "palette_spatial_balance_focal_repair",
+      colorPurpose: "background_structure"
+    }
+  });
+  const spatialRightCounterweight = placement({
+    id: `dq-${paletteProfile}-spatial-right-counterweight`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 800,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 44,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "right_counterweight_structure",
+      displayReviewRole: "palette_spatial_balance_focal_repair",
+      colorPurpose: "counterweight_structure"
+    }
+  });
+  const spatialCenterFocal = placement({
+    id: `dq-${paletteProfile}-spatial-center-focal`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 1800,
+    endMs: 4300,
+    effectSettings: { arms: 5, twists: 1, rotation: 14 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 58,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: true,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "center_focal_anchor",
+      displayReviewRole: "palette_spatial_balance_focal_repair",
+      colorPurpose: "focal_accent"
+    }
+  });
+  const spatialLineBridge = placement({
+    id: `dq-${paletteProfile}-spatial-line-bridge`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 2600,
+    endMs: 6000,
+    effectSettings: { effect: "Chase", cycles: 2, colorSpeed: 2 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 54,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "focal_to_structure_bridge",
+      displayReviewRole: "palette_spatial_balance_focal_repair",
+      colorPurpose: "transition_motion_bridge"
+    }
+  });
+  const spatialSpinnerSupport = placement({
+    id: `dq-${paletteProfile}-spatial-spinner-support`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Butterfly",
+    compositionPass: "display_review",
+    layerIndex: 4,
+    startMs: 4200,
+    endMs: 6000,
+    effectSettings: { chunks: 1, skip: 1 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 38,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "late_low_intensity_motion_support",
+      displayReviewRole: "palette_spatial_balance_focal_repair",
+      colorPurpose: "motion_support"
+    }
+  });
 
   return {
     experimentId: `display-quality-review-${paletteProfile}`,
@@ -2330,6 +2610,22 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
         comparisonBasePassId: "display_motion_variety",
         changeType: "video_aesthetic_palette_depth_contrast_motion_repair"
+      },
+      {
+        passId: "display_palette_transition_harmony_repair",
+        compositionPass: "display_review",
+        placements: [transitionBackground, transitionArchWarmEntry, transitionLineBridge, transitionSpinnerCounterpoint, transitionStarAccent],
+        displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, spinner.modelName, star.modelName],
+        comparisonBasePassId: "display_palette_depth_contrast_motion_repair",
+        changeType: "video_aesthetic_palette_transition_harmony_repair"
+      },
+      {
+        passId: "display_palette_spatial_balance_focal_repair",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, spatialLineBridge, spatialSpinnerSupport],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_transition_harmony_repair",
+        changeType: "video_aesthetic_palette_spatial_balance_focal_repair"
       }
     ]
   };
@@ -3478,6 +3774,8 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
           || str(gap.nextStrategy) === "rgb_primary_color_discipline_repair"
           || str(gap.nextStrategy) === "rgb_primary_structure_balance_pacing_repair"
           || str(gap.nextStrategy) === "palette_depth_contrast_motion_repair"
+          || str(gap.nextStrategy) === "palette_transition_harmony_repair"
+          || str(gap.nextStrategy) === "palette_spatial_balance_focal_repair"
         ? ["rgb_primary"]
         : ["mono_white"];
       for (const paletteProfile of paletteProfiles) {
@@ -3501,6 +3799,10 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
                 ? ["display_focal_consistency_repair"]
               : str(gap.nextStrategy) === "palette_depth_contrast_motion_repair"
                 ? ["display_palette_depth_contrast_motion_repair"]
+              : str(gap.nextStrategy) === "palette_transition_harmony_repair"
+                ? ["display_palette_transition_harmony_repair"]
+              : str(gap.nextStrategy) === "palette_spatial_balance_focal_repair"
+                ? ["display_palette_spatial_balance_focal_repair"]
             : ["display_pacing_balance_revision", "display_wide_balance_revision"]
           : ["display_balance_foundation", "display_motion_variety"];
         for (const passId of passIds) {

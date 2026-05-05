@@ -16,7 +16,9 @@ const VIDEO_AESTHETIC_STRATEGIES = [
   "rgb_primary_regional_focus_contrast",
   "simultaneous_display_balance_revision",
   "focal_consistency_repair",
-  "palette_depth_contrast_motion_repair"
+  "palette_depth_contrast_motion_repair",
+  "palette_transition_harmony_repair",
+  "palette_spatial_balance_focal_repair"
 ];
 
 function arr(value) {
@@ -67,10 +69,11 @@ function artifactPath(runRoot, fileName) {
 }
 
 function recentVideoAestheticAttemptHistory(latestRunRoot = "", qualityRecords = {}) {
+  const historyLimit = Math.max(8, VIDEO_AESTHETIC_STRATEGIES.length);
   const roots = [...new Set([
     ...arr(qualityRecords?.sourceRunRoots).map(resolvePath),
     resolvePath(latestRunRoot)
-  ].filter(Boolean))].slice(-8);
+  ].filter(Boolean))].slice(-historyLimit);
   return roots.map((root) => {
     const comparison = readJsonIfExists(path.join(root, "video-aesthetic-attempt-comparison.json")) || {};
     const controllerState = readJsonIfExists(path.join(root, "controller-state.json")) || {};
@@ -698,6 +701,17 @@ function videoAestheticAttemptStrategy(artifacts = {}) {
         avoidStrategy: "",
         nextStrategy: "rgb_primary_structure_balance_pacing_repair",
         reason: "previous RGB color discipline attempt improved, but visual balance or pacing remained weak"
+      };
+    }
+    if (
+      previousStrategy === "palette_transition_harmony_repair"
+      && (weakDimensions.has("visual_balance") || weakDimensions.has("focal_clarity") || weakDimensions.has("pacing_variety"))
+    ) {
+      return {
+        previousStrategy,
+        avoidStrategy: "",
+        nextStrategy: "palette_spatial_balance_focal_repair",
+        reason: "previous palette transition attempt improved, but visual balance, focal clarity, or pacing remained weak"
       };
     }
     return {

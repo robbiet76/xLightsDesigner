@@ -1011,7 +1011,7 @@ test("controller selects focal consistency repair after all current video strate
 });
 
 test("controller leaves exhausted video aesthetic strategy set for other promising goals", () => {
-  const roots = [tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir()];
+  const roots = [tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir()];
   const strategies = [
     "section_window_pacing_balance",
     "regional_focus_contrast",
@@ -1020,7 +1020,9 @@ test("controller leaves exhausted video aesthetic strategy set for other promisi
     "rgb_primary_regional_focus_contrast",
     "simultaneous_display_balance_revision",
     "focal_consistency_repair",
-    "palette_depth_contrast_motion_repair"
+    "palette_depth_contrast_motion_repair",
+    "palette_transition_harmony_repair",
+    "palette_spatial_balance_focal_repair"
   ];
   roots.forEach((root, index) => {
     writeRunRoot(root, []);
@@ -1142,6 +1144,59 @@ test("controller selects palette depth contrast after prior video strategies are
   assert.equal(state.nextQueue[0].nextStrategy, "palette_depth_contrast_motion_repair");
 });
 
+test("controller selects palette transition harmony after palette depth is ineffective", () => {
+  const roots = [tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir()];
+  const strategies = [
+    "section_window_pacing_balance",
+    "regional_focus_contrast",
+    "rgb_primary_color_discipline_repair",
+    "rgb_primary_structure_balance_pacing_repair",
+    "rgb_primary_regional_focus_contrast",
+    "simultaneous_display_balance_revision",
+    "focal_consistency_repair",
+    "palette_depth_contrast_motion_repair"
+  ];
+  roots.forEach((root, index) => {
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: index === 0 ? "regressed" : "neutral" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{ nextStrategy: strategies[index] }]
+    });
+  });
+  const latestRoot = roots[roots.length - 1];
+  const records = JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8"));
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...records,
+    sourceRunRoots: roots
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.nextQueue[0].previousAttemptStatus, "neutral");
+  assert.equal(state.nextQueue[0].nextStrategy, "palette_transition_harmony_repair");
+});
+
 test("controller moves improved rgb color discipline to structure balance pacing when balance remains weak", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, []);
@@ -1198,6 +1253,57 @@ test("controller moves improved rgb color discipline to structure balance pacing
 
   assert.equal(state.nextQueue[0].previousAttemptStatus, "improved");
   assert.equal(state.nextQueue[0].nextStrategy, "rgb_primary_structure_balance_pacing_repair");
+});
+
+test("controller moves improved palette transition to spatial balance focal repair when hierarchy remains weak", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot, {
+    scores: {
+      overallAestheticScore: 0.694,
+      displayEvolution: 0.92,
+      pacingVariety: 0.56,
+      transitionFlow: 0.72,
+      focalClarity: 0.57,
+      visualBalance: 0.46,
+      motionInterest: 0.71,
+      colorDiscipline: 1,
+      clutterControl: 1,
+      qualityConsistency: 0.5
+    }
+  });
+  writeVideoAestheticAttemptComparison(runRoot, {
+    comparisonStatus: "improved",
+    promotionEligible: true
+  });
+  writeJson(path.join(runRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{ nextStrategy: "palette_transition_harmony_repair" }]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.nextQueue[0].previousAttemptStatus, "improved");
+  assert.equal(state.nextQueue[0].nextStrategy, "palette_spatial_balance_focal_repair");
 });
 
 test("controller moves improved regional focus to rgb primary when color discipline remains weak", () => {

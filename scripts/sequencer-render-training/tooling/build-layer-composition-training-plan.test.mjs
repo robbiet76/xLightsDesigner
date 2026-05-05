@@ -968,6 +968,99 @@ test("layer composition plan expands palette depth contrast motion repair strate
   );
 });
 
+test("layer composition plan expands palette transition harmony repair strategy", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-video-aesthetic-palette-transition-harmony",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 19,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        selectionReason: "video_aesthetic_score_below_threshold",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:video-aesthetic-improvement",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap",
+        improvementSource: "video_aesthetic_score",
+        previousAttemptStatus: "neutral",
+        avoidStrategy: "section_window_pacing_balance,regional_focus_contrast,rgb_primary_color_discipline_repair,rgb_primary_structure_balance_pacing_repair,rgb_primary_regional_focus_contrast,simultaneous_display_balance_revision,focal_consistency_repair,palette_depth_contrast_motion_repair",
+        nextStrategy: "palette_transition_harmony_repair"
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_palette_depth_contrast_motion_repair", "display_palette_transition_harmony_repair"]
+  );
+  const repairPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_palette_transition_harmony_repair");
+  assert.equal(repairPass.controllerSelection.selectedByController, true);
+  assert.equal(repairPass.placements.length, 5);
+  assert.equal(
+    repairPass.placements.every((placement) => placement.layerIntent?.displayReviewRole === "palette_transition_harmony_repair"),
+    true
+  );
+  assert.deepEqual(
+    repairPass.placements.map((placement) => placement.layerIntent?.colorPurpose),
+    ["background_structure", "warm_motion_support", "transition_motion_bridge", "cool_counterpoint_motion_support", "focal_accent"]
+  );
+});
+
+test("layer composition plan expands palette spatial balance focal repair strategy", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-video-aesthetic-palette-spatial-balance",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 20,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        selectionReason: "video_aesthetic_score_below_threshold",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:video-aesthetic-improvement",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap",
+        improvementSource: "video_aesthetic_score",
+        previousAttemptStatus: "improved",
+        nextStrategy: "palette_spatial_balance_focal_repair"
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_palette_depth_contrast_motion_repair", "display_palette_transition_harmony_repair", "display_palette_spatial_balance_focal_repair"]
+  );
+  const repairPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_palette_spatial_balance_focal_repair");
+  assert.equal(repairPass.controllerSelection.selectedByController, true);
+  assert.equal(repairPass.placements.length, 5);
+  assert.equal(
+    repairPass.placements.every((placement) => placement.layerIntent?.displayReviewRole === "palette_spatial_balance_focal_repair"),
+    true
+  );
+  assert.deepEqual(
+    repairPass.placements.map((placement) => placement.layerIntent?.colorPurpose),
+    ["background_structure", "counterweight_structure", "focal_accent", "transition_motion_bridge", "motion_support"]
+  );
+});
+
 test("layer composition plan expands targeted display aesthetic coverage units", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,
