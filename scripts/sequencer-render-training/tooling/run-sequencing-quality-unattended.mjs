@@ -5,6 +5,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runSequencingQualityLoop } from "./run-sequencing-quality-loop.mjs";
+import { buildLayerCompositionDeltas } from "./build-layer-composition-deltas.mjs";
+import { buildLayerCompositionPriors } from "./build-layer-composition-priors.mjs";
+import { promoteLayerCompositionPriors } from "./promote-layer-composition-priors.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const DEFAULT_OUT_ROOT = "var/logs/sequencing-quality-controller/unattended";
@@ -49,14 +52,111 @@ function shouldAdvanceLatestRun(summary = {}) {
   return str(summary.status) === "executed" && str(summary.loopRoot);
 }
 
-function stopReasonForSummary(summary = {}, index = 0, maxLoops = 1) {
+function stopReasonForSummary(
+  summary = {},
+  index = 0,
+  maxLoops = 1,
+  {
+    consecutiveRegressionCount = 0,
+    maxConsecutiveRegressions = 0,
+    repeatedGoalCount = 0,
+    maxRepeatedGoalCount = 0
+  } = {}
+) {
   const decision = summary.controllerDecision || {};
   if (str(decision.nextAction) === "idle") return "controller_idle";
   if (str(summary.status) === "blocked_no_controller_queue") return str(decision.nextAction) === "await_evidence"
     ? "awaiting_evidence"
     : "blocked_no_controller_queue";
+  if (maxConsecutiveRegressions > 0 && consecutiveRegressionCount >= maxConsecutiveRegressions) return "max_consecutive_regressions";
+  if (maxRepeatedGoalCount > 0 && repeatedGoalCount >= maxRepeatedGoalCount) return "max_repeated_goal_selection";
   if (index >= maxLoops) return "max_loops_reached";
   return "";
+}
+
+function prunePreviewFrameDumps(root = "") {
+  const resolved = resolvePath(root);
+  const deleted = [];
+  if (!resolved || !fs.existsSync(resolved)) {
+    return { deletedFileCount: 0, deletedBytes: 0, deletedFiles: [] };
+  }
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const filePath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(filePath);
+        if (entry.name === "preview-media-frames" && fs.existsSync(filePath) && fs.readdirSync(filePath).length === 0) {
+          fs.rmdirSync(filePath);
+        }
+        continue;
+      }
+      if (entry.isFile() && path.basename(path.dirname(filePath)) === "preview-media-frames" && entry.name.startsWith("frame-") && entry.name.endsWith(".ppm")) {
+        const sizeBytes = fs.statSync(filePath).size;
+        fs.rmSync(filePath, { force: true });
+        deleted.push({ path: filePath, sizeBytes });
+      }
+    }
+  };
+  walk(resolved);
+  return {
+    deletedFileCount: deleted.length,
+    deletedBytes: deleted.reduce((total, row) => total + num(row.sizeBytes), 0),
+    deletedFiles: deleted
+  };
+}
+
+function consolidateLoopEvidence({
+  loopRoot = "",
+  crossRunQualityRecordsRef = "",
+  cleanupPreviewFrames = true,
+  deps = {}
+} = {}) {
+  const root = resolvePath(loopRoot);
+  if (!root || !fs.existsSync(path.join(root, "checkpoints.json"))) return null;
+  const deltaPath = path.join(root, "layer-composition-delta-summary.json");
+  const stagedPriorsPath = path.join(root, "cross-run-quality-priors-staged.json");
+  const promotedPriorsPath = path.join(root, "cross-run-quality-priors-promoted.json");
+  const cleanupPath = path.join(root, "unattended-cleanup-summary.json");
+
+  const buildDeltas = deps.buildDeltas || buildLayerCompositionDeltas;
+  const buildPriors = deps.buildPriors || buildLayerCompositionPriors;
+  const promotePriors = deps.promotePriors || promoteLayerCompositionPriors;
+  const deltaSummary = buildDeltas({ runRoot: root });
+  deltaSummary.sourceDeltaSummaryRef = deltaPath;
+  writeJson(deltaPath, deltaSummary);
+
+  const qualityRecords = readJsonIfExists(crossRunQualityRecordsRef);
+  if (qualityRecords) qualityRecords.sourceQualityRecordsRef = resolvePath(crossRunQualityRecordsRef);
+  const stagedPriors = buildPriors({ deltaSummary, qualityRecords });
+  writeJson(stagedPriorsPath, stagedPriors);
+  const promotedPriors = promotePriors({ priors: stagedPriors });
+  writeJson(promotedPriorsPath, promotedPriors);
+
+  const cleanup = cleanupPreviewFrames ? prunePreviewFrameDumps(root) : { deletedFileCount: 0, deletedBytes: 0, deletedFiles: [] };
+  writeJson(cleanupPath, {
+    artifactType: "sequencing_quality_unattended_cleanup_summary_v1",
+    artifactVersion: 1,
+    generatedAt: new Date().toISOString(),
+    previewFrameCleanup: cleanup
+  });
+
+  return {
+    deltaSummaryRef: deltaPath,
+    stagedPriorsRef: stagedPriorsPath,
+    promotedPriorsRef: promotedPriorsPath,
+    selectorReadyPriorCount: num(promotedPriors.selectorReadyCount),
+    blockedPromotionCount: num(promotedPriors.blockedPromotionCount),
+    cleanupRef: cleanupPath,
+    deletedPreviewFrameCount: num(cleanup.deletedFileCount),
+    deletedPreviewFrameBytes: num(cleanup.deletedBytes)
+  };
+}
+
+function runOutcome(summary = {}) {
+  const comparisonStatus = str(summary.videoAestheticAttemptComparison?.comparisonStatus);
+  if (comparisonStatus) return comparisonStatus;
+  if (summary.videoAestheticScore?.promotionEligible) return "promotion_eligible";
+  return str(summary.status);
 }
 
 export async function runSequencingQualityUnattended({
@@ -68,8 +168,11 @@ export async function runSequencingQualityUnattended({
   maxLoops = 10,
   maxQueue = 25,
   maxPasses = 5,
+  maxConsecutiveRegressions = 3,
+  maxRepeatedGoalCount = 6,
   applyRender = true,
   endpoint = DEFAULT_ENDPOINT,
+  cleanupPreviewFrames = true,
   summaryPath = "",
   deps = {}
 } = {}) {
@@ -80,6 +183,9 @@ export async function runSequencingQualityUnattended({
   let currentPreviousStatePath = resolvePath(previousStatePath);
   const iterations = [];
   let stopReason = "max_loops_reached";
+  let consecutiveRegressionCount = 0;
+  let previousGoalId = "";
+  let repeatedGoalCount = 0;
 
   for (let index = 1; index <= maxLoops; index += 1) {
     const runLoop = deps.runLoop || runSequencingQualityLoop;
@@ -98,18 +204,39 @@ export async function runSequencingQualityUnattended({
       deps: deps.loopDeps || {}
     });
     const controllerState = readJsonIfExists(summary.controllerStateRef);
+    const outcome = runOutcome(summary);
+    consecutiveRegressionCount = outcome === "regressed" ? consecutiveRegressionCount + 1 : 0;
+    const selectedGoalId = str(summary.controllerDecision?.selectedGoalId);
+    repeatedGoalCount = selectedGoalId && selectedGoalId === previousGoalId ? repeatedGoalCount + 1 : selectedGoalId ? 1 : 0;
+    previousGoalId = selectedGoalId;
+    const consolidation = str(summary.status) === "executed"
+      ? (deps.consolidateLoopEvidence || consolidateLoopEvidence)({
+        loopRoot: summary.loopRoot,
+        crossRunQualityRecordsRef: summary.crossRunQuality?.recordsRef,
+        cleanupPreviewFrames,
+        deps: deps.consolidationDeps || {}
+      })
+      : null;
     const iteration = {
       iteration: index,
       status: str(summary.status),
       loopRoot: str(summary.loopRoot),
       controllerStateRef: str(summary.controllerStateRef),
-      selectedGoalId: str(summary.controllerDecision?.selectedGoalId),
+      selectedGoalId,
       nextAction: str(summary.controllerDecision?.nextAction),
       selectionReason: str(summary.controllerDecision?.selectionReason),
       processedPasses: num(summary.passRunner?.processedPasses),
       acceptedEvidenceCount: num(summary.passRunner?.renderReviewAcceptedEvidenceCount),
+      overallAestheticScore: num(summary.videoAestheticScore?.overallAestheticScore),
+      promotionEligible: Boolean(summary.videoAestheticScore?.promotionEligible),
+      comparisonStatus: str(summary.videoAestheticAttemptComparison?.comparisonStatus),
+      overallAestheticScoreDelta: num(summary.videoAestheticAttemptComparison?.overallAestheticScoreDelta),
+      outcome,
+      consecutiveRegressionCount,
+      repeatedGoalCount,
       durableCandidateCount: num(summary.crossRunQuality?.durableCandidateCount),
       blockedRecordCount: num(summary.crossRunQuality?.blockedRecordCount),
+      consolidation,
       goalStatuses: arr(controllerState?.goalStatuses).map((goal) => ({
         goalId: str(goal.goalId),
         evidenceStatus: str(goal.evidenceStatus),
@@ -122,7 +249,12 @@ export async function runSequencingQualityUnattended({
     if (shouldAdvanceLatestRun(summary)) currentLatestRunRoot = resolvePath(summary.loopRoot);
     currentPreviousStatePath = resolvePath(summary.controllerStateRef);
 
-    const reason = stopReasonForSummary(summary, index, maxLoops);
+    const reason = stopReasonForSummary(summary, index, maxLoops, {
+      consecutiveRegressionCount,
+      maxConsecutiveRegressions,
+      repeatedGoalCount,
+      maxRepeatedGoalCount
+    });
     const partial = {
       artifactType: "sequencing_quality_unattended_run_summary_v1",
       artifactVersion: 1,
@@ -133,6 +265,14 @@ export async function runSequencingQualityUnattended({
       latestRunRoot: currentLatestRunRoot,
       previousStateRef: currentPreviousStatePath,
       iterationCount: iterations.length,
+      guardrails: {
+        maxLoops,
+        maxQueue,
+        maxPasses,
+        maxConsecutiveRegressions,
+        maxRepeatedGoalCount,
+        cleanupPreviewFrames
+      },
       iterations
     };
     writeJson(resolvedSummaryPath, partial);
@@ -152,7 +292,28 @@ export async function runSequencingQualityUnattended({
     latestRunRoot: currentLatestRunRoot,
     previousStateRef: currentPreviousStatePath,
     iterationCount: iterations.length,
+    guardrails: {
+      maxLoops,
+      maxQueue,
+      maxPasses,
+      maxConsecutiveRegressions,
+      maxRepeatedGoalCount,
+      cleanupPreviewFrames
+    },
     iterations,
+    interventionRecommended: [
+      "max_consecutive_regressions",
+      "max_repeated_goal_selection",
+      "blocked_no_controller_queue",
+      "awaiting_evidence"
+    ].includes(stopReason),
+    interventionReason: stopReason === "max_consecutive_regressions"
+      ? "The controller produced too many regressions in a row; inspect the latest selected goal and adjust curriculum or strategy selection before continuing."
+      : stopReason === "max_repeated_goal_selection"
+        ? "The controller selected the same goal repeatedly; inspect blocked promising records and add a narrower repair or exploration strategy."
+        : stopReason === "blocked_no_controller_queue" || stopReason === "awaiting_evidence"
+          ? "The controller cannot build a useful next queue from the current evidence."
+          : "",
     recommendedNextCurriculumExpansion: stopReason === "controller_idle"
       ? [
         "stronger video-level aesthetic scoring",
@@ -175,8 +336,11 @@ function parseArgs(argv = []) {
     maxLoops: 10,
     maxQueue: 25,
     maxPasses: 5,
+    maxConsecutiveRegressions: 3,
+    maxRepeatedGoalCount: 6,
     applyRender: true,
     endpoint: DEFAULT_ENDPOINT,
+    cleanupPreviewFrames: true,
     summaryPath: ""
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -189,9 +353,12 @@ function parseArgs(argv = []) {
     else if (arg === "--max-loops") args.maxLoops = Number(argv[++index]);
     else if (arg === "--max-queue") args.maxQueue = Number(argv[++index]);
     else if (arg === "--max-passes") args.maxPasses = Number(argv[++index]);
+    else if (arg === "--max-consecutive-regressions") args.maxConsecutiveRegressions = Number(argv[++index]);
+    else if (arg === "--max-repeated-goal-count") args.maxRepeatedGoalCount = Number(argv[++index]);
     else if (arg === "--endpoint") args.endpoint = argv[++index];
     else if (arg === "--summary") args.summaryPath = argv[++index];
     else if (arg === "--scaffold-only") args.applyRender = false;
+    else if (arg === "--keep-preview-frames") args.cleanupPreviewFrames = false;
     else if (arg === "--help") args.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -205,7 +372,8 @@ function usage() {
     --previous-state /tmp/xld-quality-controller-after-music-000002.json \\
     --model-catalog /tmp/xld-vendor-fixture-model-catalog.json \\
     --max-loops 20 \\
-    --max-passes 5
+    --max-passes 5 \\
+    --max-consecutive-regressions 3
 `;
 }
 

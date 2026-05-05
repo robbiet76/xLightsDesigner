@@ -124,3 +124,107 @@ test("unattended quality runner stops at max loop count", async () => {
   assert.equal(summary.stopReason, "max_loops_reached");
   assert.equal(summary.iterationCount, 1);
 });
+
+test("unattended quality runner consolidates executed loop evidence", async () => {
+  const root = tempDir();
+  let consolidatedLoopRoot = "";
+  const summary = await runSequencingQualityUnattended({
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 1,
+    deps: {
+      runLoop: async (args) => {
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "executed",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "display.full_sequence.quality_v1",
+            nextAction: "plan_goal_coverage",
+            selectionReason: "coverage_gap"
+          },
+          videoAestheticScore: {
+            overallAestheticScore: 0.75,
+            promotionEligible: true
+          },
+          videoAestheticAttemptComparison: {
+            comparisonStatus: "improved",
+            overallAestheticScoreDelta: 0.04
+          },
+          passRunner: { processedPasses: 2, renderReviewAcceptedEvidenceCount: 2 },
+          crossRunQuality: {
+            recordsRef: path.join(args.loopRoot, "cross-run-quality-records.json"),
+            durableCandidateCount: 2,
+            blockedRecordCount: 0
+          }
+        };
+      },
+      consolidateLoopEvidence: ({ loopRoot }) => {
+        consolidatedLoopRoot = loopRoot;
+        return {
+          deltaSummaryRef: path.join(loopRoot, "layer-composition-delta-summary.json"),
+          promotedPriorsRef: path.join(loopRoot, "cross-run-quality-priors-promoted.json"),
+          selectorReadyPriorCount: 1,
+          blockedPromotionCount: 0,
+          deletedPreviewFrameCount: 12,
+          deletedPreviewFrameBytes: 2048
+        };
+      }
+    }
+  });
+
+  assert.equal(summary.stopReason, "max_loops_reached");
+  assert.equal(summary.iterations[0].comparisonStatus, "improved");
+  assert.equal(summary.iterations[0].overallAestheticScore, 0.75);
+  assert.equal(summary.iterations[0].consolidation.selectorReadyPriorCount, 1);
+  assert.equal(summary.iterations[0].consolidation.deletedPreviewFrameCount, 12);
+  assert.equal(consolidatedLoopRoot, summary.iterations[0].loopRoot);
+});
+
+test("unattended quality runner stops on repeated regressions for intervention", async () => {
+  const root = tempDir();
+  const summary = await runSequencingQualityUnattended({
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 5,
+    maxConsecutiveRegressions: 2,
+    deps: {
+      runLoop: async (args) => {
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "executed",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "effect_fit.expanded_model_matrix.v1",
+            nextAction: "plan_quality_repeats",
+            selectionReason: "blocked_promising_records"
+          },
+          videoAestheticScore: {
+            overallAestheticScore: 0.62,
+            promotionEligible: false
+          },
+          videoAestheticAttemptComparison: {
+            comparisonStatus: "regressed",
+            overallAestheticScoreDelta: -0.08
+          },
+          passRunner: { processedPasses: 2, renderReviewAcceptedEvidenceCount: 1 },
+          crossRunQuality: { durableCandidateCount: 1, blockedRecordCount: 4 }
+        };
+      },
+      consolidateLoopEvidence: ({ loopRoot }) => ({
+        deltaSummaryRef: path.join(loopRoot, "layer-composition-delta-summary.json")
+      })
+    }
+  });
+
+  assert.equal(summary.stopReason, "max_consecutive_regressions");
+  assert.equal(summary.iterationCount, 2);
+  assert.equal(summary.interventionRecommended, true);
+  assert.equal(summary.iterations[1].consecutiveRegressionCount, 2);
+});
