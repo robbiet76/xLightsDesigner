@@ -2115,6 +2115,118 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       colorPurpose: "structure"
     }
   });
+  const depthContextWash = placement({
+    id: `dq-${paletteProfile}-depth-context-wash`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 46,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "quiet_background_depth",
+      displayReviewRole: "palette_depth_contrast_motion_repair",
+      colorPurpose: "background_structure"
+    }
+  });
+  const depthArchFrame = placement({
+    id: `dq-${paletteProfile}-depth-arch-frame`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 0,
+    endMs: 2600,
+    effectSettings: { direction: "up", cycles: 2 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 58,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "opening_depth_frame",
+      displayReviewRole: "palette_depth_contrast_motion_repair",
+      colorPurpose: "structure_motion_support"
+    }
+  });
+  const depthLineThread = placement({
+    id: `dq-${paletteProfile}-depth-line-thread`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 1800,
+    endMs: 6000,
+    effectSettings: { effect: "Chase", cycles: 4, colorSpeed: 4 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 64,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "foreground_motion_thread",
+      displayReviewRole: "palette_depth_contrast_motion_repair",
+      colorPurpose: "structure_motion_support"
+    }
+  });
+  const depthStarAccent = placement({
+    id: `dq-${paletteProfile}-depth-star-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 2600,
+    endMs: 4700,
+    effectSettings: { arms: 4, twists: 1, rotation: 18 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 52,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: true,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "short_focal_depth_accent",
+      displayReviewRole: "palette_depth_contrast_motion_repair",
+      colorPurpose: "focal_accent"
+    }
+  });
 
   return {
     experimentId: `display-quality-review-${paletteProfile}`,
@@ -2210,6 +2322,14 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
         comparisonBasePassId: "display_rgb_color_discipline_repair",
         changeType: "video_aesthetic_safe_local_evidence_repair"
+      },
+      {
+        passId: "display_palette_depth_contrast_motion_repair",
+        compositionPass: "display_review",
+        placements: [depthContextWash, depthArchFrame, depthLineThread, depthStarAccent],
+        displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        comparisonBasePassId: "display_motion_variety",
+        changeType: "video_aesthetic_palette_depth_contrast_motion_repair"
       }
     ]
   };
@@ -3357,6 +3477,7 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         : str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
           || str(gap.nextStrategy) === "rgb_primary_color_discipline_repair"
           || str(gap.nextStrategy) === "rgb_primary_structure_balance_pacing_repair"
+          || str(gap.nextStrategy) === "palette_depth_contrast_motion_repair"
         ? ["rgb_primary"]
         : ["mono_white"];
       for (const paletteProfile of paletteProfiles) {
@@ -3378,6 +3499,8 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
                 ? ["display_rgb_structure_balance_pacing_repair"]
               : str(gap.nextStrategy) === "focal_consistency_repair"
                 ? ["display_focal_consistency_repair"]
+              : str(gap.nextStrategy) === "palette_depth_contrast_motion_repair"
+                ? ["display_palette_depth_contrast_motion_repair"]
             : ["display_pacing_balance_revision", "display_wide_balance_revision"]
           : ["display_balance_foundation", "display_motion_variety"];
         for (const passId of passIds) {

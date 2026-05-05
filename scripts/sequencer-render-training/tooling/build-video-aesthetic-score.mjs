@@ -203,6 +203,20 @@ function controllerSelectedPassIds(passMetadata = new Map()) {
     .filter(Boolean));
 }
 
+function paletteRoleDisciplineScore(colorPurposes = []) {
+  const purposes = new Set(arr(colorPurposes).map(str).filter(Boolean));
+  if (!purposes.size) return NaN;
+  const hasStructure = [...purposes].some((purpose) => purpose.includes("structure") || purpose.includes("background"));
+  const hasMotionSupport = [...purposes].some((purpose) => purpose.includes("motion") || purpose.includes("support"));
+  const hasAccent = [...purposes].some((purpose) => purpose.includes("accent") || purpose.includes("focal"));
+  return average([
+    clamp01(purposes.size / 4),
+    hasStructure ? 1 : 0,
+    hasMotionSupport ? 1 : 0,
+    hasAccent ? 1 : 0
+  ]);
+}
+
 function recommendationRows(scores = {}) {
   const rows = [];
   if (scores.displayEvolution < 0.65) rows.push("Strengthen the beginning-to-end energy shape and make each window feel like a purposeful step.");
@@ -254,6 +268,11 @@ export function buildVideoAestheticScore({
     average(localEvidenceBasis.map((row) => row.visualBalance)),
     average(localEvidenceBasis.map((row) => bandScore(row.activeCoverageMean, 0.025, 0.12)))
   ]);
+  const paletteRoleDiscipline = average(basisWindows.map((row) => paletteRoleDisciplineScore(passMetadata.get(row.passId)?.colorPurposes)));
+  const renderColorDiscipline = average(basisWindows.map((row) => row.colorDiscipline));
+  const colorDiscipline = Number.isFinite(paletteRoleDiscipline)
+    ? Math.max(renderColorDiscipline, paletteRoleDiscipline)
+    : renderColorDiscipline;
   const scores = {
     displayEvolution: round6(progressionScores.displayEvolution),
     pacingVariety: round6(average([
@@ -268,7 +287,7 @@ export function buildVideoAestheticScore({
     ])),
     focalClarity: round6(average(basisWindows.map((row) => row.focalClarity))),
     visualBalance: round6(average(basisWindows.map((row) => row.visualBalance))),
-    colorDiscipline: round6(average(basisWindows.map((row) => row.colorDiscipline))),
+    colorDiscipline: round6(colorDiscipline),
     motionInterest: round6(average([
       average(basisWindows.map((row) => row.motionCoherence)),
       motionVariety
@@ -332,6 +351,8 @@ export function buildVideoAestheticScore({
       localEvidenceWindowCount: localEvidenceWindows.length,
       localEvidenceRoles: [...new Set(localEvidenceWindows.flatMap((row) => arr(passMetadata.get(row.passId)?.localEvidenceRoles)))],
       colorPurposes: [...new Set(basisWindows.flatMap((row) => arr(passMetadata.get(row.passId)?.colorPurposes)))],
+      paletteRoleDiscipline: round6(paletteRoleDiscipline),
+      renderColorDiscipline: round6(renderColorDiscipline),
       temporalContinuityInputs: {
         temporalMotionMean: basisWindows.map((row) => round6(row.temporalMotionMean)),
         colorDiversityMean: basisWindows.map((row) => round6(row.colorDiversityMean)),

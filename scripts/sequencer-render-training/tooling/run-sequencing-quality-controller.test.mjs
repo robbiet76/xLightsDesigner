@@ -379,7 +379,7 @@ test("controller counts durable display review records for display-level goals",
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
     ...record("sibling_submodels_split", 0.86, []),
-    experimentId: "display-quality-review-mono_white",
+    experimentId: "display-quality-review-rgb_primary",
     family: "display_quality_review",
     sampleCount: 2,
     trendStatus: "stable",
@@ -558,7 +558,7 @@ test("controller targets rgb display aesthetic records by palette and pass", () 
     qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"]
   }, {
     ...record("display_regional_focus_contrast", 0.89, []),
-    experimentId: "display-quality-review-mono_white",
+    experimentId: "display-quality-review-rgb_primary",
     family: "display_quality_review",
     sampleCount: 2,
     trendStatus: "stable",
@@ -1011,7 +1011,7 @@ test("controller selects focal consistency repair after all current video strate
 });
 
 test("controller leaves exhausted video aesthetic strategy set for other promising goals", () => {
-  const roots = [tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir()];
+  const roots = [tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir()];
   const strategies = [
     "section_window_pacing_balance",
     "regional_focus_contrast",
@@ -1019,7 +1019,8 @@ test("controller leaves exhausted video aesthetic strategy set for other promisi
     "rgb_primary_structure_balance_pacing_repair",
     "rgb_primary_regional_focus_contrast",
     "simultaneous_display_balance_revision",
-    "focal_consistency_repair"
+    "focal_consistency_repair",
+    "palette_depth_contrast_motion_repair"
   ];
   roots.forEach((root, index) => {
     writeRunRoot(root, []);
@@ -1087,6 +1088,58 @@ test("controller leaves exhausted video aesthetic strategy set for other promisi
   assert.equal(state.controllerDecision.selectedGoalId, "target_transfer.compatibility_adaptation.v1");
   assert.equal(state.controllerDecision.selectionReason, "blocked_promising_records");
   assert.equal(state.nextQueue[0].passId, "similar_cane_transfer_probe");
+});
+
+test("controller selects palette depth contrast after prior video strategies are ineffective", () => {
+  const roots = [tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir(), tempDir()];
+  const strategies = [
+    "section_window_pacing_balance",
+    "regional_focus_contrast",
+    "rgb_primary_color_discipline_repair",
+    "rgb_primary_structure_balance_pacing_repair",
+    "rgb_primary_regional_focus_contrast",
+    "simultaneous_display_balance_revision",
+    "focal_consistency_repair"
+  ];
+  roots.forEach((root, index) => {
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: index === 0 ? "regressed" : "neutral" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{ nextStrategy: strategies[index] }]
+    });
+  });
+  const latestRoot = roots[roots.length - 1];
+  const records = JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8"));
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...records,
+    sourceRunRoots: roots
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.nextQueue[0].previousAttemptStatus, "neutral");
+  assert.equal(state.nextQueue[0].nextStrategy, "palette_depth_contrast_motion_repair");
 });
 
 test("controller moves improved rgb color discipline to structure balance pacing when balance remains weak", () => {
@@ -1211,7 +1264,7 @@ test("controller resolves creative prerequisite blocker from display and music e
   writeRunRoot(runRoot, [
     {
       ...record("display_review", 0.86, []),
-      experimentId: "display-quality-review-mono_white",
+      experimentId: "display-quality-review-rgb_primary",
       family: "display_quality_review",
       sampleCount: 2,
       trendStatus: "stable",

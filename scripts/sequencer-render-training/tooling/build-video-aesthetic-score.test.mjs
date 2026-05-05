@@ -18,6 +18,7 @@ function writeWindow(root, {
   quality,
   motion = 0.12,
   color = 0.7,
+  colorDiscipline = 0.8,
   coverage = 0.04,
   eligible = true
 } = {}) {
@@ -40,7 +41,7 @@ function writeWindow(root, {
       visualReadability: 0.78,
       intentMatch: 0.76,
       compositionBalance: 0.74,
-      colorDiscipline: 0.8,
+      colorDiscipline,
       motionCoherence: 0.82,
       transitionQuality: 0.79,
       clutterControl: 0.95
@@ -278,4 +279,48 @@ test("video aesthetic score uses layer intent metadata for local evidence readab
   );
   assert.equal(artifact.scores.localEvidenceReadability > 0.75, true);
   assert.equal(artifact.scores.temporalContinuity, 0.5);
+});
+
+test("video aesthetic score treats explicit palette roles as disciplined multicolor intent", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-aesthetic-palette-roles-"));
+  const candidate = writeWindow(root, {
+    passId: "display_palette_depth_contrast_motion_repair",
+    startMs: 0,
+    endMs: 4000,
+    quality: 0.74,
+    motion: 0.13,
+    color: 1,
+    colorDiscipline: 0.1,
+    coverage: 0.05
+  });
+  const progressionPath = writeProgression(root);
+  writeJson(path.join(root, "training-plan.json"), {
+    artifactType: "layer_composition_training_plan_v1",
+    experiments: [{
+      passes: [{
+        passId: "display_palette_depth_contrast_motion_repair",
+        controllerSelection: { selectedByController: true },
+        placements: [
+          { layerIntent: { colorPurpose: "background_structure" } },
+          { layerIntent: { colorPurpose: "structure_motion_support" } },
+          { layerIntent: { colorPurpose: "focal_accent" } }
+        ]
+      }]
+    }]
+  });
+  writeJson(path.join(root, "full-sequence-review-loop.json"), {
+    artifactType: "full_sequence_review_loop_v1",
+    status: "ready",
+    windowCount: 1,
+    evidenceEligibleWindowCount: 1,
+    progressionObservationRef: progressionPath,
+    windows: [candidate]
+  });
+
+  const artifact = buildVideoAestheticScore({ runRoot: root });
+
+  assert.equal(artifact.scoreBasis, "controller_selected_window_metrics_and_progression_observation");
+  assert.equal(artifact.scoringSignals.renderColorDiscipline, 0.1);
+  assert.equal(artifact.scoringSignals.paletteRoleDiscipline > 0.8, true);
+  assert.equal(artifact.scores.colorDiscipline > 0.8, true);
 });
