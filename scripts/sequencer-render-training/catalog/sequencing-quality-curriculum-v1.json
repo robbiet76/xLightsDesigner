@@ -472,6 +472,54 @@
       }
     },
     {
+      "goalId": "display.video_aesthetic.safe_local_evidence_v1",
+      "areaId": "display_level_composition",
+      "priority": 4,
+      "status": "not_started",
+      "description": "Learn bounded local and layer evidence inside a whole-display review pass so detailed model activity can be evaluated without sacrificing display-level balance.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_safe_local_evidence_repair"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "foreground_background_separation",
+          "motion_coherence",
+          "palette_readability",
+          "regional_variety"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use restrained, short-window local accents over a stable display foundation so the review can separate useful model-level detail from display-level clutter.",
+        "Prefer explicit layer intent and color-purpose metadata over model-name assumptions when describing why a local placement exists."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_safe_local_evidence_repair"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
       "goalId": "effect_fit.expanded_model_matrix.v1",
       "areaId": "effect_behavior",
       "priority": 4,

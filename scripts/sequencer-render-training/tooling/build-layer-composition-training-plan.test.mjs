@@ -882,6 +882,53 @@ test("layer composition plan preserves palette from targeted display coverage un
   );
 });
 
+test("layer composition plan expands safe local evidence coverage units", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-targeted-safe-local-display-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 20,
+      controllerDecision: {
+        selectedGoalId: "display.video_aesthetic.safe_local_evidence_v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.video_aesthetic.safe_local_evidence_v1:coverage-gap",
+        goalId: "display.video_aesthetic.safe_local_evidence_v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "rgb_primary",
+          passId: "display_safe_local_evidence_repair"
+        }]
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_rgb_color_discipline_repair", "display_safe_local_evidence_repair"]
+  );
+  const repairPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_safe_local_evidence_repair");
+  assert.equal(repairPass.controllerSelection.selectedByController, true);
+  assert.equal(repairPass.placements.length, 4);
+  assert.deepEqual(
+    repairPass.placements.map((placement) => placement.layerIntent?.localEvidenceRole),
+    [
+      "display_context",
+      "linear_node_order_readability",
+      "radial_structure_readability",
+      "vertical_structure_readability"
+    ]
+  );
+});
+
 test("layer composition plan expands music structure coverage-gap controller queue", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

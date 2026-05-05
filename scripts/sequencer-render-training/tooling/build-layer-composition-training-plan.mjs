@@ -1855,6 +1855,122 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       colorPurpose: "warm_focal_accent"
     }
   });
+  const safeLocalFoundation = placement({
+    id: `dq-${paletteProfile}-safe-local-foundation`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 52,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "quiet_display_context",
+      displayReviewRole: "safe_local_evidence_repair",
+      localEvidenceRole: "display_context",
+      colorPurpose: "structure"
+    }
+  });
+  const safeLocalLineThread = placement({
+    id: `dq-${paletteProfile}-safe-local-line-thread`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 800,
+    endMs: 3600,
+    effectSettings: { effect: "Chase", cycles: 2, colorSpeed: 2 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 58,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "bounded_local_motion_thread",
+      displayReviewRole: "safe_local_evidence_repair",
+      localEvidenceRole: "linear_node_order_readability",
+      colorPurpose: "structure_motion_support"
+    }
+  });
+  const safeLocalStarAccent = placement({
+    id: `dq-${paletteProfile}-safe-local-star-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 2400,
+    endMs: 4300,
+    effectSettings: { arms: 3, twists: 1, rotation: 12 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 42,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "short_local_focal_detail",
+      displayReviewRole: "safe_local_evidence_repair",
+      localEvidenceRole: "radial_structure_readability",
+      colorPurpose: "warm_focal_accent"
+    }
+  });
+  const safeLocalTreeFill = placement({
+    id: `dq-${paletteProfile}-safe-local-tree-fill`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Bars",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 3800,
+    endMs: 6000,
+    effectSettings: { direction: "up", cycles: 1 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 48,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "late_low_intensity_local_fill",
+      displayReviewRole: "safe_local_evidence_repair",
+      localEvidenceRole: "vertical_structure_readability",
+      colorPurpose: "structure"
+    }
+  });
 
   return {
     experimentId: `display-quality-review-${paletteProfile}`,
@@ -1942,6 +2058,14 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
         comparisonBasePassId: "display_rgb_color_discipline_repair",
         changeType: "video_aesthetic_rgb_structure_balance_pacing_repair"
+      },
+      {
+        passId: "display_safe_local_evidence_repair",
+        compositionPass: "display_review",
+        placements: [safeLocalFoundation, safeLocalLineThread, safeLocalStarAccent, safeLocalTreeFill],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_rgb_color_discipline_repair",
+        changeType: "video_aesthetic_safe_local_evidence_repair"
       }
     ]
   };
