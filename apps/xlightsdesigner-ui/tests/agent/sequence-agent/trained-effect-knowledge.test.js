@@ -116,10 +116,15 @@ test("trained effect knowledge retrieves layer composition guidance by sequencer
   assert.equal(bundle.retrievalContract.consumptionPolicy, "advisory_evidence_not_recipe");
   assert.equal(guidance.artifactType, "sequencer_layer_composition_guidance_v1");
   assert.equal(guidance.retrievalPolicy, "advisory_evidence_not_recipe");
+  assert.equal(guidance.applicabilityPolicy, "shared_baseline_priors_require_structural_and_metadata_compatibility");
+  assert.equal(guidance.projectLocalOverrideArtifact, "display/target-behavior.json");
   assert.equal(guidance.runtimeUseBlocked, false);
   assert.ok(guidance.recommendations.length > 0);
   assert.equal(guidance.recommendations[0].scope.family, "group_model_interplay");
+  assert.equal(["compatible", "similar"].includes(guidance.recommendations[0].compatibility.status), true);
+  assert.equal(guidance.recommendations[0].compatibility.projectLocalValidationRequired, false);
   assert.ok(guidance.recommendations[0].reasons.includes("compositionIntent"));
+  assert.ok(guidance.recommendations[0].reasons.some((reason) => ["compatibleStructure", "similarStructure"].includes(reason)));
   assert.ok(guidance.recommendations[0].outcomeTags.includes("scene_spread_increased"));
   assert.ok(guidance.recommendations[0].safeguards.some((row) => /fixed sequencing recipe/i.test(row)));
 });
@@ -129,6 +134,9 @@ test("trained effect knowledge blocks runtime layer composition guidance until p
     compositionIntent: "foundation",
     family: "group_model_interplay",
     paletteProfile: "mono_white",
+    targetScopes: ["group"],
+    modelTypes: ["arch"],
+    effectNames: ["Bars"],
     includeStaged: false,
     bundleOverride: {
       artifactType: "sequencer_layer_composition_priors_bundle",
@@ -172,6 +180,9 @@ test("trained effect knowledge allows selector-ready layer composition guidance 
     compositionIntent: "foundation",
     family: "group_model_interplay",
     paletteProfile: "mono_white",
+    targetScopes: ["group"],
+    modelTypes: ["arch"],
+    effectNames: ["Bars"],
     includeStaged: false,
     bundleOverride: {
       artifactType: "sequencer_layer_composition_priors_bundle",
@@ -198,7 +209,10 @@ test("trained effect knowledge allows selector-ready layer composition guidance 
           scope: {
             compositionIntent: "foundation",
             family: "group_model_interplay",
-            paletteProfile: "mono_white"
+            paletteProfile: "mono_white",
+            targetScopes: ["group"],
+            modelTypes: ["arch"],
+            effectNames: ["Bars"]
           },
           guidance: ["quality-backed foundation prior"],
           safeguards: ["Use only in compatible context."]
@@ -211,6 +225,66 @@ test("trained effect knowledge allows selector-ready layer composition guidance 
   assert.equal(guidance.recommendationCount, 1);
   assert.equal(guidance.recommendations[0].selectorReady, true);
   assert.equal(guidance.recommendations[0].promotionState, "selector_ready");
+  assert.equal(guidance.recommendations[0].compatibility.status, "compatible");
+});
+
+test("trained effect knowledge flags weak layer composition matches for project-local validation", () => {
+  const guidance = recommendLayerCompositionPriors({
+    compositionIntent: "foundation",
+    family: "group_model_interplay",
+    paletteProfile: "mono_white",
+    targetScopes: ["model"],
+    modelTypes: ["custom"],
+    effectNames: ["Bars"],
+    includeStaged: false,
+    bundleOverride: {
+      artifactType: "sequencer_layer_composition_priors_bundle",
+      recordType: "layer_composition_prior_v1",
+      retrievalContract: {
+        consumptionPolicy: "advisory_evidence_not_recipe_until_promotion_gate_ready",
+        applicabilityPolicy: "shared_baseline_priors_require_structural_and_metadata_compatibility",
+        projectLocalOverrideArtifact: "display/target-behavior.json"
+      },
+      promotionGate: {
+        selectorRuntimeReady: true,
+        qualityBackedPriorCount: 1,
+        selectorReadyPriorCount: 1,
+        blockers: []
+      },
+      indexes: {
+        byCompositionIntent: { foundation: ["prior-1"] },
+        byFamily: { group_model_interplay: ["prior-1"] },
+        byPaletteProfile: { mono_white: ["prior-1"] },
+        byOutcomeTag: {}
+      },
+      records: {
+        "prior-1": {
+          priorId: "prior-1",
+          confidence: "quality_backed",
+          selectorReady: true,
+          promotionState: "selector_ready",
+          scope: {
+            learningScope: "shared_baseline",
+            reusePolicy: "compatible_structure_and_metadata_only",
+            compositionIntent: "foundation",
+            family: "group_model_interplay",
+            paletteProfile: "mono_white",
+            targetScopes: ["group"],
+            modelTypes: ["arch"],
+            effectNames: ["Bars"]
+          },
+          guidance: ["quality-backed foundation prior"],
+          safeguards: ["Use only in compatible context."]
+        }
+      }
+    }
+  });
+
+  assert.equal(guidance.recommendationCount, 1);
+  assert.equal(guidance.recommendations[0].compatibility.status, "weak_match");
+  assert.equal(guidance.recommendations[0].compatibility.projectLocalValidationRequired, true);
+  assert.equal(guidance.recommendations[0].learningLayer.projectLocalOverrideArtifact, "display/target-behavior.json");
+  assert.ok(guidance.recommendations[0].reasons.includes("projectLocalValidationRequired"));
 });
 
 test("trained effect knowledge recommends selector-ready video aesthetic strategies", () => {

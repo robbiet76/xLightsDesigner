@@ -952,6 +952,44 @@ function layerCompositionPromotionGate(bundle = {}) {
   };
 }
 
+function layerCompositionCompatibility({ scope = {}, targetScopes = [], modelTypes = [], geometryProfiles = [], effectNames = [] } = {}) {
+  const geometryMatches = intersectionCount(scope.geometryProfiles, geometryProfiles);
+  const modelTypeMatches = intersectionCount(scope.modelTypes, modelTypes);
+  const targetScopeMatches = intersectionCount(scope.targetScopes, targetScopes);
+  const effectMatches = intersectionCount(scope.effectNames, effectNames);
+  const requestedStructuralSignals = unique([
+    ...targetScopes,
+    ...modelTypes,
+    ...geometryProfiles,
+    ...effectNames
+  ]).length;
+  const structuralMatchCount = geometryMatches + modelTypeMatches + targetScopeMatches + effectMatches;
+  const strong = (geometryMatches > 0 || modelTypeMatches > 0) && effectMatches > 0;
+  const similar = structuralMatchCount >= 2 && effectMatches > 0;
+  const weak = structuralMatchCount > 0;
+  const status = strong
+    ? 'compatible'
+    : similar
+      ? 'similar'
+      : weak
+        ? 'weak_match'
+        : requestedStructuralSignals
+          ? 'not_compatible'
+          : 'insufficient_target_context';
+  return {
+    status,
+    projectLocalValidationRequired: !['compatible', 'similar'].includes(status),
+    structuralMatchCount,
+    requestedStructuralSignals,
+    matches: {
+      geometryProfile: geometryMatches,
+      modelType: modelTypeMatches,
+      targetScope: targetScopeMatches,
+      effectName: effectMatches
+    }
+  };
+}
+
 export function recommendLayerCompositionPriors({
   compositionIntent = '',
   family = '',
@@ -1038,11 +1076,41 @@ export function recommendLayerCompositionPriors({
         score += outcomeMatches * 14;
         reasons.push('observedOutcome');
       }
+      const compatibility = layerCompositionCompatibility({
+        scope,
+        targetScopes,
+        modelTypes,
+        geometryProfiles,
+        effectNames
+      });
+      if (compatibility.status === 'compatible') {
+        score += 40;
+        reasons.push('compatibleStructure');
+      } else if (compatibility.status === 'similar') {
+        score += 18;
+        reasons.push('similarStructure');
+      } else if (compatibility.status === 'weak_match') {
+        score -= 35;
+        reasons.push('projectLocalValidationRequired');
+      } else if (compatibility.status === 'not_compatible') {
+        score -= 120;
+        reasons.push('notStructurallyCompatible');
+      } else {
+        score -= 20;
+        reasons.push('insufficientTargetContext');
+      }
       return {
         priorId: normText(prior.priorId),
+        learningLayer: prior.learningLayer || {
+          scope: normText(scope.learningScope) || 'shared_baseline',
+          targetApplicability: normText(scope.reusePolicy) || 'compatible_structure_and_metadata_only',
+          projectLocalOverrideArtifact: 'display/target-behavior.json',
+          projectLocalBehaviorRequiredForUnknownTargets: true
+        },
         confidence: normText(prior.confidence),
         selectorReady: prior.selectorReady === true,
         promotionState: normText(prior.promotionState),
+        compatibility,
         scope,
         conditions: prior.conditions || {},
         observedEffects: prior.observedEffects || {},
@@ -1067,6 +1135,8 @@ export function recommendLayerCompositionPriors({
     sourceArtifactType: normText(bundle?.artifactType),
     recordType: normText(bundle?.recordType),
     retrievalPolicy: normText(bundle?.retrievalContract?.consumptionPolicy) || 'advisory_evidence_not_recipe',
+    applicabilityPolicy: normText(bundle?.retrievalContract?.applicabilityPolicy) || 'shared_baseline_priors_require_structural_and_metadata_compatibility',
+    projectLocalOverrideArtifact: normText(bundle?.retrievalContract?.projectLocalOverrideArtifact) || 'display/target-behavior.json',
     runtimeUseBlocked,
     promotionGate,
     context: {
