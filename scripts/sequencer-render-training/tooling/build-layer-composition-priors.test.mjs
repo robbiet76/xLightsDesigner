@@ -94,11 +94,18 @@ test("prior builder stages conditional non-selector-ready layer composition prio
   });
 
   assert.equal(bundle.artifactType, "layer_composition_priors_v1");
+  assert.equal(bundle.learningLayer.scope, "shared_baseline");
+  assert.equal(bundle.learningLayer.targetApplicability, "compatible_structure_and_metadata_only");
+  assert.equal(bundle.learningLayer.projectLocalOverrideArtifact, "display/target-behavior.json");
   assert.equal(bundle.priorCount, 1);
   assert.equal(bundle.selectorReadyCount, 0);
   const prior = bundle.priors[0];
   assert.equal(prior.selectorReady, false);
   assert.equal(prior.promotionState, "staged");
+  assert.equal(prior.learningLayer.scope, "shared_baseline");
+  assert.equal(prior.learningLayer.projectLocalBehaviorRequiredForUnknownTargets, true);
+  assert.equal(prior.scope.learningScope, "shared_baseline");
+  assert.equal(prior.scope.reusePolicy, "compatible_structure_and_metadata_only");
   assert.equal(prior.scope.compositionIntent, "foundation_plus_model_focus");
   assert.deepEqual(prior.scope.effectNames, ["Bars", "Pinwheel"]);
   assert.deepEqual(prior.scope.targetScopes, ["group", "model"]);
@@ -122,6 +129,7 @@ test("prior builder stages conditional non-selector-ready layer composition prio
   assert.equal(prior.guidance.includes("brightness: brightness_variation_increased"), true);
   assert.equal(prior.guidance.includes("Bars barCount: color_position_motion_increased"), true);
   assert.equal(prior.safeguards.some((text) => text.includes("fixed sequencing recipe")), true);
+  assert.equal(prior.safeguards.some((text) => text.includes("project-local target behavior evidence")), true);
 });
 
 test("prior builder attaches durable quality evidence when available", () => {

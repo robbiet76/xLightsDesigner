@@ -102,7 +102,8 @@ function promotePrior(prior = {}, options = {}) {
     safeguards: promoted
       ? [
         ...arr(prior.safeguards).map(str).filter(Boolean),
-        "Selector use must still match compatible family, palette, intent, target scope, and effect context."
+        "Selector use must still match compatible family, palette, intent, target scope, and effect context.",
+        "Shared baseline priors may be overridden or narrowed by project-local target behavior evidence."
       ]
       : arr(prior.safeguards).map(str).filter(Boolean)
   };
@@ -129,7 +130,9 @@ export function promoteLayerCompositionPriors({
       minSampleCount,
       minQuality,
       acceptedTrendStatuses: ACCEPTED_TRENDS,
-      sourceArtifactType: str(source?.artifactType)
+      sourceArtifactType: str(source?.artifactType),
+      targetApplicability: "compatible_structure_and_metadata_only",
+      projectLocalOverrideArtifact: "display/target-behavior.json"
     },
     priorCount: promotedPriors.length,
     qualityBackedPriorCount: promotedPriors.filter((prior) => prior.qualityEvidence?.durableCandidate).length,

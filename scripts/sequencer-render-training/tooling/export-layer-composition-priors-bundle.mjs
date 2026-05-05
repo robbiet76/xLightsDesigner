@@ -69,6 +69,9 @@ function outcomeTags(prior = {}) {
 
 function compactScope(scope = {}) {
   return {
+    learningScope: str(scope.learningScope || "shared_baseline"),
+    reusePolicy: str(scope.reusePolicy || "compatible_structure_and_metadata_only"),
+    projectLocalBehaviorRequiredForUnknownTargets: scope.projectLocalBehaviorRequiredForUnknownTargets !== false,
     family: str(scope.family),
     paletteProfile: str(scope.paletteProfile),
     compositionIntent: str(scope.compositionIntent),
@@ -187,6 +190,21 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
     const compactedPrior = compactRuntimePrior(prior, resolvedRunRoot);
     records[priorId] = {
       priorId,
+      learningLayer: prior.learningLayer && typeof prior.learningLayer === "object"
+        ? {
+          scope: str(prior.learningLayer.scope || "shared_baseline"),
+          sourceDisplayClass: str(prior.learningLayer.sourceDisplayClass || ""),
+          targetApplicability: str(prior.learningLayer.targetApplicability || "compatible_structure_and_metadata_only"),
+          projectLocalOverrideArtifact: str(prior.learningLayer.projectLocalOverrideArtifact || "display/target-behavior.json"),
+          projectLocalBehaviorRequiredForUnknownTargets: prior.learningLayer.projectLocalBehaviorRequiredForUnknownTargets !== false
+        }
+        : {
+          scope: "shared_baseline",
+          sourceDisplayClass: "",
+          targetApplicability: "compatible_structure_and_metadata_only",
+          projectLocalOverrideArtifact: "display/target-behavior.json",
+          projectLocalBehaviorRequiredForUnknownTargets: true
+        },
       confidence: str(compactedPrior.confidence),
       selectorReady: compactedPrior.selectorReady === true,
       promotionState: str(compactedPrior.promotionState),
@@ -221,7 +239,11 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
       sourceArtifactType: str(source?.artifactType),
       sourceRunId: str(source?.sourceRunId),
       sourceRecordCount: arr(source?.priors).length,
-      compactionPolicy: "runtime_bundle_relativizes_raw_evidence_refs_and_omits_no_raw_frame_payloads"
+      compactionPolicy: "runtime_bundle_relativizes_raw_evidence_refs_and_omits_no_raw_frame_payloads",
+      learningScope: str(source?.learningLayer?.scope || "shared_baseline"),
+      sourceDisplayClass: str(source?.learningLayer?.sourceDisplayClass || "representative_vendor_fixture"),
+      targetApplicability: str(source?.learningLayer?.targetApplicability || "compatible_structure_and_metadata_only"),
+      projectLocalOverrideArtifact: str(source?.learningLayer?.projectLocalOverrideArtifact || "display/target-behavior.json")
     },
     sourceArtifactType: str(source?.artifactType),
     sourceRunId: str(source?.sourceRunId),
@@ -234,7 +256,9 @@ export function buildLayerCompositionPriorsBundle({ stagedPriors, sourcePath = "
     retrievalContract: {
       primaryFacets: ["family", "paletteProfile", "compositionIntent", "outcomeTags"],
       rankingPolicy: "facet_match_confidence_then_observed_strength",
-      consumptionPolicy: "advisory_evidence_not_recipe_until_promotion_gate_ready"
+      consumptionPolicy: "advisory_evidence_not_recipe_until_promotion_gate_ready",
+      applicabilityPolicy: "shared_baseline_priors_require_structural_and_metadata_compatibility",
+      projectLocalOverrideArtifact: "display/target-behavior.json"
     },
     promotionGate,
     indexes,

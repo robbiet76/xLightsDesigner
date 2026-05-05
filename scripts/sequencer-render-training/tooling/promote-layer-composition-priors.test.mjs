@@ -46,6 +46,9 @@ test("promotion makes durable quality-backed priors selector-ready", () => {
   assert.deepEqual(promoted.promotionReview.blockers, []);
   assert.equal(promoted.promotionReview.checks.every((check) => check.ok), true);
   assert.equal(promoted.safeguards.some((row) => row.includes("compatible family")), true);
+  assert.equal(promoted.safeguards.some((row) => row.includes("project-local target behavior evidence")), true);
+  assert.equal(artifact.promotionPolicy.targetApplicability, "compatible_structure_and_metadata_only");
+  assert.equal(artifact.promotionPolicy.projectLocalOverrideArtifact, "display/target-behavior.json");
 });
 
 test("promotion blocks priors without durable repeated quality evidence", () => {

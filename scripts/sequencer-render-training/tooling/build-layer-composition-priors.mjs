@@ -73,6 +73,9 @@ function compositionIntent(passId = "") {
 function priorScope(experiment = {}, pass = {}) {
   const placement = pass.placementSummary && typeof pass.placementSummary === "object" ? pass.placementSummary : {};
   return {
+    learningScope: "shared_baseline",
+    reusePolicy: "compatible_structure_and_metadata_only",
+    projectLocalBehaviorRequiredForUnknownTargets: true,
     family: str(experiment.family),
     paletteProfile: str(experiment.paletteProfile),
     compositionIntent: compositionIntent(pass.passId),
@@ -127,6 +130,18 @@ function buildPrior(experiment = {}, pass = {}, qualityRecordByPass = new Map())
     confidence: noMacroChange ? "control_or_no_observed_change" : "smoke_observed",
     selectorReady: false,
     promotionState: "staged",
+    learningLayer: {
+      scope: "shared_baseline",
+      sourceDisplayClass: "representative_vendor_fixture",
+      targetApplicability: "compatible_structure_and_metadata_only",
+      projectLocalOverrideArtifact: "display/target-behavior.json",
+      projectLocalBehaviorRequiredForUnknownTargets: true,
+      notes: [
+        "Shared training captures reusable behavior from representative models.",
+        "Do not treat representative model coverage as exhaustive for every user display.",
+        "Unknown, custom, or edge-case targets should collect project-local behavior evidence before confident reuse."
+      ]
+    },
     qualityEvidence: compactQualityEvidence,
     scope: priorScope(experiment, pass),
     conditions: {
@@ -221,7 +236,9 @@ function buildPrior(experiment = {}, pass = {}, qualityRecordByPass = new Map())
     safeguards: [
       "Do not reuse as a fixed sequencing recipe.",
       "Use only as conditional evidence about layering behavior.",
-      "Require broader overnight evidence before selector-ready promotion."
+      "Require broader overnight evidence before selector-ready promotion.",
+      "Apply shared priors only to structurally and semantically compatible targets.",
+      "Prefer project-local target behavior evidence for unknown, custom, or edge-case models."
     ]
   };
 }
@@ -239,6 +256,13 @@ export function buildLayerCompositionPriors({ deltaSummary, qualityRecords = nul
     artifactType: "layer_composition_priors_v1",
     artifactVersion: 1,
     generatedAt: new Date().toISOString(),
+    learningLayer: {
+      scope: "shared_baseline",
+      sourceDisplayClass: "representative_vendor_fixture",
+      targetApplicability: "compatible_structure_and_metadata_only",
+      projectLocalOverrideArtifact: "display/target-behavior.json",
+      projectLocalBehaviorRequiredForUnknownTargets: true
+    },
     sourceRunId: str(summary?.runId),
     sourceRunRoot: str(summary?.runRoot),
     sourceDeltaSummaryRef: str(summary?.sourceDeltaSummaryRef),

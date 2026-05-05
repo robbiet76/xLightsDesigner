@@ -72,6 +72,11 @@ test("layer composition bundle indexes priors by sequencer retrieval facets", ()
   assert.deepEqual(bundle.indexes.byOutcomeTag.scene_spread_increased, ["layer_composition:group_model_interplay:rgb_primary:group_then_model"]);
   assert.deepEqual(bundle.indexes.byOutcomeTag.order_equivalent, ["layer_composition:group_model_interplay:rgb_primary:group_then_model"]);
   const record = bundle.records["layer_composition:group_model_interplay:rgb_primary:group_then_model"];
+  assert.equal(bundle.provenance.learningScope, "shared_baseline");
+  assert.equal(bundle.provenance.targetApplicability, "compatible_structure_and_metadata_only");
+  assert.equal(bundle.retrievalContract.projectLocalOverrideArtifact, "display/target-behavior.json");
+  assert.equal(record.learningLayer.scope, "shared_baseline");
+  assert.equal(record.learningLayer.projectLocalOverrideArtifact, "display/target-behavior.json");
   assert.equal(record.qualityEvidence.recordId, "layer_quality:group-model-interplay-rgb_primary:group_then_model:bars:archgroup");
   assert.equal(record.qualityEvidence.meanOverallQuality, 0.84);
   assert.equal(record.qualityEvidence.latestRenderReviewRef, undefined);
@@ -83,8 +88,11 @@ test("layer composition bundle indexes priors by sequencer retrieval facets", ()
     "family",
     "geometryProfiles",
     "layerIndexes",
+    "learningScope",
     "modelTypes",
     "paletteProfile",
+    "projectLocalBehaviorRequiredForUnknownTargets",
+    "reusePolicy",
     "targetScopes"
   ].sort());
   assert.deepEqual(Object.keys(record.observedEffects).sort(), [
