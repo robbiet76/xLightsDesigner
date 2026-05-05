@@ -153,6 +153,14 @@ function loadWindow(fullWindow = {}) {
   };
 }
 
+function controllerSelectedPassIds(runRoot = "") {
+  const plan = readJsonIfExists(path.join(resolvePath(runRoot), "training-plan.json")) || {};
+  return new Set(arr(plan.experiments).flatMap((experiment) => arr(experiment.passes))
+    .filter((pass) => pass?.controllerSelection?.selectedByController)
+    .map((pass) => str(pass.passId))
+    .filter(Boolean));
+}
+
 function recommendationRows(scores = {}) {
   const rows = [];
   if (scores.displayEvolution < 0.65) rows.push("Strengthen the beginning-to-end energy shape and make each window feel like a purposeful step.");
@@ -177,9 +185,12 @@ export function buildVideoAestheticScore({
   const resolvedOutPath = resolvePath(outPath || path.join(root, "video-aesthetic-score.json"));
   const windows = arr(fullSequence.windows).map(loadWindow);
   const eligibleWindows = windows.filter((row) => row.evidenceEligible);
+  const selectedPassIds = controllerSelectedPassIds(root);
+  const selectedEligibleWindows = eligibleWindows.filter((row) => selectedPassIds.has(row.passId));
   const progression = readJsonIfExists(fullSequence.progressionObservationRef) || {};
   const progressionScores = scoreFromProgression(progression);
-  const basisWindows = eligibleWindows.length >= 2 ? eligibleWindows : windows.filter((row) => row.measurementStatus !== "render_health_observation");
+  const fallbackWindows = eligibleWindows.length >= 2 ? eligibleWindows : windows.filter((row) => row.measurementStatus !== "render_health_observation");
+  const basisWindows = selectedEligibleWindows.length ? selectedEligibleWindows : fallbackWindows;
   const motionVariety = rangeScore(basisWindows.map((row) => row.temporalMotionMean), 0.25);
   const colorVariety = rangeScore(basisWindows.map((row) => row.colorDiversityMean), 1);
   const coverageVariety = rangeScore(basisWindows.map((row) => row.activeCoverageMean), 0.08);
@@ -220,7 +231,8 @@ export function buildVideoAestheticScore({
     scores.intentMatch,
     scores.qualityConsistency
   ]));
-  const status = str(fullSequence.status) === "ready" && basisWindows.length >= 2
+  const minimumScoredWindows = selectedEligibleWindows.length ? 1 : 2;
+  const status = str(fullSequence.status) === "ready" && basisWindows.length >= minimumScoredWindows
     ? "ready"
     : "insufficient_video_windows";
   const artifact = {
@@ -234,7 +246,11 @@ export function buildVideoAestheticScore({
     windowCount: windows.length,
     scoredWindowCount: basisWindows.length,
     evidenceEligibleWindowCount: eligibleWindows.length,
-    scoreBasis: "deterministic_window_metrics_and_progression_observation",
+    controllerSelectedWindowCount: selectedEligibleWindows.length,
+    minimumScoredWindows,
+    scoreBasis: selectedEligibleWindows.length
+      ? "controller_selected_window_metrics_and_progression_observation"
+      : "deterministic_window_metrics_and_progression_observation",
     qualityDimensions: [
       "display_evolution",
       "pacing_variety",

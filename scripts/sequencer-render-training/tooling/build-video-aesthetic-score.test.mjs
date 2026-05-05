@@ -157,3 +157,51 @@ test("video aesthetic score blocks when full-sequence review has too few windows
   assert.equal(artifact.promotion.evidenceEligible, false);
   assert.ok(artifact.promotion.blockers.includes("insufficient_scored_windows"));
 });
+
+test("video aesthetic score prefers controller-selected candidate windows over dependencies", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-aesthetic-selected-"));
+  const dependency = writeWindow(root, {
+    passId: "display_motion_variety",
+    startMs: 0,
+    endMs: 2000,
+    quality: 0.55,
+    motion: 0.02,
+    color: 1
+  });
+  const candidate = writeWindow(root, {
+    passId: "display_focal_consistency_repair",
+    startMs: 2000,
+    endMs: 4000,
+    quality: 0.88,
+    motion: 0.12,
+    color: 0.35
+  });
+  const progressionPath = writeProgression(root);
+  writeJson(path.join(root, "training-plan.json"), {
+    artifactType: "layer_composition_training_plan_v1",
+    experiments: [{
+      passes: [
+        { passId: "display_motion_variety", controllerSelection: { reason: "comparison_dependency" } },
+        { passId: "display_focal_consistency_repair", controllerSelection: { selectedByController: true } }
+      ]
+    }]
+  });
+  writeJson(path.join(root, "full-sequence-review-loop.json"), {
+    artifactType: "full_sequence_review_loop_v1",
+    status: "ready",
+    windowCount: 2,
+    evidenceEligibleWindowCount: 2,
+    progressionObservationRef: progressionPath,
+    windows: [dependency, candidate]
+  });
+
+  const artifact = buildVideoAestheticScore({ runRoot: root });
+
+  assert.equal(artifact.scoreBasis, "controller_selected_window_metrics_and_progression_observation");
+  assert.equal(artifact.status, "ready");
+  assert.equal(artifact.scoredWindowCount, 1);
+  assert.equal(artifact.controllerSelectedWindowCount, 1);
+  assert.equal(artifact.minimumScoredWindows, 1);
+  assert.deepEqual(artifact.windows.map((window) => window.passId), ["display_focal_consistency_repair"]);
+  assert.equal(artifact.scores.sectionQualityMean, 0.88);
+});
