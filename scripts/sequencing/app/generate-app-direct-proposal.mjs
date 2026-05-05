@@ -186,6 +186,23 @@ function normalizeArray(value) {
   return Array.isArray(value) ? value.map((row) => str(row)).filter(Boolean) : [];
 }
 
+function compactPaletteRow(row = {}) {
+  const out = {
+    name: str(row?.name || row?.label),
+    hex: str(row?.hex || row?.color || row?.value),
+    role: str(row?.role || row?.usage || row?.intent)
+  };
+  const purpose = str(row?.purpose || row?.intendedUse || row?.recommendedUse);
+  const recommendedUse = str(row?.recommendedUse);
+  const roleTags = normalizeArray(row?.roleTags || row?.tags);
+  const constraints = normalizeArray(row?.constraints);
+  if (purpose) out.purpose = purpose;
+  if (recommendedUse) out.recommendedUse = recommendedUse;
+  if (roleTags.length) out.roleTags = roleTags;
+  if (constraints.length) out.constraints = constraints;
+  return out;
+}
+
 function normalizePaletteRows(rows = []) {
   return Array.isArray(rows)
     ? rows
@@ -197,11 +214,9 @@ function normalizePaletteRows(rows = []) {
               role: index === 0 ? 'base' : (index === 1 ? 'highlight' : 'accent')
             };
           }
-          return {
-            name: str(row?.name || row?.label || `palette ${index + 1}`),
-            hex: str(row?.hex || row?.color || row?.value),
-            role: str(row?.role || row?.usage || row?.intent)
-          };
+          const normalized = compactPaletteRow(row);
+          if (!normalized.name) normalized.name = `palette ${index + 1}`;
+          return normalized;
         })
         .filter((row) => /^#[0-9a-f]{6}$/i.test(row.hex))
         .slice(0, 8)

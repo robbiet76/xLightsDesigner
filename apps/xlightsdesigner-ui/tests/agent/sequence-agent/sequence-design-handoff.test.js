@@ -40,7 +40,7 @@ test("sequencing design handoff carries compact visual asset references", () => 
     sequenceId: "seq-1",
     themeSummary: "warm nostalgic glow",
     inspirationPrompt: "Create a warm nostalgic holiday collage.",
-    palette: [{ name: "candle gold", hex: "#ffc45c", role: "warm highlight" }],
+    palette: [{ name: "candle gold", hex: "#ffc45c", role: "warm highlight", purpose: "focal warmth" }],
     motifs: ["window glow", "soft garland"],
     displayAsset: { relativePath: "inspiration-board.png" },
     sequenceAssets: [
@@ -96,6 +96,7 @@ test("sequencing design handoff carries compact visual asset references", () => 
 
   assert.equal(artifact.visualAssetPackRef, visualPack.artifactId);
   assert.deepEqual(artifact.paletteRoles, visualPack.creativeIntent.palette);
+  assert.equal(artifact.paletteRoles[0].purpose, "focal warmth");
   assert.deepEqual(artifact.motifDirectives, ["window glow", "soft garland"]);
   assert.deepEqual(artifact.mediaAssetDirectives, [
     {

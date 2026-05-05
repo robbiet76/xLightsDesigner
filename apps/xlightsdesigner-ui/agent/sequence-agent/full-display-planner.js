@@ -103,9 +103,13 @@ function normalizeVisualPaletteRows(rows = []) {
     .map((row) => ({
       name: normText(row?.name),
       hex: normText(row?.hex),
-      role: normText(row?.role)
+      role: normText(row?.role || row?.usage || row?.intent),
+      purpose: normText(row?.purpose || row?.intendedUse || row?.recommendedUse),
+      recommendedUse: normText(row?.recommendedUse),
+      roleTags: normArray(row?.roleTags || row?.tags).map((value) => normText(value)).filter(Boolean),
+      constraints: normArray(row?.constraints).map((value) => normText(value)).filter(Boolean)
     }))
-    .filter((row) => row.name || row.hex || row.role);
+    .filter((row) => row.name || row.hex || row.role || row.purpose);
 }
 
 export function buildVisualDesignPlanningContext(sequencingDesignHandoff = null) {
@@ -122,7 +126,7 @@ export function buildVisualDesignPlanningContext(sequencingDesignHandoff = null)
     ? referencePatterns.densityPerMinute
     : {};
   const paletteText = paletteRows
-    .map((row) => [row.name, row.role, row.hex].filter(Boolean).join(" "))
+    .map((row) => [row.name, row.role, row.purpose, row.hex].filter(Boolean).join(" "))
     .filter(Boolean)
     .join(", ");
   const motifText = motifs.join(", ");
@@ -796,36 +800,67 @@ function buildPaletteIntentForPlacement({ visualPlanningContext = null, row = {}
     .map((paletteRow) => ({
       name: normText(paletteRow?.name),
       hex: normText(paletteRow?.hex),
-      role: normText(paletteRow?.role)
+      role: normText(paletteRow?.role),
+      purpose: normText(paletteRow?.purpose),
+      recommendedUse: normText(paletteRow?.recommendedUse),
+      roleTags: normArray(paletteRow?.roleTags || paletteRow?.tags).map((value) => normText(value)).filter(Boolean),
+      constraints: normArray(paletteRow?.constraints).map((value) => normText(value)).filter(Boolean)
     }))
     .filter((paletteRow) => /^#[0-9a-f]{6}$/i.test(paletteRow.hex));
   if (!paletteRows.length) return null;
+  const forward = paletteRows.slice(0, 8).map((paletteRow) => ({
+    ...paletteRow,
+    role: paletteRow.role || paletteRow.name || "palette_color"
+  }));
   const canonicalPaletteRows = [];
-  const forward = paletteRows.slice(0, 8);
   const reverse = forward.slice().reverse();
   for (let cycle = 0; canonicalPaletteRows.length < 8; cycle += 1) {
     const source = cycle % 2 === 0 ? forward : reverse;
     for (const paletteRow of source) {
       if (canonicalPaletteRows.length >= 8) break;
-      canonicalPaletteRows.push({
-        ...paletteRow,
-        role: paletteRow.role || paletteRow.name || (cycle % 2 === 0 ? "forward palette color" : "reverse palette color")
-      });
+      canonicalPaletteRows.push(paletteRow);
     }
   }
+  const categoryFor = (paletteRow = {}) => {
+    const text = [
+      paletteRow.role,
+      paletteRow.name,
+      paletteRow.purpose,
+      paletteRow.recommendedUse,
+      ...normArray(paletteRow.roleTags)
+    ].map(normText).join(" ").toLowerCase();
+    if (/\b(structure|base|foundation|support|background|continuity|neutral)\b/.test(text)) return "structure";
+    if (/\b(focal|highlight|accent|lead|warm)\b/.test(text)) return "accent";
+    if (/\b(motion|cool|sparkle|response|secondary)\b/.test(text)) return "motion";
+    return "general";
+  };
+  const indexedRows = canonicalPaletteRows.map((paletteRow, index) => ({
+    ...paletteRow,
+    paletteIndex: index + 1,
+    category: categoryFor(paletteRow)
+  }));
   const role = normText(row?.compositionRole || row?.role).toLowerCase();
-  const desiredCount = role === "accent" || role === "focal" ? 3 : (role === "background" ? 2 : 4);
-  const colorCount = Math.min(canonicalPaletteRows.length, desiredCount);
-  const offset = Math.abs(Number(placementIndex) || 0) % canonicalPaletteRows.length;
-  const activePaletteIndexes = [];
-  for (let index = 0; index < colorCount; index += 1) {
-    activePaletteIndexes.push(((offset + index) % canonicalPaletteRows.length) + 1);
-  }
+  const roleWanted = role === "accent" || role === "focal"
+    ? ["accent", "motion", "structure", "general"]
+    : role === "background" || role === "foundation" || role === "support"
+      ? ["structure", "general", "motion", "accent"]
+      : ["structure", "accent", "motion", "general"];
+  const selected = roleWanted
+    .map((category) => indexedRows.find((paletteRow) => paletteRow.category === category))
+    .filter(Boolean)[0] || indexedRows[Math.abs(Number(placementIndex) || 0) % indexedRows.length];
+  const activePaletteIndexes = selected ? [selected.paletteIndex] : [];
+  const selectedColorRoles = selected ? uniqueNormTexts([selected.role, selected.name, selected.category]) : [];
   return {
     colors: activePaletteIndexes.map((index) => canonicalPaletteRows[index - 1]?.hex).filter(Boolean),
     paletteColors: canonicalPaletteRows.map((paletteRow) => paletteRow.hex),
     activePaletteIndexes,
     colorRoles: activePaletteIndexes.map((index) => canonicalPaletteRows[index - 1]?.role || canonicalPaletteRows[index - 1]?.name).filter(Boolean),
+    colorPurpose: selected?.category || "",
+    selectedColorRole: selected?.role || selected?.name || "",
+    selectedColorRoles,
+    selectedColorPurpose: selected?.purpose || selected?.recommendedUse || "",
+    paletteRoleConstraints: normArray(selected?.constraints).filter(Boolean),
+    paletteSelectionPolicy: "role_purpose_single_primary_color",
     brightness: role === "accent" || role === "focal" || Number(row?.layerIndex || 0) > 0 ? "medium_high" : "medium",
     contrast: role === "accent" || role === "focal" ? "high" : "medium",
     saturation: "medium",
@@ -958,8 +993,11 @@ function layerCompositionGuidanceForPlacement({
     sourceAggregateTargetId: row.sourceAggregateTargetId,
     targetGranularity: targetRow.targetGranularity
   });
+  const activeColors = normArray(paletteIntent?.colors).map((color) => normText(color).toLowerCase()).filter(Boolean);
   const activePaletteCount = normArray(paletteIntent?.activePaletteIndexes).length;
-  const paletteProfile = activePaletteCount > 1 ? "rgb_primary" : "mono_white";
+  const paletteProfile = activePaletteCount > 1 || activeColors.some((color) => color && color !== "#ffffff")
+    ? "rgb_primary"
+    : "mono_white";
   const desiredOutcomeTags = uniqueNormTexts([
     "scene_spread_increased",
     paletteProfile === "rgb_primary" ? "multicolor_increased" : "",
@@ -1578,6 +1616,10 @@ export function buildFullDisplayPlan({
           visualFamilies: portfolio.visualFamilies,
           layerCompositionPriorIds: normArray(layerCompositionGuidance?.recommendations).map((prior) => normText(prior?.priorId)).filter(Boolean),
           layerCompositionGuidanceMode: normText(layerCompositionGuidance?.retrievalPolicy),
+          colorPurpose: normText(paletteIntent?.colorPurpose),
+          selectedColorRoles: normArray(paletteIntent?.selectedColorRoles),
+          selectedColorPurpose: normText(paletteIntent?.selectedColorPurpose),
+          paletteSelectionPolicy: normText(paletteIntent?.paletteSelectionPolicy),
           referenceGuidedScale: {
             densityPerMinute: scale.boundedDensity,
             targetTotalPlacements: scale.targetTotalPlacements,
@@ -1592,6 +1634,8 @@ export function buildFullDisplayPlan({
         layerIntent: {
           blendRole: row.blendRole,
           compositionLayerPass: row.compositionLayerPass,
+          colorPurpose: normText(paletteIntent?.colorPurpose),
+          selectedColorRoles: normArray(paletteIntent?.selectedColorRoles),
           buildOrder: row.compositionLayerOrder,
           dependsOnPriorLayers: Number(row.compositionLayerOrder) > 0,
           mixAmount: row.layerIndex > 0 ? "medium" : "default"

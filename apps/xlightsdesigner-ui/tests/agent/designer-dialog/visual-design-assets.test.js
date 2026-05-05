@@ -21,8 +21,8 @@ test("visual design asset pack builder creates valid compact manifest", () => {
     themeSummary: "icy choral tension with gold release",
     inspirationPrompt: "Create a collage mood board for icy choral holiday tension with gold release.",
     palette: [
-      { name: "ice blue", hex: "#8fd8ff", role: "cool base" },
-      { name: "warm gold", hex: "#ffd36a", role: "impact highlight" }
+      { name: "ice blue", hex: "#8fd8ff", role: "cool base", purpose: "structure wash", constraints: ["keep readable"] },
+      { name: "warm gold", hex: "#ffd36a", role: "impact highlight", purpose: "focal release" }
     ],
     motifs: ["ice shards", "bell shimmer"],
     avoidances: ["do not depict the literal xLights layout"],
@@ -64,6 +64,8 @@ test("visual design asset pack builder creates valid compact manifest", () => {
   assert.equal(pack.displayAsset.relativePath, "inspiration-board.png");
   assert.equal(pack.palette.required, true);
   assert.deepEqual(pack.palette.colors, pack.creativeIntent.palette);
+  assert.equal(pack.creativeIntent.palette[0].purpose, "structure wash");
+  assert.deepEqual(pack.creativeIntent.palette[0].constraints, ["keep readable"]);
   assert.equal(pack.displayAsset.currentRevisionId, "board-r001");
   assert.equal(pack.imageRevisions[0].mode, "generate");
   assert.equal(pack.imageRevisions[0].paletteLocked, true);

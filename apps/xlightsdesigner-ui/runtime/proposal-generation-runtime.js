@@ -101,12 +101,23 @@ export function shouldGenerateVisualDesignAssetsFromIntent(text = "", options = 
 
 function normalizePaletteRoles(rows = []) {
   return arr(rows)
-    .map((row) => ({
-      name: str(row?.name),
-      hex: str(row?.hex),
-      role: str(row?.role)
-    }))
-    .filter((row) => row.name || row.hex || row.role);
+    .map((row) => {
+      const out = {
+        name: str(row?.name),
+        hex: str(row?.hex),
+        role: str(row?.role || row?.usage || row?.intent)
+      };
+      const purpose = str(row?.purpose || row?.intendedUse || row?.recommendedUse);
+      const recommendedUse = str(row?.recommendedUse);
+      const roleTags = arr(row?.roleTags || row?.tags).map((value) => str(value)).filter(Boolean);
+      const constraints = arr(row?.constraints).map((value) => str(value)).filter(Boolean);
+      if (purpose) out.purpose = purpose;
+      if (recommendedUse) out.recommendedUse = recommendedUse;
+      if (roleTags.length) out.roleTags = roleTags;
+      if (constraints.length) out.constraints = constraints;
+      return out;
+    })
+    .filter((row) => row.name || row.hex || row.role || row.purpose);
 }
 
 function normalizeVisualMediaAssetDirectives(rows = []) {

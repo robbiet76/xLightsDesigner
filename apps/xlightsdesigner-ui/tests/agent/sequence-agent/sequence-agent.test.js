@@ -5131,10 +5131,10 @@ test("sequence_agent promotes execution-strategy targets into scope for full-dis
         artifactId: "sequencing-design-full-yard-test",
         designSummary: "Full display direct request",
         paletteRoles: [
-          { name: "base", hex: "#0b3d91", role: "base" },
-          { name: "highlight", hex: "#2a9d8f", role: "highlight" },
-          { name: "accent", hex: "#f4a261", role: "accent" },
-          { name: "accent-2", hex: "#e76f51", role: "accent" }
+          { name: "structure white", hex: "#ffffff", role: "structure", purpose: "base geometry continuity", constraints: ["use for display structure"] },
+          { name: "warm focal red", hex: "#c8324a", role: "warm_focal_accent", purpose: "short focal emphasis", constraints: ["use sparingly"] },
+          { name: "cool motion blue", hex: "#0b3d91", role: "cool_motion_accent", purpose: "motion support" },
+          { name: "reserved amber", hex: "#f4a261", role: "reserved_secondary_accent", purpose: "secondary accent only" }
         ],
         referenceSequencePatterns: {
           artifactId: "sequence_reference_patterns_v1-test",
@@ -5173,4 +5173,10 @@ test("sequence_agent promotes execution-strategy targets into scope for full-dis
   assert.ok(effectCommands.length >= 12);
   assert.ok(effectCommands.some((command) => command.intent?.settingsIntent?.configuredBehaviorRecordId));
   assert.ok(effectCommands.some((command) => command.intent?.parameterPriorGuidance?.priors?.length));
+  const roleAwareCommand = effectCommands.find((command) => command.intent?.paletteIntent?.paletteSelectionPolicy === "role_purpose_single_primary_color");
+  assert.ok(roleAwareCommand);
+  assert.ok(roleAwareCommand.intent.paletteIntent.activePaletteIndexes.length <= 1);
+  assert.ok(roleAwareCommand.intent.paletteIntent.selectedColorRoles.length >= 1);
+  assert.equal(roleAwareCommand.intent.settingsIntent.paletteSelectionPolicy, "role_purpose_single_primary_color");
+  assert.ok(roleAwareCommand.intent.layerIntent.selectedColorRoles.length >= 1);
 });

@@ -46,10 +46,18 @@ function normalizePaletteColorRows(paletteContext = null) {
       return {
         name: normText(row?.name),
         hex: normText(row?.hex),
-        role: normText(row?.role)
+        role: normText(row?.role || row?.usage || row?.intent),
+        purpose: normText(row?.purpose || row?.intendedUse || row?.recommendedUse),
+        recommendedUse: normText(row?.recommendedUse),
+        roleTags: Array.isArray(row?.roleTags || row?.tags)
+          ? (row.roleTags || row.tags).map((value) => normText(value)).filter(Boolean)
+          : [],
+        constraints: Array.isArray(row?.constraints)
+          ? row.constraints.map((value) => normText(value)).filter(Boolean)
+          : []
       };
     })
-    .filter((row) => row.name || row.hex || row.role);
+    .filter((row) => row.name || row.hex || row.role || row.purpose);
 }
 
 function paletteRowsToXlightsPalette(rows = []) {

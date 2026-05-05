@@ -279,8 +279,8 @@ test("designer proposal can attach visual inspiration pack when explicitly reque
     themeSummary: "icy choral tension with gold release",
     inspirationPrompt: "Create an icy and gold inspiration board.",
     palette: [
-      { name: "ice blue", hex: "#8fd8ff", role: "base" },
-      { name: "warm gold", hex: "#ffd36a", role: "accent" }
+      { name: "ice blue", hex: "#8fd8ff", role: "base", purpose: "structure wash" },
+      { name: "warm gold", hex: "#ffd36a", role: "accent", purpose: "focal release" }
     ],
     motifs: ["bell shimmer"],
     displayAsset: { relativePath: "inspiration-board.png" }
@@ -391,6 +391,7 @@ test("designer proposal can attach visual inspiration pack when explicitly reque
   assert.equal(state.creative.proposalBundle.visualAssets.assetPackId, visualPack.artifactId);
   assert.equal(sequenceInput.sequencingDesignHandoff.visualAssetPackRef, visualPack.artifactId);
   assert.equal(sequenceInput.sequencingDesignHandoff.paletteRoles[0].hex, "#8fd8ff");
+  assert.equal(sequenceInput.sequencingDesignHandoff.paletteRoles[0].purpose, "structure wash");
   assert.deepEqual(sequenceInput.sequencingDesignHandoff.motifDirectives, ["bell shimmer"]);
   assert.equal(stages.some((row) => row.stage === "visual_design_assets" && row.status === "ok"), true);
 });
