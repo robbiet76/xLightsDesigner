@@ -1682,6 +1682,94 @@ test("controller moves past a stalled coverage gap with no accepted evidence", (
   assert.equal(state.nextQueue[0].reason, "coverage_gap");
 });
 
+test("controller keeps recent stalled coverage gaps on cooldown", () => {
+  const root = tempDir();
+  const stalledRoot = path.join(root, "stalled");
+  const latestRoot = path.join(root, "latest");
+  fs.mkdirSync(stalledRoot, { recursive: true });
+  fs.mkdirSync(latestRoot, { recursive: true });
+
+  writeRunRoot(stalledRoot, []);
+  writeJson(path.join(stalledRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "effect_fit.expanded_model_matrix.v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{
+        paletteProfile: "rgb_primary",
+        effect: "Butterfly",
+        modelType: "spinner"
+      }]
+    }]
+  });
+  writeJson(path.join(stalledRoot, "pass-runner-summary.json"), {
+    artifactType: "layer_composition_pass_runner_summary_v1",
+    processedPasses: 4,
+    renderReviewAcceptedEvidenceCount: 0,
+    renderReviewEligibleQualityMean: 0
+  });
+  writeVideoAestheticScore(stalledRoot, {
+    scores: {
+      overallAestheticScore: 0.2
+    }
+  });
+  writeVideoAestheticAttemptComparison(stalledRoot, {
+    comparisonStatus: "blocked"
+  });
+
+  writeRunRoot(latestRoot, []);
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    artifactType: "layer_composition_quality_records_v1",
+    sourceRunRoots: [stalledRoot],
+    durableCandidateCount: 0,
+    blockedRecordCount: 0,
+    records: []
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "effect_fit.expanded_model_matrix.v1",
+        areaId: "effect_behavior",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["expanded_effect_fit"],
+          paletteProfiles: ["rgb_primary"],
+          effects: ["Butterfly"],
+          modelTypes: ["spinner"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "effect", "modelType"],
+          desiredCoverageUnits: [{
+            paletteProfile: "rgb_primary",
+            effect: "Butterfly",
+            modelType: "spinner"
+          }]
+        }
+      }, {
+        goalId: "music.structure_alignment.v1",
+        areaId: "musical_structure",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          families: ["music_structure_review"],
+          timingSources: ["section"]
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(
+    state.goalStatuses.find((goal) => goal.goalId === "effect_fit.expanded_model_matrix.v1").blockers.includes("coverage gap attempt produced no accepted evidence"),
+    true
+  );
+  assert.equal(state.controllerDecision.selectedGoalId, "music.structure_alignment.v1");
+});
+
 test("controller increments loop index from a previous state", () => {
   const runRoot = tempDir();
   const previousStatePath = path.join(runRoot, "previous-state.json");

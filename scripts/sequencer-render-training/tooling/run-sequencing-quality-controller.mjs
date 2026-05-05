@@ -83,6 +83,30 @@ function recentVideoAestheticAttemptHistory(latestRunRoot = "", qualityRecords =
   }).filter((row) => row.comparisonStatus && row.nextStrategy);
 }
 
+function recentControllerAttemptHistory(latestRunRoot = "", qualityRecords = {}) {
+  const roots = [...new Set([
+    ...arr(qualityRecords?.sourceRunRoots).map(resolvePath),
+    resolvePath(latestRunRoot)
+  ].filter(Boolean))].slice(-12);
+  return roots.map((root) => {
+    const controllerState = readJsonIfExists(path.join(root, "controller-state.json")) || {};
+    const queue = arr(controllerState.nextQueue)[0] || {};
+    const passRunner = readJsonIfExists(path.join(root, "pass-runner-summary.json")) || {};
+    const comparison = readJsonIfExists(path.join(root, "video-aesthetic-attempt-comparison.json")) || {};
+    const score = readJsonIfExists(path.join(root, "video-aesthetic-score.json")) || {};
+    return {
+      runRoot: root,
+      goalId: str(queue.goalId),
+      reason: str(queue.reason),
+      missingCoverageUnitCount: arr(queue.missingCoverageUnits).length,
+      processedPasses: num(passRunner.processedPasses),
+      acceptedEvidenceCount: num(passRunner.renderReviewAcceptedEvidenceCount),
+      comparisonStatus: str(comparison.comparisonStatus),
+      overallAestheticScore: round6(score.scores?.overallAestheticScore)
+    };
+  }).filter((row) => row.goalId);
+}
+
 function stableQueueId(record = {}) {
   return [
     "quality-controller",
@@ -166,6 +190,7 @@ function latestRunArtifacts(latestRunRoot = "") {
     latestRunRoot: resolvePath(latestRunRoot),
     ...artifacts,
     recentVideoAestheticAttempts: recentVideoAestheticAttemptHistory(latestRunRoot, artifacts.qualityRecords),
+    recentControllerAttempts: recentControllerAttemptHistory(latestRunRoot, artifacts.qualityRecords),
     refs: files,
     missingArtifacts
   };
@@ -470,18 +495,29 @@ function supportsGeneratedCoverageGap(goal = {}) {
 }
 
 function coverageGapAttemptStalled(goal = {}, artifacts = {}, policy = {}) {
-  const previousQueue = arr(artifacts.controllerState?.nextQueue)[0] || {};
-  if (str(previousQueue.goalId) !== str(goal.goalId)) return false;
-  if (str(previousQueue.reason) !== "coverage_gap") return false;
-  if (!arr(previousQueue.missingCoverageUnits).length) return false;
-  if (num(artifacts.passRunnerSummary?.processedPasses) <= 0) return false;
-  if (num(artifacts.passRunnerSummary?.renderReviewAcceptedEvidenceCount) > 0) return false;
+  const latestQueue = arr(artifacts.controllerState?.nextQueue)[0] || {};
+  const latestAttempt = {
+    goalId: str(latestQueue.goalId),
+    reason: str(latestQueue.reason),
+    missingCoverageUnitCount: arr(latestQueue.missingCoverageUnits).length,
+    processedPasses: num(artifacts.passRunnerSummary?.processedPasses),
+    acceptedEvidenceCount: num(artifacts.passRunnerSummary?.renderReviewAcceptedEvidenceCount),
+    comparisonStatus: str(artifacts.videoAestheticAttemptComparison?.comparisonStatus),
+    overallAestheticScore: num(artifacts.videoAestheticScore?.scores?.overallAestheticScore)
+  };
+  return [latestAttempt, ...arr(artifacts.recentControllerAttempts)].some((attempt) => {
+    if (str(attempt.goalId) !== str(goal.goalId)) return false;
+    if (str(attempt.reason) !== "coverage_gap") return false;
+    if (num(attempt.missingCoverageUnitCount) <= 0) return false;
+    if (num(attempt.processedPasses) <= 0) return false;
+    if (num(attempt.acceptedEvidenceCount) > 0) return false;
 
-  const comparisonStatus = str(artifacts.videoAestheticAttemptComparison?.comparisonStatus);
-  const overallScore = num(artifacts.videoAestheticScore?.scores?.overallAestheticScore);
-  return comparisonStatus === "blocked"
-    || comparisonStatus === "regressed"
-    || (overallScore > 0 && overallScore < policy.minimumOverallQuality);
+    const comparisonStatus = str(attempt.comparisonStatus);
+    const overallScore = num(attempt.overallAestheticScore);
+    return comparisonStatus === "blocked"
+      || comparisonStatus === "regressed"
+      || (overallScore > 0 && overallScore < policy.minimumOverallQuality);
+  });
 }
 
 function buildGoalStatuses(curriculum = {}, artifacts = {}) {
