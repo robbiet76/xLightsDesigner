@@ -695,6 +695,61 @@ test("controller does not repeat section-window strategy after neutral section-w
   assert.equal(state.nextQueue[0].nextStrategy, "regional_focus_contrast");
 });
 
+test("controller avoids recently ineffective video aesthetic strategies", () => {
+  const firstRoot = tempDir();
+  const secondRoot = tempDir();
+  const latestRoot = tempDir();
+  for (const root of [firstRoot, secondRoot, latestRoot]) {
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+  }
+  writeVideoAestheticAttemptComparison(firstRoot, { comparisonStatus: "regressed" });
+  writeJson(path.join(firstRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{ nextStrategy: "section_window_pacing_balance" }]
+  });
+  writeVideoAestheticAttemptComparison(secondRoot, { comparisonStatus: "neutral" });
+  writeJson(path.join(secondRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{ nextStrategy: "regional_focus_contrast" }]
+  });
+  writeVideoAestheticAttemptComparison(latestRoot, { comparisonStatus: "neutral" });
+  writeJson(path.join(latestRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{ nextStrategy: "regional_focus_contrast" }]
+  });
+  const records = JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8"));
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...records,
+    sourceRunRoots: [firstRoot, secondRoot, latestRoot]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.nextQueue[0].previousAttemptStatus, "neutral");
+  assert.equal(state.nextQueue[0].avoidStrategy, "section_window_pacing_balance,regional_focus_contrast");
+  assert.equal(state.nextQueue[0].nextStrategy, "rgb_primary_regional_focus_contrast");
+});
+
 test("controller moves improved regional focus to rgb primary when color discipline remains weak", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, []);

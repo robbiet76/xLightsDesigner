@@ -8,6 +8,12 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const DEFAULT_CURRICULUM_PATH = "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json";
 const DEFAULT_OUT_PATH = "var/logs/sequencing-quality-controller/controller-state.json";
 const DEFAULT_MAX_QUEUE = 25;
+const VIDEO_AESTHETIC_STRATEGIES = [
+  "section_window_pacing_balance",
+  "regional_focus_contrast",
+  "rgb_primary_regional_focus_contrast",
+  "simultaneous_display_balance_revision"
+];
 
 function arr(value) {
   return Array.isArray(value) ? value : [];
@@ -54,6 +60,24 @@ function writeJson(filePath, payload) {
 function artifactPath(runRoot, fileName) {
   const root = resolvePath(runRoot);
   return root ? path.join(root, fileName) : "";
+}
+
+function recentVideoAestheticAttemptHistory(latestRunRoot = "", qualityRecords = {}) {
+  const roots = [...new Set([
+    ...arr(qualityRecords?.sourceRunRoots).map(resolvePath),
+    resolvePath(latestRunRoot)
+  ].filter(Boolean))].slice(-8);
+  return roots.map((root) => {
+    const comparison = readJsonIfExists(path.join(root, "video-aesthetic-attempt-comparison.json")) || {};
+    const controllerState = readJsonIfExists(path.join(root, "controller-state.json")) || {};
+    const queue = arr(controllerState.nextQueue)[0] || {};
+    return {
+      runRoot: root,
+      comparisonStatus: str(comparison.comparisonStatus),
+      nextStrategy: str(queue.nextStrategy),
+      overallAestheticScoreDelta: round6(comparison.summary?.overallAestheticScoreDelta)
+    };
+  }).filter((row) => row.comparisonStatus && row.nextStrategy);
 }
 
 function stableQueueId(record = {}) {
@@ -138,6 +162,7 @@ function latestRunArtifacts(latestRunRoot = "") {
   return {
     latestRunRoot: resolvePath(latestRunRoot),
     ...artifacts,
+    recentVideoAestheticAttempts: recentVideoAestheticAttemptHistory(latestRunRoot, artifacts.qualityRecords),
     refs: files,
     missingArtifacts
   };
@@ -558,6 +583,10 @@ function videoAestheticAttemptStrategy(artifacts = {}) {
     || str(arr(artifacts.controllerState?.nextQueue)[0]?.avoidStrategy)
     || "simultaneous_display_balance_revision";
   const weakDimensions = new Set(weakVideoAestheticDimensions(artifacts.videoAestheticScore || {}).map((row) => row.dimension));
+  const recentIneffectiveStrategies = new Set(arr(artifacts.recentVideoAestheticAttempts)
+    .filter((row) => ["neutral", "regressed"].includes(str(row.comparisonStatus)))
+    .map((row) => str(row.nextStrategy))
+    .filter(Boolean));
   if (comparisonStatus === "improved") {
     return {
       previousStrategy,
@@ -578,14 +607,16 @@ function videoAestheticAttemptStrategy(artifacts = {}) {
       reason: ""
     };
   }
-  const nextStrategy = previousStrategy === "section_window_pacing_balance"
-    ? "regional_focus_contrast"
-    : "section_window_pacing_balance";
+  recentIneffectiveStrategies.add(previousStrategy);
+  const nextStrategy = VIDEO_AESTHETIC_STRATEGIES.find((strategy) => !recentIneffectiveStrategies.has(strategy))
+    || (previousStrategy === "section_window_pacing_balance" ? "regional_focus_contrast" : "section_window_pacing_balance");
   return {
     previousStrategy,
-    avoidStrategy: previousStrategy,
+    avoidStrategy: [...recentIneffectiveStrategies].join(","),
     nextStrategy,
-    reason: `previous video aesthetic attempt was ${comparisonStatus}`
+    reason: recentIneffectiveStrategies.size > 1
+      ? `recent video aesthetic attempts were ineffective for ${[...recentIneffectiveStrategies].join(", ")}`
+      : `previous video aesthetic attempt was ${comparisonStatus}`
   };
 }
 
