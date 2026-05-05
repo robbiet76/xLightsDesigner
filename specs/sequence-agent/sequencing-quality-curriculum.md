@@ -161,9 +161,10 @@ The unattended runner writes `unattended-run-summary.json` after every iteration
 and advances from one loop root to the next only after an executed loop. It
 stops on `controller_idle`, `awaiting_evidence`, `blocked_no_controller_queue`,
 or `max_loops_reached`. When it stops on idle, the next curriculum expansion
-should be chosen deliberately. The current active expansion is broader
-effect/model coverage; after it is covered, the next preferred expansions are
-stronger video-level aesthetic scoring and richer creative revision variants.
+should be chosen deliberately. After expanded effect/model coverage is covered,
+the next preferred expansions are stronger video-level aesthetic scoring, richer
+creative revision variants, and matrix/cane/tree-360 coverage when those model
+families are available in the active training layout.
 
 ## Selection Rules
 
