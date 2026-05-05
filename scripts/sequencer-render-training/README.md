@@ -91,6 +91,7 @@ Generated manifests under `manifests/generated/` are local run artifacts. They a
 - `tooling/run-layer-composition-owned-pass.mjs`
 - `tooling/run-sequencing-quality-controller.mjs`
 - `tooling/run-sequencing-quality-loop.mjs`
+- `tooling/run-video-aesthetic-training-orchestrator.mjs`
 - `tooling/harvest-effect-outcome-records.mjs`
 - `tooling/build-effect-settings-coverage-report.mjs`
 - `tooling/build-effect-training-automation-plan.mjs`
@@ -306,6 +307,21 @@ small live runs. It repeats controller-selected loops, advances the latest run
 root after each executed loop, writes `unattended-run-summary.json` after every
 iteration, and stops on controller idle, missing evidence, blockers, or
 `--max-loops`.
+Use `run-video-aesthetic-training-orchestrator.mjs` for display-level video
+aesthetic training once the loop is ready to run without per-turn supervision.
+It repeats controller loops, exports selector-ready video aesthetic guidance
+when an attempt improves, and writes `video-aesthetic-training-report.json` with
+the best run, score trajectory, latest resumable checkpoint, and next steps.
+
+```bash
+node scripts/sequencer-render-training/tooling/run-video-aesthetic-training-orchestrator.mjs \
+  --seed-run-root /tmp/xld-video-aesthetic-display-loop-000010 \
+  --previous-state /tmp/xld-video-aesthetic-display-loop-000010/controller-state-next-corrected.json \
+  --model-catalog /tmp/xld-vendor-fixture-model-catalog.json \
+  --out-root var/logs/video-aesthetic-training-orchestrator \
+  --max-loops 20 \
+  --max-passes 5
+```
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-layer-composition-deltas.mjs \
