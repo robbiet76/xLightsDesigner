@@ -77,7 +77,7 @@ function classifyAttempt(deltas = [], threshold = 0.01) {
   const hardRegressions = deltas.filter((row) => hardRegressionDimensions.has(row.dimension) && num(row.delta) <= -0.03);
   const broadRegressions = deltas.filter((row) => row.dimension !== "overall_aesthetic_score" && num(row.delta) <= -0.05);
   if (overall >= threshold && !hardRegressions.length) return "improved";
-  if (overall <= -threshold || hardRegressions.length || broadRegressions.length >= 3) return "regressed";
+  if (overall <= -threshold || (hardRegressions.length && overall < threshold) || broadRegressions.length >= 3) return "regressed";
   return "neutral";
 }
 

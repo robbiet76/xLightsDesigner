@@ -103,3 +103,31 @@ test("video aesthetic attempt comparison marks broad regression", () => {
   assert.equal(artifact.promotionEligible, false);
   assert.equal(artifact.summary.regressedDimensionCount, 4);
 });
+
+test("video aesthetic attempt comparison treats score recovery with hard tradeoff as neutral", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-attempt-tradeoff-"));
+  const baseline = path.join(root, "baseline");
+  const candidate = path.join(root, "candidate");
+  writeScore(baseline, {
+    overallAestheticScore: 0.67,
+    colorDiscipline: 0.1,
+    sectionQualityMean: 0.77,
+    intentMatch: 0.73
+  });
+  writeScore(candidate, {
+    overallAestheticScore: 0.75,
+    colorDiscipline: 0.91,
+    sectionQualityMean: 0.88,
+    intentMatch: 0.68
+  });
+
+  const artifact = buildVideoAestheticAttemptComparison({
+    baselineRunRoot: baseline,
+    candidateRunRoot: candidate
+  });
+
+  assert.equal(artifact.comparisonStatus, "neutral");
+  assert.equal(artifact.promotionEligible, false);
+  assert.equal(artifact.summary.overallAestheticScoreDelta, 0.08);
+  assert.equal(artifact.summary.strongestRegressions[0].dimension, "intent_match");
+});
