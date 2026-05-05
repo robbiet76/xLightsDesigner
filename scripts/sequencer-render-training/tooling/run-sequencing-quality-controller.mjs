@@ -503,6 +503,7 @@ function supportsGeneratedCoverageGap(goal = {}) {
     || goalId === "effect_fit.core_effects.v1"
     || goalId === "effect_fit.expanded_model_matrix.v1"
     || goalId === "music.structure_alignment.v1"
+    || goalId === "music.multi_section_structure.v1"
     || goalId === "display.full_sequence.quality_v1"
     || goalId.startsWith("display.video_aesthetic.");
 }

@@ -673,6 +673,56 @@ test("controller counts durable music timing records for music-structure goals",
   assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
 });
 
+test("controller plans multi-section music structure after earlier curriculum is covered", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "music.structure_alignment.v1",
+        areaId: "musical_structure",
+        priority: 1,
+        status: "covered",
+        coverage: {
+          families: ["music_structure_review"]
+        }
+      }, {
+        goalId: "music.multi_section_structure.v1",
+        areaId: "musical_structure",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          families: ["music_structure_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["multi_section_energy_arc", "motif_reprise_variation", "lyric_phrase_release"],
+          timingSources: ["section", "phrase", "beat", "lyric", "accent"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 3,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [
+            { paletteProfile: "rgb_primary", passId: "multi_section_energy_arc" },
+            { paletteProfile: "rgb_primary", passId: "motif_reprise_variation" },
+            { paletteProfile: "rgb_primary", passId: "lyric_phrase_release" }
+          ]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "music.multi_section_structure.v1");
+  assert.equal(state.nextQueue.length, 1);
+  assert.equal(state.nextQueue[0].goalId, "music.multi_section_structure.v1");
+  assert.ok(state.nextQueue[0].missingCoverageUnits.every((row) => row.paletteProfile === "rgb_primary"));
+  assert.deepEqual(
+    state.nextQueue[0].missingCoverageUnits.map((row) => row.passId),
+    ["multi_section_energy_arc", "motif_reprise_variation", "lyric_phrase_release"]
+  );
+});
+
 test("controller does not advance past explicitly blocked curriculum goals", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{

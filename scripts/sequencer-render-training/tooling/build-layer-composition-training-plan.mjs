@@ -354,6 +354,23 @@ function palettePurpose(profile) {
   };
 }
 
+function paletteLayerSettings(profile, purpose, settings = {}) {
+  const activeSlots = (() => {
+    if (profile !== "rgb_primary") return [1];
+    if (purpose === "warm_focal_accent") return [2];
+    if (purpose === "cool_motion_accent") return [4];
+    if (purpose === "reserved_secondary_accent") return [3];
+    if (purpose === "background_structure") return [1, 4];
+    if (purpose === "structure_motion_support") return [1, 4];
+    return [1];
+  })();
+  const layerSettings = { ...settings };
+  for (let slot = 1; slot <= 8; slot += 1) {
+    layerSettings[`C_CHECKBOX_Palette${slot}`] = activeSlots.includes(slot);
+  }
+  return layerSettings;
+}
+
 function placement({
   id,
   target,
@@ -2790,9 +2807,10 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
     startMs: 0,
     endMs: 6000,
     effectSettings: { direction: "up", cycles: 2 },
-    layerSettings: { mixMethod: "Normal" },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure", { mixMethod: "Normal" }),
     layerIntent: {
       blendRole: "foundation",
+      colorPurpose: "structure",
       musicRole: {
         energy: "section_build",
         timingContext: {
@@ -2811,9 +2829,10 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
     startMs: 1000,
     endMs: 6000,
     effectSettings: { effect: "Chase", cycles: 4, colorSpeed: 6 },
-    layerSettings: { mixMethod: "Normal" },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure_motion_support", { mixMethod: "Normal" }),
     layerIntent: {
       blendRole: "beat_pulse",
+      colorPurpose: "structure_motion_support",
       musicRole: {
         beat: "four_count_pulse",
         timingContext: {
@@ -2832,9 +2851,10 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
     startMs: 2500,
     endMs: 4200,
     effectSettings: { cycles: 1, circularPalette: true },
-    layerSettings: { mixMethod: "Normal" },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal" }),
     layerIntent: {
       blendRole: "lyric_accent",
+      colorPurpose: "warm_focal_accent",
       musicRole: {
         lyric: "hook_keyword",
         accent: "lyric_hit",
@@ -2855,13 +2875,229 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
     startMs: 4200,
     endMs: 6000,
     effectSettings: { arms: 4, twists: 1, rotation: 20 },
-    layerSettings: { mixMethod: "Normal" },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal" }),
     layerIntent: {
       blendRole: "accent_motion",
+      colorPurpose: "cool_motion_accent",
       musicRole: {
         accent: "section_turnaround",
         timingContext: {
           accent: "section_turnaround"
+        }
+      }
+    }
+  });
+  const energyArcOpening = placement({
+    id: `mq-${paletteProfile}-energy-arc-opening`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "music_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 2200,
+    effectSettings: { direction: "up", cycles: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure", { mixMethod: "Normal", brightness: 48 }),
+    layerIntent: {
+      blendRole: "opening_section_anchor",
+      colorPurpose: "structure",
+      musicRole: {
+        energy: "intro_low_energy",
+        sectionRole: "opening",
+        timingContext: {
+          section: "intro",
+          phrase: "phrase_a"
+        }
+      }
+    }
+  });
+  const energyArcBuild = placement({
+    id: `mq-${paletteProfile}-energy-arc-build`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 1,
+    startMs: 1800,
+    endMs: 4200,
+    effectSettings: { effect: "Chase", cycles: 5, colorSpeed: 6 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 66 }),
+    layerIntent: {
+      blendRole: "middle_phrase_motion_build",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        energy: "phrase_build",
+        beat: "four_count_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "phrase_b",
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const energyArcRelease = placement({
+    id: `mq-${paletteProfile}-energy-arc-release`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 3900,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 62 }),
+    layerIntent: {
+      blendRole: "closing_phrase_release",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        energy: "release",
+        accent: "section_downbeat",
+        timingContext: {
+          section: "release",
+          phrase: "phrase_c",
+          accent: "downbeat_release"
+        }
+      }
+    }
+  });
+  const motifOpening = placement({
+    id: `mq-${paletteProfile}-motif-opening`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Marquee",
+    compositionPass: "music_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 1800,
+    effectSettings: { cycles: 3 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure", { mixMethod: "Normal", brightness: 52 }),
+    layerIntent: {
+      blendRole: "motif_statement",
+      colorPurpose: "structure",
+      musicRole: {
+        motif: "statement",
+        timingContext: {
+          section: "verse",
+          phrase: "motif_a"
+        }
+      }
+    }
+  });
+  const motifReprise = placement({
+    id: `mq-${paletteProfile}-motif-reprise`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Marquee",
+    compositionPass: "music_review",
+    layerIndex: 1,
+    startMs: 3000,
+    endMs: 4800,
+    effectSettings: { cycles: 5 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure_motion_support", { mixMethod: "Normal", brightness: 60 }),
+    layerIntent: {
+      blendRole: "motif_reprise_variation",
+      colorPurpose: "structure_motion_support",
+      musicRole: {
+        motif: "reprise_variation",
+        timingContext: {
+          section: "chorus",
+          phrase: "motif_a_reprise"
+        }
+      }
+    }
+  });
+  const motifSupport = placement({
+    id: `mq-${paletteProfile}-motif-support`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 4200,
+    endMs: 6000,
+    effectSettings: { arms: 4, twists: 1, rotation: 24 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 46 }),
+    layerIntent: {
+      blendRole: "motif_release_support",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        motif: "supporting_variation",
+        accent: "chorus_tail",
+        timingContext: {
+          section: "chorus",
+          accent: "tail_accent"
+        }
+      }
+    }
+  });
+  const lyricPhraseSetup = placement({
+    id: `mq-${paletteProfile}-lyric-phrase-setup`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 2600,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure", { mixMethod: "Normal", brightness: 46 }),
+    layerIntent: {
+      blendRole: "lyric_phrase_context",
+      colorPurpose: "structure",
+      musicRole: {
+        lyric: "phrase_setup",
+        timingContext: {
+          lyric: "line_setup",
+          phrase: "lyric_phrase_a"
+        }
+      }
+    }
+  });
+  const lyricPhraseHit = placement({
+    id: `mq-${paletteProfile}-lyric-phrase-hit`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "music_review",
+    layerIndex: 1,
+    startMs: 2400,
+    endMs: 3900,
+    effectSettings: { arms: 5, twists: 1, rotation: 26 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 60 }),
+    layerIntent: {
+      blendRole: "lyric_keyword_focal_hit",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        lyric: "keyword_hit",
+        accent: "vocal_hit",
+        timingContext: {
+          lyric: "keyword",
+          accent: "vocal_hit"
+        }
+      }
+    }
+  });
+  const lyricPhraseRelease = placement({
+    id: `mq-${paletteProfile}-lyric-phrase-release`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 3800,
+    endMs: 6000,
+    effectSettings: { effect: "Chase", cycles: 4, colorSpeed: 5 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 58 }),
+    layerIntent: {
+      blendRole: "lyric_phrase_release_motion",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        lyric: "line_release",
+        energy: "release",
+        timingContext: {
+          lyric: "line_release",
+          phrase: "lyric_phrase_resolution"
         }
       }
     }
@@ -2897,6 +3133,30 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
         comparisonBasePassId: "section_phrase_energy",
         changeType: "music_lyric_accent_added"
+      },
+      {
+        passId: "multi_section_energy_arc",
+        compositionPass: "music_review",
+        placements: [energyArcOpening, energyArcBuild, energyArcRelease],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        comparisonBasePassId: "section_phrase_energy",
+        changeType: "music_multi_section_energy_arc"
+      },
+      {
+        passId: "motif_reprise_variation",
+        compositionPass: "music_review",
+        placements: [motifOpening, motifReprise, motifSupport],
+        displayElementOrder: [archGroup.modelName, spinner.modelName, singleLineHorizontal.modelName, star.modelName],
+        comparisonBasePassId: "multi_section_energy_arc",
+        changeType: "music_motif_reprise_variation"
+      },
+      {
+        passId: "lyric_phrase_release",
+        compositionPass: "music_review",
+        placements: [lyricPhraseSetup, lyricPhraseHit, lyricPhraseRelease],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "motif_reprise_variation",
+        changeType: "music_lyric_phrase_release"
       }
     ]
   };
@@ -3979,6 +4239,27 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
             generatedFromCoverageGap: goalId
           }
         );
+      }
+    }
+    if (goalId === "music.multi_section_structure.v1") {
+      const missingPaletteProfiles = arr(gap.missingCoverageUnits)
+        .map((unit) => str(unit.paletteProfile || unit.palette || unit.palette_profile))
+        .filter(Boolean);
+      const missingPassIds = arr(gap.missingCoverageUnits)
+        .map((unit) => str(unit.passId || unit.pass || unit.pass_id))
+        .filter(Boolean);
+      const paletteProfiles = missingPaletteProfiles.length ? [...new Set(missingPaletteProfiles)] : ["rgb_primary"];
+      const passIds = missingPassIds.length
+        ? [...new Set(missingPassIds)]
+        : ["multi_section_energy_arc", "motif_reprise_variation", "lyric_phrase_release"];
+      for (const paletteProfile of paletteProfiles) {
+        for (const passId of passIds) {
+          rows.push({
+            experimentId: `music-structure-review-${paletteProfile}`,
+            passId,
+            generatedFromCoverageGap: goalId
+          });
+        }
       }
     }
   }

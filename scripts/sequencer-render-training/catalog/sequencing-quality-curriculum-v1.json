@@ -640,6 +640,66 @@
       }
     },
     {
+      "goalId": "music.multi_section_structure.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Learn multi-section musical structure beyond isolated section response, including energy arc, motif reprise with variation, and lyric phrase release.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "multi_section_energy_arc",
+          "motif_reprise_variation",
+          "lyric_phrase_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use RGB-primary because future sequencing must learn musical structure and color together.",
+        "Probe energy arc, motif reprise/variation, and lyric phrase release as separate pass IDs before promoting shared behavior."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "multi_section_energy_arc"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "motif_reprise_variation"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "lyric_phrase_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
       "goalId": "creative.intent_match.v1",
       "areaId": "creative_intent_matching",
       "priority": 6,

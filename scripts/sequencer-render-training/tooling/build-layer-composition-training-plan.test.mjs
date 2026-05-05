@@ -1266,6 +1266,61 @@ test("layer composition plan expands music structure coverage-gap controller que
   assert.equal(musicRoles.some((role) => role.timingContext?.accent), true);
 });
 
+test("layer composition plan expands multi-section music structure coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-multi-section-music-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 19,
+      controllerDecision: {
+        selectedGoalId: "music.multi_section_structure.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.multi_section_structure.v1:coverage-gap",
+        goalId: "music.multi_section_structure.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["music-structure-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "section_phrase_energy", "multi_section_energy_arc", "motif_reprise_variation", "lyric_phrase_release"]
+  );
+  const musicRoles = plan.experiments[0].passes
+    .flatMap((pass) => pass.placements)
+    .map((placement) => placement.layerIntent?.musicRole)
+    .filter(Boolean);
+  assert.equal(musicRoles.some((role) => role.timingContext?.section === "release"), true);
+  assert.equal(musicRoles.some((role) => role.motif === "reprise_variation"), true);
+  assert.equal(musicRoles.some((role) => role.timingContext?.lyric === "keyword"), true);
+  const colorPurposes = plan.experiments[0].passes
+    .flatMap((pass) => pass.placements)
+    .map((placement) => placement.layerIntent?.colorPurpose)
+    .filter(Boolean);
+  assert.deepEqual(
+    [...new Set(colorPurposes)].sort(),
+    ["cool_motion_accent", "structure", "structure_motion_support", "warm_focal_accent"]
+  );
+  const lyricHit = plan.experiments[0].passes
+    .find((pass) => pass.passId === "lyric_phrase_release")
+    .placements
+    .find((placement) => placement.layerIntent?.blendRole === "lyric_keyword_focal_hit");
+  assert.equal(lyricHit.layerSettings.C_CHECKBOX_Palette1, false);
+  assert.equal(lyricHit.layerSettings.C_CHECKBOX_Palette2, true);
+  assert.equal(lyricHit.layerSettings.C_CHECKBOX_Palette3, false);
+  assert.equal(lyricHit.layerSettings.C_CHECKBOX_Palette4, false);
+});
+
 test("layer composition smoke run remains explicitly marked as validation only", () => {
   const plan = buildLayerCompositionTrainingPlan({ modelCatalog, runId: "test-run", runType: "smoke" });
 
