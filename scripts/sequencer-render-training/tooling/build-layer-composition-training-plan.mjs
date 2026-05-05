@@ -2918,10 +2918,10 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
     effectName: "SingleStrand",
     compositionPass: "music_review",
     layerIndex: 1,
-    startMs: 1800,
-    endMs: 4200,
-    effectSettings: { effect: "Chase", cycles: 5, colorSpeed: 6 },
-    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 66 }),
+    startMs: 1300,
+    endMs: 4700,
+    effectSettings: { effect: "Chase", cycles: 7, colorSpeed: 8 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 70 }),
     layerIntent: {
       blendRole: "middle_phrase_motion_build",
       colorPurpose: "cool_motion_accent",
@@ -2943,7 +2943,7 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
     effectName: "Color Wash",
     compositionPass: "music_review",
     layerIndex: 2,
-    startMs: 3900,
+    startMs: 4300,
     endMs: 6000,
     effectSettings: { cycles: 1, circularPalette: true },
     layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 62 }),
@@ -2957,6 +2957,30 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
           section: "release",
           phrase: "phrase_c",
           accent: "downbeat_release"
+        }
+      }
+    }
+  });
+  const energyArcTurnaround = placement({
+    id: `mq-${paletteProfile}-energy-arc-turnaround`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 3000,
+    endMs: 5400,
+    effectSettings: { arms: 4, twists: 1, rotation: 30 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 48 }),
+    layerIntent: {
+      blendRole: "section_turnaround_motion",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        energy: "turnaround_lift",
+        accent: "section_turnaround",
+        timingContext: {
+          section: "release",
+          accent: "section_turnaround"
         }
       }
     }
@@ -3137,7 +3161,7 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
       {
         passId: "multi_section_energy_arc",
         compositionPass: "music_review",
-        placements: [energyArcOpening, energyArcBuild, energyArcRelease],
+        placements: [energyArcOpening, energyArcBuild, energyArcRelease, energyArcTurnaround],
         displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
         comparisonBasePassId: "section_phrase_energy",
         changeType: "music_multi_section_energy_arc"

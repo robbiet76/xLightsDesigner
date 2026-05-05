@@ -1301,6 +1301,7 @@ test("layer composition plan expands multi-section music structure coverage-gap 
     .map((placement) => placement.layerIntent?.musicRole)
     .filter(Boolean);
   assert.equal(musicRoles.some((role) => role.timingContext?.section === "release"), true);
+  assert.equal(musicRoles.some((role) => role.timingContext?.accent === "section_turnaround"), true);
   assert.equal(musicRoles.some((role) => role.motif === "reprise_variation"), true);
   assert.equal(musicRoles.some((role) => role.timingContext?.lyric === "keyword"), true);
   const colorPurposes = plan.experiments[0].passes
@@ -1319,6 +1320,13 @@ test("layer composition plan expands multi-section music structure coverage-gap 
   assert.equal(lyricHit.layerSettings.C_CHECKBOX_Palette2, true);
   assert.equal(lyricHit.layerSettings.C_CHECKBOX_Palette3, false);
   assert.equal(lyricHit.layerSettings.C_CHECKBOX_Palette4, false);
+  const energyArc = plan.experiments[0].passes.find((pass) => pass.passId === "multi_section_energy_arc");
+  assert.equal(energyArc.placements.length, 4);
+  assert.equal(
+    energyArc.placements.some((placement) => placement.layerIntent?.blendRole === "section_turnaround_motion"
+      && placement.target === modelCatalog.canonicalModels.spinner.modelName),
+    true
+  );
 });
 
 test("layer composition smoke run remains explicitly marked as validation only", () => {
