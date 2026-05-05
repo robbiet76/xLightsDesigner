@@ -512,6 +512,63 @@ test("layer composition plan expands display quality coverage-gap controller que
   );
 });
 
+test("layer composition plan expands video aesthetic improvement queue to revision passes", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-video-aesthetic-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 13,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        selectionReason: "video_aesthetic_score_below_threshold",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:video-aesthetic-improvement",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap",
+        improvementSource: "video_aesthetic_score",
+        weakDimensions: [
+          { dimension: "pacing_variety", score: 0.21 },
+          { dimension: "visual_balance", score: 0.47 }
+        ]
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 2);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-mono_white"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    [
+      "empty_baseline",
+      "display_balance_foundation",
+      "display_motion_variety",
+      "display_pacing_balance_revision",
+      "display_wide_balance_revision"
+    ]
+  );
+  assert.equal(
+    plan.experiments[0].passes
+      .find((pass) => pass.passId === "display_pacing_balance_revision")
+      .controllerSelection.selectedByController,
+    true
+  );
+  assert.equal(
+    plan.experiments[0].passes
+      .find((pass) => pass.passId === "display_motion_variety")
+      .controllerSelection.reason,
+    "comparison_dependency"
+  );
+});
+
 test("layer composition plan expands music structure coverage-gap controller queue", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

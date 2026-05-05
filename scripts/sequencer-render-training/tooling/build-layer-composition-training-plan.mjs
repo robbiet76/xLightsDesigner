@@ -1378,6 +1378,84 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
     layerSettings: { mixMethod: "Normal" },
     layerIntent: { blendRole: "background_texture", displayReviewRole: "regional_variety_probe" }
   });
+  const linePacingPulse = placement({
+    id: `dq-${paletteProfile}-line-pacing-pulse`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { effect: "Chase", cycles: 5, colorSpeed: 7 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "paced_motion", displayReviewRole: "pacing_variety_revision" }
+  });
+  const archEntrance = placement({
+    id: `dq-${paletteProfile}-arch-entrance`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 0,
+    endMs: 2500,
+    effectSettings: { direction: "up", cycles: 3 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "entrance_foundation", displayReviewRole: "display_evolution_revision" }
+  });
+  const starMiddleAnchor = placement({
+    id: `dq-${paletteProfile}-star-middle-anchor`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 1800,
+    endMs: 4300,
+    effectSettings: { cycles: 2, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "middle_anchor", displayReviewRole: "focal_clarity_revision" }
+  });
+  const spinnerLateMotion = placement({
+    id: `dq-${paletteProfile}-spinner-late-motion`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 3200,
+    endMs: 6000,
+    effectSettings: { arms: 6, twists: 2, rotation: 35 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "late_motion", displayReviewRole: "motion_interest_revision" }
+  });
+  const treeReleaseTexture = placement({
+    id: `dq-${paletteProfile}-tree-release-texture`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Fire",
+    compositionPass: "display_review",
+    layerIndex: 4,
+    startMs: 4200,
+    endMs: 6000,
+    effectSettings: { height: 70, hueShift: 0, growthCycles: 3 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "release_texture", displayReviewRole: "visual_balance_revision" }
+  });
+  const treeBalanceFill = placement({
+    id: `dq-${paletteProfile}-tree-balance-fill`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: { blendRole: "wide_balance_fill", displayReviewRole: "visual_balance_revision" }
+  });
 
   return {
     experimentId: `display-quality-review-${paletteProfile}`,
@@ -1409,6 +1487,22 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
         comparisonBasePassId: "display_balance_foundation",
         changeType: "display_level_regional_variety_added"
+      },
+      {
+        passId: "display_pacing_balance_revision",
+        compositionPass: "display_review",
+        placements: [linePacingPulse, archEntrance, starMiddleAnchor, spinnerLateMotion, treeReleaseTexture],
+        displayElementOrder: [singleLineHorizontal.modelName, archGroup.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_motion_variety",
+        changeType: "video_aesthetic_pacing_balance_revision"
+      },
+      {
+        passId: "display_wide_balance_revision",
+        compositionPass: "display_review",
+        placements: [treeBalanceFill, archFoundation, linePacingPulse, starMiddleAnchor],
+        displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        comparisonBasePassId: "display_balance_foundation",
+        changeType: "video_aesthetic_visual_balance_revision"
       }
     ]
   };
@@ -2497,19 +2591,18 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
       }
     }
     if (goalId === "display.full_sequence.quality_v1") {
+      const isVideoAestheticImprovement = str(gap.improvementSource) === "video_aesthetic_score";
       for (const paletteProfile of ["mono_white"]) {
-        rows.push(
-          {
+        const passIds = isVideoAestheticImprovement
+          ? ["display_pacing_balance_revision", "display_wide_balance_revision"]
+          : ["display_balance_foundation", "display_motion_variety"];
+        for (const passId of passIds) {
+          rows.push({
             experimentId: `display-quality-review-${paletteProfile}`,
-            passId: "display_balance_foundation",
+            passId,
             generatedFromCoverageGap: goalId
-          },
-          {
-            experimentId: `display-quality-review-${paletteProfile}`,
-            passId: "display_motion_variety",
-            generatedFromCoverageGap: goalId
-          }
-        );
+          });
+        }
       }
     }
     if (goalId === "music.structure_alignment.v1") {
