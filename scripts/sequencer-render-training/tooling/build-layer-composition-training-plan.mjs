@@ -2873,6 +2873,38 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         changeType: "video_aesthetic_palette_color_purpose_motion_holdout"
       },
       {
+        passId: "display_palette_motion_pacing_validation",
+        compositionPass: "display_review",
+        placements: [pacingOpeningStructure, pacingMiddleMotion, pacingMiddleFocal, pacingReleaseSupport],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_palette_motion_pacing_holdout",
+        changeType: "video_aesthetic_palette_motion_pacing_validation"
+      },
+      {
+        passId: "display_palette_spatial_negative_space_validation",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialCenterFocal, spatialLineBridge, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_negative_space_holdout",
+        changeType: "video_aesthetic_palette_spatial_negative_space_validation"
+      },
+      {
+        passId: "display_palette_spatial_focal_validation",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialCenterFocal, safeLocalLineThread, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_focal_holdout",
+        changeType: "video_aesthetic_palette_spatial_focal_validation"
+      },
+      {
+        passId: "display_palette_color_purpose_motion_validation",
+        compositionPass: "display_review",
+        placements: [archRgbDisciplineBase, pacingMiddleMotion, pacingMiddleFocal],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_color_purpose_motion_holdout",
+        changeType: "video_aesthetic_palette_color_purpose_motion_validation"
+      },
+      {
         passId: "display_palette_transition_motion_bridge",
         compositionPass: "display_review",
         placements: [transitionBackground, transitionArchWarmEntry, transitionLineBridge, transitionStarAccent],

@@ -942,6 +942,158 @@
       }
     },
     {
+      "goalId": "display.video_aesthetic.palette_motion_pacing_validation_v1",
+      "areaId": "display_level_composition",
+      "priority": 16,
+      "status": "not_started",
+      "description": "Revalidate the stable RGB motion pacing pattern under an independent validation pass key before promoting it as a durable selector prior.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_motion_pacing_validation"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_motion_pacing_validation"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_spatial_negative_space_validation_v1",
+      "areaId": "display_level_composition",
+      "priority": 17,
+      "status": "not_started",
+      "description": "Revalidate the stable RGB negative-space structure with a separate pass key for durable whole-display balance evidence.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_spatial_negative_space_validation"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_spatial_negative_space_validation"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_spatial_focal_validation_v1",
+      "areaId": "display_level_composition",
+      "priority": 18,
+      "status": "not_started",
+      "description": "Revalidate sparse RGB focal structure with restrained motion support and no broad fill.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_spatial_focal_validation"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_spatial_focal_validation"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_color_purpose_motion_validation_v1",
+      "areaId": "display_level_composition",
+      "priority": 19,
+      "status": "not_started",
+      "description": "Revalidate the non-regressing RGB color-purpose motion structure with a separate pass key.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_color_purpose_motion_validation"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_color_purpose_motion_validation"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
       "goalId": "display.video_aesthetic.palette_transition_motion_bridge_v1",
       "areaId": "display_level_composition",
       "priority": 8,
