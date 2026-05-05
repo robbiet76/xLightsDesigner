@@ -714,6 +714,234 @@
       }
     },
     {
+      "goalId": "display.video_aesthetic.palette_motion_pacing_holdout_v1",
+      "areaId": "display_level_composition",
+      "priority": 10,
+      "status": "not_started",
+      "description": "Collect additional RGB motion pacing evidence under a holdout pass key using the successful restrained section pacing structure.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_motion_pacing_holdout"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_motion_pacing_holdout"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_motion_depth_holdout_v1",
+      "areaId": "display_level_composition",
+      "priority": 11,
+      "status": "not_started",
+      "description": "Validate whether restrained RGB motion pacing remains stable when the display adds a low-intensity depth foundation.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_motion_depth_holdout"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_motion_depth_holdout"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_spatial_negative_space_holdout_v1",
+      "areaId": "display_level_composition",
+      "priority": 12,
+      "status": "not_started",
+      "description": "Collect holdout evidence for RGB negative-space display balance without introducing broad fill or competing focal layers.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_spatial_negative_space_holdout"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_spatial_negative_space_holdout"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_spatial_focal_holdout_v1",
+      "areaId": "display_level_composition",
+      "priority": 13,
+      "status": "not_started",
+      "description": "Validate RGB spatial focus with a sparse structural base, one focal accent, and a restrained line thread.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_spatial_focal_holdout"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_spatial_focal_holdout"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_color_purpose_contrast_holdout_v1",
+      "areaId": "display_level_composition",
+      "priority": 14,
+      "status": "not_started",
+      "description": "Validate RGB color-purpose contrast using the disciplined structure, focal accent, and motion roles learned earlier.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_color_purpose_contrast_holdout"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_color_purpose_contrast_holdout"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_color_purpose_motion_holdout_v1",
+      "areaId": "display_level_composition",
+      "priority": 15,
+      "status": "not_started",
+      "description": "Validate RGB color-purpose discipline when motion support carries more of the sequence energy.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_color_purpose_motion_holdout"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_color_purpose_motion_holdout"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
       "goalId": "display.video_aesthetic.palette_transition_motion_bridge_v1",
       "areaId": "display_level_composition",
       "priority": 8,

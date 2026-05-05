@@ -2809,6 +2809,22 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         changeType: "video_aesthetic_palette_motion_pacing_reprise"
       },
       {
+        passId: "display_palette_motion_pacing_holdout",
+        compositionPass: "display_review",
+        placements: [pacingOpeningStructure, pacingMiddleMotion, pacingMiddleFocal, pacingReleaseSupport],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_palette_motion_pacing_reprise",
+        changeType: "video_aesthetic_palette_motion_pacing_holdout"
+      },
+      {
+        passId: "display_palette_motion_depth_holdout",
+        compositionPass: "display_review",
+        placements: [depthContextWash, depthLineThread, pacingMiddleFocal, pacingReleaseSupport],
+        displayElementOrder: [treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, archGroup.modelName],
+        comparisonBasePassId: "display_palette_motion_pacing_holdout",
+        changeType: "video_aesthetic_palette_motion_depth_holdout"
+      },
+      {
         passId: "display_palette_spatial_negative_space",
         compositionPass: "display_review",
         placements: [spatialLeftStructure, spatialCenterFocal, spatialLineBridge, safeLocalStarAccent],
@@ -2823,6 +2839,38 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
         comparisonBasePassId: "display_palette_spatial_negative_space",
         changeType: "video_aesthetic_palette_spatial_negative_space_reprise"
+      },
+      {
+        passId: "display_palette_spatial_negative_space_holdout",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialCenterFocal, spatialLineBridge, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_negative_space_reprise",
+        changeType: "video_aesthetic_palette_spatial_negative_space_holdout"
+      },
+      {
+        passId: "display_palette_spatial_focal_holdout",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialCenterFocal, safeLocalLineThread, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_negative_space_holdout",
+        changeType: "video_aesthetic_palette_spatial_focal_holdout"
+      },
+      {
+        passId: "display_palette_color_purpose_contrast_holdout",
+        compositionPass: "display_review",
+        placements: [archRgbDisciplineBase, starRgbDisciplinedAccent, lineRgbDisciplinedMotion],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_focal_holdout",
+        changeType: "video_aesthetic_palette_color_purpose_contrast_holdout"
+      },
+      {
+        passId: "display_palette_color_purpose_motion_holdout",
+        compositionPass: "display_review",
+        placements: [archRgbDisciplineBase, pacingMiddleMotion, pacingMiddleFocal],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_color_purpose_contrast_holdout",
+        changeType: "video_aesthetic_palette_color_purpose_motion_holdout"
       },
       {
         passId: "display_palette_transition_motion_bridge",
