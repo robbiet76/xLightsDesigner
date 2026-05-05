@@ -69,6 +69,25 @@ function consistencyScore(values = [], toleratedRange = 0.35) {
   return clamp01(1 - rangeScore(values, toleratedRange));
 }
 
+function adjacentContinuityScore(values = [], toleratedDelta = 0.35) {
+  const rows = arr(values).map((value) => num(value, NaN)).filter(Number.isFinite);
+  if (rows.length < 2) return 0.5;
+  const pairScores = [];
+  for (let index = 1; index < rows.length; index += 1) {
+    pairScores.push(clamp01(1 - Math.abs(rows[index] - rows[index - 1]) / toleratedDelta));
+  }
+  return average(pairScores);
+}
+
+function bandScore(value, min, max) {
+  const parsed = num(value, NaN);
+  if (!Number.isFinite(parsed)) return NaN;
+  if (parsed >= min && parsed <= max) return 1;
+  const width = Math.max(max - min, 0.000001);
+  if (parsed < min) return clamp01(parsed / min);
+  return clamp01(1 - (parsed - max) / width);
+}
+
 function passDirFromQualityRef(ref = "") {
   const resolved = resolvePath(ref);
   if (!resolved) return "";
@@ -153,11 +172,34 @@ function loadWindow(fullWindow = {}) {
   };
 }
 
-function controllerSelectedPassIds(runRoot = "") {
+function trainingPlanPassMetadata(runRoot = "") {
   const plan = readJsonIfExists(path.join(resolvePath(runRoot), "training-plan.json")) || {};
-  return new Set(arr(plan.experiments).flatMap((experiment) => arr(experiment.passes))
-    .filter((pass) => pass?.controllerSelection?.selectedByController)
-    .map((pass) => str(pass.passId))
+  const metadata = new Map();
+  for (const pass of arr(plan.experiments).flatMap((experiment) => arr(experiment.passes))) {
+    const passId = str(pass.passId);
+    if (!passId) continue;
+    const placements = arr(pass.placements);
+    metadata.set(passId, {
+      selectedByController: Boolean(pass.controllerSelection?.selectedByController),
+      placementCount: placements.length,
+      localEvidenceRoles: [...new Set(placements
+        .map((placement) => str(placement.layerIntent?.localEvidenceRole))
+        .filter(Boolean))],
+      colorPurposes: [...new Set(placements
+        .map((placement) => str(placement.layerIntent?.colorPurpose))
+        .filter(Boolean))],
+      displayReviewRoles: [...new Set(placements
+        .map((placement) => str(placement.layerIntent?.displayReviewRole))
+        .filter(Boolean))]
+    });
+  }
+  return metadata;
+}
+
+function controllerSelectedPassIds(passMetadata = new Map()) {
+  return new Set([...passMetadata.entries()]
+    .filter(([, metadata]) => metadata.selectedByController)
+    .map(([passId]) => passId)
     .filter(Boolean));
 }
 
@@ -168,6 +210,8 @@ function recommendationRows(scores = {}) {
   if (scores.focalClarity < 0.65) rows.push("Improve target hierarchy so the viewer can identify the lead idea quickly.");
   if (scores.visualBalance < 0.55) rows.push("Rebalance coverage across the display or explicitly use negative space as an intentional choice.");
   if (scores.colorDiscipline < 0.65) rows.push("Tighten palette choices so color changes support the section instead of reading as noise.");
+  if (scores.localEvidenceReadability < 0.65) rows.push("Make local model detail readable within the whole-display context by reducing clutter or shortening accent windows.");
+  if (scores.temporalContinuity < 0.65) rows.push("Smooth adjacent-window changes so motion, color, and coverage shifts feel intentional instead of abrupt.");
   if (scores.qualityConsistency < 0.65) rows.push("Reduce large quality swings between adjacent reviewed windows.");
   return rows;
 }
@@ -185,7 +229,8 @@ export function buildVideoAestheticScore({
   const resolvedOutPath = resolvePath(outPath || path.join(root, "video-aesthetic-score.json"));
   const windows = arr(fullSequence.windows).map(loadWindow);
   const eligibleWindows = windows.filter((row) => row.evidenceEligible);
-  const selectedPassIds = controllerSelectedPassIds(root);
+  const passMetadata = trainingPlanPassMetadata(root);
+  const selectedPassIds = controllerSelectedPassIds(passMetadata);
   const selectedEligibleWindows = eligibleWindows.filter((row) => selectedPassIds.has(row.passId));
   const progression = readJsonIfExists(fullSequence.progressionObservationRef) || {};
   const progressionScores = scoreFromProgression(progression);
@@ -194,6 +239,21 @@ export function buildVideoAestheticScore({
   const motionVariety = rangeScore(basisWindows.map((row) => row.temporalMotionMean), 0.25);
   const colorVariety = rangeScore(basisWindows.map((row) => row.colorDiversityMean), 1);
   const coverageVariety = rangeScore(basisWindows.map((row) => row.activeCoverageMean), 0.08);
+  const temporalContinuity = average([
+    adjacentContinuityScore(basisWindows.map((row) => row.temporalMotionMean), 0.2),
+    adjacentContinuityScore(basisWindows.map((row) => row.colorDiversityMean), 0.65),
+    adjacentContinuityScore(basisWindows.map((row) => row.activeCoverageMean), 0.08),
+    adjacentContinuityScore(basisWindows.map((row) => row.overallQuality), 0.18)
+  ]);
+  const localEvidenceWindows = basisWindows.filter((row) => arr(passMetadata.get(row.passId)?.localEvidenceRoles).length);
+  const localEvidenceBasis = localEvidenceWindows.length ? localEvidenceWindows : basisWindows;
+  const localEvidenceReadability = average([
+    average(localEvidenceBasis.map((row) => row.focalClarity)),
+    average(localEvidenceBasis.map((row) => row.clutterControl)),
+    average(localEvidenceBasis.map((row) => row.motionCoherence)),
+    average(localEvidenceBasis.map((row) => row.visualBalance)),
+    average(localEvidenceBasis.map((row) => bandScore(row.activeCoverageMean, 0.025, 0.12)))
+  ]);
   const scores = {
     displayEvolution: round6(progressionScores.displayEvolution),
     pacingVariety: round6(average([
@@ -213,6 +273,8 @@ export function buildVideoAestheticScore({
       average(basisWindows.map((row) => row.motionCoherence)),
       motionVariety
     ])),
+    temporalContinuity: round6(temporalContinuity),
+    localEvidenceReadability: round6(localEvidenceReadability),
     clutterControl: round6(average(basisWindows.map((row) => row.clutterControl))),
     intentMatch: round6(average(basisWindows.map((row) => row.intentMatch))),
     sectionQualityMean: round6(average(basisWindows.map((row) => row.overallQuality))),
@@ -227,6 +289,8 @@ export function buildVideoAestheticScore({
     scores.visualBalance,
     scores.colorDiscipline,
     scores.motionInterest,
+    scores.temporalContinuity,
+    scores.localEvidenceReadability,
     scores.clutterControl,
     scores.intentMatch,
     scores.qualityConsistency
@@ -258,10 +322,23 @@ export function buildVideoAestheticScore({
       "focal_clarity",
       "visual_balance",
       "motion_interest",
+      "temporal_continuity",
+      "local_evidence_readability",
       "color_discipline",
       "clutter_control",
       "quality_consistency"
     ],
+    scoringSignals: {
+      localEvidenceWindowCount: localEvidenceWindows.length,
+      localEvidenceRoles: [...new Set(localEvidenceWindows.flatMap((row) => arr(passMetadata.get(row.passId)?.localEvidenceRoles)))],
+      colorPurposes: [...new Set(basisWindows.flatMap((row) => arr(passMetadata.get(row.passId)?.colorPurposes)))],
+      temporalContinuityInputs: {
+        temporalMotionMean: basisWindows.map((row) => round6(row.temporalMotionMean)),
+        colorDiversityMean: basisWindows.map((row) => round6(row.colorDiversityMean)),
+        activeCoverageMean: basisWindows.map((row) => round6(row.activeCoverageMean)),
+        overallQuality: basisWindows.map((row) => round6(row.overallQuality))
+      }
+    },
     scores,
     recommendationSummary: recommendationRows(scores),
     promotion: {
@@ -283,6 +360,10 @@ export function buildVideoAestheticScore({
       colorDiscipline: round6(row.colorDiscipline),
       focalClarity: round6(row.focalClarity),
       visualBalance: round6(row.visualBalance),
+      temporalMotionMean: round6(row.temporalMotionMean),
+      colorDiversityMean: round6(row.colorDiversityMean),
+      activeCoverageMean: round6(row.activeCoverageMean),
+      localEvidenceRoles: arr(passMetadata.get(row.passId)?.localEvidenceRoles),
       renderReviewRef: row.renderReviewRef,
       renderReviewQualityRef: row.renderReviewQualityRef
     }))

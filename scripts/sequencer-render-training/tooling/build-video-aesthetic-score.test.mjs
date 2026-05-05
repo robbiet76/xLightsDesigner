@@ -136,6 +136,8 @@ test("video aesthetic score summarizes full-sequence windows", () => {
   assert.equal(artifact.scores.sectionQualityMean, 0.825);
   assert.equal(artifact.scores.overallAestheticScore > 0.7, true);
   assert.equal(artifact.qualityDimensions.includes("display_evolution"), true);
+  assert.equal(artifact.qualityDimensions.includes("temporal_continuity"), true);
+  assert.equal(artifact.qualityDimensions.includes("local_evidence_readability"), true);
   assert.equal(artifact.promotion.evidenceEligible, true);
   assert.equal(fs.existsSync(path.join(root, "video-aesthetic-score.json")), true);
 });
@@ -204,4 +206,76 @@ test("video aesthetic score prefers controller-selected candidate windows over d
   assert.equal(artifact.minimumScoredWindows, 1);
   assert.deepEqual(artifact.windows.map((window) => window.passId), ["display_focal_consistency_repair"]);
   assert.equal(artifact.scores.sectionQualityMean, 0.88);
+});
+
+test("video aesthetic score uses layer intent metadata for local evidence readability", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-aesthetic-local-"));
+  const dependency = writeWindow(root, {
+    passId: "display_rgb_color_discipline_repair",
+    startMs: 0,
+    endMs: 2000,
+    quality: 0.72,
+    motion: 0.08,
+    color: 0.3,
+    coverage: 0.04
+  });
+  const candidate = writeWindow(root, {
+    passId: "display_safe_local_evidence_repair",
+    startMs: 2000,
+    endMs: 4000,
+    quality: 0.82,
+    motion: 0.12,
+    color: 0.45,
+    coverage: 0.05
+  });
+  const progressionPath = writeProgression(root);
+  writeJson(path.join(root, "training-plan.json"), {
+    artifactType: "layer_composition_training_plan_v1",
+    experiments: [{
+      passes: [
+        { passId: "display_rgb_color_discipline_repair", controllerSelection: { reason: "comparison_dependency" } },
+        {
+          passId: "display_safe_local_evidence_repair",
+          controllerSelection: { selectedByController: true },
+          placements: [
+            {
+              layerIntent: {
+                localEvidenceRole: "linear_node_order_readability",
+                colorPurpose: "structure_motion_support"
+              }
+            },
+            {
+              layerIntent: {
+                localEvidenceRole: "radial_structure_readability",
+                colorPurpose: "warm_focal_accent"
+              }
+            }
+          ]
+        }
+      ]
+    }]
+  });
+  writeJson(path.join(root, "full-sequence-review-loop.json"), {
+    artifactType: "full_sequence_review_loop_v1",
+    status: "ready",
+    windowCount: 2,
+    evidenceEligibleWindowCount: 2,
+    progressionObservationRef: progressionPath,
+    windows: [dependency, candidate]
+  });
+
+  const artifact = buildVideoAestheticScore({ runRoot: root });
+
+  assert.equal(artifact.scoreBasis, "controller_selected_window_metrics_and_progression_observation");
+  assert.equal(artifact.scoringSignals.localEvidenceWindowCount, 1);
+  assert.deepEqual(
+    artifact.scoringSignals.localEvidenceRoles,
+    ["linear_node_order_readability", "radial_structure_readability"]
+  );
+  assert.deepEqual(
+    artifact.windows[0].localEvidenceRoles,
+    ["linear_node_order_readability", "radial_structure_readability"]
+  );
+  assert.equal(artifact.scores.localEvidenceReadability > 0.75, true);
+  assert.equal(artifact.scores.temporalContinuity, 0.5);
 });
