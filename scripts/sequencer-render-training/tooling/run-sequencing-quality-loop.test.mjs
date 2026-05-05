@@ -56,6 +56,18 @@ function modelCatalog() {
         modelType: "tree_flat",
         geometryProfile: "tree_flat_single_layer",
         analyzerFamily: "tree"
+      },
+      cane_group: {
+        modelName: "CaneGroup",
+        modelType: "cane",
+        geometryProfile: "cane_grouped",
+        analyzerFamily: "linear"
+      },
+      matrix_low_density: {
+        modelName: "MatrixLowDensity",
+        modelType: "matrix",
+        geometryProfile: "matrix_low_density",
+        analyzerFamily: "matrix"
       }
     }
   };

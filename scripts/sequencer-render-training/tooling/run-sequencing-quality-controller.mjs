@@ -494,6 +494,7 @@ function supportsGeneratedCoverageGap(goal = {}) {
     || goalId === "creative.intent_match.v1"
     || goalId === "creative.intent_revision_comparison.v1"
     || goalId === "creative.intent_revision_variants.v1"
+    || goalId === "target_transfer.compatibility_adaptation.v1"
     || goalId === "effect_fit.core_effects.v1"
     || goalId === "effect_fit.expanded_model_matrix.v1"
     || goalId === "music.structure_alignment.v1"
@@ -503,6 +504,16 @@ function supportsGeneratedCoverageGap(goal = {}) {
 
 function coverageGapAttemptStalled(goal = {}, artifacts = {}, policy = {}) {
   const latestQueue = arr(artifacts.controllerState?.nextQueue)[0] || {};
+  const missingPassIds = arr(latestQueue.missingCoverageUnits)
+    .map((unit) => normalizedToken(unit.passId || unit.pass || unit.pass_id))
+    .filter(Boolean);
+  const passResults = arr(artifacts.passRunnerSummary?.results);
+  const attemptedMissingResults = missingPassIds.length
+    ? passResults.filter((result) => missingPassIds.includes(normalizedToken(result.passId)))
+    : [];
+  const missingPassAttemptRejected = missingPassIds.length > 0
+    && attemptedMissingResults.length === missingPassIds.length
+    && attemptedMissingResults.every((result) => !bool(result.renderReviewEvidenceEligible));
   const latestAttempt = {
     goalId: str(latestQueue.goalId),
     reason: str(latestQueue.reason),
@@ -512,6 +523,13 @@ function coverageGapAttemptStalled(goal = {}, artifacts = {}, policy = {}) {
     comparisonStatus: str(artifacts.videoAestheticAttemptComparison?.comparisonStatus),
     overallAestheticScore: num(artifacts.videoAestheticScore?.scores?.overallAestheticScore)
   };
+  if (str(latestAttempt.goalId) === str(goal.goalId)
+    && str(latestAttempt.reason) === "coverage_gap"
+    && num(latestAttempt.missingCoverageUnitCount) > 0
+    && num(latestAttempt.processedPasses) > 0
+    && missingPassAttemptRejected) {
+    return true;
+  }
   return [latestAttempt, ...arr(artifacts.recentControllerAttempts)].some((attempt) => {
     if (str(attempt.goalId) !== str(goal.goalId)) return false;
     if (str(attempt.reason) !== "coverage_gap") return false;

@@ -1682,6 +1682,105 @@ test("controller moves past a stalled coverage gap with no accepted evidence", (
   assert.equal(state.nextQueue[0].reason, "coverage_gap");
 });
 
+test("controller moves past a coverage gap when the missing pass was rejected", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("compatible_arch_prior_context", 0.88, []),
+    experimentId: "target-transfer-adaptation-mono_white",
+    family: "target_transfer_adaptation",
+    effectName: "Bars",
+    modelTypes: ["arch"],
+    targetScopes: ["group"],
+    sampleCount: 2,
+    trendStatus: "stable"
+  }, {
+    ...record("weak_matrix_local_validation_probe", 0.92, []),
+    experimentId: "target-transfer-adaptation-mono_white",
+    family: "target_transfer_adaptation",
+    effectName: "Bars",
+    modelTypes: ["matrix"],
+    targetScopes: ["model"],
+    sampleCount: 2,
+    trendStatus: "stable"
+  }]);
+  writeJson(path.join(runRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "target_transfer.compatibility_adaptation.v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{
+        paletteProfile: "mono_white",
+        passId: "similar_cane_transfer_probe"
+      }]
+    }]
+  });
+  writeJson(path.join(runRoot, "pass-runner-summary.json"), {
+    artifactType: "layer_composition_pass_runner_summary_v1",
+    processedPasses: 3,
+    renderReviewAcceptedEvidenceCount: 1,
+    results: [{
+      experimentId: "target-transfer-adaptation-mono_white",
+      passId: "compatible_arch_prior_context",
+      renderReviewDecision: "accept",
+      renderReviewEvidenceEligible: true
+    }, {
+      experimentId: "target-transfer-adaptation-mono_white",
+      passId: "similar_cane_transfer_probe",
+      renderReviewDecision: "revise",
+      renderReviewEvidenceEligible: false
+    }]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "target_transfer.compatibility_adaptation.v1",
+        areaId: "model_geometry_fit",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["target_transfer_adaptation"],
+          paletteProfiles: ["mono_white"],
+          passIds: [
+            "compatible_arch_prior_context",
+            "similar_cane_transfer_probe",
+            "weak_matrix_local_validation_probe"
+          ]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 3,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [{
+            paletteProfile: "mono_white",
+            passId: "compatible_arch_prior_context"
+          }, {
+            paletteProfile: "mono_white",
+            passId: "similar_cane_transfer_probe"
+          }, {
+            paletteProfile: "mono_white",
+            passId: "weak_matrix_local_validation_probe"
+          }]
+        }
+      }, {
+        goalId: "music.structure_alignment.v1",
+        areaId: "musical_structure",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          families: ["music_structure_review"],
+          timingSources: ["section"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  const transferStatus = state.goalStatuses.find((goal) => goal.goalId === "target_transfer.compatibility_adaptation.v1");
+  assert.equal(transferStatus.blockers.includes("coverage gap attempt produced no accepted evidence"), true);
+  assert.equal(state.controllerDecision.selectedGoalId, "music.structure_alignment.v1");
+});
+
 test("controller keeps recent stalled coverage gaps on cooldown", () => {
   const root = tempDir();
   const stalledRoot = path.join(root, "stalled");

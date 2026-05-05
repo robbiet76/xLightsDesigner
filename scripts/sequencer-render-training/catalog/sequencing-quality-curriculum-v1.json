@@ -761,6 +761,54 @@
         ],
         "maximumRegressingRecords": 0
       }
+    },
+    {
+      "goalId": "target_transfer.compatibility_adaptation.v1",
+      "areaId": "model_geometry_fit",
+      "priority": 9,
+      "status": "not_started",
+      "description": "Validate that shared baseline priors transfer only through compatible or similar target structure, while structurally weak matches are treated as project-local validation probes.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "target_transfer_adaptation"
+        ],
+        "paletteProfiles": [
+          "mono_white"
+        ],
+        "passIds": [
+          "compatible_arch_prior_context",
+          "similar_cane_transfer_probe",
+          "weak_matrix_local_validation_probe"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use shared-prior-compatible arch evidence as the source context.",
+        "Probe a similar linear cane target as advisory transfer evidence.",
+        "Probe a structurally different matrix target as local-validation-required evidence, not confident shared-prior reuse."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "mono_white",
+            "passId": "compatible_arch_prior_context"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "passId": "similar_cane_transfer_probe"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "passId": "weak_matrix_local_validation_probe"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
     }
   ]
 }

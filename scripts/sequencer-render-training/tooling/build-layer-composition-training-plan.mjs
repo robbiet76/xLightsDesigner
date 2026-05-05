@@ -1416,6 +1416,108 @@ function makeExpandedEffectFitExperiment({ paletteProfile, singleLineHorizontal,
   };
 }
 
+function makeTargetTransferAdaptationExperiment({ paletteProfile, archGroup, caneGroup, matrixLowDensity }) {
+  const sharedArchPriorProbe = placement({
+    id: `tt-${paletteProfile}-arch-compatible-prior`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "target_transfer",
+    layerIndex: 0,
+    effectSettings: { direction: "up", barCount: 3, cycles: 2 },
+    layerSettings: { mixMethod: "Normal", brightness: 62 },
+    layerIntent: {
+      blendRole: "shared_prior_reference",
+      transferRole: "compatible_source_context",
+      compatibilityExpectation: "compatible",
+      sharedPriorApplicability: "direct_reuse_allowed_with_matching_structure_and_effect_context",
+      projectLocalValidation: "not_required_for_known_compatible_context"
+    }
+  });
+  const similarCaneTransferProbe = placement({
+    id: `tt-${paletteProfile}-cane-similar-transfer`,
+    target: caneGroup,
+    targetScope: "group",
+    effectName: "SingleStrand",
+    compositionPass: "target_transfer",
+    layerIndex: 0,
+    effectSettings: { effect: "Chase", cycles: 3, colorSpeed: 5 },
+    layerSettings: { mixMethod: "Normal", brightness: 58 },
+    layerIntent: {
+      blendRole: "similar_structure_probe",
+      transferRole: "similar_linear_target",
+      compatibilityExpectation: "similar",
+      sharedPriorApplicability: "advisory_starting_point",
+      projectLocalValidation: "recommended_before_confident_reuse"
+    }
+  });
+  const weakMatrixLocalProbe = placement({
+    id: `tt-${paletteProfile}-matrix-weak-transfer`,
+    target: matrixLowDensity,
+    targetScope: "model",
+    effectName: "Bars",
+    compositionPass: "target_transfer",
+    layerIndex: 0,
+    effectSettings: { direction: "up", barCount: 3, cycles: 2 },
+    layerSettings: { mixMethod: "Normal", brightness: 48 },
+    layerIntent: {
+      blendRole: "local_validation_probe",
+      transferRole: "structurally_different_target",
+      compatibilityExpectation: "weak_match",
+      sharedPriorApplicability: "do_not_confidently_reuse_without_local_evidence",
+      projectLocalValidation: "required_before_selector_confidence"
+    }
+  });
+
+  return {
+    experimentId: `target-transfer-adaptation-${paletteProfile}`,
+    family: "target_transfer_adaptation",
+    paletteProfile,
+    curriculumStage: "project_specific_adaptation",
+    layeringTaxonomy: ["shared_prior_transfer", "target_compatibility", "project_local_validation"],
+    targetSets: [
+      { scope: "group", targets: [archGroup, caneGroup] },
+      { scope: "model", targets: [matrixLowDensity] }
+    ],
+    transferContract: {
+      sharedLearningLayer: "shared_baseline",
+      localLearningLayer: "display/target-behavior.json",
+      compatibilitySignals: ["canonical_type", "geometry_profile", "target_scope", "effect_name", "metadata_role"],
+      policy: "Use shared priors as compatible-structure guidance; require project-local validation for weak or structurally different targets."
+    },
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [archGroup.modelName, caneGroup.modelName, matrixLowDensity.modelName]
+      },
+      {
+        passId: "compatible_arch_prior_context",
+        compositionPass: "target_transfer",
+        placements: [sharedArchPriorProbe],
+        displayElementOrder: [archGroup.modelName, caneGroup.modelName, matrixLowDensity.modelName]
+      },
+      {
+        passId: "similar_cane_transfer_probe",
+        compositionPass: "target_transfer",
+        placements: [similarCaneTransferProbe],
+        displayElementOrder: [archGroup.modelName, caneGroup.modelName, matrixLowDensity.modelName],
+        comparisonBasePassId: "compatible_arch_prior_context",
+        changeType: "target_transfer_similar_structure_probe"
+      },
+      {
+        passId: "weak_matrix_local_validation_probe",
+        compositionPass: "target_transfer",
+        placements: [weakMatrixLocalProbe],
+        displayElementOrder: [archGroup.modelName, caneGroup.modelName, matrixLowDensity.modelName],
+        comparisonBasePassId: "compatible_arch_prior_context",
+        changeType: "target_transfer_local_validation_required"
+      }
+    ]
+  };
+}
+
 function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }) {
   const archFoundation = placement({
     id: `dq-${paletteProfile}-arch-foundation`,
@@ -3161,6 +3263,27 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         }
       }
     }
+    if (goalId === "target_transfer.compatibility_adaptation.v1") {
+      const missingPaletteProfiles = arr(gap.missingCoverageUnits)
+        .map((unit) => str(unit.paletteProfile || unit.palette || unit.palette_profile))
+        .filter(Boolean);
+      const missingPassIds = arr(gap.missingCoverageUnits)
+        .map((unit) => str(unit.passId || unit.pass || unit.pass_id))
+        .filter(Boolean);
+      const paletteProfiles = missingPaletteProfiles.length ? [...new Set(missingPaletteProfiles)] : ["mono_white"];
+      const passIds = missingPassIds.length
+        ? [...new Set(missingPassIds)]
+        : ["compatible_arch_prior_context", "similar_cane_transfer_probe", "weak_matrix_local_validation_probe"];
+      for (const paletteProfile of paletteProfiles) {
+        for (const passId of passIds) {
+          rows.push({
+            experimentId: `target-transfer-adaptation-${paletteProfile}`,
+            passId,
+            generatedFromCoverageGap: goalId
+          });
+        }
+      }
+    }
     if (goalId === "effect_fit.core_effects.v1") {
       const passByUnit = new Map([
         ["mono_white|single_strand|single_line", "single_strand_linear_motion"],
@@ -3410,6 +3533,8 @@ export function buildLayerCompositionTrainingPlan({
   const archSingle = model(modelCatalog, "arch_single");
   const singleLineHorizontal = model(modelCatalog, "single_line_horizontal");
   const treeFlat = model(modelCatalog, "tree_flat");
+  const caneGroup = model(modelCatalog, "cane_group");
+  const matrixLowDensity = model(modelCatalog, "matrix_low_density");
   const spinner = model(modelCatalog, "spinner");
   const star = model(modelCatalog, "star_triple_layer");
   const vendorBasicSubmodel = submodelTarget(modelCatalog, "vendor_basic");
@@ -3421,6 +3546,7 @@ export function buildLayerCompositionTrainingPlan({
     makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGroup, star, singleLineHorizontal }),
     makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
     makeExpandedEffectFitExperiment({ paletteProfile, singleLineHorizontal, archSingle, star, spinner, treeFlat }),
+    makeTargetTransferAdaptationExperiment({ paletteProfile, archGroup, caneGroup, matrixLowDensity }),
     makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
     makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner }),
     makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target: archGroup }),

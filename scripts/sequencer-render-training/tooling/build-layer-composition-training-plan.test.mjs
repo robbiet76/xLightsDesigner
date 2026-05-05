@@ -46,6 +46,18 @@ const modelCatalog = {
       modelType: "tree_flat",
       geometryProfile: "tree_flat_single_layer",
       analyzerFamily: "tree"
+    },
+    cane_group: {
+      modelName: "CaneGroup",
+      modelType: "cane",
+      geometryProfile: "cane_grouped",
+      analyzerFamily: "linear"
+    },
+    matrix_low_density: {
+      modelName: "MatrixLowDensity",
+      modelType: "matrix",
+      geometryProfile: "matrix_low_density",
+      analyzerFamily: "matrix"
     }
   },
   submodelTargets: {
@@ -401,6 +413,56 @@ test("layer composition plan expands creative intent revision variant coverage-g
     variant.placements.some((placement) => placement.layerIntent?.creativeIntent?.supportRole === "reduced_density_background"),
     true
   );
+});
+
+test("layer composition plan expands target-transfer adaptation coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-target-transfer-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 22,
+      controllerDecision: {
+        selectedGoalId: "target_transfer.compatibility_adaptation.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:target_transfer.compatibility_adaptation.v1:coverage-gap",
+        goalId: "target_transfer.compatibility_adaptation.v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "mono_white",
+          passId: "compatible_arch_prior_context"
+        }, {
+          paletteProfile: "mono_white",
+          passId: "similar_cane_transfer_probe"
+        }, {
+          paletteProfile: "mono_white",
+          passId: "weak_matrix_local_validation_probe"
+        }]
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["target-transfer-adaptation-mono_white"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "compatible_arch_prior_context", "similar_cane_transfer_probe", "weak_matrix_local_validation_probe"]
+  );
+  assert.equal(plan.experiments[0].transferContract.localLearningLayer, "display/target-behavior.json");
+  const compatibility = plan.experiments[0].passes
+    .filter((pass) => pass.passId !== "empty_baseline")
+    .map((pass) => pass.placements[0].layerIntent?.compatibilityExpectation);
+  assert.deepEqual(compatibility, ["compatible", "similar", "weak_match"]);
+  const weak = plan.experiments[0].passes.find((pass) => pass.passId === "weak_matrix_local_validation_probe");
+  assert.equal(weak.placements[0].layerIntent.projectLocalValidation, "required_before_selector_confidence");
 });
 
 test("layer composition plan expands core effect coverage-gap controller queue", () => {
