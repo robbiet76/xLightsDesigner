@@ -456,6 +456,34 @@ function hasNonRepeatableBlockedRecord(records = [], goal = {}, policy = {}) {
   });
 }
 
+function supportsGeneratedCoverageGap(goal = {}) {
+  const goalId = str(goal.goalId);
+  return goalId === "layer.rgb_primary.basic"
+    || goalId === "submodel.vendor_fixture.basic"
+    || goalId === "creative.intent_match.v1"
+    || goalId === "creative.intent_revision_comparison.v1"
+    || goalId === "effect_fit.core_effects.v1"
+    || goalId === "effect_fit.expanded_model_matrix.v1"
+    || goalId === "music.structure_alignment.v1"
+    || goalId === "display.full_sequence.quality_v1"
+    || goalId.startsWith("display.video_aesthetic.");
+}
+
+function coverageGapAttemptStalled(goal = {}, artifacts = {}, policy = {}) {
+  const previousQueue = arr(artifacts.controllerState?.nextQueue)[0] || {};
+  if (str(previousQueue.goalId) !== str(goal.goalId)) return false;
+  if (str(previousQueue.reason) !== "coverage_gap") return false;
+  if (!arr(previousQueue.missingCoverageUnits).length) return false;
+  if (num(artifacts.passRunnerSummary?.processedPasses) <= 0) return false;
+  if (num(artifacts.passRunnerSummary?.renderReviewAcceptedEvidenceCount) > 0) return false;
+
+  const comparisonStatus = str(artifacts.videoAestheticAttemptComparison?.comparisonStatus);
+  const overallScore = num(artifacts.videoAestheticScore?.scores?.overallAestheticScore);
+  return comparisonStatus === "blocked"
+    || comparisonStatus === "regressed"
+    || (overallScore > 0 && overallScore < policy.minimumOverallQuality);
+}
+
 function buildGoalStatuses(curriculum = {}, artifacts = {}) {
   const policy = promotionPolicy(curriculum);
   const records = arr(artifacts?.qualityRecords?.records);
@@ -478,6 +506,7 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
       && distinctCoverageUnitCount >= criteria.minimumDistinctCoverageUnitCount;
     if (artifacts.missingArtifacts?.length && !goalRecords.length && !selectorReadyPriorCount) blockers.add("latest evidence artifacts unavailable");
     if (!videoAestheticGatePassed(goal, artifacts)) blockers.add("video aesthetic score below promotion threshold");
+    if (coverageGapAttemptStalled(goal, artifacts, policy)) blockers.add("coverage gap attempt produced no accepted evidence");
     return {
       goalId: str(goal.goalId),
       areaId: str(goal.areaId),
@@ -680,12 +709,17 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
   const policy = promotionPolicy(curriculum);
   const records = arr(artifacts?.qualityRecords?.records);
   const goals = activeGoals(curriculum).filter((goal) => !goalEvidenceCovered(goal, artifacts, curriculum));
+  const stalledGoalIds = new Set(goals
+    .filter((goal) => coverageGapAttemptStalled(goal, artifacts, policy))
+    .map((goal) => str(goal.goalId))
+    .filter(Boolean));
+  const selectableGoals = goals.filter((goal) => !stalledGoalIds.has(str(goal.goalId)));
   if (artifacts.missingArtifacts?.length) {
     return {
-      selectedGoal: goals[0] || null,
+      selectedGoal: selectableGoals[0] || goals[0] || null,
       nextQueue: [],
       decision: {
-        selectedGoalId: str(goals[0]?.goalId),
+        selectedGoalId: str((selectableGoals[0] || goals[0])?.goalId),
         selectionReason: "missing_latest_evidence",
         blockedBy: artifacts.missingArtifacts,
         nextAction: "await_evidence"
@@ -693,7 +727,7 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     };
   }
 
-  const unblockedGoals = goals.filter((goal) => !goalBlockers(goal, artifacts, curriculum).length);
+  const unblockedGoals = selectableGoals.filter((goal) => !goalBlockers(goal, artifacts, curriculum).length);
 
   for (const goal of unblockedGoals) {
     const queue = videoAestheticImprovementQueue(goal, artifacts, policy);
@@ -727,9 +761,10 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     }
   }
 
-  const nextGoal = unblockedGoals.find((goal) => missingDesiredCoverageUnits(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
-    || unblockedGoals.find((goal) => !recordsForGoal(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
-    || unblockedGoals.find((goal) => !durableRecordCountForGoal(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
+  const coverageGapGoals = unblockedGoals.filter(supportsGeneratedCoverageGap);
+  const nextGoal = coverageGapGoals.find((goal) => missingDesiredCoverageUnits(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || coverageGapGoals.find((goal) => !recordsForGoal(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || coverageGapGoals.find((goal) => !durableRecordCountForGoal(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
     || null;
   if (nextGoal) {
     const missingCoverageUnits = missingDesiredCoverageUnits(records, nextGoal);
@@ -752,7 +787,7 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
     };
   }
 
-  const blockedGoal = goals.find((goal) => goalBlockers(goal, artifacts, curriculum).length);
+  const blockedGoal = selectableGoals.find((goal) => goalBlockers(goal, artifacts, curriculum).length);
   if (blockedGoal) {
     const blockers = goalBlockers(blockedGoal, artifacts, curriculum);
     return {
@@ -784,6 +819,19 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
         selectionReason: "nonrepeatable_regressed_evidence",
         blockedBy: ["current evidence is blocked but not repeatable by the existing curriculum strategy"],
         nextAction: "needs_strategy_expansion"
+      }
+    };
+  }
+
+  if (stalledGoalIds.size) {
+    return {
+      selectedGoal: goals.find((goal) => stalledGoalIds.has(str(goal.goalId))) || null,
+      nextQueue: [],
+      decision: {
+        selectedGoalId: [...stalledGoalIds][0] || "",
+        selectionReason: "stalled_coverage_gap",
+        blockedBy: ["coverage gap attempt produced no accepted evidence"],
+        nextAction: "await_intervention"
       }
     };
   }

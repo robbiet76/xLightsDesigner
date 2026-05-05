@@ -241,6 +241,20 @@ test("controller plans a coverage gap when no promising repeat exists", () => {
   assert.equal(state.nextQueue[0].goalId, "layer.rgb_primary.basic");
 });
 
+test("controller skips unsupported generic coverage gaps that would expand the full plan", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: curriculum(),
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
+  assert.equal(state.nextQueue[0].goalId, "layer.rgb_primary.basic");
+});
+
 test("controller can plan from quality evidence when promoted priors are not present yet", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [record("three_layer_default", 0.84)]);
@@ -1585,6 +1599,87 @@ test("controller tracks distinct effect-fit coverage units", () => {
     effect: "Marquee",
     modelType: "single_line"
   }]);
+});
+
+test("controller moves past a stalled coverage gap with no accepted evidence", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+  writeJson(path.join(runRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "effect_fit.expanded_model_matrix.v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{
+        paletteProfile: "rgb_primary",
+        effect: "Butterfly",
+        modelType: "spinner"
+      }]
+    }]
+  });
+  writeJson(path.join(runRoot, "pass-runner-summary.json"), {
+    artifactType: "layer_composition_pass_runner_summary_v1",
+    processedPasses: 4,
+    renderReviewAcceptedEvidenceCount: 0,
+    renderReviewEligibleQualityMean: 0
+  });
+  writeVideoAestheticScore(runRoot, {
+    scores: {
+      overallAestheticScore: 0.2
+    }
+  });
+  writeVideoAestheticAttemptComparison(runRoot, {
+    comparisonStatus: "blocked",
+    summary: {
+      overallAestheticScoreDelta: 0,
+      improvedDimensionCount: 0,
+      regressedDimensionCount: 0
+    }
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "effect_fit.expanded_model_matrix.v1",
+        areaId: "effect_behavior",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["expanded_effect_fit"],
+          paletteProfiles: ["rgb_primary"],
+          effects: ["Butterfly"],
+          modelTypes: ["spinner"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "effect", "modelType"],
+          desiredCoverageUnits: [{
+            paletteProfile: "rgb_primary",
+            effect: "Butterfly",
+            modelType: "spinner"
+          }]
+        }
+      }, {
+        goalId: "music.structure_alignment.v1",
+        areaId: "musical_structure",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          families: ["music_structure_review"],
+          timingSources: ["section"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(
+    state.goalStatuses.find((goal) => goal.goalId === "effect_fit.expanded_model_matrix.v1").blockers.includes("coverage gap attempt produced no accepted evidence"),
+    true
+  );
+  assert.equal(state.controllerDecision.selectedGoalId, "music.structure_alignment.v1");
+  assert.equal(state.nextQueue[0].goalId, "music.structure_alignment.v1");
+  assert.equal(state.nextQueue[0].reason, "coverage_gap");
 });
 
 test("controller increments loop index from a previous state", () => {
