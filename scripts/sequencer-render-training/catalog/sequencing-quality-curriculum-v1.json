@@ -869,7 +869,7 @@
       "goalId": "display.video_aesthetic.palette_color_purpose_contrast_holdout_v1",
       "areaId": "display_level_composition",
       "priority": 14,
-      "status": "not_started",
+      "status": "retired",
       "description": "Validate RGB color-purpose contrast using the disciplined structure, focal accent, and motion roles learned earlier.",
       "requiredStableSamples": 2,
       "coverage": {

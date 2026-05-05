@@ -2869,7 +2869,7 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         compositionPass: "display_review",
         placements: [archRgbDisciplineBase, pacingMiddleMotion, pacingMiddleFocal],
         displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
-        comparisonBasePassId: "display_palette_color_purpose_contrast_holdout",
+        comparisonBasePassId: "display_palette_spatial_focal_holdout",
         changeType: "video_aesthetic_palette_color_purpose_motion_holdout"
       },
       {
