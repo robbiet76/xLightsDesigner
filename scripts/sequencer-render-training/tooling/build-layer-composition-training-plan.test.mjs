@@ -756,6 +756,41 @@ test("layer composition plan expands targeted display aesthetic coverage units",
   assert.equal(repairPass.controllerSelection.selectedByController, true);
 });
 
+test("layer composition plan preserves palette from targeted display coverage units", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-targeted-rgb-display-aesthetic-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 19,
+      controllerDecision: {
+        selectedGoalId: "display.video_aesthetic.rgb_regional_focus_v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.video_aesthetic.rgb_regional_focus_v1:coverage-gap",
+        goalId: "display.video_aesthetic.rgb_regional_focus_v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "rgb_primary",
+          passId: "display_regional_focus_contrast"
+        }]
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_regional_focus_contrast"]
+  );
+});
+
 test("layer composition plan expands music structure coverage-gap controller queue", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

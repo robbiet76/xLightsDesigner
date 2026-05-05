@@ -485,6 +485,99 @@ test("controller can target a specific display review pass for repeat evidence",
   assert.equal(state.nextQueue[0].passId, "display_focal_consistency_repair");
 });
 
+test("controller covers targeted display aesthetic goal from durable pass evidence", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("display_focal_consistency_repair", 0.88, []),
+    experimentId: "display-quality-review-mono_white",
+    family: "display_quality_review",
+    sampleCount: 2,
+    trendStatus: "stable",
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.focal_consistency_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["mono_white"],
+          passIds: ["display_focal_consistency_repair"],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [{
+            paletteProfile: "mono_white",
+            passId: "display_focal_consistency_repair"
+          }]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].evidenceStatus, "covered");
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 1);
+  assert.equal(state.goalStatuses[0].distinctCoverageUnitCount, 1);
+  assert.equal(state.controllerDecision.nextAction, "idle");
+});
+
+test("controller targets rgb display aesthetic records by palette and pass", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("display_regional_focus_contrast", 0.85, [
+      "insufficient_repeated_quality_evidence",
+      "quality_trend_not_stable_or_improving"
+    ]),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"]
+  }, {
+    ...record("display_regional_focus_contrast", 0.89, []),
+    experimentId: "display-quality-review-mono_white",
+    family: "display_quality_review",
+    sampleCount: 2,
+    trendStatus: "stable",
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.rgb_regional_focus_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["display_regional_focus_contrast"],
+          reviewScopes: ["whole_sequence_window"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.video_aesthetic.rgb_regional_focus_v1");
+  assert.equal(state.nextQueue[0].reason, "repeat_blocked_promising_record");
+  assert.equal(state.nextQueue[0].experimentId, "display-quality-review-rgb_primary");
+  assert.equal(state.nextQueue[0].passId, "display_regional_focus_contrast");
+});
+
 test("controller counts durable music timing records for music-structure goals", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{

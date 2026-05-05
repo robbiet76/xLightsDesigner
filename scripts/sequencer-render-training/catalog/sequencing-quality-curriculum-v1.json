@@ -373,13 +373,6 @@
           "section_video",
           "whole_sequence_window",
           "full_display_contact_sheet"
-        ],
-        "qualityDimensions": [
-          "focal_clarity",
-          "pacing_variety",
-          "motion_interest",
-          "quality_consistency",
-          "visual_balance"
         ]
       },
       "completionCriteria": {
@@ -392,6 +385,44 @@
           {
             "paletteProfile": "mono_white",
             "passId": "display_focal_consistency_repair"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.rgb_regional_focus_v1",
+      "areaId": "display_level_composition",
+      "priority": 4,
+      "status": "not_started",
+      "description": "Repeat and stabilize RGB-primary regional-focus display review evidence so color-aware display composition becomes durable.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_regional_focus_contrast"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_regional_focus_contrast"
           }
         ],
         "maximumRegressingRecords": 0

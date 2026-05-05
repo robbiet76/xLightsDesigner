@@ -2751,7 +2751,12 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
     }
     if (isDisplayQualityGoal(goalId)) {
       const isVideoAestheticImprovement = str(gap.improvementSource) === "video_aesthetic_score";
-      const paletteProfiles = str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
+      const missingPaletteProfiles = arr(gap.missingCoverageUnits)
+        .map((unit) => str(unit.paletteProfile || unit.palette || unit.palette_profile))
+        .filter(Boolean);
+      const paletteProfiles = missingPaletteProfiles.length
+        ? [...new Set(missingPaletteProfiles)]
+        : str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
         ? ["rgb_primary"]
         : ["mono_white"];
       for (const paletteProfile of paletteProfiles) {
