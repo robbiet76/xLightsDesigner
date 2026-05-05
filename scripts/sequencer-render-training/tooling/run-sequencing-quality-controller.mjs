@@ -11,6 +11,7 @@ const DEFAULT_MAX_QUEUE = 25;
 const VIDEO_AESTHETIC_STRATEGIES = [
   "section_window_pacing_balance",
   "regional_focus_contrast",
+  "rgb_primary_color_discipline_repair",
   "rgb_primary_regional_focus_contrast",
   "simultaneous_display_balance_revision",
   "focal_consistency_repair"
@@ -600,7 +601,7 @@ function videoAestheticAttemptStrategy(artifacts = {}) {
       previousStrategy,
       avoidStrategy: "",
       nextStrategy: previousStrategy === "regional_focus_contrast" && weakDimensions.has("color_discipline")
-        ? "rgb_primary_regional_focus_contrast"
+        ? "rgb_primary_color_discipline_repair"
         : previousStrategy || "simultaneous_display_balance",
       reason: previousStrategy
         ? `previous video aesthetic attempt improved with ${previousStrategy}`

@@ -95,6 +95,31 @@ test("pass execution maps verified layer render settings into owned batch settin
   assert.equal(execution.unsupportedLayerSettings.length, 0);
 });
 
+test("pass execution allows placements to override palette slots", () => {
+  const plan = buildLayerCompositionTrainingPlan({ modelCatalog, runId: "execution-test", runType: "smoke" });
+  const experiment = plan.experiments.find((row) => row.experimentId === "display-quality-review-rgb_primary");
+  const pass = experiment.passes.find((row) => row.passId === "display_rgb_color_discipline_repair");
+  const passPlan = {
+    ...pass,
+    experimentId: experiment.experimentId,
+    family: experiment.family,
+    paletteProfile: experiment.paletteProfile,
+    coverageKey: experiment.coverageKey
+  };
+
+  const execution = buildLayerCompositionPassExecution({ plan, passPlan });
+  const foundation = execution.ownedBatchPayload.effects.find((row) => row.metadata.placementId === "dq-rgb_primary-arch-rgb-discipline-base");
+  const redAccent = execution.ownedBatchPayload.effects.find((row) => row.metadata.placementId === "dq-rgb_primary-star-rgb-disciplined-accent");
+
+  assert.match(foundation.palette, /C_CHECKBOX_Palette1=1/);
+  assert.match(foundation.palette, /C_CHECKBOX_Palette2=0/);
+  assert.match(foundation.palette, /C_CHECKBOX_Palette3=0/);
+  assert.match(redAccent.palette, /C_CHECKBOX_Palette1=0/);
+  assert.match(redAccent.palette, /C_CHECKBOX_Palette2=1/);
+  assert.match(redAccent.palette, /C_CHECKBOX_Palette3=0/);
+  assert.equal(execution.unsupportedLayerSettings.length, 0);
+});
+
 test("pass execution captures unmapped layer settings as explicit gaps", () => {
   const plan = buildLayerCompositionTrainingPlan({ modelCatalog, runId: "execution-test", runType: "smoke" });
   const passPlan = {

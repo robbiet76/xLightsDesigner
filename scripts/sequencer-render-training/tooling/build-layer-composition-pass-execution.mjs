@@ -107,6 +107,9 @@ function normalizeEffectSettings(effectName = "", settings = {}) {
 
 function layerRenderSettingMapping(settingName = "") {
   const key = str(settingName);
+  if (/^C_BUTTON_Palette[1-8]$/.test(key) || /^C_CHECKBOX_Palette[1-8]$/.test(key)) {
+    return { target: "palette", key };
+  }
   return {
     mixMethod: { target: "settings", key: "T_CHOICE_LayerMethod" },
     mixThreshold: { target: "settings", key: "T_SLIDER_EffectLayerMix" },

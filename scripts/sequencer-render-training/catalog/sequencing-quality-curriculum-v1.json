@@ -429,6 +429,44 @@
       }
     },
     {
+      "goalId": "display.video_aesthetic.rgb_color_discipline_v1",
+      "areaId": "display_level_composition",
+      "priority": 4,
+      "status": "not_started",
+      "description": "Learn a constrained RGB display-level strategy that preserves color discipline and visual balance by using mono-white structure with limited primary-color accents.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_rgb_color_discipline_repair"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_rgb_color_discipline_repair"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
       "goalId": "effect_fit.expanded_model_matrix.v1",
       "areaId": "effect_behavior",
       "priority": 4,

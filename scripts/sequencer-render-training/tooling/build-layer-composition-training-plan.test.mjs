@@ -97,6 +97,9 @@ test("layer composition training plan includes group/model and same-target layer
   const experimentIds = plan.experiments.map((experiment) => experiment.experimentId);
 
   assert.equal(plan.paletteProfiles.length, 2);
+  const rgbProfile = plan.paletteProfiles.find((profile) => profile.profile === "rgb_primary");
+  assert.equal(rgbProfile.purpose.colorRoles.some((role) => role.role === "warm_focal_accent"), true);
+  assert.equal(rgbProfile.purpose.constraints.includes("Assign each active color a role before selecting effects."), true);
   assert.equal(experimentIds.includes("group-model-interplay-mono_white"), true);
   assert.equal(experimentIds.includes("group-model-interplay-rgb_primary"), true);
   assert.equal(experimentIds.includes("same-target-layer-stack-mono_white"), true);
@@ -680,6 +683,52 @@ test("layer composition plan expands rgb primary regional focus strategy", () =>
     plan.experiments[0].passes.find((pass) => pass.passId === "display_regional_focus_contrast")
       .controllerSelection.selectedByController,
     true
+  );
+});
+
+test("layer composition plan expands rgb color discipline repair strategy", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-video-aesthetic-rgb-color-discipline",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 17,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        selectionReason: "video_aesthetic_score_below_threshold",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:video-aesthetic-improvement",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap",
+        improvementSource: "video_aesthetic_score",
+        previousAttemptStatus: "neutral",
+        nextStrategy: "rgb_primary_color_discipline_repair"
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_rgb_color_discipline_repair"]
+  );
+  const repairPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_rgb_color_discipline_repair");
+  assert.equal(repairPass.controllerSelection.selectedByController, true);
+  assert.equal(repairPass.placements.length, 3);
+  assert.equal(
+    repairPass.placements.every((placement) => placement.layerIntent?.displayReviewRole === "rgb_color_discipline_repair"),
+    true
+  );
+  assert.deepEqual(
+    repairPass.placements.map((placement) => placement.layerIntent?.colorPurpose),
+    ["structure", "warm_focal_accent", "structure_motion_support"]
   );
 });
 

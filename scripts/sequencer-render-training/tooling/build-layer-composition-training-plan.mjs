@@ -292,6 +292,68 @@ function paletteSettings(profile) {
   };
 }
 
+function palettePurpose(profile) {
+  if (profile === "rgb_primary") {
+    return {
+      profile,
+      designIntent: "Use RGB as assigned roles, not as an always-on three-color palette.",
+      colorRoles: [
+        {
+          slot: 1,
+          color: "#FFFFFF",
+          role: "structure",
+          purpose: "Primary readable structure, base geometry, and continuity layer.",
+          recommendedUse: "Use as the default foundation and motion thread when color discipline is weak."
+        },
+        {
+          slot: 2,
+          color: "#FF0000",
+          role: "warm_focal_accent",
+          purpose: "Short-duration focal emphasis on one lead element.",
+          recommendedUse: "Use sparingly on a single focal target or submodel; avoid full-display red washes."
+        },
+        {
+          slot: 3,
+          color: "#00FF00",
+          role: "reserved_secondary_accent",
+          purpose: "Optional second accent only when the design needs a clear contrast change.",
+          recommendedUse: "Avoid in early RGB discipline repair passes unless green has a stated design reason."
+        },
+        {
+          slot: 4,
+          color: "#0000FF",
+          role: "cool_motion_accent",
+          purpose: "Low-density motion or response accent that should not compete with the focal color.",
+          recommendedUse: "Use only after the focal color is stable; do not combine with red on the same layer stack."
+        }
+      ],
+      constraints: [
+        "Assign each active color a role before selecting effects.",
+        "Prefer one chromatic accent plus white structure until color discipline is stable.",
+        "Do not enable all primary colors on every effect by default.",
+        "Treat additional active hues as a deliberate design change that needs validation."
+      ]
+    };
+  }
+  return {
+    profile,
+    designIntent: "Use mono-white as a readability and structure baseline.",
+    colorRoles: [
+      {
+        slot: 1,
+        color: "#FFFFFF",
+        role: "structure",
+        purpose: "Readable foundation, focal clarity, and neutral motion.",
+        recommendedUse: "Use for baseline display structure and comparison passes."
+      }
+    ],
+    constraints: [
+      "Keep hue changes out of mono-white baseline passes.",
+      "Use brightness, timing, target selection, and movement for variation."
+    ]
+  };
+}
+
 function placement({
   id,
   target,
@@ -1586,6 +1648,101 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
     layerSettings: { mixMethod: "Normal" },
     layerIntent: { blendRole: "low_variance_motion_thread", displayReviewRole: "focal_consistency_repair" }
   });
+  const archRgbDisciplineBase = placement({
+    id: `dq-${paletteProfile}-arch-rgb-discipline-base`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: {
+      cycles: 1,
+      circularPalette: false
+    },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 75,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "neutral_structure",
+      displayReviewRole: "rgb_color_discipline_repair",
+      colorPurpose: "structure"
+    }
+  });
+  const starRgbDisciplinedAccent = placement({
+    id: `dq-${paletteProfile}-star-rgb-disciplined-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 1600,
+    endMs: 4600,
+    effectSettings: {
+      arms: 4,
+      twists: 1,
+      rotation: 15
+    },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 55,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "single_hue_focal_accent",
+      displayReviewRole: "rgb_color_discipline_repair",
+      colorPurpose: "warm_focal_accent"
+    }
+  });
+  const lineRgbDisciplinedMotion = placement({
+    id: `dq-${paletteProfile}-line-rgb-disciplined-motion`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 2400,
+    endMs: 6000,
+    effectSettings: {
+      effect: "Chase",
+      cycles: 2,
+      colorSpeed: 2
+    },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 70,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "neutral_motion_thread",
+      displayReviewRole: "rgb_color_discipline_repair",
+      colorPurpose: "structure_motion_support"
+    }
+  });
 
   return {
     experimentId: `display-quality-review-${paletteProfile}`,
@@ -1657,6 +1814,14 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
         comparisonBasePassId: "display_motion_variety",
         changeType: "video_aesthetic_focal_consistency_repair"
+      },
+      {
+        passId: "display_rgb_color_discipline_repair",
+        compositionPass: "display_review",
+        placements: [archRgbDisciplineBase, starRgbDisciplinedAccent, lineRgbDisciplinedMotion],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_motion_variety",
+        changeType: "video_aesthetic_rgb_color_discipline_repair"
       }
     ]
   };
@@ -2757,6 +2922,7 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
       const paletteProfiles = missingPaletteProfiles.length
         ? [...new Set(missingPaletteProfiles)]
         : str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
+          || str(gap.nextStrategy) === "rgb_primary_color_discipline_repair"
         ? ["rgb_primary"]
         : ["mono_white"];
       for (const paletteProfile of paletteProfiles) {
@@ -2770,10 +2936,12 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
             ? ["display_section_window_pacing"]
             : str(gap.nextStrategy) === "regional_focus_contrast"
               ? ["display_regional_focus_contrast"]
-              : str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
-                ? ["display_regional_focus_contrast"]
-                : str(gap.nextStrategy) === "focal_consistency_repair"
-                  ? ["display_focal_consistency_repair"]
+            : str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
+              ? ["display_regional_focus_contrast"]
+              : str(gap.nextStrategy) === "rgb_primary_color_discipline_repair"
+                ? ["display_rgb_color_discipline_repair"]
+              : str(gap.nextStrategy) === "focal_consistency_repair"
+                ? ["display_focal_consistency_repair"]
             : ["display_pacing_balance_revision", "display_wide_balance_revision"]
           : ["display_balance_foundation", "display_motion_variety"];
         for (const passId of passIds) {
@@ -2977,7 +3145,8 @@ export function buildLayerCompositionTrainingPlan({
     },
     paletteProfiles: paletteProfiles.map((profile) => ({
       profile,
-      settings: paletteSettings(profile)
+      settings: paletteSettings(profile),
+      purpose: palettePurpose(profile)
     })),
     experimentFamilies: [
       "group_model_interplay",

@@ -942,15 +942,16 @@ test("controller avoids recently ineffective video aesthetic strategies", () => 
 
   assert.equal(state.nextQueue[0].previousAttemptStatus, "neutral");
   assert.equal(state.nextQueue[0].avoidStrategy, "section_window_pacing_balance,regional_focus_contrast");
-  assert.equal(state.nextQueue[0].nextStrategy, "rgb_primary_regional_focus_contrast");
+  assert.equal(state.nextQueue[0].nextStrategy, "rgb_primary_color_discipline_repair");
 });
 
 test("controller selects focal consistency repair after all current video strategies are ineffective", () => {
-  const roots = [tempDir(), tempDir(), tempDir(), tempDir()];
+  const roots = [tempDir(), tempDir(), tempDir(), tempDir(), tempDir()];
   const strategies = [
     "section_window_pacing_balance",
     "regional_focus_contrast",
     "rgb_primary_regional_focus_contrast",
+    "rgb_primary_color_discipline_repair",
     "simultaneous_display_balance_revision"
   ];
   roots.forEach((root, index) => {
@@ -1049,7 +1050,7 @@ test("controller moves improved regional focus to rgb primary when color discipl
   });
 
   assert.equal(state.nextQueue[0].previousAttemptStatus, "improved");
-  assert.equal(state.nextQueue[0].nextStrategy, "rgb_primary_regional_focus_contrast");
+  assert.equal(state.nextQueue[0].nextStrategy, "rgb_primary_color_discipline_repair");
   assert.equal(state.nextQueue[0].avoidStrategy, "");
 });
 
