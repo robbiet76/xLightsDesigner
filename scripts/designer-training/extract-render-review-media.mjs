@@ -10,6 +10,7 @@ const ACTIVE_PIXEL_THRESHOLD = 0.05;
 const DOMINANT_PIXEL_THRESHOLD = 0.8;
 const ACTIVE_PIXEL_EPSILON = 0.0003;
 const ACTIVE_BRIGHTNESS_EPSILON = 0.0003;
+const COLOR_QUANTIZATION_STEP = 32;
 
 function str(value = '') {
   return String(value || '').trim();
@@ -145,6 +146,24 @@ function sampleRawFrames({ mediaPath, width, height, startSeconds, sectionDurati
   return { fps: round6(fps), metrics };
 }
 
+function quantizedColorKey(rByte, gByte, bByte) {
+  const quantize = (value) => Math.max(0, Math.min(7, Math.floor(value / COLOR_QUANTIZATION_STEP)));
+  return `${quantize(rByte)},${quantize(gByte)},${quantize(bByte)}`;
+}
+
+function colorClassKey(rByte, gByte, bByte) {
+  const max = Math.max(rByte, gByte, bByte);
+  const min = Math.min(rByte, gByte, bByte);
+  if (max - min <= 18) return 'white';
+  if (rByte >= gByte * 1.25 && rByte >= bByte * 1.25) return 'red';
+  if (gByte >= rByte * 1.25 && gByte >= bByte * 1.25) return 'green';
+  if (bByte >= rByte * 1.25 && bByte >= gByte * 1.25) return 'blue';
+  if (rByte >= bByte * 1.2 && gByte >= bByte * 1.2) return 'yellow';
+  if (rByte >= gByte * 1.2 && bByte >= gByte * 1.2) return 'magenta';
+  if (gByte >= rByte * 1.2 && bByte >= rByte * 1.2) return 'cyan';
+  return 'mixed';
+}
+
 function measureFrame(chunk, width, height, frameIndex) {
   const total = width * height;
   let sumR = 0;
@@ -154,6 +173,8 @@ function measureFrame(chunk, width, height, frameIndex) {
   let active = 0;
   let dominant = 0;
   const seen = new Set();
+  const activeQuantized = new Set();
+  const activeClasses = new Set();
   for (let index = 0; index < chunk.length; index += 3) {
     const rByte = chunk[index];
     const gByte = chunk[index + 1];
@@ -166,7 +187,11 @@ function measureFrame(chunk, width, height, frameIndex) {
     sumG += g;
     sumB += b;
     sumBrightness += brightness;
-    if (brightness > ACTIVE_PIXEL_THRESHOLD) active += 1;
+    if (brightness > ACTIVE_PIXEL_THRESHOLD) {
+      active += 1;
+      activeQuantized.add(quantizedColorKey(rByte, gByte, bByte));
+      activeClasses.add(colorClassKey(rByte, gByte, bByte));
+    }
     if (brightness > DOMINANT_PIXEL_THRESHOLD) dominant += 1;
     seen.add(`${rByte},${gByte},${bByte}`);
   }
@@ -176,6 +201,8 @@ function measureFrame(chunk, width, height, frameIndex) {
     frameActivePixelRatio: total ? active / total : 0,
     frameDominantPixelRatio: total ? dominant / total : 0,
     frameUniqueColorCount: seen.size,
+    frameActiveUniqueColorCount: activeQuantized.size,
+    frameActiveColorClassCount: activeClasses.size,
     frameAverageRgb: {
       r: total ? sumR / total : 0,
       g: total ? sumG / total : 0,
@@ -216,6 +243,10 @@ function summarizeFrameMetrics(metrics = []) {
       representativeSampledFrameActivePixelRatio: 0,
       representativeSampledFrameDominantPixelRatio: 0,
       representativeSampledFrameUniqueColorCount: 0,
+      representativeSampledFrameActiveUniqueColorCount: 0,
+      representativeSampledFrameActiveColorClassCount: 0,
+      meanSampledFrameActiveUniqueColorCount: 0,
+      meanSampledFrameActiveColorClassCount: 0,
       representativeSampledFrameAverageRgb: { r: 0, g: 0, b: 0 }
     };
   }
@@ -297,6 +328,8 @@ function summarizeFrameMetrics(metrics = []) {
       frameActivePixelRatio: round6(row.frameActivePixelRatio),
       frameDominantPixelRatio: round6(row.frameDominantPixelRatio),
       frameUniqueColorCount: row.frameUniqueColorCount,
+      frameActiveUniqueColorCount: row.frameActiveUniqueColorCount,
+      frameActiveColorClassCount: row.frameActiveColorClassCount,
       frameAverageRgb: {
         r: round6(row.frameAverageRgb.r),
         g: round6(row.frameAverageRgb.g),
@@ -309,6 +342,10 @@ function summarizeFrameMetrics(metrics = []) {
     representativeSampledFrameActivePixelRatio: round6(representative.frameActivePixelRatio),
     representativeSampledFrameDominantPixelRatio: round6(representative.frameDominantPixelRatio),
     representativeSampledFrameUniqueColorCount: representative.frameUniqueColorCount,
+    representativeSampledFrameActiveUniqueColorCount: representative.frameActiveUniqueColorCount,
+    representativeSampledFrameActiveColorClassCount: representative.frameActiveColorClassCount,
+    meanSampledFrameActiveUniqueColorCount: round6(metrics.reduce((sum, row) => sum + row.frameActiveUniqueColorCount, 0) / metrics.length),
+    meanSampledFrameActiveColorClassCount: round6(metrics.reduce((sum, row) => sum + row.frameActiveColorClassCount, 0) / metrics.length),
     representativeSampledFrameAverageRgb: {
       r: round6(representative.frameAverageRgb.r),
       g: round6(representative.frameAverageRgb.g),

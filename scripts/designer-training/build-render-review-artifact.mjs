@@ -121,10 +121,14 @@ function normalizeFrameFeatures(features = {}) {
     representativeBrightness: number(features.representativeSampledFrameAverageBrightness, max(sampled.map((row) => row.frameAverageBrightness))),
     representativeDominantRatio: number(features.representativeSampledFrameDominantPixelRatio, max(sampled.map((row) => row.frameDominantPixelRatio))),
     representativeUniqueColorCount: number(features.representativeSampledFrameUniqueColorCount, max(sampled.map((row) => row.frameUniqueColorCount))),
+    representativeActiveUniqueColorCount: number(features.representativeSampledFrameActiveUniqueColorCount, max(sampled.map((row) => row.frameActiveUniqueColorCount))),
+    representativeActiveColorClassCount: number(features.representativeSampledFrameActiveColorClassCount, max(sampled.map((row) => row.frameActiveColorClassCount))),
     meanActiveRatio: average(sampled.map((row) => row.frameActivePixelRatio)),
     meanBrightness: average(sampled.map((row) => row.frameAverageBrightness)),
     meanDominantRatio: average(sampled.map((row) => row.frameDominantPixelRatio)),
     meanUniqueColorCount: average(sampled.map((row) => row.frameUniqueColorCount)),
+    meanActiveUniqueColorCount: number(features.meanSampledFrameActiveUniqueColorCount, average(sampled.map((row) => row.frameActiveUniqueColorCount))),
+    meanActiveColorClassCount: number(features.meanSampledFrameActiveColorClassCount, average(sampled.map((row) => row.frameActiveColorClassCount))),
     previewWindowSignals: preview
   };
 }
@@ -144,6 +148,8 @@ function buildDeterministicMetrics(normalized = {}) {
   const brightnessPeak = clamp01(normalized.representativeBrightness);
   const dominantBrightnessPeak = clamp01(normalized.representativeDominantRatio);
   const colorDiversityMean = Math.min(1, normalized.meanUniqueColorCount / 64);
+  const activeColorDiversityMean = Math.min(1, normalized.meanActiveUniqueColorCount / 12);
+  const activeColorClassMean = Math.min(1, normalized.meanActiveColorClassCount / 6);
   const motionMean = clamp01(normalized.temporalMotionMean);
   const motionPeak = clamp01(normalized.temporalMotionPeak);
   const blankRisk = 1 - clamp01(normalized.nonBlankSampledFrameRatio || (activeCoverageMean > 0.005 ? 1 : 0));
@@ -159,6 +165,8 @@ function buildDeterministicMetrics(normalized = {}) {
     brightnessPeak: round(brightnessPeak),
     dominantBrightnessPeak: round(dominantBrightnessPeak),
     colorDiversityMean: round(colorDiversityMean),
+    activeColorDiversityMean: round(activeColorDiversityMean),
+    activeColorClassMean: round(activeColorClassMean),
     temporalMotionMean: round(motionMean),
     temporalMotionPeak: round(motionPeak),
     temporalColorDeltaMean: round(normalized.temporalColorDeltaMean),
@@ -204,7 +212,17 @@ function buildQualityScores(metrics = {}, intent = {}) {
     ((1 - metrics.clutterRisk) * 0.2) +
     ((1 - metrics.overexposureRisk) * 0.15)
   );
-  const colorDiscipline = clamp01(1 - Math.max(0, metrics.colorDiversityMean - 0.72) * 1.3);
+  const activePaletteBreadth = metrics.activeColorDiversityMean > 0
+    ? metrics.activeColorDiversityMean
+    : metrics.colorDiversityMean;
+  const activePaletteClassBreadth = metrics.activeColorClassMean > 0
+    ? metrics.activeColorClassMean
+    : activePaletteBreadth;
+  const colorDiscipline = clamp01(
+    (scoreBand(activePaletteBreadth, { low: 0.035, ideal: 0.24, high: 0.9 }) * 0.65)
+    + (scoreBand(activePaletteClassBreadth, { low: 0.08, ideal: 0.34, high: 0.92 }) * 0.25)
+    + ((1 - Math.min(1, metrics.temporalColorDeltaMean * 16)) * 0.1)
+  );
   const transitionQuality = clamp01((motionScore * 0.65) + ((1 - metrics.flatnessRisk) * 0.35));
   const musicalFit = clamp01((motionScore * 0.55) + (coverageScore * 0.25) + ((1 - metrics.blankRisk) * 0.2));
   const overall = clamp01(

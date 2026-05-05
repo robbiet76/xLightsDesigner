@@ -65,6 +65,41 @@ test('render review artifact flags blank or flat sections for revision', () => {
   assert.equal(artifact.promotion.eligible, false);
 });
 
+test('render review artifact scores color discipline from active quantized palette breadth', () => {
+  const base = {
+    sampledFrameCount: 4,
+    nonBlankSampledFrameRatio: 1,
+    temporalMotionMean: 0.08,
+    temporalMotionPeak: 0.15
+  };
+  const disciplined = buildRenderReviewArtifact({
+    frameFeatures: {
+      ...base,
+      meanSampledFrameActiveUniqueColorCount: 3,
+      meanSampledFrameActiveColorClassCount: 3,
+      sampledFrameMetrics: [
+        { frameActivePixelRatio: 0.25, frameAverageBrightness: 0.18, frameDominantPixelRatio: 0.02, frameUniqueColorCount: 8000, frameActiveUniqueColorCount: 3, frameActiveColorClassCount: 3 },
+        { frameActivePixelRatio: 0.25, frameAverageBrightness: 0.18, frameDominantPixelRatio: 0.02, frameUniqueColorCount: 8000, frameActiveUniqueColorCount: 3, frameActiveColorClassCount: 3 }
+      ]
+    }
+  });
+  const noisy = buildRenderReviewArtifact({
+    frameFeatures: {
+      ...base,
+      meanSampledFrameActiveUniqueColorCount: 12,
+      meanSampledFrameActiveColorClassCount: 6,
+      sampledFrameMetrics: [
+        { frameActivePixelRatio: 0.25, frameAverageBrightness: 0.18, frameDominantPixelRatio: 0.02, frameUniqueColorCount: 8000, frameActiveUniqueColorCount: 12, frameActiveColorClassCount: 6 },
+        { frameActivePixelRatio: 0.25, frameAverageBrightness: 0.18, frameDominantPixelRatio: 0.02, frameUniqueColorCount: 8000, frameActiveUniqueColorCount: 12, frameActiveColorClassCount: 6 }
+      ]
+    }
+  });
+
+  assert.ok(disciplined.qualityScores.colorDiscipline > noisy.qualityScores.colorDiscipline);
+  assert.ok(disciplined.qualityScores.colorDiscipline > 0.8);
+  assert.ok(noisy.qualityScores.colorDiscipline < 0.7);
+});
+
 test('render review artifact separates baseline render health from quality evidence', () => {
   const artifact = buildRenderReviewArtifact({
     frameFeatures: {
