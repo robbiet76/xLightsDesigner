@@ -2605,6 +2605,11 @@ function controllerCoverageGapRows(controllerState = {}) {
     .filter((row) => str(row.reason) === "coverage_gap" && str(row.goalId));
 }
 
+function isDisplayQualityGoal(goalId = "") {
+  return str(goalId) === "display.full_sequence.quality_v1"
+    || str(goalId).startsWith("display.video_aesthetic.");
+}
+
 function coverageGapQueueRows(controllerState = {}, experiments = []) {
   const rows = [];
   for (const gap of controllerCoverageGapRows(controllerState)) {
@@ -2744,13 +2749,18 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         }
       }
     }
-    if (goalId === "display.full_sequence.quality_v1") {
+    if (isDisplayQualityGoal(goalId)) {
       const isVideoAestheticImprovement = str(gap.improvementSource) === "video_aesthetic_score";
       const paletteProfiles = str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
         ? ["rgb_primary"]
         : ["mono_white"];
       for (const paletteProfile of paletteProfiles) {
-        const passIds = isVideoAestheticImprovement
+        const missingPassIds = arr(gap.missingCoverageUnits)
+          .map((unit) => str(unit.passId || unit.pass || unit.pass_id))
+          .filter(Boolean);
+        const passIds = missingPassIds.length
+          ? [...new Set(missingPassIds)]
+          : isVideoAestheticImprovement
           ? str(gap.nextStrategy) === "section_window_pacing_balance"
             ? ["display_section_window_pacing"]
             : str(gap.nextStrategy) === "regional_focus_contrast"

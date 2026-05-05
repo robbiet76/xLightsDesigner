@@ -719,6 +719,43 @@ test("layer composition plan expands focal consistency repair strategy", () => {
   assert.equal(repairPass.placements.some((placement) => placement.layerIntent?.displayReviewRole === "focal_consistency_repair"), true);
 });
 
+test("layer composition plan expands targeted display aesthetic coverage units", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-targeted-display-aesthetic-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 18,
+      controllerDecision: {
+        selectedGoalId: "display.video_aesthetic.focal_consistency_v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.video_aesthetic.focal_consistency_v1:coverage-gap",
+        goalId: "display.video_aesthetic.focal_consistency_v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "mono_white",
+          passId: "display_focal_consistency_repair"
+        }]
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-mono_white"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_focal_consistency_repair"]
+  );
+  const repairPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_focal_consistency_repair");
+  assert.equal(repairPass.controllerSelection.selectedByController, true);
+});
+
 test("layer composition plan expands music structure coverage-gap controller queue", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

@@ -238,6 +238,7 @@ function coverageFieldValues(record = {}, field = "") {
   if (field === "palette" || field === "palette_profile" || field === "palette_profiles" || field === "paletteprofile") return paletteProfilesForRecord(record);
   if (field === "target_scope" || field === "target_scopes") return normalizedValues(targetScopesForRecord(record));
   if (field === "family" || field === "families") return [normalizedToken(record.family)].filter(Boolean);
+  if (field === "pass" || field === "pass_id" || field === "pass_ids" || field === "passid") return [normalizedToken(record.passId)].filter(Boolean);
   return normalizedValues(record[field]);
 }
 
@@ -267,6 +268,7 @@ function coverageUnitKeyForDesiredUnit(unit = {}, fields = []) {
         ?? (field === "paletteprofile" ? unit.paletteProfile : undefined)
         ?? (field === "modeltype" ? unit.modelType : undefined)
         ?? (field === "effectname" ? unit.effectName : undefined)
+        ?? (field === "passid" ? unit.passId : undefined)
         ?? unit[field.replace("_", "")]
         ?? unit[field.replaceAll("_", "")]
         ?? unit[field.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())]
@@ -308,6 +310,7 @@ function recordMatchesGoal(record = {}, goal = {}) {
   const timingSources = coverageList(coverage, "timingSources");
   const intentDimensions = coverageList(coverage, "intentDimensions");
   const reviewMethods = coverageList(coverage, "reviewMethods");
+  const passIds = coverageList(coverage, "passIds");
   const hasStructuredCoverage = families.length
     || paletteProfiles.length
     || effects.length
@@ -317,7 +320,8 @@ function recordMatchesGoal(record = {}, goal = {}) {
     || qualityDimensions.length
     || timingSources.length
     || intentDimensions.length
-    || reviewMethods.length;
+    || reviewMethods.length
+    || passIds.length;
   if (!hasStructuredCoverage) return false;
   const experimentId = str(record.experimentId);
 
@@ -341,6 +345,7 @@ function recordMatchesGoal(record = {}, goal = {}) {
   const timingSourceMatch = matchesCoverage(record.timingSources, timingSources);
   const intentDimensionMatch = matchesCoverage(record.intentDimensions, intentDimensions);
   const reviewMethodMatch = matchesCoverage(record.reviewMethods, reviewMethods);
+  const passIdMatch = !passIds.length || passIds.includes(normalizedToken(record.passId));
   return familyMatch
     && paletteMatch
     && effectMatch
@@ -350,7 +355,8 @@ function recordMatchesGoal(record = {}, goal = {}) {
     && qualityDimensionMatch
     && timingSourceMatch
     && intentDimensionMatch
-    && reviewMethodMatch;
+    && reviewMethodMatch
+    && passIdMatch;
 }
 
 function isPromisingBlockedRecord(record = {}, goal = {}, policy = {}) {
@@ -360,7 +366,8 @@ function isPromisingBlockedRecord(record = {}, goal = {}, policy = {}) {
     || coverageList(coverage, "targetScopes").length
     || coverageList(coverage, "modelTypes").length
     || coverageList(coverage, "intentDimensions").length
-    || coverageList(coverage, "reviewMethods").length;
+    || coverageList(coverage, "reviewMethods").length
+    || coverageList(coverage, "passIds").length;
   if (!repeatableCoverage) return false;
   const blockers = arr(record?.promotion?.blockers).map(str).filter(Boolean);
   if (!blockers.length) return false;

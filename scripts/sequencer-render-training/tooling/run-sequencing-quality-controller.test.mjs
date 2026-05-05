@@ -429,6 +429,62 @@ test("controller does not repeat arbitrary blocked effect records for display-on
   assert.equal(state.nextQueue[0].goalId, "display.full_sequence.quality_v1");
 });
 
+test("controller can target a specific display review pass for repeat evidence", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("display_focal_consistency_repair", 0.88, [
+      "insufficient_repeated_quality_evidence",
+      "quality_trend_not_stable_or_improving"
+    ]),
+    experimentId: "display-quality-review-mono_white",
+    family: "display_quality_review",
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["focal_clarity", "pacing_variety", "motion_interest", "quality_consistency", "visual_balance"]
+  }, {
+    ...record("display_motion_variety", 0.91, [
+      "insufficient_repeated_quality_evidence"
+    ]),
+    experimentId: "display-quality-review-mono_white",
+    family: "display_quality_review",
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"]
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.focal_consistency_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        requiredStableSamples: 2,
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["mono_white"],
+          passIds: ["display_focal_consistency_repair"],
+          reviewScopes: ["whole_sequence_window"],
+          qualityDimensions: ["focal_clarity"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [{
+            paletteProfile: "mono_white",
+            passId: "display_focal_consistency_repair"
+          }]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.video_aesthetic.focal_consistency_v1");
+  assert.equal(state.controllerDecision.selectionReason, "blocked_promising_records");
+  assert.equal(state.nextQueue[0].reason, "repeat_blocked_promising_record");
+  assert.equal(state.nextQueue[0].passId, "display_focal_consistency_repair");
+});
+
 test("controller counts durable music timing records for music-structure goals", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{

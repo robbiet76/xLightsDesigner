@@ -353,6 +353,51 @@
       }
     },
     {
+      "goalId": "display.video_aesthetic.focal_consistency_v1",
+      "areaId": "display_level_composition",
+      "priority": 4,
+      "status": "not_started",
+      "description": "Repeat and stabilize selector-ready focal consistency video aesthetic evidence so the successful display-level strategy becomes durable across runs.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "mono_white"
+        ],
+        "passIds": [
+          "display_focal_consistency_repair"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "focal_clarity",
+          "pacing_variety",
+          "motion_interest",
+          "quality_consistency",
+          "visual_balance"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "mono_white",
+            "passId": "display_focal_consistency_repair"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
       "goalId": "effect_fit.expanded_model_matrix.v1",
       "areaId": "effect_behavior",
       "priority": 4,
