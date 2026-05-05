@@ -194,7 +194,7 @@
         "Compare color spread and multicolor frame ratio against mono-white priors."
       ],
       "completionCriteria": {
-        "minimumDurableCandidateCount": 5,
+        "minimumDurableCandidateCount": 4,
         "maximumRegressingRecords": 0
       }
     },

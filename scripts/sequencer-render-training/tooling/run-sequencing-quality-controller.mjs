@@ -87,7 +87,7 @@ function recentControllerAttemptHistory(latestRunRoot = "", qualityRecords = {})
   const roots = [...new Set([
     ...arr(qualityRecords?.sourceRunRoots).map(resolvePath),
     resolvePath(latestRunRoot)
-  ].filter(Boolean))].slice(-12);
+  ].filter(Boolean))].slice(-50);
   return roots.map((root) => {
     const controllerState = readJsonIfExists(path.join(root, "controller-state.json")) || {};
     const queue = arr(controllerState.nextQueue)[0] || {};
