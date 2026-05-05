@@ -11,6 +11,7 @@ import { runLayerCompositionPasses } from "./run-layer-composition-pass-runner.m
 import { buildLayerCompositionQualityTrend } from "./build-layer-composition-quality-trend.mjs";
 import { buildLayerCompositionQualityRecords } from "./build-layer-composition-quality-records.mjs";
 import { buildFullSequenceReviewLoop } from "./build-full-sequence-review-loop.mjs";
+import { buildVideoAestheticScore } from "./build-video-aesthetic-score.mjs";
 import { buildCreativeIntentRevisionComparison } from "./build-creative-intent-revision-comparison.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -184,6 +185,7 @@ export async function runSequencingQualityLoop({
   let passRunnerSummary = null;
   let crossRunQuality = null;
   let fullSequenceReview = null;
+  let videoAestheticScore = null;
   let creativeIntentRevisionComparison = null;
   if (applyRender) {
     passRunnerSummary = await (deps.runPasses || runLayerCompositionPasses)({
@@ -195,6 +197,11 @@ export async function runSequencingQualityLoop({
     fullSequenceReview = (deps.buildFullSequenceReview || buildFullSequenceReviewLoop)({
       runRoot: root,
       outPath: path.join(root, "full-sequence-review-loop.json")
+    });
+    videoAestheticScore = (deps.buildVideoAestheticScore || buildVideoAestheticScore)({
+      runRoot: root,
+      fullSequenceReviewPath: path.join(root, "full-sequence-review-loop.json"),
+      outPath: path.join(root, "video-aesthetic-score.json")
     });
     creativeIntentRevisionComparison = (deps.buildCreativeIntentRevisionComparison || buildCreativeIntentRevisionComparison)({
       runRoot: root,
@@ -228,6 +235,14 @@ export async function runSequencingQualityLoop({
       timingSources: arr(fullSequenceReview.timingSources).map(str).filter(Boolean),
       qualityDimensions: arr(fullSequenceReview.qualityDimensions).map(str).filter(Boolean),
       ref: path.join(root, "full-sequence-review-loop.json")
+    } : null,
+    videoAestheticScore: videoAestheticScore ? {
+      status: str(videoAestheticScore.status),
+      scoredWindowCount: num(videoAestheticScore.scoredWindowCount),
+      overallAestheticScore: num(videoAestheticScore.scores?.overallAestheticScore),
+      qualityDimensions: arr(videoAestheticScore.qualityDimensions).map(str).filter(Boolean),
+      promotionEligible: Boolean(videoAestheticScore.promotion?.evidenceEligible),
+      ref: path.join(root, "video-aesthetic-score.json")
     } : null,
     creativeIntentRevisionComparison: creativeIntentRevisionComparison ? {
       status: str(creativeIntentRevisionComparison.status),

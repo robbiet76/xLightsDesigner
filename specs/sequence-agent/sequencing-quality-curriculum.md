@@ -140,10 +140,13 @@ node scripts/sequencer-render-training/tooling/run-sequencing-quality-loop.mjs \
 
 This writes `controller-state.json`, `training-plan.json`,
 `execution-scaffold-result.json`, `checkpoints.json`, `retention-ledger.json`,
-and `loop-summary.json`. Live rendering is opt-in through `--apply-render`.
+`video-aesthetic-score.json`, and `loop-summary.json`. Live rendering is opt-in through `--apply-render`.
 When creative revision pairs are present, the live loop also writes
 `creative-intent-revision-comparison.json`; this is the compact evidence used to
 review whether the revision was beneficial rather than simply different.
+The video aesthetic artifact is the compact whole-display score for ordered
+render windows and is the bridge from section-level render success toward
+sequence-level quality improvement.
 
 After a coverage path has been proven with small live runs, use the unattended
 runner:

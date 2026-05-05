@@ -260,6 +260,11 @@ rejected quality evidence.
 Quality-enabled runs also write `layer-composition-quality-records.json`, which
 keeps one-off evidence blocked and marks repeated stable/improving accepted
 quality evidence as durable candidates.
+Live quality loops also write `full-sequence-review-loop.json` and
+`video-aesthetic-score.json`. The video aesthetic score is the compact
+whole-display review contract for ordered windows; it keeps display evolution,
+pacing variety, focal clarity, balance, motion interest, color discipline,
+clutter control, and consistency without retaining raw media.
 When quality records are supplied to `build-layer-composition-priors.mjs`, matching
 experiment/pass priors carry compact quality evidence into the runtime bundle
 without copying raw render-review media or review paths.

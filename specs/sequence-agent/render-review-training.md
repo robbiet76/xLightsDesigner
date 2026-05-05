@@ -90,6 +90,14 @@ Required top-level fields:
 
 Promotion requires repeated evidence across compatible sections or targets. One attractive render is not enough to promote a generalized training rule.
 
+`video_aesthetic_score_v1` is the compact display-level review artifact produced
+after the full-sequence review loop. It does not keep raw media. It reads the
+ordered section reviews plus `progression_observation_v1` and scores the larger
+sequence slice for display evolution, pacing variety, transition flow, focal
+clarity, visual balance, motion interest, color discipline, clutter control, and
+quality consistency. This is the first contract for measuring whether the whole
+sequence is getting better rather than only whether each effect rendered.
+
 ## Loop Integration
 
 The self-improvement loop should add a render-review phase after live apply/render:
@@ -120,3 +128,5 @@ The self-improvement loop should add a render-review phase after live apply/rend
 11. Attach richer section intent and music context to generated review artifacts.
 12. Add vision review as an optional second-pass evaluator.
 13. Use review decisions to drive revision loops before promotion.
+14. Build `video_aesthetic_score_v1` after full-sequence review so unattended
+    runs retain compact whole-display quality evidence.
