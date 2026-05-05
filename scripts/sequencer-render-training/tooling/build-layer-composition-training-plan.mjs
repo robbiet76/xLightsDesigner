@@ -2811,7 +2811,7 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       {
         passId: "display_palette_transition_motion_bridge",
         compositionPass: "display_review",
-        placements: [transitionBackground, transitionArchWarmEntry, transitionLineBridge, transitionSpinnerCounterpoint, pacingReleaseSupport],
+        placements: [transitionBackground, transitionArchWarmEntry, transitionLineBridge, transitionStarAccent],
         displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, spinner.modelName, star.modelName],
         comparisonBasePassId: "display_palette_transition_harmony_repair",
         changeType: "video_aesthetic_palette_transition_motion_bridge"
