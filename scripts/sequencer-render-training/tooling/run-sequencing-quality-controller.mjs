@@ -12,6 +12,7 @@ const VIDEO_AESTHETIC_STRATEGIES = [
   "section_window_pacing_balance",
   "regional_focus_contrast",
   "rgb_primary_color_discipline_repair",
+  "rgb_primary_structure_balance_pacing_repair",
   "rgb_primary_regional_focus_contrast",
   "simultaneous_display_balance_revision",
   "focal_consistency_repair"
@@ -597,6 +598,17 @@ function videoAestheticAttemptStrategy(artifacts = {}) {
     .map((row) => str(row.nextStrategy))
     .filter(Boolean));
   if (comparisonStatus === "improved") {
+    if (
+      previousStrategy === "rgb_primary_color_discipline_repair"
+      && (weakDimensions.has("visual_balance") || weakDimensions.has("pacing_variety"))
+    ) {
+      return {
+        previousStrategy,
+        avoidStrategy: "",
+        nextStrategy: "rgb_primary_structure_balance_pacing_repair",
+        reason: "previous RGB color discipline attempt improved, but visual balance or pacing remained weak"
+      };
+    }
     return {
       previousStrategy,
       avoidStrategy: "",
@@ -634,9 +646,16 @@ function videoAestheticImprovementQueue(goal = {}, artifacts = {}, policy = {}) 
   const video = artifacts.videoAestheticScore || {};
   if (str(video.status) !== "ready") return [];
   const overall = num(video.scores?.overallAestheticScore, NaN);
-  if (!Number.isFinite(overall) || overall >= policy.minimumOverallQuality || bool(video?.promotion?.evidenceEligible)) return [];
   const weakDimensions = weakVideoAestheticDimensions(video);
   const strategy = videoAestheticAttemptStrategy(artifacts);
+  const weakDimensionKeys = new Set(weakDimensions.map((row) => row.dimension));
+  const shouldContinuePromotionEligibleRgbRepair =
+    strategy.nextStrategy === "rgb_primary_structure_balance_pacing_repair"
+    && (weakDimensionKeys.has("visual_balance") || weakDimensionKeys.has("pacing_variety"));
+  if (
+    !Number.isFinite(overall)
+    || ((overall >= policy.minimumOverallQuality || bool(video?.promotion?.evidenceEligible)) && !shouldContinuePromotionEligibleRgbRepair)
+  ) return [];
   return [{
     queueId: `quality-controller:${str(goal.goalId)}:video-aesthetic-improvement`,
     goalId: str(goal.goalId),

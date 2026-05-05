@@ -732,6 +732,48 @@ test("layer composition plan expands rgb color discipline repair strategy", () =
   );
 });
 
+test("layer composition plan expands rgb structure balance pacing repair strategy", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-video-aesthetic-rgb-structure-balance",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 17,
+      controllerDecision: {
+        selectedGoalId: "display.full_sequence.quality_v1",
+        selectionReason: "video_aesthetic_score_below_threshold",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.full_sequence.quality_v1:video-aesthetic-improvement",
+        goalId: "display.full_sequence.quality_v1",
+        reason: "coverage_gap",
+        improvementSource: "video_aesthetic_score",
+        previousAttemptStatus: "improved",
+        nextStrategy: "rgb_primary_structure_balance_pacing_repair"
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["display-quality-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_rgb_color_discipline_repair", "display_rgb_structure_balance_pacing_repair"]
+  );
+  const repairPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_rgb_structure_balance_pacing_repair");
+  assert.equal(repairPass.controllerSelection.selectedByController, true);
+  assert.equal(repairPass.placements.length, 4);
+  assert.deepEqual(
+    repairPass.placements.map((placement) => placement.layerIntent?.colorPurpose),
+    ["structure", "structure_motion_support", "structure_motion_support", "warm_focal_accent"]
+  );
+});
+
 test("layer composition plan expands focal consistency repair strategy", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

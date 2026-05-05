@@ -443,7 +443,8 @@
           "rgb_primary"
         ],
         "passIds": [
-          "display_rgb_color_discipline_repair"
+          "display_rgb_color_discipline_repair",
+          "display_rgb_structure_balance_pacing_repair"
         ],
         "reviewScopes": [
           "section_video",
@@ -461,6 +462,10 @@
           {
             "paletteProfile": "rgb_primary",
             "passId": "display_rgb_color_discipline_repair"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_rgb_structure_balance_pacing_repair"
           }
         ],
         "maximumRegressingRecords": 0

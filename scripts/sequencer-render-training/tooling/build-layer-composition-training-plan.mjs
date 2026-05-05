@@ -1743,6 +1743,118 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       colorPurpose: "structure_motion_support"
     }
   });
+  const treeRgbStructureBalance = placement({
+    id: `dq-${paletteProfile}-tree-rgb-structure-balance`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 60,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "neutral_balance_fill",
+      displayReviewRole: "rgb_structure_balance_pacing_repair",
+      colorPurpose: "structure"
+    }
+  });
+  const archRgbPacingWindow = placement({
+    id: `dq-${paletteProfile}-arch-rgb-pacing-window`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 0,
+    endMs: 2400,
+    effectSettings: { direction: "up", cycles: 2 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 65,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "neutral_opening_pace",
+      displayReviewRole: "rgb_structure_balance_pacing_repair",
+      colorPurpose: "structure_motion_support"
+    }
+  });
+  const lineRgbPacingWindow = placement({
+    id: `dq-${paletteProfile}-line-rgb-pacing-window`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 2200,
+    endMs: 6000,
+    effectSettings: { effect: "Chase", cycles: 3, colorSpeed: 4 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 70,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "neutral_late_pace",
+      displayReviewRole: "rgb_structure_balance_pacing_repair",
+      colorPurpose: "structure_motion_support"
+    }
+  });
+  const starRgbSparseFocalAccent = placement({
+    id: `dq-${paletteProfile}-star-rgb-sparse-focal-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 2500,
+    endMs: 4100,
+    effectSettings: { arms: 3, twists: 1, rotation: 10 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 45,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "short_low_intensity_focal_accent",
+      displayReviewRole: "rgb_structure_balance_pacing_repair",
+      colorPurpose: "warm_focal_accent"
+    }
+  });
 
   return {
     experimentId: `display-quality-review-${paletteProfile}`,
@@ -1822,6 +1934,14 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
         comparisonBasePassId: "display_motion_variety",
         changeType: "video_aesthetic_rgb_color_discipline_repair"
+      },
+      {
+        passId: "display_rgb_structure_balance_pacing_repair",
+        compositionPass: "display_review",
+        placements: [treeRgbStructureBalance, archRgbPacingWindow, lineRgbPacingWindow, starRgbSparseFocalAccent],
+        displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        comparisonBasePassId: "display_rgb_color_discipline_repair",
+        changeType: "video_aesthetic_rgb_structure_balance_pacing_repair"
       }
     ]
   };
@@ -2923,6 +3043,7 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         ? [...new Set(missingPaletteProfiles)]
         : str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
           || str(gap.nextStrategy) === "rgb_primary_color_discipline_repair"
+          || str(gap.nextStrategy) === "rgb_primary_structure_balance_pacing_repair"
         ? ["rgb_primary"]
         : ["mono_white"];
       for (const paletteProfile of paletteProfiles) {
@@ -2940,6 +3061,8 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
               ? ["display_regional_focus_contrast"]
               : str(gap.nextStrategy) === "rgb_primary_color_discipline_repair"
                 ? ["display_rgb_color_discipline_repair"]
+              : str(gap.nextStrategy) === "rgb_primary_structure_balance_pacing_repair"
+                ? ["display_rgb_structure_balance_pacing_repair"]
               : str(gap.nextStrategy) === "focal_consistency_repair"
                 ? ["display_focal_consistency_repair"]
             : ["display_pacing_balance_revision", "display_wide_balance_revision"]
