@@ -520,6 +520,187 @@
       }
     },
     {
+      "goalId": "display.video_aesthetic.palette_section_pacing_consistency_v1",
+      "areaId": "display_level_composition",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Stabilize RGB-primary palette section pacing after color discipline and musical structure are covered, using whole-display review evidence that balances pacing, motion interest, and quality consistency.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_section_pacing_consistency_repair"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "pacing_variety",
+          "motion_interest",
+          "visual_balance",
+          "quality_consistency",
+          "palette_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Preserve the successful RGB color-purpose discipline while testing section-level pacing variation.",
+        "Avoid broad display widening unless the video score shows visual balance is the primary remaining weakness."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_section_pacing_consistency_repair"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_motion_pacing_variation_v1",
+      "areaId": "display_level_composition",
+      "priority": 6,
+      "status": "not_started",
+      "description": "Learn a follow-on RGB palette pacing variant that raises motion interest and pacing variety without sacrificing the color-purpose discipline established by earlier RGB display goals.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_motion_pacing_variation"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "pacing_variety",
+          "motion_interest",
+          "transition_flow",
+          "quality_consistency"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_motion_pacing_variation"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_spatial_negative_space_v1",
+      "areaId": "display_level_composition",
+      "priority": 7,
+      "status": "not_started",
+      "description": "Learn RGB display balance that uses intentional negative space and restrained focal support instead of filling more models whenever balance is weak.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_spatial_negative_space"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "visual_balance",
+          "focal_clarity",
+          "clutter_control",
+          "palette_readability"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_spatial_negative_space"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_transition_motion_bridge_v1",
+      "areaId": "display_level_composition",
+      "priority": 8,
+      "status": "not_started",
+      "description": "Learn RGB transition motion bridges that connect sections while preserving palette harmony and temporal continuity.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_transition_motion_bridge"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "transition_flow",
+          "motion_interest",
+          "temporal_continuity",
+          "quality_consistency"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_transition_motion_bridge"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
       "goalId": "effect_fit.expanded_model_matrix.v1",
       "areaId": "effect_behavior",
       "priority": 4,

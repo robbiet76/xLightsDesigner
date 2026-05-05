@@ -2791,6 +2791,30 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
         comparisonBasePassId: "display_palette_spatial_balance_focal_repair",
         changeType: "video_aesthetic_palette_section_pacing_consistency_repair"
+      },
+      {
+        passId: "display_palette_motion_pacing_variation",
+        compositionPass: "display_review",
+        placements: [pacingOpeningStructure, pacingMiddleMotion, pacingMiddleFocal, pacingReleaseSupport],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_palette_section_pacing_consistency_repair",
+        changeType: "video_aesthetic_palette_motion_pacing_variation"
+      },
+      {
+        passId: "display_palette_spatial_negative_space",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialCenterFocal, spatialLineBridge, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_balance_focal_repair",
+        changeType: "video_aesthetic_palette_spatial_negative_space"
+      },
+      {
+        passId: "display_palette_transition_motion_bridge",
+        compositionPass: "display_review",
+        placements: [transitionBackground, transitionArchWarmEntry, transitionLineBridge, transitionSpinnerCounterpoint, pacingReleaseSupport],
+        displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, spinner.modelName, star.modelName],
+        comparisonBasePassId: "display_palette_transition_harmony_repair",
+        changeType: "video_aesthetic_palette_transition_motion_bridge"
       }
     ]
   };
