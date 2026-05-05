@@ -233,6 +233,21 @@ test("sequencing quality loop writes cross-run quality summary after live execut
         };
         writeJson(outPath, artifact);
         return artifact;
+      },
+      buildVideoAestheticAttemptComparison: ({ outPath }) => {
+        const artifact = {
+          artifactType: "video_aesthetic_attempt_comparison_v1",
+          status: "ready",
+          comparisonStatus: "improved",
+          promotionEligible: true,
+          summary: {
+            overallAestheticScoreDelta: 0.04,
+            improvedDimensionCount: 3,
+            regressedDimensionCount: 0
+          }
+        };
+        writeJson(outPath, artifact);
+        return artifact;
       }
     }
   });
@@ -243,9 +258,12 @@ test("sequencing quality loop writes cross-run quality summary after live execut
   assert.equal(summary.fullSequenceReview.windowCount, 2);
   assert.equal(summary.videoAestheticScore.status, "ready");
   assert.equal(summary.videoAestheticScore.overallAestheticScore, 0.78);
+  assert.equal(summary.videoAestheticAttemptComparison.comparisonStatus, "improved");
+  assert.equal(summary.videoAestheticAttemptComparison.overallAestheticScoreDelta, 0.04);
   assert.equal(summary.crossRunQuality.durableCandidateCount, 1);
   assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-trend.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "cross-run-quality-records.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "full-sequence-review-loop.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "video-aesthetic-score.json")), true);
+  assert.equal(fs.existsSync(path.join(loopRoot, "video-aesthetic-attempt-comparison.json")), true);
 });

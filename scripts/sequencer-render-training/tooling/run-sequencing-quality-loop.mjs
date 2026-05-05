@@ -12,6 +12,7 @@ import { buildLayerCompositionQualityTrend } from "./build-layer-composition-qua
 import { buildLayerCompositionQualityRecords } from "./build-layer-composition-quality-records.mjs";
 import { buildFullSequenceReviewLoop } from "./build-full-sequence-review-loop.mjs";
 import { buildVideoAestheticScore } from "./build-video-aesthetic-score.mjs";
+import { buildVideoAestheticAttemptComparison } from "./build-video-aesthetic-attempt-comparison.mjs";
 import { buildCreativeIntentRevisionComparison } from "./build-creative-intent-revision-comparison.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -186,6 +187,7 @@ export async function runSequencingQualityLoop({
   let crossRunQuality = null;
   let fullSequenceReview = null;
   let videoAestheticScore = null;
+  let videoAestheticAttemptComparison = null;
   let creativeIntentRevisionComparison = null;
   if (applyRender) {
     passRunnerSummary = await (deps.runPasses || runLayerCompositionPasses)({
@@ -202,6 +204,11 @@ export async function runSequencingQualityLoop({
       runRoot: root,
       fullSequenceReviewPath: path.join(root, "full-sequence-review-loop.json"),
       outPath: path.join(root, "video-aesthetic-score.json")
+    });
+    videoAestheticAttemptComparison = (deps.buildVideoAestheticAttemptComparison || buildVideoAestheticAttemptComparison)({
+      baselineRunRoot: latestRunRoot,
+      candidateRunRoot: root,
+      outPath: path.join(root, "video-aesthetic-attempt-comparison.json")
     });
     creativeIntentRevisionComparison = (deps.buildCreativeIntentRevisionComparison || buildCreativeIntentRevisionComparison)({
       runRoot: root,
@@ -243,6 +250,15 @@ export async function runSequencingQualityLoop({
       qualityDimensions: arr(videoAestheticScore.qualityDimensions).map(str).filter(Boolean),
       promotionEligible: Boolean(videoAestheticScore.promotion?.evidenceEligible),
       ref: path.join(root, "video-aesthetic-score.json")
+    } : null,
+    videoAestheticAttemptComparison: videoAestheticAttemptComparison ? {
+      status: str(videoAestheticAttemptComparison.status),
+      comparisonStatus: str(videoAestheticAttemptComparison.comparisonStatus),
+      overallAestheticScoreDelta: num(videoAestheticAttemptComparison.summary?.overallAestheticScoreDelta),
+      improvedDimensionCount: num(videoAestheticAttemptComparison.summary?.improvedDimensionCount),
+      regressedDimensionCount: num(videoAestheticAttemptComparison.summary?.regressedDimensionCount),
+      promotionEligible: Boolean(videoAestheticAttemptComparison.promotionEligible),
+      ref: path.join(root, "video-aesthetic-attempt-comparison.json")
     } : null,
     creativeIntentRevisionComparison: creativeIntentRevisionComparison ? {
       status: str(creativeIntentRevisionComparison.status),

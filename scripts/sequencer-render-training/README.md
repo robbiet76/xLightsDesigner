@@ -265,6 +265,10 @@ Live quality loops also write `full-sequence-review-loop.json` and
 whole-display review contract for ordered windows; it keeps display evolution,
 pacing variety, focal clarity, balance, motion interest, color discipline,
 clutter control, and consistency without retaining raw media.
+When a previous run root is available, loops also write
+`video-aesthetic-attempt-comparison.json`, which compares the latest score to
+the prior score and marks the attempt as improved, neutral, regressed, or
+blocked.
 When quality records are supplied to `build-layer-composition-priors.mjs`, matching
 experiment/pass priors carry compact quality evidence into the runtime bundle
 without copying raw render-review media or review paths.

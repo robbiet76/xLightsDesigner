@@ -98,6 +98,12 @@ clarity, visual balance, motion interest, color discipline, clutter control, and
 quality consistency. This is the first contract for measuring whether the whole
 sequence is getting better rather than only whether each effect rendered.
 
+`video_aesthetic_attempt_comparison_v1` compares the current video aesthetic
+score against the previous loop's score. It records overall and per-dimension
+deltas, classifies the attempt as `improved`, `neutral`, `regressed`, or
+`blocked`, and keeps enough compact evidence for the controller to avoid
+repeating revision patterns that did not help.
+
 ## Loop Integration
 
 The self-improvement loop should add a render-review phase after live apply/render:
@@ -130,3 +136,5 @@ The self-improvement loop should add a render-review phase after live apply/rend
 13. Use review decisions to drive revision loops before promotion.
 14. Build `video_aesthetic_score_v1` after full-sequence review so unattended
     runs retain compact whole-display quality evidence.
+15. Build `video_aesthetic_attempt_comparison_v1` after scoring when a previous
+    run root exists so the loop can learn whether a display-level attempt helped.
