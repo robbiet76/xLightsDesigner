@@ -109,6 +109,8 @@ test("layer composition training plan includes group/model and same-target layer
   assert.equal(experimentIds.includes("creative-intent-revision-comparison-rgb_primary"), true);
   assert.equal(experimentIds.includes("core-effect-fit-mono_white"), true);
   assert.equal(experimentIds.includes("core-effect-fit-rgb_primary"), true);
+  assert.equal(experimentIds.includes("expanded-effect-fit-mono_white"), true);
+  assert.equal(experimentIds.includes("expanded-effect-fit-rgb_primary"), true);
   assert.equal(experimentIds.includes("display-quality-review-mono_white"), true);
   assert.equal(experimentIds.includes("display-quality-review-rgb_primary"), true);
   assert.equal(experimentIds.includes("music-structure-review-mono_white"), true);
@@ -237,6 +239,29 @@ test("layer composition training plan includes group/model and same-target layer
   assert.equal(
     revisionComparison.passes.find((pass) => pass.passId === "intent_targeted_revision").comparisonBasePassId,
     "intent_first_draft"
+  );
+  const expandedEffectFit = plan.experiments.find((experiment) => experiment.experimentId === "expanded-effect-fit-rgb_primary");
+  assert.equal(expandedEffectFit.family, "expanded_effect_fit");
+  assert.deepEqual(
+    expandedEffectFit.passes
+      .filter((pass) => pass.passId !== "empty_baseline")
+      .map((pass) => pass.passId),
+    [
+      "marquee_single_line_rgb_segments",
+      "single_strand_arch_chase",
+      "bars_tree_vertical_motion",
+      "color_wash_tree_gradient",
+      "marquee_arch_segments",
+      "pinwheel_star_rotation",
+      "fire_spinner_texture",
+      "butterfly_spinner_pattern"
+    ]
+  );
+  assert.deepEqual(
+    expandedEffectFit.passes
+      .filter((pass) => pass.passId !== "empty_baseline")
+      .map((pass) => pass.placements[0].modelType),
+    ["single_line", "arch", "tree_flat", "tree_flat", "arch", "star", "spinner", "spinner"]
   );
 });
 
@@ -400,6 +425,51 @@ test("layer composition plan expands missing core effect coverage units", () => 
   assert.deepEqual(
     plan.experiments[0].passes.flatMap((pass) => pass.placements).map((placement) => placement.effectName),
     ["Marquee", "Pinwheel"]
+  );
+});
+
+test("layer composition plan expands missing expanded effect matrix units", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-expanded-effect-missing-units",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 15,
+      controllerDecision: {
+        selectedGoalId: "effect_fit.expanded_model_matrix.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:effect_fit.expanded_model_matrix.v1:coverage-gap",
+        goalId: "effect_fit.expanded_model_matrix.v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "rgb_primary",
+          effect: "Marquee",
+          modelType: "single_line"
+        }, {
+          paletteProfile: "rgb_primary",
+          effect: "Butterfly",
+          modelType: "spinner"
+        }]
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 2);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["expanded-effect-fit-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "marquee_single_line_rgb_segments", "butterfly_spinner_pattern"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.flatMap((pass) => pass.placements).map((placement) => placement.effectName),
+    ["Marquee", "Butterfly"]
   );
 });
 

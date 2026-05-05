@@ -352,6 +352,93 @@
       }
     },
     {
+      "goalId": "effect_fit.expanded_model_matrix.v1",
+      "areaId": "effect_behavior",
+      "priority": 4,
+      "status": "not_started",
+      "description": "Expand effect/model fit beyond the first core baseline using RGB-primary coverage on the active vendor fixture model families.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "expanded_effect_fit"
+        ],
+        "effects": [
+          "Single Strand",
+          "Bars",
+          "Color Wash",
+          "Marquee",
+          "Pinwheel",
+          "Fire",
+          "Butterfly"
+        ],
+        "modelTypes": [
+          "arch",
+          "tree_flat",
+          "star",
+          "single_line",
+          "spinner"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use only model keys present in the active model catalog so this remains runnable on the current training fixture.",
+        "Prefer RGB-primary runs to broaden color behavior after the mono-white core effect baseline."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 8,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "effect",
+          "modelType"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "effect": "Marquee",
+            "modelType": "single_line"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "effect": "Single Strand",
+            "modelType": "arch"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "effect": "Bars",
+            "modelType": "tree_flat"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "effect": "Color Wash",
+            "modelType": "tree_flat"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "effect": "Marquee",
+            "modelType": "arch"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "effect": "Pinwheel",
+            "modelType": "star"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "effect": "Fire",
+            "modelType": "spinner"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "effect": "Butterfly",
+            "modelType": "spinner"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
       "goalId": "music.structure_alignment.v1",
       "areaId": "musical_structure",
       "priority": 5,

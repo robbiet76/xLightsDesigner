@@ -73,11 +73,20 @@ Each loop should:
    Keep the first effect set small and useful: `On`, `Single Strand`, `Bars`,
    `Color Wash`, `Marquee`, `Pinwheel`, `Morph`, `Fire`, and `Butterfly`.
 
-5. Move into display-level and music-aware review only after the effect,
+5. Expand `effect_fit.expanded_model_matrix.v1`.
+   After the core effect-fit baseline is covered, broaden RGB-primary
+   effect/model evidence across the model families currently available in the
+   vendor training fixture: single line, arch, tree, star, and spinner. This
+   goal intentionally stays fixture-runnable and excludes static `On` from
+   quality promotion because live evidence showed it is better treated as a
+   render-health control. Matrix, cane, and tree-360 coverage should be added
+   when those models are present in the active training layout.
+
+6. Move into display-level and music-aware review only after the effect,
    geometry, layer, and submodel foundations are stable enough to generate
    meaningful full-display candidates.
 
-6. Add `creative.intent_revision_comparison.v1` after baseline creative intent
+7. Add `creative.intent_revision_comparison.v1` after baseline creative intent
    evidence exists. This goal uses paired passes: an `intent_first_draft`
    baseline and an `intent_targeted_revision` pass linked by
    `comparisonBasePassId`. The comparison artifact scores overall quality,
@@ -152,9 +161,9 @@ The unattended runner writes `unattended-run-summary.json` after every iteration
 and advances from one loop root to the next only after an executed loop. It
 stops on `controller_idle`, `awaiting_evidence`, `blocked_no_controller_queue`,
 or `max_loops_reached`. When it stops on idle, the next curriculum expansion
-should be chosen deliberately. After creative intent revision comparison is
-covered, the next preferred expansions are broader effect/model coverage,
-stronger video-level aesthetic scoring, and richer creative revision variants.
+should be chosen deliberately. The current active expansion is broader
+effect/model coverage; after it is covered, the next preferred expansions are
+stronger video-level aesthetic scoring and richer creative revision variants.
 
 ## Selection Rules
 

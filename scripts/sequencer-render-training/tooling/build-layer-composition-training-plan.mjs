@@ -119,6 +119,7 @@ export const RUNTIME_SELECTION_TIERS = [
   "broad_layer_composition",
   "group_model_ordering",
   "core_effect_fit",
+  "expanded_effect_fit",
   "display_quality_review",
   "music_structure_review",
   "interaction_deepening",
@@ -1129,6 +1130,188 @@ function makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, arc
   };
 }
 
+function makeExpandedEffectFitExperiment({ paletteProfile, singleLineHorizontal, archSingle, star, spinner, treeFlat }) {
+  const lineMarquee = placement({
+    id: `xf-${paletteProfile}-line-marquee`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "Marquee",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { bandSize: 4, skipSize: 3, thickness: 2, speed: 6, reverse: false },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "rgb_linear_segmented_motion"
+    }
+  });
+  const archSingleStrand = placement({
+    id: `xf-${paletteProfile}-arch-single-strand`,
+    target: archSingle,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { effect: "Chase", cycles: 3, colorSpeed: 5 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "curved_linear_chase"
+    }
+  });
+  const treeBars = placement({
+    id: `xf-${paletteProfile}-tree-bars`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Bars",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { direction: "up", barCount: 3, cycles: 5, gradient: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "vertical_tree_bar_motion"
+    }
+  });
+  const treeWash = placement({
+    id: `xf-${paletteProfile}-tree-color-wash`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { cycles: 1.5, hFade: true, vFade: true, circularPalette: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "tree_gradient_fill"
+    }
+  });
+  const archMarquee = placement({
+    id: `xf-${paletteProfile}-arch-marquee`,
+    target: archSingle,
+    targetScope: "model",
+    effectName: "Marquee",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { bandSize: 4, skipSize: 2, thickness: 3, speed: 6, reverse: false },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "curved_segmented_motion"
+    }
+  });
+  const starPinwheel = placement({
+    id: `xf-${paletteProfile}-star-pinwheel`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { arms: 5, armSize: 45, thickness: 35, speed: 10, rotation: true },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "star_radial_rotation"
+    }
+  });
+  const spinnerFire = placement({
+    id: `xf-${paletteProfile}-spinner-fire`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Fire",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { height: 45, hueShift: 15, growthCycles: 2 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "radial_texture_stress"
+    }
+  });
+  const spinnerButterfly = placement({
+    id: `xf-${paletteProfile}-spinner-butterfly`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Butterfly",
+    compositionPass: "effect_fit",
+    layerIndex: 0,
+    effectSettings: { chunks: 4, skip: 2, speed: 5 },
+    layerSettings: { mixMethod: "Normal" },
+    layerIntent: {
+      blendRole: "effect_fit_probe",
+      effectFitRole: "radial_pattern_stress"
+    }
+  });
+
+  return {
+    experimentId: `expanded-effect-fit-${paletteProfile}`,
+    family: "expanded_effect_fit",
+    paletteProfile,
+    curriculumStage: "family_contrast_survey",
+    layeringTaxonomy: ["effect_fit", "rgb_model_matrix", "geometry_family_contrast"],
+    targetSets: [
+      { scope: "model", targets: [singleLineHorizontal, archSingle, treeFlat, star, spinner] }
+    ],
+    passes: [
+      {
+        passId: "empty_baseline",
+        compositionPass: "empty_baseline",
+        placements: [],
+        displayElementOrder: [singleLineHorizontal.modelName, archSingle.modelName, treeFlat.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "marquee_single_line_rgb_segments",
+        compositionPass: "effect_fit",
+        placements: [lineMarquee],
+        displayElementOrder: [singleLineHorizontal.modelName, archSingle.modelName, treeFlat.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "single_strand_arch_chase",
+        compositionPass: "effect_fit",
+        placements: [archSingleStrand],
+        displayElementOrder: [singleLineHorizontal.modelName, archSingle.modelName, treeFlat.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "bars_tree_vertical_motion",
+        compositionPass: "effect_fit",
+        placements: [treeBars],
+        displayElementOrder: [singleLineHorizontal.modelName, archSingle.modelName, treeFlat.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "color_wash_tree_gradient",
+        compositionPass: "effect_fit",
+        placements: [treeWash],
+        displayElementOrder: [singleLineHorizontal.modelName, archSingle.modelName, treeFlat.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "marquee_arch_segments",
+        compositionPass: "effect_fit",
+        placements: [archMarquee],
+        displayElementOrder: [singleLineHorizontal.modelName, archSingle.modelName, treeFlat.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "pinwheel_star_rotation",
+        compositionPass: "effect_fit",
+        placements: [starPinwheel],
+        displayElementOrder: [singleLineHorizontal.modelName, archSingle.modelName, treeFlat.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "fire_spinner_texture",
+        compositionPass: "effect_fit",
+        placements: [spinnerFire],
+        displayElementOrder: [singleLineHorizontal.modelName, archSingle.modelName, treeFlat.modelName, star.modelName, spinner.modelName]
+      },
+      {
+        passId: "butterfly_spinner_pattern",
+        compositionPass: "effect_fit",
+        placements: [spinnerButterfly],
+        displayElementOrder: [singleLineHorizontal.modelName, archSingle.modelName, treeFlat.modelName, star.modelName, spinner.modelName]
+      }
+    ]
+  };
+}
+
 function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }) {
   const archFoundation = placement({
     id: `dq-${paletteProfile}-arch-foundation`,
@@ -2073,6 +2256,16 @@ function runtimeSelectionForExperiment(experiment, runType) {
       reason: "Starts core-effect fit with single-effect probes across line, group, and radial targets."
     };
   }
+  if (experiment.family === "expanded_effect_fit") {
+    return {
+      ...common,
+      tier: "expanded_effect_fit",
+      queueRank: 58,
+      budgetWeight: 1,
+      selectionRole: "rgb_effect_model_matrix_expansion",
+      reason: "Broadens effect/model fit under RGB-primary palette conditions on currently runnable fixture model families."
+    };
+  }
   if (experiment.family === "display_quality_review") {
     return {
       ...common,
@@ -2271,6 +2464,38 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         }
       }
     }
+    if (goalId === "effect_fit.expanded_model_matrix.v1") {
+      const passByUnit = new Map([
+        ["rgb_primary|marquee|single_line", "marquee_single_line_rgb_segments"],
+        ["rgb_primary|single_strand|arch", "single_strand_arch_chase"],
+        ["rgb_primary|bars|tree_flat", "bars_tree_vertical_motion"],
+        ["rgb_primary|color_wash|tree_flat", "color_wash_tree_gradient"],
+        ["rgb_primary|marquee|arch", "marquee_arch_segments"],
+        ["rgb_primary|pinwheel|star", "pinwheel_star_rotation"],
+        ["rgb_primary|fire|spinner", "fire_spinner_texture"],
+        ["rgb_primary|butterfly|spinner", "butterfly_spinner_pattern"]
+      ]);
+      const missingUnits = arr(gap.missingCoverageUnits)
+        .map((unit) => [
+          normalizedToken(unit.paletteProfile || unit.palette || "rgb_primary"),
+          normalizedToken(unit.effect || unit.effectName),
+          normalizedToken(unit.modelType)
+        ].join("|"))
+        .map((key) => passByUnit.get(key))
+        .filter(Boolean);
+      const passIds = missingUnits.length
+        ? [...new Set(missingUnits)]
+        : ["marquee_single_line_rgb_segments", "single_strand_arch_chase", "bars_tree_vertical_motion"];
+      for (const paletteProfile of ["rgb_primary"]) {
+        for (const passId of passIds) {
+          rows.push({
+            experimentId: `expanded-effect-fit-${paletteProfile}`,
+            passId,
+            generatedFromCoverageGap: goalId
+          });
+        }
+      }
+    }
     if (goalId === "display.full_sequence.quality_v1") {
       for (const paletteProfile of ["mono_white"]) {
         rows.push(
@@ -2441,6 +2666,7 @@ export function buildLayerCompositionTrainingPlan({
     makeCreativeIntentProbeExperiment({ paletteProfile, star, singleLineHorizontal }),
     makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGroup, star, singleLineHorizontal }),
     makeCoreEffectFitExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
+    makeExpandedEffectFitExperiment({ paletteProfile, singleLineHorizontal, archSingle, star, spinner, treeFlat }),
     makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
     makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner }),
     makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target: archGroup }),
@@ -2487,6 +2713,7 @@ export function buildLayerCompositionTrainingPlan({
       "creative_intent_probe",
       "creative_intent_revision_comparison",
       "core_effect_fit",
+      "expanded_effect_fit",
       "display_quality_review",
       "music_structure_review",
       "setting_sensitivity_edge_probe",

@@ -280,6 +280,13 @@ Use `run-sequencing-quality-loop.mjs` to bind the controller checkpoint to a
 filtered layer-composition plan and execution scaffold. Default mode is
 scaffold-only; add `--apply-render --max-passes 1` only after reviewing the
 checkpoint and scaffold.
+The expanded effect/model matrix currently targets RGB-primary runs on the
+fixture-runnable model families: single line, arch, tree, star, and spinner.
+Static `On` remains useful as a render-health control, but it is excluded from
+this expanded quality matrix because it does not reliably produce promotable
+creative-quality evidence.
+Matrix, cane, and tree-360 coverage should be added when those models are
+available in the active training layout.
 Quality loops also write `creative-intent-revision-comparison.json` when paired
 creative baseline/revision passes exist. That compact artifact scores whether
 the targeted revision improved intent match without reducing readability or
