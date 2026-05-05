@@ -755,7 +755,7 @@
       "goalId": "display.video_aesthetic.palette_motion_depth_holdout_v1",
       "areaId": "display_level_composition",
       "priority": 11,
-      "status": "not_started",
+      "status": "retired",
       "description": "Validate whether restrained RGB motion pacing remains stable when the display adds a low-intensity depth foundation.",
       "requiredStableSamples": 2,
       "coverage": {
