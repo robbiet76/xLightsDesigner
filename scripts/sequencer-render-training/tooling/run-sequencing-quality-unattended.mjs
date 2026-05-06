@@ -365,6 +365,7 @@ export async function runSequencingQualityUnattended({
   let stopReason = "max_loops_reached";
   let consecutiveRegressionCount = 0;
   let previousGoalId = "";
+  let previousOverallAestheticScore = null;
   let repeatedGoalCount = 0;
   const refillEvents = [];
   let currentCurriculumPath = autoRefill
@@ -392,10 +393,19 @@ export async function runSequencingQualityUnattended({
     const controllerState = readJsonIfExists(summary.controllerStateRef);
     const gate = qualityGate(summary);
     const outcome = gate.status;
-    consecutiveRegressionCount = outcome === "regressed" ? consecutiveRegressionCount + 1 : 0;
     const selectedGoalId = str(summary.controllerDecision?.selectedGoalId);
+    const overallAestheticScore = num(summary.videoAestheticScore?.overallAestheticScore);
+    const isRecoveringVideoAttempt = outcome === "regressed"
+      && gate.source === "video_aesthetic_attempt_comparison"
+      && selectedGoalId
+      && selectedGoalId === previousGoalId
+      && previousOverallAestheticScore !== null
+      && overallAestheticScore >= previousOverallAestheticScore + 0.01;
+    const guardOutcome = isRecoveringVideoAttempt ? "recovering" : outcome;
+    consecutiveRegressionCount = guardOutcome === "regressed" ? consecutiveRegressionCount + 1 : 0;
     repeatedGoalCount = selectedGoalId && selectedGoalId === previousGoalId ? repeatedGoalCount + 1 : selectedGoalId ? 1 : 0;
     previousGoalId = selectedGoalId;
+    previousOverallAestheticScore = overallAestheticScore || previousOverallAestheticScore;
     const consolidation = str(summary.status) === "executed"
       ? (deps.consolidateLoopEvidence || consolidateLoopEvidence)({
         loopRoot: summary.loopRoot,
@@ -414,7 +424,7 @@ export async function runSequencingQualityUnattended({
       selectionReason: str(summary.controllerDecision?.selectionReason),
       processedPasses: num(summary.passRunner?.processedPasses),
       acceptedEvidenceCount: num(summary.passRunner?.renderReviewAcceptedEvidenceCount),
-      overallAestheticScore: num(summary.videoAestheticScore?.overallAestheticScore),
+      overallAestheticScore,
       promotionEligible: Boolean(summary.videoAestheticScore?.promotionEligible),
       comparisonStatus: str(summary.videoAestheticAttemptComparison?.comparisonStatus),
       overallAestheticScoreDelta: num(summary.videoAestheticAttemptComparison?.overallAestheticScoreDelta),
@@ -425,6 +435,7 @@ export async function runSequencingQualityUnattended({
       qualityGateStatus: gate.status,
       qualityGateReason: gate.reason,
       outcome,
+      guardOutcome,
       consecutiveRegressionCount,
       repeatedGoalCount,
       durableCandidateCount: num(summary.crossRunQuality?.durableCandidateCount),

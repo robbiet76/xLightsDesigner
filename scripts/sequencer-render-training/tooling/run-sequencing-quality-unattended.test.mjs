@@ -428,3 +428,52 @@ test("unattended quality runner does not advance video baseline after video regr
   assert.equal(summary.videoComparisonBaselineRunRoot, path.join(root, "seed"));
   assert.equal(summary.previousStateRef, path.join(summary.iterations[0].loopRoot, "controller-state.json"));
 });
+
+test("unattended quality runner continues through recovering video attempts", async () => {
+  const root = tempDir();
+  let callCount = 0;
+  const summary = await runSequencingQualityUnattended({
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 2,
+    maxConsecutiveRegressions: 2,
+    deps: {
+      runLoop: async (args) => {
+        callCount += 1;
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "executed",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "display.full_sequence.quality_v1",
+            nextAction: "plan_goal_coverage",
+            selectionReason: "video_aesthetic_score_below_threshold"
+          },
+          videoAestheticScore: {
+            overallAestheticScore: callCount === 1 ? 0.68 : 0.695,
+            promotionEligible: false
+          },
+          videoAestheticAttemptComparison: {
+            comparisonStatus: "regressed",
+            overallAestheticScoreDelta: callCount === 1 ? -0.07 : -0.055
+          },
+          passRunner: { processedPasses: 2, renderReviewAcceptedEvidenceCount: 1 },
+          crossRunQuality: { durableCandidateCount: 0, blockedRecordCount: 1 }
+        };
+      },
+      consolidateLoopEvidence: ({ loopRoot }) => ({
+        deltaSummaryRef: path.join(loopRoot, "layer-composition-delta-summary.json")
+      })
+    }
+  });
+
+  assert.equal(summary.stopReason, "max_loops_reached");
+  assert.equal(summary.iterationCount, 2);
+  assert.equal(summary.iterations[0].guardOutcome, "regressed");
+  assert.equal(summary.iterations[1].outcome, "regressed");
+  assert.equal(summary.iterations[1].guardOutcome, "recovering");
+  assert.equal(summary.iterations[1].consecutiveRegressionCount, 0);
+});
