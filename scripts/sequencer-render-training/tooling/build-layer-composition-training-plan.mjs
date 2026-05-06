@@ -2072,6 +2072,37 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       colorPurpose: "structure_motion_support"
     }
   });
+  const treeRgbDisciplinedBalance = placement({
+    id: `dq-${paletteProfile}-tree-rgb-disciplined-balance`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 900,
+    endMs: 6000,
+    effectSettings: {
+      cycles: 1,
+      circularPalette: false
+    },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 44,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "neutral_balance_support",
+      displayReviewRole: "rgb_color_discipline_repair",
+      colorPurpose: "structure"
+    }
+  });
   const treeRgbStructureBalance = placement({
     id: `dq-${paletteProfile}-tree-rgb-structure-balance`,
     target: treeFlat,
@@ -2944,7 +2975,7 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       {
         passId: "display_rgb_color_discipline_repair",
         compositionPass: "display_review",
-        placements: [archRgbDisciplineBase, starRgbDisciplinedAccent, lineRgbDisciplinedMotion],
+        placements: [archRgbDisciplineBase, starRgbDisciplinedAccent, lineRgbDisciplinedMotion, treeRgbDisciplinedBalance],
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
         comparisonBasePassId: "display_motion_variety",
         changeType: "video_aesthetic_rgb_color_discipline_repair"

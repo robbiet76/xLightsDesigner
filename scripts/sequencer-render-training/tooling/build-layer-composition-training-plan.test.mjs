@@ -969,14 +969,14 @@ test("layer composition plan expands rgb color discipline repair strategy", () =
   );
   const repairPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_rgb_color_discipline_repair");
   assert.equal(repairPass.controllerSelection.selectedByController, true);
-  assert.equal(repairPass.placements.length, 3);
+  assert.equal(repairPass.placements.length, 4);
   assert.equal(
     repairPass.placements.every((placement) => placement.layerIntent?.displayReviewRole === "rgb_color_discipline_repair"),
     true
   );
   assert.deepEqual(
     repairPass.placements.map((placement) => placement.layerIntent?.colorPurpose),
-    ["structure", "warm_focal_accent", "structure_motion_support"]
+    ["structure", "warm_focal_accent", "structure_motion_support", "structure"]
   );
 });
 
