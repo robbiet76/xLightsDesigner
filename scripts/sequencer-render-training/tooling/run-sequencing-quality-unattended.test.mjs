@@ -20,6 +20,7 @@ test("unattended quality runner advances checkpoints and stops on idle", async (
   const calls = [];
   const summary = await runSequencingQualityUnattended({
     latestRunRoot: path.join(root, "seed"),
+    videoComparisonBaselineRunRoot: path.join(root, "video-seed"),
     previousStatePath: path.join(root, "seed-controller.json"),
     outRoot: root,
     modelCatalogPath: path.join(root, "model-catalog.json"),
@@ -100,6 +101,7 @@ test("unattended quality runner refills runtime curriculum on idle", async () =>
   const calls = [];
   const summary = await runSequencingQualityUnattended({
     latestRunRoot: path.join(root, "seed"),
+    videoComparisonBaselineRunRoot: path.join(root, "video-seed"),
     previousStatePath: path.join(root, "seed-controller.json"),
     outRoot: root,
     maxLoops: 2,
@@ -285,13 +287,16 @@ test("unattended quality runner stops on repeated regressions for intervention",
 
 test("unattended quality runner uses creative revision comparison as primary gate", async () => {
   const root = tempDir();
+  const calls = [];
   const summary = await runSequencingQualityUnattended({
     latestRunRoot: path.join(root, "seed"),
+    videoComparisonBaselineRunRoot: path.join(root, "video-seed"),
     previousStatePath: path.join(root, "seed-controller.json"),
     outRoot: root,
     maxLoops: 1,
     deps: {
       runLoop: async (args) => {
+        calls.push(args);
         const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
         writeJson(controllerStateRef, { goalStatuses: [] });
         return {
@@ -329,7 +334,10 @@ test("unattended quality runner uses creative revision comparison as primary gat
   assert.equal(summary.iterations[0].qualityGateStatus, "improved");
   assert.equal(summary.iterations[0].outcome, "improved");
   assert.equal(summary.iterations[0].consecutiveRegressionCount, 0);
-  assert.equal(summary.latestRunRoot, path.join(root, "seed"));
+  assert.equal(calls[0].latestRunRoot, path.join(root, "seed"));
+  assert.equal(calls[0].videoComparisonBaselineRunRoot, path.join(root, "video-seed"));
+  assert.equal(summary.latestRunRoot, summary.iterations[0].loopRoot);
+  assert.equal(summary.videoComparisonBaselineRunRoot, path.join(root, "video-seed"));
   assert.equal(summary.previousStateRef, path.join(summary.iterations[0].loopRoot, "controller-state.json"));
 });
 
@@ -381,7 +389,7 @@ test("unattended quality runner treats blocked creative revision comparisons as 
   assert.equal(summary.iterations[0].consecutiveRegressionCount, 1);
 });
 
-test("unattended quality runner does not advance latest run root after video regressions", async () => {
+test("unattended quality runner does not advance video baseline after video regressions", async () => {
   const root = tempDir();
   const summary = await runSequencingQualityUnattended({
     latestRunRoot: path.join(root, "seed"),
@@ -416,6 +424,7 @@ test("unattended quality runner does not advance latest run root after video reg
   });
 
   assert.equal(summary.stopReason, "max_consecutive_regressions");
-  assert.equal(summary.latestRunRoot, path.join(root, "seed"));
+  assert.equal(summary.latestRunRoot, summary.iterations[0].loopRoot);
+  assert.equal(summary.videoComparisonBaselineRunRoot, path.join(root, "seed"));
   assert.equal(summary.previousStateRef, path.join(summary.iterations[0].loopRoot, "controller-state.json"));
 });

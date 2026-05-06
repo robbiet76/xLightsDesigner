@@ -132,6 +132,7 @@ function nextLoopDir(outRoot = "", loopIndex = 1) {
 
 export async function runSequencingQualityLoop({
   latestRunRoot = "",
+  videoComparisonBaselineRunRoot = "",
   outRoot = DEFAULT_OUT_ROOT,
   loopRoot = "",
   previousStatePath = "",
@@ -146,6 +147,7 @@ export async function runSequencingQualityLoop({
   endpoint = DEFAULT_ENDPOINT,
   deps = {}
 } = {}) {
+  const resolvedVideoComparisonBaselineRunRoot = resolvePath(videoComparisonBaselineRunRoot || latestRunRoot);
   const controllerState = buildSequencingQualityControllerState({
     curriculumPath,
     latestRunRoot,
@@ -165,6 +167,7 @@ export async function runSequencingQualityLoop({
     loopIndex: controllerState.loopIndex,
     loopRoot: root,
     latestRunRoot: resolvePath(latestRunRoot),
+    videoComparisonBaselineRunRoot: resolvedVideoComparisonBaselineRunRoot,
     controllerStateRef: controllerStatePath,
     controllerDecision: controllerState.controllerDecision,
     nextQueueCount: arr(controllerState.nextQueue).length
@@ -237,7 +240,7 @@ export async function runSequencingQualityLoop({
       outPath: path.join(root, "video-aesthetic-score.json")
     });
     videoAestheticAttemptComparison = (deps.buildVideoAestheticAttemptComparison || buildVideoAestheticAttemptComparison)({
-      baselineRunRoot: latestRunRoot,
+      baselineRunRoot: resolvedVideoComparisonBaselineRunRoot,
       candidateRunRoot: root,
       outPath: path.join(root, "video-aesthetic-attempt-comparison.json")
     });

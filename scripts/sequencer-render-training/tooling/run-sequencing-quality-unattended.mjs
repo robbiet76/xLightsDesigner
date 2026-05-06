@@ -173,7 +173,7 @@ function loopDir(root = "", index = 1) {
   return path.join(resolvePath(root || DEFAULT_OUT_ROOT), `loop-${String(index).padStart(6, "0")}`);
 }
 
-function shouldAdvanceLatestRun(summary = {}, gate = {}) {
+function shouldAdvanceVideoBaselineRun(summary = {}, gate = {}) {
   if (str(summary.status) !== "executed" || !str(summary.loopRoot)) return false;
   if (str(gate.source) === "creative_intent_revision_comparison") return false;
   if (str(gate.status) === "regressed") return false;
@@ -336,6 +336,7 @@ function runOutcome(summary = {}) {
 
 export async function runSequencingQualityUnattended({
   latestRunRoot = "",
+  videoComparisonBaselineRunRoot = "",
   previousStatePath = "",
   outRoot = DEFAULT_OUT_ROOT,
   curriculumPath = DEFAULT_CURRICULUM,
@@ -358,6 +359,7 @@ export async function runSequencingQualityUnattended({
   fs.mkdirSync(root, { recursive: true });
   const resolvedSummaryPath = resolvePath(summaryPath) || path.join(root, "unattended-run-summary.json");
   let currentLatestRunRoot = resolvePath(latestRunRoot);
+  let currentVideoBaselineRunRoot = resolvePath(videoComparisonBaselineRunRoot) || currentLatestRunRoot;
   let currentPreviousStatePath = resolvePath(previousStatePath);
   const iterations = [];
   let stopReason = "max_loops_reached";
@@ -373,6 +375,7 @@ export async function runSequencingQualityUnattended({
     const runLoop = deps.runLoop || runSequencingQualityLoop;
     const summary = await runLoop({
       latestRunRoot: currentLatestRunRoot,
+      videoComparisonBaselineRunRoot: currentVideoBaselineRunRoot,
       previousStatePath: currentPreviousStatePath,
       curriculumPath: currentCurriculumPath,
       outRoot: root,
@@ -436,7 +439,8 @@ export async function runSequencingQualityUnattended({
       }))
     };
     iterations.push(iteration);
-    if (shouldAdvanceLatestRun(summary, gate)) currentLatestRunRoot = resolvePath(summary.loopRoot);
+    if (shouldAdvanceVideoBaselineRun(summary, gate)) currentVideoBaselineRunRoot = resolvePath(summary.loopRoot);
+    if (str(summary.status) === "executed" && str(summary.loopRoot)) currentLatestRunRoot = resolvePath(summary.loopRoot);
     currentPreviousStatePath = resolvePath(summary.controllerStateRef);
 
     const reason = stopReasonForSummary(summary, index, maxLoops, {
@@ -467,6 +471,7 @@ export async function runSequencingQualityUnattended({
       stopReason: effectiveReason || "",
       outRoot: root,
       latestRunRoot: currentLatestRunRoot,
+      videoComparisonBaselineRunRoot: currentVideoBaselineRunRoot,
       previousStateRef: currentPreviousStatePath,
       iterationCount: iterations.length,
       guardrails: {
@@ -498,6 +503,7 @@ export async function runSequencingQualityUnattended({
     stopReason,
     outRoot: root,
     latestRunRoot: currentLatestRunRoot,
+    videoComparisonBaselineRunRoot: currentVideoBaselineRunRoot,
     previousStateRef: currentPreviousStatePath,
     iterationCount: iterations.length,
     guardrails: {
@@ -541,6 +547,7 @@ export async function runSequencingQualityUnattended({
 function parseArgs(argv = []) {
   const args = {
     latestRunRoot: "",
+    videoComparisonBaselineRunRoot: "",
     previousStatePath: "",
     outRoot: DEFAULT_OUT_ROOT,
     curriculumPath: DEFAULT_CURRICULUM,
@@ -561,6 +568,7 @@ function parseArgs(argv = []) {
   for (let index = 0; index < argv.length; index += 1) {
     const arg = str(argv[index]);
     if (arg === "--latest-run-root") args.latestRunRoot = argv[++index];
+    else if (arg === "--video-comparison-baseline-run-root") args.videoComparisonBaselineRunRoot = argv[++index];
     else if (arg === "--previous-state") args.previousStatePath = argv[++index];
     else if (arg === "--out-root") args.outRoot = argv[++index];
     else if (arg === "--curriculum") args.curriculumPath = argv[++index];
@@ -587,6 +595,7 @@ function usage() {
   return `Usage:
   node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \\
     --latest-run-root /tmp/xld-quality-controller-loop-live-music-000002 \\
+    --video-comparison-baseline-run-root /tmp/xld-quality-controller-loop-live-display-000001 \\
     --previous-state /tmp/xld-quality-controller-after-music-000002.json \\
     --curriculum scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json \\
     --model-catalog /tmp/xld-vendor-fixture-model-catalog.json \\
