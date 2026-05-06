@@ -1066,28 +1066,24 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
   const pacingRevisionBackground = {
     ...baselineBackground,
     placementId: `cr-${paletteProfile}-pacing-revision-background`,
-    startMs: 1200,
-    endMs: 6000,
-    effectSettings: { ...baselineBackground.effectSettings, cycles: 3 },
-    layerSettings: { ...baselineBackground.layerSettings, brightness: 50, fadeIn: "0.6", fadeOut: "0.4" },
     layerIntent: {
       ...baselineBackground.layerIntent,
       creativeIntent: {
         ...baselineBackground.layerIntent.creativeIntent,
         revisionRole: "targeted_revision",
         revisionVariant: "pacing_balance",
-        supportRole: "restrained_motion_pacing_support",
-        revisionTarget: "add clearer pacing variation while keeping coverage balanced"
+        supportRole: "preserved_pacing_context",
+        revisionTarget: "preserve the first draft context while adding a restrained late pacing cue"
       }
     }
   };
   const pacingRevisionAccent = {
     ...revisedAccent,
     placementId: `cr-${paletteProfile}-pacing-revision-accent`,
-    startMs: 3000,
-    endMs: 5900,
+    startMs: 3300,
+    endMs: 5700,
     effectSettings: { ...revisedAccent.effectSettings, cycles: 3, colorSpeed: 4 },
-    layerSettings: { ...revisedAccent.layerSettings, brightness: 60, fadeIn: "0.45", fadeOut: "0.45" },
+    layerSettings: { ...revisedAccent.layerSettings, brightness: 55, fadeIn: "0.45", fadeOut: "0.6" },
     layerIntent: {
       ...revisedAccent.layerIntent,
       creativeIntent: {
@@ -1167,7 +1163,7 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
       {
         passId: "intent_pacing_balance_revision",
         compositionPass: "creative_revision",
-        placements: [revisedWash, pacingRevisionBackground, pacingRevisionAccent],
+        placements: [baselineWash, pacingRevisionBackground, pacingRevisionAccent],
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName],
         comparisonBasePassId: "intent_first_draft",
         changeType: "creative_intent_revision_variant"

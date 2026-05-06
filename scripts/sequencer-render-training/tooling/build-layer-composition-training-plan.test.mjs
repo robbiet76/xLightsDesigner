@@ -498,6 +498,48 @@ test("layer composition plan isolates requested creative revision variants", () 
   assert.equal(handoff.placements[2].layerSettings.brightness, 50);
 });
 
+test("layer composition plan keeps pacing revision variant restrained", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-creative-revision-pacing-variant-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 24,
+      controllerDecision: {
+        selectedGoalId: "creative.intent_revision_variants.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:creative.intent_revision_variants.v1:coverage-gap",
+        goalId: "creative.intent_revision_variants.v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [
+          { paletteProfile: "mono_white", passId: "intent_pacing_balance_revision" }
+        ]
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "intent_first_draft", "intent_pacing_balance_revision"]
+  );
+  const pacing = plan.experiments[0].passes.find((pass) => pass.passId === "intent_pacing_balance_revision");
+  assert.deepEqual(
+    pacing.placements.map((placement) => placement.placementId),
+    ["cr-mono_white-baseline-wash", "cr-mono_white-pacing-revision-background", "cr-mono_white-pacing-revision-accent"]
+  );
+  assert.deepEqual(
+    pacing.placements.map((placement) => placement.startMs),
+    [0, 0, 3300]
+  );
+  assert.equal(pacing.placements[2].layerSettings.brightness, 55);
+  assert.equal(pacing.placements[2].effectSettings.cycles, 3);
+  assert.equal(pacing.placements[2].effectSettings.colorSpeed, 4);
+});
+
 test("layer composition plan expands target-transfer adaptation coverage-gap controller queue", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,

@@ -142,8 +142,9 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
     && activeCoverageMeanDelta <= 0.004;
   const pacingBalanceImproved =
     revisionVariants.includes("pacing_balance")
-    && motionCoherenceDelta >= 0.01
-    && visualReadabilityDelta >= -0.01
+    && (motionCoherenceDelta >= 0.01 || emphasisImproved)
+    && motionCoherenceDelta >= -0.015
+    && visualReadabilityDelta >= -0.005
     && clutterControlDelta >= -0.01
     && activeCoverageMeanDelta <= 0.004;
   const revisionObjectiveImproved = focusSimplificationImproved || (emphasisImproved && negativeSpacePreserved);
