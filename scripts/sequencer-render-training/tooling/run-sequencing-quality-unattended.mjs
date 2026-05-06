@@ -8,11 +8,35 @@ import { runSequencingQualityLoop } from "./run-sequencing-quality-loop.mjs";
 import { buildLayerCompositionDeltas } from "./build-layer-composition-deltas.mjs";
 import { buildLayerCompositionPriors } from "./build-layer-composition-priors.mjs";
 import { promoteLayerCompositionPriors } from "./promote-layer-composition-priors.mjs";
+import { RGB_DISPLAY_AUTO_REFILL_VALIDATION_CYCLE_COUNT } from "./build-layer-composition-training-plan.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const DEFAULT_OUT_ROOT = "var/logs/sequencing-quality-controller/unattended";
 const DEFAULT_MODEL_CATALOG = "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json";
+const DEFAULT_CURRICULUM = "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json";
 const DEFAULT_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
+const AUTO_REFILL_PATTERN_SPECS = [
+  {
+    key: "motion_pacing",
+    passPrefix: "display_palette_motion_pacing_validation_cycle",
+    description: "Auto-refill validation of the stable RGB motion pacing pattern."
+  },
+  {
+    key: "spatial_negative_space",
+    passPrefix: "display_palette_spatial_negative_space_validation_cycle",
+    description: "Auto-refill validation of the stable RGB negative-space balance pattern."
+  },
+  {
+    key: "spatial_focal",
+    passPrefix: "display_palette_spatial_focal_validation_cycle",
+    description: "Auto-refill validation of the stable sparse RGB focal pattern."
+  },
+  {
+    key: "color_purpose_motion",
+    passPrefix: "display_palette_color_purpose_motion_validation_cycle",
+    description: "Auto-refill validation of the stable RGB color-purpose motion pattern."
+  }
+];
 
 function str(value = "") {
   return String(value || "").trim();
@@ -42,6 +66,107 @@ function readJsonIfExists(filePath = "") {
   const resolved = resolvePath(filePath);
   if (!resolved || !fs.existsSync(resolved)) return null;
   return JSON.parse(fs.readFileSync(resolved, "utf8"));
+}
+
+function copyRuntimeCurriculum({ sourcePath = DEFAULT_CURRICULUM, outRoot = "" } = {}) {
+  const source = resolvePath(sourcePath || DEFAULT_CURRICULUM);
+  const target = path.join(resolvePath(outRoot || DEFAULT_OUT_ROOT), "runtime-curriculum.json");
+  const curriculum = readJsonIfExists(source);
+  if (!curriculum) throw new Error(`Unable to read curriculum: ${source}`);
+  curriculum.runtimeSourceRef = source;
+  curriculum.runtimeGeneratedAt = new Date().toISOString();
+  writeJson(target, curriculum);
+  return target;
+}
+
+function existingGoalPassIds(curriculum = {}) {
+  return new Set(arr(curriculum.goals).flatMap((goal) => arr(goal.coverage?.passIds).map(str).filter(Boolean)));
+}
+
+function maxGoalPriority(curriculum = {}) {
+  return arr(curriculum.goals).reduce((max, goal) => Math.max(max, num(goal.priority)), 0);
+}
+
+function autoRefillGoal({ passId = "", pattern = {}, priority = 1, cycle = "" } = {}) {
+  return {
+    goalId: `display.video_aesthetic.auto_refill.${pattern.key}_cycle_${cycle}_v1`,
+    areaId: "display_level_composition",
+    priority,
+    status: "not_started",
+    description: pattern.description,
+    requiredStableSamples: 2,
+    coverage: {
+      families: ["display_quality_review"],
+      paletteProfiles: ["rgb_primary"],
+      passIds: [passId],
+      reviewScopes: [
+        "section_video",
+        "whole_sequence_window",
+        "full_display_contact_sheet"
+      ]
+    },
+    completionCriteria: {
+      minimumDistinctCoverageUnitCount: 1,
+      distinctCoverageFields: [
+        "paletteProfile",
+        "passId"
+      ],
+      desiredCoverageUnits: [{
+        paletteProfile: "rgb_primary",
+        passId
+      }],
+      maximumRegressingRecords: 0
+    }
+  };
+}
+
+function refillRuntimeCurriculum({
+  curriculumPath = "",
+  outRoot = "",
+  iteration = 0,
+  batchSize = AUTO_REFILL_PATTERN_SPECS.length,
+  deps = {}
+} = {}) {
+  const read = deps.readJson || readJsonIfExists;
+  const write = deps.writeJson || writeJson;
+  const resolved = resolvePath(curriculumPath);
+  const curriculum = read(resolved);
+  if (!curriculum) return null;
+  const usedPassIds = existingGoalPassIds(curriculum);
+  const newGoals = [];
+  let priority = maxGoalPriority(curriculum) + 1;
+  for (let cycleIndex = 1; cycleIndex <= RGB_DISPLAY_AUTO_REFILL_VALIDATION_CYCLE_COUNT; cycleIndex += 1) {
+    const cycle = String(cycleIndex).padStart(2, "0");
+    for (const pattern of AUTO_REFILL_PATTERN_SPECS) {
+      const passId = `${pattern.passPrefix}_${cycle}`;
+      if (usedPassIds.has(passId)) continue;
+      newGoals.push(autoRefillGoal({ passId, pattern, priority: priority += 1, cycle }));
+      usedPassIds.add(passId);
+      if (newGoals.length >= batchSize) break;
+    }
+    if (newGoals.length >= batchSize) break;
+  }
+  if (!newGoals.length) return null;
+  const event = {
+    artifactType: "sequencing_quality_unattended_refill_event_v1",
+    artifactVersion: 1,
+    generatedAt: new Date().toISOString(),
+    iteration,
+    reason: "controller_idle",
+    curriculumRef: resolved,
+    addedGoalCount: newGoals.length,
+    addedGoals: newGoals.map((goal) => ({
+      goalId: goal.goalId,
+      passId: goal.coverage.passIds[0],
+      priority: goal.priority
+    }))
+  };
+  curriculum.goals = [...arr(curriculum.goals), ...newGoals];
+  curriculum.runtimeRefillEvents = [...arr(curriculum.runtimeRefillEvents), event];
+  write(resolved, curriculum);
+  const eventPath = path.join(resolvePath(outRoot || path.dirname(resolved)), `runtime-curriculum-refill-${String(iteration).padStart(6, "0")}.json`);
+  write(eventPath, event);
+  return { ...event, eventRef: eventPath };
 }
 
 function loopDir(root = "", index = 1) {
@@ -163,6 +288,7 @@ export async function runSequencingQualityUnattended({
   latestRunRoot = "",
   previousStatePath = "",
   outRoot = DEFAULT_OUT_ROOT,
+  curriculumPath = DEFAULT_CURRICULUM,
   modelCatalogPath = DEFAULT_MODEL_CATALOG,
   runType = "overnight",
   maxLoops = 10,
@@ -173,6 +299,8 @@ export async function runSequencingQualityUnattended({
   applyRender = true,
   endpoint = DEFAULT_ENDPOINT,
   cleanupPreviewFrames = true,
+  autoRefill = true,
+  maxAutoRefills = 4,
   summaryPath = "",
   deps = {}
 } = {}) {
@@ -186,12 +314,17 @@ export async function runSequencingQualityUnattended({
   let consecutiveRegressionCount = 0;
   let previousGoalId = "";
   let repeatedGoalCount = 0;
+  const refillEvents = [];
+  let currentCurriculumPath = autoRefill
+    ? (deps.copyRuntimeCurriculum || copyRuntimeCurriculum)({ sourcePath: curriculumPath, outRoot: root })
+    : resolvePath(curriculumPath || DEFAULT_CURRICULUM);
 
   for (let index = 1; index <= maxLoops; index += 1) {
     const runLoop = deps.runLoop || runSequencingQualityLoop;
     const summary = await runLoop({
       latestRunRoot: currentLatestRunRoot,
       previousStatePath: currentPreviousStatePath,
+      curriculumPath: currentCurriculumPath,
       outRoot: root,
       loopRoot: loopDir(root, index),
       modelCatalogPath,
@@ -255,12 +388,26 @@ export async function runSequencingQualityUnattended({
       repeatedGoalCount,
       maxRepeatedGoalCount
     });
+    if (reason === "controller_idle" && autoRefill && refillEvents.length < maxAutoRefills && index < maxLoops) {
+      const refill = (deps.refillRuntimeCurriculum || refillRuntimeCurriculum)({
+        curriculumPath: currentCurriculumPath,
+        outRoot: root,
+        iteration: index,
+        deps: deps.refillDeps || {}
+      });
+      if (refill) {
+        refillEvents.push(refill);
+        iteration.refillEventRef = refill.eventRef;
+        iteration.refillAddedGoalCount = refill.addedGoalCount;
+      }
+    }
+    const effectiveReason = iteration.refillAddedGoalCount ? "" : reason;
     const partial = {
       artifactType: "sequencing_quality_unattended_run_summary_v1",
       artifactVersion: 1,
       generatedAt: new Date().toISOString(),
-      status: reason && reason !== "max_loops_reached" ? "stopped" : index >= maxLoops ? "stopped" : "running",
-      stopReason: reason || "",
+      status: effectiveReason && effectiveReason !== "max_loops_reached" ? "stopped" : index >= maxLoops ? "stopped" : "running",
+      stopReason: effectiveReason || "",
       outRoot: root,
       latestRunRoot: currentLatestRunRoot,
       previousStateRef: currentPreviousStatePath,
@@ -271,13 +418,17 @@ export async function runSequencingQualityUnattended({
         maxPasses,
         maxConsecutiveRegressions,
         maxRepeatedGoalCount,
-        cleanupPreviewFrames
+        cleanupPreviewFrames,
+        autoRefill,
+        maxAutoRefills
       },
-      iterations
+      iterations,
+      runtimeCurriculumRef: currentCurriculumPath,
+      refillEvents
     };
     writeJson(resolvedSummaryPath, partial);
-    if (reason) {
-      stopReason = reason;
+    if (effectiveReason) {
+      stopReason = effectiveReason;
       break;
     }
   }
@@ -298,9 +449,13 @@ export async function runSequencingQualityUnattended({
       maxPasses,
       maxConsecutiveRegressions,
       maxRepeatedGoalCount,
-      cleanupPreviewFrames
+      cleanupPreviewFrames,
+      autoRefill,
+      maxAutoRefills
     },
     iterations,
+    runtimeCurriculumRef: currentCurriculumPath,
+    refillEvents,
     interventionRecommended: [
       "max_consecutive_regressions",
       "max_repeated_goal_selection",
@@ -331,6 +486,7 @@ function parseArgs(argv = []) {
     latestRunRoot: "",
     previousStatePath: "",
     outRoot: DEFAULT_OUT_ROOT,
+    curriculumPath: DEFAULT_CURRICULUM,
     modelCatalogPath: DEFAULT_MODEL_CATALOG,
     runType: "overnight",
     maxLoops: 10,
@@ -341,6 +497,8 @@ function parseArgs(argv = []) {
     applyRender: true,
     endpoint: DEFAULT_ENDPOINT,
     cleanupPreviewFrames: true,
+    autoRefill: true,
+    maxAutoRefills: 4,
     summaryPath: ""
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -348,6 +506,7 @@ function parseArgs(argv = []) {
     if (arg === "--latest-run-root") args.latestRunRoot = argv[++index];
     else if (arg === "--previous-state") args.previousStatePath = argv[++index];
     else if (arg === "--out-root") args.outRoot = argv[++index];
+    else if (arg === "--curriculum") args.curriculumPath = argv[++index];
     else if (arg === "--model-catalog") args.modelCatalogPath = argv[++index];
     else if (arg === "--run-type") args.runType = argv[++index];
     else if (arg === "--max-loops") args.maxLoops = Number(argv[++index]);
@@ -355,10 +514,12 @@ function parseArgs(argv = []) {
     else if (arg === "--max-passes") args.maxPasses = Number(argv[++index]);
     else if (arg === "--max-consecutive-regressions") args.maxConsecutiveRegressions = Number(argv[++index]);
     else if (arg === "--max-repeated-goal-count") args.maxRepeatedGoalCount = Number(argv[++index]);
+    else if (arg === "--max-auto-refills") args.maxAutoRefills = Number(argv[++index]);
     else if (arg === "--endpoint") args.endpoint = argv[++index];
     else if (arg === "--summary") args.summaryPath = argv[++index];
     else if (arg === "--scaffold-only") args.applyRender = false;
     else if (arg === "--keep-preview-frames") args.cleanupPreviewFrames = false;
+    else if (arg === "--no-auto-refill") args.autoRefill = false;
     else if (arg === "--help") args.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -370,10 +531,12 @@ function usage() {
   node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \\
     --latest-run-root /tmp/xld-quality-controller-loop-live-music-000002 \\
     --previous-state /tmp/xld-quality-controller-after-music-000002.json \\
+    --curriculum scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json \\
     --model-catalog /tmp/xld-vendor-fixture-model-catalog.json \\
     --max-loops 20 \\
     --max-passes 5 \\
-    --max-consecutive-regressions 3
+    --max-consecutive-regressions 3 \\
+    --max-auto-refills 4
 `;
 }
 

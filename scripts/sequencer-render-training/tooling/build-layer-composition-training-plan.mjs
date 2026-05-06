@@ -7,6 +7,7 @@ const DEFAULT_OUT = "var/logs/sequencer-layer-composition-training-runs/manual-p
 const DEFAULT_RUN_TYPE = "overnight";
 
 export const DEFAULT_PALETTE_PROFILES = ["mono_white", "rgb_primary"];
+export const RGB_DISPLAY_AUTO_REFILL_VALIDATION_CYCLE_COUNT = 12;
 
 export const RUNTIME_BUDGETS = {
   smoke: {
@@ -2664,6 +2665,43 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       colorPurpose: "motion_support"
     }
   });
+  const generatedValidationPasses = Array.from({ length: RGB_DISPLAY_AUTO_REFILL_VALIDATION_CYCLE_COUNT }, (_, index) => {
+    const cycle = String(index + 1).padStart(2, "0");
+    return [
+      {
+        passId: `display_palette_motion_pacing_validation_cycle_${cycle}`,
+        compositionPass: "display_review",
+        placements: [pacingOpeningStructure, pacingMiddleMotion, pacingMiddleFocal, pacingReleaseSupport],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_palette_motion_pacing_holdout",
+        changeType: "video_aesthetic_palette_motion_pacing_validation_cycle"
+      },
+      {
+        passId: `display_palette_spatial_negative_space_validation_cycle_${cycle}`,
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialCenterFocal, spatialLineBridge, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_negative_space_holdout",
+        changeType: "video_aesthetic_palette_spatial_negative_space_validation_cycle"
+      },
+      {
+        passId: `display_palette_spatial_focal_validation_cycle_${cycle}`,
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialCenterFocal, safeLocalLineThread, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_focal_holdout",
+        changeType: "video_aesthetic_palette_spatial_focal_validation_cycle"
+      },
+      {
+        passId: `display_palette_color_purpose_motion_validation_cycle_${cycle}`,
+        compositionPass: "display_review",
+        placements: [archRgbDisciplineBase, pacingMiddleMotion, pacingMiddleFocal],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_color_purpose_motion_holdout",
+        changeType: "video_aesthetic_palette_color_purpose_motion_validation_cycle"
+      }
+    ];
+  }).flat();
 
   return {
     experimentId: `display-quality-review-${paletteProfile}`,
@@ -2904,6 +2942,7 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         comparisonBasePassId: "display_palette_color_purpose_motion_holdout",
         changeType: "video_aesthetic_palette_color_purpose_motion_validation"
       },
+      ...generatedValidationPasses,
       {
         passId: "display_palette_transition_motion_bridge",
         compositionPass: "display_review",
