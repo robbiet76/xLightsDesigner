@@ -282,3 +282,99 @@ test("unattended quality runner stops on repeated regressions for intervention",
   assert.equal(summary.interventionRecommended, true);
   assert.equal(summary.iterations[1].consecutiveRegressionCount, 2);
 });
+
+test("unattended quality runner uses creative revision comparison as primary gate", async () => {
+  const root = tempDir();
+  const summary = await runSequencingQualityUnattended({
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 1,
+    deps: {
+      runLoop: async (args) => {
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "executed",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "creative.intent_revision_variants.v1",
+            nextAction: "plan_goal_coverage",
+            selectionReason: "coverage_gap"
+          },
+          videoAestheticAttemptComparison: {
+            comparisonStatus: "regressed",
+            overallAestheticScoreDelta: -0.06
+          },
+          creativeIntentRevisionComparison: {
+            status: "ready",
+            comparisonCount: 1,
+            improvedComparisonCount: 1,
+            promotionEligibleCount: 1
+          },
+          passRunner: { processedPasses: 2, renderReviewAcceptedEvidenceCount: 2 },
+          crossRunQuality: { durableCandidateCount: 1, blockedRecordCount: 0 }
+        };
+      },
+      consolidateLoopEvidence: ({ loopRoot }) => ({
+        deltaSummaryRef: path.join(loopRoot, "layer-composition-delta-summary.json")
+      })
+    }
+  });
+
+  assert.equal(summary.stopReason, "max_loops_reached");
+  assert.equal(summary.iterations[0].comparisonStatus, "regressed");
+  assert.equal(summary.iterations[0].qualityGateSource, "creative_intent_revision_comparison");
+  assert.equal(summary.iterations[0].qualityGateStatus, "improved");
+  assert.equal(summary.iterations[0].outcome, "improved");
+  assert.equal(summary.iterations[0].consecutiveRegressionCount, 0);
+});
+
+test("unattended quality runner treats blocked creative revision comparisons as regressions", async () => {
+  const root = tempDir();
+  const summary = await runSequencingQualityUnattended({
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 2,
+    maxConsecutiveRegressions: 1,
+    deps: {
+      runLoop: async (args) => {
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "executed",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "creative.intent_revision_variants.v1",
+            nextAction: "plan_goal_coverage",
+            selectionReason: "coverage_gap"
+          },
+          videoAestheticAttemptComparison: {
+            comparisonStatus: "neutral",
+            overallAestheticScoreDelta: 0
+          },
+          creativeIntentRevisionComparison: {
+            status: "ready",
+            comparisonCount: 1,
+            improvedComparisonCount: 0,
+            promotionEligibleCount: 0
+          },
+          passRunner: { processedPasses: 2, renderReviewAcceptedEvidenceCount: 1 },
+          crossRunQuality: { durableCandidateCount: 0, blockedRecordCount: 1 }
+        };
+      },
+      consolidateLoopEvidence: ({ loopRoot }) => ({
+        deltaSummaryRef: path.join(loopRoot, "layer-composition-delta-summary.json")
+      })
+    }
+  });
+
+  assert.equal(summary.stopReason, "max_consecutive_regressions");
+  assert.equal(summary.iterationCount, 1);
+  assert.equal(summary.iterations[0].qualityGateSource, "creative_intent_revision_comparison");
+  assert.equal(summary.iterations[0].outcome, "regressed");
+  assert.equal(summary.iterations[0].consecutiveRegressionCount, 1);
+});

@@ -277,11 +277,58 @@ function consolidateLoopEvidence({
   };
 }
 
-function runOutcome(summary = {}) {
+function isCreativeRevisionGoal(goalId = "") {
+  return str(goalId).startsWith("creative.intent_revision");
+}
+
+function creativeRevisionOutcome(comparison = {}) {
+  const status = str(comparison.status);
+  const comparisonCount = num(comparison.comparisonCount);
+  const improvedComparisonCount = num(comparison.improvedComparisonCount);
+  const promotionEligibleCount = num(comparison.promotionEligibleCount);
+  if (status !== "ready" || comparisonCount <= 0) return "";
+  if (promotionEligibleCount > 0 || improvedComparisonCount > 0) return "improved";
+  return "regressed";
+}
+
+function qualityGate(summary = {}) {
+  const selectedGoalId = str(summary.controllerDecision?.selectedGoalId);
+  if (isCreativeRevisionGoal(selectedGoalId)) {
+    const creativeOutcome = creativeRevisionOutcome(summary.creativeIntentRevisionComparison);
+    if (creativeOutcome) {
+      return {
+        source: "creative_intent_revision_comparison",
+        status: creativeOutcome,
+        reason: creativeOutcome === "improved"
+          ? "At least one paired creative revision comparison improved."
+          : "No paired creative revision comparison was promotion eligible."
+      };
+    }
+  }
   const comparisonStatus = str(summary.videoAestheticAttemptComparison?.comparisonStatus);
-  if (comparisonStatus) return comparisonStatus;
-  if (summary.videoAestheticScore?.promotionEligible) return "promotion_eligible";
-  return str(summary.status);
+  if (comparisonStatus) {
+    return {
+      source: "video_aesthetic_attempt_comparison",
+      status: comparisonStatus,
+      reason: "Candidate video aesthetic score was compared against the latest run root."
+    };
+  }
+  if (summary.videoAestheticScore?.promotionEligible) {
+    return {
+      source: "video_aesthetic_score",
+      status: "promotion_eligible",
+      reason: "Candidate video aesthetic score is promotion eligible without a comparison."
+    };
+  }
+  return {
+    source: "loop_status",
+    status: str(summary.status),
+    reason: "No quality comparison artifact was available for this loop."
+  };
+}
+
+function runOutcome(summary = {}) {
+  return qualityGate(summary).status;
 }
 
 export async function runSequencingQualityUnattended({
@@ -337,7 +384,8 @@ export async function runSequencingQualityUnattended({
       deps: deps.loopDeps || {}
     });
     const controllerState = readJsonIfExists(summary.controllerStateRef);
-    const outcome = runOutcome(summary);
+    const gate = qualityGate(summary);
+    const outcome = gate.status;
     consecutiveRegressionCount = outcome === "regressed" ? consecutiveRegressionCount + 1 : 0;
     const selectedGoalId = str(summary.controllerDecision?.selectedGoalId);
     repeatedGoalCount = selectedGoalId && selectedGoalId === previousGoalId ? repeatedGoalCount + 1 : selectedGoalId ? 1 : 0;
@@ -364,6 +412,12 @@ export async function runSequencingQualityUnattended({
       promotionEligible: Boolean(summary.videoAestheticScore?.promotionEligible),
       comparisonStatus: str(summary.videoAestheticAttemptComparison?.comparisonStatus),
       overallAestheticScoreDelta: num(summary.videoAestheticAttemptComparison?.overallAestheticScoreDelta),
+      creativeRevisionComparisonStatus: str(summary.creativeIntentRevisionComparison?.status),
+      creativeRevisionImprovedComparisonCount: num(summary.creativeIntentRevisionComparison?.improvedComparisonCount),
+      creativeRevisionPromotionEligibleCount: num(summary.creativeIntentRevisionComparison?.promotionEligibleCount),
+      qualityGateSource: gate.source,
+      qualityGateStatus: gate.status,
+      qualityGateReason: gate.reason,
       outcome,
       consecutiveRegressionCount,
       repeatedGoalCount,

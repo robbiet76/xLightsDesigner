@@ -321,6 +321,61 @@ test("creative intent revision comparison scores focal handoff stability variant
   assert.equal(artifact.comparisons[0].revisionObjective.targetedVideoObjectiveImproved, true);
 });
 
+test("creative intent revision comparison accepts stable focal handoff overlays", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-creative-revision-stable-handoff-"));
+  writeJson(path.join(root, "training-plan.json"), {
+    experiments: [{
+      experimentId: "creative-intent-revision-comparison-mono_white",
+      family: "creative_intent_revision_comparison",
+      paletteProfile: "mono_white",
+      passes: [{
+        passId: "intent_first_draft"
+      }, {
+        passId: "intent_focal_handoff_revision",
+        comparisonBasePassId: "intent_first_draft",
+        changeType: "creative_intent_revision_variant",
+        placements: [{
+          layerIntent: {
+            creativeIntent: {
+              revisionVariant: "focal_handoff_stability",
+              supportRole: "clear_late_focal_handoff"
+            }
+          }
+        }]
+      }]
+    }]
+  });
+  const baseline = writeReview(root, "intent_first_draft", {
+    overallQuality: 0.78,
+    intentMatch: 0.76,
+    visualReadability: 0.75,
+    motionCoherence: 0.77,
+    clutterControl: 0.8,
+    activeCoverageMean: 0.03,
+    activeModelCountPeak: 3,
+    temporalActiveDeltaMean: 0.0004
+  });
+  const revised = writeReview(root, "intent_focal_handoff_revision", {
+    overallQuality: 0.780003,
+    intentMatch: 0.760011,
+    visualReadability: 0.75001,
+    motionCoherence: 0.769998,
+    clutterControl: 0.8,
+    activeCoverageMean: 0.030001,
+    activeModelCountPeak: 4,
+    temporalActiveDeltaMean: 0.0004
+  });
+  writeJson(path.join(root, "pass-runner-summary.json"), {
+    results: [baseline, revised]
+  });
+
+  const artifact = buildCreativeIntentRevisionComparison({ runRoot: root });
+
+  assert.equal(artifact.comparisons[0].comparisonStatus, "improved");
+  assert.equal(artifact.comparisons[0].revisionObjective.focalHandoffStabilityImproved, true);
+  assert.deepEqual(artifact.comparisons[0].blockers, []);
+});
+
 test("creative intent revision comparison scores pacing balance variants", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-creative-revision-pacing-"));
   writeJson(path.join(root, "training-plan.json"), {

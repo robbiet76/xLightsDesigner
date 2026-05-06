@@ -487,6 +487,15 @@ test("layer composition plan isolates requested creative revision variants", () 
     handoff.placements.some((placement) => placement.layerIntent?.creativeIntent?.revisionVariant === "focal_handoff_stability"),
     true
   );
+  assert.deepEqual(
+    handoff.placements.map((placement) => placement.placementId),
+    ["cr-mono_white-baseline-wash", "cr-mono_white-handoff-revision-background", "cr-mono_white-handoff-revision-accent"]
+  );
+  assert.deepEqual(
+    handoff.placements.map((placement) => placement.startMs),
+    [0, 0, 3800]
+  );
+  assert.equal(handoff.placements[2].layerSettings.brightness, 50);
 });
 
 test("layer composition plan expands target-transfer adaptation coverage-gap controller queue", () => {

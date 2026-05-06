@@ -1035,27 +1035,23 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
   const handoffRevisionBackground = {
     ...baselineBackground,
     placementId: `cr-${paletteProfile}-handoff-revision-background`,
-    startMs: 900,
-    endMs: 5200,
-    effectSettings: { ...baselineBackground.effectSettings, cycles: 1 },
-    layerSettings: { ...baselineBackground.layerSettings, brightness: 45, fadeIn: "0.8", fadeOut: "0.8" },
     layerIntent: {
       ...baselineBackground.layerIntent,
       creativeIntent: {
         ...baselineBackground.layerIntent.creativeIntent,
         revisionRole: "targeted_revision",
         revisionVariant: "focal_handoff_stability",
-        supportRole: "soft_directional_handoff",
-        revisionTarget: "stabilize focal handoff so attention moves deliberately into the late accent"
+        supportRole: "preserved_directional_background",
+        revisionTarget: "preserve the first draft background while adding only a clear late handoff accent"
       }
     }
   };
   const handoffRevisionAccent = {
     ...revisedAccent,
     placementId: `cr-${paletteProfile}-handoff-revision-accent`,
-    startMs: 3400,
-    endMs: 5800,
-    layerSettings: { ...revisedAccent.layerSettings, brightness: 70, fadeIn: "0.75", fadeOut: "0.6" },
+    startMs: 3800,
+    endMs: 5400,
+    layerSettings: { ...revisedAccent.layerSettings, brightness: 50, fadeIn: "0.4", fadeOut: "0.75" },
     layerIntent: {
       ...revisedAccent.layerIntent,
       creativeIntent: {
@@ -1163,7 +1159,7 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
       {
         passId: "intent_focal_handoff_revision",
         compositionPass: "creative_revision",
-        placements: [revisedWash, handoffRevisionBackground, handoffRevisionAccent],
+        placements: [baselineWash, handoffRevisionBackground, handoffRevisionAccent],
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName],
         comparisonBasePassId: "intent_first_draft",
         changeType: "creative_intent_revision_variant"

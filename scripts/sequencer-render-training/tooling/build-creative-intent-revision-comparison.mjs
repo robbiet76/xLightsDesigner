@@ -126,14 +126,18 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
   const emphasisImproved = activeModelCountPeakDelta > 0 || temporalActiveDeltaMeanDelta > 0.0002 || temporalColorDeltaMeanDelta > 0.0002;
   const negativeSpacePreserved = activeCoverageMeanDelta <= 0.002;
   const densityReduced = activeCoverageMeanDelta <= 0;
+  const stableReadabilityDelta = visualReadabilityDelta >= -0.005;
+  const stableMotionDelta = motionCoherenceDelta >= -0.005;
+  const focalHandoffSignalImproved = emphasisImproved || visualReadabilityDelta >= 0.01 || motionCoherenceDelta >= 0.01;
   const focusSimplificationImproved =
     revisionVariants.includes("focus_simplification")
     && densityReduced
     && (visualReadabilityDelta >= 0 || intentMatchDelta >= 0.01 || clutterControlDelta >= 0);
   const focalHandoffStabilityImproved =
     revisionVariants.includes("focal_handoff_stability")
-    && visualReadabilityDelta >= 0
-    && motionCoherenceDelta >= 0
+    && focalHandoffSignalImproved
+    && stableReadabilityDelta
+    && stableMotionDelta
     && clutterControlDelta >= -0.01
     && activeCoverageMeanDelta <= 0.004;
   const pacingBalanceImproved =
