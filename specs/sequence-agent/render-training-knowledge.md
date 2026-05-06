@@ -151,6 +151,11 @@ The sequencer execution training module documents the current package contracts,
 - The sequence-agent prompt now defines target-context precedence: live xLights readback, `display/model-index.json`, project display metadata, `display/target-behavior.json`, then names only as labels or fallback identifiers.
 - The first self-improvement loop is manifest-driven and starts with `On`, `Bars`, `Color Wash`, and `SingleStrand`; `Shimmer` is intentionally excluded from the initial validation scope because it is lower value for proving sequencing quality. Live custom-submodel probes are opt-in and feed the same project-local target-behavior export and promotion gate.
 - The sequencing-quality curriculum is now explicit and controller-facing. The active goal map lives in `../../scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json`, with operating guidance in `sequencing-quality-curriculum.md`. Automated loops should select work from that curriculum, not from unconstrained exploration.
+- Unattended RGB display-validation cycles showed a repeatable split in display-level behavior:
+  - motion-pacing validation produced consistent first-pass gains around `+0.0105` overall aesthetic score, then repeated neutrally;
+  - spatial negative-space and spatial focal-control validations were stable and near-neutral;
+  - the original color-purpose/motion validation repeatedly dropped around `-0.0097`, mainly from color-discipline, transition-flow, and motion-interest losses.
+- Color-purpose/motion validation should preserve the stable spatial/focal foundation and add restrained disciplined motion. Replacing the foundation with a separate color stack produced measurable whole-display regression. Quality-improvement unattended runs now stop on the first meaningful regression so the agent can adjust the curriculum or strategy before spending more render time.
 
 ## Current Gaps
 

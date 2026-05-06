@@ -180,6 +180,8 @@ The controller should prefer:
 - curriculum goals with no RGB evidence
 - model/effect/palette combinations missing required stable samples
 - periodic revalidation of promoted priors only after broader coverage is moving
+- color-purpose and palette-motion validations that preserve a stable
+  spatial/focal foundation before adding restrained color motion
 
 The controller should skip:
 
@@ -188,6 +190,8 @@ The controller should skip:
   requires investigation
 - paths that cannot be cleaned up within disk guardrails
 - submodel choices derived only from names rather than structure or metadata
+- color-purpose variants that discard the current readable foundation and
+  introduce a new palette stack in the same comparison step
 
 ## Current Baseline
 

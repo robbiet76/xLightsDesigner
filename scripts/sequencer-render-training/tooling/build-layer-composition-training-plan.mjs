@@ -2695,7 +2695,7 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       {
         passId: `display_palette_color_purpose_motion_validation_cycle_${cycle}`,
         compositionPass: "display_review",
-        placements: [archRgbDisciplineBase, pacingMiddleMotion, pacingMiddleFocal],
+        placements: [spatialLeftStructure, spatialCenterFocal, safeLocalLineThread, safeLocalStarAccent, lineRgbDisciplinedMotion],
         displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
         comparisonBasePassId: "display_palette_color_purpose_motion_holdout",
         changeType: "video_aesthetic_palette_color_purpose_motion_validation_cycle"
@@ -2905,7 +2905,7 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       {
         passId: "display_palette_color_purpose_motion_holdout",
         compositionPass: "display_review",
-        placements: [archRgbDisciplineBase, pacingMiddleMotion, pacingMiddleFocal],
+        placements: [spatialLeftStructure, spatialCenterFocal, safeLocalLineThread, safeLocalStarAccent, lineRgbDisciplinedMotion],
         displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
         comparisonBasePassId: "display_palette_spatial_focal_holdout",
         changeType: "video_aesthetic_palette_color_purpose_motion_holdout"
@@ -2937,7 +2937,7 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       {
         passId: "display_palette_color_purpose_motion_validation",
         compositionPass: "display_review",
-        placements: [archRgbDisciplineBase, pacingMiddleMotion, pacingMiddleFocal],
+        placements: [spatialLeftStructure, spatialCenterFocal, safeLocalLineThread, safeLocalStarAccent, lineRgbDisciplinedMotion],
         displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
         comparisonBasePassId: "display_palette_color_purpose_motion_holdout",
         changeType: "video_aesthetic_palette_color_purpose_motion_validation"

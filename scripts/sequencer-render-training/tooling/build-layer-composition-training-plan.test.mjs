@@ -1179,6 +1179,50 @@ test("layer composition plan preserves palette from targeted display coverage un
   );
 });
 
+test("layer composition plan preserves stable focal foundation for color-purpose motion validation", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-targeted-color-purpose-motion-cycle",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 80,
+      controllerDecision: {
+        selectedGoalId: "display.video_aesthetic.auto_refill.color_purpose_motion_cycle_06_v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.video_aesthetic.auto_refill.color_purpose_motion_cycle_06_v1:coverage-gap",
+        goalId: "display.video_aesthetic.auto_refill.color_purpose_motion_cycle_06_v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "rgb_primary",
+          passId: "display_palette_color_purpose_motion_validation_cycle_06"
+        }]
+      }]
+    }
+  });
+
+  const experiment = plan.experiments.find((item) => item.experimentId === "display-quality-review-rgb_primary");
+  const validationPass = experiment.passes.find((pass) => pass.passId === "display_palette_color_purpose_motion_validation_cycle_06");
+  assert.equal(validationPass.controllerSelection.selectedByController, true);
+  assert.deepEqual(
+    validationPass.placements.map((placement) => placement.placementId),
+    [
+      "dq-rgb_primary-spatial-left-structure",
+      "dq-rgb_primary-spatial-center-focal",
+      "dq-rgb_primary-safe-local-line-thread",
+      "dq-rgb_primary-safe-local-star-accent",
+      "dq-rgb_primary-line-rgb-disciplined-motion"
+    ]
+  );
+  assert.deepEqual(
+    validationPass.placements.map((placement) => placement.layerIntent?.colorPurpose),
+    ["background_structure", "focal_accent", "structure_motion_support", "warm_focal_accent", "structure_motion_support"]
+  );
+});
+
 test("layer composition plan expands safe local evidence coverage units", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,
