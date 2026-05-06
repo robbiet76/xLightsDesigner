@@ -92,6 +92,12 @@ Each loop should:
    `comparisonBasePassId`. The comparison artifact scores overall quality,
    intent match, readability, motion coherence, and clutter-control deltas.
 
+8. Add `creative.intent_revision_variants.v1` after the first revision pair is
+   stable. This goal compares the same first draft against focus-simplification,
+   focal-handoff-stability, and pacing-balance variants. The variants should use
+   the stronger video aesthetic dimensions as targeted objectives, not just as a
+   generic intent-match score.
+
 ## Controller State
 
 The controller writes a durable state artifact after every loop. The current
@@ -179,6 +185,9 @@ The first stronger scoring expansion is implemented in
 `build-video-aesthetic-score.mjs` and compared by
 `build-video-aesthetic-attempt-comparison.mjs`; future curriculum work should
 use those stronger dimensions before adding another parallel scoring contract.
+The creative revision variant expansion consumes those dimensions through
+targeted variants for focal handoff stability and pacing balance alongside the
+existing focus-simplification variant.
 
 ## Selection Rules
 

@@ -125,12 +125,25 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
     revisionVariants.includes("focus_simplification")
     && densityReduced
     && (visualReadabilityDelta >= 0 || intentMatchDelta >= 0.01 || clutterControlDelta >= 0);
+  const focalHandoffStabilityImproved =
+    revisionVariants.includes("focal_handoff_stability")
+    && visualReadabilityDelta >= 0
+    && motionCoherenceDelta >= 0
+    && clutterControlDelta >= -0.01
+    && activeCoverageMeanDelta <= 0.004;
+  const pacingBalanceImproved =
+    revisionVariants.includes("pacing_balance")
+    && motionCoherenceDelta >= 0.01
+    && visualReadabilityDelta >= -0.01
+    && clutterControlDelta >= -0.01
+    && activeCoverageMeanDelta <= 0.004;
   const revisionObjectiveImproved = focusSimplificationImproved || (emphasisImproved && negativeSpacePreserved);
+  const targetedVideoObjectiveImproved = focalHandoffStabilityImproved || pacingBalanceImproved;
   const blockers = [];
   if (!baseline.evidenceEligible) blockers.push("baseline_not_evidence_eligible");
   if (!revised.evidenceEligible) blockers.push("revised_not_evidence_eligible");
   if (str(revised.decision) !== "accept") blockers.push("revised_review_not_accepted");
-  if (intentMatchDelta < 0.02 && !revisionObjectiveImproved) blockers.push("intent_match_not_improved");
+  if (intentMatchDelta < 0.02 && !revisionObjectiveImproved && !targetedVideoObjectiveImproved) blockers.push("intent_match_not_improved");
   if (visualReadabilityDelta < -0.03) blockers.push("readability_regressed");
   if (clutterControlDelta < -0.03) blockers.push("clutter_control_regressed");
   return {
@@ -157,21 +170,29 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
       temporalColorDeltaMean: temporalColorDeltaMeanDelta
     },
     revisionObjective: {
-      status: revisionObjectiveImproved ? "improved" : "not_improved",
+      status: revisionObjectiveImproved || targetedVideoObjectiveImproved ? "improved" : "not_improved",
       emphasisImproved,
       negativeSpacePreserved,
       densityReduced,
       focusSimplificationImproved,
+      focalHandoffStabilityImproved,
+      pacingBalanceImproved,
+      targetedVideoObjectiveImproved,
       signals: {
         activeModelCountPeakDelta,
         temporalActiveDeltaMeanDelta,
         temporalColorDeltaMeanDelta,
-        activeCoverageMeanDelta
+        activeCoverageMeanDelta,
+        visualReadabilityDelta,
+        motionCoherenceDelta,
+        clutterControlDelta
       },
       notes: [
         emphasisImproved ? "late emphasis signal increased" : "late emphasis signal did not increase",
         negativeSpacePreserved ? "mean coverage stayed restrained" : "mean coverage increased beyond guardrail",
-        densityReduced ? "mean coverage decreased" : "mean coverage did not decrease"
+        densityReduced ? "mean coverage decreased" : "mean coverage did not decrease",
+        focalHandoffStabilityImproved ? "focal handoff stability objective improved" : "focal handoff stability objective did not improve",
+        pacingBalanceImproved ? "pacing balance objective improved" : "pacing balance objective did not improve"
       ]
     },
     baseline: {

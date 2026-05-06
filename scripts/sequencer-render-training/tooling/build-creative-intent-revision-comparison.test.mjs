@@ -262,3 +262,119 @@ test("creative intent revision comparison scores focus simplification variants",
   assert.equal(artifact.comparisons[0].revisionObjective.focusSimplificationImproved, true);
   assert.equal(artifact.comparisons[0].revisionObjective.densityReduced, true);
 });
+
+test("creative intent revision comparison scores focal handoff stability variants", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-creative-revision-handoff-"));
+  writeJson(path.join(root, "training-plan.json"), {
+    experiments: [{
+      experimentId: "creative-intent-revision-comparison-mono_white",
+      family: "creative_intent_revision_comparison",
+      paletteProfile: "mono_white",
+      passes: [{
+        passId: "intent_first_draft"
+      }, {
+        passId: "intent_focal_handoff_revision",
+        comparisonBasePassId: "intent_first_draft",
+        changeType: "creative_intent_revision_variant",
+        placements: [{
+          layerIntent: {
+            creativeIntent: {
+              revisionVariant: "focal_handoff_stability",
+              supportRole: "clear_late_focal_handoff",
+              revisionTarget: "make the late accent arrive as a clear handoff rather than a separate event"
+            }
+          }
+        }]
+      }]
+    }]
+  });
+  const baseline = writeReview(root, "intent_first_draft", {
+    overallQuality: 0.78,
+    intentMatch: 0.76,
+    visualReadability: 0.72,
+    motionCoherence: 0.73,
+    clutterControl: 0.8,
+    activeCoverageMean: 0.03,
+    activeModelCountPeak: 3,
+    temporalActiveDeltaMean: 0.0004
+  });
+  const revised = writeReview(root, "intent_focal_handoff_revision", {
+    overallQuality: 0.79,
+    intentMatch: 0.765,
+    visualReadability: 0.75,
+    motionCoherence: 0.75,
+    clutterControl: 0.795,
+    activeCoverageMean: 0.032,
+    activeModelCountPeak: 3,
+    temporalActiveDeltaMean: 0.00045
+  });
+  writeJson(path.join(root, "pass-runner-summary.json"), {
+    results: [baseline, revised]
+  });
+
+  const artifact = buildCreativeIntentRevisionComparison({ runRoot: root });
+
+  assert.equal(artifact.status, "ready");
+  assert.equal(artifact.comparisons[0].comparisonStatus, "improved");
+  assert.deepEqual(artifact.comparisons[0].revisionVariants, ["focal_handoff_stability"]);
+  assert.equal(artifact.comparisons[0].revisionObjective.focalHandoffStabilityImproved, true);
+  assert.equal(artifact.comparisons[0].revisionObjective.targetedVideoObjectiveImproved, true);
+});
+
+test("creative intent revision comparison scores pacing balance variants", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-creative-revision-pacing-"));
+  writeJson(path.join(root, "training-plan.json"), {
+    experiments: [{
+      experimentId: "creative-intent-revision-comparison-mono_white",
+      family: "creative_intent_revision_comparison",
+      paletteProfile: "mono_white",
+      passes: [{
+        passId: "intent_first_draft"
+      }, {
+        passId: "intent_pacing_balance_revision",
+        comparisonBasePassId: "intent_first_draft",
+        changeType: "creative_intent_revision_variant",
+        placements: [{
+          layerIntent: {
+            creativeIntent: {
+              revisionVariant: "pacing_balance",
+              supportRole: "paced_late_linear_accent",
+              revisionTarget: "make motion pacing more readable without overfilling the section"
+            }
+          }
+        }]
+      }]
+    }]
+  });
+  const baseline = writeReview(root, "intent_first_draft", {
+    overallQuality: 0.76,
+    intentMatch: 0.75,
+    visualReadability: 0.74,
+    motionCoherence: 0.7,
+    clutterControl: 0.8,
+    activeCoverageMean: 0.03,
+    activeModelCountPeak: 3,
+    temporalActiveDeltaMean: 0.0003
+  });
+  const revised = writeReview(root, "intent_pacing_balance_revision", {
+    overallQuality: 0.775,
+    intentMatch: 0.758,
+    visualReadability: 0.735,
+    motionCoherence: 0.72,
+    clutterControl: 0.795,
+    activeCoverageMean: 0.033,
+    activeModelCountPeak: 3,
+    temporalActiveDeltaMean: 0.00055
+  });
+  writeJson(path.join(root, "pass-runner-summary.json"), {
+    results: [baseline, revised]
+  });
+
+  const artifact = buildCreativeIntentRevisionComparison({ runRoot: root });
+
+  assert.equal(artifact.status, "ready");
+  assert.equal(artifact.comparisons[0].comparisonStatus, "improved");
+  assert.deepEqual(artifact.comparisons[0].revisionVariants, ["pacing_balance"]);
+  assert.equal(artifact.comparisons[0].revisionObjective.pacingBalanceImproved, true);
+  assert.equal(artifact.comparisons[0].revisionObjective.targetedVideoObjectiveImproved, true);
+});

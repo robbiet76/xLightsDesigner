@@ -157,6 +157,7 @@ The sequencer execution training module documents the current package contracts,
   - the original color-purpose/motion validation repeatedly dropped around `-0.0097`, mainly from color-discipline, transition-flow, and motion-interest losses.
 - Color-purpose/motion validation should preserve the stable spatial/focal foundation and add restrained disciplined motion. Replacing the foundation with a separate color stack produced measurable whole-display regression. Quality-improvement unattended runs now stop on the first meaningful regression so the agent can adjust the curriculum or strategy before spending more render time.
 - The repaired color-purpose/motion path remained stable through repeated validation cycles after the fix, while motion pacing stayed directionally positive but below promotion threshold. The next scoring layer should therefore judge broader video quality rather than only repeated candidate-pass stability. `video_aesthetic_score_model_v2` adds full-display context dimensions for narrative shape, focal handoff stability, palette purpose coverage, and full-sequence context while preserving the selected candidate-pass score for targeted controller decisions.
+- Creative revision variants now include focus simplification, focal handoff stability, and pacing balance. These variants should be evaluated against their targeted objective and not only by raw intent-match delta, because the stronger video-level scorer can expose weaknesses such as focal handoff and pacing even when a selected pass is mechanically acceptable.
 
 ## Current Gaps
 
@@ -164,7 +165,7 @@ The sequencer execution training module documents the current package contracts,
 - layer-composition knowledge needs broader production-display evidence
 - custom model geometry and submodel behavior now have package and runtime coverage; the next gap is broader real-display calibration across more accepted apply/render outcomes using the self-improvement loop
 - mature sequence examples need stronger extraction and calibration
-- creative revision variants need to consume the stronger video-level dimensions so training can target specific quality gaps rather than repeating stable neutral validation passes
+- creative revision variants now consume stronger video-level dimensions; the next gap is running live evidence to learn which variant reliably improves which weakness
 
 ## Related Artifacts
 

@@ -112,6 +112,14 @@ deltas, classifies the attempt as `improved`, `neutral`, `regressed`, or
 `blocked`, and keeps enough compact evidence for the controller to avoid
 repeating revision patterns that did not help.
 
+`creative_intent_revision_comparison_v1` compares paired creative-intent passes.
+The baseline pair remains `intent_first_draft` to `intent_targeted_revision`.
+The richer variant set adds `focus_simplification`,
+`focal_handoff_stability`, and `pacing_balance` revision variants. These are
+scored as targeted objectives so a revision can be accepted for improving the
+specific v2 weakness it was built to address, while still guarding readability,
+motion coherence, coverage, and clutter.
+
 ## Loop Integration
 
 The self-improvement loop should add a render-review phase after live apply/render:

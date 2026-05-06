@@ -1032,6 +1032,77 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
       }
     }
   };
+  const handoffRevisionBackground = {
+    ...baselineBackground,
+    placementId: `cr-${paletteProfile}-handoff-revision-background`,
+    startMs: 900,
+    endMs: 5200,
+    effectSettings: { ...baselineBackground.effectSettings, cycles: 1 },
+    layerSettings: { ...baselineBackground.layerSettings, brightness: 45, fadeIn: "0.8", fadeOut: "0.8" },
+    layerIntent: {
+      ...baselineBackground.layerIntent,
+      creativeIntent: {
+        ...baselineBackground.layerIntent.creativeIntent,
+        revisionRole: "targeted_revision",
+        revisionVariant: "focal_handoff_stability",
+        supportRole: "soft_directional_handoff",
+        revisionTarget: "stabilize focal handoff so attention moves deliberately into the late accent"
+      }
+    }
+  };
+  const handoffRevisionAccent = {
+    ...revisedAccent,
+    placementId: `cr-${paletteProfile}-handoff-revision-accent`,
+    startMs: 3400,
+    endMs: 5800,
+    layerSettings: { ...revisedAccent.layerSettings, brightness: 70, fadeIn: "0.75", fadeOut: "0.6" },
+    layerIntent: {
+      ...revisedAccent.layerIntent,
+      creativeIntent: {
+        ...revisedAccent.layerIntent.creativeIntent,
+        revisionRole: "targeted_revision",
+        revisionVariant: "focal_handoff_stability",
+        supportRole: "clear_late_focal_handoff",
+        revisionTarget: "make the late accent arrive as a clear handoff rather than a separate event"
+      }
+    }
+  };
+  const pacingRevisionBackground = {
+    ...baselineBackground,
+    placementId: `cr-${paletteProfile}-pacing-revision-background`,
+    startMs: 1200,
+    endMs: 6000,
+    effectSettings: { ...baselineBackground.effectSettings, cycles: 3 },
+    layerSettings: { ...baselineBackground.layerSettings, brightness: 50, fadeIn: "0.6", fadeOut: "0.4" },
+    layerIntent: {
+      ...baselineBackground.layerIntent,
+      creativeIntent: {
+        ...baselineBackground.layerIntent.creativeIntent,
+        revisionRole: "targeted_revision",
+        revisionVariant: "pacing_balance",
+        supportRole: "restrained_motion_pacing_support",
+        revisionTarget: "add clearer pacing variation while keeping coverage balanced"
+      }
+    }
+  };
+  const pacingRevisionAccent = {
+    ...revisedAccent,
+    placementId: `cr-${paletteProfile}-pacing-revision-accent`,
+    startMs: 3000,
+    endMs: 5900,
+    effectSettings: { ...revisedAccent.effectSettings, cycles: 3, colorSpeed: 4 },
+    layerSettings: { ...revisedAccent.layerSettings, brightness: 60, fadeIn: "0.45", fadeOut: "0.45" },
+    layerIntent: {
+      ...revisedAccent.layerIntent,
+      creativeIntent: {
+        ...revisedAccent.layerIntent.creativeIntent,
+        revisionRole: "targeted_revision",
+        revisionVariant: "pacing_balance",
+        supportRole: "paced_late_linear_accent",
+        revisionTarget: "make motion pacing more readable without overfilling the section"
+      }
+    }
+  };
 
   return {
     experimentId: `creative-intent-revision-comparison-${paletteProfile}`,
@@ -1052,7 +1123,11 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
         "intent_match_delta",
         "visual_readability_delta",
         "motion_coherence_delta",
-        "clutter_regression_guard"
+        "clutter_regression_guard",
+        "video_v2_narrative_shape",
+        "video_v2_focal_handoff_stability",
+        "video_v2_palette_purpose_coverage",
+        "video_v2_full_sequence_context"
       ],
       promotionUse: "Revision evidence is promoted only when the revised pass improves intent match without reducing readability."
     },
@@ -1081,6 +1156,22 @@ function makeCreativeIntentRevisionComparisonExperiment({ paletteProfile, archGr
         passId: "intent_focus_simplification_revision",
         compositionPass: "creative_revision",
         placements: [revisedWash, focusRevisionBackground, focusRevisionAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName],
+        comparisonBasePassId: "intent_first_draft",
+        changeType: "creative_intent_revision_variant"
+      },
+      {
+        passId: "intent_focal_handoff_revision",
+        compositionPass: "creative_revision",
+        placements: [revisedWash, handoffRevisionBackground, handoffRevisionAccent],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName],
+        comparisonBasePassId: "intent_first_draft",
+        changeType: "creative_intent_revision_variant"
+      },
+      {
+        passId: "intent_pacing_balance_revision",
+        compositionPass: "creative_revision",
+        placements: [revisedWash, pacingRevisionBackground, pacingRevisionAccent],
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName],
         comparisonBasePassId: "intent_first_draft",
         changeType: "creative_intent_revision_variant"
@@ -4254,7 +4345,11 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         .map((unit) => str(unit.passId || unit.pass || unit.pass_id))
         .filter(Boolean);
       const paletteProfiles = missingPaletteProfiles.length ? [...new Set(missingPaletteProfiles)] : ["mono_white"];
-      const passIds = missingPassIds.length ? [...new Set(missingPassIds)] : ["intent_focus_simplification_revision"];
+      const passIds = missingPassIds.length ? [...new Set(missingPassIds)] : [
+        "intent_focus_simplification_revision",
+        "intent_focal_handoff_revision",
+        "intent_pacing_balance_revision"
+      ];
       for (const paletteProfile of paletteProfiles) {
         rows.push({
           experimentId: `creative-intent-revision-comparison-${paletteProfile}`,

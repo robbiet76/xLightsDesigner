@@ -1382,14 +1382,16 @@
       "areaId": "creative_intent_matching",
       "priority": 8,
       "status": "not_started",
-      "description": "Compare an additional targeted creative revision variant so the selector can learn when simplifying background density improves intent match and readability.",
+      "description": "Compare targeted creative revision variants so the selector can learn when focus simplification, focal handoff stabilization, or pacing balance improves intent match and video-level readability.",
       "requiredStableSamples": 2,
       "coverage": {
         "families": [
           "creative_intent_revision_comparison"
         ],
         "revisionVariants": [
-          "focus_simplification"
+          "focus_simplification",
+          "focal_handoff_stability",
+          "pacing_balance"
         ],
         "intentDimensions": [
           "mood",
@@ -1408,11 +1410,11 @@
         "needs baseline creative-intent evidence first"
       ],
       "nextSelectionHints": [
-        "Compare the same first draft against a focus-simplification revision that reduces background density and shortens the late accent.",
-        "Promote only if intent match or readability improves without clutter or motion-coherence regression."
+        "Compare the same first draft against focus-simplification, focal-handoff-stability, and pacing-balance revisions.",
+        "Promote only if the targeted objective improves without clutter, readability, or motion-coherence regression."
       ],
       "completionCriteria": {
-        "minimumDistinctCoverageUnitCount": 3,
+        "minimumDistinctCoverageUnitCount": 5,
         "distinctCoverageFields": [
           "paletteProfile",
           "passId"
@@ -1429,6 +1431,14 @@
           {
             "paletteProfile": "mono_white",
             "passId": "intent_focus_simplification_revision"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "passId": "intent_focal_handoff_revision"
+          },
+          {
+            "paletteProfile": "mono_white",
+            "passId": "intent_pacing_balance_revision"
           }
         ],
         "maximumRegressingRecords": 0
