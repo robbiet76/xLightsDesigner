@@ -10,6 +10,9 @@ test("sequencing quality curriculum is controller-ready", () => {
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.equal(result.summary.curriculumId, "sequencing-quality-v1");
+  assert.equal(result.summary.primaryOutcome, "whole_display_quality");
+  assert.ok(result.summary.evidenceScopes.includes("full_sequence_render"));
+  assert.ok(result.summary.evidenceScopes.includes("effect_capability"));
   assert.ok(result.summary.areaCount >= 8);
   assert.ok(result.summary.goalCount >= 8);
   assert.ok(result.summary.activeGoalIds.includes("layer.same_target.mono_white.basic"));

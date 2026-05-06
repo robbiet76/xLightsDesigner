@@ -7,6 +7,25 @@ import { fileURLToPath } from "node:url";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const DEFAULT_CURRICULUM = "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json";
 const VALID_STATUSES = new Set(["not_started", "in_progress", "blocked", "covered", "retired"]);
+const REQUIRED_EVIDENCE_SCOPES = [
+  "effect_capability",
+  "layer_stack",
+  "target_composition",
+  "section_render",
+  "full_sequence_render"
+];
+const REQUIRED_WHOLE_DISPLAY_QUALITY_AXES = [
+  "intent_match",
+  "style_match",
+  "technical_render_quality",
+  "visibility_presence",
+  "energy_fit",
+  "composition_readability",
+  "musical_alignment",
+  "transition_quality",
+  "novelty_non_repetition",
+  "sequence_progression"
+];
 
 function arr(value) {
   return Array.isArray(value) ? value : [];
@@ -37,6 +56,35 @@ export function validateSequencingQualityCurriculum(curriculum = {}) {
   const goals = arr(curriculum.goals);
   if (!areas.length) errors.push("areas must not be empty");
   if (!goals.length) errors.push("goals must not be empty");
+  const qualityTarget = curriculum.qualityTargetModel || {};
+  if (str(qualityTarget.primaryOutcome) !== "whole_display_quality") {
+    errors.push("qualityTargetModel.primaryOutcome must be whole_display_quality");
+  }
+  const promotionPriority = arr(qualityTarget.promotionPriority).map(str);
+  if (promotionPriority[0] !== "full_sequence_render" || promotionPriority[1] !== "section_render") {
+    errors.push("qualityTargetModel.promotionPriority must prioritize full_sequence_render then section_render");
+  }
+  if (!str(qualityTarget.singleEffectPromotionLimit).includes("capability")) {
+    errors.push("qualityTargetModel.singleEffectPromotionLimit must limit single-effect evidence to capability promotion");
+  }
+  const evidenceScopes = new Set(arr(curriculum.evidenceHierarchy).map((row) => str(row.scope)));
+  for (const scope of REQUIRED_EVIDENCE_SCOPES) {
+    if (!evidenceScopes.has(scope)) errors.push(`evidenceHierarchy missing scope: ${scope}`);
+  }
+  const fullSequenceEvidence = arr(curriculum.evidenceHierarchy)
+    .find((row) => str(row.scope) === "full_sequence_render") || {};
+  if (str(fullSequenceEvidence.promotionUse) !== "primary_human_level_quality_evidence") {
+    errors.push("full_sequence_render evidence must be primary_human_level_quality_evidence");
+  }
+  const effectEvidence = arr(curriculum.evidenceHierarchy)
+    .find((row) => str(row.scope) === "effect_capability") || {};
+  if (str(effectEvidence.promotionUse) !== "capability_prior_only") {
+    errors.push("effect_capability evidence must be capability_prior_only");
+  }
+  const qualityAxes = new Set(arr(curriculum.requiredWholeDisplayQualityAxes).map(str));
+  for (const axis of REQUIRED_WHOLE_DISPLAY_QUALITY_AXES) {
+    if (!qualityAxes.has(axis)) errors.push(`requiredWholeDisplayQualityAxes missing axis: ${axis}`);
+  }
   const areaIds = new Set();
   for (const area of areas) {
     const areaId = str(area.areaId);
@@ -82,6 +130,8 @@ export function validateSequencingQualityCurriculum(curriculum = {}) {
       areaCount: areas.length,
       goalCount: goals.length,
       statusCounts,
+      primaryOutcome: str(qualityTarget.primaryOutcome),
+      evidenceScopes: [...evidenceScopes],
       activeGoalIds: goals
         .filter((goal) => ["not_started", "in_progress", "blocked"].includes(str(goal.status)))
         .sort((a, b) => Number(a.priority) - Number(b.priority) || str(a.goalId).localeCompare(str(b.goalId)))

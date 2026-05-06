@@ -13,6 +13,12 @@ Machine-readable curriculum:
 
 - `../../scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json`
 
+That artifact must declare `qualityTargetModel.primaryOutcome` as
+`whole_display_quality`. Lower-level goals can be active and useful, but they
+serve the whole-display target. The validator should fail the curriculum if the
+machine-readable hierarchy ever stops prioritizing `full_sequence_render` and
+`section_render` above effect or layer capability evidence.
+
 ## Training Principle
 
 The automation loop is self-improving inside curriculum boundaries. It may choose

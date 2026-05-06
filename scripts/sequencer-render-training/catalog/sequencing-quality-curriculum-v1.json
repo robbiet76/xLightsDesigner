@@ -4,6 +4,73 @@
   "curriculumId": "sequencing-quality-v1",
   "status": "active",
   "purpose": "Define the learning goals an automated training controller should work through before promoting sequencing knowledge.",
+  "qualityTargetModel": {
+    "primaryOutcome": "whole_display_quality",
+    "principle": "Effect, model, submodel, and layer evidence are prerequisite capability evidence. Human-level sequencing quality is promoted from section-level and full-sequence whole-display renders.",
+    "promotionPriority": [
+      "full_sequence_render",
+      "section_render",
+      "target_composition",
+      "layer_stack",
+      "effect_capability"
+    ],
+    "conflictResolution": "When lower-level capability evidence conflicts with section-level or full-sequence whole-display evidence, the broader rendered context wins.",
+    "singleEffectPromotionLimit": "A strong single-effect result can promote an effect capability prior only. It cannot promote creative sequencing behavior without composition, section, or full-sequence evidence.",
+    "designRangePolicy": "Scores are interpreted against the selected song section, style, model role, and design intent. Brightness, density, color richness, motion, negative space, and neutrality are valid only when they fit that intent range.",
+    "diversityPolicy": "Preserve multiple valid candidates per intent and style when they differ meaningfully in effect family, target choice, timing, palette, motion, density, or focal path."
+  },
+  "evidenceHierarchy": [
+    {
+      "scope": "effect_capability",
+      "rank": 5,
+      "promotionUse": "capability_prior_only",
+      "description": "One effect on one target or submodel. Learns visibility, motion type, fill, texture, color behavior, setting sensitivity, and geometry fit.",
+      "cannotProve": [
+        "section_quality",
+        "full_sequence_quality",
+        "human_level_sequencing_quality"
+      ]
+    },
+    {
+      "scope": "layer_stack",
+      "rank": 4,
+      "promotionUse": "composition_prior",
+      "description": "Multiple layers on the same target. Learns blend behavior, layer order, brightness hierarchy, fades, and timing overlap."
+    },
+    {
+      "scope": "target_composition",
+      "rank": 3,
+      "promotionUse": "composition_prior",
+      "description": "Multiple targets, groups, or submodels in one design window. Learns whether selected elements read coherently together."
+    },
+    {
+      "scope": "section_render",
+      "rank": 2,
+      "promotionUse": "sequencing_behavior_candidate",
+      "description": "All selected models, layers, and effects for a song section. Scores intent fit, style fit, energy range, presence, focal hierarchy, color story, motion variety, transition quality, and musical fit."
+    },
+    {
+      "scope": "full_sequence_render",
+      "rank": 1,
+      "promotionUse": "primary_human_level_quality_evidence",
+      "description": "The complete sequence or representative multi-section excerpt. Scores motifs, development, repeated-section variation, energy progression, lyric and feature moments, color progression, finale payoff, and non-repetition."
+    }
+  ],
+  "requiredWholeDisplayQualityAxes": [
+    "intent_match",
+    "style_match",
+    "technical_render_quality",
+    "visibility_presence",
+    "energy_fit",
+    "color_purpose",
+    "color_richness_when_intended",
+    "composition_readability",
+    "musical_alignment",
+    "transition_quality",
+    "novelty_non_repetition",
+    "sequence_progression",
+    "targeted_repair_need"
+  ],
   "selectionPolicy": {
     "strategy": "priority_then_blocked_promising_then_coverage_gap",
     "loopSizeDefault": 25,
