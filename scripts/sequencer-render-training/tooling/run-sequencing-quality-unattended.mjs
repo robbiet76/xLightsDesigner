@@ -173,8 +173,11 @@ function loopDir(root = "", index = 1) {
   return path.join(resolvePath(root || DEFAULT_OUT_ROOT), `loop-${String(index).padStart(6, "0")}`);
 }
 
-function shouldAdvanceLatestRun(summary = {}) {
-  return str(summary.status) === "executed" && str(summary.loopRoot);
+function shouldAdvanceLatestRun(summary = {}, gate = {}) {
+  if (str(summary.status) !== "executed" || !str(summary.loopRoot)) return false;
+  if (str(gate.source) === "creative_intent_revision_comparison") return false;
+  if (str(gate.status) === "regressed") return false;
+  return true;
 }
 
 function stopReasonForSummary(
@@ -433,7 +436,7 @@ export async function runSequencingQualityUnattended({
       }))
     };
     iterations.push(iteration);
-    if (shouldAdvanceLatestRun(summary)) currentLatestRunRoot = resolvePath(summary.loopRoot);
+    if (shouldAdvanceLatestRun(summary, gate)) currentLatestRunRoot = resolvePath(summary.loopRoot);
     currentPreviousStatePath = resolvePath(summary.controllerStateRef);
 
     const reason = stopReasonForSummary(summary, index, maxLoops, {

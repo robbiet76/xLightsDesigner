@@ -329,6 +329,8 @@ test("unattended quality runner uses creative revision comparison as primary gat
   assert.equal(summary.iterations[0].qualityGateStatus, "improved");
   assert.equal(summary.iterations[0].outcome, "improved");
   assert.equal(summary.iterations[0].consecutiveRegressionCount, 0);
+  assert.equal(summary.latestRunRoot, path.join(root, "seed"));
+  assert.equal(summary.previousStateRef, path.join(summary.iterations[0].loopRoot, "controller-state.json"));
 });
 
 test("unattended quality runner treats blocked creative revision comparisons as regressions", async () => {
@@ -377,4 +379,43 @@ test("unattended quality runner treats blocked creative revision comparisons as 
   assert.equal(summary.iterations[0].qualityGateSource, "creative_intent_revision_comparison");
   assert.equal(summary.iterations[0].outcome, "regressed");
   assert.equal(summary.iterations[0].consecutiveRegressionCount, 1);
+});
+
+test("unattended quality runner does not advance latest run root after video regressions", async () => {
+  const root = tempDir();
+  const summary = await runSequencingQualityUnattended({
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 1,
+    deps: {
+      runLoop: async (args) => {
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "executed",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "display.full_sequence.quality_v1",
+            nextAction: "plan_goal_coverage",
+            selectionReason: "video_aesthetic_score_below_threshold"
+          },
+          videoAestheticAttemptComparison: {
+            comparisonStatus: "regressed",
+            overallAestheticScoreDelta: -0.04
+          },
+          passRunner: { processedPasses: 2, renderReviewAcceptedEvidenceCount: 1 },
+          crossRunQuality: { durableCandidateCount: 0, blockedRecordCount: 1 }
+        };
+      },
+      consolidateLoopEvidence: ({ loopRoot }) => ({
+        deltaSummaryRef: path.join(loopRoot, "layer-composition-delta-summary.json")
+      })
+    }
+  });
+
+  assert.equal(summary.stopReason, "max_consecutive_regressions");
+  assert.equal(summary.latestRunRoot, path.join(root, "seed"));
+  assert.equal(summary.previousStateRef, path.join(summary.iterations[0].loopRoot, "controller-state.json"));
 });
