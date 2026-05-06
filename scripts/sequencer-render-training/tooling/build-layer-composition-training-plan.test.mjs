@@ -870,13 +870,25 @@ test("layer composition plan expands rgb primary regional focus strategy", () =>
   );
   assert.deepEqual(
     plan.experiments[0].passes.map((pass) => pass.passId),
-    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_regional_focus_contrast"]
+    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_rgb_color_discipline_repair", "display_rgb_regional_focus_contrast"]
   );
   assert.equal(plan.paletteProfiles.some((profile) => profile.profile === "rgb_primary"), true);
+  const focusPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_rgb_regional_focus_contrast");
   assert.equal(
-    plan.experiments[0].passes.find((pass) => pass.passId === "display_regional_focus_contrast")
-      .controllerSelection.selectedByController,
+    focusPass.controllerSelection.selectedByController,
     true
+  );
+  assert.equal(
+    focusPass.placements.every((placement) => placement.layerIntent?.displayReviewRole === "rgb_regional_focus_contrast"),
+    true
+  );
+  assert.deepEqual(
+    focusPass.placements.map((placement) => placement.layerIntent?.colorPurpose),
+    ["structure", "warm_focal_accent", "structure_motion_support"]
+  );
+  assert.deepEqual(
+    focusPass.placements.map((placement) => placement.layerSettings?.brightness),
+    [58, 64, 52]
   );
 });
 

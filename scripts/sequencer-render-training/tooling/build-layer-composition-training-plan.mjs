@@ -1858,6 +1858,90 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
     layerSettings: { mixMethod: "Normal" },
     layerIntent: { blendRole: "release_accent", displayReviewRole: "regional_focus_contrast" }
   });
+  const archRgbRegionalFocusBase = placement({
+    id: `dq-${paletteProfile}-arch-rgb-regional-focus-base`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 58,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "neutral_regional_context",
+      displayReviewRole: "rgb_regional_focus_contrast",
+      colorPurpose: "structure"
+    }
+  });
+  const starRgbRegionalFocusAccent = placement({
+    id: `dq-${paletteProfile}-star-rgb-regional-focus-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 1,
+    startMs: 1700,
+    endMs: 4700,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 64,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "warm_regional_focal_anchor",
+      displayReviewRole: "rgb_regional_focus_contrast",
+      colorPurpose: "warm_focal_accent"
+    }
+  });
+  const lineRgbRegionalReleaseThread = placement({
+    id: `dq-${paletteProfile}-line-rgb-regional-release-thread`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 3600,
+    endMs: 6000,
+    effectSettings: { effect: "Chase", cycles: 2, colorSpeed: 2 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 52,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "neutral_release_motion_thread",
+      displayReviewRole: "rgb_regional_focus_contrast",
+      colorPurpose: "structure_motion_support"
+    }
+  });
   const archConsistencyBase = placement({
     id: `dq-${paletteProfile}-arch-consistency-base`,
     target: archGroup,
@@ -2868,6 +2952,14 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
         comparisonBasePassId: "display_motion_variety",
         changeType: "video_aesthetic_rgb_color_discipline_repair"
+      },
+      {
+        passId: "display_rgb_regional_focus_contrast",
+        compositionPass: "display_review",
+        placements: [archRgbRegionalFocusBase, starRgbRegionalFocusAccent, lineRgbRegionalReleaseThread],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName, treeFlat.modelName],
+        comparisonBasePassId: "display_rgb_color_discipline_repair",
+        changeType: "video_aesthetic_rgb_regional_focus_contrast_revision"
       },
       {
         passId: "display_rgb_structure_balance_pacing_repair",
@@ -4474,7 +4566,7 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
             : str(gap.nextStrategy) === "regional_focus_contrast"
               ? ["display_regional_focus_contrast"]
             : str(gap.nextStrategy) === "rgb_primary_regional_focus_contrast"
-              ? ["display_regional_focus_contrast"]
+              ? ["display_rgb_regional_focus_contrast"]
               : str(gap.nextStrategy) === "rgb_primary_color_discipline_repair"
                 ? ["display_rgb_color_discipline_repair"]
               : str(gap.nextStrategy) === "rgb_primary_structure_balance_pacing_repair"
