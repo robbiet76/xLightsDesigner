@@ -4345,11 +4345,12 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         .map((unit) => str(unit.passId || unit.pass || unit.pass_id))
         .filter(Boolean);
       const paletteProfiles = missingPaletteProfiles.length ? [...new Set(missingPaletteProfiles)] : ["mono_white"];
-      const passIds = missingPassIds.length ? [...new Set(missingPassIds)] : [
+      const candidatePassIds = missingPassIds.length ? [...new Set(missingPassIds)] : [
         "intent_focus_simplification_revision",
         "intent_focal_handoff_revision",
         "intent_pacing_balance_revision"
       ];
+      const passIds = candidatePassIds.slice(0, 1);
       for (const paletteProfile of paletteProfiles) {
         rows.push({
           experimentId: `creative-intent-revision-comparison-${paletteProfile}`,

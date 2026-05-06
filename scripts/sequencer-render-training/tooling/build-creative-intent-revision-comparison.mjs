@@ -118,6 +118,11 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
   const temporalActiveDeltaMeanDelta = round6(revised.temporalActiveDeltaMean - baseline.temporalActiveDeltaMean);
   const temporalColorDeltaMeanDelta = round6(revised.temporalColorDeltaMean - baseline.temporalColorDeltaMean);
   const revisionVariants = arr(metadata.revisionVariants).map(str).filter(Boolean);
+  const hasTargetedVariant = revisionVariants.some((variant) => [
+    "focus_simplification",
+    "focal_handoff_stability",
+    "pacing_balance"
+  ].includes(variant));
   const emphasisImproved = activeModelCountPeakDelta > 0 || temporalActiveDeltaMeanDelta > 0.0002 || temporalColorDeltaMeanDelta > 0.0002;
   const negativeSpacePreserved = activeCoverageMeanDelta <= 0.002;
   const densityReduced = activeCoverageMeanDelta <= 0;
@@ -139,12 +144,18 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
     && activeCoverageMeanDelta <= 0.004;
   const revisionObjectiveImproved = focusSimplificationImproved || (emphasisImproved && negativeSpacePreserved);
   const targetedVideoObjectiveImproved = focalHandoffStabilityImproved || pacingBalanceImproved;
+  const objectiveImproved = hasTargetedVariant
+    ? (focusSimplificationImproved || targetedVideoObjectiveImproved)
+    : revisionObjectiveImproved;
   const blockers = [];
   if (!baseline.evidenceEligible) blockers.push("baseline_not_evidence_eligible");
   if (!revised.evidenceEligible) blockers.push("revised_not_evidence_eligible");
   if (str(revised.decision) !== "accept") blockers.push("revised_review_not_accepted");
-  if (intentMatchDelta < 0.02 && !revisionObjectiveImproved && !targetedVideoObjectiveImproved) blockers.push("intent_match_not_improved");
+  if (intentMatchDelta < 0.02 && !objectiveImproved) blockers.push("intent_match_not_improved");
+  if (hasTargetedVariant && !objectiveImproved) blockers.push("targeted_revision_objective_not_improved");
   if (visualReadabilityDelta < -0.03) blockers.push("readability_regressed");
+  if (hasTargetedVariant && visualReadabilityDelta < 0) blockers.push("targeted_revision_readability_not_preserved");
+  if (hasTargetedVariant && intentMatchDelta < -0.01) blockers.push("targeted_revision_intent_match_regressed");
   if (clutterControlDelta < -0.03) blockers.push("clutter_control_regressed");
   return {
     experimentId: str(metadata.experimentId || revised.experimentId),
@@ -170,13 +181,14 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
       temporalColorDeltaMean: temporalColorDeltaMeanDelta
     },
     revisionObjective: {
-      status: revisionObjectiveImproved || targetedVideoObjectiveImproved ? "improved" : "not_improved",
+      status: objectiveImproved ? "improved" : "not_improved",
       emphasisImproved,
       negativeSpacePreserved,
       densityReduced,
       focusSimplificationImproved,
       focalHandoffStabilityImproved,
       pacingBalanceImproved,
+      hasTargetedVariant,
       targetedVideoObjectiveImproved,
       signals: {
         activeModelCountPeakDelta,

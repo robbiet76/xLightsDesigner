@@ -359,7 +359,7 @@ test("creative intent revision comparison scores pacing balance variants", () =>
   const revised = writeReview(root, "intent_pacing_balance_revision", {
     overallQuality: 0.775,
     intentMatch: 0.758,
-    visualReadability: 0.735,
+    visualReadability: 0.745,
     motionCoherence: 0.72,
     clutterControl: 0.795,
     activeCoverageMean: 0.033,
@@ -377,4 +377,60 @@ test("creative intent revision comparison scores pacing balance variants", () =>
   assert.deepEqual(artifact.comparisons[0].revisionVariants, ["pacing_balance"]);
   assert.equal(artifact.comparisons[0].revisionObjective.pacingBalanceImproved, true);
   assert.equal(artifact.comparisons[0].revisionObjective.targetedVideoObjectiveImproved, true);
+});
+
+test("creative intent revision comparison blocks targeted variants that only improve generic emphasis", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-creative-revision-targeted-block-"));
+  writeJson(path.join(root, "training-plan.json"), {
+    experiments: [{
+      experimentId: "creative-intent-revision-comparison-mono_white",
+      family: "creative_intent_revision_comparison",
+      paletteProfile: "mono_white",
+      passes: [{
+        passId: "intent_first_draft"
+      }, {
+        passId: "intent_focal_handoff_revision",
+        comparisonBasePassId: "intent_first_draft",
+        changeType: "creative_intent_revision_variant",
+        placements: [{
+          layerIntent: {
+            creativeIntent: {
+              revisionVariant: "focal_handoff_stability",
+              supportRole: "clear_late_focal_handoff"
+            }
+          }
+        }]
+      }]
+    }]
+  });
+  const baseline = writeReview(root, "intent_first_draft", {
+    overallQuality: 0.78,
+    intentMatch: 0.76,
+    visualReadability: 0.75,
+    motionCoherence: 0.77,
+    clutterControl: 0.8,
+    activeCoverageMean: 0.03,
+    activeModelCountPeak: 3,
+    temporalActiveDeltaMean: 0.0004
+  });
+  const revised = writeReview(root, "intent_focal_handoff_revision", {
+    overallQuality: 0.77,
+    intentMatch: 0.73,
+    visualReadability: 0.72,
+    motionCoherence: 0.78,
+    clutterControl: 0.8,
+    activeCoverageMean: 0.027,
+    activeModelCountPeak: 4,
+    temporalActiveDeltaMean: 0.001
+  });
+  writeJson(path.join(root, "pass-runner-summary.json"), {
+    results: [baseline, revised]
+  });
+
+  const artifact = buildCreativeIntentRevisionComparison({ runRoot: root });
+
+  assert.equal(artifact.comparisons[0].comparisonStatus, "blocked");
+  assert.equal(artifact.comparisons[0].revisionObjective.emphasisImproved, true);
+  assert.equal(artifact.comparisons[0].revisionObjective.focalHandoffStabilityImproved, false);
+  assert.equal(artifact.comparisons[0].blockers.includes("targeted_revision_objective_not_improved"), true);
 });

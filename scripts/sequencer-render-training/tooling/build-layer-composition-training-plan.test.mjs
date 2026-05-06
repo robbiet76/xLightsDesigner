@@ -442,25 +442,49 @@ test("layer composition plan expands richer creative revision variants by defaul
     [
       "empty_baseline",
       "intent_first_draft",
-      "intent_focus_simplification_revision",
-      "intent_focal_handoff_revision",
-      "intent_pacing_balance_revision"
+      "intent_focus_simplification_revision"
     ]
   );
-  const handoff = plan.experiments[0].passes.find((pass) => pass.passId === "intent_focal_handoff_revision");
-  const pacing = plan.experiments[0].passes.find((pass) => pass.passId === "intent_pacing_balance_revision");
-  assert.equal(handoff.changeType, "creative_intent_revision_variant");
-  assert.equal(pacing.changeType, "creative_intent_revision_variant");
-  assert.equal(
-    handoff.placements.some((placement) => placement.layerIntent?.creativeIntent?.revisionVariant === "focal_handoff_stability"),
-    true
-  );
-  assert.equal(
-    pacing.placements.some((placement) => placement.layerIntent?.creativeIntent?.revisionVariant === "pacing_balance"),
-    true
-  );
+  const focus = plan.experiments[0].passes.find((pass) => pass.passId === "intent_focus_simplification_revision");
+  assert.equal(focus.changeType, "creative_intent_revision_variant");
   assert.equal(
     plan.experiments[0].revisionComparisonContract.scoringSignals.includes("video_v2_full_sequence_context"),
+    true
+  );
+});
+
+test("layer composition plan isolates requested creative revision variants", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-creative-revision-specific-variant-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 23,
+      controllerDecision: {
+        selectedGoalId: "creative.intent_revision_variants.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:creative.intent_revision_variants.v1:coverage-gap",
+        goalId: "creative.intent_revision_variants.v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [
+          { paletteProfile: "mono_white", passId: "intent_focal_handoff_revision" },
+          { paletteProfile: "mono_white", passId: "intent_pacing_balance_revision" }
+        ]
+      }]
+    }
+  });
+
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "intent_first_draft", "intent_focal_handoff_revision"]
+  );
+  const handoff = plan.experiments[0].passes.find((pass) => pass.passId === "intent_focal_handoff_revision");
+  assert.equal(
+    handoff.placements.some((placement) => placement.layerIntent?.creativeIntent?.revisionVariant === "focal_handoff_stability"),
     true
   );
 });
