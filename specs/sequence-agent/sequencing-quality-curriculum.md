@@ -147,7 +147,12 @@ When creative revision pairs are present, the live loop also writes
 review whether the revision was beneficial rather than simply different.
 The video aesthetic artifact is the compact whole-display score for ordered
 render windows and is the bridge from section-level render success toward
-sequence-level quality improvement.
+sequence-level quality improvement. `video_aesthetic_score_model_v2` keeps the
+candidate-window score that the controller needs for targeted experiments, then
+adds full-display context over all eligible windows: narrative shape, focal
+handoff stability, palette purpose coverage, and full-sequence context. This
+lets unattended runs distinguish a technically acceptable selected pass from one
+that actually improves the larger display arc.
 
 After a coverage path has been proven with small live runs, use the unattended
 runner:
@@ -169,6 +174,11 @@ should be chosen deliberately. After expanded effect/model coverage is covered,
 the next preferred expansions are stronger video-level aesthetic scoring, richer
 creative revision variants, and matrix/cane/tree-360 coverage when those model
 families are available in the active training layout.
+
+The first stronger scoring expansion is implemented in
+`build-video-aesthetic-score.mjs` and compared by
+`build-video-aesthetic-attempt-comparison.mjs`; future curriculum work should
+use those stronger dimensions before adding another parallel scoring contract.
 
 ## Selection Rules
 

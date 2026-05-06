@@ -209,6 +209,67 @@ test("video aesthetic score prefers controller-selected candidate windows over d
   assert.equal(artifact.scores.sectionQualityMean, 0.88);
 });
 
+test("video aesthetic score adds full-sequence context when candidate window is selected", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-aesthetic-context-"));
+  const weakOpening = writeWindow(root, {
+    passId: "weak_opening",
+    startMs: 0,
+    endMs: 2000,
+    quality: 0.52,
+    motion: 0.02,
+    color: 0.1,
+    coverage: 0.01
+  });
+  const selectedCandidate = writeWindow(root, {
+    passId: "selected_candidate",
+    startMs: 2000,
+    endMs: 4000,
+    quality: 0.88,
+    motion: 0.13,
+    color: 0.45,
+    coverage: 0.05
+  });
+  const progressionPath = writeProgression(root);
+  writeJson(path.join(root, "training-plan.json"), {
+    artifactType: "layer_composition_training_plan_v1",
+    experiments: [{
+      passes: [
+        { passId: "weak_opening", controllerSelection: { reason: "comparison_dependency" } },
+        {
+          passId: "selected_candidate",
+          controllerSelection: { selectedByController: true },
+          placements: [
+            { layerIntent: { colorPurpose: "background_structure" } },
+            { layerIntent: { colorPurpose: "structure_motion_support" } },
+            { layerIntent: { colorPurpose: "focal_accent" } }
+          ]
+        }
+      ]
+    }]
+  });
+  writeJson(path.join(root, "full-sequence-review-loop.json"), {
+    artifactType: "full_sequence_review_loop_v1",
+    status: "ready",
+    windowCount: 2,
+    evidenceEligibleWindowCount: 2,
+    progressionObservationRef: progressionPath,
+    windows: [weakOpening, selectedCandidate]
+  });
+
+  const artifact = buildVideoAestheticScore({ runRoot: root });
+
+  assert.equal(artifact.scoringModelVersion, "video_aesthetic_score_model_v2");
+  assert.equal(artifact.scoredWindowCount, 1);
+  assert.equal(artifact.contextWindowCount, 2);
+  assert.equal(artifact.qualityDimensions.includes("full_sequence_context"), true);
+  assert.equal(artifact.qualityDimensions.includes("narrative_shape"), true);
+  assert.equal(artifact.qualityDimensions.includes("focal_handoff_stability"), true);
+  assert.equal(artifact.qualityDimensions.includes("palette_purpose_coverage"), true);
+  assert.equal(artifact.scores.sectionQualityMean, 0.88);
+  assert.equal(artifact.scoringSignals.fullSequenceContextInputs.contextQualityMean, 0.7);
+  assert.equal(artifact.scores.fullSequenceContext < artifact.scores.sectionQualityMean, true);
+});
+
 test("video aesthetic score uses layer intent metadata for local evidence readability", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-aesthetic-local-"));
   const dependency = writeWindow(root, {

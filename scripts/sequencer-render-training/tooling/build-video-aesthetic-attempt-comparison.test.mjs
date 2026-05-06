@@ -158,3 +158,35 @@ test("video aesthetic attempt comparison treats score recovery with hard tradeof
   assert.equal(artifact.summary.overallAestheticScoreDelta, 0.08);
   assert.equal(artifact.summary.strongestRegressions[0].dimension, "intent_match");
 });
+
+test("video aesthetic attempt comparison includes stronger video context dimensions", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-aesthetic-context-comparison-"));
+  const baseline = path.join(root, "baseline");
+  const candidate = path.join(root, "candidate");
+  writeScore(baseline, {
+    overallAestheticScore: 0.72,
+    narrativeShape: 0.62,
+    focalHandoffStability: 0.58,
+    palettePurposeCoverage: 0.66,
+    fullSequenceContext: 0.6
+  });
+  writeScore(candidate, {
+    overallAestheticScore: 0.731,
+    narrativeShape: 0.69,
+    focalHandoffStability: 0.64,
+    palettePurposeCoverage: 0.78,
+    fullSequenceContext: 0.68
+  });
+
+  const artifact = buildVideoAestheticAttemptComparison({
+    baselineRunRoot: baseline,
+    candidateRunRoot: candidate
+  });
+
+  const dimensions = artifact.deltas.map((row) => row.dimension);
+  assert.equal(dimensions.includes("narrative_shape"), true);
+  assert.equal(dimensions.includes("focal_handoff_stability"), true);
+  assert.equal(dimensions.includes("palette_purpose_coverage"), true);
+  assert.equal(dimensions.includes("full_sequence_context"), true);
+  assert.equal(artifact.comparisonStatus, "improved");
+});

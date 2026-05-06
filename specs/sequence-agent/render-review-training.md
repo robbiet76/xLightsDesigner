@@ -98,6 +98,14 @@ clarity, visual balance, motion interest, color discipline, clutter control, and
 quality consistency. This is the first contract for measuring whether the whole
 sequence is getting better rather than only whether each effect rendered.
 
+The current scorer identifies itself as
+`scoringModelVersion: video_aesthetic_score_model_v2`. It still scores the
+controller-selected candidate pass when one is present, but it also keeps a
+full-display context layer over all eligible windows. That context layer adds
+narrative shape, focal handoff stability, palette purpose coverage, and
+full-sequence context dimensions so a candidate cannot be judged only by its own
+render quality when the surrounding display arc is weak.
+
 `video_aesthetic_attempt_comparison_v1` compares the current video aesthetic
 score against the previous loop's score. It records overall and per-dimension
 deltas, classifies the attempt as `improved`, `neutral`, `regressed`, or

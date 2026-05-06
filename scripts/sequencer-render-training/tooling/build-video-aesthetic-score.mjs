@@ -58,6 +58,19 @@ function average(values = []) {
   return rows.length ? rows.reduce((sum, value) => sum + value, 0) / rows.length : 0;
 }
 
+function weightedAverage(entries = []) {
+  let weightedSum = 0;
+  let weightSum = 0;
+  for (const entry of arr(entries)) {
+    const value = num(entry?.value, NaN);
+    const weight = Math.max(0, num(entry?.weight, 0));
+    if (!Number.isFinite(value) || !weight) continue;
+    weightedSum += value * weight;
+    weightSum += weight;
+  }
+  return weightSum ? weightedSum / weightSum : 0;
+}
+
 function rangeScore(values = [], expectedRange = 0.5) {
   const rows = arr(values).map((value) => num(value, NaN)).filter(Number.isFinite);
   if (rows.length < 2) return 0.5;
@@ -217,16 +230,65 @@ function paletteRoleDisciplineScore(colorPurposes = []) {
   ]);
 }
 
+function palettePurposeCoverageScore(colorPurposes = []) {
+  const purposes = new Set(arr(colorPurposes).map(str).filter(Boolean));
+  if (!purposes.size) return NaN;
+  const rows = [...purposes];
+  const hasBackground = rows.some((purpose) => purpose.includes("background"));
+  const hasStructure = rows.some((purpose) => purpose.includes("structure"));
+  const hasMotion = rows.some((purpose) => purpose.includes("motion") || purpose.includes("support"));
+  const hasFocal = rows.some((purpose) => purpose.includes("focal"));
+  const hasAccent = rows.some((purpose) => purpose.includes("accent"));
+  return average([
+    clamp01(purposes.size / 5),
+    hasBackground ? 1 : 0,
+    hasStructure ? 1 : 0,
+    hasMotion ? 1 : 0,
+    hasFocal ? 1 : 0,
+    hasAccent ? 1 : 0
+  ]);
+}
+
+function contextCoverageAdequacyScore(windows = []) {
+  return average(arr(windows).map((row) => bandScore(row.activeCoverageMean, 0.025, 0.12)));
+}
+
+function narrativeShapeScore(progression = {}) {
+  const development = progression.development?.scores || {};
+  const energyArc = progression.energyArc?.scores || {};
+  return average([
+    energyArc.energyShapeClarity,
+    energyArc.arcCoherence,
+    energyArc.peakPlacementRead,
+    energyArc.releaseRead,
+    development.developmentStrength,
+    development.variationAdequacy,
+    present(development.stagnationRisk) ? 1 - num(development.stagnationRisk) : NaN
+  ]);
+}
+
+function focalHandoffStabilityScore(windows = [], transitionFlow = NaN) {
+  return average([
+    adjacentContinuityScore(arr(windows).map((row) => row.focalClarity), 0.25),
+    adjacentContinuityScore(arr(windows).map((row) => row.visualBalance), 0.25),
+    transitionFlow
+  ]);
+}
+
 function recommendationRows(scores = {}) {
   const rows = [];
   if (scores.displayEvolution < 0.65) rows.push("Strengthen the beginning-to-end energy shape and make each window feel like a purposeful step.");
+  if (scores.narrativeShape < 0.65) rows.push("Clarify the intro, lift, peak, and release so the sequence reads as a composed arc.");
   if (scores.pacingVariety < 0.65) rows.push("Add clearer variation in motion, density, or palette across repeated sections.");
   if (scores.focalClarity < 0.65) rows.push("Improve target hierarchy so the viewer can identify the lead idea quickly.");
+  if (scores.focalHandoffStability < 0.65) rows.push("Stabilize focal handoffs so attention moves deliberately between display regions.");
   if (scores.visualBalance < 0.55) rows.push("Rebalance coverage across the display or explicitly use negative space as an intentional choice.");
   if (scores.colorDiscipline < 0.65) rows.push("Tighten palette choices so color changes support the section instead of reading as noise.");
+  if (scores.palettePurposeCoverage < 0.65) rows.push("Assign clearer color purposes across structure, support motion, focal accents, and background roles.");
   if (scores.localEvidenceReadability < 0.65) rows.push("Make local model detail readable within the whole-display context by reducing clutter or shortening accent windows.");
   if (scores.temporalContinuity < 0.65) rows.push("Smooth adjacent-window changes so motion, color, and coverage shifts feel intentional instead of abrupt.");
   if (scores.qualityConsistency < 0.65) rows.push("Reduce large quality swings between adjacent reviewed windows.");
+  if (scores.fullSequenceContext < 0.65) rows.push("Improve the full-display context, not only the selected candidate pass.");
   return rows;
 }
 
@@ -250,6 +312,7 @@ export function buildVideoAestheticScore({
   const progressionScores = scoreFromProgression(progression);
   const fallbackWindows = eligibleWindows.length >= 2 ? eligibleWindows : windows.filter((row) => row.measurementStatus !== "render_health_observation");
   const basisWindows = selectedEligibleWindows.length ? selectedEligibleWindows : fallbackWindows;
+  const contextWindows = eligibleWindows.length >= 2 ? eligibleWindows : fallbackWindows;
   const motionVariety = rangeScore(basisWindows.map((row) => row.temporalMotionMean), 0.25);
   const colorVariety = rangeScore(basisWindows.map((row) => row.colorDiversityMean), 1);
   const coverageVariety = rangeScore(basisWindows.map((row) => row.activeCoverageMean), 0.08);
@@ -273,8 +336,24 @@ export function buildVideoAestheticScore({
   const colorDiscipline = Number.isFinite(paletteRoleDiscipline)
     ? Math.max(renderColorDiscipline, paletteRoleDiscipline)
     : renderColorDiscipline;
+  const allColorPurposes = [...new Set(basisWindows.flatMap((row) => arr(passMetadata.get(row.passId)?.colorPurposes)))];
+  const palettePurposeCoverage = present(palettePurposeCoverageScore(allColorPurposes))
+    ? palettePurposeCoverageScore(allColorPurposes)
+    : 0.5;
+  const contextTemporalContinuity = average([
+    adjacentContinuityScore(contextWindows.map((row) => row.temporalMotionMean), 0.2),
+    adjacentContinuityScore(contextWindows.map((row) => row.colorDiversityMean), 0.65),
+    adjacentContinuityScore(contextWindows.map((row) => row.activeCoverageMean), 0.08),
+    adjacentContinuityScore(contextWindows.map((row) => row.overallQuality), 0.18)
+  ]);
+  const narrativeShape = narrativeShapeScore(progression);
+  const contextQualityConsistency = consistencyScore(contextWindows.map((row) => row.overallQuality));
+  const contextQualityMean = average(contextWindows.map((row) => row.overallQuality));
+  const contextCoverageAdequacy = contextCoverageAdequacyScore(contextWindows);
+  const contextFocalHandoffStability = focalHandoffStabilityScore(contextWindows, progressionScores.transitionFlow);
   const scores = {
     displayEvolution: round6(progressionScores.displayEvolution),
+    narrativeShape: round6(narrativeShape),
     pacingVariety: round6(average([
       progressionScores.pacingVariety,
       motionVariety,
@@ -286,8 +365,10 @@ export function buildVideoAestheticScore({
       average(basisWindows.map((row) => row.transitionQuality))
     ])),
     focalClarity: round6(average(basisWindows.map((row) => row.focalClarity))),
+    focalHandoffStability: round6(contextFocalHandoffStability),
     visualBalance: round6(average(basisWindows.map((row) => row.visualBalance))),
     colorDiscipline: round6(colorDiscipline),
+    palettePurposeCoverage: round6(palettePurposeCoverage),
     motionInterest: round6(average([
       average(basisWindows.map((row) => row.motionCoherence)),
       motionVariety
@@ -297,22 +378,35 @@ export function buildVideoAestheticScore({
     clutterControl: round6(average(basisWindows.map((row) => row.clutterControl))),
     intentMatch: round6(average(basisWindows.map((row) => row.intentMatch))),
     sectionQualityMean: round6(average(basisWindows.map((row) => row.overallQuality))),
-    qualityConsistency: round6(consistencyScore(basisWindows.map((row) => row.overallQuality)))
+    qualityConsistency: round6(consistencyScore(basisWindows.map((row) => row.overallQuality))),
+    fullSequenceContext: round6(average([
+      narrativeShape,
+      progressionScores.transitionFlow,
+      contextTemporalContinuity,
+      contextFocalHandoffStability,
+      contextQualityMean,
+      contextQualityConsistency,
+      contextCoverageAdequacy
+    ]))
   };
-  scores.overallAestheticScore = round6(average([
-    scores.sectionQualityMean,
-    scores.displayEvolution,
-    scores.pacingVariety,
-    scores.transitionFlow,
-    scores.focalClarity,
-    scores.visualBalance,
-    scores.colorDiscipline,
-    scores.motionInterest,
-    scores.temporalContinuity,
-    scores.localEvidenceReadability,
-    scores.clutterControl,
-    scores.intentMatch,
-    scores.qualityConsistency
+  scores.overallAestheticScore = round6(weightedAverage([
+    { value: scores.sectionQualityMean, weight: 1.2 },
+    { value: scores.intentMatch, weight: 1.1 },
+    { value: scores.displayEvolution, weight: 0.9 },
+    { value: scores.narrativeShape, weight: 1.1 },
+    { value: scores.pacingVariety, weight: 1 },
+    { value: scores.transitionFlow, weight: 1.1 },
+    { value: scores.focalClarity, weight: 1 },
+    { value: scores.focalHandoffStability, weight: 1 },
+    { value: scores.visualBalance, weight: 1 },
+    { value: scores.colorDiscipline, weight: 0.8 },
+    { value: scores.palettePurposeCoverage, weight: 0.8 },
+    { value: scores.motionInterest, weight: 1 },
+    { value: scores.temporalContinuity, weight: 1.1 },
+    { value: scores.localEvidenceReadability, weight: 0.8 },
+    { value: scores.clutterControl, weight: 0.8 },
+    { value: scores.qualityConsistency, weight: 0.9 },
+    { value: scores.fullSequenceContext, weight: 1.3 }
   ]));
   const minimumScoredWindows = selectedEligibleWindows.length ? 1 : 2;
   const status = str(fullSequence.status) === "ready" && basisWindows.length >= minimumScoredWindows
@@ -324,10 +418,12 @@ export function buildVideoAestheticScore({
     generatedAt: new Date().toISOString(),
     runRoot: root,
     status,
+    scoringModelVersion: "video_aesthetic_score_model_v2",
     fullSequenceReviewRef: fullPath,
     progressionObservationRef: str(fullSequence.progressionObservationRef),
     windowCount: windows.length,
     scoredWindowCount: basisWindows.length,
+    contextWindowCount: contextWindows.length,
     evidenceEligibleWindowCount: eligibleWindows.length,
     controllerSelectedWindowCount: selectedEligibleWindows.length,
     minimumScoredWindows,
@@ -336,23 +432,36 @@ export function buildVideoAestheticScore({
       : "deterministic_window_metrics_and_progression_observation",
     qualityDimensions: [
       "display_evolution",
+      "narrative_shape",
       "pacing_variety",
       "transition_flow",
       "focal_clarity",
+      "focal_handoff_stability",
       "visual_balance",
       "motion_interest",
       "temporal_continuity",
       "local_evidence_readability",
       "color_discipline",
+      "palette_purpose_coverage",
       "clutter_control",
-      "quality_consistency"
+      "quality_consistency",
+      "full_sequence_context"
     ],
     scoringSignals: {
       localEvidenceWindowCount: localEvidenceWindows.length,
       localEvidenceRoles: [...new Set(localEvidenceWindows.flatMap((row) => arr(passMetadata.get(row.passId)?.localEvidenceRoles)))],
-      colorPurposes: [...new Set(basisWindows.flatMap((row) => arr(passMetadata.get(row.passId)?.colorPurposes)))],
+      colorPurposes: allColorPurposes,
       paletteRoleDiscipline: round6(paletteRoleDiscipline),
+      palettePurposeCoverage: round6(palettePurposeCoverage),
       renderColorDiscipline: round6(renderColorDiscipline),
+      fullSequenceContextInputs: {
+        contextWindowCount: contextWindows.length,
+        contextQualityMean: round6(contextQualityMean),
+        contextQualityConsistency: round6(contextQualityConsistency),
+        contextTemporalContinuity: round6(contextTemporalContinuity),
+        contextCoverageAdequacy: round6(contextCoverageAdequacy),
+        contextFocalHandoffStability: round6(contextFocalHandoffStability)
+      },
       temporalContinuityInputs: {
         temporalMotionMean: basisWindows.map((row) => round6(row.temporalMotionMean)),
         colorDiversityMean: basisWindows.map((row) => round6(row.colorDiversityMean)),

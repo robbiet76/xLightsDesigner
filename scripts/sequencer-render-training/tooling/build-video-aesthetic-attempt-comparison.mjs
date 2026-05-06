@@ -48,16 +48,22 @@ function scoreDeltas(baselineScores = {}, candidateScores = {}) {
   const dimensions = [
     ["overallAestheticScore", "overall_aesthetic_score"],
     ["displayEvolution", "display_evolution"],
+    ["narrativeShape", "narrative_shape"],
     ["pacingVariety", "pacing_variety"],
     ["transitionFlow", "transition_flow"],
     ["focalClarity", "focal_clarity"],
+    ["focalHandoffStability", "focal_handoff_stability"],
     ["visualBalance", "visual_balance"],
     ["colorDiscipline", "color_discipline"],
+    ["palettePurposeCoverage", "palette_purpose_coverage"],
     ["motionInterest", "motion_interest"],
+    ["temporalContinuity", "temporal_continuity"],
+    ["localEvidenceReadability", "local_evidence_readability"],
     ["clutterControl", "clutter_control"],
     ["intentMatch", "intent_match"],
     ["sectionQualityMean", "section_quality_mean"],
-    ["qualityConsistency", "quality_consistency"]
+    ["qualityConsistency", "quality_consistency"],
+    ["fullSequenceContext", "full_sequence_context"]
   ];
   return dimensions.map(([key, dimension]) => {
     const baseline = num(baselineScores[key], NaN);
