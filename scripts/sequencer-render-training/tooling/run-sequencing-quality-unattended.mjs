@@ -294,7 +294,7 @@ export async function runSequencingQualityUnattended({
   maxLoops = 10,
   maxQueue = 25,
   maxPasses = 5,
-  maxConsecutiveRegressions = 3,
+  maxConsecutiveRegressions = 1,
   maxRepeatedGoalCount = 6,
   applyRender = true,
   endpoint = DEFAULT_ENDPOINT,
@@ -492,7 +492,7 @@ function parseArgs(argv = []) {
     maxLoops: 10,
     maxQueue: 25,
     maxPasses: 5,
-    maxConsecutiveRegressions: 3,
+    maxConsecutiveRegressions: 1,
     maxRepeatedGoalCount: 6,
     applyRender: true,
     endpoint: DEFAULT_ENDPOINT,
@@ -535,7 +535,7 @@ function usage() {
     --model-catalog /tmp/xld-vendor-fixture-model-catalog.json \\
     --max-loops 20 \\
     --max-passes 5 \\
-    --max-consecutive-regressions 3 \\
+    --max-consecutive-regressions 1 \\
     --max-auto-refills 4
 `;
 }

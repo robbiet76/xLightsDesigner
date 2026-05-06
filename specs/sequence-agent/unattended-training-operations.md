@@ -88,9 +88,14 @@ node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended
   --max-loops 20 \
   --max-queue 10 \
   --max-passes 6 \
-  --max-consecutive-regressions 3 \
+  --max-consecutive-regressions 1 \
   --max-repeated-goal-count 6
 ```
+
+Quality-improvement runs should stop on the first meaningful regression so the
+agent can inspect and adjust scoring, curriculum, or generation behavior before
+spending additional render time. Broader exploratory sweeps may explicitly raise
+`--max-consecutive-regressions` when the goal is discovery rather than promotion.
 
 ## Review Output
 
