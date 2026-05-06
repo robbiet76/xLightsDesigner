@@ -19,6 +19,19 @@ The automation loop is self-improving inside curriculum boundaries. It may choos
 the next best pass from prior results, but the goals, promotion criteria, and
 coverage expectations are explicit.
 
+Training must not optimize for one universal aesthetic average. Good sequencing
+depends on the song, section, style, model role, and requested design intent.
+Metrics should therefore be interpreted as ranges that support a design goal,
+not as a single recipe. A low-density neutral look may be valid for quiet support
+and invalid for a chorus impact moment; a bright dense look may be valid for a
+finale and invalid for a lyric stop.
+
+The curriculum should preserve multiple valid candidates for the same intent
+when they differ meaningfully in effect family, target choice, timing, color,
+motion, density, or focal path. Promotion should favor "valid inside the intent
+range and sufficiently different from recent choices," not just the highest
+single score.
+
 Each loop should:
 
 1. Read curriculum goals and controller state.
@@ -30,6 +43,79 @@ Each loop should:
 6. Delete summarized intermediate media and temporary sequence files.
 7. Queue the next loop from blocked-promising records, regressions, or coverage
    gaps.
+
+## Evidence Hierarchy
+
+The durable training stack has four levels. Lower levels are necessary, but they
+do not prove sequence quality by themselves.
+
+1. **Effect-level evidence**
+   Effect-level training maps capabilities: visibility, motion type, fill,
+   texture, color behavior, setting sensitivity, and geometry fit. It answers
+   whether an effect/settings range can produce a useful visual behavior on a
+   target. It must not be promoted as a final sequencing choice without broader
+   context.
+
+2. **Composition-level evidence**
+   Composition training evaluates layers, groups, models, submodels, timing
+   offsets, blend behavior, color purpose, brightness hierarchy, and target
+   handoffs. This is the first level where the system can judge whether several
+   selected models/layers/effects read coherently together.
+
+3. **Section-level evidence**
+   Section training evaluates a song section or design window as an ordered
+   whole-display render. It must score intent fit, style fit, energy range,
+   visual presence, focal hierarchy, color story, motion variety, negative
+   space, and transition quality across all selected models/layers/effects in
+   the section.
+
+4. **Full-sequence evidence**
+   Full-sequence training evaluates the complete sequence arc: motifs,
+   development, repeated-section variation, chorus lift, verse restraint, lyric
+   moments, feature moments, color progression, finale payoff, and avoidance of
+   predictable reuse. This is the primary evidence for human-level sequencing.
+
+Promotion rules should weight larger context more heavily. A strong single
+effect score can only create a capability prior. A strong section or full
+sequence score can promote sequencing behavior. If lower-level and higher-level
+evidence conflict, the higher-level rendered sequence result wins.
+
+## Metric Scope
+
+Every metric should declare its scope:
+
+- `effect_capability`: one effect on one target or submodel.
+- `layer_stack`: multiple layers on the same target.
+- `target_composition`: multiple targets, groups, or submodels in one design
+  window.
+- `section_render`: all selected models/layers/effects for a song section.
+- `full_sequence_render`: the complete rendered sequence or a representative
+  multi-section excerpt.
+
+Effect-level metrics can support planning and candidate generation, but the
+controller must not treat them as proof of quality sequencing. Quality gates for
+creative generation should require section-level or full-sequence evidence
+unless the goal is explicitly a low-level capability probe.
+
+The sequence-level score should be multi-axis, not a single taste function:
+
+- intent match
+- style match
+- technical render quality
+- visibility and presence
+- energy fit for the song section
+- color purpose and color richness where appropriate
+- composition readability across the selected display elements
+- musical alignment
+- transition quality
+- novelty and non-repetition
+- sequence progression
+- targeted repair need
+
+Visibility, color, brightness, density, and neutrality should be judged against
+the design intent range. The system should penalize effects that disappear when
+presence is required, and it should also penalize over-bright or over-dense
+effects when restraint is required.
 
 ## Curriculum Areas
 
@@ -52,6 +138,32 @@ Each loop should:
 - Creative revision comparison: learn whether a targeted before/after revision
   actually improves the requested intent without reducing readability or adding
   clutter.
+
+## Human-Level Sequencing Path
+
+The remaining curriculum should move from mechanics toward full sequence
+generation in this order:
+
+1. Stabilize measurement reliability and artifact cleanup.
+2. Expand effect capability ranges without treating them as final answers.
+3. Map model and submodel roles from display metadata and render evidence.
+4. Train layer and target composition across multiple selected elements.
+5. Add intent-conditioned section scoring for verse support, chorus impact,
+   builds, drops/stops, transitions, lyric hits, focal features, spectacle, and
+   finale moments.
+6. Add style-conditioned scoring so the same section can be valid in clean,
+   classic, dense, minimal, playful, symmetric, aggressive, ambient, color-rich,
+   or prop-feature styles.
+7. Preserve multiple passing candidates per intent/style and score novelty
+   against recent selections.
+8. Train multi-section musical structure: repeated motifs, section variation,
+   energy progression, and section-to-section handoff.
+9. Train full-sequence generation and full-sequence video review.
+10. Add self-review and repair for problems such as too dim, too neutral, too
+    cluttered, too repetitive, too random, weak chorus impact, weak lyric hit,
+    missing model roles, poor color story, and style mismatch.
+11. Add project-local adaptation so user displays and custom models learn from
+    their own metadata, submodels, accepted outputs, and render history.
 
 ## Initial Goal Order
 
