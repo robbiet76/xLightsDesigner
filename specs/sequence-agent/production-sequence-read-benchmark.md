@@ -126,6 +126,22 @@ vocabulary, target usage, and timeline coverage. This validates that the system
 can read the sequence as a complete composition before spending time on video
 render analysis.
 
+Rendered calibration:
+
+```bash
+python3 scripts/sequencer-render-training/tooling/run-mature-sequence-calibration.py \
+  --manifest var/benchmarks/production-sequence-read/manifest.json \
+  --max-sequences 1 \
+  --window opening \
+  --out-dir var/benchmarks/production-sequence-read/rendered-calibration
+```
+
+Rendered calibration reconstructs display preview-scene windows from existing
+`.fseq` output, then extracts render, composition, progression, and critique
+observations. This is the first visual read layer: it evaluates what the viewer
+would see in selected sequence windows while remaining read-only with respect to
+the source show folder.
+
 ## Relationship To Training
 
 Generated render training remains the place where the system experiments.
