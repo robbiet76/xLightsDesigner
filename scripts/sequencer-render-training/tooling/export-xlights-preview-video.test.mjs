@@ -27,6 +27,7 @@ test("exportXLightsPreviewVideo opens, renders, and exports via xLights automati
   };
 
   const artifact = await exportXLightsPreviewVideo({
+    apiMode: "legacy",
     xlightsBaseUrl: "http://127.0.0.1:49914/",
     sequence: sequencePath,
     out: videoPath,
@@ -49,6 +50,63 @@ test("exportXLightsPreviewVideo opens, renders, and exports via xLights automati
   assert.equal(persisted.steps.length, 3);
 });
 
+test("exportXLightsPreviewVideo defaults to the owned xLightsDesigner API", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-preview-video-owned-"));
+  const stagingDir = path.join(root, "xlights-staging");
+  const sequencePath = path.join(root, "Sequence.xsq");
+  const finalVideoPath = path.join(root, "artifacts", "Sequence.mp4");
+  writeFile(sequencePath, "<xsequence/>");
+
+  let jobCounter = 0;
+  const calls = [];
+  const fetchImpl = async (url, options = {}) => {
+    const route = new URL(String(url)).pathname.replace("/xlightsdesigner/api", "");
+    const body = options.body ? JSON.parse(String(options.body)) : null;
+    calls.push({ route, body });
+    if (route === "/sequence/open") {
+      jobCounter += 1;
+      return { ok: true, text: async () => JSON.stringify({ ok: true, data: { jobId: `job-${jobCounter}` } }) };
+    }
+    if (route === "/sequence/export-preview-video") {
+      jobCounter += 1;
+      writeFile(body.file, "mp4");
+      return { ok: true, text: async () => JSON.stringify({ ok: true, data: { jobId: `job-${jobCounter}` } }) };
+    }
+    if (route === "/jobs/get") {
+      return {
+        ok: true,
+        text: async () => JSON.stringify({
+          ok: true,
+          data: {
+            state: "succeeded",
+            result: { ok: true, data: { exported: true } }
+          }
+        })
+      };
+    }
+    throw new Error(`Unexpected route: ${route}`);
+  };
+
+  const artifact = await exportXLightsPreviewVideo({
+    xlightsEndpoint: "http://127.0.0.1:49915/xlightsdesigner/api/",
+    sequence: sequencePath,
+    out: finalVideoPath,
+    xlightsStagingDir: stagingDir,
+    fetchImpl
+  });
+
+  assert.equal(fs.readFileSync(finalVideoPath, "utf8"), "mp4");
+  assert.equal(artifact.source.apiMode, "owned");
+  assert.equal(artifact.source.xlightsEndpoint, "http://127.0.0.1:49915/xlightsdesigner/api");
+  assert.deepEqual(
+    calls.filter((call) => call.route !== "/jobs/get").map((call) => call.route),
+    ["/sequence/open", "/sequence/export-preview-video"]
+  );
+  assert.equal(calls[0].body.file, sequencePath);
+  assert.equal(calls[2].body.renderFirst, true);
+  assert.equal(artifact.steps.at(-1).command, "copyStagedPreviewVideo");
+});
+
 test("exportXLightsPreviewVideo can export the currently open sequence", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-preview-video-current-"));
   const videoPath = path.join(root, "Current.mp4");
@@ -59,6 +117,7 @@ test("exportXLightsPreviewVideo can export the currently open sequence", async (
   };
 
   await exportXLightsPreviewVideo({
+    apiMode: "legacy",
     xlightsBaseUrl: "http://127.0.0.1:49914",
     skipOpen: true,
     skipRender: true,
@@ -84,6 +143,7 @@ test("exportXLightsPreviewVideo accepts legacy openSequence metadata response", 
   };
 
   const artifact = await exportXLightsPreviewVideo({
+    apiMode: "legacy",
     xlightsBaseUrl: "http://127.0.0.1:49914",
     sequence: sequencePath,
     out: videoPath,
@@ -109,6 +169,7 @@ test("exportXLightsPreviewVideo treats already-open sequence as open", async () 
   };
 
   const artifact = await exportXLightsPreviewVideo({
+    apiMode: "legacy",
     xlightsBaseUrl: "http://127.0.0.1:49914",
     sequence: sequencePath,
     out: videoPath,
@@ -137,6 +198,7 @@ test("exportXLightsPreviewVideo accepts legacy render and export success respons
   };
 
   const artifact = await exportXLightsPreviewVideo({
+    apiMode: "legacy",
     xlightsBaseUrl: "http://127.0.0.1:49914",
     sequence: sequencePath,
     out: videoPath,
@@ -162,6 +224,7 @@ test("exportXLightsPreviewVideo times out blocked automation calls", async () =>
 
   await assert.rejects(
     () => exportXLightsPreviewVideo({
+      apiMode: "legacy",
       xlightsBaseUrl: "http://127.0.0.1:49914",
       sequence: sequencePath,
       out: videoPath,
@@ -195,6 +258,7 @@ test("exportXLightsPreviewVideo stages in an xLights-writable directory and copi
   };
 
   const artifact = await exportXLightsPreviewVideo({
+    apiMode: "legacy",
     xlightsBaseUrl: "http://127.0.0.1:49914",
     sequence: sequencePath,
     out: finalVideoPath,

@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+const DEFAULT_API_MODE = process.env.XLIGHTS_PREVIEW_VIDEO_API_MODE || "owned";
+const DEFAULT_XLIGHTS_ENDPOINT = process.env.XLIGHTS_ENDPOINT || "http://127.0.0.1:49915/xlightsdesigner/api";
 const DEFAULT_XLIGHTS_BASE_URL = process.env.XLIGHTS_BASE_URL || "http://127.0.0.1:49914";
 const DEFAULT_AUTOMATION_TIMEOUT_MS = 5 * 60 * 1000;
 const DEFAULT_XLIGHTS_STAGING_DIR = process.env.XLIGHTS_PREVIEW_VIDEO_STAGING_DIR
@@ -29,6 +31,8 @@ function resolvePath(value = "") {
 
 function parseArgs(argv = []) {
   const args = {
+    apiMode: DEFAULT_API_MODE,
+    xlightsEndpoint: DEFAULT_XLIGHTS_ENDPOINT,
     xlightsBaseUrl: DEFAULT_XLIGHTS_BASE_URL,
     sequence: "",
     out: "",
@@ -41,7 +45,9 @@ function parseArgs(argv = []) {
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = str(argv[index]);
-    if (arg === "--xlights-base-url") args.xlightsBaseUrl = str(argv[++index]);
+    if (arg === "--api-mode") args.apiMode = str(argv[++index]);
+    else if (arg === "--xlights-endpoint") args.xlightsEndpoint = str(argv[++index]);
+    else if (arg === "--xlights-base-url") args.xlightsBaseUrl = str(argv[++index]);
     else if (arg === "--sequence") args.sequence = str(argv[++index]);
     else if (arg === "--out") args.out = str(argv[++index]);
     else if (arg === "--artifact") args.artifact = str(argv[++index]);
@@ -64,6 +70,8 @@ function usage() {
     --artifact var/benchmarks/sequence-preview-video.json
 
 Options:
+  --api-mode owned|legacy   API path to use. Default: ${DEFAULT_API_MODE}
+  --xlights-endpoint <url>  Owned xLightsDesigner API endpoint. Default: ${DEFAULT_XLIGHTS_ENDPOINT}
   --xlights-base-url <url>  xLights legacy automation base URL. Default: ${DEFAULT_XLIGHTS_BASE_URL}
   --skip-open              Export the currently open sequence.
   --skip-render            Export without running renderAll first.
@@ -140,7 +148,116 @@ export async function callXLightsAutomation(xlightsBaseUrl, payload, {
   return parseAutomationResponse(await response.text(), command);
 }
 
+function normalizeEndpoint(endpoint = "") {
+  const base = str(endpoint).replace(/\/+$/, "");
+  if (!base) throw new Error("Owned xLightsDesigner API endpoint is required");
+  return base;
+}
+
+async function callOwnedApi(endpoint, route, {
+  method = "GET",
+  body = null,
+  fetchImpl = globalThis.fetch,
+  timeoutMs = DEFAULT_AUTOMATION_TIMEOUT_MS,
+  allowError = false
+} = {}) {
+  if (typeof fetchImpl !== "function") {
+    throw new Error("fetch is unavailable");
+  }
+  const controller = typeof AbortController === "function" ? new AbortController() : null;
+  const timeout = Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0
+    ? setTimeout(() => controller?.abort(), Number(timeoutMs))
+    : null;
+  let response;
+  try {
+    response = await fetchImpl(`${normalizeEndpoint(endpoint)}${route}`, {
+      method,
+      headers: body == null ? undefined : { "Content-Type": "application/json" },
+      body: body == null ? undefined : JSON.stringify(body),
+      signal: controller?.signal
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`${method} ${route} timed out after ${timeoutMs}ms; xLights may be blocked by a modal or long-running export.`);
+    }
+    throw error;
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+  const text = await response.text();
+  let json = {};
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch (error) {
+    throw new Error(`${method} ${route} returned invalid JSON: ${error.message}`);
+  }
+  if (!allowError && (!response.ok || json?.ok === false)) {
+    const code = json?.error?.code || response.status;
+    const message = json?.error?.message || response.statusText || "Request failed";
+    throw new Error(`${method} ${route} failed (${code}): ${message}`);
+  }
+  return json;
+}
+
+function ownedJobState(payload = {}) {
+  const state = str(payload?.data?.state || payload?.state).toLowerCase();
+  return state === "succeeded" ? "completed" : state;
+}
+
+function ownedJobResult(payload = {}) {
+  return payload?.data?.result || payload?.result || payload;
+}
+
+async function waitForOwnedJob(endpoint, jobId, {
+  fetchImpl = globalThis.fetch,
+  timeoutMs = DEFAULT_AUTOMATION_TIMEOUT_MS
+} = {}) {
+  const started = Date.now();
+  let last = null;
+  for (;;) {
+    const payload = await callOwnedApi(endpoint, `/jobs/get?jobId=${encodeURIComponent(jobId)}`, {
+      fetchImpl,
+      timeoutMs: Math.min(timeoutMs, 30000),
+      allowError: true
+    });
+    last = payload;
+    const state = ownedJobState(payload);
+    const result = ownedJobResult(payload);
+    if (state === "completed") {
+      if (result?.ok === false) {
+        throw new Error(`Owned API job ${jobId} completed with failed result: ${JSON.stringify(result)}`);
+      }
+      return { payload, result };
+    }
+    if (state === "failed") {
+      throw new Error(`Owned API job ${jobId} failed: ${JSON.stringify(payload)}`);
+    }
+    if (Date.now() - started > timeoutMs) {
+      throw new Error(`Timed out waiting for owned API job ${jobId}. Last response: ${JSON.stringify(last)}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+}
+
+async function postOwnedJob(endpoint, route, body, {
+  fetchImpl = globalThis.fetch,
+  timeoutMs = DEFAULT_AUTOMATION_TIMEOUT_MS
+} = {}) {
+  const accepted = await callOwnedApi(endpoint, route, {
+    method: "POST",
+    body,
+    fetchImpl,
+    timeoutMs
+  });
+  const jobId = str(accepted?.data?.jobId);
+  if (!jobId) throw new Error(`${route} returned no jobId: ${JSON.stringify(accepted)}`);
+  const settled = await waitForOwnedJob(endpoint, jobId, { fetchImpl, timeoutMs });
+  return { accepted, settled };
+}
+
 export async function exportXLightsPreviewVideo(options = {}) {
+  const apiMode = str(options.apiMode || DEFAULT_API_MODE).toLowerCase();
+  const xlightsEndpoint = normalizeEndpoint(options.xlightsEndpoint || DEFAULT_XLIGHTS_ENDPOINT);
   const xlightsBaseUrl = str(options.xlightsBaseUrl || DEFAULT_XLIGHTS_BASE_URL);
   const sequencePath = options.sequence ? resolvePath(options.sequence) : "";
   const outputPath = resolvePath(options.out);
@@ -160,27 +277,45 @@ export async function exportXLightsPreviewVideo(options = {}) {
 
   const steps = [];
   const fetchImpl = options.fetchImpl || globalThis.fetch;
-  if (!options.skipOpen) {
-    const response = await callXLightsAutomation(xlightsBaseUrl, {
-      cmd: "openSequence",
-      seq: sequencePath,
-      force: true,
-      promptIssues: false
+  if (apiMode === "owned") {
+    if (!options.skipOpen) {
+      const response = await postOwnedJob(xlightsEndpoint, "/sequence/open", {
+        file: sequencePath,
+        force: true,
+        promptIssues: false
+      }, { fetchImpl, timeoutMs: automationTimeoutMs });
+      steps.push({ command: "sequence.open", ok: true, response });
+    }
+    const response = await postOwnedJob(xlightsEndpoint, "/sequence/export-preview-video", {
+      file: xlightsOutputPath,
+      renderFirst: !options.skipRender
     }, { fetchImpl, timeoutMs: automationTimeoutMs });
-    steps.push({ command: "openSequence", ok: true, response });
-  }
-  if (!options.skipRender) {
-    const response = await callXLightsAutomation(xlightsBaseUrl, {
-      cmd: "renderAll",
-      highdef: options.highdef !== false
+    steps.push({ command: "sequence.exportPreviewVideo", ok: true, response });
+  } else if (apiMode === "legacy") {
+    if (!options.skipOpen) {
+      const response = await callXLightsAutomation(xlightsBaseUrl, {
+        cmd: "openSequence",
+        seq: sequencePath,
+        force: true,
+        promptIssues: false
+      }, { fetchImpl, timeoutMs: automationTimeoutMs });
+      steps.push({ command: "openSequence", ok: true, response });
+    }
+    if (!options.skipRender) {
+      const response = await callXLightsAutomation(xlightsBaseUrl, {
+        cmd: "renderAll",
+        highdef: options.highdef !== false
+      }, { fetchImpl, timeoutMs: automationTimeoutMs });
+      steps.push({ command: "renderAll", ok: true, response });
+    }
+    const exportResponse = await callXLightsAutomation(xlightsBaseUrl, {
+      cmd: "exportVideoPreview",
+      filename: xlightsOutputPath
     }, { fetchImpl, timeoutMs: automationTimeoutMs });
-    steps.push({ command: "renderAll", ok: true, response });
+    steps.push({ command: "exportVideoPreview", ok: true, response: exportResponse });
+  } else {
+    throw new Error(`Unsupported --api-mode: ${apiMode}`);
   }
-  const exportResponse = await callXLightsAutomation(xlightsBaseUrl, {
-    cmd: "exportVideoPreview",
-    filename: xlightsOutputPath
-  }, { fetchImpl, timeoutMs: automationTimeoutMs });
-  steps.push({ command: "exportVideoPreview", ok: true, response: exportResponse });
   if (xlightsOutputPath !== outputPath) {
     if (!fs.existsSync(xlightsOutputPath)) {
       throw new Error(`xLights export reported success but staged MP4 was not found: ${xlightsOutputPath}`);
@@ -197,6 +332,8 @@ export async function exportXLightsPreviewVideo(options = {}) {
     readFormat: "house_preview_mp4_with_sequence_audio_when_present",
     source: {
       sequencePath,
+      apiMode,
+      xlightsEndpoint: apiMode === "owned" ? xlightsEndpoint : null,
       xlightsBaseUrl
     },
     output: {
