@@ -30,6 +30,8 @@ Build the manifest with:
 ```bash
 python3 scripts/sequencer-render-training/tooling/build-mature-sequence-benchmark-manifest.py \
   --show-root /path/to/production/show/root \
+  --benchmark-metadata var/benchmarks/production-sequence-read/benchmark-metadata.json \
+  --exclude-folder Test \
   --out var/benchmarks/production-sequence-read/manifest.json
 ```
 
@@ -41,6 +43,31 @@ node scripts/sequencer-render-training/tooling/validate-production-sequence-benc
 ```
 
 The manifest artifact is `production_sequence_read_benchmark_manifest_v1`.
+The `--benchmark-metadata` file is optional. Without it, sequences are included
+with neutral annotations: no inferred style tags and no initial audit subset.
+Use metadata when a human wants to mark style tags, initial review subsets,
+folder exclusions, or known calibration notes. Folder exclusions can also be
+passed with repeated `--exclude-folder` arguments. The builder must not infer
+style or quality fields from sequence folder names.
+
+Example metadata:
+
+```json
+{
+  "initialAuditSubset": ["SequenceA"],
+  "sequences": {
+    "SequenceA": {
+      "styleTags": ["dramatic", "high_energy"],
+      "humanReview": {
+        "status": "pending",
+        "notes": "Use for section contrast calibration.",
+        "knownStrengths": [],
+        "knownWeaknesses": []
+      }
+    }
+  }
+}
+```
 
 ## Read Goals
 
