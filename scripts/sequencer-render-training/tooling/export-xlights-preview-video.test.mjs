@@ -92,6 +92,34 @@ test("exportXLightsPreviewVideo accepts legacy openSequence metadata response", 
   assert.equal(artifact.steps[0].response.fullseq, sequencePath);
 });
 
+test("exportXLightsPreviewVideo accepts legacy render and export success responses", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-preview-video-legacy-success-"));
+  const sequencePath = path.join(root, "Sequence.xsq");
+  const videoPath = path.join(root, "Sequence.mp4");
+  writeFile(sequencePath, "<xsequence/>");
+  const fetchImpl = async (_url, options = {}) => {
+    const body = JSON.parse(String(options.body || "{}"));
+    if (body.cmd === "openSequence") {
+      return { text: async () => JSON.stringify({ seq: "Sequence", fullseq: sequencePath }) };
+    }
+    if (body.cmd === "renderAll") {
+      return { text: async () => JSON.stringify({ msg: "Rendered." }) };
+    }
+    return { text: async () => JSON.stringify({ msg: "Export Video Preview.", output: videoPath }) };
+  };
+
+  const artifact = await exportXLightsPreviewVideo({
+    xlightsBaseUrl: "http://127.0.0.1:49914",
+    sequence: sequencePath,
+    out: videoPath,
+    fetchImpl
+  });
+
+  assert.equal(artifact.steps[1].response.res, 200);
+  assert.equal(artifact.steps[2].response.res, 200);
+  assert.equal(artifact.steps[2].response.output, videoPath);
+});
+
 test("exportXLightsPreviewVideo times out blocked automation calls", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-preview-video-timeout-"));
   const sequencePath = path.join(root, "Sequence.xsq");

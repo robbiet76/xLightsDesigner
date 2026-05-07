@@ -81,6 +81,12 @@ function parseAutomationResponse(text, command) {
   if (command === "openSequence" && str(json?.fullseq)) {
     return { res: 200, ...json };
   }
+  if (command === "renderAll" && /^rendered\.?$/i.test(str(json?.msg))) {
+    return { res: 200, ...json };
+  }
+  if (command === "exportVideoPreview" && str(json?.output)) {
+    return { res: 200, ...json };
+  }
   if (Number(json?.res) !== 200) {
     throw new Error(`${command} failed (${json?.res || "UNKNOWN"}): ${json?.msg || JSON.stringify(json)}`);
   }
