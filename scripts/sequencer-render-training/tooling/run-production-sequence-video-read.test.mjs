@@ -15,6 +15,10 @@ function writeJson(filePath, payload) {
   writeFile(filePath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
+function editableSequenceXml() {
+  return `<xsequence><ElementEffects><Element type="model" name="Arch"><EffectLayer><Effect name="Bars" startTime="0" endTime="1000"/></EffectLayer></Element></ElementEffects></xsequence>`;
+}
+
 function frameFeatures(mediaPath, startMs = 0, endMs = 10000) {
   return {
     artifactType: "render_review_frame_features_v1",
@@ -100,7 +104,7 @@ test("runProductionSequenceVideoRead exports video, extracts compact features, a
   const xsqPath = path.join(sequenceDir, "Song.xsq");
   const manifestPath = path.join(root, "manifest.json");
   const outDir = path.join(root, "out");
-  writeFile(xsqPath, "<xsequence/>");
+  writeFile(xsqPath, editableSequenceXml());
   writeJson(manifestPath, {
     artifactType: "production_sequence_read_benchmark_manifest_v1",
     artifactVersion: 1,
@@ -163,7 +167,7 @@ test("runProductionSequenceVideoRead can reuse an existing video without exporti
   const xsqPath = path.join(sequenceDir, "Song.xsq");
   const outDir = path.join(root, "out");
   const manifestPath = path.join(root, "manifest.json");
-  writeFile(xsqPath, "<xsequence/>");
+  writeFile(xsqPath, editableSequenceXml());
   writeFile(path.join(outDir, "videos", "song.mp4"), "mp4");
   writeJson(manifestPath, {
     artifactType: "production_sequence_read_benchmark_manifest_v1",
@@ -206,8 +210,8 @@ test("runProductionSequenceVideoRead reuses existing videos and exports missing 
   const manifestPath = path.join(root, "manifest.json");
   const firstXsq = path.join(showDir, "First", "First.xsq");
   const secondXsq = path.join(showDir, "Second", "Second.xsq");
-  writeFile(firstXsq, "<xsequence/>");
-  writeFile(secondXsq, "<xsequence/>");
+  writeFile(firstXsq, editableSequenceXml());
+  writeFile(secondXsq, editableSequenceXml());
   writeFile(path.join(outDir, "videos", "first.mp4"), "mp4");
   writeJson(manifestPath, {
     artifactType: "production_sequence_read_benchmark_manifest_v1",
@@ -250,7 +254,7 @@ test("runProductionSequenceVideoRead marks static full-sequence preview video as
   const xsqPath = path.join(sequenceDir, "StaticSong.xsq");
   const outDir = path.join(root, "out");
   const manifestPath = path.join(root, "manifest.json");
-  writeFile(xsqPath, "<xsequence/>");
+  writeFile(xsqPath, editableSequenceXml());
   writeFile(path.join(outDir, "videos", "staticsong.mp4"), "mp4");
   writeJson(manifestPath, {
     artifactType: "production_sequence_read_benchmark_manifest_v1",
@@ -283,4 +287,42 @@ test("runProductionSequenceVideoRead marks static full-sequence preview video as
   assert.equal(summary.rows[0].renderReviewPath, "");
   assert.equal(summary.rows[0].overallQuality, null);
   assert.equal(summary.rows[0].decision, "invalid_export");
+});
+
+test("runProductionSequenceVideoRead rejects source xsq files with no editable effects before export", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-production-video-read-empty-source-"));
+  const sequenceDir = path.join(root, "Show", "EmptySong");
+  const xsqPath = path.join(sequenceDir, "EmptySong.xsq");
+  const manifestPath = path.join(root, "manifest.json");
+  writeFile(xsqPath, "<xsequence><ElementEffects></ElementEffects></xsequence>");
+  writeJson(manifestPath, {
+    artifactType: "production_sequence_read_benchmark_manifest_v1",
+    artifactVersion: 1,
+    readOnly: true,
+    sequences: [{
+      sequenceId: "EmptySong",
+      readOnly: true,
+      benchmarkUse: "production_sequence_read_calibration",
+      xsq: { path: xsqPath },
+      readGoals: []
+    }]
+  });
+
+  const summary = await runProductionSequenceVideoRead({
+    manifestPath,
+    outDir: path.join(root, "out"),
+    deps: {
+      exportVideo: async () => {
+        throw new Error("export should not be called for empty source sequence");
+      },
+      extractMedia: () => {
+        throw new Error("media extraction should not run for empty source sequence");
+      }
+    }
+  });
+
+  assert.equal(summary.rows[0].status, "invalid_source_sequence");
+  assert.equal(summary.rows[0].invalidReasonCode, "NO_EDITABLE_EFFECTS");
+  assert.equal(summary.rows[0].sourceSequence.namedEffectCount, 0);
+  assert.equal(summary.rows[0].exportMode, "not_exported");
 });

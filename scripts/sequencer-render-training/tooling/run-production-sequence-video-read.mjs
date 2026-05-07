@@ -44,6 +44,12 @@ function writeJson(filePath, payload) {
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
+function readTextIfExists(filePath = "") {
+  const resolved = resolvePath(filePath);
+  if (!resolved || !fs.existsSync(resolved)) return "";
+  return fs.readFileSync(resolved, "utf8");
+}
+
 function parseArgs(argv = []) {
   const args = {
     manifestPath: "",
@@ -140,6 +146,42 @@ function buildFullSequenceIntent(sequence = {}) {
   };
 }
 
+function sourceSequenceSummary(sequence = {}) {
+  const xsqPath = resolvePath(sequence?.xsq?.path);
+  const text = readTextIfExists(xsqPath);
+  const effectTagCount = (text.match(/<Effect\b/g) || []).length;
+  const namedEffectCount = (text.match(/<Effect\b[^>]*\bname=/g) || []).length;
+  return {
+    xsqPath,
+    effectTagCount,
+    namedEffectCount,
+    hasEditableEffects: namedEffectCount > 0
+  };
+}
+
+function invalidSourceRow(sequence = {}, summary = {}, reason = {}) {
+  const sequenceId = str(sequence.sequenceId || sequence.folderName || path.basename(str(sequence.folderPath)));
+  return {
+    sequenceId,
+    status: "invalid_source_sequence",
+    invalidReasonCode: reason.code,
+    invalidReason: reason.message,
+    sourceSequence: summary,
+    videoPath: "",
+    exportArtifactPath: "",
+    renderReviewPath: "",
+    frameFeaturesPath: "",
+    contactSheetPath: "",
+    sampledFrameCount: 0,
+    nonBlankSampledFrameRatio: 0,
+    temporalMotionMean: 0,
+    temporalPixelDeltaMean: 0,
+    overallQuality: null,
+    decision: "invalid_source_sequence",
+    exportMode: "not_exported"
+  };
+}
+
 function previewVideoValidity(frameFeatures = {}) {
   const sampledFrameCount = num(frameFeatures.sampledFrameCount);
   const nonBlankRatio = num(frameFeatures.nonBlankSampledFrameRatio);
@@ -174,6 +216,13 @@ async function processSequence(sequence = {}, {
   deps = {}
 } = {}) {
   const sequenceId = str(sequence.sequenceId || sequence.folderName || path.basename(str(sequence.folderPath)));
+  const sourceSummary = sourceSequenceSummary(sequence);
+  if (!sourceSummary.hasEditableEffects) {
+    return invalidSourceRow(sequence, sourceSummary, {
+      code: "NO_EDITABLE_EFFECTS",
+      message: "Source .xsq contains no named effects, so House Preview video export is not valid sequence evidence."
+    });
+  }
   const baseName = slug(sequenceId);
   const sequenceDir = path.join(outDir, baseName);
   const videoDir = path.join(outDir, "videos");
@@ -233,7 +282,8 @@ async function processSequence(sequence = {}, {
       temporalPixelDeltaMean: num(frameFeatures.temporalPixelDeltaMean),
       overallQuality: null,
       decision: "invalid_export",
-      exportMode: shouldExport ? str(exportArtifact?.source?.apiMode || "owned") : "existing_video"
+      exportMode: shouldExport ? str(exportArtifact?.source?.apiMode || "owned") : "existing_video",
+      sourceSequence: sourceSummary
     };
   }
   const intent = buildFullSequenceIntent(sequence);
@@ -276,6 +326,7 @@ async function processSequence(sequence = {}, {
     sampledFrameCount: num(media.sampledFrameCount),
     nonBlankSampledFrameRatio: num(media.nonBlankSampledFrameRatio),
     temporalMotionMean: num(media.temporalMotionMean),
+    sourceSequence: sourceSummary,
     overallQuality: num(review.qualityScores?.overallQuality),
     decision: str(review.critique?.decision),
     exportMode: shouldExport ? str(exportArtifact?.source?.apiMode || "owned") : "existing_video"
