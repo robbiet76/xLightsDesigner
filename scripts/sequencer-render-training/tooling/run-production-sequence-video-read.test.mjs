@@ -37,6 +37,7 @@ function frameFeatures(mediaPath, startMs = 0, endMs = 10000) {
     temporalUniqueColorDeltaMean: 3,
     temporalColorDeltaMean: 0.05,
     temporalMotionMean: 0.045,
+    temporalPixelDeltaMean: 0.04,
     temporalMotionPeak: 0.08,
     temporalSignature: "moderate_motion",
     representativeSampledFrameIndex: 1,
@@ -60,6 +61,36 @@ function frameFeatures(mediaPath, startMs = 0, endMs = 10000) {
       { fromFrameIndex: 1, toFrameIndex: 2, brightnessDelta: 0.02, activeDelta: 0.02, dominantDelta: 0.01, uniqueColorDelta: 4, colorDelta: 0.09, combinedDelta: 0.05 },
       { fromFrameIndex: 2, toFrameIndex: 3, brightnessDelta: 0.04, activeDelta: 0.02, dominantDelta: 0, uniqueColorDelta: 4, colorDelta: 0.1, combinedDelta: 0.06 }
     ]
+  };
+}
+
+function staticFrameFeatures(mediaPath) {
+  const features = frameFeatures(mediaPath, 0, 120000);
+  return {
+    ...features,
+    mediaDurationSeconds: 120,
+    sampledFrameCount: 4,
+    nonBlankSampledFrameCount: 4,
+    nonBlankSampledFrameRatio: 1,
+    temporalMotionMean: 0,
+    temporalPixelDeltaMean: 0,
+    temporalSignature: "static_or_near_static",
+    sampledFrameMetrics: features.sampledFrameMetrics.map((row) => ({
+      ...row,
+      frameAverageBrightness: 0.1,
+      frameActivePixelRatio: 0.2,
+      framePixelDeltaFromPrevious: 0
+    })),
+    sampledFrameTransitions: features.sampledFrameTransitions.map((row) => ({
+      ...row,
+      brightnessDelta: 0,
+      activeDelta: 0,
+      dominantDelta: 0,
+      uniqueColorDelta: 0,
+      colorDelta: 0,
+      pixelDelta: 0,
+      combinedDelta: 0
+    }))
   };
 }
 
@@ -211,4 +242,45 @@ test("runProductionSequenceVideoRead reuses existing videos and exports missing 
   assert.deepEqual(exportCalls, [secondXsq]);
   assert.equal(summary.rows[0].exportMode, "existing_video");
   assert.equal(summary.rows[1].exportMode, "owned");
+});
+
+test("runProductionSequenceVideoRead marks static full-sequence preview video as invalid export", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-production-video-read-static-"));
+  const sequenceDir = path.join(root, "Show", "StaticSong");
+  const xsqPath = path.join(sequenceDir, "StaticSong.xsq");
+  const outDir = path.join(root, "out");
+  const manifestPath = path.join(root, "manifest.json");
+  writeFile(xsqPath, "<xsequence/>");
+  writeFile(path.join(outDir, "videos", "staticsong.mp4"), "mp4");
+  writeJson(manifestPath, {
+    artifactType: "production_sequence_read_benchmark_manifest_v1",
+    artifactVersion: 1,
+    readOnly: true,
+    sequences: [{
+      sequenceId: "StaticSong",
+      readOnly: true,
+      benchmarkUse: "production_sequence_read_calibration",
+      xsq: { path: xsqPath },
+      readGoals: []
+    }]
+  });
+
+  const summary = await runProductionSequenceVideoRead({
+    manifestPath,
+    outDir,
+    skipExport: true,
+    deps: {
+      extractMedia: ({ mediaPath, frameFeaturesOut, contactSheetOut }) => {
+        writeJson(frameFeaturesOut, staticFrameFeatures(mediaPath));
+        writeFile(contactSheetOut, "jpg");
+        return { sampledFrameCount: 4, nonBlankSampledFrameRatio: 1, temporalMotionMean: 0 };
+      }
+    }
+  });
+
+  assert.equal(summary.rows[0].status, "invalid_export");
+  assert.equal(summary.rows[0].invalidReasonCode, "STATIC_PREVIEW_VIDEO");
+  assert.equal(summary.rows[0].renderReviewPath, "");
+  assert.equal(summary.rows[0].overallQuality, null);
+  assert.equal(summary.rows[0].decision, "invalid_export");
 });

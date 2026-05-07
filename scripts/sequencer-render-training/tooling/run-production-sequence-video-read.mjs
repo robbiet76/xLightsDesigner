@@ -140,6 +140,29 @@ function buildFullSequenceIntent(sequence = {}) {
   };
 }
 
+function previewVideoValidity(frameFeatures = {}) {
+  const sampledFrameCount = num(frameFeatures.sampledFrameCount);
+  const nonBlankRatio = num(frameFeatures.nonBlankSampledFrameRatio);
+  const temporalMotionMean = num(frameFeatures.temporalMotionMean);
+  const temporalPixelDeltaMean = num(frameFeatures.temporalPixelDeltaMean);
+  const durationSeconds = num(frameFeatures.mediaDurationSeconds);
+  if (sampledFrameCount < 2) {
+    return {
+      valid: false,
+      code: "INSUFFICIENT_VIDEO_SAMPLES",
+      message: "Preview video did not produce enough sampled frames for full-sequence review."
+    };
+  }
+  if (durationSeconds >= 30 && nonBlankRatio > 0.5 && temporalMotionMean <= 0.000001 && temporalPixelDeltaMean <= 0.000001) {
+    return {
+      valid: false,
+      code: "STATIC_PREVIEW_VIDEO",
+      message: "Preview video appears static even though the sequence is nonblank; treat as failed export evidence."
+    };
+  }
+  return { valid: true, code: "", message: "" };
+}
+
 async function processSequence(sequence = {}, {
   outDir = "",
   endpoint = DEFAULT_ENDPOINT,
@@ -191,9 +214,30 @@ async function processSequence(sequence = {}, {
     keepFrames,
     buildContactSheet: true
   });
+  const frameFeatures = readJson(frameFeaturesPath);
+  const validity = previewVideoValidity(frameFeatures);
+  if (!validity.valid) {
+    return {
+      sequenceId,
+      status: "invalid_export",
+      invalidReasonCode: validity.code,
+      invalidReason: validity.message,
+      videoPath,
+      exportArtifactPath: skipExport || !shouldExport ? "" : exportArtifactPath,
+      renderReviewPath: "",
+      frameFeaturesPath,
+      contactSheetPath,
+      sampledFrameCount: num(media.sampledFrameCount),
+      nonBlankSampledFrameRatio: num(media.nonBlankSampledFrameRatio),
+      temporalMotionMean: num(media.temporalMotionMean),
+      temporalPixelDeltaMean: num(frameFeatures.temporalPixelDeltaMean),
+      overallQuality: null,
+      decision: "invalid_export",
+      exportMode: shouldExport ? str(exportArtifact?.source?.apiMode || "owned") : "existing_video"
+    };
+  }
   const intent = buildFullSequenceIntent(sequence);
   writeJson(intentPath, intent);
-  const frameFeatures = readJson(frameFeaturesPath);
   const review = buildReview({
     frameFeatures,
     intent,
