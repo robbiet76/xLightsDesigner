@@ -160,6 +160,22 @@ stable: the model evaluates the same whole-display visual/audio output a human
 would review, while structural and frame-metric observations remain explanation
 and debugging aids.
 
+Full-sequence video read:
+
+```bash
+node scripts/sequencer-render-training/tooling/run-production-sequence-video-read.mjs \
+  --manifest var/benchmarks/production-sequence-read/manifest.json \
+  --out-dir var/benchmarks/production-sequence-read/video-review \
+  --max-sequences 1
+```
+
+This runner exports the House Preview MP4 through the owned xLightsDesigner API,
+extracts compact sampled video features and a contact sheet, then writes one
+`render_review_v1` per production sequence with `full_sequence_render` scope.
+Raw sampled frames are not retained unless `--keep-frames` is explicitly used;
+the durable artifacts are the MP4, preview export metadata, frame feature JSON,
+contact sheet, render review JSON, and run summary.
+
 If xLights is blocked by a modal during open, render, or export, the exporter
 must fail by timeout instead of leaving the unattended training loop hung.
 

@@ -88,7 +88,7 @@ Options:
 }
 
 function run(command, args, options = {}) {
-  return execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1024 * 1024 * 256, ...options });
+  return execFileSync(command, args, { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1024 * 1024 * 1024, ...options });
 }
 
 function probeMedia(mediaPath) {
@@ -125,7 +125,7 @@ function ffmpegInputArgs({ mediaPath, startSeconds, sectionDurationSeconds }) {
 }
 
 function sampleRawFrames({ mediaPath, width, height, startSeconds, sectionDurationSeconds, sampleCount }) {
-  const fps = Math.max(1, Math.min(30, number(sampleCount, 16) / Math.max(sectionDurationSeconds, 0.001)));
+  const fps = Math.max(0.001, Math.min(30, number(sampleCount, 16) / Math.max(sectionDurationSeconds, 0.001)));
   const raw = run('ffmpeg', [
     '-v', 'error',
     ...ffmpegInputArgs({ mediaPath, startSeconds, sectionDurationSeconds }),

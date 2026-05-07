@@ -92,6 +92,8 @@ Generated manifests under `manifests/generated/` are local run artifacts. They a
 - `tooling/run-sequencing-quality-controller.mjs`
 - `tooling/run-sequencing-quality-loop.mjs`
 - `tooling/run-video-aesthetic-training-orchestrator.mjs`
+- `tooling/export-xlights-preview-video.mjs`
+- `tooling/run-production-sequence-video-read.mjs`
 - `tooling/harvest-effect-outcome-records.mjs`
 - `tooling/build-effect-settings-coverage-report.mjs`
 - `tooling/build-effect-training-automation-plan.mjs`
