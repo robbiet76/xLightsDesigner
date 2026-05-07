@@ -137,11 +137,13 @@ function sampleRawFrames({ mediaPath, width, height, startSeconds, sectionDurati
   const frameSize = width * height * 3;
   const frameCount = frameSize > 0 ? Math.floor(raw.length / frameSize) : 0;
   const metrics = [];
+  let previousChunk = null;
   for (let frameIndex = 0; frameIndex < frameCount; frameIndex += 1) {
     const start = frameIndex * frameSize;
     const end = start + frameSize;
     const chunk = raw.subarray(start, end);
-    metrics.push(measureFrame(chunk, width, height, frameIndex));
+    metrics.push(measureFrame(chunk, width, height, frameIndex, previousChunk));
+    previousChunk = chunk;
   }
   return { fps: round6(fps), metrics };
 }
@@ -164,7 +166,16 @@ function colorClassKey(rByte, gByte, bByte) {
   return 'mixed';
 }
 
-function measureFrame(chunk, width, height, frameIndex) {
+function pixelDeltaMean(chunk, previousChunk) {
+  if (!previousChunk || previousChunk.length !== chunk.length || chunk.length === 0) return 0;
+  let delta = 0;
+  for (let index = 0; index < chunk.length; index += 1) {
+    delta += Math.abs(chunk[index] - previousChunk[index]) / 255;
+  }
+  return delta / chunk.length;
+}
+
+function measureFrame(chunk, width, height, frameIndex, previousChunk = null) {
   const total = width * height;
   let sumR = 0;
   let sumG = 0;
@@ -203,6 +214,7 @@ function measureFrame(chunk, width, height, frameIndex) {
     frameUniqueColorCount: seen.size,
     frameActiveUniqueColorCount: activeQuantized.size,
     frameActiveColorClassCount: activeClasses.size,
+    framePixelDeltaFromPrevious: pixelDeltaMean(chunk, previousChunk),
     frameAverageRgb: {
       r: total ? sumR / total : 0,
       g: total ? sumG / total : 0,
@@ -233,6 +245,7 @@ function summarizeFrameMetrics(metrics = []) {
       temporalDominantDeltaMean: 0,
       temporalUniqueColorDeltaMean: 0,
       temporalColorDeltaMean: 0,
+      temporalPixelDeltaMean: 0,
       temporalMotionMean: 0,
       temporalMotionPeak: 0,
       temporalSignature: 'static_or_near_static',
@@ -245,6 +258,7 @@ function summarizeFrameMetrics(metrics = []) {
       representativeSampledFrameUniqueColorCount: 0,
       representativeSampledFrameActiveUniqueColorCount: 0,
       representativeSampledFrameActiveColorClassCount: 0,
+      representativeSampledFramePixelDeltaFromPrevious: 0,
       meanSampledFrameActiveUniqueColorCount: 0,
       meanSampledFrameActiveColorClassCount: 0,
       representativeSampledFrameAverageRgb: { r: 0, g: 0, b: 0 }
@@ -264,12 +278,14 @@ function summarizeFrameMetrics(metrics = []) {
       + Math.abs(current.frameAverageRgb.g - previous.frameAverageRgb.g)
       + Math.abs(current.frameAverageRgb.b - previous.frameAverageRgb.b)
     ) / 3;
+    const pixelDelta = number(current.framePixelDeltaFromPrevious);
     const combinedDelta = (
-      brightnessDelta * 0.35
-      + activeDelta * 0.25
-      + dominantDelta * 0.1
-      + Math.min(uniqueColorDelta / 8, 1) * 0.1
-      + colorDelta * 0.2
+      brightnessDelta * 0.2
+      + activeDelta * 0.15
+      + dominantDelta * 0.05
+      + Math.min(uniqueColorDelta / 8, 1) * 0.05
+      + colorDelta * 0.15
+      + pixelDelta * 0.4
     );
     transitions.push({
       fromFrameIndex: previous.frameIndex,
@@ -279,6 +295,7 @@ function summarizeFrameMetrics(metrics = []) {
       dominantDelta: round6(dominantDelta),
       uniqueColorDelta,
       colorDelta: round6(colorDelta),
+      pixelDelta: round6(pixelDelta),
       combinedDelta: round6(combinedDelta)
     });
   }
@@ -319,6 +336,7 @@ function summarizeFrameMetrics(metrics = []) {
     temporalDominantDeltaMean: round6(average('dominantDelta')),
     temporalUniqueColorDeltaMean: round6(average('uniqueColorDelta')),
     temporalColorDeltaMean: round6(average('colorDelta')),
+    temporalPixelDeltaMean: round6(average('pixelDelta')),
     temporalMotionMean: round6(motionMean),
     temporalMotionPeak: round6(maximum('combinedDelta')),
     temporalSignature,
@@ -330,6 +348,7 @@ function summarizeFrameMetrics(metrics = []) {
       frameUniqueColorCount: row.frameUniqueColorCount,
       frameActiveUniqueColorCount: row.frameActiveUniqueColorCount,
       frameActiveColorClassCount: row.frameActiveColorClassCount,
+      framePixelDeltaFromPrevious: round6(row.framePixelDeltaFromPrevious),
       frameAverageRgb: {
         r: round6(row.frameAverageRgb.r),
         g: round6(row.frameAverageRgb.g),
@@ -344,6 +363,7 @@ function summarizeFrameMetrics(metrics = []) {
     representativeSampledFrameUniqueColorCount: representative.frameUniqueColorCount,
     representativeSampledFrameActiveUniqueColorCount: representative.frameActiveUniqueColorCount,
     representativeSampledFrameActiveColorClassCount: representative.frameActiveColorClassCount,
+    representativeSampledFramePixelDeltaFromPrevious: round6(representative.framePixelDeltaFromPrevious),
     meanSampledFrameActiveUniqueColorCount: round6(metrics.reduce((sum, row) => sum + row.frameActiveUniqueColorCount, 0) / metrics.length),
     meanSampledFrameActiveColorClassCount: round6(metrics.reduce((sum, row) => sum + row.frameActiveColorClassCount, 0) / metrics.length),
     representativeSampledFrameAverageRgb: {

@@ -52,6 +52,7 @@ function parseArgs(argv = []) {
     maxSequences: 0,
     initialAuditOnly: false,
     skipExport: false,
+    reuseExistingVideos: false,
     sampleCount: 32,
     keepFrames: false,
     automationTimeoutMs: 600000
@@ -64,6 +65,7 @@ function parseArgs(argv = []) {
     else if (arg === "--max-sequences") args.maxSequences = Number(argv[++index]);
     else if (arg === "--initial-audit-only") args.initialAuditOnly = true;
     else if (arg === "--skip-export") args.skipExport = true;
+    else if (arg === "--reuse-existing-videos") args.reuseExistingVideos = true;
     else if (arg === "--sample-count") args.sampleCount = Number(argv[++index]);
     else if (arg === "--keep-frames") args.keepFrames = true;
     else if (arg === "--automation-timeout-ms") args.automationTimeoutMs = Number(argv[++index]);
@@ -84,6 +86,7 @@ Options:
   --endpoint <url>          Owned xLightsDesigner API endpoint. Default: ${DEFAULT_ENDPOINT}
   --initial-audit-only      Only process manifest rows marked initialAuditSubset.
   --skip-export             Reuse existing per-sequence MP4s in --out-dir/videos.
+  --reuse-existing-videos   Reuse existing MP4s when present, export missing ones.
   --sample-count <n>        Sampled video frame count for compact metrics. Default: 32.
   --keep-frames             Keep extracted PNG frames. Default deletes/skips frame dump.
   --automation-timeout-ms <n>
@@ -141,6 +144,7 @@ async function processSequence(sequence = {}, {
   outDir = "",
   endpoint = DEFAULT_ENDPOINT,
   skipExport = false,
+  reuseExistingVideos = false,
   sampleCount = 32,
   keepFrames = false,
   automationTimeoutMs = 600000,
@@ -164,7 +168,8 @@ async function processSequence(sequence = {}, {
   const extractMedia = deps.extractMedia || extractRenderReviewMedia;
   const buildReview = deps.buildReview || buildRenderReviewArtifact;
   let exportArtifact = null;
-  if (!skipExport) {
+  const shouldExport = !skipExport && !(reuseExistingVideos && fs.existsSync(videoPath));
+  if (shouldExport) {
     exportArtifact = await exportVideo({
       apiMode: "owned",
       xlightsEndpoint: endpoint,
@@ -229,7 +234,7 @@ async function processSequence(sequence = {}, {
     temporalMotionMean: num(media.temporalMotionMean),
     overallQuality: num(review.qualityScores?.overallQuality),
     decision: str(review.critique?.decision),
-    exportMode: skipExport ? "existing_video" : str(exportArtifact?.source?.apiMode || "owned")
+    exportMode: shouldExport ? str(exportArtifact?.source?.apiMode || "owned") : "existing_video"
   };
 }
 
@@ -240,6 +245,7 @@ export async function runProductionSequenceVideoRead({
   maxSequences = 0,
   initialAuditOnly = false,
   skipExport = false,
+  reuseExistingVideos = false,
   sampleCount = 32,
   keepFrames = false,
   automationTimeoutMs = 600000,
@@ -258,6 +264,7 @@ export async function runProductionSequenceVideoRead({
       outDir: resolvedOutDir,
       endpoint,
       skipExport,
+      reuseExistingVideos,
       sampleCount,
       keepFrames,
       automationTimeoutMs,

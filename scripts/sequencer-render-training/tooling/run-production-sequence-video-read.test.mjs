@@ -167,3 +167,48 @@ test("runProductionSequenceVideoRead can reuse an existing video without exporti
   assert.equal(summary.rows[0].exportMode, "existing_video");
   assert.equal(summary.rows[0].videoPath, path.join(outDir, "videos", "song.mp4"));
 });
+
+test("runProductionSequenceVideoRead reuses existing videos and exports missing videos", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-production-video-read-reuse-mixed-"));
+  const showDir = path.join(root, "Show");
+  const outDir = path.join(root, "out");
+  const manifestPath = path.join(root, "manifest.json");
+  const firstXsq = path.join(showDir, "First", "First.xsq");
+  const secondXsq = path.join(showDir, "Second", "Second.xsq");
+  writeFile(firstXsq, "<xsequence/>");
+  writeFile(secondXsq, "<xsequence/>");
+  writeFile(path.join(outDir, "videos", "first.mp4"), "mp4");
+  writeJson(manifestPath, {
+    artifactType: "production_sequence_read_benchmark_manifest_v1",
+    artifactVersion: 1,
+    readOnly: true,
+    sequences: [
+      { sequenceId: "First", readOnly: true, benchmarkUse: "production_sequence_read_calibration", xsq: { path: firstXsq }, readGoals: [] },
+      { sequenceId: "Second", readOnly: true, benchmarkUse: "production_sequence_read_calibration", xsq: { path: secondXsq }, readGoals: [] }
+    ]
+  });
+
+  const exportCalls = [];
+  const summary = await runProductionSequenceVideoRead({
+    manifestPath,
+    outDir,
+    reuseExistingVideos: true,
+    deps: {
+      exportVideo: async (options) => {
+        exportCalls.push(options.sequence);
+        writeFile(options.out, "mp4");
+        writeJson(options.artifact, { source: { apiMode: "owned" } });
+        return { source: { apiMode: "owned" } };
+      },
+      extractMedia: ({ mediaPath, frameFeaturesOut, contactSheetOut }) => {
+        writeJson(frameFeaturesOut, frameFeatures(mediaPath));
+        writeFile(contactSheetOut, "jpg");
+        return { sampledFrameCount: 4, nonBlankSampledFrameRatio: 1, temporalMotionMean: 0.045 };
+      }
+    }
+  });
+
+  assert.deepEqual(exportCalls, [secondXsq]);
+  assert.equal(summary.rows[0].exportMode, "existing_video");
+  assert.equal(summary.rows[1].exportMode, "owned");
+});

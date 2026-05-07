@@ -272,3 +272,41 @@ test("exportXLightsPreviewVideo stages in an xLights-writable directory and copi
   assert.equal(artifact.output.xlightsOutputPath, stagedPath);
   assert.equal(artifact.steps.at(-1).command, "copyStagedPreviewVideo");
 });
+
+test("exportXLightsPreviewVideo uses default staging for programmatic owned API calls", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-preview-video-default-staging-"));
+  const sequencePath = path.join(root, "Sequence.xsq");
+  const finalVideoPath = path.join(root, "artifacts", "Sequence.mp4");
+  writeFile(sequencePath, "<xsequence/>");
+
+  let exportTarget = "";
+  const fetchImpl = async (url, options = {}) => {
+    const route = new URL(String(url)).pathname.replace("/xlightsdesigner/api", "");
+    const body = options.body ? JSON.parse(String(options.body)) : {};
+    if (route === "/sequence/export-preview-video") {
+      exportTarget = body.file;
+      writeFile(exportTarget, "mp4");
+      return { ok: true, text: async () => JSON.stringify({ ok: true, data: { jobId: "export-job" } }) };
+    }
+    if (route === "/sequence/open") {
+      return { ok: true, text: async () => JSON.stringify({ ok: true, data: { jobId: "open-job" } }) };
+    }
+    if (route === "/jobs/get") {
+      return { ok: true, text: async () => JSON.stringify({ ok: true, data: { state: "succeeded", result: { ok: true } } }) };
+    }
+    throw new Error(`Unexpected route: ${route}`);
+  };
+
+  const artifact = await exportXLightsPreviewVideo({
+    apiMode: "owned",
+    xlightsEndpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    sequence: sequencePath,
+    out: finalVideoPath,
+    fetchImpl
+  });
+
+  assert.notEqual(exportTarget, finalVideoPath);
+  assert.match(exportTarget, /xld-preview-video/);
+  assert.equal(fs.readFileSync(finalVideoPath, "utf8"), "mp4");
+  assert.equal(artifact.output.stagingDir.endsWith("xld-preview-video"), true);
+});

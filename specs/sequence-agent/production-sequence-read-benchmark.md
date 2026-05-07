@@ -166,7 +166,8 @@ Full-sequence video read:
 node scripts/sequencer-render-training/tooling/run-production-sequence-video-read.mjs \
   --manifest var/benchmarks/production-sequence-read/manifest.json \
   --out-dir var/benchmarks/production-sequence-read/video-review \
-  --max-sequences 1
+  --max-sequences 1 \
+  --reuse-existing-videos
 ```
 
 This runner exports the House Preview MP4 through the owned xLightsDesigner API,
@@ -174,7 +175,9 @@ extracts compact sampled video features and a contact sheet, then writes one
 `render_review_v1` per production sequence with `full_sequence_render` scope.
 Raw sampled frames are not retained unless `--keep-frames` is explicitly used;
 the durable artifacts are the MP4, preview export metadata, frame feature JSON,
-contact sheet, render review JSON, and run summary.
+contact sheet, render review JSON, and run summary. Use
+`--reuse-existing-videos` for resumed calibration runs so existing MP4s are
+re-read while only missing sequence videos are exported.
 
 If xLights is blocked by a modal during open, render, or export, the exporter
 must fail by timeout instead of leaving the unattended training loop hung.

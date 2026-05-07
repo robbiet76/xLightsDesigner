@@ -262,7 +262,9 @@ export async function exportXLightsPreviewVideo(options = {}) {
   const sequencePath = options.sequence ? resolvePath(options.sequence) : "";
   const outputPath = resolvePath(options.out);
   const artifactPath = options.artifact ? resolvePath(options.artifact) : "";
-  const xlightsStagingDir = options.xlightsStagingDir ? resolvePath(options.xlightsStagingDir) : "";
+  const xlightsStagingDir = options.xlightsStagingDir === ""
+    ? ""
+    : resolvePath(options.xlightsStagingDir ?? DEFAULT_XLIGHTS_STAGING_DIR);
   const xlightsOutputPath = xlightsStagingDir
     ? path.join(xlightsStagingDir, `${path.basename(outputPath, path.extname(outputPath))}-${Date.now()}${path.extname(outputPath) || ".mp4"}`)
     : outputPath;
