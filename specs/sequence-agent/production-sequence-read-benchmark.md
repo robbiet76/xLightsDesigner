@@ -196,6 +196,21 @@ excluded rows, and summarizes score/metric/feature ranges for whole-display
 calibration. It is still calibration-only: it must not train generation policy,
 copy production style, or promote scoring changes without human review.
 
+Scorer diagnostics:
+
+```bash
+node scripts/sequencer-render-training/tooling/build-production-scorer-calibration-diagnostics.mjs \
+  --baseline var/benchmarks/production-sequence-read/video-review/production-video-calibration-baseline.json \
+  --out var/benchmarks/production-sequence-read/video-review/production-scorer-calibration-diagnostics.json
+```
+
+The diagnostics artifact is
+`production_scorer_calibration_diagnostics_v1`. It flags score dimensions that
+are saturated, compressed, or low-variance across accepted production reads.
+When diagnostics report `scorer_calibration_needed`, generated training loops
+must treat current automated scores as diagnostic baselines rather than direct
+optimization targets.
+
 ## Relationship To Training
 
 Generated render training remains the place where the system experiments.
