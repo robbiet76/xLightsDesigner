@@ -263,6 +263,21 @@ the production reference distribution and marks low-variance dimensions as
 supporting diagnostics. Generated training may use these ranges only after
 human review confirms the production reads and calibration bands.
 
+Human review gate:
+
+```bash
+node scripts/sequencer-render-training/tooling/build-production-human-review-calibration.mjs \
+  --profile var/benchmarks/production-sequence-read/video-review/production-scorer-calibration-profile.json \
+  --write-template var/benchmarks/production-sequence-read/human-review-notes.template.json \
+  --out var/benchmarks/production-sequence-read/video-review/production-human-review-calibration.json
+```
+
+The review artifact is `production_human_review_calibration_v1`. It keeps the
+calibration profile blocked until reviewed production references are marked
+`reviewed` with recommendation `approve` or `adjust`. The generated notes
+template is user-editable and stores strengths, weaknesses, dimension notes, and
+optional band adjustments without modifying source sequences.
+
 ## Relationship To Training
 
 Generated render training remains the place where the system experiments.
