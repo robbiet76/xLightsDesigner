@@ -182,6 +182,20 @@ re-read while only missing sequence videos are exported.
 If xLights is blocked by a modal during open, render, or export, the exporter
 must fail by timeout instead of leaving the unattended training loop hung.
 
+Calibration baseline:
+
+```bash
+node scripts/sequencer-render-training/tooling/build-production-video-calibration-baseline.mjs \
+  --summary var/benchmarks/production-sequence-read/video-review/production-sequence-video-read-summary.json \
+  --out var/benchmarks/production-sequence-read/video-review/production-video-calibration-baseline.json
+```
+
+The baseline artifact is `production_video_calibration_baseline_v1`. It keeps
+only accepted production video reads, records invalid or rejected references as
+excluded rows, and summarizes score/metric/feature ranges for whole-display
+calibration. It is still calibration-only: it must not train generation policy,
+copy production style, or promote scoring changes without human review.
+
 ## Relationship To Training
 
 Generated render training remains the place where the system experiments.
