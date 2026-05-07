@@ -326,3 +326,87 @@ test("runProductionSequenceVideoRead rejects source xsq files with no editable e
   assert.equal(summary.rows[0].sourceSequence.namedEffectCount, 0);
   assert.equal(summary.rows[0].exportMode, "not_exported");
 });
+
+test("runProductionSequenceVideoRead records per-sequence export failures and continues", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-production-video-read-failure-"));
+  const showDir = path.join(root, "Show");
+  const firstXsq = path.join(showDir, "First", "First.xsq");
+  const secondXsq = path.join(showDir, "Second", "Second.xsq");
+  const manifestPath = path.join(root, "manifest.json");
+  writeFile(firstXsq, editableSequenceXml());
+  writeFile(secondXsq, editableSequenceXml());
+  writeJson(manifestPath, {
+    artifactType: "production_sequence_read_benchmark_manifest_v1",
+    artifactVersion: 1,
+    readOnly: true,
+    sequences: [
+      { sequenceId: "First", readOnly: true, benchmarkUse: "production_sequence_read_calibration", xsq: { path: firstXsq }, readGoals: [] },
+      { sequenceId: "Second", readOnly: true, benchmarkUse: "production_sequence_read_calibration", xsq: { path: secondXsq }, readGoals: [] }
+    ]
+  });
+
+  const summary = await runProductionSequenceVideoRead({
+    manifestPath,
+    outDir: path.join(root, "out"),
+    deps: {
+      exportVideo: async ({ sequence, out, artifact }) => {
+        if (sequence === firstXsq) throw new Error("render timeout");
+        writeFile(out, "mp4");
+        writeJson(artifact, { source: { apiMode: "owned" } });
+        return { source: { apiMode: "owned" } };
+      },
+      extractMedia: ({ mediaPath, frameFeaturesOut, contactSheetOut }) => {
+        writeJson(frameFeaturesOut, frameFeatures(mediaPath));
+        writeFile(contactSheetOut, "jpg");
+        return { sampledFrameCount: 4, nonBlankSampledFrameRatio: 1, temporalMotionMean: 0.045 };
+      }
+    }
+  });
+
+  assert.equal(summary.rows[0].status, "export_failed");
+  assert.match(summary.rows[0].invalidReason, /render timeout/);
+  assert.equal(summary.rows[1].status, "reviewed");
+});
+
+test("runProductionSequenceVideoRead can include and exclude sequences by id", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-production-video-read-filter-"));
+  const showDir = path.join(root, "Show");
+  const firstXsq = path.join(showDir, "First", "First.xsq");
+  const secondXsq = path.join(showDir, "Second", "Second.xsq");
+  const thirdXsq = path.join(showDir, "Third", "Third.xsq");
+  const manifestPath = path.join(root, "manifest.json");
+  writeFile(firstXsq, editableSequenceXml());
+  writeFile(secondXsq, editableSequenceXml());
+  writeFile(thirdXsq, editableSequenceXml());
+  writeJson(manifestPath, {
+    artifactType: "production_sequence_read_benchmark_manifest_v1",
+    artifactVersion: 1,
+    readOnly: true,
+    sequences: [
+      { sequenceId: "First", folderName: "First", readOnly: true, benchmarkUse: "production_sequence_read_calibration", xsq: { path: firstXsq }, readGoals: [] },
+      { sequenceId: "Second", folderName: "Second", readOnly: true, benchmarkUse: "production_sequence_read_calibration", xsq: { path: secondXsq }, readGoals: [] },
+      { sequenceId: "Third", folderName: "Third", readOnly: true, benchmarkUse: "production_sequence_read_calibration", xsq: { path: thirdXsq }, readGoals: [] }
+    ]
+  });
+
+  const summary = await runProductionSequenceVideoRead({
+    manifestPath,
+    outDir: path.join(root, "out"),
+    sequenceIds: ["First", "Second"],
+    excludeSequenceIds: ["Second"],
+    deps: {
+      exportVideo: async ({ out, artifact }) => {
+        writeFile(out, "mp4");
+        writeJson(artifact, { source: { apiMode: "owned" } });
+        return { source: { apiMode: "owned" } };
+      },
+      extractMedia: ({ mediaPath, frameFeaturesOut, contactSheetOut }) => {
+        writeJson(frameFeaturesOut, frameFeatures(mediaPath));
+        writeFile(contactSheetOut, "jpg");
+        return { sampledFrameCount: 4, nonBlankSampledFrameRatio: 1, temporalMotionMean: 0.045 };
+      }
+    }
+  });
+
+  assert.deepEqual(summary.rows.map((row) => row.sequenceId), ["First"]);
+});

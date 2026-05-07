@@ -56,6 +56,8 @@ function parseArgs(argv = []) {
     outDir: DEFAULT_OUT_DIR,
     endpoint: DEFAULT_ENDPOINT,
     maxSequences: 0,
+    sequenceIds: [],
+    excludeSequenceIds: [],
     initialAuditOnly: false,
     skipExport: false,
     reuseExistingVideos: false,
@@ -68,6 +70,8 @@ function parseArgs(argv = []) {
     if (arg === "--manifest") args.manifestPath = argv[++index];
     else if (arg === "--out-dir") args.outDir = argv[++index];
     else if (arg === "--endpoint") args.endpoint = argv[++index];
+    else if (arg === "--sequence") args.sequenceIds.push(argv[++index]);
+    else if (arg === "--exclude-sequence") args.excludeSequenceIds.push(argv[++index]);
     else if (arg === "--max-sequences") args.maxSequences = Number(argv[++index]);
     else if (arg === "--initial-audit-only") args.initialAuditOnly = true;
     else if (arg === "--skip-export") args.skipExport = true;
@@ -90,6 +94,8 @@ function usage() {
 
 Options:
   --endpoint <url>          Owned xLightsDesigner API endpoint. Default: ${DEFAULT_ENDPOINT}
+  --sequence <id>           Only process a sequenceId/folderName. Repeatable.
+  --exclude-sequence <id>   Skip a sequenceId/folderName. Repeatable.
   --initial-audit-only      Only process manifest rows marked initialAuditSubset.
   --skip-export             Reuse existing per-sequence MP4s in --out-dir/videos.
   --reuse-existing-videos   Reuse existing MP4s when present, export missing ones.
@@ -99,10 +105,37 @@ Options:
 `;
 }
 
-function selectSequences(manifest = {}, { initialAuditOnly = false, maxSequences = 0 } = {}) {
+function normalizeId(value = "") {
+  return slug(value);
+}
+
+function sequenceMatches(sequence = {}, ids = []) {
+  if (!ids.length) return true;
+  const candidates = [
+    sequence.sequenceId,
+    sequence.folderName,
+    path.basename(str(sequence.folderPath))
+  ].map(normalizeId).filter(Boolean);
+  return ids.some((id) => candidates.includes(normalizeId(id)));
+}
+
+function selectSequences(manifest = {}, {
+  initialAuditOnly = false,
+  maxSequences = 0,
+  sequenceIds = [],
+  excludeSequenceIds = []
+} = {}) {
   let sequences = arr(manifest.sequences)
     .filter((sequence) => sequence?.readOnly === true)
     .filter((sequence) => str(sequence?.xsq?.path));
+  const included = arr(sequenceIds).map(str).filter(Boolean);
+  const excluded = arr(excludeSequenceIds).map(str).filter(Boolean);
+  if (included.length) {
+    sequences = sequences.filter((sequence) => sequenceMatches(sequence, included));
+  }
+  if (excluded.length) {
+    sequences = sequences.filter((sequence) => !sequenceMatches(sequence, excluded));
+  }
   if (initialAuditOnly) {
     sequences = sequences.filter((sequence) => sequence.initialAuditSubset === true);
   }
@@ -179,6 +212,29 @@ function invalidSourceRow(sequence = {}, summary = {}, reason = {}) {
     overallQuality: null,
     decision: "invalid_source_sequence",
     exportMode: "not_exported"
+  };
+}
+
+function failedSequenceRow(sequence = {}, error, { status = "export_failed" } = {}) {
+  const sequenceId = str(sequence.sequenceId || sequence.folderName || path.basename(str(sequence.folderPath)));
+  return {
+    sequenceId,
+    status,
+    invalidReasonCode: "PREVIEW_VIDEO_EXPORT_FAILED",
+    invalidReason: error?.message || String(error),
+    sourceSequence: sourceSequenceSummary(sequence),
+    videoPath: "",
+    exportArtifactPath: "",
+    renderReviewPath: "",
+    frameFeaturesPath: "",
+    contactSheetPath: "",
+    sampledFrameCount: 0,
+    nonBlankSampledFrameRatio: 0,
+    temporalMotionMean: 0,
+    temporalPixelDeltaMean: 0,
+    overallQuality: null,
+    decision: status,
+    exportMode: "failed"
   };
 }
 
@@ -338,6 +394,8 @@ export async function runProductionSequenceVideoRead({
   outDir = DEFAULT_OUT_DIR,
   endpoint = DEFAULT_ENDPOINT,
   maxSequences = 0,
+  sequenceIds = [],
+  excludeSequenceIds = [],
   initialAuditOnly = false,
   skipExport = false,
   reuseExistingVideos = false,
@@ -352,19 +410,24 @@ export async function runProductionSequenceVideoRead({
   }
   const manifest = readJson(resolvedManifestPath);
   const resolvedOutDir = resolvePath(outDir || DEFAULT_OUT_DIR);
-  const sequences = selectSequences(manifest, { initialAuditOnly, maxSequences });
+  const sequences = selectSequences(manifest, { initialAuditOnly, maxSequences, sequenceIds, excludeSequenceIds });
   const rows = [];
   for (const sequence of sequences) {
-    rows.push(await processSequence(sequence, {
-      outDir: resolvedOutDir,
-      endpoint,
-      skipExport,
-      reuseExistingVideos,
-      sampleCount,
-      keepFrames,
-      automationTimeoutMs,
-      deps
-    }));
+    try {
+      rows.push(await processSequence(sequence, {
+        outDir: resolvedOutDir,
+        endpoint,
+        skipExport,
+        reuseExistingVideos,
+        sampleCount,
+        keepFrames,
+        automationTimeoutMs,
+        deps
+      }));
+    } catch (error) {
+      if (deps.failFast) throw error;
+      rows.push(failedSequenceRow(sequence, error));
+    }
   }
   const summary = {
     artifactType: "production_sequence_video_read_run_v1",
