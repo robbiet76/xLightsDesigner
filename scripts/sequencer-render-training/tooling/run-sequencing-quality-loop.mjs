@@ -280,6 +280,9 @@ export async function runSequencingQualityLoop({
     } : null,
     videoAestheticScore: videoAestheticScore ? {
       status: str(videoAestheticScore.status),
+      metricScope: str(videoAestheticScore.metricScope),
+      contextMetricScope: str(videoAestheticScore.contextMetricScope),
+      promotionUse: str(videoAestheticScore.promotionUse),
       scoredWindowCount: num(videoAestheticScore.scoredWindowCount),
       overallAestheticScore: num(videoAestheticScore.scores?.overallAestheticScore),
       qualityDimensions: arr(videoAestheticScore.qualityDimensions).map(str).filter(Boolean),
@@ -288,6 +291,8 @@ export async function runSequencingQualityLoop({
     } : null,
     videoAestheticAttemptComparison: videoAestheticAttemptComparison ? {
       status: str(videoAestheticAttemptComparison.status),
+      metricScope: str(videoAestheticAttemptComparison.metricScope),
+      promotionUse: str(videoAestheticAttemptComparison.promotionUse),
       comparisonStatus: str(videoAestheticAttemptComparison.comparisonStatus),
       overallAestheticScoreDelta: num(videoAestheticAttemptComparison.summary?.overallAestheticScoreDelta),
       improvedDimensionCount: num(videoAestheticAttemptComparison.summary?.improvedDimensionCount),

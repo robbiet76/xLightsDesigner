@@ -269,6 +269,9 @@ test("sequencing quality loop writes cross-run quality summary after live execut
         const artifact = {
           artifactType: "video_aesthetic_score_v1",
           status: "ready",
+          metricScope: "full_sequence_render",
+          contextMetricScope: "full_sequence_render",
+          promotionUse: "primary_human_level_quality_evidence",
           scoredWindowCount: 2,
           qualityDimensions: ["display_evolution", "pacing_variety"],
           scores: { overallAestheticScore: 0.78 },
@@ -281,6 +284,8 @@ test("sequencing quality loop writes cross-run quality summary after live execut
         const artifact = {
           artifactType: "video_aesthetic_attempt_comparison_v1",
           status: "ready",
+          metricScope: "full_sequence_render",
+          promotionUse: "primary_human_level_quality_evidence",
           comparisonStatus: "improved",
           promotionEligible: true,
           summary: {
@@ -300,7 +305,10 @@ test("sequencing quality loop writes cross-run quality summary after live execut
   assert.equal(summary.fullSequenceReview.status, "ready");
   assert.equal(summary.fullSequenceReview.windowCount, 2);
   assert.equal(summary.videoAestheticScore.status, "ready");
+  assert.equal(summary.videoAestheticScore.metricScope, "full_sequence_render");
+  assert.equal(summary.videoAestheticScore.promotionUse, "primary_human_level_quality_evidence");
   assert.equal(summary.videoAestheticScore.overallAestheticScore, 0.78);
+  assert.equal(summary.videoAestheticAttemptComparison.metricScope, "full_sequence_render");
   assert.equal(summary.videoAestheticAttemptComparison.comparisonStatus, "improved");
   assert.equal(summary.videoAestheticAttemptComparison.overallAestheticScoreDelta, 0.04);
   assert.equal(summary.crossRunQuality.durableCandidateCount, 1);
