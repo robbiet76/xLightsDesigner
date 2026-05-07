@@ -31,6 +31,7 @@ test("exportXLightsPreviewVideo opens, renders, and exports via xLights automati
     sequence: sequencePath,
     out: videoPath,
     artifact: artifactPath,
+    xlightsStagingDir: "",
     fetchImpl
   });
 
@@ -62,6 +63,7 @@ test("exportXLightsPreviewVideo can export the currently open sequence", async (
     skipOpen: true,
     skipRender: true,
     out: videoPath,
+    xlightsStagingDir: "",
     fetchImpl
   });
 
@@ -85,11 +87,37 @@ test("exportXLightsPreviewVideo accepts legacy openSequence metadata response", 
     xlightsBaseUrl: "http://127.0.0.1:49914",
     sequence: sequencePath,
     out: videoPath,
+    xlightsStagingDir: "",
     fetchImpl
   });
 
   assert.equal(artifact.steps[0].response.res, 200);
   assert.equal(artifact.steps[0].response.fullseq, sequencePath);
+});
+
+test("exportXLightsPreviewVideo treats already-open sequence as open", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-preview-video-already-open-"));
+  const sequencePath = path.join(root, "Sequence.xsq");
+  const videoPath = path.join(root, "Sequence.mp4");
+  writeFile(sequencePath, "<xsequence/>");
+  const fetchImpl = async (_url, options = {}) => {
+    const body = JSON.parse(String(options.body || "{}"));
+    if (body.cmd === "openSequence") {
+      return { text: async () => JSON.stringify({ msg: "Sequence already open." }) };
+    }
+    return { text: async () => JSON.stringify({ res: 200, msg: "ok" }) };
+  };
+
+  const artifact = await exportXLightsPreviewVideo({
+    xlightsBaseUrl: "http://127.0.0.1:49914",
+    sequence: sequencePath,
+    out: videoPath,
+    xlightsStagingDir: "",
+    fetchImpl
+  });
+
+  assert.equal(artifact.steps[0].response.res, 200);
+  assert.equal(artifact.steps[0].response.alreadyOpen, true);
 });
 
 test("exportXLightsPreviewVideo accepts legacy render and export success responses", async () => {
@@ -112,6 +140,7 @@ test("exportXLightsPreviewVideo accepts legacy render and export success respons
     xlightsBaseUrl: "http://127.0.0.1:49914",
     sequence: sequencePath,
     out: videoPath,
+    xlightsStagingDir: "",
     fetchImpl
   });
 
@@ -136,9 +165,46 @@ test("exportXLightsPreviewVideo times out blocked automation calls", async () =>
       xlightsBaseUrl: "http://127.0.0.1:49914",
       sequence: sequencePath,
       out: videoPath,
+      xlightsStagingDir: "",
       automationTimeoutMs: 5,
       fetchImpl
     }),
     /timed out after 5ms.*modal/i
   );
+});
+
+test("exportXLightsPreviewVideo stages in an xLights-writable directory and copies final MP4", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-preview-video-staged-"));
+  const stagingDir = path.join(root, "xlights-staging");
+  const sequencePath = path.join(root, "Sequence.xsq");
+  const finalVideoPath = path.join(root, "artifacts", "Sequence.mp4");
+  writeFile(sequencePath, "<xsequence/>");
+
+  let stagedPath = "";
+  const fetchImpl = async (_url, options = {}) => {
+    const body = JSON.parse(String(options.body || "{}"));
+    if (body.cmd === "exportVideoPreview") {
+      stagedPath = body.filename;
+      writeFile(stagedPath, "mp4");
+      return { text: async () => JSON.stringify({ msg: "Export Video Preview.", output: stagedPath }) };
+    }
+    if (body.cmd === "openSequence") {
+      return { text: async () => JSON.stringify({ seq: "Sequence", fullseq: sequencePath }) };
+    }
+    return { text: async () => JSON.stringify({ msg: "Rendered." }) };
+  };
+
+  const artifact = await exportXLightsPreviewVideo({
+    xlightsBaseUrl: "http://127.0.0.1:49914",
+    sequence: sequencePath,
+    out: finalVideoPath,
+    xlightsStagingDir: stagingDir,
+    fetchImpl
+  });
+
+  assert.equal(fs.readFileSync(finalVideoPath, "utf8"), "mp4");
+  assert.equal(fs.existsSync(stagedPath), false);
+  assert.equal(artifact.output.videoPath, finalVideoPath);
+  assert.equal(artifact.output.xlightsOutputPath, stagedPath);
+  assert.equal(artifact.steps.at(-1).command, "copyStagedPreviewVideo");
 });

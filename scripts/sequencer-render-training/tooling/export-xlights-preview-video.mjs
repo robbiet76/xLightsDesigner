@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DEFAULT_XLIGHTS_BASE_URL = process.env.XLIGHTS_BASE_URL || "http://127.0.0.1:49914";
 const DEFAULT_AUTOMATION_TIMEOUT_MS = 5 * 60 * 1000;
+const DEFAULT_XLIGHTS_STAGING_DIR = process.env.XLIGHTS_PREVIEW_VIDEO_STAGING_DIR
+  || (process.platform === "darwin"
+    ? path.join(os.homedir(), "Library/Containers/org.xlights/Data/tmp/xld-preview-video")
+    : "");
 
 function str(value = "") {
   return String(value || "").trim();
@@ -28,6 +33,7 @@ function parseArgs(argv = []) {
     sequence: "",
     out: "",
     artifact: "",
+    xlightsStagingDir: DEFAULT_XLIGHTS_STAGING_DIR,
     skipOpen: false,
     skipRender: false,
     highdef: true,
@@ -39,6 +45,7 @@ function parseArgs(argv = []) {
     else if (arg === "--sequence") args.sequence = str(argv[++index]);
     else if (arg === "--out") args.out = str(argv[++index]);
     else if (arg === "--artifact") args.artifact = str(argv[++index]);
+    else if (arg === "--xlights-staging-dir") args.xlightsStagingDir = str(argv[++index]);
     else if (arg === "--skip-open") args.skipOpen = true;
     else if (arg === "--skip-render") args.skipRender = true;
     else if (arg === "--highdef") args.highdef = boolish(argv[++index]);
@@ -61,6 +68,9 @@ Options:
   --skip-open              Export the currently open sequence.
   --skip-render            Export without running renderAll first.
   --highdef true|false     Pass highdef to renderAll. Default: true.
+  --xlights-staging-dir <dir>
+                            Directory xLights can write before copying to --out.
+                            Default on macOS: ${DEFAULT_XLIGHTS_STAGING_DIR || "(disabled)"}
   --automation-timeout-ms <n>
                             Timeout per xLights automation command. Default: ${DEFAULT_AUTOMATION_TIMEOUT_MS}
 `;
@@ -80,6 +90,9 @@ function parseAutomationResponse(text, command) {
   }
   if (command === "openSequence" && str(json?.fullseq)) {
     return { res: 200, ...json };
+  }
+  if (command === "openSequence" && /^sequence already open\.?$/i.test(str(json?.msg))) {
+    return { res: 200, alreadyOpen: true, ...json };
   }
   if (command === "renderAll" && /^rendered\.?$/i.test(str(json?.msg))) {
     return { res: 200, ...json };
@@ -132,6 +145,10 @@ export async function exportXLightsPreviewVideo(options = {}) {
   const sequencePath = options.sequence ? resolvePath(options.sequence) : "";
   const outputPath = resolvePath(options.out);
   const artifactPath = options.artifact ? resolvePath(options.artifact) : "";
+  const xlightsStagingDir = options.xlightsStagingDir ? resolvePath(options.xlightsStagingDir) : "";
+  const xlightsOutputPath = xlightsStagingDir
+    ? path.join(xlightsStagingDir, `${path.basename(outputPath, path.extname(outputPath))}-${Date.now()}${path.extname(outputPath) || ".mp4"}`)
+    : outputPath;
   const automationTimeoutMs = Number(options.automationTimeoutMs || DEFAULT_AUTOMATION_TIMEOUT_MS);
   if (!options.skipOpen && !sequencePath) throw new Error("--sequence is required unless --skip-open is used");
   if (!outputPath) throw new Error("--out is required");
@@ -139,6 +156,7 @@ export async function exportXLightsPreviewVideo(options = {}) {
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   if (artifactPath) fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+  if (xlightsStagingDir) fs.mkdirSync(xlightsStagingDir, { recursive: true });
 
   const steps = [];
   const fetchImpl = options.fetchImpl || globalThis.fetch;
@@ -160,9 +178,17 @@ export async function exportXLightsPreviewVideo(options = {}) {
   }
   const exportResponse = await callXLightsAutomation(xlightsBaseUrl, {
     cmd: "exportVideoPreview",
-    filename: outputPath
+    filename: xlightsOutputPath
   }, { fetchImpl, timeoutMs: automationTimeoutMs });
   steps.push({ command: "exportVideoPreview", ok: true, response: exportResponse });
+  if (xlightsOutputPath !== outputPath) {
+    if (!fs.existsSync(xlightsOutputPath)) {
+      throw new Error(`xLights export reported success but staged MP4 was not found: ${xlightsOutputPath}`);
+    }
+    fs.copyFileSync(xlightsOutputPath, outputPath);
+    fs.rmSync(xlightsOutputPath, { force: true });
+    steps.push({ command: "copyStagedPreviewVideo", ok: true, source: xlightsOutputPath, destination: outputPath });
+  }
 
   const artifact = {
     artifactType: "xlights_preview_video_export_v1",
@@ -175,6 +201,8 @@ export async function exportXLightsPreviewVideo(options = {}) {
     },
     output: {
       videoPath: outputPath,
+      xlightsOutputPath,
+      stagingDir: xlightsStagingDir || null,
       expectedContainer: "mp4",
       audioPolicy: "include_current_sequence_media_audio_when_present"
     },
