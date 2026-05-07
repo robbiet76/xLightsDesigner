@@ -246,6 +246,23 @@ without mutating production sequences.
 When a production video baseline is supplied, only accepted video references are
 scored and invalid source sequences are listed as excluded references.
 
+Calibration profile:
+
+```bash
+node scripts/sequencer-render-training/tooling/build-production-scorer-calibration-profile.mjs \
+  --video-dimensions var/benchmarks/production-sequence-read/video-review/production-full-sequence-dimensions.json \
+  --model-region-handoff var/benchmarks/production-sequence-read/video-review/production-model-region-handoff.json \
+  --scorer-diagnostics var/benchmarks/production-sequence-read/video-review/production-scorer-calibration-diagnostics.json \
+  --out var/benchmarks/production-sequence-read/video-review/production-scorer-calibration-profile.json
+```
+
+The profile artifact is `production_scorer_calibration_profile_v1`. It merges
+the video-derived full-sequence dimensions with the model-region handoff layer
+into one per-sequence calibration surface. It also records target bands from
+the production reference distribution and marks low-variance dimensions as
+supporting diagnostics. Generated training may use these ranges only after
+human review confirms the production reads and calibration bands.
+
 ## Relationship To Training
 
 Generated render training remains the place where the system experiments.
