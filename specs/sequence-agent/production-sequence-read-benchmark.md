@@ -107,10 +107,11 @@ sequence is wrong.
 1. Create a read-only manifest from the production show folder.
 2. Validate manifest policy and source paths.
 3. Build a structural read audit from the `.xsq` files.
-4. For an initial subset, inspect available rendered `.fseq` output.
-5. Build full-sequence and section-window observations.
-6. Compare automated reading against human notes.
-7. Adjust intent/style/range scoring before running more generated training.
+4. Export a house-preview MP4 with sequence audio for selected sequences.
+5. Run vision/audio review against the MP4 as the primary quality read.
+6. Use `.xsq` and `.fseq` observations as supporting diagnostics only.
+7. Compare automated reading against human notes.
+8. Adjust intent/style/range scoring before running more generated training.
 
 Structural audit:
 
@@ -141,6 +142,26 @@ Rendered calibration reconstructs display preview-scene windows from existing
 observations. This is the first visual read layer: it evaluates what the viewer
 would see in selected sequence windows while remaining read-only with respect to
 the source show folder.
+
+Primary review video:
+
+```bash
+node scripts/sequencer-render-training/tooling/export-xlights-preview-video.mjs \
+  --sequence /path/to/production/show/root/SequenceA/SequenceA.xsq \
+  --out var/benchmarks/production-sequence-read/videos/SequenceA.mp4 \
+  --artifact var/benchmarks/production-sequence-read/videos/SequenceA.preview-video.json \
+  --automation-timeout-ms 300000
+```
+
+The primary review artifact should be an xLights House Preview MP4 with sequence
+audio when the sequence has media. This uses xLights' existing preview video
+export path rather than a separate renderer. That keeps the review baseline
+stable: the model evaluates the same whole-display visual/audio output a human
+would review, while structural and frame-metric observations remain explanation
+and debugging aids.
+
+If xLights is blocked by a modal during open, render, or export, the exporter
+must fail by timeout instead of leaving the unattended training loop hung.
 
 ## Relationship To Training
 
