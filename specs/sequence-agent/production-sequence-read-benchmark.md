@@ -79,11 +79,25 @@ sequence is wrong.
 
 1. Create a read-only manifest from the production show folder.
 2. Validate manifest policy and source paths.
-3. For an initial subset, inspect sequence structure and available rendered
-   `.fseq` output.
-4. Build full-sequence and section-window observations.
-5. Compare automated reading against human notes.
-6. Adjust intent/style/range scoring before running more generated training.
+3. Build a structural read audit from the `.xsq` files.
+4. For an initial subset, inspect available rendered `.fseq` output.
+5. Build full-sequence and section-window observations.
+6. Compare automated reading against human notes.
+7. Adjust intent/style/range scoring before running more generated training.
+
+Structural audit:
+
+```bash
+python3 scripts/sequencer-render-training/tooling/build-production-sequence-read-audit.py \
+  --manifest var/benchmarks/production-sequence-read/manifest.json \
+  --out var/benchmarks/production-sequence-read/read-audit.json
+```
+
+The structural audit is intentionally read-only and render-free. It parses
+existing `.xsq` files to summarize display elements, timing marks, effect
+vocabulary, target usage, and timeline coverage. This validates that the system
+can read the sequence as a complete composition before spending time on video
+render analysis.
 
 ## Relationship To Training
 
