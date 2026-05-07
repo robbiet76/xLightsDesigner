@@ -80,6 +80,8 @@ test("quality records promote repeated accepted stable or improving evidence", (
   assert.equal(artifact.durableCandidateCount, 1);
   const record = artifact.records[0];
   assert.equal(record.artifactType, "layer_composition_quality_record_v1");
+  assert.equal(record.metricScope, "target_composition");
+  assert.equal(record.promotionUse, "composition_prior");
   assert.equal(record.promotion.durableCandidate, true);
   assert.equal(record.sampleCount, 2);
   assert.deepEqual(record.targetScopes, ["submodel"]);
@@ -139,4 +141,19 @@ test("quality records can be built from a trend file", () => {
   assert.equal(fs.existsSync(outPath), true);
   assert.equal(artifact.sourceQualityTrendRef, trendPath);
   assert.equal(artifact.durableCandidateCount, 1);
+});
+
+test("quality records classify display review evidence as section-level sequencing evidence", () => {
+  const artifact = buildLayerCompositionQualityRecords({
+    qualityTrend: {
+      groups: [trendGroup({
+        family: "display_quality_review",
+        experimentId: "display-quality-review-rgb_primary",
+        passId: "display_palette_spatial_focal_validation"
+      })]
+    }
+  });
+
+  assert.equal(artifact.records[0].metricScope, "section_render");
+  assert.equal(artifact.records[0].promotionUse, "sequencing_behavior_candidate");
 });

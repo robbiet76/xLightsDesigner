@@ -72,10 +72,29 @@ function promotionBlockers(group = {}, { minSampleCount = DEFAULT_MIN_SAMPLE_COU
   return blockers;
 }
 
+function metricScopeForGroup(group = {}) {
+  if (str(group.family) === "display_quality_review") return "section_render";
+  const reviewScopes = new Set(arr(group.reviewScopes).map(str).filter(Boolean));
+  if (reviewScopes.has("whole_sequence_window") || reviewScopes.has("section_video")) return "target_composition";
+  if (arr(group.targetScopes).length > 1) return "target_composition";
+  if (str(group.changeType).includes("layer") || str(group.family).includes("layer")) return "layer_stack";
+  return "effect_capability";
+}
+
+function promotionUseForMetricScope(metricScope = "") {
+  if (metricScope === "full_sequence_render") return "primary_human_level_quality_evidence";
+  if (metricScope === "section_render") return "sequencing_behavior_candidate";
+  if (metricScope === "target_composition" || metricScope === "layer_stack") return "composition_prior";
+  if (metricScope === "effect_capability") return "capability_prior_only";
+  return "diagnostic_only";
+}
+
 function buildRecord(group = {}, options = {}) {
   const samples = qualitySamples(group);
   const sampleQualities = samples.map((sample) => sample.overallQuality);
   const blockers = promotionBlockers(group, options);
+  const metricScope = metricScopeForGroup(group);
+  const promotionUse = promotionUseForMetricScope(metricScope);
   return {
     artifactType: "layer_composition_quality_record_v1",
     artifactVersion: 1,
@@ -94,6 +113,8 @@ function buildRecord(group = {}, options = {}) {
     modelTypes: arr(group.modelTypes).map(str).filter(Boolean),
     geometryProfiles: arr(group.geometryProfiles).map(str).filter(Boolean),
     changeType: str(group.changeType),
+    metricScope,
+    promotionUse,
     reviewScopes: arr(group.reviewScopes).map(str).filter(Boolean),
     qualityDimensions: arr(group.qualityDimensions).map(str).filter(Boolean),
     timingSources: arr(group.timingSources).map(str).filter(Boolean),

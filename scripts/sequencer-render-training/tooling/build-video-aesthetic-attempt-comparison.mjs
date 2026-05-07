@@ -97,6 +97,18 @@ function loadScore(runRoot = "", explicitPath = "") {
   return { root, scorePath, score };
 }
 
+function scoreMetricScope(score = {}) {
+  return str(score.metricScope || "section_render");
+}
+
+function scorePromotionUse(score = {}) {
+  return str(score.promotionUse || (
+    scoreMetricScope(score) === "full_sequence_render"
+      ? "primary_human_level_quality_evidence"
+      : "sequencing_behavior_candidate"
+  ));
+}
+
 export function buildVideoAestheticAttemptComparison({
   baselineRunRoot = "",
   candidateRunRoot = "",
@@ -116,6 +128,11 @@ export function buildVideoAestheticAttemptComparison({
   if (!candidate.score) blockers.push("candidate_video_aesthetic_score_missing");
   if (baseline.score && str(baseline.score.status) !== "ready") blockers.push("baseline_video_aesthetic_score_not_ready");
   if (candidate.score && str(candidate.score.status) !== "ready") blockers.push("candidate_video_aesthetic_score_not_ready");
+  const candidateMetricScope = candidate.score ? scoreMetricScope(candidate.score) : "";
+  const candidatePromotionUse = candidate.score ? scorePromotionUse(candidate.score) : "";
+  if (candidate.score && !["section_render", "full_sequence_render"].includes(candidateMetricScope)) {
+    blockers.push("candidate_metric_scope_not_sequence_level");
+  }
   const deltas = blockers.length ? [] : scoreDeltas(baseline.score.scores || {}, candidate.score.scores || {});
   const comparisonStatus = blockers.length ? "blocked" : classifyAttempt(deltas);
   const improvedDimensions = deltas
@@ -133,8 +150,13 @@ export function buildVideoAestheticAttemptComparison({
     candidateRunRoot: candidate.root,
     baselineVideoAestheticScoreRef: baseline.scorePath,
     candidateVideoAestheticScoreRef: candidate.scorePath,
+    metricScope: candidateMetricScope,
+    baselineMetricScope: baseline.score ? scoreMetricScope(baseline.score) : "",
+    candidateMetricScope,
+    promotionUse: candidatePromotionUse,
     comparisonStatus,
-    promotionEligible: comparisonStatus === "improved",
+    promotionEligible: comparisonStatus === "improved"
+      && ["sequencing_behavior_candidate", "primary_human_level_quality_evidence"].includes(candidatePromotionUse),
     blockers,
     deltas,
     summary: blockers.length ? {

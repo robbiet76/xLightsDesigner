@@ -48,6 +48,8 @@ test("video aesthetic attempt comparison marks meaningful score gains as improve
 
   assert.equal(artifact.artifactType, "video_aesthetic_attempt_comparison_v1");
   assert.equal(artifact.status, "ready");
+  assert.equal(artifact.metricScope, "section_render");
+  assert.equal(artifact.promotionUse, "sequencing_behavior_candidate");
   assert.equal(artifact.comparisonStatus, "improved");
   assert.equal(artifact.promotionEligible, true);
   assert.equal(artifact.summary.overallAestheticScoreDelta, 0.06);
@@ -189,4 +191,29 @@ test("video aesthetic attempt comparison includes stronger video context dimensi
   assert.equal(dimensions.includes("palette_purpose_coverage"), true);
   assert.equal(dimensions.includes("full_sequence_context"), true);
   assert.equal(artifact.comparisonStatus, "improved");
+});
+
+test("video aesthetic attempt comparison blocks non-sequence metric scopes", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-attempt-scope-"));
+  const baseline = path.join(root, "baseline");
+  const candidate = path.join(root, "candidate");
+  writeScore(baseline, { overallAestheticScore: 0.6 });
+  writeScore(candidate, { overallAestheticScore: 0.8 });
+  const candidateScorePath = path.join(candidate, "video-aesthetic-score.json");
+  const candidateScore = JSON.parse(fs.readFileSync(candidateScorePath, "utf8"));
+  writeJson(candidateScorePath, {
+    ...candidateScore,
+    metricScope: "effect_capability",
+    promotionUse: "capability_prior_only"
+  });
+
+  const artifact = buildVideoAestheticAttemptComparison({
+    baselineRunRoot: baseline,
+    candidateRunRoot: candidate
+  });
+
+  assert.equal(artifact.status, "blocked");
+  assert.equal(artifact.comparisonStatus, "blocked");
+  assert.equal(artifact.promotionEligible, false);
+  assert.equal(artifact.blockers.includes("candidate_metric_scope_not_sequence_level"), true);
 });

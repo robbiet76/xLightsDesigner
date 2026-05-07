@@ -133,6 +133,8 @@ test("video aesthetic score summarizes full-sequence windows", () => {
 
   assert.equal(artifact.artifactType, "video_aesthetic_score_v1");
   assert.equal(artifact.status, "ready");
+  assert.equal(artifact.metricScope, "full_sequence_render");
+  assert.equal(artifact.promotionUse, "primary_human_level_quality_evidence");
   assert.equal(artifact.scoredWindowCount, 2);
   assert.equal(artifact.scores.sectionQualityMean, 0.825);
   assert.equal(artifact.scores.overallAestheticScore > 0.7, true);
@@ -201,6 +203,9 @@ test("video aesthetic score prefers controller-selected candidate windows over d
   const artifact = buildVideoAestheticScore({ runRoot: root });
 
   assert.equal(artifact.scoreBasis, "controller_selected_window_metrics_and_progression_observation");
+  assert.equal(artifact.metricScope, "section_render");
+  assert.equal(artifact.contextMetricScope, "full_sequence_render");
+  assert.equal(artifact.promotionUse, "sequencing_behavior_candidate");
   assert.equal(artifact.status, "ready");
   assert.equal(artifact.scoredWindowCount, 1);
   assert.equal(artifact.controllerSelectedWindowCount, 1);

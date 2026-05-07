@@ -216,6 +216,18 @@ function controllerSelectedPassIds(passMetadata = new Map()) {
     .filter(Boolean));
 }
 
+function metricScopeForScore({ selectedEligibleWindowCount = 0, contextWindowCount = 0, basisWindowCount = 0 } = {}) {
+  if (selectedEligibleWindowCount) return "section_render";
+  if (contextWindowCount >= 2 && basisWindowCount >= 2) return "full_sequence_render";
+  return "section_render";
+}
+
+function promotionUseForMetricScope(metricScope = "") {
+  if (metricScope === "full_sequence_render") return "primary_human_level_quality_evidence";
+  if (metricScope === "section_render") return "sequencing_behavior_candidate";
+  return "diagnostic_only";
+}
+
 function paletteRoleDisciplineScore(colorPurposes = []) {
   const purposes = new Set(arr(colorPurposes).map(str).filter(Boolean));
   if (!purposes.size) return NaN;
@@ -412,6 +424,13 @@ export function buildVideoAestheticScore({
   const status = str(fullSequence.status) === "ready" && basisWindows.length >= minimumScoredWindows
     ? "ready"
     : "insufficient_video_windows";
+  const metricScope = metricScopeForScore({
+    selectedEligibleWindowCount: selectedEligibleWindows.length,
+    contextWindowCount: contextWindows.length,
+    basisWindowCount: basisWindows.length
+  });
+  const promotionUse = promotionUseForMetricScope(metricScope);
+  const eligiblePromotionScopes = new Set(["section_render", "full_sequence_render"]);
   const artifact = {
     artifactType: "video_aesthetic_score_v1",
     artifactVersion: 1,
@@ -419,6 +438,9 @@ export function buildVideoAestheticScore({
     runRoot: root,
     status,
     scoringModelVersion: "video_aesthetic_score_model_v2",
+    metricScope,
+    contextMetricScope: contextWindows.length >= 2 ? "full_sequence_render" : metricScope,
+    promotionUse,
     fullSequenceReviewRef: fullPath,
     progressionObservationRef: str(fullSequence.progressionObservationRef),
     windowCount: windows.length,
@@ -472,9 +494,12 @@ export function buildVideoAestheticScore({
     scores,
     recommendationSummary: recommendationRows(scores),
     promotion: {
-      evidenceEligible: status === "ready" && scores.overallAestheticScore >= 0.72,
+      evidenceEligible: status === "ready"
+        && eligiblePromotionScopes.has(metricScope)
+        && scores.overallAestheticScore >= 0.72,
       blockers: [
         ...(status === "ready" ? [] : ["insufficient_scored_windows"]),
+        ...(eligiblePromotionScopes.has(metricScope) ? [] : ["metric_scope_not_sequence_level"]),
         ...(scores.overallAestheticScore >= 0.72 ? [] : ["overall_aesthetic_score_below_threshold"])
       ]
     },
