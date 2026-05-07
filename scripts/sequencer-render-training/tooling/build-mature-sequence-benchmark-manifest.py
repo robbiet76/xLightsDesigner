@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from datetime import date
 
 INITIAL_SUBSET = [
     "Intro_ElectricChristmas",
@@ -49,9 +50,12 @@ def build_manifest(show_root: Path) -> dict:
         if not xsqs:
             continue
         sequence = {
+            "sequenceId": folder.name,
             "folderName": folder.name,
             "folderPath": str(folder),
             "readOnly": True,
+            "benchmarkUse": "production_sequence_read_calibration",
+            "expectedEvidenceScope": "full_sequence_render",
             "xsq": {
                 "path": str(xsqs[0]),
                 "name": xsqs[0].name,
@@ -65,21 +69,48 @@ def build_manifest(show_root: Path) -> dict:
             "requiresRender": not bool(fseqs),
             "styleTags": infer_style_tags(folder.name),
             "initialAuditSubset": folder.name in INITIAL_SUBSET,
+            "humanReview": {
+                "status": "pending",
+                "notes": "",
+                "knownStrengths": [],
+                "knownWeaknesses": []
+            },
+            "readGoals": [
+                "whole_display_energy_arc",
+                "section_contrast",
+                "target_usage_and_handoff",
+                "effect_vocabulary_and_variation",
+                "color_story",
+                "density_and_brightness_ranges",
+                "submodel_usage_when_present"
+            ],
         }
         sequences.append(sequence)
 
     return {
-        "schema": "mature_sequence_benchmark_manifest_v1",
-        "date": "2026-04-17",
+        "artifactType": "production_sequence_read_benchmark_manifest_v1",
+        "artifactVersion": 1,
+        "schema": "production_sequence_read_benchmark_manifest_v1",
+        "createdAt": date.today().isoformat(),
         "showRoot": str(show_root),
         "readOnly": True,
         "excludedFolders": ["Static"],
         "policy": {
-            "purpose": "render_understanding_audit_only",
+            "purpose": "production_sequence_read_calibration_only",
             "trainSequencingPolicy": False,
             "copyStylisticPatterns": False,
+            "mutateSourceSequences": False,
+            "promotionRequiresHumanReview": True,
             "allowRenderFromXSQWhenNeeded": True,
+            "primaryOutcome": "calibrate_whole_display_sequence_reading",
         },
+        "evidencePriority": [
+            "full_sequence_render",
+            "section_render",
+            "target_composition",
+            "layer_stack",
+            "effect_capability"
+        ],
         "summary": {
             "sequenceCount": len(sequences),
             "withFseq": sum(1 for row in sequences if row["fseq"]["present"]),
