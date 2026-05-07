@@ -227,6 +227,25 @@ requires model-aware or region-aware evidence in addition to the video frame
 features, so the proxy must not be promoted as a production-quality handoff
 score by itself.
 
+Model-region handoff:
+
+```bash
+python3 scripts/sequencer-render-training/tooling/build-production-model-region-handoff.py \
+  --manifest var/benchmarks/production-sequence-read/manifest.json \
+  --geometry var/benchmarks/production-sequence-read/rendered-calibration/offline-preview-scene-geometry-show.json \
+  --baseline var/benchmarks/production-sequence-read/video-review/production-video-calibration-baseline.json \
+  --out var/benchmarks/production-sequence-read/video-review/production-model-region-handoff.json
+```
+
+The handoff artifact is `production_model_region_handoff_v1`. It maps direct
+`.xsq` model targets onto normalized layout regions from preview-scene geometry
+and scores lead-target movement across ordered sequence windows. Group targets
+or unresolved targets are recorded explicitly and are not inferred from names.
+This gives focal handoff and target hierarchy a model-aware evidence layer
+without mutating production sequences.
+When a production video baseline is supplied, only accepted video references are
+scored and invalid source sequences are listed as excluded references.
+
 ## Relationship To Training
 
 Generated render training remains the place where the system experiments.
