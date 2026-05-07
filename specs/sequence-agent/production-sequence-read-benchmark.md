@@ -211,6 +211,22 @@ When diagnostics report `scorer_calibration_needed`, generated training loops
 must treat current automated scores as diagnostic baselines rather than direct
 optimization targets.
 
+Full-sequence dimensions:
+
+```bash
+node scripts/sequencer-render-training/tooling/build-production-full-sequence-dimensions.mjs \
+  --baseline var/benchmarks/production-sequence-read/video-review/production-video-calibration-baseline.json \
+  --out var/benchmarks/production-sequence-read/video-review/production-full-sequence-dimensions.json
+```
+
+The dimensions artifact is `production_full_sequence_dimensions_v1`. It derives
+range-aware full-sequence calibration signals from sampled video windows:
+energy arc, section contrast, pacing variety, palette evolution, motif
+development, and a low-confidence focal-handoff proxy. True focal handoff
+requires model-aware or region-aware evidence in addition to the video frame
+features, so the proxy must not be promoted as a production-quality handoff
+score by itself.
+
 ## Relationship To Training
 
 Generated render training remains the place where the system experiments.
