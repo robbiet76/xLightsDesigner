@@ -96,8 +96,8 @@ Launcher scripts should include this evidence in failure output so failures can 
 
 ## Current Audit Findings
 
-- Multiple 2026.07 binaries are present locally with different owned API surfaces. DerivedData auto-selection can silently choose a different runtime between runs.
-- The current upstream `/Applications/xLights.app` reports 2026.07 but does not include the owned xLightsDesigner API. That path becomes valid after the API ships in the installed xLights build and the same health and route capability probes pass.
+- Multiple locally built xLights binaries can be present with different owned API surfaces. DerivedData auto-selection can silently choose a different runtime between runs.
+- The current upstream `/Applications/xLights.app` does not include the owned xLightsDesigner API. That path becomes valid after the API ships in the installed xLights build and the same health and route capability probes pass.
 - The older runnable debug build can expose `/health` but may lack newer layout routes such as `/layout/submodels` and `/layout/model-nodes`.
 - The rebuilt source app suppresses the pre-frame command-line information dialog, but exits when xLights cannot establish the requested show folder. The spdlog evidence indicates show-folder access/validation failure rather than an unexplained crash.
 - Command-line `-s` is brittle for real user folders because it runs before API health and before any structured modal reporting.

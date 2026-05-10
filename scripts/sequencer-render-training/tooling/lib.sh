@@ -24,7 +24,7 @@ resolve_xlights_app_path() {
     return 0
   fi
 
-  local repo_debug_app="${HOME}/xLights-2026.07/build/XLD-CodexDerivedData/Build/Products/Debug/xLights.app"
+  local repo_debug_app="${HOME}/Projects/xLights/build/XLD-CodexDerivedData-202608/Build/Products/Debug/xLights.app"
   if [[ -d "${repo_debug_app}" ]]; then
     printf '%s\n' "${repo_debug_app}"
     return 0

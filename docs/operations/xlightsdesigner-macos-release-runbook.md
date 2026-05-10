@@ -14,7 +14,7 @@ This runbook defines the app validation path.
 
 - App source: `apps/xlightsdesigner-macos`
 - App automation server: `http://127.0.0.1:49916`
-- Owned xLights API source: `/Users/robterry/xLights-2026.07/src-ui-wx/xLightsDesigner`
+- Owned xLights API source: `/Users/robterry/Projects/xLights/src-ui-wx/xLightsDesigner`
 - Owned xLights API endpoint: `http://127.0.0.1:49915/xlightsdesigner/api`
 - During current development, the upstream installed `/Applications/xLights.app` is not valid for owned API validation because it does not include the xLightsDesigner API. After this work ships in xLights, the installed app path is valid when the same owned API health and capability probes pass.
 

@@ -10,7 +10,7 @@ import { pidsMatching, stopPids } from '../xlights/process-helpers.mjs';
 
 const execFileAsync = promisify(execFile);
 const APP_AUTOMATION_URL = process.env.XLD_APP_AUTOMATION_URL || 'http://127.0.0.1:49916';
-const DEFAULT_XLIGHTS_APP = '/Users/robterry/xLights-2026.07/build/XLD-CodexDerivedData/Build/Products/Debug/xLights.app';
+const DEFAULT_XLIGHTS_APP = '/Users/robterry/Projects/xLights/build/XLD-CodexDerivedData-202608/Build/Products/Debug/xLights.app';
 const DEFAULT_SOURCE_PROJECT = '/Users/robterry/Documents/Lights/xLightsDesigner/projects/Vendor Layout API Test/Vendor Layout API Test.xdproj';
 const DEFAULT_SHOW_DIR = '/Users/robterry/Library/Containers/org.xlights/Data/tmp/xld_vendor_layout_api_test';
 const DEFAULT_SCRATCH_NAME = 'Vendor Reconciliation Scratch';

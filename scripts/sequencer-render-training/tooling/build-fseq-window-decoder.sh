@@ -4,8 +4,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_BIN="${SCRIPT_DIR}/fseq_window_decoder"
 SRC_CPP="${SCRIPT_DIR}/fseq_window_decoder.cpp"
-XLIGHTS_ROOT="${XLIGHTS_ROOT:-${HOME}/xLights-2026.07}"
-XLIGHTS_DEPS_ROOT="${XLIGHTS_DEPS_ROOT:-${XLIGHTS_ROOT}/macOS/xLights-macOS-dependencies-2026.07}"
+XLIGHTS_ROOT="${XLIGHTS_ROOT:-${HOME}/Projects/xLights}"
+if [[ -z "${XLIGHTS_DEPS_ROOT:-}" ]]; then
+  XLIGHTS_DEPS_ROOT="$(find "${XLIGHTS_ROOT}/macOS" -maxdepth 1 -type d -name 'xLights-macOS-dependencies-*' | sort | tail -1)"
+fi
 FSEQ_CPP="${XLIGHTS_ROOT}/src-core/render/FSEQFile.cpp"
 
 if [[ -x "${OUT_BIN}" && "${OUT_BIN}" -nt "${SRC_CPP}" && "${OUT_BIN}" -nt "${FSEQ_CPP}" ]]; then

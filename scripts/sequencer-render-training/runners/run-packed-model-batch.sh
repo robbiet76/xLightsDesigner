@@ -118,7 +118,7 @@ const protocol = String(protocolRaw || "")
   .filter(Boolean);
 
 const palettePath = process.env.TRAINING_DEFAULT_PALETTE_PATH
-  || `${process.env.HOME || ""}/xLights-2026.07/resources/palettes/Default.xpalette`;
+  || `${process.env.HOME || ""}/Projects/xLights/resources/palettes/Default.xpalette`;
 
 function loadXpalette(path) {
   const raw = fs.readFileSync(path, "utf8");

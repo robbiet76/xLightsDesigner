@@ -12,9 +12,9 @@ test("import-upstream-effect-metadata emits normalized bundle, fingerprint, and 
     [
       resolve("scripts/sequencer-render-training/tooling/import-upstream-effect-metadata.mjs"),
       root,
-      join(homedir(), "xLights-2026.07", "resources", "effectmetadata"),
+      join(homedir(), "Projects", "xLights", "resources", "effectmetadata"),
       resolve("scripts/sequencer-render-training/catalog/effect-parameter-registry.json"),
-      "2026.07"
+      "2026.08"
     ],
     {
       cwd: resolve("."),
@@ -22,9 +22,9 @@ test("import-upstream-effect-metadata emits normalized bundle, fingerprint, and 
     }
   );
 
-  const bundlePath = join(root, "xlights-effectmetadata-bundle-2026.07.json");
-  const fingerprintPath = join(root, "xlights-effectmetadata-fingerprint-2026.07.json");
-  const diffPath = join(root, "xlights-effectmetadata-diff-2026.07.json");
+  const bundlePath = join(root, "xlights-effectmetadata-bundle-2026.08.json");
+  const fingerprintPath = join(root, "xlights-effectmetadata-fingerprint-2026.08.json");
+  const diffPath = join(root, "xlights-effectmetadata-diff-2026.08.json");
   const effectiveRegistryPath = join(root, "effective-effect-parameter-registry.json");
 
   assert.equal(existsSync(bundlePath), true);
@@ -38,7 +38,7 @@ test("import-upstream-effect-metadata emits normalized bundle, fingerprint, and 
   const effectiveRegistry = JSON.parse(readFileSync(effectiveRegistryPath, "utf8"));
 
   assert.equal(bundle.artifactType, "xlights_effect_metadata_bundle_v1");
-  assert.equal(bundle.source.xlightsVersion, "2026.07");
+  assert.equal(bundle.source.xlightsVersion, "2026.08");
   assert.equal(bundle.source.sourceDir, "resources/effectmetadata");
   assert.equal(bundle.effects.every((effect) => !effect.sourcePath.startsWith("/")), true);
   assert.ok(bundle.effectCount >= 50);
@@ -50,7 +50,7 @@ test("import-upstream-effect-metadata emits normalized bundle, fingerprint, and 
 
   assert.equal(diff.artifactType, "xlights_effect_metadata_diff_v1");
   assert.ok(diff.overlapEffects.some((row) => row.effectName === "Shockwave"));
-  assert.equal(effectiveRegistry.metadataSource.xlightsVersion, "2026.07");
+  assert.equal(effectiveRegistry.metadataSource.xlightsVersion, "2026.08");
   assert.equal(effectiveRegistry.effects.Shockwave.parameters.centerX.upstream.id, "Shockwave_CenterX");
 
   const shockwave = diff.overlapEffects.find((row) => row.effectName === "Shockwave");

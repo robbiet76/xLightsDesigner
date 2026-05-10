@@ -53,6 +53,6 @@ Model metadata refresh and reconciliation requirements are defined in `model-met
 
 ## Version Policy
 
-The current implementation target is xLights 2026.07. Earlier 2026.06 migration docs are historical evidence only; they should not be treated as open implementation plans.
+The current implementation target is xLights 2026.08. Earlier 2026.06 and 2026.07 migration docs are historical evidence only; they should not be treated as open implementation plans.
 
 Future xLights releases should be handled by a short impact audit and then folded into this durable API spec when decisions become current.
