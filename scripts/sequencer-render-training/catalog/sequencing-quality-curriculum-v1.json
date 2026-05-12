@@ -443,7 +443,7 @@
         ]
       },
       "completionCriteria": {
-        "minimumDistinctCoverageUnitCount": 1,
+        "minimumDistinctCoverageUnitCount": 3,
         "distinctCoverageFields": [
           "paletteProfile",
           "passId"
@@ -481,7 +481,7 @@
         ]
       },
       "completionCriteria": {
-        "minimumDistinctCoverageUnitCount": 1,
+        "minimumDistinctCoverageUnitCount": 3,
         "distinctCoverageFields": [
           "paletteProfile",
           "passId"
@@ -520,7 +520,7 @@
         ]
       },
       "completionCriteria": {
-        "minimumDistinctCoverageUnitCount": 1,
+        "minimumDistinctCoverageUnitCount": 3,
         "distinctCoverageFields": [
           "paletteProfile",
           "passId"
@@ -629,11 +629,203 @@
       }
     },
     {
-      "goalId": "display.video_aesthetic.palette_motion_pacing_variation_v1",
+      "goalId": "display.video_aesthetic.palette_foundation_guarded_motion_v1",
       "areaId": "display_level_composition",
       "priority": 6,
       "status": "not_started",
-      "description": "Learn a follow-on RGB palette pacing variant that raises motion interest and pacing variety without sacrificing the color-purpose discipline established by earlier RGB display goals.",
+      "description": "After repeated display-target regressions, validate a guarded motion target that preserves the stable palette/spatial/focal foundation before adding only one restrained motion layer.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_foundation_guarded_intro",
+          "display_palette_foundation_guarded_lift",
+          "display_palette_foundation_guarded_release"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_guarded_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_guarded_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_guarded_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+      "areaId": "display_level_composition",
+      "priority": 7,
+      "status": "not_started",
+      "description": "Refine the guarded three-window display candidate by strengthening the focal hold and adding slightly clearer lift/release pacing while preserving the stable foundation.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_foundation_focal_pacing_intro",
+          "display_palette_foundation_focal_pacing_lift",
+          "display_palette_foundation_focal_pacing_release"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_focal_pacing_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_focal_pacing_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_focal_pacing_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_foundation_focal_isolation_v1",
+      "areaId": "display_level_composition",
+      "priority": 8,
+      "status": "not_started",
+      "description": "Refine the guarded three-window display candidate by preserving the original focal anchor and reducing support-motion competition around it.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_foundation_focal_isolation_intro",
+          "display_palette_foundation_focal_isolation_lift",
+          "display_palette_foundation_focal_isolation_release"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_focal_isolation_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_focal_isolation_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_focal_isolation_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_foundation_controlled_counterpoint_v1",
+      "areaId": "display_level_composition",
+      "priority": 9,
+      "status": "not_started",
+      "description": "Refine the stable guarded foundation by restoring motion interest with short low-intensity counterpoint support that does not compete with the focal star.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_foundation_counterpoint_intro",
+          "display_palette_foundation_counterpoint_lift",
+          "display_palette_foundation_counterpoint_release"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_counterpoint_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_counterpoint_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_counterpoint_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_motion_pacing_variation_v1",
+      "areaId": "display_level_composition",
+      "priority": 10,
+      "status": "not_started",
+      "description": "Learn a follow-on RGB palette pacing variant that raises motion interest and pacing variety while preserving the stable palette/spatial/focal foundation.",
       "requiredStableSamples": 2,
       "coverage": {
         "families": [
@@ -669,7 +861,7 @@
     {
       "goalId": "display.video_aesthetic.palette_spatial_negative_space_v1",
       "areaId": "display_level_composition",
-      "priority": 7,
+      "priority": 8,
       "status": "not_started",
       "description": "Learn RGB display balance that uses intentional negative space and restrained focal support instead of filling more models whenever balance is weak.",
       "requiredStableSamples": 2,
@@ -707,7 +899,7 @@
     {
       "goalId": "display.video_aesthetic.palette_motion_pacing_reprise_v1",
       "areaId": "display_level_composition",
-      "priority": 8,
+      "priority": 9,
       "status": "not_started",
       "description": "Repeat the successful RGB motion pacing structure under a new pass key so the runner can collect additional durable evidence without re-entering the regressing transition bridge path.",
       "requiredStableSamples": 2,
@@ -745,7 +937,7 @@
     {
       "goalId": "display.video_aesthetic.palette_spatial_negative_space_reprise_v1",
       "areaId": "display_level_composition",
-      "priority": 9,
+      "priority": 10,
       "status": "not_started",
       "description": "Repeat the successful RGB spatial negative-space structure under a new pass key to collect additional stable balance evidence for selector use.",
       "requiredStableSamples": 2,
@@ -783,7 +975,7 @@
     {
       "goalId": "display.video_aesthetic.palette_motion_pacing_holdout_v1",
       "areaId": "display_level_composition",
-      "priority": 10,
+      "priority": 11,
       "status": "not_started",
       "description": "Collect additional RGB motion pacing evidence under a holdout pass key using the successful restrained section pacing structure.",
       "requiredStableSamples": 2,
@@ -821,7 +1013,7 @@
     {
       "goalId": "display.video_aesthetic.palette_motion_depth_holdout_v1",
       "areaId": "display_level_composition",
-      "priority": 11,
+      "priority": 12,
       "status": "retired",
       "description": "Validate whether restrained RGB motion pacing remains stable when the display adds a low-intensity depth foundation.",
       "requiredStableSamples": 2,
@@ -859,7 +1051,7 @@
     {
       "goalId": "display.video_aesthetic.palette_spatial_negative_space_holdout_v1",
       "areaId": "display_level_composition",
-      "priority": 12,
+      "priority": 13,
       "status": "not_started",
       "description": "Collect holdout evidence for RGB negative-space display balance without introducing broad fill or competing focal layers.",
       "requiredStableSamples": 2,
@@ -897,7 +1089,7 @@
     {
       "goalId": "display.video_aesthetic.palette_spatial_focal_holdout_v1",
       "areaId": "display_level_composition",
-      "priority": 13,
+      "priority": 14,
       "status": "not_started",
       "description": "Validate RGB spatial focus with a sparse structural base, one focal accent, and a restrained line thread.",
       "requiredStableSamples": 2,
@@ -935,7 +1127,7 @@
     {
       "goalId": "display.video_aesthetic.palette_color_purpose_contrast_holdout_v1",
       "areaId": "display_level_composition",
-      "priority": 14,
+      "priority": 15,
       "status": "retired",
       "description": "Validate RGB color-purpose contrast using the disciplined structure, focal accent, and motion roles learned earlier.",
       "requiredStableSamples": 2,
@@ -973,7 +1165,7 @@
     {
       "goalId": "display.video_aesthetic.palette_color_purpose_motion_holdout_v1",
       "areaId": "display_level_composition",
-      "priority": 15,
+      "priority": 16,
       "status": "not_started",
       "description": "Validate RGB color-purpose discipline when motion support carries more of the sequence energy.",
       "requiredStableSamples": 2,
@@ -1011,7 +1203,7 @@
     {
       "goalId": "display.video_aesthetic.palette_motion_pacing_validation_v1",
       "areaId": "display_level_composition",
-      "priority": 16,
+      "priority": 17,
       "status": "not_started",
       "description": "Revalidate the stable RGB motion pacing pattern under an independent validation pass key before promoting it as a durable selector prior.",
       "requiredStableSamples": 2,
@@ -1049,7 +1241,7 @@
     {
       "goalId": "display.video_aesthetic.palette_spatial_negative_space_validation_v1",
       "areaId": "display_level_composition",
-      "priority": 17,
+      "priority": 18,
       "status": "not_started",
       "description": "Revalidate the stable RGB negative-space structure with a separate pass key for durable whole-display balance evidence.",
       "requiredStableSamples": 2,
@@ -1087,7 +1279,7 @@
     {
       "goalId": "display.video_aesthetic.palette_spatial_focal_validation_v1",
       "areaId": "display_level_composition",
-      "priority": 18,
+      "priority": 19,
       "status": "not_started",
       "description": "Revalidate sparse RGB focal structure with restrained motion support and no broad fill.",
       "requiredStableSamples": 2,
@@ -1125,7 +1317,7 @@
     {
       "goalId": "display.video_aesthetic.palette_color_purpose_motion_validation_v1",
       "areaId": "display_level_composition",
-      "priority": 19,
+      "priority": 20,
       "status": "not_started",
       "description": "Revalidate the non-regressing RGB color-purpose motion structure with a separate pass key.",
       "requiredStableSamples": 2,
@@ -1155,6 +1347,328 @@
           {
             "paletteProfile": "rgb_primary",
             "passId": "display_palette_color_purpose_motion_validation"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_focal_handoff_context_validation_v1",
+      "areaId": "display_level_composition",
+      "priority": 21,
+      "status": "not_started",
+      "description": "Validate a constrained RGB display structure that protects focal handoff and full-sequence context after palette discipline and motion support have stabilized.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_focal_handoff_context_validation"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "focal_handoff_stability",
+          "focal_clarity",
+          "full_sequence_context",
+          "intent_match"
+        ]
+      },
+      "nextSelectionHints": [
+        "Hold the primary focal element longer, add only one low-competition handoff thread, and keep late support as context rather than competing motion.",
+        "Prefer preserving focal handoff and full-sequence context over additional color-purpose motion."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 1,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_focal_handoff_context_validation"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_focal_handoff_context_sequence_v1",
+      "areaId": "display_level_composition",
+      "priority": 22,
+      "status": "not_started",
+      "description": "Validate focal handoff as a compact three-window intro/lift/release sequence so whole-sequence context is measured without dragging in a long dependency chain.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_focal_handoff_context_intro",
+          "display_palette_focal_handoff_context_lift",
+          "display_palette_focal_handoff_context_release"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "focal_handoff_stability",
+          "focal_clarity",
+          "full_sequence_context",
+          "intent_match"
+        ]
+      },
+      "nextSelectionHints": [
+        "Measure the handoff as a compact sequence: establish focal anchor, introduce one restrained bridge, then add quiet release context.",
+        "Do not add broad palette or motion support until focal handoff and context are preserved."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_focal_handoff_context_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_focal_handoff_context_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_focal_handoff_context_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_foundation_guarded_revalidation_v1",
+      "areaId": "display_level_composition",
+      "priority": 23,
+      "status": "not_started",
+      "description": "Revalidate the current best guarded foundation structure under fresh pass keys before adding more sequence complexity.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_foundation_guarded_revalidation_intro",
+          "display_palette_foundation_guarded_revalidation_lift",
+          "display_palette_foundation_guarded_revalidation_release"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the stable guarded foundation as the control branch: preserve left structure, right counterweight, center focal accent, restrained line motion, and late star support.",
+        "Treat this as a reproducibility checkpoint before exploring additional complexity."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_guarded_revalidation_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_guarded_revalidation_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_guarded_revalidation_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_focal_handoff_guarded_context_sequence_v1",
+      "areaId": "display_level_composition",
+      "priority": 23,
+      "status": "not_started",
+      "description": "Validate focal handoff while preserving the stable guarded foundation context so the sequence does not lose intent match, local readability, visual balance, or full-sequence context.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_focal_handoff_guarded_context_intro",
+          "display_palette_focal_handoff_guarded_context_lift",
+          "display_palette_focal_handoff_guarded_context_release"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ],
+        "qualityDimensions": [
+          "focal_handoff_stability",
+          "focal_clarity",
+          "full_sequence_context",
+          "intent_match",
+          "visual_balance",
+          "local_evidence_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Preserve the stable left/right context and focal hold before adding the restrained handoff bridge.",
+        "Use this as the repair branch after the sparse focal-handoff sequence regressed intent match, readability, and full-sequence context."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_focal_handoff_guarded_context_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_focal_handoff_guarded_context_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_focal_handoff_guarded_context_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_foundation_soft_counterpoint_v1",
+      "areaId": "display_level_composition",
+      "priority": 24,
+      "status": "not_started",
+      "description": "Test a softer late counterpoint over the stable guarded foundation to improve motion and balance without repeating the focal-handoff regression from the stronger counterpoint branch.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_foundation_soft_counterpoint_intro",
+          "display_palette_foundation_soft_counterpoint_lift",
+          "display_palette_foundation_soft_counterpoint_release"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "nextSelectionHints": [
+        "Preserve the stable guarded foundation, then add only a late low-brightness counterpoint so visual balance can improve without stealing the focal handoff.",
+        "Treat any focal handoff or intent-match regression as more important than small motion-interest gains."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_soft_counterpoint_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_soft_counterpoint_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_soft_counterpoint_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "display.video_aesthetic.palette_foundation_calibrated_counterpoint_v1",
+      "areaId": "display_level_composition",
+      "priority": 25,
+      "status": "not_started",
+      "description": "Test a calibrated late counterpoint between the invisible soft branch and the stronger branch that hurt focal handoff.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "display_quality_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "display_palette_foundation_calibrated_counterpoint_intro",
+          "display_palette_foundation_calibrated_counterpoint_lift",
+          "display_palette_foundation_calibrated_counterpoint_release"
+        ],
+        "reviewScopes": [
+          "section_video",
+          "whole_sequence_window",
+          "full_display_contact_sheet"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use a measurable but late counterpoint: it should improve motion and visual balance while staying below the focal star and line motion.",
+        "If focal handoff drops, retreat to the soft branch; if no metrics move, increase counterpoint presence only in a future bounded branch."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_calibrated_counterpoint_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_calibrated_counterpoint_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "display_palette_foundation_calibrated_counterpoint_release"
           }
         ],
         "maximumRegressingRecords": 0
@@ -1373,6 +1887,1230 @@
           {
             "paletteProfile": "rgb_primary",
             "passId": "lyric_phrase_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.guarded_foundation_sequence.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Blend the stable guarded display foundation with section energy, motif lift, and lyric release timing so the sequence learns musical structure without losing whole-display readability.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "guarded_foundation_energy_arc",
+          "guarded_foundation_motif_lift",
+          "guarded_foundation_lyric_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the stable guarded foundation as the visual base, then vary timing roles by section, motif lift, and lyric release.",
+        "This branch should teach sequence-level musical phrasing rather than another display-only counterpoint variant."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "guarded_foundation_energy_arc"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "guarded_foundation_motif_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "guarded_foundation_lyric_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.guarded_pacing_sequence.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Use the stable guarded visual foundation with a clearer focal hold and measured phrase lift to recover motion/palette purpose while preserving section, beat, lyric, and accent timing.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "guarded_pacing_energy_arc",
+          "guarded_pacing_motif_lift",
+          "guarded_pacing_lyric_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Preserve the guarded foundation, but use the clearer focal-hold and measured line lift that previously produced stable display evidence.",
+        "This branch should retain music timing coverage while repairing the guarded music branch's weak motion and palette-purpose movement."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "guarded_pacing_energy_arc"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "guarded_pacing_motif_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "guarded_pacing_lyric_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.full_sequence_audio_alignment.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Train full-sequence song response using intro, build, and release sections with audio-intent labels so generated sequences can learn energy arc, beat/motif continuity, lyric release, and whole-display payoff together.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "audio_intro_foundation",
+          "audio_build_motif_lift",
+          "audio_release_payoff"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Treat this as full-sequence song response training: intro establishes structure, build introduces motif and motion, release creates focal payoff.",
+        "Promote only when the whole-display video remains readable and the music review shows section, beat, phrase, lyric, and accent timing coverage."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "audio_intro_foundation"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "audio_build_motif_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "audio_release_payoff"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.full_sequence_audio_consistency_repair.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Repair full-sequence audio alignment by preserving intro/build/release intent while reducing color-role churn, abrupt motion shifts, and section-to-section inconsistency.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "audio_consistent_intro_foundation",
+          "audio_consistent_build_motif_lift",
+          "audio_consistent_release_payoff"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Keep the audio section roles from the first audio-alignment branch, but use a more consistent palette and gentler motion handoff.",
+        "This repair is targeted at quality consistency, color discipline, temporal continuity, and full-sequence context."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "audio_consistent_intro_foundation"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "audio_consistent_build_motif_lift"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "audio_consistent_release_payoff"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.full_sequence_audio_guarded_repair.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Repair broad full-sequence audio alignment by keeping the guarded visual foundation and adding only single-target phrase and release cues so focal clarity gains do not cost color discipline, quality consistency, temporal continuity, or full-sequence context.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "audio_guarded_repair_intro",
+          "audio_guarded_repair_build",
+          "audio_guarded_repair_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability",
+          "quality_consistency",
+          "color_discipline",
+          "full_sequence_context"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use this instead of retrying the broad audio alignment branch after quality-consistency and color-discipline regressions.",
+        "Preserve the guarded structure and keep timing cues on one compatible support target."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "audio_guarded_repair_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "audio_guarded_repair_build"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "audio_guarded_repair_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Layer synthesized intro, phrase, lyric, and release timing cues over the strongest guarded visual foundation without rebuilding the whole-display structure.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_intro",
+          "baseline_audio_overlay_phrase_accent",
+          "baseline_audio_overlay_release_accent"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Preserve the guarded display foundation and add only subtle synthetic timing cues.",
+        "This branch should test whether music labels can improve intent and section quality while keeping whole-display quality near the best baseline."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_phrase_accent"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_release_accent"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_motion_repair.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Repair the baseline-preserving synthesized audio overlay by adding only minimal motion/color-purpose support while preserving the guarded display foundation.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_motion_intro",
+          "baseline_audio_overlay_motion_phrase",
+          "baseline_audio_overlay_motion_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the close baseline-preserving overlay as the base, then add only low-brightness motion support to repair motion interest and palette purpose.",
+        "Avoid changing focal hierarchy, display order, or section structure."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_motion_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_motion_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_motion_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_palette_role_repair.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Repair the close baseline-preserving synthesized audio overlay by assigning the release cue a distinct lyric focal accent purpose without adding new visual layers.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_palette_intro",
+          "baseline_audio_overlay_palette_phrase",
+          "baseline_audio_overlay_palette_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Keep the same visible overlay as the close baseline-preserving candidate.",
+        "Only distinguish the lyric release color purpose so palette-purpose coverage is explicit without adding display clutter."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_palette_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_palette_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_palette_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_existing_motion_repair.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Repair motion interest in the promoted baseline-preserving synthesized audio overlay by increasing the existing phrase overlay's motion contrast without adding layers or changing focal hierarchy.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_existing_motion_intro",
+          "baseline_audio_overlay_existing_motion_phrase",
+          "baseline_audio_overlay_existing_motion_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted palette-role overlay as the base.",
+        "Increase motion range only by retiming the existing phrase overlay; do not add a new prop or competing focal layer."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_existing_motion_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_existing_motion_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_existing_motion_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_style_variation.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a second baseline-preserving synthesized audio overlay style that keeps the promoted display foundation and semantic timing roles while varying phrase/release timing and color-purpose emphasis.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_style_intro",
+          "baseline_audio_overlay_style_phrase",
+          "baseline_audio_overlay_style_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability",
+          "style_range"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted palette-role overlay as the reference foundation.",
+        "Explore a controlled timing/style variation that preserves whole-display hierarchy instead of optimizing toward one static effect recipe."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_style_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_style_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_style_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_call_response.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a baseline-preserving synthesized audio call/response style that keeps the guarded display foundation while alternating restrained phrase and lyric accents across compatible targets.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_call_response_intro",
+          "baseline_audio_overlay_call_response_phrase",
+          "baseline_audio_overlay_call_response_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability",
+          "style_range",
+          "target_handoff"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted guarded foundation and style-variation evidence as the reference.",
+        "Test restrained call/response timing across line and focal targets without adding broad display activity."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_call_response_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_call_response_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_call_response_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_single_target_motif.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a baseline-preserving synthesized audio motif variation that keeps phrase, reprise, and release echo on one support target so the established focal handoff is not disturbed.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_single_target_intro",
+          "baseline_audio_overlay_single_target_phrase",
+          "baseline_audio_overlay_single_target_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "lyric_readability",
+          "style_range",
+          "focal_handoff_stability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted guarded foundation and style-variation evidence as the reference.",
+        "Keep all added motif timing on one support target to test style range without cross-target focal competition."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_single_target_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_single_target_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_single_target_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_single_target_swell.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a baseline-preserving synthesized section-energy swell that keeps all added timing on one support target while changing intensity across intro, phrase, and release windows.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_single_target_swell_intro",
+          "baseline_audio_overlay_single_target_swell_phrase",
+          "baseline_audio_overlay_single_target_swell_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "style_range",
+          "focal_handoff_stability",
+          "visual_balance"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted guarded foundation and single-target motif evidence as the reference.",
+        "Explore a gradual support-target energy swell without moving attention away from the established focal handoff."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_single_target_swell_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_single_target_swell_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_single_target_swell_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_sparse_accent.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a sparse baseline-preserving synthesized accent style that keeps only one short support-target phrase cue and one restrained release cue over the guarded foundation.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_sparse_accent_intro",
+          "baseline_audio_overlay_sparse_accent_phrase",
+          "baseline_audio_overlay_sparse_accent_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "style_range",
+          "focal_handoff_stability",
+          "local_evidence_readability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted guarded foundation and single-target overlay evidence as the reference.",
+        "Reduce accent density while preserving a readable phrase cue and release cue on the same support target."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_accent_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_accent_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_accent_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_sparse_palette.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a sparse baseline-preserving synthesized accent style that keeps density and timing stable while changing the support phrase to a secondary palette accent role.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_sparse_palette_intro",
+          "baseline_audio_overlay_sparse_palette_phrase",
+          "baseline_audio_overlay_sparse_palette_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "style_range",
+          "palette_purpose_coverage",
+          "color_discipline",
+          "focal_handoff_stability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted sparse-accent branch as the reference.",
+        "Keep sparse timing and target selection stable while testing whether a secondary accent purpose adds useful palette range."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_palette_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_palette_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_palette_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_sparse_palette_discipline_repair.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Repair the failed sparse secondary-palette overlay by preserving the same sparse timing and support target while returning the phrase cue to the disciplined cool-motion accent role.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_sparse_palette_discipline_intro",
+          "baseline_audio_overlay_sparse_palette_discipline_phrase",
+          "baseline_audio_overlay_sparse_palette_discipline_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "style_range",
+          "palette_purpose_coverage",
+          "color_discipline",
+          "focal_handoff_stability"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use this instead of retrying the sparse secondary-palette branch after color-discipline and palette-purpose regressions.",
+        "Keep sparse timing and target selection stable, but do not activate the reserved secondary accent color."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_palette_discipline_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_palette_discipline_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_palette_discipline_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_sparse_delayed.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a sparse baseline-preserving synthesized accent style that keeps target and color-purpose stable while delaying phrase and release accents for a later emphasis contour.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_sparse_delayed_intro",
+          "baseline_audio_overlay_sparse_delayed_phrase",
+          "baseline_audio_overlay_sparse_delayed_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "style_range",
+          "focal_handoff_stability",
+          "temporal_continuity"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted sparse-accent branch as the reference.",
+        "Keep sparse density, target selection, and color purpose stable while shifting accent timing later."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_delayed_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_delayed_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_delayed_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_sparse_early.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a sparse baseline-preserving synthesized accent style that keeps target and color-purpose stable while moving phrase and release accents earlier for a front-weighted emphasis contour.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_sparse_early_intro",
+          "baseline_audio_overlay_sparse_early_phrase",
+          "baseline_audio_overlay_sparse_early_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "style_range",
+          "focal_handoff_stability",
+          "temporal_continuity"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted sparse-delayed branch as the reference.",
+        "Keep sparse density, target selection, and color purpose stable while shifting accent timing earlier."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_early_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_early_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_early_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_sparse_syncopated.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a sparse baseline-preserving synthesized syncopated echo style that preserves target and color-purpose discipline while adding a second low-brightness offbeat phrase echo.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_sparse_syncopated_intro",
+          "baseline_audio_overlay_sparse_syncopated_phrase",
+          "baseline_audio_overlay_sparse_syncopated_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "style_range",
+          "focal_handoff_stability",
+          "temporal_continuity"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted sparse-delayed and sparse-early branches as timing-range references.",
+        "Keep target selection and color purposes stable while testing a restrained offbeat phrase echo."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_syncopated_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_syncopated_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_syncopated_release"
+          }
+        ],
+        "maximumRegressingRecords": 0
+      }
+    },
+    {
+      "goalId": "music.baseline_preserving_audio_overlay_sparse_release_hold.v1",
+      "areaId": "musical_structure",
+      "priority": 5,
+      "status": "not_started",
+      "description": "Validate a sparse baseline-preserving synthesized release-hold style that keeps the phrase cue restrained and stretches the lyric release cue without adding targets.",
+      "requiredStableSamples": 2,
+      "coverage": {
+        "families": [
+          "music_structure_review"
+        ],
+        "paletteProfiles": [
+          "rgb_primary"
+        ],
+        "passIds": [
+          "baseline_audio_overlay_sparse_release_hold_intro",
+          "baseline_audio_overlay_sparse_release_hold_phrase",
+          "baseline_audio_overlay_sparse_release_hold_release"
+        ],
+        "timingSources": [
+          "section",
+          "phrase",
+          "beat",
+          "lyric",
+          "accent"
+        ],
+        "qualityDimensions": [
+          "energy_progression",
+          "timing_alignment",
+          "repetition_with_variation",
+          "style_range",
+          "focal_handoff_stability",
+          "temporal_continuity"
+        ]
+      },
+      "nextSelectionHints": [
+        "Use the promoted sparse-delayed branch as the reference for late emphasis.",
+        "Keep the same support target and semantic color roles while testing whether a restrained release hold adds useful style range."
+      ],
+      "completionCriteria": {
+        "minimumDistinctCoverageUnitCount": 3,
+        "distinctCoverageFields": [
+          "paletteProfile",
+          "passId"
+        ],
+        "desiredCoverageUnits": [
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_release_hold_intro"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_release_hold_phrase"
+          },
+          {
+            "paletteProfile": "rgb_primary",
+            "passId": "baseline_audio_overlay_sparse_release_hold_release"
           }
         ],
         "maximumRegressingRecords": 0

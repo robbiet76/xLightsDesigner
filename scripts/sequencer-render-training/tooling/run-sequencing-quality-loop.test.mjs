@@ -175,13 +175,39 @@ test("sequencing quality loop blocks cleanly when evidence is missing", async ()
   assert.equal(summary.nextQueueCount, 0);
 });
 
+test("sequencing quality loop chooses an unused default loop directory", async () => {
+  const root = tempDir();
+  const outRoot = path.join(root, "loops");
+  const latestRunRoot = path.join(root, "latest");
+  const modelCatalogPath = path.join(root, "model-catalog.json");
+  fs.mkdirSync(path.join(outRoot, "loop-000001"), { recursive: true });
+  writeLatestEvidence(latestRunRoot);
+  writeJson(modelCatalogPath, modelCatalog());
+
+  const summary = await runSequencingQualityLoop({
+    latestRunRoot,
+    outRoot,
+    modelCatalogPath,
+    runId: "loop-test",
+    maxQueue: 1
+  });
+
+  assert.equal(summary.loopRoot, path.join(outRoot, "loop-000002"));
+  assert.equal(fs.existsSync(path.join(outRoot, "loop-000001")), true);
+  assert.equal(fs.existsSync(path.join(outRoot, "loop-000002", "loop-summary.json")), true);
+});
+
 test("sequencing quality loop writes cross-run quality summary after live execution", async () => {
   const root = tempDir();
   const latestRunRoot = path.join(root, "latest");
   const loopRoot = path.join(root, "loop");
   const modelCatalogPath = path.join(root, "model-catalog.json");
+  const humanCalibrationPath = path.join(root, "human-calibration.json");
+  const humanScorerAlignmentPath = path.join(root, "human-scorer-alignment.json");
   writeLatestEvidence(latestRunRoot);
   writeJson(modelCatalogPath, modelCatalog());
+  writeJson(humanCalibrationPath, { artifactType: "production_human_review_calibration_v1", status: "approved" });
+  writeJson(humanScorerAlignmentPath, { artifactType: "production_human_scorer_alignment_v1" });
 
   const summary = await runSequencingQualityLoop({
     latestRunRoot,
@@ -190,6 +216,8 @@ test("sequencing quality loop writes cross-run quality summary after live execut
     runId: "loop-test",
     maxQueue: 1,
     applyRender: true,
+    humanCalibrationPath,
+    humanScorerAlignmentPath,
     deps: {
       runPasses: async ({ runRoot }) => {
         writeJson(path.join(runRoot, "pass-runner-summary.json"), {
@@ -296,6 +324,22 @@ test("sequencing quality loop writes cross-run quality summary after live execut
         };
         writeJson(outPath, artifact);
         return artifact;
+      },
+      buildHumanCalibratedCandidateEvaluation: ({ outPath }) => {
+        const artifact = {
+          artifactType: "human_calibrated_candidate_evaluation_v1",
+          status: "ready",
+          summary: {
+            candidateCount: 1,
+            promotionEligibleCandidateCount: 0,
+            optimizationMetricEvaluations: 0,
+            guardrailMetricEvaluations: 3,
+            diagnosticMetricEvaluations: 3,
+            primaryRisk: "No current automated dimension is aligned enough for unattended promotion."
+          }
+        };
+        writeJson(outPath, artifact);
+        return artifact;
       }
     }
   });
@@ -311,6 +355,9 @@ test("sequencing quality loop writes cross-run quality summary after live execut
   assert.equal(summary.videoAestheticAttemptComparison.metricScope, "full_sequence_render");
   assert.equal(summary.videoAestheticAttemptComparison.comparisonStatus, "improved");
   assert.equal(summary.videoAestheticAttemptComparison.overallAestheticScoreDelta, 0.04);
+  assert.equal(summary.humanCalibratedCandidateEvaluation.status, "ready");
+  assert.equal(summary.humanCalibratedCandidateEvaluation.candidateCount, 1);
+  assert.equal(summary.humanCalibratedCandidateEvaluation.guardrailMetricEvaluations, 3);
   assert.equal(summary.crossRunQuality.durableCandidateCount, 1);
   assert.equal(summary.promotionArtifacts.selectorReadyPriorCount, 1);
   assert.deepEqual(summary.promotionArtifacts.selectorReadyPriorIds, [
@@ -324,4 +371,49 @@ test("sequencing quality loop writes cross-run quality summary after live execut
   assert.equal(fs.existsSync(path.join(loopRoot, "full-sequence-review-loop.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "video-aesthetic-score.json")), true);
   assert.equal(fs.existsSync(path.join(loopRoot, "video-aesthetic-attempt-comparison.json")), true);
+  assert.equal(fs.existsSync(path.join(loopRoot, "human-calibrated-candidate-evaluation.json")), true);
+});
+
+test("sequencing quality loop does not score when live render blocks before processing passes", async () => {
+  const root = tempDir();
+  const latestRunRoot = path.join(root, "latest");
+  const loopRoot = path.join(root, "loop");
+  const modelCatalogPath = path.join(root, "model-catalog.json");
+  writeLatestEvidence(latestRunRoot);
+  writeJson(modelCatalogPath, modelCatalog());
+
+  const summary = await runSequencingQualityLoop({
+    latestRunRoot,
+    loopRoot,
+    modelCatalogPath,
+    runId: "loop-test",
+    maxQueue: 1,
+    applyRender: true,
+    deps: {
+      runPasses: async ({ runRoot }) => {
+        const artifact = {
+          artifactType: "layer_composition_pass_runner_summary_v1",
+          processedPasses: 0,
+          stopStatus: "training_show_mismatch",
+          stopReason: "fetch failed",
+          renderReviewAcceptedEvidenceCount: 0
+        };
+        writeJson(path.join(runRoot, "pass-runner-summary.json"), artifact);
+        return artifact;
+      },
+      buildFullSequenceReview: () => {
+        throw new Error("should not score a render-blocked loop");
+      },
+      buildVideoAestheticScore: () => {
+        throw new Error("should not score a render-blocked loop");
+      }
+    }
+  });
+
+  assert.equal(summary.status, "render_blocked");
+  assert.equal(summary.passRunner.stopStatus, "training_show_mismatch");
+  assert.equal(summary.fullSequenceReview, null);
+  assert.equal(summary.videoAestheticScore, null);
+  assert.equal(summary.crossRunQuality, null);
+  assert.equal(fs.existsSync(path.join(loopRoot, "video-aesthetic-score.json")), false);
 });

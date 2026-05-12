@@ -1,0 +1,158 @@
+{
+  "artifactType": "sequencing_quality_training_campaign_v1",
+  "artifactVersion": 1,
+  "campaignId": "vendor-fixture-human-level-sequencing-v1",
+  "status": "active",
+  "description": "High-level unattended training campaign for moving the representative vendor fixture from current generated sequence quality toward human-level full-sequence creation.",
+  "trainingLayout": "render-training-vendor-fixture",
+  "expectedRuntime": {
+    "unit": "hours_or_days",
+    "operatorExpectation": "Run until the campaign objective, daily time budget, disk budget, or an intervention-required guardrail is reached. This is not a per-loop or per-job-slice approval boundary.",
+    "initialRecommendedWindowHours": 8,
+    "maximumUnattendedWindowHours": 72
+  },
+  "objective": {
+    "primaryOutcome": "Generate complete, musically coherent, visually readable, color-rich whole-display sequences on the representative vendor fixture.",
+    "qualityLevel": "human_level_sequence_creation",
+    "primaryEvidence": [
+      "full_sequence_render_video",
+      "whole_display_video_aesthetic_score",
+      "human_calibrated_candidate_evaluation",
+      "selector_ready_quality_backed_priors"
+    ],
+    "promotionPhilosophy": [
+      "Optimize whole-display quality over isolated effect quality.",
+      "Learn ranges of valid sequencing behavior, not one fixed recipe.",
+      "Treat effect-level and model-level learning as supporting evidence for full-sequence decisions.",
+      "Use human review only when automated evidence is ambiguous, scorer alignment is weak, or new rubric labels are explicitly needed."
+    ]
+  },
+  "campaignPhases": [
+    {
+      "phaseId": "foundation-and-retention",
+      "status": "complete",
+      "purpose": "Prove unattended execution, checkpoints, cleanup, and compact evidence retention.",
+      "jobRefs": [
+        "scripts/sequencer-render-training/catalog/training-jobs/synthetic-full-sequence-quality-v1.json"
+      ],
+      "exitCriteria": [
+        "unattended loops can stop without per-loop approval",
+        "preview frames are deleted after summarization",
+        "job-run retention keeps output bounded"
+      ]
+    },
+    {
+      "phaseId": "guarded-synthetic-style-range",
+      "status": "complete",
+      "purpose": "Expand valid timing and accent ranges over the current guarded foundation without collapsing into one best-scoring look.",
+      "jobRefs": [
+        "scripts/sequencer-render-training/catalog/training-jobs/synthetic-style-range-expansion-v1.json"
+      ],
+      "exitCriteria": [
+        "multiple timing families have repeated stable or improving full-sequence evidence",
+        "color-purpose and focal-handoff guardrails remain stable",
+        "known bad branches are recorded as avoidances rather than retried blindly"
+      ]
+    },
+    {
+      "phaseId": "focal-handoff-and-sequence-context",
+      "status": "complete",
+      "purpose": "Improve whole-display focal handoff, visual hierarchy, section-to-section readability, and context preservation across complete generated sequences.",
+      "jobRefs": [
+        "scripts/sequencer-render-training/catalog/training-jobs/synthetic-focal-handoff-context-v1.json"
+      ],
+      "exitCriteria": [
+        "focal-handoff/context variants are tested as compact multi-window sequences",
+        "successful variants repeat without whole-sequence regressions",
+        "failed variants identify clear avoidances or require human review"
+      ]
+    },
+    {
+      "phaseId": "audio-structure-and-lyric-awareness",
+      "status": "complete",
+      "purpose": "Use synthesized timing tracks and later real audio analysis to connect generated sequencing to beats, sections, lyrics, releases, and energy arcs.",
+      "jobRefs": [
+        "scripts/sequencer-render-training/catalog/training-jobs/synthetic-timing-structure-v1.json"
+      ],
+      "exitCriteria": [
+        "synthetic timing-track sequences create readable structure and release moments",
+        "style variation remains broad enough to avoid predictable repeated looks",
+        "real audio analysis gaps are isolated from sequencing-quality learning"
+      ]
+    },
+    {
+      "phaseId": "synthetic-timing-style-range",
+      "status": "complete",
+      "purpose": "Expand synthetic timing-overlay style ranges across motion, palette role, sparse accent density, early/delayed/syncopated phrase placement, and release-hold timing while preserving the whole-display foundation.",
+      "jobRefs": [
+        "scripts/sequencer-render-training/catalog/training-jobs/synthetic-timing-style-range-v1.json"
+      ],
+      "exitCriteria": [
+        "remaining baseline-preserving timing overlay families have repeated stable or improving evidence",
+        "sparse and syncopated timing variants do not collapse whole-display readability",
+        "failed timing variants identify avoidances or request human review rather than being retried blindly"
+      ]
+    },
+    {
+      "phaseId": "synthetic-timing-repair",
+      "status": "complete",
+      "purpose": "Repair synthetic timing branches that improved local clarity but regressed color discipline, quality consistency, temporal continuity, or full-sequence context.",
+      "jobRefs": [
+        "scripts/sequencer-render-training/catalog/training-jobs/synthetic-timing-repair-v1.json"
+      ],
+      "exitCriteria": [
+        "guarded audio repair is tested without rebuilding the broad audio-alignment stack",
+        "sparse palette discipline repair avoids the reserved secondary-palette regression",
+        "failed repairs identify avoidances or request human review rather than being retried blindly"
+      ]
+    },
+    {
+      "phaseId": "human-calibrated-validation",
+      "status": "in_progress",
+      "purpose": "Use production-sequence review labels and targeted generated-sequence review prompts to calibrate automated quality scoring.",
+      "jobRefs": [
+        "scripts/sequencer-render-training/catalog/training-jobs/human-calibrated-sequence-candidate-expansion-v1.json"
+      ],
+      "exitCriteria": [
+        "automated dimensions are classified as optimization targets, guardrails, or diagnostics",
+        "new generated candidates can be reviewed quickly in the app when scorer confidence is weak",
+        "promotion uses human-calibrated gates for full-sequence quality"
+      ]
+    },
+    {
+      "phaseId": "project-local-adaptation",
+      "status": "planned",
+      "purpose": "Validate how shared vendor-fixture learnings transfer to a specific user display and where project-local target/submodel behavior evidence is required.",
+      "jobRefs": [],
+      "exitCriteria": [
+        "shared priors are applied only to structurally and semantically compatible targets",
+        "unknown/custom/edge targets gather project-local evidence before confident reuse",
+        "sequence-level generation can blend shared baseline knowledge with project-local metadata"
+      ]
+    }
+  ],
+  "unattendedPolicy": {
+    "jobSliceRole": "A training job spec is a bounded slice inside this campaign, not the campaign itself.",
+    "continueWithoutUserApprovalWhen": [
+      "a job slice completes normally and the next planned slice is clear",
+      "a bounded controller or curriculum repair is needed to continue the campaign",
+      "intermediate generated artifacts can be safely summarized and deleted",
+      "focused tests pass after a scoped automation change"
+    ],
+    "stopForUserWhen": [
+      "human visual judgment is needed in the Review page",
+      "the scoring philosophy or product objective needs to change",
+      "the selected show folder/project linkage would change",
+      "source training assets or user-authored metadata would be deleted"
+    ]
+  },
+  "retentionPolicy": {
+    "deleteRawPreviewFramesAfterLoop": true,
+    "preserveCompactEvidence": true,
+    "campaignSummaryFrequency": "after_every_job_slice",
+    "diskGuardrail": {
+      "minimumFreeGiB": 15,
+      "actionBelowMinimum": "stop_and_summarize_before_continuing"
+    }
+  }
+}

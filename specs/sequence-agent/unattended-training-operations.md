@@ -8,11 +8,36 @@ The training system should continuously improve sequencing quality by running bo
 
 The user should not need to monitor routine loops. The expected user experience is to review periodic summaries, major learning milestones, and product-level decisions.
 
+Terminology:
+
+- **Training campaign**: the true major chunk of work. A campaign may run for many hours or days and covers a product-level training objective, such as moving the vendor fixture toward human-level full-sequence generation.
+- **Training job slice**: a bounded executable slice inside a campaign. A slice may cover a specific curriculum family, strategy repair, or validation range and can complete without ending the broader campaign.
+- **Loop**: one controller-selected apply/render/score/promote cycle inside a job slice.
+
 ## Operating Model
 
-Unattended training has two layers:
+Unattended training has four layers:
 
-1. **Automated loop runner**
+1. **Training campaign**
+   - Defines the high-level training objective, expected unattended runtime,
+     phase order, evidence standards, and user-review boundaries.
+   - Coordinates multiple job slices and is the level that should be considered
+     a major chunk of remaining training work.
+   - Writes periodic campaign summaries so the user can inspect progress after
+     hours or days rather than approving each loop.
+
+2. **Training job spec**
+   - Defines the bounded slice being worked, default guardrails, curriculum
+     scope, selected fixture, and stop policy.
+   - Lets a run stop as `major_chunk_complete_*` when the current chunk is
+     exhausted. In the current artifact schema, this means the job slice is
+     complete, not that the whole training campaign is complete.
+   - Uses a unique output directory per launched job run unless the caller
+     explicitly overrides `--out-root`.
+   - Defines job-run retention so repeated long runs do not accumulate raw or
+     obsolete artifacts indefinitely.
+
+3. **Automated loop runner**
    - Selects the next curriculum goal from controller state.
    - Builds the training plan.
    - Applies effects through the xLightsDesigner API.
@@ -21,7 +46,7 @@ Unattended training has two layers:
    - Builds deltas, stages/promotes priors, and prunes intermediate frame dumps.
    - Writes an iteration summary after every loop.
 
-2. **Agent intervention**
+4. **Agent intervention**
    - Reviews stopped unattended runs.
    - Makes bounded code, curriculum, strategy, scoring, or fixture repairs when the evidence clearly identifies the failure mode.
    - Runs focused tests.
@@ -56,7 +81,41 @@ The unattended runner should stop with an intervention recommendation when:
 - Required evidence files are missing or malformed.
 - Disk cleanup cannot keep generated artifacts bounded.
 
+When a run is launched with a training job spec, controller idle or
+`needs_strategy_expansion` may instead mean the current job slice is complete.
+The current summary field is named `majorChunkStatus` for compatibility with
+the first implementation, but it should be read as job-slice status. A complete
+job slice is not a request for user approval and does not mean the high-level
+campaign is complete. The next step is to inspect the compact summary, update
+campaign progress, and launch or create the next job slice when the next path is
+clear.
+
 These stops are not user approval points by default. They are agent handoff points: inspect evidence, make a bounded fix, test, and resume.
+
+## Notifications
+
+Long unattended CLI runs should notify the user when they stop. The unattended
+runner sends a macOS notification by default when:
+
+- a job slice finishes normally
+- a guardrail stops the run for agent intervention
+- an unexpected error terminates the run
+
+The notification is intentionally a lightweight alert, not the full review
+surface. The compact JSON summary remains the source of truth for scores,
+selected goals, cleanup, retention, and next steps.
+
+Notification controls:
+
+```bash
+--notify
+--no-notify
+--notification-sound Glass
+--notification-title "xLightsDesigner training"
+```
+
+Use `--no-notify` for tests, scripts that already alert elsewhere, or short
+foreground smoke runs.
 
 ## Evidence Policy
 
@@ -74,22 +133,76 @@ Each loop must preserve compact evidence:
 
 Raw frame dumps and other large intermediate files should be deleted after they are summarized unless a failure requires preserving them for debugging.
 
+## Retention Policy
+
+Each executed loop should keep compact evidence and remove raw preview frames.
+The unattended runner writes `unattended-cleanup-summary.json` for every
+executed loop with preview-frame deletion counts.
+
+Training job slices should use unique `run-*` output directories and a bounded
+`retentionPolicy`. The default full-sequence job keeps the latest eight completed
+job runs under its output base. Older completed `run-*` directories may be
+deleted only when they contain a stopped `unattended-run-summary.json`; incomplete
+or unrecognized directories are preserved for inspection. The current run,
+latest run root, video-comparison baseline, and previous-state run are always
+protected.
+
+The final summary includes `jobRetention` and, when enabled, writes:
+
+```text
+job-retention-summary.json
+```
+
+Current proof point: the `synthetic-style-range-expansion-v1` job completed two
+executed loops plus a terminal strategy-exhaustion checkpoint, deleted 32 raw
+PPM preview frames per executed loop, and left zero retained preview-frame dumps
+under the job root while preserving compact summaries, score artifacts,
+promoted priors, cleanup summaries, and retention summaries.
+
 ## Default Command
 
-For the current vendor fixture workflow:
+The current campaign manifest is:
+
+```text
+scripts/sequencer-render-training/catalog/training-campaigns/vendor-fixture-human-level-sequencing-v1.json
+```
+
+For a long unattended campaign window, run the campaign wrapper. This chains
+planned job slices, writes `campaign-run-summary.json` after each slice, stops
+on campaign guardrails, and sends a notification when the campaign window stops
+or errors:
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-training-campaign.mjs \
+  --campaign-spec scripts/sequencer-render-training/catalog/training-campaigns/vendor-fixture-human-level-sequencing-v1.json \
+  --latest-run-root var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-20260512T005407Z/loop-000002 \
+  --video-comparison-baseline-run-root var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-20260512T005407Z/loop-000002 \
+  --previous-state var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-20260512T005407Z/loop-000003/controller-state.json \
+  --max-job-slices 4 \
+  --max-hours 8 \
+  --notify
+```
+
+For a bounded job slice inside the current vendor fixture workflow:
 
 ```bash
 node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \
-  --latest-run-root var/logs/sequencing-quality-controller/loop-000031 \
-  --previous-state var/logs/sequencing-quality-controller/loop-000032/controller-state.json \
-  --model-catalog var/logs/sequencing-quality-controller/vendor-fixture-model-catalog.json \
-  --out-root var/logs/sequencing-quality-controller/unattended \
-  --run-type overnight \
-  --max-loops 20 \
-  --max-queue 10 \
-  --max-passes 6 \
-  --max-consecutive-regressions 1 \
-  --max-repeated-goal-count 6
+  --job-spec scripts/sequencer-render-training/catalog/training-jobs/synthetic-full-sequence-quality-v1.json \
+  --latest-run-root var/logs/sequencing-quality-controller/loop-000141 \
+  --video-comparison-baseline-run-root var/logs/sequencing-quality-controller/loop-000141 \
+  --previous-state var/logs/sequencing-quality-controller/loop-000143/controller-state.json \
+  --notify
+```
+
+For the current style-range expansion chunk, chain from the latest completed
+full-sequence or style-range loop:
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \
+  --job-spec scripts/sequencer-render-training/catalog/training-jobs/synthetic-style-range-expansion-v1.json \
+  --latest-run-root var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-<timestamp>/loop-000002 \
+  --video-comparison-baseline-run-root var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-<timestamp>/loop-000002 \
+  --previous-state var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-<timestamp>/loop-000003/controller-state.json
 ```
 
 Quality-improvement runs should stop on the first meaningful regression so the
@@ -109,9 +222,20 @@ The summary should make clear:
 
 - how many loops ran
 - why the run stopped
+- which training campaign and job slice were active
+- whether the job slice is complete, running, or incomplete
 - which goals were selected
 - score and delta per loop
 - whether each loop improved or regressed
 - durable and blocked evidence counts
 - which compact evidence files were written
 - whether agent intervention is recommended
+
+For campaign-level review, summaries should additionally answer:
+
+- which phase is active
+- which job slices completed since the last review
+- what durable learnings were added
+- what avoidances or blocked strategies were discovered
+- what the next planned job slice is
+- whether human review is needed before continuing

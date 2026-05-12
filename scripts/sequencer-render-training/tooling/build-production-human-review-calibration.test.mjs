@@ -49,6 +49,18 @@ test("production human review calibration writes a pending template and gate", (
   assert.equal(fs.existsSync(templatePath), true);
   const template = JSON.parse(fs.readFileSync(templatePath, "utf8"));
   assert.equal(template.artifactType, "production_human_review_notes_v1");
+  assert.equal(template.artifactVersion, 2);
+  assert.equal(template.reviewSchema.inputMode, "multiple_choice_with_optional_notes");
+  assert.deepEqual(template.reviewSchema.metricOrder, ["energyArc", "sectionContrast", "paletteEvolution", "focalHandoff", "targetHierarchy", "overallFit"]);
+  assert.equal(template.reviewSchema.metricChoices.energyArc.options[0].id, "excellent_dynamic_arc");
+  assert.deepEqual(template.reviews[0].metricChoices, {
+    energyArc: "",
+    sectionContrast: "",
+    paletteEvolution: "",
+    focalHandoff: "",
+    targetHierarchy: "",
+    overallFit: ""
+  });
   assert.deepEqual(template.reviews.map((row) => row.sequenceId), ["A", "B"]);
 });
 
@@ -69,6 +81,14 @@ test("production human review calibration approves reviewed notes", () => {
         summary: "Strong arc.",
         knownStrengths: ["clear lift"],
         knownWeaknesses: [],
+        metricChoices: {
+          energyArc: "excellent_dynamic_arc",
+          sectionContrast: "good_some_repetition",
+          paletteEvolution: "excellent_color_story",
+          focalHandoff: "excellent_focus_direction",
+          targetHierarchy: "excellent_layer_hierarchy",
+          overallFit: "excellent_reference"
+        },
         calibrationNotes: { energyArc: "Good build." }
       },
       {
@@ -79,6 +99,11 @@ test("production human review calibration approves reviewed notes", () => {
         summary: "Useful but needs lower handoff target.",
         knownStrengths: ["contrast"],
         knownWeaknesses: ["handoff is intentionally subtle"],
+        metricChoices: {
+          energyArc: "good_with_minor_flat_spots",
+          focalHandoff: "good_focus_some_static",
+          targetHierarchy: "invalid_choice"
+        },
         calibrationNotes: { focalHandoff: "Do not over-penalize subtle holds." }
       }
     ]
@@ -92,4 +117,11 @@ test("production human review calibration approves reviewed notes", () => {
   assert.deepEqual(artifact.adjustmentSequenceIds, ["B"]);
   assert.equal(artifact.summary.pending, 0);
   assert.equal(artifact.reviews[0].profileSnapshot.combinedCalibrationScore, 0.7);
+  assert.equal(artifact.reviews[1].metricChoices.targetHierarchy, "");
+  assert.equal(artifact.metricChoiceSummary.energyArc.reviewedChoices, 2);
+  assert.equal(artifact.metricChoiceSummary.energyArc.meanChoiceScore, 0.89);
+  assert.deepEqual(artifact.metricChoiceSummary.focalHandoff.counts, {
+    excellent_focus_direction: 1,
+    good_focus_some_static: 1
+  });
 });

@@ -98,3 +98,55 @@ test("promotion respects stricter quality threshold", () => {
   assert.equal(artifact.priors[0].promotionReview.blockers.includes("latest_quality"), true);
   assert.equal(artifact.priors[0].promotionReview.blockers.includes("mean_quality"), true);
 });
+
+test("promotion blocks creative revision priors when paired comparison blocks the revision", () => {
+  const artifact = promoteLayerCompositionPriors({
+    creativeIntentRevisionComparison: {
+      artifactType: "creative_intent_revision_comparison_v1",
+      status: "ready",
+      comparisons: [{
+        baselinePassId: "intent_first_draft",
+        revisedPassId: "intent_focus_simplification_revision",
+        comparisonStatus: "blocked",
+        promotionEligible: false,
+        blockers: ["intent_match_regressed", "visual_readability_regressed"]
+      }, {
+        baselinePassId: "intent_first_draft",
+        revisedPassId: "intent_focal_handoff_revision",
+        comparisonStatus: "improved",
+        promotionEligible: true,
+        blockers: []
+      }]
+    },
+    priors: {
+      artifactType: "layer_composition_priors_v1",
+      priors: [
+        prior({
+          priorId: "layer_composition:creative_intent_revision_comparison:mono_white:intent_focus_simplification_revision",
+          scope: {
+            family: "creative_intent_revision_comparison",
+            passId: "intent_focus_simplification_revision"
+          }
+        }),
+        prior({
+          priorId: "layer_composition:creative_intent_revision_comparison:mono_white:intent_focal_handoff_revision",
+          scope: {
+            family: "creative_intent_revision_comparison",
+            passId: "intent_focal_handoff_revision"
+          }
+        })
+      ]
+    }
+  });
+
+  assert.equal(artifact.selectorReadyCount, 1);
+  assert.deepEqual(artifact.promotionSummary.selectorReadyPriorIds, [
+    "layer_composition:creative_intent_revision_comparison:mono_white:intent_focal_handoff_revision"
+  ]);
+  assert.equal(artifact.priors[0].selectorReady, false);
+  assert.equal(
+    artifact.priors[0].promotionReview.blockers.includes("creative_revision_comparison_promotion_eligible"),
+    true
+  );
+  assert.equal(artifact.priors[1].selectorReady, true);
+});

@@ -1,0 +1,73 @@
+{
+  "artifactType": "sequencing_quality_training_job_v1",
+  "artifactVersion": 1,
+  "jobId": "human-calibrated-sequence-candidate-expansion-v1",
+  "chunkId": "vendor-fixture-human-calibrated-sequence-candidate-expansion",
+  "status": "active",
+  "description": "Generate and score full-sequence creative-intent candidates that can be promoted automatically when evidence is strong or queued for Review-page human calibration when automated confidence is weak.",
+  "defaults": {
+    "outRoot": "var/logs/sequencing-quality-controller/unattended/human-calibrated-sequence-candidate-expansion-v1",
+    "uniqueOutRoot": true,
+    "curriculumPath": "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json",
+    "modelCatalogPath": "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json",
+    "runType": "overnight",
+    "maxLoops": 180,
+    "maxQueue": 40,
+    "maxPasses": 6,
+    "maxConsecutiveRegressions": 1,
+    "maxRepeatedGoalCount": 10,
+    "cleanupPreviewFrames": true,
+    "autoRefill": false,
+    "maxAutoRefills": 0,
+    "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
+  },
+  "stopPolicy": {
+    "treatControllerIdleAsChunkComplete": true,
+    "treatNeedsStrategyExpansionAsChunkComplete": false,
+    "maxConsecutiveRegressionsRequiresIntervention": true,
+    "maxRepeatedGoalSelectionRequiresIntervention": true
+  },
+  "curriculumScope": {
+    "trainingLayout": "render-training-vendor-fixture",
+    "primaryEvidence": "full_sequence_render",
+    "currentFocus": [
+      "creative intent baseline evidence",
+      "targeted before-after revision comparison",
+      "revision variant quality range",
+      "whole-display readability preservation",
+      "human-calibrated scoring readiness"
+    ],
+    "targetGoalIds": [
+      "creative.intent_match.v1",
+      "creative.intent_revision_comparison.v1",
+      "creative.intent_revision_variants.v1"
+    ],
+    "excluded": [
+      "production audio analysis",
+      "real audio feature extraction",
+      "unscoped new effect-family exploration",
+      "human promotion without review evidence"
+    ]
+  },
+  "retentionPolicy": {
+    "maxRunDirectories": 8,
+    "requireSummaryBeforeRunDirectoryDelete": true,
+    "preserveCurrentRun": true,
+    "preserveLatestRunRoot": true,
+    "preserveVideoComparisonBaselineRunRoot": true,
+    "preservePreviousStateRunRoot": true,
+    "deleteRawPreviewFramesAfterLoop": true,
+    "preserveCompactEvidence": true
+  },
+  "operatorReviewPolicy": {
+    "requiredOnlyWhen": [
+      "max_consecutive_regressions",
+      "max_repeated_goal_selection",
+      "blocked_no_controller_queue_without_chunk_completion",
+      "awaiting_evidence",
+      "new human rubric labels are explicitly requested",
+      "automated scorer confidence is weak for a promotion decision"
+    ],
+    "preferredReviewSurface": "xLightsDesigner Review page"
+  }
+}

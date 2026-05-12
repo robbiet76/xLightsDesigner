@@ -1,0 +1,77 @@
+{
+  "artifactType": "sequencing_quality_training_job_v1",
+  "artifactVersion": 1,
+  "jobId": "synthetic-timing-structure-v1",
+  "chunkId": "vendor-fixture-synthetic-timing-structure",
+  "status": "active",
+  "description": "Run the vendor-fixture synthetic timing structure chunk over the current guarded foundation, focusing on section energy, motif lift, phrase timing, lyric-release cues, and baseline-preserving timing overlays.",
+  "defaults": {
+    "outRoot": "var/logs/sequencing-quality-controller/unattended/synthetic-timing-structure-v1",
+    "uniqueOutRoot": true,
+    "curriculumPath": "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json",
+    "modelCatalogPath": "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json",
+    "runType": "overnight",
+    "maxLoops": 80,
+    "maxQueue": 25,
+    "maxPasses": 5,
+    "maxConsecutiveRegressions": 1,
+    "maxRepeatedGoalCount": 6,
+    "cleanupPreviewFrames": true,
+    "autoRefill": false,
+    "maxAutoRefills": 0,
+    "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
+  },
+  "stopPolicy": {
+    "treatControllerIdleAsChunkComplete": true,
+    "treatNeedsStrategyExpansionAsChunkComplete": true,
+    "maxConsecutiveRegressionsRequiresIntervention": true,
+    "maxRepeatedGoalSelectionRequiresIntervention": true
+  },
+  "curriculumScope": {
+    "trainingLayout": "render-training-vendor-fixture",
+    "primaryEvidence": "full_sequence_render",
+    "currentFocus": [
+      "synthetic section energy arcs",
+      "phrase and beat timing",
+      "motif lift and reprise",
+      "lyric release cues",
+      "baseline-preserving timing overlays",
+      "style range without audio-analysis dependency"
+    ],
+    "targetGoalIds": [
+      "music.guarded_foundation_sequence.v1",
+      "music.guarded_pacing_sequence.v1",
+      "music.baseline_preserving_audio_overlay.v1",
+      "music.baseline_preserving_audio_overlay_style_variation.v1",
+      "music.baseline_preserving_audio_overlay_call_response.v1",
+      "music.baseline_preserving_audio_overlay_single_target_motif.v1"
+    ],
+    "excluded": [
+      "production audio analysis",
+      "real audio feature extraction",
+      "new effect-family exploration",
+      "generic display repair that replaces the guarded foundation",
+      "secondary palette accent changes without human review"
+    ]
+  },
+  "retentionPolicy": {
+    "maxRunDirectories": 8,
+    "requireSummaryBeforeRunDirectoryDelete": true,
+    "preserveCurrentRun": true,
+    "preserveLatestRunRoot": true,
+    "preserveVideoComparisonBaselineRunRoot": true,
+    "preservePreviousStateRunRoot": true,
+    "deleteRawPreviewFramesAfterLoop": true,
+    "preserveCompactEvidence": true
+  },
+  "operatorReviewPolicy": {
+    "requiredOnlyWhen": [
+      "max_consecutive_regressions",
+      "max_repeated_goal_selection",
+      "blocked_no_controller_queue_without_chunk_completion",
+      "awaiting_evidence",
+      "new human rubric labels are explicitly requested"
+    ],
+    "preferredReviewSurface": "xLightsDesigner Review page"
+  }
+}

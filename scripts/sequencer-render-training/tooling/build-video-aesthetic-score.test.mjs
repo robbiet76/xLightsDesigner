@@ -275,6 +275,80 @@ test("video aesthetic score adds full-sequence context when candidate window is 
   assert.equal(artifact.scores.fullSequenceContext < artifact.scores.sectionQualityMean, true);
 });
 
+test("display quality review controller selections are scored as whole-display evidence", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-aesthetic-whole-display-"));
+  const opening = writeWindow(root, {
+    passId: "display_balance_foundation",
+    startMs: 0,
+    endMs: 2000,
+    quality: 0.62,
+    motion: 0.04,
+    color: 0.3,
+    coverage: 0.02
+  });
+  const selectedCandidate = writeWindow(root, {
+    passId: "display_rgb_structure_balance_pacing_repair",
+    startMs: 2000,
+    endMs: 4000,
+    quality: 0.92,
+    motion: 0.18,
+    color: 0.85,
+    coverage: 0.06
+  });
+  const close = writeWindow(root, {
+    passId: "display_motion_variety",
+    startMs: 4000,
+    endMs: 6000,
+    quality: 0.7,
+    motion: 0.12,
+    color: 0.55,
+    coverage: 0.04
+  });
+  const progressionPath = writeProgression(root);
+  writeJson(path.join(root, "training-plan.json"), {
+    artifactType: "layer_composition_training_plan_v1",
+    experiments: [{
+      family: "display_quality_review",
+      curriculumStage: "sequence_pattern_validation",
+      passes: [
+        { passId: "display_balance_foundation", controllerSelection: { reason: "comparison_dependency" } },
+        {
+          passId: "display_rgb_structure_balance_pacing_repair",
+          controllerSelection: { selectedByController: true },
+          placements: [
+            { layerIntent: { colorPurpose: "background_structure" } },
+            { layerIntent: { colorPurpose: "structure_motion_support" } },
+            { layerIntent: { colorPurpose: "focal_accent" } }
+          ]
+        },
+        { passId: "display_motion_variety", controllerSelection: { reason: "comparison_dependency" } }
+      ]
+    }]
+  });
+  writeJson(path.join(root, "full-sequence-review-loop.json"), {
+    artifactType: "full_sequence_review_loop_v1",
+    status: "ready",
+    windowCount: 3,
+    evidenceEligibleWindowCount: 3,
+    progressionObservationRef: progressionPath,
+    windows: [opening, selectedCandidate, close]
+  });
+
+  const artifact = buildVideoAestheticScore({ runRoot: root });
+
+  assert.equal(artifact.scoreBasis, "whole_display_metrics_with_controller_selected_candidate_context");
+  assert.equal(artifact.metricScope, "full_sequence_render");
+  assert.equal(artifact.promotionUse, "primary_human_level_quality_evidence");
+  assert.equal(artifact.scoredWindowCount, 3);
+  assert.equal(artifact.controllerSelectedWindowCount, 1);
+  assert.deepEqual(artifact.windows.map((window) => window.passId), [
+    "display_balance_foundation",
+    "display_rgb_structure_balance_pacing_repair",
+    "display_motion_variety"
+  ]);
+  assert.equal(artifact.scores.sectionQualityMean, 0.746667);
+});
+
 test("video aesthetic score uses layer intent metadata for local evidence readability", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-aesthetic-local-"));
   const dependency = writeWindow(root, {

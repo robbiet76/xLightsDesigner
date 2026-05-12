@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { runProductionSequenceVideoRead } from "./run-production-sequence-video-read.mjs";
+import { derivePreviewVideoSize, runProductionSequenceVideoRead } from "./run-production-sequence-video-read.mjs";
 
 function writeFile(filePath, text) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -135,6 +135,7 @@ test("runProductionSequenceVideoRead exports video, extracts compact features, a
         writeJson(options.artifact, { source: { apiMode: "owned" }, output: { videoPath: options.out } });
         return { source: { apiMode: "owned" } };
       },
+      getLayoutSettings: async () => ({ previewWidth: 1000, previewHeight: 462 }),
       extractMedia: ({ mediaPath, frameFeaturesOut, contactSheetOut, sampleCount, keepFrames }) => {
         writeJson(frameFeaturesOut, frameFeatures(mediaPath));
         writeFile(contactSheetOut, "jpg");
@@ -152,13 +153,47 @@ test("runProductionSequenceVideoRead exports video, extracts compact features, a
   assert.equal(summary.sequenceCount, 1);
   assert.equal(summary.rows[0].sequenceId, "Song");
   assert.equal(summary.rows[0].exportMode, "owned");
+  assert.deepEqual(summary.requestedVideoSize, {
+    width: 2000,
+    height: 924,
+    source: "layout_preview_canvas",
+    previewWidth: 1000,
+    previewHeight: 462
+  });
   assert.equal(exportCalls[0].apiMode, "owned");
   assert.equal(exportCalls[0].sequence, xsqPath);
+  assert.equal(exportCalls[0].width, 2000);
+  assert.equal(exportCalls[0].height, 924);
   const review = JSON.parse(fs.readFileSync(summary.rows[0].renderReviewPath, "utf8"));
   assert.equal(review.artifactType, "render_review_v1");
   assert.equal(review.section.id, "full_sequence");
   assert.equal(review.calibrationPolicy.trainSequencingPolicy, false);
   assert.equal(review.calibrationPolicy.copyStylisticPatterns, false);
+});
+
+test("derivePreviewVideoSize follows the layout preview aspect ratio", () => {
+  assert.deepEqual(derivePreviewVideoSize({
+    previewWidth: 1000,
+    previewHeight: 462,
+    longSide: 2000
+  }), {
+    width: 2000,
+    height: 924,
+    source: "layout_preview_canvas",
+    previewWidth: 1000,
+    previewHeight: 462
+  });
+  assert.deepEqual(derivePreviewVideoSize({
+    previewWidth: 720,
+    previewHeight: 1280,
+    longSide: 2000
+  }), {
+    width: 1126,
+    height: 2000,
+    source: "layout_preview_canvas",
+    previewWidth: 720,
+    previewHeight: 1280
+  });
 });
 
 test("runProductionSequenceVideoRead can reuse an existing video without exporting", async () => {

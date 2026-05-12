@@ -157,6 +157,9 @@ function comparePair({ baseline = {}, revised = {}, metadata = {} } = {}) {
   if (!revised.evidenceEligible) blockers.push("revised_not_evidence_eligible");
   if (str(revised.decision) !== "accept") blockers.push("revised_review_not_accepted");
   if (intentMatchDelta < 0.02 && !objectiveImproved) blockers.push("intent_match_not_improved");
+  if (overallQualityDelta < -0.005) blockers.push("overall_quality_regressed");
+  if (intentMatchDelta < -0.005) blockers.push("intent_match_regressed");
+  if (visualReadabilityDelta < -0.005) blockers.push("visual_readability_regressed");
   if (hasTargetedVariant && !objectiveImproved) blockers.push("targeted_revision_objective_not_improved");
   if (visualReadabilityDelta < -0.03) blockers.push("readability_regressed");
   if (hasTargetedVariant && visualReadabilityDelta < 0) blockers.push("targeted_revision_readability_not_preserved");

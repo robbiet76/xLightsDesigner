@@ -590,6 +590,625 @@ test("layer composition plan expands target-transfer adaptation coverage-gap con
   assert.equal(weak.placements[0].layerIntent.projectLocalValidation, "required_before_selector_confidence");
 });
 
+test("layer composition plan expands full-sequence audio alignment coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-audio-alignment-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 26,
+      controllerDecision: {
+        selectedGoalId: "music.full_sequence_audio_alignment.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.full_sequence_audio_alignment.v1:coverage-gap",
+        goalId: "music.full_sequence_audio_alignment.v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "rgb_primary",
+          passId: "audio_intro_foundation"
+        }, {
+          paletteProfile: "rgb_primary",
+          passId: "audio_build_motif_lift"
+        }, {
+          paletteProfile: "rgb_primary",
+          passId: "audio_release_payoff"
+        }]
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.enabled, true);
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["music-structure-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "audio_intro_foundation", "audio_build_motif_lift", "audio_release_payoff"]
+  );
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "audio_release_payoff");
+  assert.deepEqual(
+    release.placements.map((placement) => placement.layerIntent?.musicRole?.audioSection).filter(Boolean),
+    ["intro", "build", "build", "release"]
+  );
+  assert.equal(release.placements.some((placement) => placement.layerIntent?.musicRole?.lyric === "release_keyword"), true);
+});
+
+test("layer composition plan expands guarded full-sequence audio repair coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-audio-guarded-repair-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 27,
+      controllerDecision: {
+        selectedGoalId: "music.full_sequence_audio_guarded_repair.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.full_sequence_audio_guarded_repair.v1:coverage-gap",
+        goalId: "music.full_sequence_audio_guarded_repair.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "audio_guarded_repair_intro", "audio_guarded_repair_build", "audio_guarded_repair_release"]
+  );
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "audio_guarded_repair_release");
+  assert.equal(release.placements.length, 5);
+  assert.equal(release.placements[3].target, release.placements[4].target);
+  assert.equal(release.placements[4].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 28,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay.v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [{
+          paletteProfile: "rgb_primary",
+          passId: "baseline_audio_overlay_intro"
+        }, {
+          paletteProfile: "rgb_primary",
+          passId: "baseline_audio_overlay_phrase_accent"
+        }, {
+          paletteProfile: "rgb_primary",
+          passId: "baseline_audio_overlay_release_accent"
+        }]
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments.map((experiment) => experiment.experimentId),
+    ["music-structure-review-rgb_primary"]
+  );
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_intro", "baseline_audio_overlay_phrase_accent", "baseline_audio_overlay_release_accent"]
+  );
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_release_accent");
+  assert.equal(release.placements.length, 5);
+  assert.equal(release.placements[3].layerSettings.brightness, 28);
+  assert.equal(release.placements[4].layerIntent.musicRole.lyric, "synthetic_release_keyword");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay motion repair coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-motion-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 29,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_motion_repair.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_motion_repair.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_motion_repair.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_motion_intro", "baseline_audio_overlay_motion_phrase", "baseline_audio_overlay_motion_release"]
+  );
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_motion_release");
+  assert.equal(release.placements.length, 6);
+  assert.equal(release.placements[5].modelType, "spinner");
+  assert.equal(release.placements[5].layerSettings.brightness, 24);
+  assert.equal(release.placements[5].layerIntent.musicRole.accent, "subtle_motion_support");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay palette role repair coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-palette-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 30,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_palette_role_repair.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_palette_role_repair.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_palette_role_repair.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_palette_intro", "baseline_audio_overlay_palette_phrase", "baseline_audio_overlay_palette_release"]
+  );
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_palette_release");
+  assert.equal(release.placements.length, 5);
+  assert.equal(release.placements[4].layerIntent.colorPurpose, "lyric_focal_accent");
+  assert.equal(release.placements[4].layerSettings.C_CHECKBOX_Palette2, true);
+});
+
+test("layer composition plan expands baseline-preserving audio overlay existing motion repair coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-existing-motion-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 31,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_existing_motion_repair.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_existing_motion_repair.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_existing_motion_repair.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_existing_motion_intro", "baseline_audio_overlay_existing_motion_phrase", "baseline_audio_overlay_existing_motion_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_existing_motion_phrase");
+  assert.equal(phrase.placements.length, 4);
+  assert.equal(phrase.placements[3].effectSettings.cycles, 2);
+  assert.equal(phrase.placements[3].effectSettings.colorSpeed, 3);
+  assert.equal(phrase.placements[3].layerSettings.brightness, 30);
+});
+
+test("layer composition plan expands baseline-preserving audio overlay style variation coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-style-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 32,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_style_variation.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_style_variation.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_style_variation.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_style_intro", "baseline_audio_overlay_style_phrase", "baseline_audio_overlay_style_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_style_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_style_release");
+  assert.equal(phrase.placements.length, 5);
+  assert.equal(phrase.placements[3].layerIntent.musicRole.phrase, "synthetic_phrase_lift_variant");
+  assert.equal(phrase.placements[4].layerIntent.colorPurpose, "structure_motion_support");
+  assert.equal(release.placements.length, 6);
+  assert.equal(release.placements[5].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay call response coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-call-response-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 33,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_call_response.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_call_response.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_call_response.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_call_response_intro", "baseline_audio_overlay_call_response_phrase", "baseline_audio_overlay_call_response_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_call_response_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_call_response_release");
+  assert.equal(phrase.placements.length, 5);
+  assert.equal(phrase.placements[3].layerIntent.blendRole, "baseline_preserving_phrase_call");
+  assert.equal(phrase.placements[4].layerIntent.colorPurpose, "lyric_focal_accent");
+  assert.equal(release.placements.length, 6);
+  assert.equal(release.placements[5].layerIntent.blendRole, "baseline_preserving_release_echo");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay single target motif coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-single-target-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 34,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_single_target_motif.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_single_target_motif.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_single_target_motif.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_single_target_intro", "baseline_audio_overlay_single_target_phrase", "baseline_audio_overlay_single_target_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_single_target_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_single_target_release");
+  assert.equal(phrase.placements.length, 5);
+  assert.equal(phrase.placements[3].target, phrase.placements[4].target);
+  assert.equal(release.placements.length, 6);
+  assert.equal(release.placements[5].target, phrase.placements[3].target);
+  assert.equal(release.placements[5].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay single target swell coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-single-target-swell-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 35,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_single_target_swell.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_single_target_swell.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_single_target_swell.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_single_target_swell_intro", "baseline_audio_overlay_single_target_swell_phrase", "baseline_audio_overlay_single_target_swell_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_single_target_swell_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_single_target_swell_release");
+  assert.equal(phrase.placements.length, 4);
+  assert.equal(release.placements.length, 5);
+  assert.equal(phrase.placements[3].target, release.placements[4].target);
+  assert.equal(phrase.placements[3].layerIntent.musicRole.energy, "restrained_swell");
+  assert.equal(release.placements[4].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay sparse accent coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-sparse-accent-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 36,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_sparse_accent.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_sparse_accent.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_sparse_accent.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_sparse_accent_intro", "baseline_audio_overlay_sparse_accent_phrase", "baseline_audio_overlay_sparse_accent_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_accent_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_accent_release");
+  assert.equal(phrase.placements.length, 4);
+  assert.equal(release.placements.length, 5);
+  assert.equal(phrase.placements[3].target, release.placements[4].target);
+  assert.equal(phrase.placements[3].layerIntent.blendRole, "baseline_preserving_sparse_phrase_accent");
+  assert.equal(release.placements[4].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay sparse palette coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-sparse-palette-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 37,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_sparse_palette.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_sparse_palette.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_sparse_palette.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_sparse_palette_intro", "baseline_audio_overlay_sparse_palette_phrase", "baseline_audio_overlay_sparse_palette_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_palette_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_palette_release");
+  assert.equal(phrase.placements.length, 4);
+  assert.equal(release.placements.length, 5);
+  assert.equal(phrase.placements[3].target, release.placements[4].target);
+  assert.equal(phrase.placements[3].layerIntent.colorPurpose, "reserved_secondary_accent");
+  assert.equal(phrase.placements[3].layerSettings.C_CHECKBOX_Palette3, true);
+  assert.equal(release.placements[4].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
+test("layer composition plan expands sparse palette discipline repair coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-sparse-palette-discipline-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 38,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_sparse_palette_discipline_repair.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_sparse_palette_discipline_repair.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_sparse_palette_discipline_repair.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_sparse_palette_discipline_intro", "baseline_audio_overlay_sparse_palette_discipline_phrase", "baseline_audio_overlay_sparse_palette_discipline_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_palette_discipline_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_palette_discipline_release");
+  assert.equal(phrase.placements.length, 4);
+  assert.equal(release.placements.length, 5);
+  assert.equal(phrase.placements[3].layerIntent.colorPurpose, "cool_motion_accent");
+  assert.equal(phrase.placements[3].layerSettings.C_CHECKBOX_Palette3, false);
+  assert.equal(phrase.placements[3].layerSettings.C_CHECKBOX_Palette4, true);
+});
+
+test("layer composition plan expands baseline-preserving audio overlay sparse delayed coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-sparse-delayed-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 38,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_sparse_delayed.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_sparse_delayed.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_sparse_delayed.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_sparse_delayed_intro", "baseline_audio_overlay_sparse_delayed_phrase", "baseline_audio_overlay_sparse_delayed_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_delayed_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_delayed_release");
+  assert.equal(phrase.placements.length, 4);
+  assert.equal(release.placements.length, 5);
+  assert.equal(phrase.placements[3].target, release.placements[4].target);
+  assert.equal(phrase.placements[3].startMs, 2850);
+  assert.equal(phrase.placements[3].layerIntent.colorPurpose, "cool_motion_accent");
+  assert.equal(release.placements[4].startMs, 4900);
+  assert.equal(release.placements[4].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay sparse early coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-sparse-early-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 39,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_sparse_early.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_sparse_early.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_sparse_early.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_sparse_early_intro", "baseline_audio_overlay_sparse_early_phrase", "baseline_audio_overlay_sparse_early_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_early_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_early_release");
+  assert.equal(phrase.placements.length, 4);
+  assert.equal(release.placements.length, 5);
+  assert.equal(phrase.placements[3].target, release.placements[4].target);
+  assert.equal(phrase.placements[3].startMs, 1850);
+  assert.equal(phrase.placements[3].layerIntent.colorPurpose, "cool_motion_accent");
+  assert.equal(release.placements[4].startMs, 4200);
+  assert.equal(release.placements[4].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay sparse syncopated coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-sparse-syncopated-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 40,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_sparse_syncopated.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_sparse_syncopated.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_sparse_syncopated.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_sparse_syncopated_intro", "baseline_audio_overlay_sparse_syncopated_phrase", "baseline_audio_overlay_sparse_syncopated_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_syncopated_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_syncopated_release");
+  assert.equal(phrase.placements.length, 5);
+  assert.equal(release.placements.length, 6);
+  assert.equal(phrase.placements[3].target, phrase.placements[4].target);
+  assert.equal(phrase.placements[3].startMs, 2450);
+  assert.equal(phrase.placements[4].startMs, 3450);
+  assert.equal(phrase.placements[4].layerIntent.colorPurpose, "cool_motion_accent");
+  assert.equal(release.placements[5].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
+test("layer composition plan expands baseline-preserving audio overlay sparse release hold coverage-gap controller queue", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-baseline-audio-overlay-sparse-release-hold-gap",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 41,
+      controllerDecision: {
+        selectedGoalId: "music.baseline_preserving_audio_overlay_sparse_release_hold.v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:music.baseline_preserving_audio_overlay_sparse_release_hold.v1:coverage-gap",
+        goalId: "music.baseline_preserving_audio_overlay_sparse_release_hold.v1",
+        reason: "coverage_gap"
+      }]
+    }
+  });
+
+  assert.equal(plan.curriculum.controllerSelection.generatedCoverageQueueCount, 3);
+  assert.deepEqual(
+    plan.experiments[0].passes.map((pass) => pass.passId),
+    ["empty_baseline", "baseline_audio_overlay_sparse_release_hold_intro", "baseline_audio_overlay_sparse_release_hold_phrase", "baseline_audio_overlay_sparse_release_hold_release"]
+  );
+  const phrase = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_release_hold_phrase");
+  const release = plan.experiments[0].passes.find((pass) => pass.passId === "baseline_audio_overlay_sparse_release_hold_release");
+  assert.equal(phrase.placements.length, 4);
+  assert.equal(release.placements.length, 5);
+  assert.equal(phrase.placements[3].target, release.placements[4].target);
+  assert.equal(phrase.placements[3].startMs, 2850);
+  assert.equal(release.placements[4].startMs, 4300);
+  assert.equal(release.placements[4].endMs, 5850);
+  assert.equal(release.placements[4].layerIntent.colorPurpose, "lyric_focal_accent");
+});
+
 test("layer composition plan expands core effect coverage-gap controller queue", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,
@@ -1360,6 +1979,261 @@ test("layer composition plan preserves stable focal foundation for color-purpose
   );
 });
 
+test("layer composition plan preserves stable foundation for guarded display motion", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-targeted-foundation-guarded-motion",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 81,
+      controllerDecision: {
+        selectedGoalId: "display.video_aesthetic.palette_foundation_guarded_motion_v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.video_aesthetic.palette_foundation_guarded_motion_v1:coverage-gap",
+        goalId: "display.video_aesthetic.palette_foundation_guarded_motion_v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_foundation_guarded_intro"
+          },
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_foundation_guarded_lift"
+          },
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_foundation_guarded_release"
+          }
+        ]
+      }]
+    }
+  });
+
+  const experiment = plan.experiments.find((item) => item.experimentId === "display-quality-review-rgb_primary");
+  assert.deepEqual(
+    experiment.passes.map((pass) => pass.passId),
+    [
+      "empty_baseline",
+      "display_palette_foundation_guarded_intro",
+      "display_palette_foundation_guarded_lift",
+      "display_palette_foundation_guarded_release"
+    ]
+  );
+  const guardedPass = experiment.passes.find((pass) => pass.passId === "display_palette_foundation_guarded_lift");
+  assert.equal(guardedPass.controllerSelection.selectedByController, true);
+  assert.deepEqual(
+    guardedPass.placements.map((placement) => placement.placementId),
+    [
+      "dq-rgb_primary-spatial-left-structure",
+      "dq-rgb_primary-spatial-right-counterweight",
+      "dq-rgb_primary-spatial-center-focal",
+      "dq-rgb_primary-guarded-foundation-motion"
+    ]
+  );
+  assert.deepEqual(
+    guardedPass.placements.map((placement) => placement.layerIntent?.colorPurpose),
+    ["background_structure", "counterweight_structure", "focal_accent", "transition_motion_bridge"]
+  );
+  assert.equal(
+    guardedPass.placements.find((placement) => placement.placementId === "dq-rgb_primary-guarded-foundation-motion")
+      ?.layerIntent?.fullSequenceGuardrail,
+    "preserve_foundation_focal_counterweight"
+  );
+});
+
+test("layer composition plan refines guarded display with clearer focal pacing", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-targeted-foundation-focal-pacing",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 82,
+      controllerDecision: {
+        selectedGoalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.video_aesthetic.palette_foundation_focal_pacing_v1:coverage-gap",
+        goalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_foundation_focal_pacing_intro"
+          },
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_foundation_focal_pacing_lift"
+          },
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_foundation_focal_pacing_release"
+          }
+        ]
+      }]
+    }
+  });
+
+  const experiment = plan.experiments.find((item) => item.experimentId === "display-quality-review-rgb_primary");
+  assert.deepEqual(
+    experiment.passes.map((pass) => pass.passId),
+    [
+      "empty_baseline",
+      "display_palette_foundation_focal_pacing_intro",
+      "display_palette_foundation_focal_pacing_lift",
+      "display_palette_foundation_focal_pacing_release"
+    ]
+  );
+  const liftPass = experiment.passes.find((pass) => pass.passId === "display_palette_foundation_focal_pacing_lift");
+  assert.deepEqual(
+    liftPass.placements.map((placement) => placement.placementId),
+    [
+      "dq-rgb_primary-spatial-left-structure",
+      "dq-rgb_primary-spatial-right-counterweight",
+      "dq-rgb_primary-guarded-focal-hold",
+      "dq-rgb_primary-guarded-lift-motion"
+    ]
+  );
+  assert.equal(
+    liftPass.placements.find((placement) => placement.placementId === "dq-rgb_primary-guarded-focal-hold")
+      ?.layerIntent?.fullSequenceGuardrail,
+    "preserve_focal_clarity"
+  );
+});
+
+test("layer composition plan repairs focal handoff with guarded context", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-targeted-focal-handoff-guarded-context",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 86,
+      controllerDecision: {
+        selectedGoalId: "display.video_aesthetic.palette_focal_handoff_guarded_context_sequence_v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.video_aesthetic.palette_focal_handoff_guarded_context_sequence_v1:coverage-gap",
+        goalId: "display.video_aesthetic.palette_focal_handoff_guarded_context_sequence_v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_focal_handoff_guarded_context_intro"
+          },
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_focal_handoff_guarded_context_lift"
+          },
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_focal_handoff_guarded_context_release"
+          }
+        ]
+      }]
+    }
+  });
+
+  const experiment = plan.experiments.find((item) => item.experimentId === "display-quality-review-rgb_primary");
+  assert.deepEqual(
+    experiment.passes.map((pass) => pass.passId),
+    [
+      "empty_baseline",
+      "display_palette_focal_handoff_guarded_context_intro",
+      "display_palette_focal_handoff_guarded_context_lift",
+      "display_palette_focal_handoff_guarded_context_release"
+    ]
+  );
+  const releasePass = experiment.passes.find((pass) => pass.passId === "display_palette_focal_handoff_guarded_context_release");
+  assert.deepEqual(
+    releasePass.placements.map((placement) => placement.placementId),
+    [
+      "dq-rgb_primary-spatial-left-structure",
+      "dq-rgb_primary-spatial-right-counterweight",
+      "dq-rgb_primary-guarded-focal-hold",
+      "dq-rgb_primary-focal-handoff-line-bridge",
+      "dq-rgb_primary-focal-handoff-release-counterweight"
+    ]
+  );
+});
+
+test("layer composition plan restores motion with controlled counterpoint while preserving focal anchor", () => {
+  const plan = buildLayerCompositionTrainingPlan({
+    modelCatalog,
+    runId: "controller-targeted-foundation-counterpoint",
+    runType: "overnight",
+    controllerState: {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      curriculumId: "sequencing-quality-v1",
+      loopIndex: 84,
+      controllerDecision: {
+        selectedGoalId: "display.video_aesthetic.palette_foundation_controlled_counterpoint_v1",
+        nextAction: "plan_goal_coverage"
+      },
+      nextQueue: [{
+        queueId: "quality-controller:display.video_aesthetic.palette_foundation_controlled_counterpoint_v1:coverage-gap",
+        goalId: "display.video_aesthetic.palette_foundation_controlled_counterpoint_v1",
+        reason: "coverage_gap",
+        missingCoverageUnits: [
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_foundation_counterpoint_intro"
+          },
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_foundation_counterpoint_lift"
+          },
+          {
+            paletteProfile: "rgb_primary",
+            passId: "display_palette_foundation_counterpoint_release"
+          }
+        ]
+      }]
+    }
+  });
+
+  const experiment = plan.experiments.find((item) => item.experimentId === "display-quality-review-rgb_primary");
+  assert.deepEqual(
+    experiment.passes.map((pass) => pass.passId),
+    [
+      "empty_baseline",
+      "display_palette_foundation_counterpoint_intro",
+      "display_palette_foundation_counterpoint_lift",
+      "display_palette_foundation_counterpoint_release"
+    ]
+  );
+  const releasePass = experiment.passes.find((pass) => pass.passId === "display_palette_foundation_counterpoint_release");
+  assert.deepEqual(
+    releasePass.placements.map((placement) => placement.placementId),
+    [
+      "dq-rgb_primary-spatial-left-structure",
+      "dq-rgb_primary-spatial-right-counterweight",
+      "dq-rgb_primary-spatial-center-focal",
+      "dq-rgb_primary-guarded-foundation-motion",
+      "dq-rgb_primary-controlled-counterpoint-motion"
+    ]
+  );
+  assert.equal(
+    releasePass.placements.find((placement) => placement.placementId === "dq-rgb_primary-spatial-center-focal")
+      ?.layerIntent?.colorPurpose,
+    "focal_accent"
+  );
+  assert.equal(
+    releasePass.placements.find((placement) => placement.placementId === "dq-rgb_primary-controlled-counterpoint-motion")
+      ?.layerIntent?.fullSequenceGuardrail,
+    "restore_motion_interest_without_focal_competition"
+  );
+});
+
 test("layer composition plan expands safe local evidence coverage units", () => {
   const plan = buildLayerCompositionTrainingPlan({
     modelCatalog,
@@ -1391,18 +2265,26 @@ test("layer composition plan expands safe local evidence coverage units", () => 
   );
   assert.deepEqual(
     plan.experiments[0].passes.map((pass) => pass.passId),
-    ["empty_baseline", "display_balance_foundation", "display_motion_variety", "display_rgb_color_discipline_repair", "display_safe_local_evidence_repair"]
+    [
+      "empty_baseline",
+      "display_balance_foundation",
+      "display_motion_variety",
+      "display_palette_depth_contrast_motion_repair",
+      "display_palette_transition_harmony_repair",
+      "display_palette_spatial_balance_focal_repair",
+      "display_safe_local_evidence_repair"
+    ]
   );
   const repairPass = plan.experiments[0].passes.find((pass) => pass.passId === "display_safe_local_evidence_repair");
   assert.equal(repairPass.controllerSelection.selectedByController, true);
-  assert.equal(repairPass.placements.length, 4);
+  assert.equal(repairPass.placements.length, 5);
   assert.deepEqual(
-    repairPass.placements.map((placement) => placement.layerIntent?.localEvidenceRole),
+    repairPass.placements
+      .map((placement) => placement.layerIntent?.localEvidenceRole)
+      .filter(Boolean),
     [
-      "display_context",
       "linear_node_order_readability",
       "radial_structure_readability",
-      "vertical_structure_readability"
     ]
   );
 });
@@ -1491,7 +2373,7 @@ test("layer composition plan expands multi-section music structure coverage-gap 
     .filter(Boolean);
   assert.deepEqual(
     [...new Set(colorPurposes)].sort(),
-    ["cool_motion_accent", "structure", "structure_motion_support", "warm_focal_accent"]
+    ["background_structure", "cool_motion_accent", "structure", "structure_motion_support", "warm_focal_accent"]
   );
   const lyricHit = plan.experiments[0].passes
     .find((pass) => pass.passId === "lyric_phrase_release")
@@ -1502,7 +2384,7 @@ test("layer composition plan expands multi-section music structure coverage-gap 
   assert.equal(lyricHit.layerSettings.C_CHECKBOX_Palette3, false);
   assert.equal(lyricHit.layerSettings.C_CHECKBOX_Palette4, false);
   const energyArc = plan.experiments[0].passes.find((pass) => pass.passId === "multi_section_energy_arc");
-  assert.equal(energyArc.placements.length, 4);
+  assert.equal(energyArc.placements.length, 5);
   assert.equal(
     energyArc.placements.some((placement) => placement.layerIntent?.blendRole === "section_turnaround_motion"
       && placement.target === modelCatalog.canonicalModels.spinner.modelName),

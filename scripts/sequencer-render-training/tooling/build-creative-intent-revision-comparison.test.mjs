@@ -155,7 +155,7 @@ test("creative intent revision comparison blocks regressions", () => {
   assert.equal(artifact.comparisons[0].blockers.includes("clutter_control_regressed"), true);
 });
 
-test("creative intent revision comparison can accept objective-specific improvement", () => {
+test("creative intent revision comparison blocks objective-specific improvement when core quality regresses", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-creative-revision-objective-"));
   writeJson(path.join(root, "training-plan.json"), {
     experiments: [{
@@ -199,9 +199,10 @@ test("creative intent revision comparison can accept objective-specific improvem
 
   const artifact = buildCreativeIntentRevisionComparison({ runRoot: root });
 
-  assert.equal(artifact.comparisons[0].comparisonStatus, "improved");
+  assert.equal(artifact.comparisons[0].comparisonStatus, "blocked");
   assert.equal(artifact.comparisons[0].revisionObjective.status, "improved");
-  assert.deepEqual(artifact.comparisons[0].blockers, []);
+  assert.equal(artifact.comparisons[0].blockers.includes("intent_match_regressed"), true);
+  assert.equal(artifact.comparisons[0].blockers.includes("visual_readability_regressed"), true);
 });
 
 test("creative intent revision comparison scores focus simplification variants", () => {

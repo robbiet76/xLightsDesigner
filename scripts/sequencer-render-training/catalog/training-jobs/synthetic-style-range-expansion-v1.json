@@ -1,0 +1,68 @@
+{
+  "artifactType": "sequencing_quality_training_job_v1",
+  "artifactVersion": 1,
+  "jobId": "synthetic-style-range-expansion-v1",
+  "chunkId": "vendor-fixture-synthetic-style-range-expansion",
+  "status": "active",
+  "description": "Run the next vendor-fixture synthetic style-range chunk over the stable guarded/sparse foundation, focusing on controlled timing variation rather than display repair.",
+  "defaults": {
+    "outRoot": "var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1",
+    "uniqueOutRoot": true,
+    "curriculumPath": "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json",
+    "modelCatalogPath": "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json",
+    "runType": "overnight",
+    "maxLoops": 50,
+    "maxQueue": 25,
+    "maxPasses": 5,
+    "maxConsecutiveRegressions": 1,
+    "maxRepeatedGoalCount": 6,
+    "cleanupPreviewFrames": true,
+    "autoRefill": false,
+    "maxAutoRefills": 0,
+    "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
+  },
+  "stopPolicy": {
+    "treatControllerIdleAsChunkComplete": true,
+    "treatNeedsStrategyExpansionAsChunkComplete": true,
+    "maxConsecutiveRegressionsRequiresIntervention": true,
+    "maxRepeatedGoalSelectionRequiresIntervention": true
+  },
+  "curriculumScope": {
+    "trainingLayout": "render-training-vendor-fixture",
+    "primaryEvidence": "full_sequence_render",
+    "currentFocus": [
+      "controlled style range",
+      "sparse synthetic timing overlays",
+      "syncopated phrase echo",
+      "restrained lyric release hold",
+      "same-target focal handoff protection",
+      "palette-purpose preservation"
+    ],
+    "excluded": [
+      "generic display repair",
+      "new target families",
+      "production audio analysis",
+      "secondary palette accent changes without human review"
+    ]
+  },
+  "retentionPolicy": {
+    "maxRunDirectories": 8,
+    "requireSummaryBeforeRunDirectoryDelete": true,
+    "preserveCurrentRun": true,
+    "preserveLatestRunRoot": true,
+    "preserveVideoComparisonBaselineRunRoot": true,
+    "preservePreviousStateRunRoot": true,
+    "deleteRawPreviewFramesAfterLoop": true,
+    "preserveCompactEvidence": true
+  },
+  "operatorReviewPolicy": {
+    "requiredOnlyWhen": [
+      "max_consecutive_regressions",
+      "max_repeated_goal_selection",
+      "blocked_no_controller_queue_without_chunk_completion",
+      "awaiting_evidence",
+      "new human rubric labels are explicitly requested"
+    ],
+    "preferredReviewSurface": "xLightsDesigner Review page"
+  }
+}

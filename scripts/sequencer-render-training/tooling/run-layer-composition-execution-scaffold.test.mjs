@@ -17,7 +17,9 @@ const modelCatalog = {
     arch_single: { modelName: "ArchSingle", modelType: "arch", geometryProfile: "arch_single", analyzerFamily: "linear" },
     spinner: { modelName: "Spinner", modelType: "spinner", geometryProfile: "spinner_standard", analyzerFamily: "radial" },
     star_triple_layer: { modelName: "StarTripleLayer", modelType: "star", geometryProfile: "star_multi_layer", analyzerFamily: "star" },
-    tree_flat: { modelName: "TreeFlat", modelType: "tree_flat", geometryProfile: "tree_flat_single_layer", analyzerFamily: "tree" }
+    tree_flat: { modelName: "TreeFlat", modelType: "tree_flat", geometryProfile: "tree_flat_single_layer", analyzerFamily: "tree" },
+    cane_group: { modelName: "CaneGroup", modelType: "cane", geometryProfile: "cane_grouped", analyzerFamily: "linear" },
+    matrix_low_density: { modelName: "MatrixLowDensity", modelType: "matrix", geometryProfile: "matrix_low_density", analyzerFamily: "matrix" }
   }
 };
 

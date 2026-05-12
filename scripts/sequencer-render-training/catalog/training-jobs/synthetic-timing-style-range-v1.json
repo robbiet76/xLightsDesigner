@@ -1,0 +1,82 @@
+{
+  "artifactType": "sequencing_quality_training_job_v1",
+  "artifactVersion": 1,
+  "jobId": "synthetic-timing-style-range-v1",
+  "chunkId": "vendor-fixture-synthetic-timing-style-range",
+  "status": "active",
+  "description": "Run a broader vendor-fixture synthetic timing style-range chunk, using baseline-preserving overlays to test motion, palette role, sparse accent timing, early/delayed/syncopated phrase placement, and release-hold timing without depending on production audio analysis.",
+  "defaults": {
+    "outRoot": "var/logs/sequencing-quality-controller/unattended/synthetic-timing-style-range-v1",
+    "uniqueOutRoot": true,
+    "curriculumPath": "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json",
+    "modelCatalogPath": "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json",
+    "runType": "overnight",
+    "maxLoops": 120,
+    "maxQueue": 25,
+    "maxPasses": 5,
+    "maxConsecutiveRegressions": 1,
+    "maxRepeatedGoalCount": 6,
+    "cleanupPreviewFrames": true,
+    "autoRefill": false,
+    "maxAutoRefills": 0,
+    "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
+  },
+  "stopPolicy": {
+    "treatControllerIdleAsChunkComplete": true,
+    "treatNeedsStrategyExpansionAsChunkComplete": true,
+    "maxConsecutiveRegressionsRequiresIntervention": true,
+    "maxRepeatedGoalSelectionRequiresIntervention": true
+  },
+  "curriculumScope": {
+    "trainingLayout": "render-training-vendor-fixture",
+    "primaryEvidence": "full_sequence_render",
+    "currentFocus": [
+      "synthetic full-sequence timing overlays",
+      "baseline-preserving motion repair",
+      "palette-role timing accents",
+      "single-target swell timing",
+      "sparse accent density",
+      "early, delayed, syncopated, and release-hold timing ranges"
+    ],
+    "targetGoalIds": [
+      "music.baseline_preserving_audio_overlay_motion_repair.v1",
+      "music.baseline_preserving_audio_overlay_palette_role_repair.v1",
+      "music.baseline_preserving_audio_overlay_existing_motion_repair.v1",
+      "music.baseline_preserving_audio_overlay_single_target_swell.v1",
+      "music.baseline_preserving_audio_overlay_sparse_accent.v1",
+      "music.baseline_preserving_audio_overlay_sparse_delayed.v1",
+      "music.baseline_preserving_audio_overlay_sparse_early.v1",
+      "music.baseline_preserving_audio_overlay_sparse_syncopated.v1",
+      "music.baseline_preserving_audio_overlay_sparse_release_hold.v1"
+    ],
+    "excluded": [
+      "production audio analysis",
+      "real audio feature extraction",
+      "sparse secondary-palette timing overlay retry after color-discipline regression",
+      "broad full-sequence audio alignment retry after quality-consistency and color-discipline regression",
+      "new effect-family exploration",
+      "generic display repair that replaces the guarded foundation",
+      "new model-family coverage outside the representative vendor fixture"
+    ]
+  },
+  "retentionPolicy": {
+    "maxRunDirectories": 8,
+    "requireSummaryBeforeRunDirectoryDelete": true,
+    "preserveCurrentRun": true,
+    "preserveLatestRunRoot": true,
+    "preserveVideoComparisonBaselineRunRoot": true,
+    "preservePreviousStateRunRoot": true,
+    "deleteRawPreviewFramesAfterLoop": true,
+    "preserveCompactEvidence": true
+  },
+  "operatorReviewPolicy": {
+    "requiredOnlyWhen": [
+      "max_consecutive_regressions",
+      "max_repeated_goal_selection",
+      "blocked_no_controller_queue_without_chunk_completion",
+      "awaiting_evidence",
+      "new human rubric labels are explicitly requested"
+    ],
+    "preferredReviewSurface": "xLightsDesigner Review page"
+  }
+}

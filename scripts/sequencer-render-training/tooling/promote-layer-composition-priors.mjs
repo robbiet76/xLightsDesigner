@@ -77,8 +77,34 @@ function blockedReasons(checks = []) {
     .filter(Boolean);
 }
 
+function creativeRevisionComparisonByPass(comparison = {}) {
+  const rows = new Map();
+  for (const row of arr(comparison?.comparisons)) {
+    const revisedPassId = str(row.revisedPassId);
+    if (revisedPassId) rows.set(revisedPassId, row);
+  }
+  return rows;
+}
+
+function creativeRevisionPromotionChecks(prior = {}, options = {}) {
+  const scope = prior.scope || {};
+  if (str(scope.family) !== "creative_intent_revision_comparison") return [];
+  const passId = str(scope.passId);
+  const comparison = options.creativeRevisionComparisonByPass?.get(passId);
+  if (!comparison) return [];
+  return [{
+    id: "creative_revision_comparison_promotion_eligible",
+    ok: comparison.promotionEligible === true,
+    actual: str(comparison.comparisonStatus),
+    blockers: arr(comparison.blockers).map(str).filter(Boolean)
+  }];
+}
+
 function promotePrior(prior = {}, options = {}) {
-  const checks = promotionChecks(prior, options);
+  const checks = [
+    ...promotionChecks(prior, options),
+    ...creativeRevisionPromotionChecks(prior, options)
+  ];
   const blockers = blockedReasons(checks);
   const promoted = blockers.length === 0;
   return {
@@ -112,10 +138,16 @@ function promotePrior(prior = {}, options = {}) {
 export function promoteLayerCompositionPriors({
   priors,
   minSampleCount = DEFAULT_MIN_SAMPLE_COUNT,
-  minQuality = DEFAULT_MIN_QUALITY
+  minQuality = DEFAULT_MIN_QUALITY,
+  creativeIntentRevisionComparison = null
 } = {}) {
   const source = typeof priors === "string" ? readJson(priors) : priors;
-  const promotedPriors = arr(source?.priors).map((prior) => promotePrior(prior, { minSampleCount, minQuality }));
+  const creativeRevisionComparisonByPassMap = creativeRevisionComparisonByPass(creativeIntentRevisionComparison || {});
+  const promotedPriors = arr(source?.priors).map((prior) => promotePrior(prior, {
+    minSampleCount,
+    minQuality,
+    creativeRevisionComparisonByPass: creativeRevisionComparisonByPassMap
+  }));
   const selectorReadyPriors = promotedPriors.filter((prior) => prior.selectorReady === true);
   const blockedPriors = promotedPriors.filter((prior) => prior.selectorReady !== true);
   return {

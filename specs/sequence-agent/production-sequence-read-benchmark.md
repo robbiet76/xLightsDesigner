@@ -268,6 +268,7 @@ Human review gate:
 ```bash
 node scripts/sequencer-render-training/tooling/build-production-human-review-calibration.mjs \
   --profile var/benchmarks/production-sequence-read/video-review/production-scorer-calibration-profile.json \
+  --notes var/benchmarks/production-sequence-read/human-review-notes.template.json \
   --write-template var/benchmarks/production-sequence-read/human-review-notes.template.json \
   --out var/benchmarks/production-sequence-read/video-review/production-human-review-calibration.json
 ```
@@ -275,8 +276,73 @@ node scripts/sequencer-render-training/tooling/build-production-human-review-cal
 The review artifact is `production_human_review_calibration_v1`. It keeps the
 calibration profile blocked until reviewed production references are marked
 `reviewed` with recommendation `approve` or `adjust`. The generated notes
-template is user-editable and stores strengths, weaknesses, dimension notes, and
-optional band adjustments without modifying source sequences.
+template is user-editable and stores structured multiple-choice metric picks,
+optional strengths/weaknesses, dimension notes, and optional band adjustments
+without modifying source sequences. The structured choices are the primary
+calibration signal; free-text notes are supporting context for unusual cases.
+
+Human/scorer alignment:
+
+```bash
+node scripts/sequencer-render-training/tooling/build-production-human-scorer-alignment.mjs \
+  --human-calibration var/benchmarks/production-sequence-read/video-review/production-human-review-calibration.json \
+  --out var/benchmarks/production-sequence-read/video-review/production-human-scorer-alignment.json
+```
+
+The alignment artifact is `production_human_scorer_alignment_v1`. It compares
+the user's structured review scores against the automated full-sequence profile
+dimensions and labels each metric as aligned, partially aligned, weak, inverted,
+or needing more variance. Generated training may use human review scores as
+full-sequence target labels once the human calibration artifact is approved.
+Automated dimensions marked weak or inverted must remain diagnostics until they
+are retuned against more reviewed evidence.
+
+Current vendor-show calibration result:
+
+- `energyArc`, `sectionContrast`, and `paletteEvolution` are partially aligned
+  and may be used only with human-calibrated guardrails.
+- `focalHandoff`, `targetHierarchy`, and `overallFit` are weakly aligned; do
+  not optimize generated sequences directly against the current automated
+  scores for those dimensions.
+- Production references remain read-only. Training should generate new
+  candidate sequences and compare those candidates to the human-calibrated
+  target ranges, not copy production sequencing choices.
+
+Generated candidate evaluation:
+
+```bash
+node scripts/sequencer-render-training/tooling/build-human-calibrated-candidate-evaluation.mjs \
+  --human-calibration var/benchmarks/production-sequence-read/video-review/production-human-review-calibration.json \
+  --alignment var/benchmarks/production-sequence-read/video-review/production-human-scorer-alignment.json \
+  --candidate-score <generated-run-root>/video-aesthetic-score.json \
+  --out <generated-run-root>/human-calibrated-candidate-evaluation.json
+```
+
+The evaluation artifact is `human_calibrated_candidate_evaluation_v1`. It
+turns approved human production reviews into target bands and compares generated
+full-sequence candidates against those bands. It does not copy or train on
+production sequences. It uses the human/scorer alignment result as policy:
+
+- aligned automated metrics may support optimization
+- partially aligned metrics may be used only as human-calibrated guardrails
+- weak, inverted, or unknown metrics remain diagnostic only
+
+With the current vendor-show calibration, no metric is aligned enough for
+unattended promotion by itself. The artifact is therefore primarily used to
+select generated candidates for human review, identify weak scorer dimensions,
+and prevent training from optimizing against metrics that disagree with human
+review.
+
+The unattended quality loop can write this artifact directly when running live
+candidate renders:
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-loop.mjs \
+  --latest-run-root <previous-quality-loop-root> \
+  --apply-render \
+  --human-calibration var/benchmarks/production-sequence-read/video-review/production-human-review-calibration.json \
+  --human-scorer-alignment var/benchmarks/production-sequence-read/video-review/production-human-scorer-alignment.json
+```
 
 ## Relationship To Training
 

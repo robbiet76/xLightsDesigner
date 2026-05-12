@@ -308,21 +308,49 @@ Use `run-sequencing-quality-unattended.mjs` after the loop has been proven in
 small live runs. It repeats controller-selected loops, advances the latest run
 root after each executed loop, writes `unattended-run-summary.json` after every
 iteration, and stops on controller idle, missing evidence, blockers, or
-`--max-loops`.
-Use `run-video-aesthetic-training-orchestrator.mjs` for display-level video
-aesthetic training once the loop is ready to run without per-turn supervision.
-It repeats controller loops, exports selector-ready video aesthetic guidance
-when an attempt improves, and writes `video-aesthetic-training-report.json` with
-the best run, score trajectory, latest resumable checkpoint, and next steps.
+`--max-loops`. For bounded work inside a larger campaign, pass a JSON training
+job spec so the summary records the active job slice and can treat controller
+idle or exhausted strategy coverage as `major_chunk_complete_*` instead of a
+per-loop approval point. The high-level campaign layer lives in
+`catalog/training-campaigns/`; those campaign manifests represent the true major
+chunks that may run for hours or days across multiple job slices.
+The runner also applies per-loop cleanup and job-level retention when configured:
+raw preview frame dumps are summarized then deleted, while compact JSON evidence
+and promoted/staged priors are retained.
+CLI runs send a macOS notification by default when the job slice stops or errors.
+Use `--no-notify` for short smoke runs or wrapper scripts that already alert.
+
+Use `run-sequencing-training-campaign.mjs` for true long unattended campaign
+windows. It chains job slices from a campaign manifest, writes
+`campaign-run-summary.json` after each slice, stops on campaign guardrails, and
+sends a campaign-level notification when the window stops or errors.
 
 ```bash
-node scripts/sequencer-render-training/tooling/run-video-aesthetic-training-orchestrator.mjs \
-  --seed-run-root /tmp/xld-video-aesthetic-display-loop-000010 \
-  --previous-state /tmp/xld-video-aesthetic-display-loop-000010/controller-state-next-corrected.json \
-  --model-catalog /tmp/xld-vendor-fixture-model-catalog.json \
-  --out-root var/logs/video-aesthetic-training-orchestrator \
-  --max-loops 20 \
-  --max-passes 5
+node scripts/sequencer-render-training/tooling/run-sequencing-training-campaign.mjs \
+  --campaign-spec scripts/sequencer-render-training/catalog/training-campaigns/vendor-fixture-human-level-sequencing-v1.json \
+  --latest-run-root var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-20260512T005407Z/loop-000002 \
+  --video-comparison-baseline-run-root var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-20260512T005407Z/loop-000002 \
+  --previous-state var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-20260512T005407Z/loop-000003/controller-state.json \
+  --max-job-slices 4 \
+  --max-hours 8 \
+  --notify
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \
+  --job-spec scripts/sequencer-render-training/catalog/training-jobs/synthetic-full-sequence-quality-v1.json \
+  --latest-run-root var/logs/sequencing-quality-controller/loop-000141 \
+  --video-comparison-baseline-run-root var/logs/sequencing-quality-controller/loop-000141 \
+  --previous-state var/logs/sequencing-quality-controller/loop-000143/controller-state.json \
+  --notify
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \
+  --job-spec scripts/sequencer-render-training/catalog/training-jobs/synthetic-style-range-expansion-v1.json \
+  --latest-run-root var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-<timestamp>/loop-000002 \
+  --video-comparison-baseline-run-root var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-<timestamp>/loop-000002 \
+  --previous-state var/logs/sequencing-quality-controller/unattended/synthetic-style-range-expansion-v1/run-<timestamp>/loop-000003/controller-state.json
 ```
 
 ```bash
@@ -363,6 +391,7 @@ node scripts/sequencer-render-training/tooling/run-sequencing-quality-loop.mjs \
 
 ```bash
 node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \
+  --job-spec scripts/sequencer-render-training/catalog/training-jobs/synthetic-full-sequence-quality-v1.json \
   --latest-run-root var/logs/sequencing-quality-controller/loop-000001 \
   --previous-state var/logs/sequencing-quality-controller/loop-000001/controller-state.json \
   --model-catalog scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json \

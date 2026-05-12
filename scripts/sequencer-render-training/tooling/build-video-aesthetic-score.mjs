@@ -203,8 +203,23 @@ function trainingPlanPassMetadata(runRoot = "") {
         .filter(Boolean))],
       displayReviewRoles: [...new Set(placements
         .map((placement) => str(placement.layerIntent?.displayReviewRole))
-        .filter(Boolean))]
+        .filter(Boolean))],
+      family: str(pass.family || pass.experimentFamily || ""),
+      experimentFamily: str(pass.experimentFamily || ""),
+      curriculumStage: str(pass.curriculumStage || "")
     });
+  }
+  for (const experiment of arr(plan.experiments)) {
+    const experimentFamily = str(experiment.family);
+    const curriculumStage = str(experiment.curriculumStage);
+    for (const pass of arr(experiment.passes)) {
+      const passId = str(pass.passId);
+      if (!passId || !metadata.has(passId)) continue;
+      const row = metadata.get(passId);
+      row.experimentFamily = experimentFamily;
+      row.curriculumStage = row.curriculumStage || curriculumStage;
+      row.family = row.family || experimentFamily;
+    }
   }
   return metadata;
 }
@@ -220,6 +235,16 @@ function metricScopeForScore({ selectedEligibleWindowCount = 0, contextWindowCou
   if (selectedEligibleWindowCount) return "section_render";
   if (contextWindowCount >= 2 && basisWindowCount >= 2) return "full_sequence_render";
   return "section_render";
+}
+
+function shouldScoreWholeDisplay({ selectedEligibleWindows = [], passMetadata = new Map() } = {}) {
+  if (!selectedEligibleWindows.length) return false;
+  return selectedEligibleWindows.some((row) => {
+    const metadata = passMetadata.get(row.passId) || {};
+    return metadata.experimentFamily === "display_quality_review"
+      || metadata.family === "display_quality_review"
+      || metadata.curriculumStage === "sequence_pattern_validation";
+  });
 }
 
 function promotionUseForMetricScope(metricScope = "") {
@@ -320,10 +345,11 @@ export function buildVideoAestheticScore({
   const passMetadata = trainingPlanPassMetadata(root);
   const selectedPassIds = controllerSelectedPassIds(passMetadata);
   const selectedEligibleWindows = eligibleWindows.filter((row) => selectedPassIds.has(row.passId));
+  const useWholeDisplayBasis = shouldScoreWholeDisplay({ selectedEligibleWindows, passMetadata });
   const progression = readJsonIfExists(fullSequence.progressionObservationRef) || {};
   const progressionScores = scoreFromProgression(progression);
   const fallbackWindows = eligibleWindows.length >= 2 ? eligibleWindows : windows.filter((row) => row.measurementStatus !== "render_health_observation");
-  const basisWindows = selectedEligibleWindows.length ? selectedEligibleWindows : fallbackWindows;
+  const basisWindows = selectedEligibleWindows.length && !useWholeDisplayBasis ? selectedEligibleWindows : fallbackWindows;
   const contextWindows = eligibleWindows.length >= 2 ? eligibleWindows : fallbackWindows;
   const motionVariety = rangeScore(basisWindows.map((row) => row.temporalMotionMean), 0.25);
   const colorVariety = rangeScore(basisWindows.map((row) => row.colorDiversityMean), 1);
@@ -425,7 +451,7 @@ export function buildVideoAestheticScore({
     ? "ready"
     : "insufficient_video_windows";
   const metricScope = metricScopeForScore({
-    selectedEligibleWindowCount: selectedEligibleWindows.length,
+    selectedEligibleWindowCount: useWholeDisplayBasis ? 0 : selectedEligibleWindows.length,
     contextWindowCount: contextWindows.length,
     basisWindowCount: basisWindows.length
   });
@@ -449,8 +475,10 @@ export function buildVideoAestheticScore({
     evidenceEligibleWindowCount: eligibleWindows.length,
     controllerSelectedWindowCount: selectedEligibleWindows.length,
     minimumScoredWindows,
-    scoreBasis: selectedEligibleWindows.length
+    scoreBasis: selectedEligibleWindows.length && !useWholeDisplayBasis
       ? "controller_selected_window_metrics_and_progression_observation"
+      : selectedEligibleWindows.length
+        ? "whole_display_metrics_with_controller_selected_candidate_context"
       : "deterministic_window_metrics_and_progression_observation",
     qualityDimensions: [
       "display_evolution",

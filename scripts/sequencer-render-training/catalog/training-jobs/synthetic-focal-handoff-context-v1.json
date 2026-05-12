@@ -1,0 +1,74 @@
+{
+  "artifactType": "sequencing_quality_training_job_v1",
+  "artifactVersion": 1,
+  "jobId": "synthetic-focal-handoff-context-v1",
+  "chunkId": "vendor-fixture-synthetic-focal-handoff-context",
+  "status": "active",
+  "description": "Run the vendor-fixture focal handoff and sequence-context slice over the current guarded foundation, focusing on whole-display readability and context preservation.",
+  "defaults": {
+    "outRoot": "var/logs/sequencing-quality-controller/unattended/synthetic-focal-handoff-context-v1",
+    "uniqueOutRoot": true,
+    "curriculumPath": "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json",
+    "modelCatalogPath": "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json",
+    "runType": "overnight",
+    "maxLoops": 50,
+    "maxQueue": 25,
+    "maxPasses": 5,
+    "maxConsecutiveRegressions": 1,
+    "maxRepeatedGoalCount": 6,
+    "cleanupPreviewFrames": true,
+    "autoRefill": false,
+    "maxAutoRefills": 0,
+    "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
+  },
+  "stopPolicy": {
+    "treatControllerIdleAsChunkComplete": true,
+    "treatNeedsStrategyExpansionAsChunkComplete": true,
+    "maxConsecutiveRegressionsRequiresIntervention": true,
+    "maxRepeatedGoalSelectionRequiresIntervention": true
+  },
+  "curriculumScope": {
+    "trainingLayout": "render-training-vendor-fixture",
+    "primaryEvidence": "full_sequence_render",
+    "currentFocus": [
+      "focal handoff stability",
+      "whole-display context preservation",
+      "section-to-section readability",
+      "guarded foundation revalidation",
+      "soft counterpoint",
+      "calibrated counterpoint"
+    ],
+    "targetGoalIds": [
+      "display.video_aesthetic.palette_focal_handoff_guarded_context_sequence_v1",
+      "display.video_aesthetic.palette_foundation_guarded_revalidation_v1",
+      "display.video_aesthetic.palette_foundation_soft_counterpoint_v1",
+      "display.video_aesthetic.palette_foundation_calibrated_counterpoint_v1"
+    ],
+    "excluded": [
+      "new effect-family exploration",
+      "production audio analysis",
+      "secondary palette accent changes without human review",
+      "generic display repair that replaces the guarded foundation"
+    ]
+  },
+  "retentionPolicy": {
+    "maxRunDirectories": 8,
+    "requireSummaryBeforeRunDirectoryDelete": true,
+    "preserveCurrentRun": true,
+    "preserveLatestRunRoot": true,
+    "preserveVideoComparisonBaselineRunRoot": true,
+    "preservePreviousStateRunRoot": true,
+    "deleteRawPreviewFramesAfterLoop": true,
+    "preserveCompactEvidence": true
+  },
+  "operatorReviewPolicy": {
+    "requiredOnlyWhen": [
+      "max_consecutive_regressions",
+      "max_repeated_goal_selection",
+      "blocked_no_controller_queue_without_chunk_completion",
+      "awaiting_evidence",
+      "new human rubric labels are explicitly requested"
+    ],
+    "preferredReviewSurface": "xLightsDesigner Review page"
+  }
+}

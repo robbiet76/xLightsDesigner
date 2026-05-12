@@ -41,6 +41,8 @@ function parseArgs(argv = []) {
     skipOpen: false,
     skipRender: false,
     highdef: true,
+    width: 0,
+    height: 0,
     automationTimeoutMs: DEFAULT_AUTOMATION_TIMEOUT_MS
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -55,6 +57,8 @@ function parseArgs(argv = []) {
     else if (arg === "--skip-open") args.skipOpen = true;
     else if (arg === "--skip-render") args.skipRender = true;
     else if (arg === "--highdef") args.highdef = boolish(argv[++index]);
+    else if (arg === "--width") args.width = Number(argv[++index]);
+    else if (arg === "--height") args.height = Number(argv[++index]);
     else if (arg === "--automation-timeout-ms") args.automationTimeoutMs = Number(argv[++index]);
     else if (arg === "--help") args.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
@@ -76,6 +80,8 @@ Options:
   --skip-open              Export the currently open sequence.
   --skip-render            Export without running renderAll first.
   --highdef true|false     Pass highdef to renderAll. Default: true.
+  --width <n>              Owned API export width. Requires --height.
+  --height <n>             Owned API export height. Requires --width.
   --xlights-staging-dir <dir>
                             Directory xLights can write before copying to --out.
                             Default on macOS: ${DEFAULT_XLIGHTS_STAGING_DIR || "(disabled)"}
@@ -269,9 +275,14 @@ export async function exportXLightsPreviewVideo(options = {}) {
     ? path.join(xlightsStagingDir, `${path.basename(outputPath, path.extname(outputPath))}-${Date.now()}${path.extname(outputPath) || ".mp4"}`)
     : outputPath;
   const automationTimeoutMs = Number(options.automationTimeoutMs || DEFAULT_AUTOMATION_TIMEOUT_MS);
+  const requestedWidth = Number(options.width || 0);
+  const requestedHeight = Number(options.height || 0);
   if (!options.skipOpen && !sequencePath) throw new Error("--sequence is required unless --skip-open is used");
   if (!outputPath) throw new Error("--out is required");
   if (!options.skipOpen && !fs.existsSync(sequencePath)) throw new Error(`Sequence file does not exist: ${sequencePath}`);
+  if ((requestedWidth > 0 || requestedHeight > 0) && !(requestedWidth > 0 && requestedHeight > 0)) {
+    throw new Error("--width and --height must be provided together");
+  }
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   if (artifactPath) fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
@@ -290,7 +301,8 @@ export async function exportXLightsPreviewVideo(options = {}) {
     }
     const response = await postOwnedJob(xlightsEndpoint, "/sequence/export-preview-video", {
       file: xlightsOutputPath,
-      renderFirst: !options.skipRender
+      renderFirst: !options.skipRender,
+      ...(requestedWidth > 0 && requestedHeight > 0 ? { width: requestedWidth, height: requestedHeight } : {})
     }, { fetchImpl, timeoutMs: automationTimeoutMs });
     steps.push({ command: "sequence.exportPreviewVideo", ok: true, response });
   } else if (apiMode === "legacy") {
@@ -343,6 +355,8 @@ export async function exportXLightsPreviewVideo(options = {}) {
       xlightsOutputPath,
       stagingDir: xlightsStagingDir || null,
       expectedContainer: "mp4",
+      requestedWidth: requestedWidth > 0 ? requestedWidth : null,
+      requestedHeight: requestedHeight > 0 ? requestedHeight : null,
       audioPolicy: "include_current_sequence_media_audio_when_present"
     },
     automation: {

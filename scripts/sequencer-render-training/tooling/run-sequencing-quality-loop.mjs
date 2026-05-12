@@ -13,6 +13,7 @@ import { buildLayerCompositionQualityRecords } from "./build-layer-composition-q
 import { buildFullSequenceReviewLoop } from "./build-full-sequence-review-loop.mjs";
 import { buildVideoAestheticScore } from "./build-video-aesthetic-score.mjs";
 import { buildVideoAestheticAttemptComparison } from "./build-video-aesthetic-attempt-comparison.mjs";
+import { buildHumanCalibratedCandidateEvaluation } from "./build-human-calibrated-candidate-evaluation.mjs";
 import { buildCreativeIntentRevisionComparison } from "./build-creative-intent-revision-comparison.mjs";
 import { buildLayerCompositionDeltas } from "./build-layer-composition-deltas.mjs";
 import { buildLayerCompositionPriors } from "./build-layer-composition-priors.mjs";
@@ -49,6 +50,10 @@ function resolvePath(filePath = "") {
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readJsonIfExists(filePath = "") {
+  return filePath && fs.existsSync(filePath) ? readJson(filePath) : null;
 }
 
 function writeJson(filePath, payload) {
@@ -112,7 +117,11 @@ function buildPromotionArtifacts({ loopRoot = "", crossRunQuality = null, deps =
   qualityRecords.sourceQualityRecordsRef = crossRunQuality.recordsRef;
   const stagedPriors = (deps.buildPriors || buildLayerCompositionPriors)({ deltaSummary, qualityRecords });
   writeJson(stagedPriorsPath, stagedPriors);
-  const promotedPriors = (deps.promotePriors || promoteLayerCompositionPriors)({ priors: stagedPriors });
+  const creativeIntentRevisionComparison = readJsonIfExists(path.join(root, "creative-intent-revision-comparison.json"));
+  const promotedPriors = (deps.promotePriors || promoteLayerCompositionPriors)({
+    priors: stagedPriors,
+    creativeIntentRevisionComparison
+  });
   writeJson(promotedPriorsPath, promotedPriors);
   return {
     deltaSummaryRef: deltaSummaryPath,
@@ -127,7 +136,12 @@ function buildPromotionArtifacts({ loopRoot = "", crossRunQuality = null, deps =
 }
 
 function nextLoopDir(outRoot = "", loopIndex = 1) {
-  return path.join(resolvePath(outRoot || DEFAULT_OUT_ROOT), `loop-${String(loopIndex).padStart(6, "0")}`);
+  const root = resolvePath(outRoot || DEFAULT_OUT_ROOT);
+  let candidateIndex = Math.max(1, num(loopIndex, 1));
+  while (fs.existsSync(path.join(root, `loop-${String(candidateIndex).padStart(6, "0")}`))) {
+    candidateIndex += 1;
+  }
+  return path.join(root, `loop-${String(candidateIndex).padStart(6, "0")}`);
 }
 
 export async function runSequencingQualityLoop({
@@ -144,6 +158,9 @@ export async function runSequencingQualityLoop({
   maxPasses = 1,
   applyRender = false,
   renderReviewQuality = true,
+  humanCalibrationPath = "",
+  humanScorerAlignmentPath = "",
+  ownedJobTimeoutMs = null,
   endpoint = DEFAULT_ENDPOINT,
   deps = {}
 } = {}) {
@@ -221,40 +238,63 @@ export async function runSequencingQualityLoop({
   let fullSequenceReview = null;
   let videoAestheticScore = null;
   let videoAestheticAttemptComparison = null;
+  let humanCalibratedCandidateEvaluation = null;
   let creativeIntentRevisionComparison = null;
   let promotionArtifacts = null;
+  let renderBlocked = false;
   if (applyRender) {
     passRunnerSummary = await (deps.runPasses || runLayerCompositionPasses)({
       runRoot: root,
       endpoint,
       maxPasses,
-      renderReviewQuality
+      renderReviewQuality,
+      deps: {
+        ...(deps.passRunnerDeps || {}),
+        ownedDeps: {
+          ...(deps.passRunnerDeps?.ownedDeps || {}),
+          ...(ownedJobTimeoutMs ? { timeoutMs: ownedJobTimeoutMs } : {})
+        }
+      }
     });
-    fullSequenceReview = (deps.buildFullSequenceReview || buildFullSequenceReviewLoop)({
-      runRoot: root,
-      outPath: path.join(root, "full-sequence-review-loop.json")
-    });
-    videoAestheticScore = (deps.buildVideoAestheticScore || buildVideoAestheticScore)({
-      runRoot: root,
-      fullSequenceReviewPath: path.join(root, "full-sequence-review-loop.json"),
-      outPath: path.join(root, "video-aesthetic-score.json")
-    });
-    videoAestheticAttemptComparison = (deps.buildVideoAestheticAttemptComparison || buildVideoAestheticAttemptComparison)({
-      baselineRunRoot: resolvedVideoComparisonBaselineRunRoot,
-      candidateRunRoot: root,
-      outPath: path.join(root, "video-aesthetic-attempt-comparison.json")
-    });
-    creativeIntentRevisionComparison = (deps.buildCreativeIntentRevisionComparison || buildCreativeIntentRevisionComparison)({
-      runRoot: root,
-      outPath: path.join(root, "creative-intent-revision-comparison.json")
-    });
-    crossRunQuality = buildCrossRunQualityArtifacts({ latestRunRoot, loopRoot: root, deps });
-    promotionArtifacts = buildPromotionArtifacts({ loopRoot: root, crossRunQuality, deps });
+    renderBlocked = num(passRunnerSummary?.processedPasses) === 0
+      && !["queue_exhausted", "pass_limit_reached"].includes(str(passRunnerSummary?.stopStatus));
+    if (!renderBlocked) {
+      fullSequenceReview = (deps.buildFullSequenceReview || buildFullSequenceReviewLoop)({
+        runRoot: root,
+        outPath: path.join(root, "full-sequence-review-loop.json")
+      });
+      videoAestheticScore = (deps.buildVideoAestheticScore || buildVideoAestheticScore)({
+        runRoot: root,
+        fullSequenceReviewPath: path.join(root, "full-sequence-review-loop.json"),
+        outPath: path.join(root, "video-aesthetic-score.json")
+      });
+      videoAestheticAttemptComparison = (deps.buildVideoAestheticAttemptComparison || buildVideoAestheticAttemptComparison)({
+        baselineRunRoot: resolvedVideoComparisonBaselineRunRoot,
+        candidateRunRoot: root,
+        outPath: path.join(root, "video-aesthetic-attempt-comparison.json")
+      });
+      const resolvedHumanCalibrationPath = resolvePath(humanCalibrationPath);
+      const resolvedHumanScorerAlignmentPath = resolvePath(humanScorerAlignmentPath);
+      if (resolvedHumanCalibrationPath && resolvedHumanScorerAlignmentPath) {
+        humanCalibratedCandidateEvaluation = (deps.buildHumanCalibratedCandidateEvaluation || buildHumanCalibratedCandidateEvaluation)({
+          humanCalibrationPath: resolvedHumanCalibrationPath,
+          alignmentPath: resolvedHumanScorerAlignmentPath,
+          candidatePaths: [path.join(root, "video-aesthetic-score.json")],
+          outPath: path.join(root, "human-calibrated-candidate-evaluation.json")
+        });
+      }
+      creativeIntentRevisionComparison = (deps.buildCreativeIntentRevisionComparison || buildCreativeIntentRevisionComparison)({
+        runRoot: root,
+        outPath: path.join(root, "creative-intent-revision-comparison.json")
+      });
+      crossRunQuality = buildCrossRunQualityArtifacts({ latestRunRoot, loopRoot: root, deps });
+      promotionArtifacts = buildPromotionArtifacts({ loopRoot: root, crossRunQuality, deps });
+    }
   }
 
   const summary = {
     ...summaryBase,
-    status: applyRender ? "executed" : "scaffolded",
+    status: renderBlocked ? "render_blocked" : applyRender ? "executed" : "scaffolded",
     trainingPlanRef: planPath,
     scaffoldRef: scaffoldPath,
     plan: summarizePlan(plan),
@@ -300,6 +340,16 @@ export async function runSequencingQualityLoop({
       promotionEligible: Boolean(videoAestheticAttemptComparison.promotionEligible),
       ref: path.join(root, "video-aesthetic-attempt-comparison.json")
     } : null,
+    humanCalibratedCandidateEvaluation: humanCalibratedCandidateEvaluation ? {
+      status: str(humanCalibratedCandidateEvaluation.status),
+      candidateCount: num(humanCalibratedCandidateEvaluation.summary?.candidateCount),
+      promotionEligibleCandidateCount: num(humanCalibratedCandidateEvaluation.summary?.promotionEligibleCandidateCount),
+      optimizationMetricEvaluations: num(humanCalibratedCandidateEvaluation.summary?.optimizationMetricEvaluations),
+      guardrailMetricEvaluations: num(humanCalibratedCandidateEvaluation.summary?.guardrailMetricEvaluations),
+      diagnosticMetricEvaluations: num(humanCalibratedCandidateEvaluation.summary?.diagnosticMetricEvaluations),
+      primaryRisk: str(humanCalibratedCandidateEvaluation.summary?.primaryRisk),
+      ref: path.join(root, "human-calibrated-candidate-evaluation.json")
+    } : null,
     creativeIntentRevisionComparison: creativeIntentRevisionComparison ? {
       status: str(creativeIntentRevisionComparison.status),
       comparisonCount: num(creativeIntentRevisionComparison.comparisonCount),
@@ -321,6 +371,7 @@ export async function runSequencingQualityLoop({
 function parseArgs(argv = []) {
   const args = {
     latestRunRoot: "",
+    videoComparisonBaselineRunRoot: "",
     outRoot: DEFAULT_OUT_ROOT,
     loopRoot: "",
     previousStatePath: "",
@@ -332,11 +383,15 @@ function parseArgs(argv = []) {
     maxPasses: 1,
     applyRender: false,
     renderReviewQuality: true,
+    humanCalibrationPath: "",
+    humanScorerAlignmentPath: "",
+    ownedJobTimeoutMs: null,
     endpoint: DEFAULT_ENDPOINT
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = str(argv[index]);
     if (arg === "--latest-run-root") args.latestRunRoot = argv[++index];
+    else if (arg === "--video-comparison-baseline-run-root") args.videoComparisonBaselineRunRoot = argv[++index];
     else if (arg === "--out-root") args.outRoot = argv[++index];
     else if (arg === "--loop-root") args.loopRoot = argv[++index];
     else if (arg === "--previous-state") args.previousStatePath = argv[++index];
@@ -347,6 +402,9 @@ function parseArgs(argv = []) {
     else if (arg === "--max-queue") args.maxQueue = Number(argv[++index]);
     else if (arg === "--max-passes") args.maxPasses = Number(argv[++index]);
     else if (arg === "--endpoint") args.endpoint = argv[++index];
+    else if (arg === "--human-calibration") args.humanCalibrationPath = argv[++index];
+    else if (arg === "--human-scorer-alignment") args.humanScorerAlignmentPath = argv[++index];
+    else if (arg === "--owned-job-timeout-ms") args.ownedJobTimeoutMs = Number(argv[++index]);
     else if (arg === "--apply-render") args.applyRender = true;
     else if (arg === "--no-render-review-quality") args.renderReviewQuality = false;
     else if (arg === "--help") args.help = true;
@@ -359,9 +417,11 @@ function usage() {
   return `Usage:
   node scripts/sequencer-render-training/tooling/run-sequencing-quality-loop.mjs \\
     --latest-run-root /tmp/xld-layer-composition-quality-long-YYYYMMDDTHHMMSSZ \\
+    --video-comparison-baseline-run-root /tmp/xld-layer-composition-quality-long-YYYYMMDDTHHMMSSZ \\
     --loop-root /tmp/xld-quality-controller-loop-000001
 
 Default mode is scaffold-only. Add --apply-render --max-passes 1 for a small live loop.
+Add --human-calibration and --human-scorer-alignment to evaluate generated full-sequence candidates against approved human target bands.
 `;
 }
 

@@ -91,6 +91,8 @@ test("exportXLightsPreviewVideo defaults to the owned xLightsDesigner API", asyn
     xlightsEndpoint: "http://127.0.0.1:49915/xlightsdesigner/api/",
     sequence: sequencePath,
     out: finalVideoPath,
+    width: 2000,
+    height: 3696,
     xlightsStagingDir: stagingDir,
     fetchImpl
   });
@@ -104,6 +106,10 @@ test("exportXLightsPreviewVideo defaults to the owned xLightsDesigner API", asyn
   );
   assert.equal(calls[0].body.file, sequencePath);
   assert.equal(calls[2].body.renderFirst, true);
+  assert.equal(calls[2].body.width, 2000);
+  assert.equal(calls[2].body.height, 3696);
+  assert.equal(artifact.output.requestedWidth, 2000);
+  assert.equal(artifact.output.requestedHeight, 3696);
   assert.equal(artifact.steps.at(-1).command, "copyStagedPreviewVideo");
 });
 

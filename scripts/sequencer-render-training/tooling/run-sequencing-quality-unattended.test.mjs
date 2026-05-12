@@ -181,6 +181,58 @@ test("unattended quality runner stops at max loop count", async () => {
   assert.equal(summary.iterationCount, 1);
 });
 
+test("unattended quality runner scopes runtime curriculum to job target goals", async () => {
+  const root = tempDir();
+  const curriculumPath = path.join(root, "curriculum.json");
+  writeJson(curriculumPath, {
+    artifactType: "sequencing_quality_curriculum_v1",
+    goals: [
+      { goalId: "display.video_aesthetic.palette_motion_pacing_reprise_v1", status: "not_started" },
+      { goalId: "display.video_aesthetic.palette_focal_handoff_context_sequence_v1", status: "not_started" }
+    ]
+  });
+  let scopedCurriculum = null;
+  const summary = await runSequencingQualityUnattended({
+    jobSpec: {
+      jobId: "targeted-job",
+      chunkId: "targeted-job",
+      curriculumScope: {
+        targetGoalIds: ["display.video_aesthetic.palette_focal_handoff_context_sequence_v1"]
+      }
+    },
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    curriculumPath,
+    autoRefill: false,
+    maxLoops: 1,
+    deps: {
+      runLoop: async (args) => {
+        scopedCurriculum = JSON.parse(fs.readFileSync(args.curriculumPath, "utf8"));
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "blocked_no_controller_queue",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "",
+            nextAction: "idle",
+            selectionReason: "no_active_goals"
+          }
+        };
+      }
+    }
+  });
+
+  assert.equal(summary.stopReason, "controller_idle");
+  assert.deepEqual(scopedCurriculum.goals.map((goal) => goal.goalId), ["display.video_aesthetic.palette_focal_handoff_context_sequence_v1"]);
+  assert.deepEqual(scopedCurriculum.runtimeScope.targetGoalIds, ["display.video_aesthetic.palette_focal_handoff_context_sequence_v1"]);
+  assert.equal(scopedCurriculum.runtimeScope.ignoreRecentControllerAttemptHistory, true);
+  assert.equal(scopedCurriculum.runtimeScope.sourceGoalCount, 2);
+  assert.equal(scopedCurriculum.runtimeScope.scopedGoalCount, 1);
+});
+
 test("unattended quality runner consolidates executed loop evidence", async () => {
   const root = tempDir();
   let consolidatedLoopRoot = "";
@@ -476,4 +528,156 @@ test("unattended quality runner continues through recovering video attempts", as
   assert.equal(summary.iterations[1].outcome, "regressed");
   assert.equal(summary.iterations[1].guardOutcome, "recovering");
   assert.equal(summary.iterations[1].consecutiveRegressionCount, 0);
+});
+
+test("unattended quality runner reports major chunk completion for job strategy exhaustion", async () => {
+  const root = tempDir();
+  const summary = await runSequencingQualityUnattended({
+    jobSpec: {
+      artifactType: "sequencing_quality_training_job_v1",
+      artifactVersion: 1,
+      jobId: "test-major-chunk",
+      chunkId: "test-chunk",
+      stopPolicy: {
+        treatNeedsStrategyExpansionAsChunkComplete: true
+      }
+    },
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 3,
+    autoRefill: false,
+    deps: {
+      runLoop: async (args) => {
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "blocked_no_controller_queue",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "display.video_aesthetic",
+            nextAction: "needs_strategy_expansion",
+            selectionReason: "targeted_display_regression_cluster"
+          }
+        };
+      }
+    }
+  });
+
+  assert.equal(summary.stopReason, "major_chunk_complete_strategy_exhausted");
+  assert.equal(summary.majorChunkStatus, "complete");
+  assert.equal(summary.interventionRecommended, false);
+  assert.equal(summary.trainingJob.jobId, "test-major-chunk");
+  assert.equal(summary.iterationCount, 1);
+});
+
+test("unattended quality runner reports major chunk completion for job idle", async () => {
+  const root = tempDir();
+  const summary = await runSequencingQualityUnattended({
+    jobSpec: {
+      jobId: "test-idle-chunk",
+      stopPolicy: {
+        treatControllerIdleAsChunkComplete: true
+      }
+    },
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 1,
+    autoRefill: false,
+    deps: {
+      runLoop: async (args) => {
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "blocked_no_controller_queue",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "",
+            nextAction: "idle",
+            selectionReason: "no_active_goals"
+          }
+        };
+      }
+    }
+  });
+
+  assert.equal(summary.stopReason, "major_chunk_complete_controller_idle");
+  assert.equal(summary.majorChunkStatus, "complete");
+  assert.equal(summary.trainingJob.chunkId, "test-idle-chunk");
+});
+
+test("unattended quality runner prunes old completed job run directories", async () => {
+  const baseRoot = tempDir();
+  for (const name of ["run-20260101T000000Z", "run-20260102T000000Z"]) {
+    const dir = path.join(baseRoot, name);
+    writeJson(path.join(dir, "unattended-run-summary.json"), {
+      artifactType: "sequencing_quality_unattended_run_summary_v1",
+      status: "stopped"
+    });
+    fs.writeFileSync(path.join(dir, "large.tmp"), "x".repeat(32));
+  }
+  const currentRoot = path.join(baseRoot, "run-20260103T000000Z");
+  const summary = await runSequencingQualityUnattended({
+    jobSpec: {
+      jobId: "test-retention",
+      retentionPolicy: {
+        maxRunDirectories: 2,
+        requireSummaryBeforeRunDirectoryDelete: true
+      }
+    },
+    latestRunRoot: path.join(baseRoot, "seed"),
+    previousStatePath: path.join(baseRoot, "seed-controller.json"),
+    outRoot: currentRoot,
+    maxLoops: 1,
+    autoRefill: false,
+    deps: {
+      runLoop: async (args) => {
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "blocked_no_controller_queue",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "",
+            nextAction: "idle",
+            selectionReason: "no_active_goals"
+          }
+        };
+      }
+    }
+  });
+
+  assert.equal(summary.jobRetention.enabled, true);
+  assert.equal(summary.jobRetention.deletedRunDirectoryCount, 1);
+  assert.equal(fs.existsSync(path.join(baseRoot, "run-20260101T000000Z")), false);
+  assert.equal(fs.existsSync(path.join(baseRoot, "run-20260102T000000Z")), true);
+  assert.equal(fs.existsSync(currentRoot), true);
+  assert.equal(fs.existsSync(path.join(currentRoot, "job-retention-summary.json")), true);
+});
+
+test("unattended quality runner does not prune incomplete job run directories by default", async () => {
+  const baseRoot = tempDir();
+  fs.mkdirSync(path.join(baseRoot, "run-20260101T000000Z"), { recursive: true });
+  const currentRoot = path.join(baseRoot, "run-20260102T000000Z");
+  const summary = await runSequencingQualityUnattended({
+    jobSpec: {
+      jobId: "test-retention-incomplete",
+      retentionPolicy: {
+        maxRunDirectories: 1
+      }
+    },
+    latestRunRoot: path.join(baseRoot, "seed"),
+    previousStatePath: path.join(baseRoot, "seed-controller.json"),
+    outRoot: currentRoot,
+    maxLoops: 0,
+    autoRefill: false
+  });
+
+  assert.equal(summary.jobRetention.enabled, true);
+  assert.equal(summary.jobRetention.deletedRunDirectoryCount, 0);
+  assert.equal(fs.existsSync(path.join(baseRoot, "run-20260101T000000Z")), true);
 });

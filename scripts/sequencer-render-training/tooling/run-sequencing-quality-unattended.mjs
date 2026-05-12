@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 
 import { runSequencingQualityLoop } from "./run-sequencing-quality-loop.mjs";
 import { buildLayerCompositionDeltas } from "./build-layer-composition-deltas.mjs";
@@ -15,6 +16,7 @@ const DEFAULT_OUT_ROOT = "var/logs/sequencing-quality-controller/unattended";
 const DEFAULT_MODEL_CATALOG = "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json";
 const DEFAULT_CURRICULUM = "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json";
 const DEFAULT_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
+const JOB_SPEC_ARTIFACT_TYPE = "sequencing_quality_training_job_v1";
 const AUTO_REFILL_PATTERN_SPECS = [
   {
     key: "motion_pacing",
@@ -57,6 +59,67 @@ function resolvePath(filePath = "") {
   return path.isAbsolute(value) ? value : path.resolve(REPO_ROOT, value);
 }
 
+function appleScriptString(value = "") {
+  return str(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+export function sendMacNotification({
+  enabled = true,
+  title = "xLightsDesigner Training",
+  subtitle = "",
+  message = "",
+  soundName = ""
+} = {}, deps = {}) {
+  if (!enabled) return { sent: false, reason: "disabled" };
+  if (process.platform !== "darwin") return { sent: false, reason: "unsupported_platform" };
+  const execFile = deps.execFileSync || execFileSync;
+  const parts = [
+    `display notification "${appleScriptString(message)}"`,
+    `with title "${appleScriptString(title)}"`
+  ];
+  if (subtitle) parts.push(`subtitle "${appleScriptString(subtitle)}"`);
+  if (soundName) parts.push(`sound name "${appleScriptString(soundName)}"`);
+  execFile("osascript", ["-e", parts.join(" ")], { stdio: "ignore" });
+  return { sent: true, reason: "sent" };
+}
+
+function summarizeNotificationMessage(summary = {}) {
+  const jobId = str(summary.trainingJob?.jobId) || "unattended training";
+  const stopReason = str(summary.stopReason) || "stopped";
+  const iterationCount = num(summary.iterationCount);
+  const latest = arr(summary.iterations).at(-1) || {};
+  const latestGoal = str(latest.selectedGoalId) || "no selected goal";
+  const latestScore = num(latest.overallAestheticScore);
+  const scoreText = latestScore > 0 ? ` Latest score ${latestScore.toFixed(6)}.` : "";
+  return `${jobId} stopped after ${iterationCount} loop${iterationCount === 1 ? "" : "s"} (${stopReason}). Latest goal: ${latestGoal}.${scoreText}`;
+}
+
+function notificationTitleForSummary(summary = {}) {
+  if (summary.interventionRecommended) return "xLightsDesigner training needs attention";
+  if (str(summary.stopReason).startsWith("major_chunk_complete_")) return "xLightsDesigner training job slice finished";
+  return "xLightsDesigner training stopped";
+}
+
+export function notifyTrainingSummary(summary = {}, options = {}, deps = {}) {
+  return sendMacNotification({
+    enabled: options.enabled,
+    title: options.title || notificationTitleForSummary(summary),
+    subtitle: str(summary.trainingJob?.chunkId || summary.trainingJob?.jobId || ""),
+    message: summarizeNotificationMessage(summary),
+    soundName: options.soundName
+  }, deps);
+}
+
+export function notifyTrainingError(error = {}, options = {}, deps = {}) {
+  return sendMacNotification({
+    enabled: options.enabled,
+    title: options.title || "xLightsDesigner training error",
+    subtitle: "Unattended run stopped",
+    message: str(error?.message) || "The unattended training run stopped with an error.",
+    soundName: options.soundName
+  }, deps);
+}
+
 function writeJson(filePath, payload) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`);
@@ -68,11 +131,71 @@ function readJsonIfExists(filePath = "") {
   return JSON.parse(fs.readFileSync(resolved, "utf8"));
 }
 
-function copyRuntimeCurriculum({ sourcePath = DEFAULT_CURRICULUM, outRoot = "" } = {}) {
+function loadTrainingJobSpec(jobSpecPath = "", deps = {}) {
+  const resolved = resolvePath(jobSpecPath);
+  if (!resolved) return null;
+  const read = deps.readJson || readJsonIfExists;
+  const spec = read(resolved);
+  if (!spec) throw new Error(`Unable to read training job spec: ${resolved}`);
+  return normalizeTrainingJobSpec({ ...spec, sourceRef: resolved });
+}
+
+function normalizeTrainingJobSpec(spec = null) {
+  if (!spec) return null;
+  return {
+    artifactType: str(spec.artifactType) || JOB_SPEC_ARTIFACT_TYPE,
+    artifactVersion: num(spec.artifactVersion, 1),
+    jobId: str(spec.jobId),
+    chunkId: str(spec.chunkId) || str(spec.jobId),
+    status: str(spec.status) || "active",
+    description: str(spec.description),
+    sourceRef: str(spec.sourceRef),
+    defaults: spec.defaults || {},
+    stopPolicy: {
+      treatControllerIdleAsChunkComplete: Boolean(spec.stopPolicy?.treatControllerIdleAsChunkComplete),
+      treatNeedsStrategyExpansionAsChunkComplete: Boolean(spec.stopPolicy?.treatNeedsStrategyExpansionAsChunkComplete),
+      maxConsecutiveRegressionsRequiresIntervention: spec.stopPolicy?.maxConsecutiveRegressionsRequiresIntervention !== false,
+      maxRepeatedGoalSelectionRequiresIntervention: spec.stopPolicy?.maxRepeatedGoalSelectionRequiresIntervention !== false
+    },
+    curriculumScope: spec.curriculumScope || {},
+    checkpoints: spec.checkpoints || {},
+    retentionPolicy: spec.retentionPolicy || {},
+    operatorReviewPolicy: spec.operatorReviewPolicy || {}
+  };
+}
+
+function jobSummary(jobSpec = null) {
+  if (!jobSpec) return null;
+  return {
+    artifactType: jobSpec.artifactType,
+    artifactVersion: jobSpec.artifactVersion,
+    jobId: jobSpec.jobId,
+    chunkId: jobSpec.chunkId,
+    status: jobSpec.status,
+    description: jobSpec.description,
+    sourceRef: jobSpec.sourceRef,
+    curriculumScope: jobSpec.curriculumScope,
+    retentionPolicy: jobSpec.retentionPolicy,
+    operatorReviewPolicy: jobSpec.operatorReviewPolicy
+  };
+}
+
+function copyRuntimeCurriculum({ sourcePath = DEFAULT_CURRICULUM, outRoot = "", targetGoalIds = [] } = {}) {
   const source = resolvePath(sourcePath || DEFAULT_CURRICULUM);
   const target = path.join(resolvePath(outRoot || DEFAULT_OUT_ROOT), "runtime-curriculum.json");
   const curriculum = readJsonIfExists(source);
   if (!curriculum) throw new Error(`Unable to read curriculum: ${source}`);
+  const scopedGoalIds = new Set(arr(targetGoalIds).map(str).filter(Boolean));
+  if (scopedGoalIds.size) {
+    const beforeCount = arr(curriculum.goals).length;
+    curriculum.goals = arr(curriculum.goals).filter((goal) => scopedGoalIds.has(str(goal.goalId)));
+    curriculum.runtimeScope = {
+      targetGoalIds: [...scopedGoalIds],
+      ignoreRecentControllerAttemptHistory: true,
+      sourceGoalCount: beforeCount,
+      scopedGoalCount: curriculum.goals.length
+    };
+  }
   curriculum.runtimeSourceRef = source;
   curriculum.runtimeGeneratedAt = new Date().toISOString();
   writeJson(target, curriculum);
@@ -202,6 +325,35 @@ function stopReasonForSummary(
   return "";
 }
 
+function jobAdjustedStopReason(reason = "", summary = {}, jobSpec = null) {
+  if (!jobSpec) return reason;
+  const nextAction = str(summary.controllerDecision?.nextAction);
+  if (reason === "controller_idle" && jobSpec.stopPolicy.treatControllerIdleAsChunkComplete) {
+    return "major_chunk_complete_controller_idle";
+  }
+  if (
+    reason === "blocked_no_controller_queue"
+    && nextAction === "needs_strategy_expansion"
+    && jobSpec.stopPolicy.treatNeedsStrategyExpansionAsChunkComplete
+  ) {
+    return "major_chunk_complete_strategy_exhausted";
+  }
+  return reason;
+}
+
+function majorChunkStatus(stopReason = "", jobSpec = null) {
+  if (!jobSpec) return "";
+  if (str(stopReason).startsWith("major_chunk_complete_")) return "complete";
+  if ([
+    "max_loops_reached",
+    "max_consecutive_regressions",
+    "max_repeated_goal_selection",
+    "blocked_no_controller_queue",
+    "awaiting_evidence"
+  ].includes(str(stopReason))) return "incomplete";
+  return "running";
+}
+
 function prunePreviewFrameDumps(root = "") {
   const resolved = resolvePath(root);
   const deleted = [];
@@ -230,6 +382,119 @@ function prunePreviewFrameDumps(root = "") {
     deletedFileCount: deleted.length,
     deletedBytes: deleted.reduce((total, row) => total + num(row.sizeBytes), 0),
     deletedFiles: deleted
+  };
+}
+
+function dirSizeBytes(root = "") {
+  const resolved = resolvePath(root);
+  if (!resolved || !fs.existsSync(resolved)) return 0;
+  let total = 0;
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const filePath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(filePath);
+      } else if (entry.isFile()) {
+        total += num(fs.statSync(filePath).size);
+      }
+    }
+  };
+  walk(resolved);
+  return total;
+}
+
+function completedRunDirectory(dir = "") {
+  const summary = readJsonIfExists(path.join(dir, "unattended-run-summary.json"));
+  return str(summary?.artifactType) === "sequencing_quality_unattended_run_summary_v1"
+    && str(summary?.status) === "stopped";
+}
+
+function applyJobRunRetention({
+  runRoot = "",
+  jobSpec = null,
+  summary = {},
+  deps = {}
+} = {}) {
+  const policy = jobSpec?.retentionPolicy || {};
+  const maxRunDirectories = num(policy.maxRunDirectories);
+  const currentRunRoot = resolvePath(runRoot);
+  if (!jobSpec || maxRunDirectories <= 0 || !currentRunRoot) {
+    return {
+      artifactType: "sequencing_quality_job_retention_summary_v1",
+      artifactVersion: 1,
+      generatedAt: new Date().toISOString(),
+      enabled: false,
+      reason: maxRunDirectories <= 0 ? "maxRunDirectories_not_configured" : "job_spec_or_run_root_missing",
+      deletedRunDirectoryCount: 0,
+      deletedBytes: 0,
+      deletedRunDirectories: []
+    };
+  }
+  const currentBaseName = path.basename(currentRunRoot);
+  if (!currentBaseName.startsWith("run-")) {
+    return {
+      artifactType: "sequencing_quality_job_retention_summary_v1",
+      artifactVersion: 1,
+      generatedAt: new Date().toISOString(),
+      enabled: false,
+      reason: "run_root_is_not_unique_job_run_directory",
+      deletedRunDirectoryCount: 0,
+      deletedBytes: 0,
+      deletedRunDirectories: []
+    };
+  }
+  const baseRoot = path.dirname(currentRunRoot);
+  const readDir = deps.readdirSync || fs.readdirSync;
+  const stat = deps.statSync || fs.statSync;
+  const rm = deps.rmSync || fs.rmSync;
+  const candidates = readDir(baseRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith("run-"))
+    .map((entry) => {
+      const dir = path.join(baseRoot, entry.name);
+      return {
+        dir,
+        name: entry.name,
+        mtimeMs: stat(dir).mtimeMs,
+        isCurrent: path.resolve(dir) === currentRunRoot,
+        completed: completedRunDirectory(dir)
+      };
+    })
+    .sort((left, right) => right.mtimeMs - left.mtimeMs || right.name.localeCompare(left.name));
+  const protectedRefs = new Set([
+    currentRunRoot,
+    resolvePath(summary.latestRunRoot),
+    resolvePath(summary.videoComparisonBaselineRunRoot),
+    resolvePath(summary.previousStateRef ? path.dirname(summary.previousStateRef) : "")
+  ].filter(Boolean));
+  const kept = candidates.slice(0, maxRunDirectories).map((row) => row.dir);
+  for (const dir of kept) protectedRefs.add(path.resolve(dir));
+  const deletedRunDirectories = [];
+  for (const candidate of candidates.slice(maxRunDirectories)) {
+    const resolved = path.resolve(candidate.dir);
+    if (protectedRefs.has(resolved)) continue;
+    if (policy.requireSummaryBeforeRunDirectoryDelete !== false && !candidate.completed) continue;
+    const sizeBytes = dirSizeBytes(resolved);
+    rm(resolved, { recursive: true, force: true });
+    deletedRunDirectories.push({
+      path: resolved,
+      sizeBytes,
+      completed: candidate.completed
+    });
+  }
+  return {
+    artifactType: "sequencing_quality_job_retention_summary_v1",
+    artifactVersion: 1,
+    generatedAt: new Date().toISOString(),
+    enabled: true,
+    jobId: str(jobSpec.jobId),
+    baseRoot,
+    currentRunRoot,
+    maxRunDirectories,
+    candidateRunDirectoryCount: candidates.length,
+    keptRunDirectoryCount: candidates.length - deletedRunDirectories.length,
+    deletedRunDirectoryCount: deletedRunDirectories.length,
+    deletedBytes: deletedRunDirectories.reduce((total, row) => total + num(row.sizeBytes), 0),
+    deletedRunDirectories
   };
 }
 
@@ -335,6 +600,8 @@ function runOutcome(summary = {}) {
 }
 
 export async function runSequencingQualityUnattended({
+  jobSpecPath = "",
+  jobSpec = null,
   latestRunRoot = "",
   videoComparisonBaselineRunRoot = "",
   previousStatePath = "",
@@ -358,6 +625,8 @@ export async function runSequencingQualityUnattended({
   const root = resolvePath(outRoot || DEFAULT_OUT_ROOT);
   fs.mkdirSync(root, { recursive: true });
   const resolvedSummaryPath = resolvePath(summaryPath) || path.join(root, "unattended-run-summary.json");
+  const resolvedJobSpec = normalizeTrainingJobSpec(jobSpec) || loadTrainingJobSpec(jobSpecPath, deps.jobSpecDeps || {});
+  const trainingJob = jobSummary(resolvedJobSpec);
   let currentLatestRunRoot = resolvePath(latestRunRoot);
   let currentVideoBaselineRunRoot = resolvePath(videoComparisonBaselineRunRoot) || currentLatestRunRoot;
   let currentPreviousStatePath = resolvePath(previousStatePath);
@@ -368,8 +637,9 @@ export async function runSequencingQualityUnattended({
   let previousOverallAestheticScore = null;
   let repeatedGoalCount = 0;
   const refillEvents = [];
-  let currentCurriculumPath = autoRefill
-    ? (deps.copyRuntimeCurriculum || copyRuntimeCurriculum)({ sourcePath: curriculumPath, outRoot: root })
+  const targetGoalIds = arr(resolvedJobSpec?.curriculumScope?.targetGoalIds).map(str).filter(Boolean);
+  let currentCurriculumPath = autoRefill || targetGoalIds.length
+    ? (deps.copyRuntimeCurriculum || copyRuntimeCurriculum)({ sourcePath: curriculumPath, outRoot: root, targetGoalIds })
     : resolvePath(curriculumPath || DEFAULT_CURRICULUM);
 
   for (let index = 1; index <= maxLoops; index += 1) {
@@ -454,13 +724,13 @@ export async function runSequencingQualityUnattended({
     if (str(summary.status) === "executed" && str(summary.loopRoot)) currentLatestRunRoot = resolvePath(summary.loopRoot);
     currentPreviousStatePath = resolvePath(summary.controllerStateRef);
 
-    const reason = stopReasonForSummary(summary, index, maxLoops, {
+    const baseReason = stopReasonForSummary(summary, index, maxLoops, {
       consecutiveRegressionCount,
       maxConsecutiveRegressions,
       repeatedGoalCount,
       maxRepeatedGoalCount
     });
-    if (reason === "controller_idle" && autoRefill && refillEvents.length < maxAutoRefills && index < maxLoops) {
+    if (baseReason === "controller_idle" && autoRefill && refillEvents.length < maxAutoRefills && index < maxLoops) {
       const refill = (deps.refillRuntimeCurriculum || refillRuntimeCurriculum)({
         curriculumPath: currentCurriculumPath,
         outRoot: root,
@@ -473,13 +743,18 @@ export async function runSequencingQualityUnattended({
         iteration.refillAddedGoalCount = refill.addedGoalCount;
       }
     }
-    const effectiveReason = iteration.refillAddedGoalCount ? "" : reason;
+    const reason = iteration.refillAddedGoalCount
+      ? ""
+      : jobAdjustedStopReason(baseReason, summary, resolvedJobSpec);
+    const effectiveReason = reason;
     const partial = {
       artifactType: "sequencing_quality_unattended_run_summary_v1",
       artifactVersion: 1,
       generatedAt: new Date().toISOString(),
       status: effectiveReason && effectiveReason !== "max_loops_reached" ? "stopped" : index >= maxLoops ? "stopped" : "running",
       stopReason: effectiveReason || "",
+      majorChunkStatus: majorChunkStatus(effectiveReason, resolvedJobSpec),
+      trainingJob,
       outRoot: root,
       latestRunRoot: currentLatestRunRoot,
       videoComparisonBaselineRunRoot: currentVideoBaselineRunRoot,
@@ -512,6 +787,8 @@ export async function runSequencingQualityUnattended({
     generatedAt: new Date().toISOString(),
     status: "stopped",
     stopReason,
+    majorChunkStatus: majorChunkStatus(stopReason, resolvedJobSpec),
+    trainingJob,
     outRoot: root,
     latestRunRoot: currentLatestRunRoot,
     videoComparisonBaselineRunRoot: currentVideoBaselineRunRoot,
@@ -530,7 +807,7 @@ export async function runSequencingQualityUnattended({
     iterations,
     runtimeCurriculumRef: currentCurriculumPath,
     refillEvents,
-    interventionRecommended: [
+    interventionRecommended: !str(stopReason).startsWith("major_chunk_complete_") && [
       "max_consecutive_regressions",
       "max_repeated_goal_selection",
       "blocked_no_controller_queue",
@@ -543,7 +820,7 @@ export async function runSequencingQualityUnattended({
         : stopReason === "blocked_no_controller_queue" || stopReason === "awaiting_evidence"
           ? "The controller cannot build a useful next queue from the current evidence."
           : "",
-    recommendedNextCurriculumExpansion: stopReason === "controller_idle"
+    recommendedNextCurriculumExpansion: ["controller_idle", "major_chunk_complete_controller_idle", "major_chunk_complete_strategy_exhausted"].includes(stopReason)
       ? [
         "stronger video-level aesthetic scoring",
         "richer creative revision variants",
@@ -551,12 +828,25 @@ export async function runSequencingQualityUnattended({
       ]
       : []
   };
+  const retentionSummary = (deps.applyJobRunRetention || applyJobRunRetention)({
+    runRoot: root,
+    jobSpec: resolvedJobSpec,
+    summary: finalSummary,
+    deps: deps.jobRetentionDeps || {}
+  });
+  finalSummary.jobRetention = retentionSummary;
+  if (retentionSummary?.enabled) {
+    const retentionPath = path.join(root, "job-retention-summary.json");
+    writeJson(retentionPath, retentionSummary);
+    finalSummary.jobRetentionRef = retentionPath;
+  }
   writeJson(resolvedSummaryPath, finalSummary);
   return finalSummary;
 }
 
-function parseArgs(argv = []) {
+export function parseArgs(argv = []) {
   const args = {
+    jobSpecPath: "",
     latestRunRoot: "",
     videoComparisonBaselineRunRoot: "",
     previousStatePath: "",
@@ -574,37 +864,68 @@ function parseArgs(argv = []) {
     cleanupPreviewFrames: true,
     autoRefill: true,
     maxAutoRefills: 4,
+    notify: true,
+    notificationSound: "Glass",
+    notificationTitle: "",
     summaryPath: ""
+  };
+  const provided = new Set();
+  const take = (field, value) => {
+    args[field] = value;
+    provided.add(field);
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = str(argv[index]);
-    if (arg === "--latest-run-root") args.latestRunRoot = argv[++index];
-    else if (arg === "--video-comparison-baseline-run-root") args.videoComparisonBaselineRunRoot = argv[++index];
-    else if (arg === "--previous-state") args.previousStatePath = argv[++index];
-    else if (arg === "--out-root") args.outRoot = argv[++index];
-    else if (arg === "--curriculum") args.curriculumPath = argv[++index];
-    else if (arg === "--model-catalog") args.modelCatalogPath = argv[++index];
-    else if (arg === "--run-type") args.runType = argv[++index];
-    else if (arg === "--max-loops") args.maxLoops = Number(argv[++index]);
-    else if (arg === "--max-queue") args.maxQueue = Number(argv[++index]);
-    else if (arg === "--max-passes") args.maxPasses = Number(argv[++index]);
-    else if (arg === "--max-consecutive-regressions") args.maxConsecutiveRegressions = Number(argv[++index]);
-    else if (arg === "--max-repeated-goal-count") args.maxRepeatedGoalCount = Number(argv[++index]);
-    else if (arg === "--max-auto-refills") args.maxAutoRefills = Number(argv[++index]);
-    else if (arg === "--endpoint") args.endpoint = argv[++index];
-    else if (arg === "--summary") args.summaryPath = argv[++index];
-    else if (arg === "--scaffold-only") args.applyRender = false;
-    else if (arg === "--keep-preview-frames") args.cleanupPreviewFrames = false;
-    else if (arg === "--no-auto-refill") args.autoRefill = false;
+    if (arg === "--job-spec") take("jobSpecPath", argv[++index]);
+    else if (arg === "--latest-run-root") take("latestRunRoot", argv[++index]);
+    else if (arg === "--video-comparison-baseline-run-root") take("videoComparisonBaselineRunRoot", argv[++index]);
+    else if (arg === "--previous-state") take("previousStatePath", argv[++index]);
+    else if (arg === "--out-root") take("outRoot", argv[++index]);
+    else if (arg === "--curriculum") take("curriculumPath", argv[++index]);
+    else if (arg === "--model-catalog") take("modelCatalogPath", argv[++index]);
+    else if (arg === "--run-type") take("runType", argv[++index]);
+    else if (arg === "--max-loops") take("maxLoops", Number(argv[++index]));
+    else if (arg === "--max-queue") take("maxQueue", Number(argv[++index]));
+    else if (arg === "--max-passes") take("maxPasses", Number(argv[++index]));
+    else if (arg === "--max-consecutive-regressions") take("maxConsecutiveRegressions", Number(argv[++index]));
+    else if (arg === "--max-repeated-goal-count") take("maxRepeatedGoalCount", Number(argv[++index]));
+    else if (arg === "--max-auto-refills") take("maxAutoRefills", Number(argv[++index]));
+    else if (arg === "--endpoint") take("endpoint", argv[++index]);
+    else if (arg === "--summary") take("summaryPath", argv[++index]);
+    else if (arg === "--notification-sound") take("notificationSound", argv[++index]);
+    else if (arg === "--notification-title") take("notificationTitle", argv[++index]);
+    else if (arg === "--scaffold-only") take("applyRender", false);
+    else if (arg === "--keep-preview-frames") take("cleanupPreviewFrames", false);
+    else if (arg === "--no-auto-refill") take("autoRefill", false);
+    else if (arg === "--no-notify") take("notify", false);
+    else if (arg === "--notify") take("notify", true);
     else if (arg === "--help") args.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
+  args._provided = provided;
   return args;
+}
+
+export function applyJobDefaults(args = {}) {
+  const jobSpec = loadTrainingJobSpec(args.jobSpecPath);
+  if (!jobSpec) return args;
+  const provided = args._provided || new Set();
+  const defaults = jobSpec.defaults || {};
+  const merged = { ...args, jobSpec };
+  for (const [field, value] of Object.entries(defaults)) {
+    if (!provided.has(field)) merged[field] = value;
+  }
+  if (defaults.uniqueOutRoot && !provided.has("outRoot")) {
+    const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+    merged.outRoot = path.join(str(defaults.outRoot || args.outRoot || DEFAULT_OUT_ROOT), `run-${timestamp}`);
+  }
+  return merged;
 }
 
 function usage() {
   return `Usage:
   node scripts/sequencer-render-training/tooling/run-sequencing-quality-unattended.mjs \\
+    --job-spec scripts/sequencer-render-training/catalog/training-jobs/synthetic-full-sequence-quality-v1.json \\
     --latest-run-root /tmp/xld-quality-controller-loop-live-music-000002 \\
     --video-comparison-baseline-run-root /tmp/xld-quality-controller-loop-live-display-000001 \\
     --previous-state /tmp/xld-quality-controller-after-music-000002.json \\
@@ -614,6 +935,12 @@ function usage() {
     --max-passes 5 \\
     --max-consecutive-regressions 1 \\
     --max-auto-refills 4
+
+Notifications:
+  --notify                    Send a macOS notification when the run stops (default)
+  --no-notify                 Disable completion/error notifications
+  --notification-sound Glass  macOS notification sound name
+  --notification-title "..."  Override the notification title
 `;
 }
 
@@ -623,12 +950,31 @@ async function main() {
     process.stdout.write(usage());
     return;
   }
-  const summary = await runSequencingQualityUnattended(args);
+  const summary = await runSequencingQualityUnattended(applyJobDefaults(args));
+  try {
+    notifyTrainingSummary(summary, {
+      enabled: args.notify,
+      soundName: args.notificationSound,
+      title: args.notificationTitle
+    });
+  } catch (error) {
+    console.error(`Notification failed: ${error.message}`);
+  }
   process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
+    try {
+      const args = parseArgs(process.argv.slice(2));
+      notifyTrainingError(error, {
+        enabled: args.notify,
+        soundName: args.notificationSound,
+        title: args.notificationTitle
+      });
+    } catch {
+      // Notification failures must not hide the original training failure.
+    }
     console.error(error);
     process.exit(1);
   });

@@ -2863,6 +2863,267 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
       colorPurpose: "motion_support"
     }
   });
+  const guardedFoundationMotion = placement({
+    id: `dq-${paletteProfile}-guarded-foundation-motion`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 1600,
+    endMs: 5000,
+    effectSettings: { effect: "Chase", cycles: 2, colorSpeed: 2 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 42,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "guarded_motion_variation",
+      displayReviewRole: "palette_foundation_guarded_motion",
+      colorPurpose: "transition_motion_bridge",
+      fullSequenceGuardrail: "preserve_foundation_focal_counterweight"
+    }
+  });
+  const guardedFocalHold = placement({
+    id: `dq-${paletteProfile}-guarded-focal-hold`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 2,
+    startMs: 900,
+    endMs: 5400,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 64,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: true,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "clear_focal_hold",
+      displayReviewRole: "palette_foundation_focal_pacing",
+      colorPurpose: "focal_accent",
+      fullSequenceGuardrail: "preserve_focal_clarity"
+    }
+  });
+  const guardedLiftMotion = placement({
+    id: `dq-${paletteProfile}-guarded-lift-motion`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 1200,
+    endMs: 5200,
+    effectSettings: { effect: "Chase", cycles: 3, colorSpeed: 3 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 46,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: true,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "guarded_lift_motion",
+      displayReviewRole: "palette_foundation_focal_pacing",
+      colorPurpose: "transition_motion_bridge",
+      fullSequenceGuardrail: "increase_pacing_without_focal_loss"
+    }
+  });
+  const focalIsolationMotion = placement({
+    id: `dq-${paletteProfile}-focal-isolation-motion`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 2600,
+    endMs: 5000,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 2 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 34,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "low_competition_motion_support",
+      displayReviewRole: "palette_foundation_focal_isolation",
+      colorPurpose: "structure_motion_support",
+      fullSequenceGuardrail: "protect_focal_clarity"
+    }
+  });
+  const controlledCounterpointMotion = placement({
+    id: `dq-${paletteProfile}-controlled-counterpoint-motion`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Butterfly",
+    compositionPass: "display_review",
+    layerIndex: 4,
+    startMs: 3400,
+    endMs: 5600,
+    effectSettings: { chunks: 1, skip: 1 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 34,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "low_intensity_counterpoint_motion",
+      displayReviewRole: "palette_foundation_controlled_counterpoint",
+      colorPurpose: "motion_counterpoint",
+      fullSequenceGuardrail: "restore_motion_interest_without_focal_competition"
+    }
+  });
+  const softCounterpointReleaseMotion = placement({
+    id: `dq-${paletteProfile}-soft-counterpoint-release-motion`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Butterfly",
+    compositionPass: "display_review",
+    layerIndex: 4,
+    startMs: 4300,
+    endMs: 5600,
+    effectSettings: { chunks: 1, skip: 1 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 24,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "soft_release_counterpoint_motion",
+      displayReviewRole: "palette_foundation_soft_counterpoint",
+      colorPurpose: "quiet_motion_counterpoint",
+      fullSequenceGuardrail: "protect_focal_handoff_while_testing_late_motion_balance"
+    }
+  });
+  const calibratedCounterpointReleaseMotion = placement({
+    id: `dq-${paletteProfile}-calibrated-counterpoint-release-motion`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Butterfly",
+    compositionPass: "display_review",
+    layerIndex: 4,
+    startMs: 4000,
+    endMs: 5600,
+    effectSettings: { chunks: 1, skip: 1 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 28,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "calibrated_release_counterpoint_motion",
+      displayReviewRole: "palette_foundation_calibrated_counterpoint",
+      colorPurpose: "measured_motion_counterpoint",
+      fullSequenceGuardrail: "increase_motion_balance_without_focal_handoff_loss"
+    }
+  });
+  const focalHandoffLineBridge = placement({
+    id: `dq-${paletteProfile}-focal-handoff-line-bridge`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "display_review",
+    layerIndex: 3,
+    startMs: 3400,
+    endMs: 5800,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 30,
+      C_CHECKBOX_Palette1: true,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: false,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "late_low_competition_handoff_thread",
+      displayReviewRole: "palette_focal_handoff_context_validation",
+      colorPurpose: "handoff_motion_support",
+      fullSequenceGuardrail: "preserve_focal_handoff_stability"
+    }
+  });
+  const focalHandoffReleaseCounterweight = placement({
+    id: `dq-${paletteProfile}-focal-handoff-release-counterweight`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "display_review",
+    layerIndex: 4,
+    startMs: 4200,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: {
+      mixMethod: "Normal",
+      brightness: 28,
+      C_CHECKBOX_Palette1: false,
+      C_CHECKBOX_Palette2: false,
+      C_CHECKBOX_Palette3: true,
+      C_CHECKBOX_Palette4: false,
+      C_CHECKBOX_Palette5: false,
+      C_CHECKBOX_Palette6: false,
+      C_CHECKBOX_Palette7: false,
+      C_CHECKBOX_Palette8: false
+    },
+    layerIntent: {
+      blendRole: "late_context_anchor",
+      displayReviewRole: "palette_focal_handoff_context_validation",
+      colorPurpose: "quiet_release_context",
+      fullSequenceGuardrail: "maintain_full_sequence_context_without_focal_competition"
+    }
+  });
   const generatedValidationPasses = Array.from({ length: RGB_DISPLAY_AUTO_REFILL_VALIDATION_CYCLE_COUNT }, (_, index) => {
     const cycle = String(index + 1).padStart(2, "0");
     return [
@@ -2997,14 +3258,6 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         changeType: "video_aesthetic_rgb_structure_balance_pacing_repair"
       },
       {
-        passId: "display_safe_local_evidence_repair",
-        compositionPass: "display_review",
-        placements: [safeLocalFoundation, safeLocalLineThread, safeLocalStarAccent, safeLocalTreeFill],
-        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, treeFlat.modelName, spinner.modelName],
-        comparisonBasePassId: "display_rgb_color_discipline_repair",
-        changeType: "video_aesthetic_safe_local_evidence_repair"
-      },
-      {
         passId: "display_palette_depth_contrast_motion_repair",
         compositionPass: "display_review",
         placements: [depthContextWash, depthArchFrame, depthLineThread, depthStarAccent],
@@ -3029,6 +3282,20 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         changeType: "video_aesthetic_palette_spatial_balance_focal_repair"
       },
       {
+        passId: "display_safe_local_evidence_repair",
+        compositionPass: "display_review",
+        placements: [
+          spatialLeftStructure,
+          spatialRightCounterweight,
+          spatialCenterFocal,
+          safeLocalLineThread,
+          safeLocalStarAccent
+        ],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_balance_focal_repair",
+        changeType: "video_aesthetic_safe_local_evidence_repair"
+      },
+      {
         passId: "display_palette_section_pacing_consistency_repair",
         compositionPass: "display_review",
         placements: [pacingOpeningStructure, pacingMiddleMotion, pacingMiddleFocal, pacingLateCounterweight, pacingReleaseSupport],
@@ -3037,27 +3304,125 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         changeType: "video_aesthetic_palette_section_pacing_consistency_repair"
       },
       {
+        passId: "display_palette_foundation_guarded_intro",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "video_aesthetic_palette_foundation_guarded_intro"
+      },
+      {
+        passId: "display_palette_foundation_guarded_lift",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_guarded_intro",
+        changeType: "video_aesthetic_palette_foundation_guarded_lift"
+      },
+      {
+        passId: "display_palette_foundation_guarded_release",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_guarded_lift",
+        changeType: "video_aesthetic_palette_foundation_guarded_release"
+      },
+      {
+        passId: "display_palette_foundation_focal_pacing_intro",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, guardedFocalHold],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "video_aesthetic_palette_foundation_focal_pacing_intro"
+      },
+      {
+        passId: "display_palette_foundation_focal_pacing_lift",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, guardedFocalHold, guardedLiftMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_focal_pacing_intro",
+        changeType: "video_aesthetic_palette_foundation_focal_pacing_lift"
+      },
+      {
+        passId: "display_palette_foundation_focal_pacing_release",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, guardedFocalHold, guardedLiftMotion, pacingReleaseSupport],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_focal_pacing_lift",
+        changeType: "video_aesthetic_palette_foundation_focal_pacing_release"
+      },
+      {
+        passId: "display_palette_foundation_focal_isolation_intro",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "video_aesthetic_palette_foundation_focal_isolation_intro"
+      },
+      {
+        passId: "display_palette_foundation_focal_isolation_lift",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, focalIsolationMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_focal_isolation_intro",
+        changeType: "video_aesthetic_palette_foundation_focal_isolation_lift"
+      },
+      {
+        passId: "display_palette_foundation_focal_isolation_release",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, focalIsolationMotion, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_focal_isolation_lift",
+        changeType: "video_aesthetic_palette_foundation_focal_isolation_release"
+      },
+      {
+        passId: "display_palette_foundation_counterpoint_intro",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "video_aesthetic_palette_foundation_counterpoint_intro"
+      },
+      {
+        passId: "display_palette_foundation_counterpoint_lift",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_counterpoint_intro",
+        changeType: "video_aesthetic_palette_foundation_counterpoint_lift"
+      },
+      {
+        passId: "display_palette_foundation_counterpoint_release",
+        compositionPass: "display_review",
+        placements: [
+          spatialLeftStructure,
+          spatialRightCounterweight,
+          spatialCenterFocal,
+          guardedFoundationMotion,
+          controlledCounterpointMotion
+        ],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_counterpoint_lift",
+        changeType: "video_aesthetic_palette_foundation_counterpoint_release"
+      },
+      {
         passId: "display_palette_motion_pacing_variation",
         compositionPass: "display_review",
-        placements: [pacingOpeningStructure, pacingMiddleMotion, pacingMiddleFocal, pacingReleaseSupport],
-        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
-        comparisonBasePassId: "display_palette_section_pacing_consistency_repair",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_safe_local_evidence_repair",
         changeType: "video_aesthetic_palette_motion_pacing_variation"
       },
       {
         passId: "display_palette_motion_pacing_reprise",
         compositionPass: "display_review",
-        placements: [pacingOpeningStructure, pacingMiddleMotion, pacingMiddleFocal, pacingReleaseSupport],
-        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
-        comparisonBasePassId: "display_palette_motion_pacing_variation",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_safe_local_evidence_repair",
         changeType: "video_aesthetic_palette_motion_pacing_reprise"
       },
       {
         passId: "display_palette_motion_pacing_holdout",
         compositionPass: "display_review",
-        placements: [pacingOpeningStructure, pacingMiddleMotion, pacingMiddleFocal, pacingReleaseSupport],
-        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
-        comparisonBasePassId: "display_palette_motion_pacing_reprise",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_safe_local_evidence_repair",
         changeType: "video_aesthetic_palette_motion_pacing_holdout"
       },
       {
@@ -3148,6 +3513,129 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
         comparisonBasePassId: "display_palette_color_purpose_motion_holdout",
         changeType: "video_aesthetic_palette_color_purpose_motion_validation"
       },
+      {
+        passId: "display_palette_focal_handoff_context_intro",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, guardedFocalHold],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        changeType: "video_aesthetic_palette_focal_handoff_context_intro"
+      },
+      {
+        passId: "display_palette_focal_handoff_context_lift",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, guardedFocalHold, focalHandoffLineBridge],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_focal_handoff_context_intro",
+        changeType: "video_aesthetic_palette_focal_handoff_context_lift"
+      },
+      {
+        passId: "display_palette_focal_handoff_context_release",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, guardedFocalHold, focalHandoffLineBridge, focalHandoffReleaseCounterweight],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_focal_handoff_context_lift",
+        changeType: "video_aesthetic_palette_focal_handoff_context_release"
+      },
+      {
+        passId: "display_palette_focal_handoff_context_validation",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, guardedFocalHold, focalHandoffLineBridge, focalHandoffReleaseCounterweight],
+        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, treeFlat.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_spatial_focal_validation",
+        changeType: "video_aesthetic_palette_focal_handoff_context_validation"
+      },
+      {
+        passId: "display_palette_focal_handoff_guarded_context_intro",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, guardedFocalHold],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "video_aesthetic_palette_focal_handoff_guarded_context_intro"
+      },
+      {
+        passId: "display_palette_focal_handoff_guarded_context_lift",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, guardedFocalHold, focalHandoffLineBridge],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_focal_handoff_guarded_context_intro",
+        changeType: "video_aesthetic_palette_focal_handoff_guarded_context_lift"
+      },
+      {
+        passId: "display_palette_focal_handoff_guarded_context_release",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, guardedFocalHold, focalHandoffLineBridge, focalHandoffReleaseCounterweight],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_focal_handoff_guarded_context_lift",
+        changeType: "video_aesthetic_palette_focal_handoff_guarded_context_release"
+      },
+      {
+        passId: "display_palette_foundation_guarded_revalidation_intro",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "video_aesthetic_palette_foundation_guarded_revalidation_intro"
+      },
+      {
+        passId: "display_palette_foundation_guarded_revalidation_lift",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_guarded_revalidation_intro",
+        changeType: "video_aesthetic_palette_foundation_guarded_revalidation_lift"
+      },
+      {
+        passId: "display_palette_foundation_guarded_revalidation_release",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion, safeLocalStarAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_guarded_revalidation_lift",
+        changeType: "video_aesthetic_palette_foundation_guarded_revalidation_release"
+      },
+      {
+        passId: "display_palette_foundation_soft_counterpoint_intro",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "video_aesthetic_palette_foundation_soft_counterpoint_intro"
+      },
+      {
+        passId: "display_palette_foundation_soft_counterpoint_lift",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_soft_counterpoint_intro",
+        changeType: "video_aesthetic_palette_foundation_soft_counterpoint_lift"
+      },
+      {
+        passId: "display_palette_foundation_soft_counterpoint_release",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion, softCounterpointReleaseMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_soft_counterpoint_lift",
+        changeType: "video_aesthetic_palette_foundation_soft_counterpoint_release"
+      },
+      {
+        passId: "display_palette_foundation_calibrated_counterpoint_intro",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "video_aesthetic_palette_foundation_calibrated_counterpoint_intro"
+      },
+      {
+        passId: "display_palette_foundation_calibrated_counterpoint_lift",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_calibrated_counterpoint_intro",
+        changeType: "video_aesthetic_palette_foundation_calibrated_counterpoint_lift"
+      },
+      {
+        passId: "display_palette_foundation_calibrated_counterpoint_release",
+        compositionPass: "display_review",
+        placements: [spatialLeftStructure, spatialRightCounterweight, spatialCenterFocal, guardedFoundationMotion, calibratedCounterpointReleaseMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        comparisonBasePassId: "display_palette_foundation_calibrated_counterpoint_lift",
+        changeType: "video_aesthetic_palette_foundation_calibrated_counterpoint_release"
+      },
       ...generatedValidationPasses,
       {
         passId: "display_palette_transition_motion_bridge",
@@ -3161,7 +3649,7 @@ function makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizont
   };
 }
 
-function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner }) {
+function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }) {
   const sectionBuild = placement({
     id: `mq-${paletteProfile}-section-build`,
     target: archGroup,
@@ -3276,6 +3764,28 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
       }
     }
   });
+  const energyArcBackground = placement({
+    id: `mq-${paletteProfile}-energy-arc-background`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "background_structure", { mixMethod: "Normal", brightness: 38 }),
+    layerIntent: {
+      blendRole: "section_energy_background",
+      colorPurpose: "background_structure",
+      musicRole: {
+        energy: "section_arc_context",
+        timingContext: {
+          section: "multi_section_arc"
+        }
+      }
+    }
+  });
   const energyArcBuild = placement({
     id: `mq-${paletteProfile}-energy-arc-build`,
     target: singleLineHorizontal,
@@ -3373,6 +3883,28 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
       }
     }
   });
+  const motifBackground = placement({
+    id: `mq-${paletteProfile}-motif-background`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "background_structure", { mixMethod: "Normal", brightness: 36 }),
+    layerIntent: {
+      blendRole: "motif_background_context",
+      colorPurpose: "background_structure",
+      musicRole: {
+        motif: "background_continuity",
+        timingContext: {
+          section: "motif_reprise"
+        }
+      }
+    }
+  });
   const motifReprise = placement({
     id: `mq-${paletteProfile}-motif-reprise`,
     target: archGroup,
@@ -3443,6 +3975,28 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
       }
     }
   });
+  const lyricPhraseBackground = placement({
+    id: `mq-${paletteProfile}-lyric-phrase-background`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "background_structure", { mixMethod: "Normal", brightness: 34 }),
+    layerIntent: {
+      blendRole: "lyric_background_context",
+      colorPurpose: "background_structure",
+      musicRole: {
+        lyric: "phrase_context",
+        timingContext: {
+          lyric: "phrase_background"
+        }
+      }
+    }
+  });
   const lyricPhraseHit = placement({
     id: `mq-${paletteProfile}-lyric-phrase-hit`,
     target: star,
@@ -3491,6 +4045,1118 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
       }
     }
   });
+  const guardedMusicStructure = placement({
+    id: `mq-${paletteProfile}-guarded-music-structure`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "music_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { direction: "up", cycles: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure", { mixMethod: "Normal", brightness: 48 }),
+    layerIntent: {
+      blendRole: "guarded_section_structure",
+      colorPurpose: "structure",
+      musicRole: {
+        energy: "stable_section_foundation",
+        timingContext: {
+          section: "whole_section",
+          phrase: "foundation_phrase"
+        }
+      }
+    }
+  });
+  const guardedMusicCounterweight = placement({
+    id: `mq-${paletteProfile}-guarded-music-counterweight`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 1,
+    startMs: 800,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "background_structure", { mixMethod: "Normal", brightness: 44 }),
+    layerIntent: {
+      blendRole: "guarded_section_counterweight",
+      colorPurpose: "background_structure",
+      musicRole: {
+        energy: "section_context",
+        timingContext: {
+          section: "whole_section"
+        }
+      }
+    }
+  });
+  const guardedMusicFocal = placement({
+    id: `mq-${paletteProfile}-guarded-music-focal`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 1800,
+    endMs: 4300,
+    effectSettings: { arms: 5, twists: 1, rotation: 14 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 58 }),
+    layerIntent: {
+      blendRole: "guarded_section_focal",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        accent: "section_focal_moment",
+        timingContext: {
+          section: "middle_phrase",
+          accent: "focal_hit"
+        }
+      }
+    }
+  });
+  const guardedMusicLift = placement({
+    id: `mq-${paletteProfile}-guarded-music-lift`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 1600,
+    endMs: 5000,
+    effectSettings: { effect: "Chase", cycles: 2, colorSpeed: 2 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 42 }),
+    layerIntent: {
+      blendRole: "guarded_section_lift",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        beat: "measured_motion_lift",
+        energy: "phrase_lift",
+        timingContext: {
+          section: "build",
+          phrase: "phrase_lift",
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const guardedMusicLyricRelease = placement({
+    id: `mq-${paletteProfile}-guarded-music-lyric-release`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 2400,
+    endMs: 4300,
+    effectSettings: { arms: 3, twists: 1, rotation: 12 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 42 }),
+    layerIntent: {
+      blendRole: "guarded_lyric_release_accent",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        lyric: "phrase_release_keyword",
+        accent: "vocal_release",
+        timingContext: {
+          lyric: "keyword",
+          phrase: "lyric_release",
+          accent: "vocal_release"
+        }
+      }
+    }
+  });
+  const guardedMusicFocalHold = placement({
+    id: `mq-${paletteProfile}-guarded-music-focal-hold`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 900,
+    endMs: 5400,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 64 }),
+    layerIntent: {
+      blendRole: "guarded_music_focal_hold",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        lyric: "held_phrase_focus",
+        accent: "sustained_focal_phrase",
+        timingContext: {
+          section: "whole_section",
+          phrase: "held_focal_phrase",
+          lyric: "phrase_focus"
+        }
+      }
+    }
+  });
+  const guardedMusicPacingLift = placement({
+    id: `mq-${paletteProfile}-guarded-music-pacing-lift`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 1200,
+    endMs: 5200,
+    effectSettings: { effect: "Chase", cycles: 3, colorSpeed: 3 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 46 }),
+    layerIntent: {
+      blendRole: "guarded_music_pacing_lift",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        beat: "measured_phrase_pulse",
+        energy: "section_lift",
+        timingContext: {
+          section: "build",
+          phrase: "phrase_lift",
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const guardedMusicPacingRelease = placement({
+    id: `mq-${paletteProfile}-guarded-music-pacing-release`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 2400,
+    endMs: 4300,
+    effectSettings: { arms: 3, twists: 1, rotation: 12 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 42 }),
+    layerIntent: {
+      blendRole: "guarded_music_pacing_release",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        lyric: "release_keyword",
+        accent: "phrase_release",
+        timingContext: {
+          section: "release",
+          phrase: "phrase_resolution",
+          lyric: "release_keyword",
+          accent: "release_hit"
+        }
+      }
+    }
+  });
+  const audioIntroFoundation = placement({
+    id: `mq-${paletteProfile}-audio-intro-foundation`,
+    target: archGroup,
+    targetScope: "group",
+    effectName: "Bars",
+    compositionPass: "music_review",
+    layerIndex: 0,
+    startMs: 0,
+    endMs: 2200,
+    effectSettings: { direction: "up", cycles: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure", { mixMethod: "Normal", brightness: 46 }),
+    layerIntent: {
+      blendRole: "audio_intro_structure",
+      colorPurpose: "structure",
+      musicRole: {
+        audioSection: "intro",
+        energy: "low_opening_establish",
+        timingContext: {
+          section: "intro",
+          phrase: "opening_phrase"
+        }
+      }
+    }
+  });
+  const audioBuildBackground = placement({
+    id: `mq-${paletteProfile}-audio-build-background`,
+    target: treeFlat,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 1,
+    startMs: 0,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "background_structure", { mixMethod: "Normal", brightness: 38 }),
+    layerIntent: {
+      blendRole: "audio_build_background",
+      colorPurpose: "background_structure",
+      musicRole: {
+        audioSection: "build",
+        energy: "build_context",
+        timingContext: {
+          section: "build",
+          phrase: "build_phrase"
+        }
+      }
+    }
+  });
+  const audioBuildMotifLift = placement({
+    id: `mq-${paletteProfile}-audio-build-motif-lift`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 1600,
+    endMs: 5000,
+    effectSettings: { effect: "Chase", cycles: 4, colorSpeed: 4 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 52 }),
+    layerIntent: {
+      blendRole: "audio_build_motion_lift",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        motif: "repeating_motion_lift",
+        beat: "measured_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "motif_lift",
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const audioReleaseFocal = placement({
+    id: `mq-${paletteProfile}-audio-release-focal`,
+    target: star,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 3600,
+    endMs: 6000,
+    effectSettings: { arms: 5, twists: 1, rotation: 18 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 58 }),
+    layerIntent: {
+      blendRole: "audio_release_focal_payoff",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "release_keyword",
+        accent: "payoff_hit",
+        timingContext: {
+          section: "release",
+          phrase: "payoff_phrase",
+          lyric: "release_keyword",
+          accent: "final_hit"
+        }
+      }
+    }
+  });
+  const audioConsistentMotion = placement({
+    id: `mq-${paletteProfile}-audio-consistent-motion`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 2,
+    startMs: 1800,
+    endMs: 5200,
+    effectSettings: { effect: "Chase", cycles: 2, colorSpeed: 2 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure_motion_support", { mixMethod: "Normal", brightness: 44 }),
+    layerIntent: {
+      blendRole: "audio_consistent_motion_lift",
+      colorPurpose: "structure_motion_support",
+      musicRole: {
+        audioSection: "build",
+        motif: "restrained_repeating_lift",
+        beat: "measured_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "motif_lift",
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const audioConsistentRelease = placement({
+    id: `mq-${paletteProfile}-audio-consistent-release`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 3600,
+    endMs: 6000,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 54 }),
+    layerIntent: {
+      blendRole: "audio_consistent_release_payoff",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "release_keyword",
+        accent: "payoff_hit",
+        timingContext: {
+          section: "release",
+          phrase: "payoff_phrase",
+          lyric: "release_keyword",
+          accent: "final_hit"
+        }
+      }
+    }
+  });
+  const baselineOverlayPhraseAccent = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-phrase-accent`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 2100,
+    endMs: 4300,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 2 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 28 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_phrase_overlay",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "synthetic_phrase_lift",
+        beat: "subtle_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "phrase_lift",
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const baselineOverlayExistingMotionAccent = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-existing-motion-accent`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 2100,
+    endMs: 4300,
+    effectSettings: { effect: "Chase", cycles: 2, colorSpeed: 3 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 30 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_phrase_overlay",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "synthetic_phrase_lift",
+        beat: "subtle_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "phrase_lift",
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const baselineOverlayStylePhraseAccent = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-style-phrase-accent`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 1700,
+    endMs: 3100,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 26 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_phrase_overlay",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "synthetic_phrase_lift_variant",
+        beat: "restrained_first_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "phrase_lift_variant",
+          beat: "beat_grid_2"
+        }
+      }
+    }
+  });
+  const baselineOverlayStylePhraseReprise = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-style-phrase-reprise`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 3300,
+    endMs: 4500,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 2 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure_motion_support", { mixMethod: "Normal", brightness: 24 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_phrase_reprise",
+      colorPurpose: "structure_motion_support",
+      musicRole: {
+        audioSection: "build",
+        motif: "phrase_reprise_variant",
+        beat: "restrained_second_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "phrase_reprise",
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const baselineOverlayReleaseAccent = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-release-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 3900,
+    endMs: 5200,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 34 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_release_overlay",
+      colorPurpose: "warm_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "synthetic_release_keyword",
+        accent: "subtle_release_hit",
+        timingContext: {
+          section: "release",
+          phrase: "release_phrase",
+          lyric: "release_keyword",
+          accent: "release_hit"
+        }
+      }
+    }
+  });
+  const baselineOverlayStyleLyricAccent = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-style-lyric-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 5,
+    startMs: 4200,
+    endMs: 5600,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 38 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_release_overlay",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "synthetic_release_keyword",
+        accent: "subtle_release_variant",
+        timingContext: {
+          section: "release",
+          phrase: "release_phrase_variant",
+          lyric: "release_keyword",
+          accent: "release_hit_variant"
+        }
+      }
+    }
+  });
+  const baselineOverlayLyricFocalAccent = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-lyric-focal-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 3900,
+    endMs: 5200,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 34 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_release_overlay",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "synthetic_release_keyword",
+        accent: "subtle_release_hit",
+        timingContext: {
+          section: "release",
+          phrase: "release_phrase",
+          lyric: "release_keyword",
+          accent: "release_hit"
+        }
+      }
+    }
+  });
+  const baselineOverlayCallPhrase = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-call-phrase`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 1850,
+    endMs: 3000,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 2 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 25 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_phrase_call",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "synthetic_phrase_call",
+        beat: "call_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "call_phrase",
+          beat: "beat_grid_2"
+        }
+      }
+    }
+  });
+  const baselineOverlayResponseAccent = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-response-accent`,
+    target: star,
+    targetScope: "model",
+    effectName: "Color Wash",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 3150,
+    endMs: 4050,
+    effectSettings: { cycles: 1, circularPalette: false },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 35 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_phrase_response",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "build",
+        lyric: "synthetic_response_keyword",
+        accent: "response_hit",
+        timingContext: {
+          section: "build",
+          phrase: "response_phrase",
+          lyric: "response_keyword",
+          accent: "response_hit"
+        }
+      }
+    }
+  });
+  const baselineOverlayReleaseEcho = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-release-echo`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 5,
+    startMs: 4300,
+    endMs: 5400,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure_motion_support", { mixMethod: "Normal", brightness: 22 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_release_echo",
+      colorPurpose: "structure_motion_support",
+      musicRole: {
+        audioSection: "release",
+        motif: "call_response_echo",
+        accent: "release_echo",
+        timingContext: {
+          section: "release",
+          phrase: "release_echo",
+          accent: "echo_after_hit"
+        }
+      }
+    }
+  });
+  const baselineOverlaySingleTargetPhrase = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-single-target-phrase`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 1800,
+    endMs: 3050,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 2 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 25 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_single_target_phrase",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "single_target_phrase_lift",
+        beat: "motif_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "single_target_phrase",
+          beat: "beat_grid_2"
+        }
+      }
+    }
+  });
+  const baselineOverlaySingleTargetReprise = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-single-target-reprise`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 3300,
+    endMs: 4300,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure_motion_support", { mixMethod: "Normal", brightness: 22 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_single_target_reprise",
+      colorPurpose: "structure_motion_support",
+      musicRole: {
+        audioSection: "build",
+        motif: "single_target_reprise",
+        beat: "motif_answer",
+        timingContext: {
+          section: "build",
+          phrase: "single_target_reprise",
+          beat: "beat_grid_4"
+        }
+      }
+    }
+  });
+  const baselineOverlaySingleTargetRelease = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-single-target-release`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 5,
+    startMs: 4450,
+    endMs: 5550,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 24 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_single_target_release",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "single_target_release_keyword",
+        accent: "single_target_release_echo",
+        timingContext: {
+          section: "release",
+          phrase: "single_target_release",
+          lyric: "release_keyword",
+          accent: "release_echo"
+        }
+      }
+    }
+  });
+  const baselineOverlaySingleTargetSwellPhrase = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-single-target-swell-phrase`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 1650,
+    endMs: 4200,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "structure_motion_support", { mixMethod: "Normal", brightness: 23 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_single_target_swell_phrase",
+      colorPurpose: "structure_motion_support",
+      musicRole: {
+        audioSection: "build",
+        phrase: "single_target_energy_swell",
+        energy: "restrained_swell",
+        timingContext: {
+          section: "build",
+          phrase: "single_target_swell",
+          beat: "slow_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySingleTargetSwellRelease = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-single-target-swell-release`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 4050,
+    endMs: 5600,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 2 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 27 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_single_target_swell_release",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "single_target_swell_release",
+        accent: "restrained_release_swell",
+        timingContext: {
+          section: "release",
+          phrase: "single_target_swell_release",
+          lyric: "release_keyword",
+          accent: "release_swell"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparsePhraseAccent = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-phrase-accent`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 2350,
+    endMs: 3300,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 23 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_phrase_accent",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "sparse_phrase_accent",
+        beat: "single_phrase_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "sparse_phrase",
+          beat: "single_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseReleaseAccent = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-release-accent`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 4550,
+    endMs: 5350,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 25 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_release_accent",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "sparse_release_keyword",
+        accent: "single_release_pulse",
+        timingContext: {
+          section: "release",
+          phrase: "sparse_release",
+          lyric: "release_keyword",
+          accent: "release_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparsePalettePhrase = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-palette-phrase`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 2350,
+    endMs: 3300,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "reserved_secondary_accent", { mixMethod: "Normal", brightness: 22 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_palette_phrase",
+      colorPurpose: "reserved_secondary_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "sparse_palette_accent",
+        beat: "single_phrase_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "sparse_palette_phrase",
+          beat: "single_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparsePaletteDisciplinePhrase = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-palette-discipline-phrase`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 2350,
+    endMs: 3300,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 20 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_palette_discipline_phrase",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "sparse_palette_repaired_accent",
+        beat: "single_phrase_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "sparse_palette_discipline_phrase",
+          beat: "single_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseDelayedPhrase = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-delayed-phrase`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 2850,
+    endMs: 3800,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 23 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_delayed_phrase",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "sparse_delayed_phrase_accent",
+        beat: "late_phrase_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "sparse_delayed_phrase",
+          beat: "late_single_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseDelayedRelease = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-delayed-release`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 4900,
+    endMs: 5750,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 25 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_delayed_release",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "sparse_delayed_release_keyword",
+        accent: "late_release_pulse",
+        timingContext: {
+          section: "release",
+          phrase: "sparse_delayed_release",
+          lyric: "release_keyword",
+          accent: "late_release_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseEarlyPhrase = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-early-phrase`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 1850,
+    endMs: 2800,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 23 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_early_phrase",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "sparse_early_phrase_accent",
+        beat: "early_phrase_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "sparse_early_phrase",
+          beat: "early_single_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseEarlyRelease = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-early-release`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 4200,
+    endMs: 5050,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 25 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_early_release",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "sparse_early_release_keyword",
+        accent: "early_release_pulse",
+        timingContext: {
+          section: "release",
+          phrase: "sparse_early_release",
+          lyric: "release_keyword",
+          accent: "early_release_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseSyncopatedPhrase = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-syncopated-phrase`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 2450,
+    endMs: 3050,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 22 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_syncopated_phrase",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "sparse_syncopated_phrase_accent",
+        beat: "offbeat_phrase_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "sparse_syncopated_phrase",
+          beat: "offbeat_single_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseSyncopatedEcho = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-syncopated-echo`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 3450,
+    endMs: 3850,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 18 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_syncopated_echo",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "sparse_syncopated_phrase_echo",
+        beat: "offbeat_echo_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "sparse_syncopated_echo",
+          beat: "offbeat_echo"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseSyncopatedRelease = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-syncopated-release`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 5,
+    startMs: 4750,
+    endMs: 5350,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 24 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_syncopated_release",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "sparse_syncopated_release_keyword",
+        accent: "syncopated_release_pulse",
+        timingContext: {
+          section: "release",
+          phrase: "sparse_syncopated_release",
+          lyric: "release_keyword",
+          accent: "syncopated_release_pulse"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseReleaseHoldPhrase = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-release-hold-phrase`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 3,
+    startMs: 2850,
+    endMs: 3600,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 21 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_release_hold_phrase",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "build",
+        phrase: "sparse_release_hold_setup",
+        beat: "late_setup_pulse",
+        timingContext: {
+          section: "build",
+          phrase: "sparse_release_hold_setup",
+          beat: "late_setup"
+        }
+      }
+    }
+  });
+  const baselineOverlaySparseReleaseHold = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-sparse-release-hold`,
+    target: singleLineHorizontal,
+    targetScope: "model",
+    effectName: "SingleStrand",
+    compositionPass: "music_review",
+    layerIndex: 4,
+    startMs: 4300,
+    endMs: 5850,
+    effectSettings: { effect: "Chase", cycles: 1, colorSpeed: 1 },
+    layerSettings: paletteLayerSettings(paletteProfile, "warm_focal_accent", { mixMethod: "Normal", brightness: 21 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_sparse_release_hold",
+      colorPurpose: "lyric_focal_accent",
+      musicRole: {
+        audioSection: "release",
+        lyric: "sparse_release_hold_keyword",
+        accent: "restrained_release_hold",
+        timingContext: {
+          section: "release",
+          phrase: "sparse_release_hold",
+          lyric: "release_keyword",
+          accent: "release_hold"
+        }
+      }
+    }
+  });
+  const baselineOverlayMotionSupport = placement({
+    id: `mq-${paletteProfile}-baseline-overlay-motion-support`,
+    target: spinner,
+    targetScope: "model",
+    effectName: "Pinwheel",
+    compositionPass: "music_review",
+    layerIndex: 5,
+    startMs: 2600,
+    endMs: 5200,
+    effectSettings: { arms: 3, twists: 1, rotation: 10 },
+    layerSettings: paletteLayerSettings(paletteProfile, "cool_motion_accent", { mixMethod: "Normal", brightness: 24 }),
+    layerIntent: {
+      blendRole: "baseline_preserving_motion_support",
+      colorPurpose: "cool_motion_accent",
+      musicRole: {
+        audioSection: "release",
+        accent: "subtle_motion_support",
+        timingContext: {
+          section: "release",
+          phrase: "release_phrase",
+          accent: "motion_support"
+        }
+      }
+    }
+  });
 
   return {
     experimentId: `music-structure-review-${paletteProfile}`,
@@ -3500,52 +5166,472 @@ function makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizont
     layeringTaxonomy: ["music_structure_alignment", "section_energy", "beat_phrase_lyric_accent"],
     targetSets: [
       { scope: "group", targets: [archGroup] },
-      { scope: "model", targets: [singleLineHorizontal, star, spinner] }
+      { scope: "model", targets: [singleLineHorizontal, star, spinner, treeFlat] }
     ],
     passes: [
       {
         passId: "empty_baseline",
         compositionPass: "empty_baseline",
         placements: [],
-        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName]
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName]
       },
       {
         passId: "section_phrase_energy",
         compositionPass: "music_review",
         placements: [sectionBuild, beatPulse],
-        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName]
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName]
       },
       {
         passId: "lyric_accent_response",
         compositionPass: "music_review",
         placements: [sectionBuild, beatPulse, lyricAccent, accentMotion],
-        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName, treeFlat.modelName],
         comparisonBasePassId: "section_phrase_energy",
         changeType: "music_lyric_accent_added"
       },
       {
         passId: "multi_section_energy_arc",
         compositionPass: "music_review",
-        placements: [energyArcOpening, energyArcBuild, energyArcRelease, energyArcTurnaround],
-        displayElementOrder: [archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        placements: [energyArcBackground, energyArcOpening, energyArcBuild, energyArcRelease, energyArcTurnaround],
+        displayElementOrder: [treeFlat.modelName, archGroup.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
         comparisonBasePassId: "section_phrase_energy",
         changeType: "music_multi_section_energy_arc"
       },
       {
         passId: "motif_reprise_variation",
         compositionPass: "music_review",
-        placements: [motifOpening, motifReprise, motifSupport],
-        displayElementOrder: [archGroup.modelName, spinner.modelName, singleLineHorizontal.modelName, star.modelName],
+        placements: [motifBackground, motifOpening, motifReprise, motifSupport],
+        displayElementOrder: [treeFlat.modelName, archGroup.modelName, spinner.modelName, singleLineHorizontal.modelName, star.modelName],
         comparisonBasePassId: "multi_section_energy_arc",
         changeType: "music_motif_reprise_variation"
       },
       {
         passId: "lyric_phrase_release",
         compositionPass: "music_review",
-        placements: [lyricPhraseSetup, lyricPhraseHit, lyricPhraseRelease],
-        displayElementOrder: [archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        placements: [lyricPhraseBackground, lyricPhraseSetup, lyricPhraseHit, lyricPhraseRelease],
+        displayElementOrder: [treeFlat.modelName, archGroup.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
         comparisonBasePassId: "motif_reprise_variation",
         changeType: "music_lyric_phrase_release"
+      },
+      {
+        passId: "guarded_foundation_energy_arc",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_guarded_foundation_energy_arc"
+      },
+      {
+        passId: "guarded_foundation_motif_lift",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, guardedMusicLift],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_guarded_foundation_motif_lift"
+      },
+      {
+        passId: "guarded_foundation_lyric_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, guardedMusicLift, guardedMusicLyricRelease],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_guarded_foundation_lyric_release"
+      },
+      {
+        passId: "guarded_pacing_energy_arc",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocalHold],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_guarded_pacing_energy_arc"
+      },
+      {
+        passId: "guarded_pacing_motif_lift",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocalHold, guardedMusicPacingLift],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_guarded_pacing_motif_lift"
+      },
+      {
+        passId: "guarded_pacing_lyric_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocalHold, guardedMusicPacingLift, guardedMusicPacingRelease],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_guarded_pacing_lyric_release"
+      },
+      {
+        passId: "audio_intro_foundation",
+        compositionPass: "music_review",
+        placements: [audioIntroFoundation, audioBuildBackground],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_full_sequence_audio_intro_foundation"
+      },
+      {
+        passId: "audio_build_motif_lift",
+        compositionPass: "music_review",
+        placements: [audioIntroFoundation, audioBuildBackground, audioBuildMotifLift],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_full_sequence_audio_build_motif_lift"
+      },
+      {
+        passId: "audio_release_payoff",
+        compositionPass: "music_review",
+        placements: [audioIntroFoundation, audioBuildBackground, audioBuildMotifLift, audioReleaseFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_full_sequence_audio_release_payoff"
+      },
+      {
+        passId: "audio_consistent_intro_foundation",
+        compositionPass: "music_review",
+        placements: [audioIntroFoundation, audioBuildBackground],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_full_sequence_audio_consistent_intro_foundation"
+      },
+      {
+        passId: "audio_consistent_build_motif_lift",
+        compositionPass: "music_review",
+        placements: [audioIntroFoundation, audioBuildBackground, audioConsistentMotion],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_full_sequence_audio_consistent_build_motif_lift"
+      },
+      {
+        passId: "audio_consistent_release_payoff",
+        compositionPass: "music_review",
+        placements: [audioIntroFoundation, audioBuildBackground, audioConsistentMotion, audioConsistentRelease],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_full_sequence_audio_consistent_release_payoff"
+      },
+      {
+        passId: "audio_guarded_repair_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_full_sequence_audio_guarded_repair_intro"
+      },
+      {
+        passId: "audio_guarded_repair_build",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySingleTargetPhrase],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_full_sequence_audio_guarded_repair_build"
+      },
+      {
+        passId: "audio_guarded_repair_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySingleTargetPhrase, baselineOverlaySingleTargetRelease],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_full_sequence_audio_guarded_repair_release"
+      },
+      {
+        passId: "baseline_audio_overlay_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_phrase_accent",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayPhraseAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_phrase_accent"
+      },
+      {
+        passId: "baseline_audio_overlay_release_accent",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayPhraseAccent, baselineOverlayReleaseAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_release_accent"
+      },
+      {
+        passId: "baseline_audio_overlay_motion_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_motion_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_motion_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayPhraseAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_motion_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_motion_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayPhraseAccent, baselineOverlayReleaseAccent, baselineOverlayMotionSupport],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_motion_release"
+      },
+      {
+        passId: "baseline_audio_overlay_palette_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_palette_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_palette_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayPhraseAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_palette_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_palette_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayPhraseAccent, baselineOverlayLyricFocalAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_palette_release"
+      },
+      {
+        passId: "baseline_audio_overlay_existing_motion_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_existing_motion_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_existing_motion_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayExistingMotionAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_existing_motion_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_existing_motion_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayExistingMotionAccent, baselineOverlayLyricFocalAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_existing_motion_release"
+      },
+      {
+        passId: "baseline_audio_overlay_style_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_style_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_style_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayStylePhraseAccent, baselineOverlayStylePhraseReprise],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_style_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_style_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayStylePhraseAccent, baselineOverlayStylePhraseReprise, baselineOverlayStyleLyricAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_style_release"
+      },
+      {
+        passId: "baseline_audio_overlay_call_response_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_call_response_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_call_response_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayCallPhrase, baselineOverlayResponseAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_call_response_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_call_response_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlayCallPhrase, baselineOverlayResponseAccent, baselineOverlayReleaseEcho],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_call_response_release"
+      },
+      {
+        passId: "baseline_audio_overlay_single_target_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_single_target_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_single_target_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySingleTargetPhrase, baselineOverlaySingleTargetReprise],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_single_target_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_single_target_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySingleTargetPhrase, baselineOverlaySingleTargetReprise, baselineOverlaySingleTargetRelease],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_single_target_release"
+      },
+      {
+        passId: "baseline_audio_overlay_single_target_swell_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_single_target_swell_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_single_target_swell_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySingleTargetSwellPhrase],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_single_target_swell_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_single_target_swell_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySingleTargetSwellPhrase, baselineOverlaySingleTargetSwellRelease],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_single_target_swell_release"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_accent_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_accent_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_accent_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparsePhraseAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_accent_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_accent_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparsePhraseAccent, baselineOverlaySparseReleaseAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_accent_release"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_palette_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_palette_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_palette_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparsePalettePhrase],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_palette_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_palette_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparsePalettePhrase, baselineOverlaySparseReleaseAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_palette_release"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_palette_discipline_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_palette_discipline_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_palette_discipline_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparsePaletteDisciplinePhrase],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_palette_discipline_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_palette_discipline_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparsePaletteDisciplinePhrase, baselineOverlaySparseReleaseAccent],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_palette_discipline_release"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_delayed_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_delayed_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_delayed_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparseDelayedPhrase],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_delayed_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_delayed_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparseDelayedPhrase, baselineOverlaySparseDelayedRelease],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_delayed_release"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_early_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_early_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_early_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparseEarlyPhrase],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_early_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_early_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparseEarlyPhrase, baselineOverlaySparseEarlyRelease],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_early_release"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_syncopated_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_syncopated_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_syncopated_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparseSyncopatedPhrase, baselineOverlaySparseSyncopatedEcho],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_syncopated_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_syncopated_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparseSyncopatedPhrase, baselineOverlaySparseSyncopatedEcho, baselineOverlaySparseSyncopatedRelease],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_syncopated_release"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_release_hold_intro",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, star.modelName, singleLineHorizontal.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_release_hold_intro"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_release_hold_phrase",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparseReleaseHoldPhrase],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_release_hold_phrase"
+      },
+      {
+        passId: "baseline_audio_overlay_sparse_release_hold_release",
+        compositionPass: "music_review",
+        placements: [guardedMusicStructure, guardedMusicCounterweight, guardedMusicFocal, baselineOverlaySparseReleaseHoldPhrase, baselineOverlaySparseReleaseHold],
+        displayElementOrder: [archGroup.modelName, treeFlat.modelName, singleLineHorizontal.modelName, star.modelName, spinner.modelName],
+        changeType: "music_baseline_preserving_audio_overlay_sparse_release_hold_release"
       }
     ]
   };
@@ -4635,7 +6721,7 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
         );
       }
     }
-    if (goalId === "music.multi_section_structure.v1") {
+    if (goalId === "music.multi_section_structure.v1" || goalId === "music.guarded_foundation_sequence.v1" || goalId === "music.guarded_pacing_sequence.v1" || goalId === "music.full_sequence_audio_alignment.v1" || goalId === "music.full_sequence_audio_consistency_repair.v1" || goalId === "music.full_sequence_audio_guarded_repair.v1" || goalId === "music.baseline_preserving_audio_overlay.v1" || goalId === "music.baseline_preserving_audio_overlay_motion_repair.v1" || goalId === "music.baseline_preserving_audio_overlay_palette_role_repair.v1" || goalId === "music.baseline_preserving_audio_overlay_existing_motion_repair.v1" || goalId === "music.baseline_preserving_audio_overlay_style_variation.v1" || goalId === "music.baseline_preserving_audio_overlay_call_response.v1" || goalId === "music.baseline_preserving_audio_overlay_single_target_motif.v1" || goalId === "music.baseline_preserving_audio_overlay_single_target_swell.v1" || goalId === "music.baseline_preserving_audio_overlay_sparse_accent.v1" || goalId === "music.baseline_preserving_audio_overlay_sparse_palette.v1" || goalId === "music.baseline_preserving_audio_overlay_sparse_palette_discipline_repair.v1" || goalId === "music.baseline_preserving_audio_overlay_sparse_delayed.v1" || goalId === "music.baseline_preserving_audio_overlay_sparse_early.v1" || goalId === "music.baseline_preserving_audio_overlay_sparse_syncopated.v1" || goalId === "music.baseline_preserving_audio_overlay_sparse_release_hold.v1") {
       const missingPaletteProfiles = arr(gap.missingCoverageUnits)
         .map((unit) => str(unit.paletteProfile || unit.palette || unit.palette_profile))
         .filter(Boolean);
@@ -4645,7 +6731,47 @@ function coverageGapQueueRows(controllerState = {}, experiments = []) {
       const paletteProfiles = missingPaletteProfiles.length ? [...new Set(missingPaletteProfiles)] : ["rgb_primary"];
       const passIds = missingPassIds.length
         ? [...new Set(missingPassIds)]
-        : ["multi_section_energy_arc", "motif_reprise_variation", "lyric_phrase_release"];
+        : goalId === "music.baseline_preserving_audio_overlay_sparse_release_hold.v1"
+          ? ["baseline_audio_overlay_sparse_release_hold_intro", "baseline_audio_overlay_sparse_release_hold_phrase", "baseline_audio_overlay_sparse_release_hold_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_sparse_syncopated.v1"
+          ? ["baseline_audio_overlay_sparse_syncopated_intro", "baseline_audio_overlay_sparse_syncopated_phrase", "baseline_audio_overlay_sparse_syncopated_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_sparse_early.v1"
+          ? ["baseline_audio_overlay_sparse_early_intro", "baseline_audio_overlay_sparse_early_phrase", "baseline_audio_overlay_sparse_early_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_sparse_delayed.v1"
+          ? ["baseline_audio_overlay_sparse_delayed_intro", "baseline_audio_overlay_sparse_delayed_phrase", "baseline_audio_overlay_sparse_delayed_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_sparse_palette.v1"
+          ? ["baseline_audio_overlay_sparse_palette_intro", "baseline_audio_overlay_sparse_palette_phrase", "baseline_audio_overlay_sparse_palette_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_sparse_palette_discipline_repair.v1"
+          ? ["baseline_audio_overlay_sparse_palette_discipline_intro", "baseline_audio_overlay_sparse_palette_discipline_phrase", "baseline_audio_overlay_sparse_palette_discipline_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_sparse_accent.v1"
+          ? ["baseline_audio_overlay_sparse_accent_intro", "baseline_audio_overlay_sparse_accent_phrase", "baseline_audio_overlay_sparse_accent_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_single_target_swell.v1"
+          ? ["baseline_audio_overlay_single_target_swell_intro", "baseline_audio_overlay_single_target_swell_phrase", "baseline_audio_overlay_single_target_swell_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_single_target_motif.v1"
+          ? ["baseline_audio_overlay_single_target_intro", "baseline_audio_overlay_single_target_phrase", "baseline_audio_overlay_single_target_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_call_response.v1"
+          ? ["baseline_audio_overlay_call_response_intro", "baseline_audio_overlay_call_response_phrase", "baseline_audio_overlay_call_response_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_style_variation.v1"
+          ? ["baseline_audio_overlay_style_intro", "baseline_audio_overlay_style_phrase", "baseline_audio_overlay_style_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_existing_motion_repair.v1"
+          ? ["baseline_audio_overlay_existing_motion_intro", "baseline_audio_overlay_existing_motion_phrase", "baseline_audio_overlay_existing_motion_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_palette_role_repair.v1"
+          ? ["baseline_audio_overlay_palette_intro", "baseline_audio_overlay_palette_phrase", "baseline_audio_overlay_palette_release"]
+        : goalId === "music.baseline_preserving_audio_overlay_motion_repair.v1"
+          ? ["baseline_audio_overlay_motion_intro", "baseline_audio_overlay_motion_phrase", "baseline_audio_overlay_motion_release"]
+        : goalId === "music.baseline_preserving_audio_overlay.v1"
+          ? ["baseline_audio_overlay_intro", "baseline_audio_overlay_phrase_accent", "baseline_audio_overlay_release_accent"]
+        : goalId === "music.full_sequence_audio_consistency_repair.v1"
+          ? ["audio_consistent_intro_foundation", "audio_consistent_build_motif_lift", "audio_consistent_release_payoff"]
+        : goalId === "music.full_sequence_audio_guarded_repair.v1"
+          ? ["audio_guarded_repair_intro", "audio_guarded_repair_build", "audio_guarded_repair_release"]
+        : goalId === "music.full_sequence_audio_alignment.v1"
+          ? ["audio_intro_foundation", "audio_build_motif_lift", "audio_release_payoff"]
+        : goalId === "music.guarded_pacing_sequence.v1"
+          ? ["guarded_pacing_energy_arc", "guarded_pacing_motif_lift", "guarded_pacing_lyric_release"]
+          : goalId === "music.guarded_foundation_sequence.v1"
+          ? ["guarded_foundation_energy_arc", "guarded_foundation_motif_lift", "guarded_foundation_lyric_release"]
+          : ["multi_section_energy_arc", "motif_reprise_variation", "lyric_phrase_release"];
       for (const paletteProfile of paletteProfiles) {
         for (const passId of passIds) {
           rows.push({
@@ -4799,7 +6925,7 @@ export function buildLayerCompositionTrainingPlan({
     makeExpandedEffectFitExperiment({ paletteProfile, singleLineHorizontal, archSingle, star, spinner, treeFlat }),
     makeTargetTransferAdaptationExperiment({ paletteProfile, archGroup, caneGroup, matrixLowDensity }),
     makeDisplayQualityReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
-    makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner }),
+    makeMusicStructureReviewExperiment({ paletteProfile, singleLineHorizontal, archGroup, star, spinner, treeFlat }),
     makeSettingSensitivityEdgeProbeExperiment({ paletteProfile, target: archGroup }),
     makeSettingAttributionProbeExperiment({ paletteProfile, target: singleLineHorizontal }),
     makeLowMovementSettingGeometryProbeExperiment({ paletteProfile, target: archSingle }),

@@ -143,6 +143,8 @@ function writeVideoAestheticScore(runRoot, overrides = {}) {
   writeJson(path.join(runRoot, "video-aesthetic-score.json"), {
     artifactType: "video_aesthetic_score_v1",
     status: "ready",
+    metricScope: "full_sequence_render",
+    promotionUse: "primary_human_level_quality_evidence",
     scoredWindowCount: 2,
     evidenceEligibleWindowCount: 2,
     qualityDimensions: [
@@ -186,6 +188,27 @@ function writeVideoAestheticAttemptComparison(runRoot, overrides = {}) {
       improvedDimensionCount: 3,
       regressedDimensionCount: 2
     },
+    ...overrides
+  });
+}
+
+function writeHumanCalibratedCandidateEvaluation(runRoot, overrides = {}) {
+  writeJson(path.join(runRoot, "human-calibrated-candidate-evaluation.json"), {
+    artifactType: "human_calibrated_candidate_evaluation_v1",
+    status: "ready",
+    summary: {
+      candidateCount: 1,
+      promotionEligibleCandidateCount: 0,
+      optimizationMetricEvaluations: 0,
+      guardrailMetricEvaluations: 3,
+      diagnosticMetricEvaluations: 3,
+      primaryRisk: "No current automated dimension is aligned enough for unattended promotion."
+    },
+    candidateEvaluations: [{
+      status: "ready",
+      promotionEligible: false,
+      blockers: []
+    }],
     ...overrides
   });
 }
@@ -916,6 +939,1189 @@ test("controller changes video aesthetic strategy after neutral attempt", () => 
   assert.equal(state.videoAestheticAttemptSummary.overallAestheticScoreDelta, -0.001);
 });
 
+test("controller prioritizes palette repair when palette purpose is weak", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot, {
+    scores: {
+      overallAestheticScore: 0.716,
+      displayEvolution: 0.92,
+      narrativeShape: 0.82,
+      pacingVariety: 0.68,
+      transitionFlow: 0.74,
+      focalClarity: 0.84,
+      focalHandoffStability: 0.67,
+      visualBalance: 0.66,
+      motionInterest: 0.75,
+      colorDiscipline: 0.91,
+      palettePurposeCoverage: 0.5,
+      temporalContinuity: 0.7,
+      clutterControl: 1,
+      qualityConsistency: 0.8,
+      fullSequenceContext: 0.73
+    },
+    recommendationSummary: [
+      "Assign clearer color purposes across structure, support motion, focal accents, and background roles."
+    ]
+  });
+  writeVideoAestheticAttemptComparison(runRoot, { comparisonStatus: "neutral" });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectionReason, "video_aesthetic_score_below_threshold");
+  assert.equal(state.nextQueue[0].nextStrategy, "palette_depth_contrast_motion_repair");
+  assert.equal(state.nextQueue[0].weakDimensions[0].dimension, "palette_purpose_coverage");
+});
+
+test("controller continues full-sequence work when automated promotion passes but human gate blocks", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, []);
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot, {
+    scores: {
+      overallAestheticScore: 0.768,
+      displayEvolution: 0.92,
+      narrativeShape: 0.83,
+      pacingVariety: 0.56,
+      transitionFlow: 0.75,
+      focalClarity: 0.91,
+      focalHandoffStability: 0.65,
+      visualBalance: 0.49,
+      motionInterest: 0.75,
+      colorDiscipline: 0.94,
+      palettePurposeCoverage: 0.93,
+      temporalContinuity: 0.5,
+      localEvidenceReadability: 0.88,
+      clutterControl: 1,
+      qualityConsistency: 0.5,
+      fullSequenceContext: 0.78
+    },
+    promotion: {
+      evidenceEligible: true,
+      blockers: []
+    }
+  });
+  writeVideoAestheticAttemptComparison(runRoot, {
+    comparisonStatus: "neutral",
+    summary: {
+      overallAestheticScoreDelta: 0.052,
+      improvedDimensionCount: 9,
+      regressedDimensionCount: 2
+    }
+  });
+  writeHumanCalibratedCandidateEvaluation(runRoot);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }, {
+        goalId: "effect_fit.expanded_model_matrix.v1",
+        areaId: "layer_composition",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          families: ["expanded_effect_fit"],
+          paletteProfiles: ["rgb_primary"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.full_sequence.quality_v1");
+  assert.equal(state.controllerDecision.selectionReason, "video_aesthetic_score_below_threshold");
+  assert.equal(state.nextQueue[0].humanCalibratedPromotionBlocked, true);
+  assert.equal(state.humanCalibratedCandidateSummary.promotionEligibleCandidateCount, 0);
+  assert.notEqual(state.goalStatuses[0].evidenceStatus, "covered");
+});
+
+test("controller repeats improved music structure candidates before generic display repair", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    recordId: "record:lyric_phrase_release",
+    experimentId: "music-structure-review-rgb_primary",
+    family: "music_structure_review",
+    passId: "lyric_phrase_release",
+    effectName: "Color Wash",
+    leadTargets: ["Vendor Arch"],
+    timingSources: ["section", "phrase", "beat", "lyric", "accent"],
+    paletteProfiles: ["rgb_primary"],
+    sampleCount: 1,
+    trendStatus: "single_run_baseline",
+    quality: {
+      latestOverallQuality: 0.868717,
+      meanOverallQuality: 0.868717
+    },
+    promotion: {
+      durableCandidate: false,
+      blockers: [
+        "insufficient_repeated_quality_evidence",
+        "quality_trend_not_stable_or_improving"
+      ]
+    }
+  }]);
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot, {
+    scores: {
+      overallAestheticScore: 0.799408,
+      displayEvolution: 0.9,
+      narrativeShape: 0.77,
+      pacingVariety: 0.73,
+      transitionFlow: 0.81,
+      focalClarity: 0.89,
+      focalHandoffStability: 0.78,
+      visualBalance: 0.62,
+      motionInterest: 0.76,
+      colorDiscipline: 0.91,
+      palettePurposeCoverage: 0.94,
+      temporalContinuity: 0.83,
+      localEvidenceReadability: 0.86,
+      clutterControl: 1,
+      qualityConsistency: 0.88,
+      fullSequenceContext: 0.81
+    },
+    promotion: {
+      evidenceEligible: true,
+      blockers: []
+    }
+  });
+  writeVideoAestheticAttemptComparison(runRoot, {
+    comparisonStatus: "neutral",
+    summary: {
+      overallAestheticScoreDelta: 0.011034,
+      improvedDimensionCount: 7,
+      regressedDimensionCount: 4
+    }
+  });
+  writeHumanCalibratedCandidateEvaluation(runRoot);
+  writeJson(path.join(runRoot, "training-plan.json"), {
+    artifactType: "layer_composition_training_plan_v1",
+    experiments: [{
+      experimentId: "music-structure-review-rgb_primary",
+      family: "music_structure_review"
+    }]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          reviewScopes: ["whole_sequence_window"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }, {
+        goalId: "music.multi_section_structure.v1",
+        areaId: "musical_structure",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          families: ["music_structure_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["multi_section_energy_arc", "motif_reprise_variation", "lyric_phrase_release"],
+          timingSources: ["section", "phrase", "beat", "lyric", "accent"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 3,
+          distinctCoverageFields: ["paletteProfile", "passId"]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "music.multi_section_structure.v1");
+  assert.equal(state.controllerDecision.selectionReason, "music_structure_improved_repeat_evidence");
+  assert.equal(state.nextQueue[0].passId, "lyric_phrase_release");
+  assert.equal(state.nextQueue[0].selectionHint, "repeat the improved music-structure candidate before attempting generic display repair");
+});
+
+test("controller advances targeted display validation after a regressed display aesthetic target", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("display_palette_section_pacing_consistency_repair", 0.824969),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    reviewScopes: ["whole_sequence_window"],
+    qualityDimensions: ["pacing_variety", "visual_balance"]
+  }]);
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot, {
+    scores: {
+      overallAestheticScore: 0.784207,
+      displayEvolution: 0.91,
+      narrativeShape: 0.84,
+      pacingVariety: 0.29,
+      transitionFlow: 0.78,
+      focalClarity: 0.85,
+      focalHandoffStability: 0.69,
+      visualBalance: 0.5,
+      motionInterest: 0.74,
+      colorDiscipline: 0.98,
+      palettePurposeCoverage: 0.95,
+      temporalContinuity: 0.91,
+      localEvidenceReadability: 0.86,
+      clutterControl: 1,
+      qualityConsistency: 0.78,
+      fullSequenceContext: 0.79
+    },
+    promotion: {
+      evidenceEligible: true,
+      blockers: []
+    }
+  });
+  writeVideoAestheticAttemptComparison(runRoot, {
+    comparisonStatus: "regressed",
+    summary: {
+      overallAestheticScoreDelta: -0.015201,
+      improvedDimensionCount: 6,
+      regressedDimensionCount: 6
+    }
+  });
+  writeJson(path.join(runRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "display.video_aesthetic.palette_motion_pacing_variation_v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_motion_pacing_variation" }]
+    }]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          reviewScopes: ["whole_sequence_window"],
+          qualityDimensions: ["pacing_variety", "visual_balance"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }, {
+        goalId: "display.video_aesthetic.palette_motion_pacing_variation_v1",
+        areaId: "display_level_composition",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["display_palette_motion_pacing_variation"],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [
+            { paletteProfile: "rgb_primary", passId: "display_palette_motion_pacing_variation" }
+          ]
+        }
+      }, {
+        goalId: "display.video_aesthetic.palette_spatial_negative_space_v1",
+        areaId: "display_level_composition",
+        priority: 3,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["display_palette_spatial_negative_space"],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [
+            { paletteProfile: "rgb_primary", passId: "display_palette_spatial_negative_space" }
+          ]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.video_aesthetic.palette_spatial_negative_space_v1");
+  assert.equal(state.controllerDecision.selectionReason, "targeted_display_regression_next_validation");
+  assert.equal(state.nextQueue[0].missingCoverageUnits[0].passId, "display_palette_spatial_negative_space");
+});
+
+test("controller keeps earlier regressed targeted display validations on cooldown", () => {
+  const previousRoot = tempDir();
+  writeRunRoot(previousRoot, []);
+  writeFullSequenceReview(previousRoot);
+  writeVideoAestheticScore(previousRoot);
+  writeVideoAestheticAttemptComparison(previousRoot, { comparisonStatus: "regressed" });
+  writeJson(path.join(previousRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "display.video_aesthetic.palette_motion_pacing_variation_v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_motion_pacing_variation" }]
+    }]
+  });
+  writeJson(path.join(previousRoot, "pass-runner-summary.json"), {
+    artifactType: "layer_composition_pass_runner_summary_v1",
+    processedPasses: 8,
+    renderReviewAcceptedEvidenceCount: 7,
+    renderReviewEligibleQualityMean: 0.79
+  });
+
+  const latestRoot = tempDir();
+  writeRunRoot(latestRoot, []);
+  const records = JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8"));
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...records,
+    sourceRunRoots: [previousRoot, latestRoot]
+  });
+  writeFullSequenceReview(latestRoot);
+  writeVideoAestheticScore(latestRoot);
+  writeVideoAestheticAttemptComparison(latestRoot, { comparisonStatus: "regressed" });
+  writeJson(path.join(latestRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "display.video_aesthetic.palette_spatial_negative_space_v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_spatial_negative_space" }]
+    }]
+  });
+
+  const displayGoal = (goalId, passId, priority) => ({
+    goalId,
+    areaId: "display_level_composition",
+    priority,
+    status: "not_started",
+    coverage: {
+      families: ["display_quality_review"],
+      paletteProfiles: ["rgb_primary"],
+      passIds: [passId],
+      reviewScopes: ["whole_sequence_window"]
+    },
+    completionCriteria: {
+      minimumDistinctCoverageUnitCount: 1,
+      distinctCoverageFields: ["paletteProfile", "passId"],
+      desiredCoverageUnits: [{ paletteProfile: "rgb_primary", passId }]
+    }
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [
+        displayGoal("display.video_aesthetic.palette_motion_pacing_variation_v1", "display_palette_motion_pacing_variation", 1),
+        displayGoal("display.video_aesthetic.palette_spatial_negative_space_v1", "display_palette_spatial_negative_space", 2),
+        displayGoal("display.video_aesthetic.palette_motion_pacing_reprise_v1", "display_palette_motion_pacing_reprise", 3)
+      ]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.video_aesthetic.palette_motion_pacing_reprise_v1");
+  assert.equal(state.nextQueue[0].missingCoverageUnits[0].passId, "display_palette_motion_pacing_reprise");
+});
+
+test("controller advances to holdout display strategy after repeated targeted display aesthetic regressions", () => {
+  const roots = [
+    ["display.video_aesthetic.palette_motion_pacing_variation_v1", "display_palette_motion_pacing_variation"],
+    ["display.video_aesthetic.palette_spatial_negative_space_v1", "display_palette_spatial_negative_space"],
+    ["display.video_aesthetic.palette_motion_pacing_reprise_v1", "display_palette_motion_pacing_reprise"]
+  ].map(([goalId, passId]) => {
+    const root = tempDir();
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: "regressed" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{
+        goalId,
+        reason: "coverage_gap",
+        missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId }]
+      }]
+    });
+    writeJson(path.join(root, "pass-runner-summary.json"), {
+      artifactType: "layer_composition_pass_runner_summary_v1",
+      processedPasses: 8,
+      renderReviewAcceptedEvidenceCount: 7,
+      renderReviewEligibleQualityMean: 0.79
+    });
+    return root;
+  });
+  const latestRoot = roots[roots.length - 1];
+  const records = JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8"));
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...records,
+    sourceRunRoots: roots
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.palette_motion_pacing_holdout_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["display_palette_motion_pacing_holdout"],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_motion_pacing_holdout" }]
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.video_aesthetic.palette_motion_pacing_holdout_v1");
+  assert.equal(state.controllerDecision.selectionReason, "targeted_display_regression_cluster_redesign");
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+  assert.equal(state.nextQueue[0].missingCoverageUnits[0].passId, "display_palette_motion_pacing_holdout");
+});
+
+test("controller selects redesigned guarded display target after regression cluster when available", () => {
+  const roots = [
+    ["display.video_aesthetic.palette_motion_pacing_variation_v1", "display_palette_motion_pacing_variation"],
+    ["display.video_aesthetic.palette_spatial_negative_space_v1", "display_palette_spatial_negative_space"],
+    ["display.video_aesthetic.palette_motion_pacing_reprise_v1", "display_palette_motion_pacing_reprise"]
+  ].map(([goalId, passId]) => {
+    const root = tempDir();
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: "regressed" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{
+        goalId,
+        reason: "coverage_gap",
+        missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId }]
+      }]
+    });
+    writeJson(path.join(root, "pass-runner-summary.json"), {
+      artifactType: "layer_composition_pass_runner_summary_v1",
+      processedPasses: 8,
+      renderReviewAcceptedEvidenceCount: 7,
+      renderReviewEligibleQualityMean: 0.79
+    });
+    return root;
+  });
+  const latestRoot = roots[roots.length - 1];
+  const records = JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8"));
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...records,
+    sourceRunRoots: roots
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.palette_foundation_guarded_motion_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: [
+            "display_palette_foundation_guarded_intro",
+            "display_palette_foundation_guarded_lift",
+            "display_palette_foundation_guarded_release"
+          ],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [
+            { paletteProfile: "rgb_primary", passId: "display_palette_foundation_guarded_intro" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_foundation_guarded_lift" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_foundation_guarded_release" }
+          ]
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "display.video_aesthetic.palette_foundation_guarded_motion_v1");
+  assert.equal(state.controllerDecision.selectionReason, "targeted_display_regression_cluster_redesign");
+  assert.deepEqual(
+    state.nextQueue[0].missingCoverageUnits.map((unit) => unit.passId),
+    [
+      "display_palette_foundation_guarded_intro",
+      "display_palette_foundation_guarded_lift",
+      "display_palette_foundation_guarded_release"
+    ]
+  );
+});
+
+test("controller repeats improved guarded display redesign before expanding variants", () => {
+  const regressionRoots = [
+    ["display.video_aesthetic.palette_motion_pacing_variation_v1", "display_palette_motion_pacing_variation"],
+    ["display.video_aesthetic.palette_spatial_negative_space_v1", "display_palette_spatial_negative_space"],
+    ["display.video_aesthetic.palette_motion_pacing_reprise_v1", "display_palette_motion_pacing_reprise"]
+  ].map(([goalId, passId]) => {
+    const root = tempDir();
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: "regressed" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{
+        goalId,
+        reason: "coverage_gap",
+        missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId }]
+      }]
+    });
+    writeJson(path.join(root, "pass-runner-summary.json"), {
+      artifactType: "layer_composition_pass_runner_summary_v1",
+      processedPasses: 8,
+      renderReviewAcceptedEvidenceCount: 7,
+      renderReviewEligibleQualityMean: 0.79
+    });
+    return root;
+  });
+  const latestRoot = tempDir();
+  writeRunRoot(latestRoot, [
+    "display_palette_foundation_guarded_intro",
+    "display_palette_foundation_guarded_lift",
+    "display_palette_foundation_guarded_release"
+  ].map((passId) => ({
+    ...record(passId, 0.84),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    paletteProfiles: ["rgb_primary"],
+    reviewScopes: ["whole_sequence_window"]
+  })));
+  writeFullSequenceReview(latestRoot);
+  writeVideoAestheticScore(latestRoot);
+  writeVideoAestheticAttemptComparison(latestRoot, {
+    comparisonStatus: "neutral",
+    summary: {
+      overallAestheticScoreDelta: 0.005,
+      improvedDimensionCount: 4,
+      regressedDimensionCount: 2
+    }
+  });
+  writeJson(path.join(latestRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "display.video_aesthetic.palette_motion_pacing_reprise_v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_motion_pacing_reprise" }]
+    }]
+  });
+  writeJson(path.join(latestRoot, "pass-runner-summary.json"), {
+    artifactType: "layer_composition_pass_runner_summary_v1",
+    processedPasses: 4,
+    renderReviewAcceptedEvidenceCount: 3,
+    renderReviewEligibleQualityMean: 0.84
+  });
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8")),
+    sourceRunRoots: [...regressionRoots, latestRoot]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.palette_foundation_guarded_motion_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: [
+            "display_palette_foundation_guarded_intro",
+            "display_palette_foundation_guarded_lift",
+            "display_palette_foundation_guarded_release"
+          ],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 3,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [
+            { paletteProfile: "rgb_primary", passId: "display_palette_foundation_guarded_intro" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_foundation_guarded_lift" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_foundation_guarded_release" }
+          ]
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.controllerDecision.selectionReason, "targeted_display_regression_cluster_redesign_repeat");
+  assert.deepEqual(
+    state.nextQueue.map((row) => row.passId),
+    [
+      "display_palette_foundation_guarded_intro",
+      "display_palette_foundation_guarded_lift",
+      "display_palette_foundation_guarded_release"
+    ]
+  );
+});
+
+test("controller does not repeat a redesigned display branch that loses whole-sequence score", () => {
+  const regressionRoots = [
+    ["display.video_aesthetic.palette_motion_pacing_variation_v1", "display_palette_motion_pacing_variation"],
+    ["display.video_aesthetic.palette_spatial_negative_space_v1", "display_palette_spatial_negative_space"],
+    ["display.video_aesthetic.palette_motion_pacing_reprise_v1", "display_palette_motion_pacing_reprise"]
+  ].map(([goalId, passId]) => {
+    const root = tempDir();
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: "regressed" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{
+        goalId,
+        reason: "coverage_gap",
+        missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId }]
+      }]
+    });
+    writeJson(path.join(root, "pass-runner-summary.json"), {
+      artifactType: "layer_composition_pass_runner_summary_v1",
+      processedPasses: 8,
+      renderReviewAcceptedEvidenceCount: 7,
+      renderReviewEligibleQualityMean: 0.79
+    });
+    return root;
+  });
+  const latestRoot = tempDir();
+  writeRunRoot(latestRoot, [
+    "display_palette_foundation_focal_pacing_intro",
+    "display_palette_foundation_focal_pacing_lift",
+    "display_palette_foundation_focal_pacing_release"
+  ].map((passId) => ({
+    ...record(passId, 0.844),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    paletteProfiles: ["rgb_primary"],
+    reviewScopes: ["whole_sequence_window"]
+  })));
+  writeFullSequenceReview(latestRoot);
+  writeVideoAestheticScore(latestRoot);
+  writeVideoAestheticAttemptComparison(latestRoot, {
+    comparisonStatus: "neutral",
+    summary: {
+      overallAestheticScoreDelta: -0.001,
+      improvedDimensionCount: 2,
+      regressedDimensionCount: 3
+    }
+  });
+  writeJson(path.join(latestRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_release" }]
+    }]
+  });
+  writeJson(path.join(latestRoot, "pass-runner-summary.json"), {
+    artifactType: "layer_composition_pass_runner_summary_v1",
+    processedPasses: 4,
+    renderReviewAcceptedEvidenceCount: 3,
+    renderReviewEligibleQualityMean: 0.844
+  });
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8")),
+    sourceRunRoots: [...regressionRoots, latestRoot]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: [
+            "display_palette_foundation_focal_pacing_intro",
+            "display_palette_foundation_focal_pacing_lift",
+            "display_palette_foundation_focal_pacing_release"
+          ],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 3,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [
+            { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_intro" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_lift" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_release" }
+          ]
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.controllerDecision.selectionReason, "targeted_display_redesign_not_improved");
+  assert.deepEqual(state.nextQueue, []);
+});
+
+test("controller pivots to music structure after redesigned display branches are exhausted", () => {
+  const regressionRoots = [
+    ["display.video_aesthetic.palette_motion_pacing_variation_v1", "display_palette_motion_pacing_variation"],
+    ["display.video_aesthetic.palette_spatial_negative_space_v1", "display_palette_spatial_negative_space"],
+    ["display.video_aesthetic.palette_motion_pacing_reprise_v1", "display_palette_motion_pacing_reprise"]
+  ].map(([goalId, passId]) => {
+    const root = tempDir();
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: "regressed" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{
+        goalId,
+        reason: "coverage_gap",
+        missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId }]
+      }]
+    });
+    writeJson(path.join(root, "pass-runner-summary.json"), {
+      artifactType: "layer_composition_pass_runner_summary_v1",
+      processedPasses: 8,
+      renderReviewAcceptedEvidenceCount: 7,
+      renderReviewEligibleQualityMean: 0.79
+    });
+    return root;
+  });
+  const latestRoot = tempDir();
+  writeRunRoot(latestRoot, [
+    "display_palette_foundation_focal_pacing_intro",
+    "display_palette_foundation_focal_pacing_lift",
+    "display_palette_foundation_focal_pacing_release"
+  ].map((passId) => ({
+    ...record(passId, 0.844),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    paletteProfiles: ["rgb_primary"],
+    reviewScopes: ["whole_sequence_window"]
+  })));
+  writeFullSequenceReview(latestRoot);
+  writeVideoAestheticScore(latestRoot);
+  writeVideoAestheticAttemptComparison(latestRoot, {
+    comparisonStatus: "neutral",
+    summary: { overallAestheticScoreDelta: -0.001, improvedDimensionCount: 2, regressedDimensionCount: 3 }
+  });
+  writeJson(path.join(latestRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_release" }]
+    }]
+  });
+  writeJson(path.join(latestRoot, "pass-runner-summary.json"), {
+    artifactType: "layer_composition_pass_runner_summary_v1",
+    processedPasses: 4,
+    renderReviewAcceptedEvidenceCount: 3,
+    renderReviewEligibleQualityMean: 0.844
+  });
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8")),
+    sourceRunRoots: [...regressionRoots, latestRoot]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [
+        {
+          goalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+          areaId: "display_level_composition",
+          priority: 1,
+          status: "not_started",
+          coverage: {
+            families: ["display_quality_review"],
+            paletteProfiles: ["rgb_primary"],
+            passIds: [
+              "display_palette_foundation_focal_pacing_intro",
+              "display_palette_foundation_focal_pacing_lift",
+              "display_palette_foundation_focal_pacing_release"
+            ],
+            reviewScopes: ["whole_sequence_window"]
+          },
+          completionCriteria: {
+            minimumDistinctCoverageUnitCount: 3,
+            distinctCoverageFields: ["paletteProfile", "passId"],
+            desiredCoverageUnits: [
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_intro" },
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_lift" },
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_release" }
+            ]
+          }
+        },
+        {
+          goalId: "music.multi_section_structure.v1",
+          areaId: "music_structure",
+          priority: 2,
+          status: "not_started",
+          coverage: {
+            families: ["music_structure_alignment"],
+            paletteProfiles: ["rgb_primary"],
+            passIds: ["multi_section_energy_arc"],
+            timingSources: ["section"]
+          },
+          completionCriteria: {
+            minimumDistinctCoverageUnitCount: 1,
+            distinctCoverageFields: ["paletteProfile", "passId"],
+            desiredCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "multi_section_energy_arc" }]
+          }
+        }
+      ]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.controllerDecision.selectionReason, "targeted_display_redesign_exhausted_music_pivot");
+  assert.equal(state.controllerDecision.selectedGoalId, "music.multi_section_structure.v1");
+  assert.deepEqual(state.nextQueue[0].missingCoverageUnits, [
+    { paletteProfile: "rgb_primary", passId: "multi_section_energy_arc" }
+  ]);
+});
+
+test("controller advances to next redesigned display branch after prior redesigns lose whole-sequence score", () => {
+  const regressionRoots = [
+    ["display.video_aesthetic.palette_motion_pacing_variation_v1", "display_palette_motion_pacing_variation"],
+    ["display.video_aesthetic.palette_spatial_negative_space_v1", "display_palette_spatial_negative_space"],
+    ["display.video_aesthetic.palette_motion_pacing_reprise_v1", "display_palette_motion_pacing_reprise"]
+  ].map(([goalId, passId]) => {
+    const root = tempDir();
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: "regressed" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{
+        goalId,
+        reason: "coverage_gap",
+        missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId }]
+      }]
+    });
+    writeJson(path.join(root, "pass-runner-summary.json"), {
+      artifactType: "layer_composition_pass_runner_summary_v1",
+      processedPasses: 8,
+      renderReviewAcceptedEvidenceCount: 7,
+      renderReviewEligibleQualityMean: 0.79
+    });
+    return root;
+  });
+  const focalPacingRoot = tempDir();
+  writeRunRoot(focalPacingRoot, [
+    "display_palette_foundation_focal_pacing_intro",
+    "display_palette_foundation_focal_pacing_lift",
+    "display_palette_foundation_focal_pacing_release"
+  ].map((passId) => ({
+    ...record(passId, 0.844),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    paletteProfiles: ["rgb_primary"],
+    reviewScopes: ["whole_sequence_window"]
+  })));
+  writeFullSequenceReview(focalPacingRoot);
+  writeVideoAestheticScore(focalPacingRoot);
+  writeVideoAestheticAttemptComparison(focalPacingRoot, {
+    comparisonStatus: "neutral",
+    summary: { overallAestheticScoreDelta: -0.001, improvedDimensionCount: 2, regressedDimensionCount: 3 }
+  });
+  writeJson(path.join(focalPacingRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_release" }]
+    }]
+  });
+  writeJson(path.join(focalPacingRoot, "pass-runner-summary.json"), {
+    artifactType: "layer_composition_pass_runner_summary_v1",
+    processedPasses: 4,
+    renderReviewAcceptedEvidenceCount: 3,
+    renderReviewEligibleQualityMean: 0.844
+  });
+
+  const latestRoot = tempDir();
+  writeRunRoot(latestRoot, [
+    ...[
+      "display_palette_foundation_focal_pacing_intro",
+      "display_palette_foundation_focal_pacing_lift",
+      "display_palette_foundation_focal_pacing_release"
+    ].map((passId) => ({
+      ...record(passId, 0.844),
+      experimentId: "display-quality-review-rgb_primary",
+      family: "display_quality_review",
+      paletteProfiles: ["rgb_primary"],
+      reviewScopes: ["whole_sequence_window"]
+    })),
+    ...[
+      "display_palette_foundation_focal_isolation_intro",
+      "display_palette_foundation_focal_isolation_lift",
+      "display_palette_foundation_focal_isolation_release"
+    ].map((passId) => ({
+    ...record(passId, 0.843),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    paletteProfiles: ["rgb_primary"],
+    reviewScopes: ["whole_sequence_window"]
+    }))
+  ]);
+  writeFullSequenceReview(latestRoot);
+  writeVideoAestheticScore(latestRoot);
+  writeVideoAestheticAttemptComparison(latestRoot, {
+    comparisonStatus: "neutral",
+    summary: { overallAestheticScoreDelta: -0.0004, improvedDimensionCount: 0, regressedDimensionCount: 1 }
+  });
+  writeJson(path.join(latestRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "display.video_aesthetic.palette_foundation_focal_isolation_v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_isolation_release" }]
+    }]
+  });
+  writeJson(path.join(latestRoot, "pass-runner-summary.json"), {
+    artifactType: "layer_composition_pass_runner_summary_v1",
+    processedPasses: 4,
+    renderReviewAcceptedEvidenceCount: 3,
+    renderReviewEligibleQualityMean: 0.843
+  });
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8")),
+    sourceRunRoots: [...regressionRoots, focalPacingRoot, latestRoot]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [
+        {
+          goalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+          areaId: "display_level_composition",
+          priority: 1,
+          status: "not_started",
+          coverage: {
+            families: ["display_quality_review"],
+            paletteProfiles: ["rgb_primary"],
+            passIds: [
+              "display_palette_foundation_focal_pacing_intro",
+              "display_palette_foundation_focal_pacing_lift",
+              "display_palette_foundation_focal_pacing_release"
+            ],
+            reviewScopes: ["whole_sequence_window"]
+          },
+          completionCriteria: {
+            minimumDistinctCoverageUnitCount: 3,
+            distinctCoverageFields: ["paletteProfile", "passId"],
+            desiredCoverageUnits: [
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_intro" },
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_lift" },
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_release" }
+            ]
+          }
+        },
+        {
+          goalId: "display.video_aesthetic.palette_foundation_focal_isolation_v1",
+          areaId: "display_level_composition",
+          priority: 2,
+          status: "not_started",
+          coverage: {
+            families: ["display_quality_review"],
+            paletteProfiles: ["rgb_primary"],
+            passIds: [
+              "display_palette_foundation_focal_isolation_intro",
+              "display_palette_foundation_focal_isolation_lift",
+              "display_palette_foundation_focal_isolation_release"
+            ],
+            reviewScopes: ["whole_sequence_window"]
+          },
+          completionCriteria: {
+            minimumDistinctCoverageUnitCount: 3,
+            distinctCoverageFields: ["paletteProfile", "passId"],
+            desiredCoverageUnits: [
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_isolation_intro" },
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_isolation_lift" },
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_isolation_release" }
+            ]
+          }
+        },
+        {
+          goalId: "display.video_aesthetic.palette_foundation_controlled_counterpoint_v1",
+          areaId: "display_level_composition",
+          priority: 3,
+          status: "not_started",
+          coverage: {
+            families: ["display_quality_review"],
+            paletteProfiles: ["rgb_primary"],
+            passIds: [
+              "display_palette_foundation_counterpoint_intro",
+              "display_palette_foundation_counterpoint_lift",
+              "display_palette_foundation_counterpoint_release"
+            ],
+            reviewScopes: ["whole_sequence_window"]
+          },
+          completionCriteria: {
+            minimumDistinctCoverageUnitCount: 3,
+            distinctCoverageFields: ["paletteProfile", "passId"],
+            desiredCoverageUnits: [
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_counterpoint_intro" },
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_counterpoint_lift" },
+              { paletteProfile: "rgb_primary", passId: "display_palette_foundation_counterpoint_release" }
+            ]
+          }
+        }
+      ]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.controllerDecision.selectionReason, "targeted_display_regression_cluster_redesign");
+  assert.equal(
+    state.controllerDecision.selectedGoalId,
+    "display.video_aesthetic.palette_foundation_controlled_counterpoint_v1"
+  );
+  assert.deepEqual(
+    state.nextQueue[0].missingCoverageUnits.map((unit) => unit.passId),
+    [
+      "display_palette_foundation_counterpoint_intro",
+      "display_palette_foundation_counterpoint_lift",
+      "display_palette_foundation_counterpoint_release"
+    ]
+  );
+});
+
+test("controller targets palette spatial repair after repeated weak pacing and motion attempts in color-rich display context", () => {
+  const roots = [tempDir(), tempDir(), tempDir(), tempDir()];
+  const strategies = [
+    "section_window_pacing_balance",
+    "regional_focus_contrast",
+    "palette_depth_contrast_motion_repair",
+    "palette_section_pacing_consistency_repair"
+  ];
+  roots.forEach((root, index) => {
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root, {
+      scores: {
+        overallAestheticScore: 0.788,
+        displayEvolution: 0.92,
+        narrativeShape: 0.84,
+        pacingVariety: 0.27,
+        transitionFlow: 0.79,
+        focalClarity: 0.86,
+        focalHandoffStability: 0.7,
+        visualBalance: 0.51,
+        motionInterest: 0.53,
+        colorDiscipline: 0.98,
+        palettePurposeCoverage: 1,
+        temporalContinuity: 0.92,
+        localEvidenceReadability: 0.86,
+        clutterControl: 1,
+        qualityConsistency: 0.79,
+        fullSequenceContext: 0.8
+      },
+      promotion: {
+        evidenceEligible: true,
+        blockers: []
+      }
+    });
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: "regressed" });
+    writeHumanCalibratedCandidateEvaluation(root);
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{ nextStrategy: strategies[index] }]
+    });
+  });
+  const latestRoot = roots[roots.length - 1];
+  const records = JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8"));
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...records,
+    sourceRunRoots: roots
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.full_sequence.quality_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          qualityDimensions: ["coverage_balance", "regional_variety"]
+        },
+        completionCriteria: {
+          minimumDurableCandidateCount: 2
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.nextQueue[0].nextStrategy, "palette_spatial_balance_focal_repair");
+});
+
 test("controller does not repeat section-window strategy after neutral section-window attempt", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, []);
@@ -1604,6 +2810,12 @@ test("controller plans creative revision comparison after baseline creative evid
     trendStatus: "stable",
     intentDimensions: ["mood", "palette", "pace", "emphasis", "style", "negative_space"],
     reviewMethods: ["deterministic_metrics"]
+  }, {
+    ...record("intent_focus_simplification_revision", 0.66, ["quality_trend_not_stable_or_improving"]),
+    experimentId: "creative-intent-revision-comparison-mono_white",
+    family: "creative_intent_revision_comparison",
+    intentDimensions: ["mood", "palette", "pace", "emphasis", "style", "negative_space"],
+    reviewMethods: ["deterministic_metrics", "before_after_revision_comparison"]
   }]);
 
   const state = buildSequencingQualityControllerState({
@@ -1641,6 +2853,78 @@ test("controller plans creative revision comparison after baseline creative evid
   assert.equal(state.controllerDecision.selectedGoalId, "creative.intent_revision_comparison.v1");
   assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
   assert.equal(state.nextQueue[0].reason, "coverage_gap");
+});
+
+test("controller continues creative revision variants when prior variant run produced no comparison pairs", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("emphasis_negative_space", 0.84, []),
+    experimentId: "creative-intent-probe-mono_white",
+    family: "creative_intent_probe",
+    sampleCount: 2,
+    trendStatus: "stable",
+    intentDimensions: ["mood", "palette", "pace", "emphasis", "style", "negative_space"],
+    reviewMethods: ["deterministic_metrics"]
+  }]);
+  writeJson(path.join(runRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "creative.intent_revision_variants.v1"
+    }]
+  });
+  writeJson(path.join(runRoot, "creative-intent-revision-comparison.json"), {
+    artifactType: "creative_intent_revision_comparison_v1",
+    status: "no_revision_pairs",
+    comparisonCount: 0,
+    promotionEligibleCount: 0
+  });
+
+  const creativeGoals = [{
+    goalId: "creative.intent_revision_comparison.v1",
+    areaId: "creative_intent_matching",
+    priority: 1,
+    status: "not_started",
+    requiredStableSamples: 2,
+    coverage: {
+      families: ["creative_intent_revision_comparison"],
+      reviewMethods: ["before_after_revision_comparison"]
+    }
+  }, {
+    goalId: "creative.intent_revision_variants.v1",
+    areaId: "creative_intent_matching",
+    priority: 2,
+    status: "not_started",
+    requiredStableSamples: 2,
+    coverage: {
+      families: ["creative_intent_revision_comparison"],
+      passIds: [
+        "intent_first_draft",
+        "intent_targeted_revision",
+        "intent_focus_simplification_revision"
+      ]
+    },
+    completionCriteria: {
+      distinctCoverageFields: ["passId"],
+      desiredCoverageUnits: [
+        { passId: "intent_first_draft" },
+        { passId: "intent_targeted_revision" },
+        { passId: "intent_focus_simplification_revision" }
+      ]
+    }
+  }];
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: creativeGoals
+    },
+    latestRunRoot: runRoot,
+    maxQueue: 6
+  });
+
+  assert.equal(state.controllerDecision.selectedGoalId, "creative.intent_revision_variants.v1");
+  assert.equal(state.controllerDecision.selectionReason, "creative_revision_variants_incomplete_continue");
+  assert.equal(state.nextQueue[0].goalId, "creative.intent_revision_variants.v1");
 });
 
 test("controller counts durable creative revision comparison records", () => {
@@ -2247,6 +3531,71 @@ test("controller continues bounded coverage when durable evidence count is still
   assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
   assert.equal(state.controllerDecision.selectedGoalId, "layer.rgb_primary.basic");
   assert.equal(state.nextQueue[0].reason, "coverage_gap");
+});
+
+test("controller counts pass-scoped video aesthetic coverage even when pass records use section dimensions", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [
+    "display_palette_focal_handoff_guarded_context_intro",
+    "display_palette_focal_handoff_guarded_context_lift",
+    "display_palette_focal_handoff_guarded_context_release"
+  ].map((passId) => ({
+    ...record(passId, 0.84, []),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    paletteProfiles: ["rgb_primary"],
+    reviewScopes: ["section_video", "whole_sequence_window", "full_display_contact_sheet"],
+    qualityDimensions: ["coverage_balance", "motion_coherence", "palette_readability"],
+    sampleCount: 2,
+    trendStatus: "stable"
+  })));
+  writeFullSequenceReview(runRoot);
+  writeVideoAestheticScore(runRoot, {
+    qualityDimensions: ["focal_handoff_stability", "focal_clarity", "full_sequence_context", "intent_match"]
+  });
+  writeVideoAestheticAttemptComparison(runRoot, {
+    comparisonStatus: "neutral",
+    summary: { overallAestheticScoreDelta: 0, improvedDimensionCount: 0, regressedDimensionCount: 0 }
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.palette_focal_handoff_guarded_context_sequence_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: [
+            "display_palette_focal_handoff_guarded_context_intro",
+            "display_palette_focal_handoff_guarded_context_lift",
+            "display_palette_focal_handoff_guarded_context_release"
+          ],
+          reviewScopes: ["whole_sequence_window"],
+          qualityDimensions: ["focal_handoff_stability", "focal_clarity", "full_sequence_context", "intent_match"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 3,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [
+            { paletteProfile: "rgb_primary", passId: "display_palette_focal_handoff_guarded_context_intro" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_focal_handoff_guarded_context_lift" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_focal_handoff_guarded_context_release" }
+          ]
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 3);
+  assert.equal(state.goalStatuses[0].distinctCoverageUnitCount, 3);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "covered");
+  assert.equal(state.controllerDecision.selectionReason, "no_active_goals");
+  assert.deepEqual(state.nextQueue, []);
 });
 
 test("controller increments loop index from a previous state", () => {

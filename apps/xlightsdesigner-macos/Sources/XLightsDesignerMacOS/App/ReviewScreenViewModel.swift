@@ -9,6 +9,16 @@ final class ReviewScreenViewModel {
     private let reviewExecutionService: ReviewExecutionService
     private let xlightsSessionService: XLightsSessionService
     var screenModel: ReviewScreenModel
+    var calibrationReview: ProductionCalibrationReviewPanelModel
+    var selectedCalibrationSequenceID = ""
+    var selectedCalibrationMetricChoices: [String: String] = [:]
+    var shouldShowCalibrationVideo = false
+    var calibrationVideoZoom = 0.0
+    var calibrationVideoIsPlaying = false
+    var calibrationVideoCurrentTime = 0.0
+    var calibrationVideoDuration = 0.0
+    var calibrationVideoSeekTarget = 0.0
+    var calibrationVideoSeekRequestId = 0
     var transientBanner: WorkflowBannerModel?
     var isApplying = false
     var isRestoringBackup = false
@@ -34,6 +44,11 @@ final class ReviewScreenViewModel {
             lastAppliedSequencePath: "",
             lastSequenceBackupPath: ""
         )
+        self.calibrationReview = Self.loadProductionCalibrationReview()
+        if let first = calibrationReview.rows.first {
+            self.selectedCalibrationSequenceID = first.sequenceId
+            self.selectedCalibrationMetricChoices = first.metricChoices
+        }
     }
 
     func refresh() {
@@ -47,6 +62,77 @@ final class ReviewScreenViewModel {
             lastAppliedSequencePath: lastAppliedSequencePath,
             lastSequenceBackupPath: lastSequenceBackupPath
         )
+        calibrationReview = Self.loadProductionCalibrationReview()
+        if selectedCalibrationSequenceID.isEmpty, let first = calibrationReview.rows.first {
+            selectedCalibrationSequenceID = first.sequenceId
+            selectedCalibrationMetricChoices = first.metricChoices
+        } else if let selected = calibrationReview.rows.first(where: { $0.sequenceId == selectedCalibrationSequenceID }) {
+            for metric in calibrationReview.metrics where selectedCalibrationMetricChoices[metric.id] == nil {
+                selectedCalibrationMetricChoices[metric.id] = selected.metricChoices[metric.id] ?? ""
+            }
+        }
+    }
+
+    var selectedCalibrationReviewRow: ProductionCalibrationReviewRowModel? {
+        calibrationReview.rows.first { $0.sequenceId == selectedCalibrationSequenceID }
+    }
+
+    func selectCalibrationSequence(_ sequenceId: String) {
+        selectedCalibrationSequenceID = sequenceId
+        selectedCalibrationMetricChoices = calibrationReview.rows.first { $0.sequenceId == sequenceId }?.metricChoices ?? [:]
+        shouldShowCalibrationVideo = false
+        calibrationVideoZoom = 0.0
+        calibrationVideoIsPlaying = false
+        calibrationVideoCurrentTime = 0.0
+        calibrationVideoDuration = 0.0
+        calibrationVideoSeekTarget = 0.0
+        calibrationVideoSeekRequestId = 0
+    }
+
+    func setCalibrationChoice(metricId: String, optionId: String) {
+        selectedCalibrationMetricChoices[metricId] = optionId
+    }
+
+    func showSelectedCalibrationVideo() {
+        shouldShowCalibrationVideo = true
+    }
+
+    func resetCalibrationVideoZoom() {
+        calibrationVideoZoom = 0.0
+    }
+
+    func toggleCalibrationVideoPlayback() {
+        calibrationVideoIsPlaying.toggle()
+    }
+
+    func seekCalibrationVideo(to seconds: Double) {
+        calibrationVideoSeekTarget = max(0, seconds)
+        calibrationVideoCurrentTime = calibrationVideoSeekTarget
+        calibrationVideoSeekRequestId += 1
+    }
+
+    func saveCalibrationReviewChoices() {
+        guard !selectedCalibrationSequenceID.isEmpty else { return }
+        do {
+            try Self.saveProductionCalibrationReviewChoices(
+                notesPath: calibrationReview.notesPath,
+                sequenceId: selectedCalibrationSequenceID,
+                metricChoices: selectedCalibrationMetricChoices
+            )
+            transientBanner = WorkflowBannerModel(
+                id: "production-calibration-review-saved",
+                text: "Saved production review choices for \(selectedCalibrationSequenceID).",
+                state: .ready
+            )
+            refresh()
+        } catch {
+            transientBanner = WorkflowBannerModel(
+                id: "production-calibration-review-save-failed",
+                text: "Unable to save production review choices: \(error.localizedDescription)",
+                state: .blocked
+            )
+            refresh()
+        }
     }
 
     func applyPendingWork() {
@@ -327,6 +413,127 @@ final class ReviewScreenViewModel {
         )
     }
 
+    private static func productionCalibrationNotesPath() -> String {
+        URL(fileURLWithPath: AppEnvironment.repoRootPath, isDirectory: true)
+            .appendingPathComponent("var/benchmarks/production-sequence-read/human-review-notes.template.json")
+            .path
+    }
+
+    private static func productionCalibrationVideoDirectoryPath() -> String {
+        URL(fileURLWithPath: AppEnvironment.repoRootPath, isDirectory: true)
+            .appendingPathComponent("var/benchmarks/production-sequence-read/video-review-owned/videos")
+            .path
+    }
+
+    private static func loadProductionCalibrationReview() -> ProductionCalibrationReviewPanelModel {
+        let notesPath = productionCalibrationNotesPath()
+        let videoDir = productionCalibrationVideoDirectoryPath()
+        guard
+            FileManager.default.fileExists(atPath: notesPath),
+            let data = try? Data(contentsOf: URL(fileURLWithPath: notesPath)),
+            let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return ProductionCalibrationReviewPanelModel(
+                isAvailable: false,
+                title: "Production Sequence Calibration",
+                summary: "No production review worksheet is available yet.",
+                notesPath: notesPath,
+                videoDirectoryPath: videoDir,
+                metrics: [],
+                rows: []
+            )
+        }
+
+        let schema = root["reviewSchema"] as? [String: Any] ?? [:]
+        let metricObjects = schema["metricChoices"] as? [String: Any] ?? [:]
+        let fileOrder = (schema["metricOrder"] as? [Any] ?? []).map { string($0) }.filter { !$0.isEmpty }
+        let order = fileOrder.isEmpty ? metricObjects.keys.sorted() : fileOrder
+        let metrics = order.compactMap { metricId -> ProductionCalibrationMetricModel? in
+            guard let metric = metricObjects[metricId] as? [String: Any] else { return nil }
+            let options = ((metric["options"] as? [[String: Any]]) ?? []).map { option in
+                ProductionCalibrationChoiceOptionModel(
+                    id: string(option["id"]),
+                    label: string(option["label"]),
+                    description: string(option["description"])
+                )
+            }.filter { !$0.id.isEmpty }
+            return ProductionCalibrationMetricModel(
+                id: metricId,
+                label: string(metric["label"]),
+                prompt: string(metric["prompt"]),
+                options: options
+            )
+        }
+
+        let reviews = (root["reviews"] as? [[String: Any]]) ?? []
+        let rows = reviews.compactMap { review -> ProductionCalibrationReviewRowModel? in
+            let sequenceId = string(review["sequenceId"])
+            guard !sequenceId.isEmpty else { return nil }
+            let choices = (review["metricChoices"] as? [String: Any] ?? [:]).reduce(into: [String: String]()) { partial, entry in
+                partial[entry.key] = string(entry.value)
+            }
+            return ProductionCalibrationReviewRowModel(
+                id: sequenceId,
+                sequenceId: sequenceId,
+                videoPath: URL(fileURLWithPath: videoDir, isDirectory: true).appendingPathComponent("\(slug(sequenceId)).mp4").path,
+                status: string(review["status"]),
+                recommendation: string(review["recommendation"]),
+                metricChoices: choices
+            )
+        }
+
+        return ProductionCalibrationReviewPanelModel(
+            isAvailable: !rows.isEmpty && !metrics.isEmpty,
+            title: "Production Sequence Calibration",
+            summary: "Review production MP4s with structured lighting-design choices. These choices calibrate full-sequence scoring without relying on free-text interpretation.",
+            notesPath: notesPath,
+            videoDirectoryPath: videoDir,
+            metrics: metrics,
+            rows: rows
+        )
+    }
+
+    private static func saveProductionCalibrationReviewChoices(
+        notesPath: String,
+        sequenceId: String,
+        metricChoices: [String: String]
+    ) throws {
+        let url = URL(fileURLWithPath: notesPath)
+        let data = try Data(contentsOf: url)
+        guard var root = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw ReviewExecutionError.invalidResponse("Review worksheet is not a JSON object.")
+        }
+        var reviews = root["reviews"] as? [[String: Any]] ?? []
+        guard let index = reviews.firstIndex(where: { string($0["sequenceId"]) == sequenceId }) else {
+            throw ReviewExecutionError.invalidResponse("Review worksheet does not contain \(sequenceId).")
+        }
+        reviews[index]["status"] = "reviewed"
+        reviews[index]["recommendation"] = "approve"
+        reviews[index]["reviewedAt"] = ISO8601DateFormatter().string(from: Date())
+        reviews[index]["metricChoices"] = metricChoices
+        root["reviews"] = reviews
+        let output = try JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys])
+        try output.write(to: url)
+    }
+
+    private static func slug(_ value: String) -> String {
+        let lower = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyz0123456789._-")
+        var result = ""
+        var lastWasDash = false
+        for scalar in lower.unicodeScalars {
+            if allowed.contains(scalar) {
+                result.append(String(scalar))
+                lastWasDash = false
+            } else if !lastWasDash {
+                result.append("-")
+                lastWasDash = true
+            }
+        }
+        let trimmed = result.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+        return trimmed.isEmpty ? "sequence" : trimmed
+    }
+
     private static func buildBackupSummary(
         pendingWork: PendingWorkReadModel?,
         lastAppliedSequencePath: String,
@@ -414,6 +621,10 @@ final class ReviewScreenViewModel {
             return ["true", "yes", "1"].contains(string.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
         }
         return false
+    }
+
+    private static func string(_ value: Any?) -> String {
+        String(describing: value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func pendingWorkMatchesTarget(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> Bool {

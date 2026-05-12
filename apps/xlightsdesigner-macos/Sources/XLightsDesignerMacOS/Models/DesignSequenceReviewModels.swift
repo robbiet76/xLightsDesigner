@@ -232,6 +232,38 @@ struct ReviewActionStateModel: Sendable {
     let restoreBackupButtonTitle: String
 }
 
+struct ProductionCalibrationChoiceOptionModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let label: String
+    let description: String
+}
+
+struct ProductionCalibrationMetricModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let label: String
+    let prompt: String
+    let options: [ProductionCalibrationChoiceOptionModel]
+}
+
+struct ProductionCalibrationReviewRowModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let sequenceId: String
+    let videoPath: String
+    let status: String
+    let recommendation: String
+    let metricChoices: [String: String]
+}
+
+struct ProductionCalibrationReviewPanelModel: Sendable {
+    let isAvailable: Bool
+    let title: String
+    let summary: String
+    let notesPath: String
+    let videoDirectoryPath: String
+    let metrics: [ProductionCalibrationMetricModel]
+    let rows: [ProductionCalibrationReviewRowModel]
+}
+
 struct ReviewScreenModel: Sendable {
     let title: String
     let subtitle: String

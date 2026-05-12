@@ -11,6 +11,8 @@ import { buildRenderReviewArtifact } from "../../designer-training/build-render-
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const DEFAULT_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
 const DEFAULT_OUT_DIR = "var/benchmarks/production-sequence-read/video-review";
+const DEFAULT_VIDEO_LONG_SIDE = 2000;
+const DEFAULT_VIDEO_ASPECT_RATIO = 16 / 9;
 
 function str(value = "") {
   return String(value || "").trim();
@@ -50,6 +52,83 @@ function readTextIfExists(filePath = "") {
   return fs.readFileSync(resolved, "utf8");
 }
 
+function evenDimension(value) {
+  const rounded = Math.max(2, Math.round(Number(value) || 0));
+  return rounded % 2 === 0 ? rounded : rounded + 1;
+}
+
+function positive(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+export function derivePreviewVideoSize({
+  previewWidth = 0,
+  previewHeight = 0,
+  requestedWidth = 0,
+  requestedHeight = 0,
+  longSide = DEFAULT_VIDEO_LONG_SIDE
+} = {}) {
+  const explicitWidth = positive(requestedWidth);
+  const explicitHeight = positive(requestedHeight);
+  if (explicitWidth || explicitHeight) {
+    if (!(explicitWidth && explicitHeight)) {
+      throw new Error("--video-width and --video-height must be provided together");
+    }
+    return {
+      width: evenDimension(explicitWidth),
+      height: evenDimension(explicitHeight),
+      source: "explicit"
+    };
+  }
+
+  const layoutWidth = positive(previewWidth);
+  const layoutHeight = positive(previewHeight);
+  const aspectRatio = layoutWidth && layoutHeight
+    ? layoutWidth / layoutHeight
+    : DEFAULT_VIDEO_ASPECT_RATIO;
+  const targetLongSide = evenDimension(positive(longSide) || DEFAULT_VIDEO_LONG_SIDE);
+  if (aspectRatio >= 1) {
+    return {
+      width: targetLongSide,
+      height: evenDimension(targetLongSide / aspectRatio),
+      source: layoutWidth && layoutHeight ? "layout_preview_canvas" : "fallback_aspect_ratio",
+      previewWidth: layoutWidth || null,
+      previewHeight: layoutHeight || null
+    };
+  }
+  return {
+    width: evenDimension(targetLongSide * aspectRatio),
+    height: targetLongSide,
+    source: layoutWidth && layoutHeight ? "layout_preview_canvas" : "fallback_aspect_ratio",
+    previewWidth: layoutWidth || null,
+    previewHeight: layoutHeight || null
+  };
+}
+
+async function readLayoutSettings(endpoint = DEFAULT_ENDPOINT, {
+  fetchImpl = globalThis.fetch,
+  timeoutMs = 30000
+} = {}) {
+  if (typeof fetchImpl !== "function") {
+    throw new Error("fetch is unavailable");
+  }
+  const controller = typeof AbortController === "function" ? new AbortController() : null;
+  const timeout = setTimeout(() => controller?.abort(), timeoutMs);
+  try {
+    const response = await fetchImpl(`${str(endpoint).replace(/\/+$/, "")}/layout/settings`, {
+      signal: controller?.signal
+    });
+    const payload = await response.json();
+    if (!response.ok || payload?.ok === false) {
+      throw new Error(`layout.getSettings failed: ${payload?.error?.message || response.statusText}`);
+    }
+    return payload?.data || {};
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function parseArgs(argv = []) {
   const args = {
     manifestPath: "",
@@ -63,6 +142,9 @@ function parseArgs(argv = []) {
     reuseExistingVideos: false,
     sampleCount: 32,
     keepFrames: false,
+    videoWidth: 0,
+    videoHeight: 0,
+    videoLongSide: DEFAULT_VIDEO_LONG_SIDE,
     automationTimeoutMs: 600000
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -78,6 +160,9 @@ function parseArgs(argv = []) {
     else if (arg === "--reuse-existing-videos") args.reuseExistingVideos = true;
     else if (arg === "--sample-count") args.sampleCount = Number(argv[++index]);
     else if (arg === "--keep-frames") args.keepFrames = true;
+    else if (arg === "--video-width") args.videoWidth = Number(argv[++index]);
+    else if (arg === "--video-height") args.videoHeight = Number(argv[++index]);
+    else if (arg === "--video-long-side") args.videoLongSide = Number(argv[++index]);
     else if (arg === "--automation-timeout-ms") args.automationTimeoutMs = Number(argv[++index]);
     else if (arg === "--help") args.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
@@ -101,6 +186,9 @@ Options:
   --reuse-existing-videos   Reuse existing MP4s when present, export missing ones.
   --sample-count <n>        Sampled video frame count for compact metrics. Default: 32.
   --keep-frames             Keep extracted PNG frames. Default deletes/skips frame dump.
+  --video-width <n>         Owned API preview export width. Default derives from xLights layout preview.
+  --video-height <n>        Owned API preview export height. Default derives from xLights layout preview.
+  --video-long-side <n>     Long side used for derived export size. Default: ${DEFAULT_VIDEO_LONG_SIDE}.
   --automation-timeout-ms <n>
 `;
 }
@@ -268,6 +356,9 @@ async function processSequence(sequence = {}, {
   reuseExistingVideos = false,
   sampleCount = 32,
   keepFrames = false,
+  videoWidth = 0,
+  videoHeight = 0,
+  videoSize = derivePreviewVideoSize({ requestedWidth: videoWidth, requestedHeight: videoHeight }),
   automationTimeoutMs = 600000,
   deps = {}
 } = {}) {
@@ -304,6 +395,8 @@ async function processSequence(sequence = {}, {
       sequence: resolvePath(sequence.xsq.path),
       out: videoPath,
       artifact: exportArtifactPath,
+      width: videoSize.width,
+      height: videoSize.height,
       automationTimeoutMs
     });
   } else if (!fs.existsSync(videoPath)) {
@@ -401,6 +494,9 @@ export async function runProductionSequenceVideoRead({
   reuseExistingVideos = false,
   sampleCount = 32,
   keepFrames = false,
+  videoWidth = 0,
+  videoHeight = 0,
+  videoLongSide = DEFAULT_VIDEO_LONG_SIDE,
   automationTimeoutMs = 600000,
   deps = {}
 } = {}) {
@@ -411,6 +507,19 @@ export async function runProductionSequenceVideoRead({
   const manifest = readJson(resolvedManifestPath);
   const resolvedOutDir = resolvePath(outDir || DEFAULT_OUT_DIR);
   const sequences = selectSequences(manifest, { initialAuditOnly, maxSequences, sequenceIds, excludeSequenceIds });
+  const shouldResolveLayoutSize = !(positive(videoWidth) && positive(videoHeight))
+    && !skipExport
+    && (typeof deps.getLayoutSettings === "function" || !deps.exportVideo);
+  const layoutSettings = shouldResolveLayoutSize
+    ? await (deps.getLayoutSettings || readLayoutSettings)(endpoint, { fetchImpl: deps.fetchImpl })
+    : {};
+  const videoSize = derivePreviewVideoSize({
+    previewWidth: layoutSettings?.previewWidth,
+    previewHeight: layoutSettings?.previewHeight,
+    requestedWidth: videoWidth,
+    requestedHeight: videoHeight,
+    longSide: videoLongSide
+  });
   const rows = [];
   for (const sequence of sequences) {
     try {
@@ -421,6 +530,7 @@ export async function runProductionSequenceVideoRead({
         reuseExistingVideos,
         sampleCount,
         keepFrames,
+        videoSize,
         automationTimeoutMs,
         deps
       }));
@@ -438,6 +548,13 @@ export async function runProductionSequenceVideoRead({
     readOnly: true,
     evidenceScope: "full_sequence_render",
     videoSource: "xlights_house_preview_mp4_with_sequence_audio_when_present",
+    requestedVideoSize: {
+      width: videoSize.width,
+      height: videoSize.height,
+      source: videoSize.source,
+      previewWidth: videoSize.previewWidth || null,
+      previewHeight: videoSize.previewHeight || null
+    },
     sequenceCount: rows.length,
     rows,
     cleanupPolicy: {
