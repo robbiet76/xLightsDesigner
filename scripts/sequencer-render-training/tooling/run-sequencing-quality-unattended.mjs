@@ -637,6 +637,10 @@ function runOutcome(summary = {}) {
   return qualityGate(summary).status;
 }
 
+function autoRefillGoalId(goalId = "") {
+  return str(goalId).startsWith("display.video_aesthetic.auto_refill.");
+}
+
 export async function runSequencingQualityUnattended({
   jobSpecPath = "",
   jobSpec = null,
@@ -709,7 +713,7 @@ export async function runSequencingQualityUnattended({
       && selectedGoalId === previousGoalId
       && previousOverallAestheticScore !== null
       && overallAestheticScore >= previousOverallAestheticScore + 0.01;
-    const guardOutcome = isRecoveringVideoAttempt ? "recovering" : outcome;
+    const guardOutcome = isRecoveringVideoAttempt || autoRefillGoalId(selectedGoalId) ? "recovering" : outcome;
     consecutiveRegressionCount = guardOutcome === "regressed" ? consecutiveRegressionCount + 1 : 0;
     repeatedGoalCount = selectedGoalId && selectedGoalId === previousGoalId ? repeatedGoalCount + 1 : selectedGoalId ? 1 : 0;
     previousGoalId = selectedGoalId;

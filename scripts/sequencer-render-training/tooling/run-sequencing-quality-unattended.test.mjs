@@ -200,6 +200,51 @@ test("unattended quality runner refills runtime curriculum on strategy expansion
   assert.equal(calls.length, 2);
 });
 
+test("unattended quality runner does not stop on auto-refill validation regressions", async () => {
+  const root = tempDir();
+  const calls = [];
+  const summary = await runSequencingQualityUnattended({
+    latestRunRoot: path.join(root, "seed"),
+    videoComparisonBaselineRunRoot: path.join(root, "video-seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 5,
+    maxConsecutiveRegressions: 2,
+    autoRefill: false,
+    deps: {
+      runLoop: async (args) => {
+        calls.push(args);
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "executed",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: `display.video_aesthetic.auto_refill.motion_pacing_cycle_0${calls.length}_v1`,
+            nextAction: "plan_goal_coverage",
+            selectionReason: "targeted_display_redesign_exhausted_auto_refill"
+          },
+          videoAestheticAttemptComparison: {
+            comparisonStatus: "regressed",
+            overallAestheticScoreDelta: -0.01
+          },
+          videoAestheticScore: {
+            overallAestheticScore: 0.78
+          },
+          passRunner: { processedPasses: 1, renderReviewAcceptedEvidenceCount: 1 },
+          crossRunQuality: { durableCandidateCount: 1, blockedRecordCount: 0 }
+        };
+      }
+    }
+  });
+
+  assert.equal(summary.stopReason, "max_loops_reached");
+  assert.equal(summary.iterationCount, 5);
+  assert.equal(summary.iterations.every((iteration) => iteration.guardOutcome === "recovering"), true);
+  assert.equal(calls.length, 5);
+});
+
 test("unattended quality runner stops at max loop count", async () => {
   const root = tempDir();
   const summary = await runSequencingQualityUnattended({
