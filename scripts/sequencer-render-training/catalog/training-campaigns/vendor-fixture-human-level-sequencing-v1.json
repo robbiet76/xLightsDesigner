@@ -121,7 +121,7 @@
     },
     {
       "phaseId": "project-local-adaptation",
-      "status": "in_progress",
+      "status": "complete",
       "purpose": "Validate how shared vendor-fixture learnings transfer to a specific user display and where project-local target/submodel behavior evidence is required.",
       "jobRefs": [
         "scripts/sequencer-render-training/catalog/training-jobs/target-transfer-adaptation-v1.json"
@@ -130,6 +130,19 @@
         "shared priors are applied only to structurally and semantically compatible targets",
         "unknown/custom/edge targets gather project-local evidence before confident reuse",
         "sequence-level generation can blend shared baseline knowledge with project-local metadata"
+      ]
+    },
+    {
+      "phaseId": "open-curriculum-continuation",
+      "status": "in_progress",
+      "purpose": "Continue from the latest checkpoint across any remaining uncovered curriculum goals after the named chunks have been satisfied.",
+      "jobRefs": [
+        "scripts/sequencer-render-training/catalog/training-jobs/open-curriculum-continuation-v1.json"
+      ],
+      "exitCriteria": [
+        "the controller reaches no active goals",
+        "a strategy-expansion stop point is reached with compact evidence",
+        "a human-review or scorer-calibration stop point is reached"
       ]
     }
   ],
