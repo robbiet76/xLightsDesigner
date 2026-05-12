@@ -1307,6 +1307,29 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
         }
       };
     }
+    const autoRefillDisplayGoal = unblockedGoals
+      .filter((goal) => str(goal.goalId).startsWith("display.video_aesthetic.auto_refill."))
+      .find((goal) => missingDesiredCoverageUnits(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy));
+    if (autoRefillDisplayGoal) {
+      const missingCoverageUnits = missingDesiredCoverageUnits(records, autoRefillDisplayGoal);
+      return {
+        selectedGoal: autoRefillDisplayGoal,
+        nextQueue: [{
+          queueId: `quality-controller:${str(autoRefillDisplayGoal.goalId)}:coverage-gap`,
+          goalId: str(autoRefillDisplayGoal.goalId),
+          priority: 1,
+          reason: "coverage_gap",
+          missingCoverageUnits,
+          selectionHint: "display strategy exhausted; run an auto-refilled validation cycle before stopping for strategy expansion"
+        }],
+        decision: {
+          selectedGoalId: str(autoRefillDisplayGoal.goalId),
+          selectionReason: "targeted_display_redesign_exhausted_auto_refill",
+          blockedBy: [],
+          nextAction: "plan_goal_coverage"
+        }
+      };
+    }
     const failedRedesignedGoal = unblockedGoals
       .filter((goal) => str(goal.goalId).startsWith("display.video_aesthetic."))
       .find((goal) => redesignedGoalIds.has(str(goal.goalId)) && recordsForGoal(records, goal).length);

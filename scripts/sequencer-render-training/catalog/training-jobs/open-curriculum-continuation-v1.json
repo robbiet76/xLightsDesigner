@@ -17,13 +17,13 @@
     "maxConsecutiveRegressions": 4,
     "maxRepeatedGoalCount": 8,
     "cleanupPreviewFrames": true,
-    "autoRefill": false,
-    "maxAutoRefills": 0,
+    "autoRefill": true,
+    "maxAutoRefills": 12,
     "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
   },
   "stopPolicy": {
     "treatControllerIdleAsChunkComplete": true,
-    "treatNeedsStrategyExpansionAsChunkComplete": true,
+    "treatNeedsStrategyExpansionAsChunkComplete": false,
     "maxConsecutiveRegressionsRequiresIntervention": true,
     "maxRepeatedGoalSelectionRequiresIntervention": true
   },

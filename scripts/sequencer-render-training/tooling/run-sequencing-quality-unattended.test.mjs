@@ -150,6 +150,56 @@ test("unattended quality runner refills runtime curriculum on idle", async () =>
   assert.ok(runtimeCurriculum.goals.some((goal) => goal.goalId === "display.video_aesthetic.auto_refill.motion_pacing_cycle_01_v1"));
 });
 
+test("unattended quality runner refills runtime curriculum on strategy expansion", async () => {
+  const root = tempDir();
+  const calls = [];
+  const summary = await runSequencingQualityUnattended({
+    latestRunRoot: path.join(root, "seed"),
+    videoComparisonBaselineRunRoot: path.join(root, "video-seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 2,
+    maxAutoRefills: 1,
+    deps: {
+      runLoop: async (args) => {
+        calls.push(args);
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        if (calls.length === 1) {
+          return {
+            status: "blocked_no_controller_queue",
+            loopRoot: args.loopRoot,
+            controllerStateRef,
+            controllerDecision: {
+              selectedGoalId: "display.video_aesthetic",
+              nextAction: "needs_strategy_expansion",
+              selectionReason: "targeted_display_regression_cluster"
+            }
+          };
+        }
+        return {
+          status: "executed",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "display.video_aesthetic.auto_refill.motion_pacing_cycle_01_v1",
+            nextAction: "plan_goal_coverage",
+            selectionReason: "targeted_display_redesign_exhausted_auto_refill"
+          },
+          passRunner: { processedPasses: 1, renderReviewAcceptedEvidenceCount: 1 },
+          crossRunQuality: { durableCandidateCount: 1, blockedRecordCount: 0 }
+        };
+      }
+    }
+  });
+
+  assert.equal(summary.stopReason, "max_loops_reached");
+  assert.equal(summary.refillEvents.length, 1);
+  assert.equal(summary.refillEvents[0].reason, "strategy_expansion");
+  assert.equal(summary.iterations[0].refillAddedGoalCount, 4);
+  assert.equal(calls.length, 2);
+});
+
 test("unattended quality runner stops at max loop count", async () => {
   const root = tempDir();
   const summary = await runSequencingQualityUnattended({

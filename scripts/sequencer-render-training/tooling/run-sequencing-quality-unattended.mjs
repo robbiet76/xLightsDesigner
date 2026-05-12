@@ -278,6 +278,7 @@ function refillRuntimeCurriculum({
   curriculumPath = "",
   outRoot = "",
   iteration = 0,
+  reason = "controller_idle",
   batchSize = AUTO_REFILL_PATTERN_SPECS.length,
   deps = {}
 } = {}) {
@@ -306,7 +307,7 @@ function refillRuntimeCurriculum({
     artifactVersion: 1,
     generatedAt: new Date().toISOString(),
     iteration,
-    reason: "controller_idle",
+    reason,
     curriculumRef: resolved,
     addedGoalCount: newGoals.length,
     addedGoals: newGoals.map((goal) => ({
@@ -321,6 +322,12 @@ function refillRuntimeCurriculum({
   const eventPath = path.join(resolvePath(outRoot || path.dirname(resolved)), `runtime-curriculum-refill-${String(iteration).padStart(6, "0")}.json`);
   write(eventPath, event);
   return { ...event, eventRef: eventPath };
+}
+
+function shouldAutoRefill(baseReason = "", summary = {}) {
+  if (baseReason === "controller_idle") return true;
+  return baseReason === "blocked_no_controller_queue"
+    && str(summary.controllerDecision?.nextAction) === "needs_strategy_expansion";
 }
 
 function loopDir(root = "", index = 1) {
@@ -761,11 +768,12 @@ export async function runSequencingQualityUnattended({
       repeatedGoalCount,
       maxRepeatedGoalCount
     });
-    if (baseReason === "controller_idle" && autoRefill && refillEvents.length < maxAutoRefills && index < maxLoops) {
+    if (shouldAutoRefill(baseReason, summary) && autoRefill && refillEvents.length < maxAutoRefills && index < maxLoops) {
       const refill = (deps.refillRuntimeCurriculum || refillRuntimeCurriculum)({
         curriculumPath: currentCurriculumPath,
         outRoot: root,
         iteration: index,
+        reason: baseReason === "controller_idle" ? "controller_idle" : "strategy_expansion",
         deps: deps.refillDeps || {}
       });
       if (refill) {

@@ -661,6 +661,98 @@ test("controller reports stalled goals when evidence regressed and is not repeat
   assert.deepEqual(state.nextQueue, []);
 });
 
+test("controller uses auto-refill display goals before declaring strategy expansion", () => {
+  const regressionRoots = [
+    ["display.video_aesthetic.palette_motion_pacing_variation_v1", "display_palette_motion_pacing_variation"],
+    ["display.video_aesthetic.palette_spatial_negative_space_v1", "display_palette_spatial_negative_space"],
+    ["display.video_aesthetic.palette_motion_pacing_reprise_v1", "display_palette_motion_pacing_reprise"]
+  ].map(([goalId, passId]) => {
+    const root = tempDir();
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: "regressed" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{
+        goalId,
+        reason: "coverage_gap",
+        missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId }]
+      }]
+    });
+    return root;
+  });
+  const latestRoot = tempDir();
+  writeRunRoot(latestRoot, [{
+    ...record("display_palette_foundation_focal_pacing_intro", 0.79, ["quality_trend_not_stable_or_improving"]),
+    experimentId: "display-quality-review-rgb_primary",
+    family: "display_quality_review",
+    paletteProfiles: ["rgb_primary"],
+    reviewScopes: ["whole_sequence_window"],
+    sampleCount: 1,
+    trendStatus: "single_run_baseline"
+  }]);
+  writeFullSequenceReview(latestRoot);
+  writeVideoAestheticScore(latestRoot);
+  writeVideoAestheticAttemptComparison(latestRoot, { comparisonStatus: "regressed" });
+  writeJson(path.join(latestRoot, "controller-state.json"), {
+    artifactType: "sequencing_quality_training_controller_state_v1",
+    nextQueue: [{
+      goalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+      reason: "coverage_gap",
+      missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_intro" }]
+    }]
+  });
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8")),
+    sourceRunRoots: [...regressionRoots, latestRoot]
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.palette_foundation_focal_pacing_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["display_palette_foundation_focal_pacing_intro"],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_foundation_focal_pacing_intro" }]
+        }
+      }, {
+        goalId: "display.video_aesthetic.auto_refill.motion_pacing_cycle_01_v1",
+        areaId: "display_level_composition",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["display_palette_motion_pacing_validation_cycle_01"],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_motion_pacing_validation_cycle_01" }]
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.controllerDecision.selectionReason, "targeted_display_redesign_exhausted_auto_refill");
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+  assert.equal(state.nextQueue[0].goalId, "display.video_aesthetic.auto_refill.motion_pacing_cycle_01_v1");
+});
+
 test("controller counts durable music timing records for music-structure goals", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
