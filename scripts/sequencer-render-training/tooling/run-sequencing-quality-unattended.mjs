@@ -180,17 +180,48 @@ function jobSummary(jobSpec = null) {
   };
 }
 
+function prerequisiteGoalIdsForGoal(goal = {}) {
+  const ids = new Set();
+  for (const blocker of arr(goal.blockedBy).map(str).filter(Boolean)) {
+    if (blocker === "needs display-level and musical-structure evidence first") {
+      ids.add("display.full_sequence.quality_v1");
+      ids.add("music.structure_alignment.v1");
+    }
+    if (blocker === "needs baseline creative-intent evidence first") {
+      ids.add("creative.intent_match.v1");
+    }
+  }
+  return [...ids];
+}
+
+function expandedScopedGoalIds(goals = [], targetGoalIds = []) {
+  const requested = new Set(arr(targetGoalIds).map(str).filter(Boolean));
+  const byId = new Map(arr(goals).map((goal) => [str(goal.goalId), goal]));
+  const queue = [...requested];
+  for (let index = 0; index < queue.length; index += 1) {
+    const goal = byId.get(queue[index]);
+    for (const prerequisiteId of prerequisiteGoalIdsForGoal(goal || {})) {
+      if (!requested.has(prerequisiteId)) {
+        requested.add(prerequisiteId);
+        queue.push(prerequisiteId);
+      }
+    }
+  }
+  return requested;
+}
+
 function copyRuntimeCurriculum({ sourcePath = DEFAULT_CURRICULUM, outRoot = "", targetGoalIds = [] } = {}) {
   const source = resolvePath(sourcePath || DEFAULT_CURRICULUM);
   const target = path.join(resolvePath(outRoot || DEFAULT_OUT_ROOT), "runtime-curriculum.json");
   const curriculum = readJsonIfExists(source);
   if (!curriculum) throw new Error(`Unable to read curriculum: ${source}`);
-  const scopedGoalIds = new Set(arr(targetGoalIds).map(str).filter(Boolean));
+  const scopedGoalIds = expandedScopedGoalIds(curriculum.goals, targetGoalIds);
   if (scopedGoalIds.size) {
     const beforeCount = arr(curriculum.goals).length;
     curriculum.goals = arr(curriculum.goals).filter((goal) => scopedGoalIds.has(str(goal.goalId)));
     curriculum.runtimeScope = {
-      targetGoalIds: [...scopedGoalIds],
+      targetGoalIds: arr(targetGoalIds).map(str).filter(Boolean),
+      includedPrerequisiteGoalIds: [...scopedGoalIds].filter((goalId) => !arr(targetGoalIds).map(str).includes(goalId)),
       ignoreRecentControllerAttemptHistory: true,
       sourceGoalCount: beforeCount,
       scopedGoalCount: curriculum.goals.length
