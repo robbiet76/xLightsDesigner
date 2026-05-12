@@ -108,7 +108,7 @@
     },
     {
       "phaseId": "human-calibrated-validation",
-      "status": "in_progress",
+      "status": "complete",
       "purpose": "Use production-sequence review labels and targeted generated-sequence review prompts to calibrate automated quality scoring.",
       "jobRefs": [
         "scripts/sequencer-render-training/catalog/training-jobs/human-calibrated-sequence-candidate-expansion-v1.json"
@@ -121,9 +121,11 @@
     },
     {
       "phaseId": "project-local-adaptation",
-      "status": "planned",
+      "status": "in_progress",
       "purpose": "Validate how shared vendor-fixture learnings transfer to a specific user display and where project-local target/submodel behavior evidence is required.",
-      "jobRefs": [],
+      "jobRefs": [
+        "scripts/sequencer-render-training/catalog/training-jobs/target-transfer-adaptation-v1.json"
+      ],
       "exitCriteria": [
         "shared priors are applied only to structurally and semantically compatible targets",
         "unknown/custom/edge targets gather project-local evidence before confident reuse",

@@ -1,0 +1,69 @@
+{
+  "artifactType": "sequencing_quality_training_job_v1",
+  "artifactVersion": 1,
+  "jobId": "target-transfer-adaptation-v1",
+  "chunkId": "vendor-fixture-target-transfer-adaptation",
+  "status": "active",
+  "description": "Validate how shared sequencing priors transfer across compatible, similar, and weakly compatible target structures before relying on project-local adaptation.",
+  "defaults": {
+    "outRoot": "var/logs/sequencing-quality-controller/unattended/target-transfer-adaptation-v1",
+    "uniqueOutRoot": true,
+    "curriculumPath": "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json",
+    "modelCatalogPath": "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json",
+    "runType": "overnight",
+    "maxLoops": 120,
+    "maxQueue": 30,
+    "maxPasses": 6,
+    "maxConsecutiveRegressions": 4,
+    "maxRepeatedGoalCount": 8,
+    "cleanupPreviewFrames": true,
+    "autoRefill": false,
+    "maxAutoRefills": 0,
+    "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
+  },
+  "stopPolicy": {
+    "treatControllerIdleAsChunkComplete": true,
+    "treatNeedsStrategyExpansionAsChunkComplete": true,
+    "maxConsecutiveRegressionsRequiresIntervention": true,
+    "maxRepeatedGoalSelectionRequiresIntervention": true
+  },
+  "curriculumScope": {
+    "trainingLayout": "render-training-vendor-fixture",
+    "primaryEvidence": "full_sequence_render",
+    "currentFocus": [
+      "compatible shared-prior transfer",
+      "similar target advisory transfer",
+      "weak target local-validation-required evidence",
+      "target structure compatibility guardrails"
+    ],
+    "targetGoalIds": [
+      "target_transfer.compatibility_adaptation.v1"
+    ],
+    "excluded": [
+      "production audio analysis",
+      "real audio feature extraction",
+      "unscoped new effect-family exploration",
+      "confident shared-prior reuse for structurally weak targets"
+    ]
+  },
+  "retentionPolicy": {
+    "maxRunDirectories": 8,
+    "requireSummaryBeforeRunDirectoryDelete": true,
+    "preserveCurrentRun": true,
+    "preserveLatestRunRoot": true,
+    "preserveVideoComparisonBaselineRunRoot": true,
+    "preservePreviousStateRunRoot": true,
+    "deleteRawPreviewFramesAfterLoop": true,
+    "preserveCompactEvidence": true
+  },
+  "operatorReviewPolicy": {
+    "requiredOnlyWhen": [
+      "max_consecutive_regressions",
+      "max_repeated_goal_selection",
+      "blocked_no_controller_queue_without_chunk_completion",
+      "awaiting_evidence",
+      "new human rubric labels are explicitly requested"
+    ],
+    "preferredReviewSurface": "xLightsDesigner Review page"
+  }
+}
