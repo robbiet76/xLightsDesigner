@@ -14,7 +14,7 @@
     "maxLoops": 180,
     "maxQueue": 40,
     "maxPasses": 6,
-    "maxConsecutiveRegressions": 1,
+    "maxConsecutiveRegressions": 6,
     "maxRepeatedGoalCount": 10,
     "cleanupPreviewFrames": true,
     "autoRefill": false,
