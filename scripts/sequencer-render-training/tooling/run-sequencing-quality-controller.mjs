@@ -1162,7 +1162,8 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
       "display.video_aesthetic.palette_foundation_soft_counterpoint_v1",
       "display.video_aesthetic.palette_foundation_calibrated_counterpoint_v1"
     ]);
-    if (recentAutoRefillRegressionCount(artifacts) >= 4) {
+    const autoRefillRegressionCluster = recentAutoRefillRegressionCount(artifacts) >= 4;
+    if (autoRefillRegressionCluster) {
       const adaptiveRepairGoalIds = [
         "display.video_aesthetic.palette_focal_handoff_context_sequence_v1",
         "music.full_sequence_audio_consistency_repair.v1",
@@ -1354,9 +1355,11 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
         }
       };
     }
-    const autoRefillDisplayGoal = unblockedGoals
-      .filter((goal) => str(goal.goalId).startsWith("display.video_aesthetic.auto_refill."))
-      .find((goal) => missingDesiredCoverageUnits(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy));
+    const autoRefillDisplayGoal = autoRefillRegressionCluster
+      ? null
+      : unblockedGoals
+        .filter((goal) => str(goal.goalId).startsWith("display.video_aesthetic.auto_refill."))
+        .find((goal) => missingDesiredCoverageUnits(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy));
     if (autoRefillDisplayGoal) {
       const missingCoverageUnits = missingDesiredCoverageUnits(records, autoRefillDisplayGoal);
       return {
