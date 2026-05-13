@@ -113,7 +113,9 @@ function notifyCampaign(summary = {}, options = {}, deps = {}) {
     title: options.title || title,
     subtitle: str(summary.activePhaseId || ""),
     message,
-    soundName: options.soundName
+    soundName: options.soundName,
+    showAlert: Boolean(options.showAlert),
+    alertTimeoutSeconds: options.alertTimeoutSeconds
   }, deps);
 }
 
@@ -129,6 +131,8 @@ export async function runSequencingTrainingCampaign({
   notify = false,
   notificationSound = "Glass",
   notificationTitle = "",
+  notificationAlert = true,
+  notificationAlertTimeoutSeconds = 60,
   deps = {}
 } = {}) {
   const campaign = readJson(campaignSpecPath);
@@ -229,7 +233,13 @@ export async function runSequencingTrainingCampaign({
     };
     writeJson(summaryPath, summary);
     try {
-      notifyTrainingError(error, { enabled: notify, soundName: notificationSound, title: notificationTitle });
+      notifyTrainingError(error, {
+        enabled: notify,
+        soundName: notificationSound,
+        title: notificationTitle,
+        showAlert: notificationAlert,
+        alertTimeoutSeconds: notificationAlertTimeoutSeconds
+      });
     } catch {
       // Keep the original error visible.
     }
@@ -240,7 +250,15 @@ export async function runSequencingTrainingCampaign({
   const finalStatus = interventionRecommended ? "stopped" : completed.length >= jobSlices.length ? "complete" : "stopped";
   const finalSummary = writeSummary(finalStatus);
   try {
-    notifyCampaign(finalSummary, { enabled: notify, soundName: notificationSound, title: notificationTitle });
+    const notificationResult = notifyCampaign(finalSummary, {
+      enabled: notify,
+      soundName: notificationSound,
+      title: notificationTitle,
+      showAlert: notificationAlert,
+      alertTimeoutSeconds: notificationAlertTimeoutSeconds
+    });
+    finalSummary.notificationResult = notificationResult;
+    writeJson(summaryPath, finalSummary);
   } catch (error) {
     finalSummary.notificationError = str(error.message);
     writeJson(summaryPath, finalSummary);
@@ -261,6 +279,8 @@ function parseArgs(argv = []) {
     notify: true,
     notificationSound: "Glass",
     notificationTitle: "",
+    notificationAlert: true,
+    notificationAlertTimeoutSeconds: 60,
     help: false
   };
   const take = (field, value) => {
@@ -278,6 +298,9 @@ function parseArgs(argv = []) {
     else if (arg === "--include-planned") take("includePlanned", true);
     else if (arg === "--notification-sound") take("notificationSound", argv[++index]);
     else if (arg === "--notification-title") take("notificationTitle", argv[++index]);
+    else if (arg === "--notification-alert") take("notificationAlert", true);
+    else if (arg === "--no-notification-alert") take("notificationAlert", false);
+    else if (arg === "--notification-alert-timeout-seconds") take("notificationAlertTimeoutSeconds", Number(argv[++index]));
     else if (arg === "--no-notify") take("notify", false);
     else if (arg === "--notify") take("notify", true);
     else if (arg === "--help") args.help = true;
@@ -301,6 +324,8 @@ Campaign notifications:
   --no-notify                 Disable campaign notifications
   --notification-sound Glass  macOS notification sound name
   --notification-title "..."  Override the notification title
+  --notification-alert        Also show an auto-dismiss macOS dialog at completion (default)
+  --no-notification-alert     Disable the completion dialog fallback
 `;
 }
 

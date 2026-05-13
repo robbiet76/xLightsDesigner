@@ -68,19 +68,33 @@ export function sendMacNotification({
   title = "xLightsDesigner Training",
   subtitle = "",
   message = "",
-  soundName = ""
+  soundName = "",
+  showAlert = false,
+  alertTimeoutSeconds = 60
 } = {}, deps = {}) {
   if (!enabled) return { sent: false, reason: "disabled" };
   if (process.platform !== "darwin") return { sent: false, reason: "unsupported_platform" };
   const execFile = deps.execFileSync || execFileSync;
-  const parts = [
+  const notificationParts = [
     `display notification "${appleScriptString(message)}"`,
     `with title "${appleScriptString(title)}"`
   ];
-  if (subtitle) parts.push(`subtitle "${appleScriptString(subtitle)}"`);
-  if (soundName) parts.push(`sound name "${appleScriptString(soundName)}"`);
-  execFile("osascript", ["-e", parts.join(" ")], { stdio: "ignore" });
-  return { sent: true, reason: "sent" };
+  if (subtitle) notificationParts.push(`subtitle "${appleScriptString(subtitle)}"`);
+  if (soundName) notificationParts.push(`sound name "${appleScriptString(soundName)}"`);
+  execFile("osascript", ["-e", notificationParts.join(" ")], { stdio: "ignore" });
+  const result = { sent: true, reason: "sent", alertShown: false };
+  if (showAlert) {
+    const alertScript = [
+      `display dialog "${appleScriptString(message)}"`,
+      `with title "${appleScriptString(title)}"`,
+      `buttons {"OK"}`,
+      `default button "OK"`,
+      `giving up after ${Math.max(1, num(alertTimeoutSeconds, 60))}`
+    ].join(" ");
+    execFile("osascript", ["-e", alertScript], { stdio: "ignore" });
+    result.alertShown = true;
+  }
+  return result;
 }
 
 function summarizeNotificationMessage(summary = {}) {
@@ -106,7 +120,9 @@ export function notifyTrainingSummary(summary = {}, options = {}, deps = {}) {
     title: options.title || notificationTitleForSummary(summary),
     subtitle: str(summary.trainingJob?.chunkId || summary.trainingJob?.jobId || ""),
     message: summarizeNotificationMessage(summary),
-    soundName: options.soundName
+    soundName: options.soundName,
+    showAlert: Boolean(options.showAlert),
+    alertTimeoutSeconds: options.alertTimeoutSeconds
   }, deps);
 }
 
@@ -116,7 +132,9 @@ export function notifyTrainingError(error = {}, options = {}, deps = {}) {
     title: options.title || "xLightsDesigner training error",
     subtitle: "Unattended run stopped",
     message: str(error?.message) || "The unattended training run stopped with an error.",
-    soundName: options.soundName
+    soundName: options.soundName,
+    showAlert: Boolean(options.showAlert),
+    alertTimeoutSeconds: options.alertTimeoutSeconds
   }, deps);
 }
 
@@ -989,6 +1007,8 @@ export function parseArgs(argv = []) {
     notify: true,
     notificationSound: "Glass",
     notificationTitle: "",
+    notificationAlert: true,
+    notificationAlertTimeoutSeconds: 60,
     summaryPath: ""
   };
   const provided = new Set();
@@ -1017,6 +1037,9 @@ export function parseArgs(argv = []) {
     else if (arg === "--summary") take("summaryPath", argv[++index]);
     else if (arg === "--notification-sound") take("notificationSound", argv[++index]);
     else if (arg === "--notification-title") take("notificationTitle", argv[++index]);
+    else if (arg === "--notification-alert") take("notificationAlert", true);
+    else if (arg === "--no-notification-alert") take("notificationAlert", false);
+    else if (arg === "--notification-alert-timeout-seconds") take("notificationAlertTimeoutSeconds", Number(argv[++index]));
     else if (arg === "--scaffold-only") take("applyRender", false);
     else if (arg === "--keep-preview-frames") take("cleanupPreviewFrames", false);
     else if (arg === "--no-auto-refill") take("autoRefill", false);
@@ -1064,6 +1087,8 @@ Notifications:
   --no-notify                 Disable completion/error notifications
   --notification-sound Glass  macOS notification sound name
   --notification-title "..."  Override the notification title
+  --notification-alert        Also show an auto-dismiss macOS dialog at completion (default)
+  --no-notification-alert     Disable the completion dialog fallback
 `;
 }
 
@@ -1075,12 +1100,19 @@ async function main() {
   }
   const summary = await runSequencingQualityUnattended(applyJobDefaults(args));
   try {
-    notifyTrainingSummary(summary, {
+    const notificationResult = notifyTrainingSummary(summary, {
       enabled: args.notify,
       soundName: args.notificationSound,
-      title: args.notificationTitle
+      title: args.notificationTitle,
+      showAlert: args.notificationAlert,
+      alertTimeoutSeconds: args.notificationAlertTimeoutSeconds
     });
+    summary.notificationResult = notificationResult;
+    if (summary.outRoot) writeJson(path.join(resolvePath(summary.outRoot), "unattended-run-summary.json"), summary);
+    console.error(`Notification result: ${JSON.stringify(notificationResult)}`);
   } catch (error) {
+    summary.notificationError = str(error.message);
+    if (summary.outRoot) writeJson(path.join(resolvePath(summary.outRoot), "unattended-run-summary.json"), summary);
     console.error(`Notification failed: ${error.message}`);
   }
   process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
@@ -1093,7 +1125,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       notifyTrainingError(error, {
         enabled: args.notify,
         soundName: args.notificationSound,
-        title: args.notificationTitle
+        title: args.notificationTitle,
+        showAlert: args.notificationAlert,
+        alertTimeoutSeconds: args.notificationAlertTimeoutSeconds
       });
     } catch {
       // Notification failures must not hide the original training failure.
