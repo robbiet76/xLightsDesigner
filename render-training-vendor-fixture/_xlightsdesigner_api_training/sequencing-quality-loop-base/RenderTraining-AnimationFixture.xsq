@@ -1,0 +1,306 @@
+<?xml version="1.0"?>
+<xsequence BaseChannel="0" ChanCtrlBasic="0" ChanCtrlColor="0" FixedPointTiming="1" ModelBlending="true">
+  <head>
+    <version>2026.07</version>
+    <author></author>
+    <author-email></author-email>
+    <author-website></author-website>
+    <song></song>
+    <artist></artist>
+    <album></album>
+    <MusicURL></MusicURL>
+    <comment></comment>
+    <sequenceTiming>50 ms</sequenceTiming>
+    <sequenceType>Animation</sequenceType>
+    <mediaFile></mediaFile>
+    <sequenceDuration>10.000</sequenceDuration>
+    <imageDir></imageDir>
+  </head>
+  <ColorPalettes />
+  <EffectDB />
+  <SequenceMedia />
+  <DataLayers>
+    <DataLayer lor_params="0" channel_offset="0" num_channels="0" num_frames="0" data="&lt;rendered: erase-mode>" source="&lt;auto-generated>" name="Nutcracker" />
+  </DataLayers>
+  <DisplayElements>
+    <Element collapsed="false" type="timing" name="New Timing" visible="true" views=",Master View" active="true" />
+    <Element collapsed="false" type="model" name="Arches" visible="true" />
+    <Element collapsed="false" type="model" name="Archs" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaCane 1" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaCane 2" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaCane 3" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaCane 4" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaCane 5" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaCane 6" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaCane 7" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaCane 8" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaFlake 1" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaFlake 2" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaFlake 3" visible="true" />
+    <Element collapsed="false" type="model" name="Boscoyo ChromaFlake 4" visible="true" />
+    <Element collapsed="false" type="model" name="Candy Canes" visible="true" />
+    <Element collapsed="false" type="model" name="Entire Display" visible="true" />
+    <Element collapsed="false" type="model" name="Entire House Face" visible="true" />
+    <Element collapsed="false" type="model" name="Flood Lights" visible="true" />
+    <Element collapsed="false" type="model" name="FloodLight-1" visible="true" />
+    <Element collapsed="false" type="model" name="FloodLight-2" visible="true" />
+    <Element collapsed="false" type="model" name="FloodLight-3" visible="true" />
+    <Element collapsed="false" type="model" name="FloodLight-4" visible="true" />
+    <Element collapsed="false" type="model" name="FloodLight-5" visible="true" />
+    <Element collapsed="false" type="model" name="FloodLight-6" visible="true" />
+    <Element collapsed="false" type="model" name="FloodLight-7" visible="true" />
+    <Element collapsed="false" type="model" name="FloodLight-8" visible="true" />
+    <Element collapsed="false" type="model" name="Matrix1" visible="true" />
+    <Element collapsed="false" type="model" name="Matrix2" visible="true" />
+    <Element collapsed="false" type="model" name="MegaTree Singing Faces" visible="true" />
+    <Element collapsed="false" type="model" name="MegaTree1" visible="true" />
+    <Element collapsed="false" type="model" name="Mini Trees" visible="true" />
+    <Element collapsed="false" type="model" name="Outlines" visible="true" />
+    <Element collapsed="false" type="model" name="P10" visible="true" />
+    <Element collapsed="false" type="model" name="Singing  Faces Matrix 1" visible="true" />
+    <Element collapsed="false" type="model" name="Singing Bulb 1" visible="true" />
+    <Element collapsed="false" type="model" name="Singing Bulb 2" visible="true" />
+    <Element collapsed="false" type="model" name="Singing Bulb 3" visible="true" />
+    <Element collapsed="false" type="model" name="Singing Bulb 4" visible="true" />
+    <Element collapsed="false" type="model" name="Singing Bulbs" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-1" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-10" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-11" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-12" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-13" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-14" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-2" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-3" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-4" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-5" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-6" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-7" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-8" visible="true" />
+    <Element collapsed="false" type="model" name="Single Line-9" visible="true" />
+    <Element collapsed="false" type="model" name="Snowflakes" visible="true" />
+    <Element collapsed="false" type="model" name="Spinner" visible="true" />
+    <Element collapsed="false" type="model" name="Star1" visible="true" />
+    <Element collapsed="false" type="model" name="Star2" visible="true" />
+    <Element collapsed="false" type="model" name="Tree-10" visible="true" />
+    <Element collapsed="false" type="model" name="Tree-3" visible="true" />
+    <Element collapsed="false" type="model" name="Tree-4" visible="true" />
+    <Element collapsed="false" type="model" name="Tree-5" visible="true" />
+    <Element collapsed="false" type="model" name="Tree-6" visible="true" />
+    <Element collapsed="false" type="model" name="Tree-7" visible="true" />
+    <Element collapsed="false" type="model" name="Tree-8" visible="true" />
+    <Element collapsed="false" type="model" name="Tree-9" visible="true" />
+  </DisplayElements>
+  <ElementEffects>
+    <Element type="timing" name="New Timing">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Arches">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Archs">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaCane 1">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaCane 2">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaCane 3">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaCane 4">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaCane 5">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaCane 6">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaCane 7">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaCane 8">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaFlake 1">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaFlake 2">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaFlake 3">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Boscoyo ChromaFlake 4">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Candy Canes">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Entire Display">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Entire House Face">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Flood Lights">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="FloodLight-1">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="FloodLight-2">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="FloodLight-3">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="FloodLight-4">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="FloodLight-5">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="FloodLight-6">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="FloodLight-7">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="FloodLight-8">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Matrix1">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Matrix2">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="MegaTree Singing Faces">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="MegaTree1">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Mini Trees">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Outlines">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="P10">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Singing  Faces Matrix 1">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Singing Bulb 1">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Singing Bulb 2">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Singing Bulb 3">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Singing Bulb 4">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Singing Bulbs">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-1">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-10">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-11">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-12">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-13">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-14">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-2">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-3">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-4">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-5">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-6">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-7">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-8">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Single Line-9">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Snowflakes">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Spinner">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Star1">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Star2">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Tree-10">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Tree-3">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Tree-4">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Tree-5">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Tree-6">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Tree-7">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Tree-8">
+      <EffectLayer />
+    </Element>
+    <Element type="model" name="Tree-9">
+      <EffectLayer />
+    </Element>
+  </ElementEffects>
+  <lastView>0</lastView>
+  <TimingTags>
+    <Tag number="0" position="-1" />
+    <Tag number="1" position="-1" />
+    <Tag number="2" position="-1" />
+    <Tag number="3" position="-1" />
+    <Tag number="4" position="-1" />
+    <Tag number="5" position="-1" />
+    <Tag number="6" position="-1" />
+    <Tag number="7" position="-1" />
+    <Tag number="8" position="-1" />
+    <Tag number="9" position="-1" />
+  </TimingTags>
+</xsequence>

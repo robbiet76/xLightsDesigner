@@ -1,7 +1,7 @@
 {
   "layoutName": "RenderTraining",
   "showDir": "render-training-vendor-fixture",
-  "fixtureSequencePath": "render-training-vendor-fixture/xld-layer-composition__unattended-000031__display-quality-review-rgb_primary__empty_baseline.xsq",
+  "fixtureSequencePath": "render-training-vendor-fixture/_xlightsdesigner_api_training/sequencing-quality-loop-base/RenderTraining-AnimationFixture.xsq",
   "canonicalModels": {
     "single_line_horizontal": {
       "modelName": "Single Line-1",

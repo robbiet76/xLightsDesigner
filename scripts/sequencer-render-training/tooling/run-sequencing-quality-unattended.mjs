@@ -684,24 +684,73 @@ export async function runSequencingQualityUnattended({
     ? (deps.copyRuntimeCurriculum || copyRuntimeCurriculum)({ sourcePath: curriculumPath, outRoot: root, targetGoalIds })
     : resolvePath(curriculumPath || DEFAULT_CURRICULUM);
 
-  for (let index = 1; index <= maxLoops; index += 1) {
-    const runLoop = deps.runLoop || runSequencingQualityLoop;
-    const summary = await runLoop({
+  const writeRunSummary = (payload = {}) => {
+    const summary = {
+      artifactType: "sequencing_quality_unattended_run_summary_v1",
+      artifactVersion: 1,
+      generatedAt: new Date().toISOString(),
+      trainingJob,
+      outRoot: root,
       latestRunRoot: currentLatestRunRoot,
       videoComparisonBaselineRunRoot: currentVideoBaselineRunRoot,
-      previousStatePath: currentPreviousStatePath,
-      curriculumPath: currentCurriculumPath,
-      outRoot: root,
-      loopRoot: loopDir(root, index),
-      modelCatalogPath,
-      runType,
-      runId: `unattended-${String(index).padStart(6, "0")}`,
-      maxQueue,
-      maxPasses,
-      applyRender,
-      endpoint,
-      deps: deps.loopDeps || {}
-    });
+      previousStateRef: currentPreviousStatePath,
+      iterationCount: iterations.length,
+      guardrails: {
+        maxLoops,
+        maxQueue,
+        maxPasses,
+        maxConsecutiveRegressions,
+        maxRepeatedGoalCount,
+        cleanupPreviewFrames,
+        autoRefill,
+        maxAutoRefills
+      },
+      iterations,
+      runtimeCurriculumRef: currentCurriculumPath,
+      refillEvents,
+      ...payload
+    };
+    writeJson(resolvedSummaryPath, summary);
+    return summary;
+  };
+
+  for (let index = 1; index <= maxLoops; index += 1) {
+    const runLoop = deps.runLoop || runSequencingQualityLoop;
+    let summary = null;
+    try {
+      summary = await runLoop({
+        latestRunRoot: currentLatestRunRoot,
+        videoComparisonBaselineRunRoot: currentVideoBaselineRunRoot,
+        previousStatePath: currentPreviousStatePath,
+        curriculumPath: currentCurriculumPath,
+        outRoot: root,
+        loopRoot: loopDir(root, index),
+        modelCatalogPath,
+        runType,
+        runId: `unattended-${String(index).padStart(6, "0")}`,
+        maxQueue,
+        maxPasses,
+        applyRender,
+        endpoint,
+        deps: deps.loopDeps || {}
+      });
+    } catch (error) {
+      stopReason = "loop_error";
+      writeRunSummary({
+        status: "error",
+        stopReason,
+        majorChunkStatus: "incomplete",
+        failedLoopIndex: index,
+        failedLoopRoot: loopDir(root, index),
+        error: {
+          message: str(error?.message),
+          stack: str(error?.stack)
+        },
+        interventionRecommended: true,
+        interventionReason: "The quality loop threw before producing a complete loop summary; inspect the failed loop root and resume from the previous completed loop."
+      });
+      throw error;
+    }
     const controllerState = readJsonIfExists(summary.controllerStateRef);
     const gate = qualityGate(summary);
     const outcome = gate.status;
@@ -790,66 +839,21 @@ export async function runSequencingQualityUnattended({
       ? ""
       : jobAdjustedStopReason(baseReason, summary, resolvedJobSpec);
     const effectiveReason = reason;
-    const partial = {
-      artifactType: "sequencing_quality_unattended_run_summary_v1",
-      artifactVersion: 1,
-      generatedAt: new Date().toISOString(),
+    const partial = writeRunSummary({
       status: effectiveReason && effectiveReason !== "max_loops_reached" ? "stopped" : index >= maxLoops ? "stopped" : "running",
       stopReason: effectiveReason || "",
       majorChunkStatus: majorChunkStatus(effectiveReason, resolvedJobSpec),
-      trainingJob,
-      outRoot: root,
-      latestRunRoot: currentLatestRunRoot,
-      videoComparisonBaselineRunRoot: currentVideoBaselineRunRoot,
-      previousStateRef: currentPreviousStatePath,
-      iterationCount: iterations.length,
-      guardrails: {
-        maxLoops,
-        maxQueue,
-        maxPasses,
-        maxConsecutiveRegressions,
-        maxRepeatedGoalCount,
-        cleanupPreviewFrames,
-        autoRefill,
-        maxAutoRefills
-      },
-      iterations,
-      runtimeCurriculumRef: currentCurriculumPath,
-      refillEvents
-    };
-    writeJson(resolvedSummaryPath, partial);
+    });
     if (effectiveReason) {
       stopReason = effectiveReason;
       break;
     }
   }
 
-  const finalSummary = {
-    artifactType: "sequencing_quality_unattended_run_summary_v1",
-    artifactVersion: 1,
-    generatedAt: new Date().toISOString(),
+  const finalSummary = writeRunSummary({
     status: "stopped",
     stopReason,
     majorChunkStatus: majorChunkStatus(stopReason, resolvedJobSpec),
-    trainingJob,
-    outRoot: root,
-    latestRunRoot: currentLatestRunRoot,
-    videoComparisonBaselineRunRoot: currentVideoBaselineRunRoot,
-    previousStateRef: currentPreviousStatePath,
-    iterationCount: iterations.length,
-    guardrails: {
-      maxLoops,
-      maxQueue,
-      maxPasses,
-      maxConsecutiveRegressions,
-      maxRepeatedGoalCount,
-      cleanupPreviewFrames,
-      autoRefill,
-      maxAutoRefills
-    },
-    iterations,
-    runtimeCurriculumRef: currentCurriculumPath,
-    refillEvents,
     interventionRecommended: !str(stopReason).startsWith("major_chunk_complete_") && [
       "max_consecutive_regressions",
       "max_repeated_goal_selection",
@@ -870,7 +874,7 @@ export async function runSequencingQualityUnattended({
         "matrix/cane/tree-360 effect-model coverage when those models are available"
       ]
       : []
-  };
+  });
   const retentionSummary = (deps.applyJobRunRetention || applyJobRunRetention)({
     runRoot: root,
     jobSpec: resolvedJobSpec,

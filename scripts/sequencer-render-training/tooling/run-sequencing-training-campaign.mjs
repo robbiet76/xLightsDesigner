@@ -220,7 +220,14 @@ export async function runSequencingTrainingCampaign({
   } catch (error) {
     stopReason = "campaign_error";
     interventionRecommended = true;
-    const summary = writeSummary("error");
+    const summary = {
+      ...writeSummary("error"),
+      error: {
+        message: str(error?.message),
+        stack: str(error?.stack)
+      }
+    };
+    writeJson(summaryPath, summary);
     try {
       notifyTrainingError(error, { enabled: notify, soundName: notificationSound, title: notificationTitle });
     } catch {
@@ -309,6 +316,10 @@ async function main() {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
+    const summary = error?.campaignSummary;
+    if (summary?.summaryRef) {
+      console.error(`Campaign failed. Summary: ${summary.summaryRef}`);
+    }
     console.error(error);
     process.exit(1);
   });
