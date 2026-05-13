@@ -34,7 +34,7 @@
     "trainingLayout": "render-training-vendor-fixture",
     "primaryEvidence": "full_sequence_render",
     "reopenTargetGoals": true,
-    "minimumDurableCandidateCountOverride": 12,
+    "minimumDurableSampleCountOverride": 12,
     "currentFocus": [
       "explicit sequence intent",
       "style range instead of one fixed recipe",

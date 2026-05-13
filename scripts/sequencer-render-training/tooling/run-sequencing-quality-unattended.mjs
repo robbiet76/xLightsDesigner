@@ -228,11 +228,23 @@ function copyRuntimeCurriculum({ sourcePath = DEFAULT_CURRICULUM, outRoot = "", 
         const next = { ...goal };
         if (curriculumScope.reopenTargetGoals) next.status = "not_started";
         const minimumDurableCandidateCount = num(curriculumScope.minimumDurableCandidateCountOverride);
+        const minimumDurableSampleCount = num(curriculumScope.minimumDurableSampleCountOverride);
         if (minimumDurableCandidateCount > 0) {
           next.completionCriteria = {
             ...next.completionCriteria,
             minimumDurableCandidateCount,
             minimumSelectorReadyPriorCount: null,
+            minimumDistinctCoverageUnitCount: null,
+            distinctCoverageFields: [],
+            desiredCoverageUnits: []
+          };
+        }
+        if (minimumDurableSampleCount > 0) {
+          next.completionCriteria = {
+            ...next.completionCriteria,
+            minimumDurableSampleCount,
+            minimumSelectorReadyPriorCount: null,
+            minimumDurableCandidateCount: null,
             minimumDistinctCoverageUnitCount: null,
             distinctCoverageFields: [],
             desiredCoverageUnits: []
@@ -246,6 +258,7 @@ function copyRuntimeCurriculum({ sourcePath = DEFAULT_CURRICULUM, outRoot = "", 
       ignoreRecentControllerAttemptHistory: true,
       reopenTargetGoals: Boolean(curriculumScope.reopenTargetGoals),
       minimumDurableCandidateCountOverride: num(curriculumScope.minimumDurableCandidateCountOverride) || null,
+      minimumDurableSampleCountOverride: num(curriculumScope.minimumDurableSampleCountOverride) || null,
       sourceGoalCount: beforeCount,
       scopedGoalCount: curriculum.goals.length
     };

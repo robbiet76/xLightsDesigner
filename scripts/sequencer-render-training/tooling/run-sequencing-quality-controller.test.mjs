@@ -3324,6 +3324,61 @@ test("controller treats durable completion criteria as covered evidence", () => 
   assert.equal(state.nextQueue[0].goalId, "effect_fit.core_effects.v1");
 });
 
+test("controller treats durable sample completion criteria as covered evidence", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [
+    {
+      ...record("guarded_foundation_energy_arc", 0.84, []),
+      experimentId: "music-structure-review-rgb_primary",
+      family: "music_structure_review",
+      sampleCount: 6,
+      trendStatus: "stable"
+    },
+    {
+      ...record("guarded_foundation_motif_lift", 0.85, []),
+      experimentId: "music-structure-review-rgb_primary",
+      family: "music_structure_review",
+      sampleCount: 6,
+      trendStatus: "stable"
+    }
+  ]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "music.guarded_foundation_sequence.v1",
+        areaId: "musical_structure",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["music_structure_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: [
+            "guarded_foundation_energy_arc",
+            "guarded_foundation_motif_lift",
+            "guarded_foundation_lyric_release"
+          ]
+        },
+        completionCriteria: {
+          minimumDurableSampleCount: 12
+        }
+      }, {
+        goalId: "creative.intent_match.v1",
+        areaId: "creative_intent_matching",
+        priority: 2,
+        status: "not_started"
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableCandidateCount, 2);
+  assert.equal(state.goalStatuses[0].durableSampleCount, 12);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "covered");
+  assert.equal(state.controllerDecision.selectedGoalId, "creative.intent_match.v1");
+});
+
 test("controller matches xLights internal SingleStrand name to single strand coverage", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{

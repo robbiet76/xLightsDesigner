@@ -401,7 +401,7 @@ test("unattended quality runner can reopen scoped goals with stricter durable ev
       curriculumScope: {
         targetGoalIds: ["creative.intent_revision_variants.v1"],
         reopenTargetGoals: true,
-        minimumDurableCandidateCountOverride: 12
+        minimumDurableSampleCountOverride: 12
       }
     },
     latestRunRoot: path.join(root, "seed"),
@@ -426,12 +426,13 @@ test("unattended quality runner can reopen scoped goals with stricter durable ev
   });
 
   assert.equal(scopedCurriculum.goals[0].status, "not_started");
-  assert.equal(scopedCurriculum.goals[0].completionCriteria.minimumDurableCandidateCount, 12);
+  assert.equal(scopedCurriculum.goals[0].completionCriteria.minimumDurableSampleCount, 12);
+  assert.equal(scopedCurriculum.goals[0].completionCriteria.minimumDurableCandidateCount, null);
   assert.equal(scopedCurriculum.goals[0].completionCriteria.minimumDistinctCoverageUnitCount, null);
   assert.deepEqual(scopedCurriculum.goals[0].completionCriteria.distinctCoverageFields, []);
   assert.deepEqual(scopedCurriculum.goals[0].completionCriteria.desiredCoverageUnits, []);
   assert.equal(scopedCurriculum.runtimeScope.reopenTargetGoals, true);
-  assert.equal(scopedCurriculum.runtimeScope.minimumDurableCandidateCountOverride, 12);
+  assert.equal(scopedCurriculum.runtimeScope.minimumDurableSampleCountOverride, 12);
 });
 
 test("unattended quality runner resumes from previous runtime curriculum", async () => {

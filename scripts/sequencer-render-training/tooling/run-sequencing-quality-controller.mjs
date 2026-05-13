@@ -262,6 +262,7 @@ function completionCriteriaForGoal(goal = {}) {
     minimumDurableCandidateCount: finiteCriteriaNumber(criteria.minimumDurableCandidateCount)
       || minimumSelectorReadyPriorCount
       || null,
+    minimumDurableSampleCount: finiteCriteriaNumber(criteria.minimumDurableSampleCount),
     minimumDistinctCoverageUnitCount: finiteCriteriaNumber(criteria.minimumDistinctCoverageUnitCount),
     distinctCoverageFields: arr(criteria.distinctCoverageFields).map(normalizedToken).filter(Boolean),
     desiredCoverageUnits: arr(criteria.desiredCoverageUnits)
@@ -568,6 +569,12 @@ function durableRecordCountForGoal(records = [], goal = {}) {
   return recordsForGoal(records, goal).filter((record) => bool(record?.promotion?.durableCandidate)).length;
 }
 
+function durableSampleCountForGoal(records = [], goal = {}) {
+  return recordsForGoal(records, goal)
+    .filter((record) => bool(record?.promotion?.durableCandidate))
+    .reduce((sum, record) => sum + Math.max(1, num(record.sampleCount)), 0);
+}
+
 function videoAestheticGatePassed(goal = {}, artifacts = {}) {
   if (str(goal.goalId) !== "display.full_sequence.quality_v1") return true;
   const video = artifacts.videoAestheticScore || {};
@@ -595,9 +602,11 @@ function goalEvidenceCovered(goal = {}, artifacts = {}, curriculum = {}) {
   const records = arr(artifacts?.qualityRecords?.records);
   const selectorReadyPriorCount = promotedPriorsForGoal(arr(artifacts?.promotedPriors?.priors), goal).length;
   const durableCandidateCount = durableRecordCountForGoal(records, goal);
+  const durableSampleCount = durableSampleCountForGoal(records, goal);
   const distinctCoverageUnitCount = durableCoverageUnitKeysForGoal(records, goal).size;
   return (criteria.minimumSelectorReadyPriorCount !== null && selectorReadyPriorCount >= criteria.minimumSelectorReadyPriorCount)
     || (criteria.minimumDurableCandidateCount !== null && durableCandidateCount >= criteria.minimumDurableCandidateCount)
+    || (criteria.minimumDurableSampleCount !== null && durableSampleCount >= criteria.minimumDurableSampleCount)
     || (criteria.minimumDistinctCoverageUnitCount !== null && distinctCoverageUnitCount >= criteria.minimumDistinctCoverageUnitCount);
 }
 
@@ -616,8 +625,10 @@ function hasRepeatableBlockedRecord(records = [], goal = {}, policy = {}) {
 
 function durableCriteriaStillNeedsCoverage(records = [], goal = {}) {
   const criteria = completionCriteriaForGoal(goal);
-  return criteria.minimumDurableCandidateCount !== null
-    && durableRecordCountForGoal(records, goal) < criteria.minimumDurableCandidateCount;
+  return (criteria.minimumDurableCandidateCount !== null
+    && durableRecordCountForGoal(records, goal) < criteria.minimumDurableCandidateCount)
+    || (criteria.minimumDurableSampleCount !== null
+      && durableSampleCountForGoal(records, goal) < criteria.minimumDurableSampleCount);
 }
 
 function supportsGeneratedCoverageGap(goal = {}) {
@@ -707,6 +718,7 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
   return arr(curriculum.goals).sort(goalSort).map((goal) => {
     const goalRecords = recordsForGoal(records, goal);
     const durableCandidateCount = goalRecords.filter((record) => bool(record?.promotion?.durableCandidate)).length;
+    const durableSampleCount = durableSampleCountForGoal(records, goal);
     const blockedPromisingCount = goalRecords.filter((record) => isPromisingBlockedRecord(record, goal, policy)).length;
     const selectorReadyPriorCount = promotedPriorsForGoal(priors, goal).length;
     const distinctCoverageUnitCount = durableCoverageUnitKeysForGoal(records, goal).size;
@@ -718,6 +730,8 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
       && selectorReadyPriorCount >= criteria.minimumSelectorReadyPriorCount;
     const coveredByDurableEvidence = criteria.minimumDurableCandidateCount !== null
       && durableCandidateCount >= criteria.minimumDurableCandidateCount;
+    const coveredByDurableSamples = criteria.minimumDurableSampleCount !== null
+      && durableSampleCount >= criteria.minimumDurableSampleCount;
     const coveredByDistinctCoverage = criteria.minimumDistinctCoverageUnitCount !== null
       && distinctCoverageUnitCount >= criteria.minimumDistinctCoverageUnitCount;
     if (artifacts.missingArtifacts?.length && !goalRecords.length && !selectorReadyPriorCount) blockers.add("latest evidence artifacts unavailable");
@@ -729,7 +743,7 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
       areaId: str(goal.areaId),
       status: str(goal.status),
       priority: num(goal.priority),
-      evidenceStatus: coveredByDeclaredStatus || coveredBySelectorReadyPriors || coveredByDurableEvidence || coveredByDistinctCoverage
+      evidenceStatus: coveredByDeclaredStatus || coveredBySelectorReadyPriors || coveredByDurableEvidence || coveredByDurableSamples || coveredByDistinctCoverage
         ? videoAestheticGatePassed(goal, artifacts) ? "covered" : "in_progress"
         : blockedPromisingCount
           ? "in_progress"
@@ -738,6 +752,7 @@ function buildGoalStatuses(curriculum = {}, artifacts = {}) {
             : str(goal.status),
       selectorReadyPriorCount,
       durableCandidateCount,
+      durableSampleCount,
       distinctCoverageUnitCount,
       missingCoverageUnitCount: missingCoverageUnits.length,
       blockedPromisingCount,
