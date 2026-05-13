@@ -1,0 +1,73 @@
+{
+  "artifactType": "sequencing_quality_training_job_v1",
+  "artifactVersion": 1,
+  "jobId": "intent-calibrated-strategy-expansion-v1",
+  "chunkId": "vendor-fixture-intent-calibrated-strategy-expansion",
+  "status": "active",
+  "description": "Run bounded full-sequence strategy expansion after auto-refill validation stalls. This job prioritizes explicit design intent, hard quality guardrails, focal handoff, temporal continuity, palette purpose, and guarded style variation instead of near-duplicate baseline comparisons.",
+  "defaults": {
+    "outRoot": "var/logs/sequencing-quality-controller/unattended/intent-calibrated-strategy-expansion-v1",
+    "uniqueOutRoot": true,
+    "curriculumPath": "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json",
+    "modelCatalogPath": "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json",
+    "runType": "overnight",
+    "maxLoops": 96,
+    "maxQueue": 24,
+    "maxPasses": 6,
+    "maxConsecutiveRegressions": 6,
+    "maxRepeatedGoalCount": 8,
+    "cleanupPreviewFrames": true,
+    "autoRefill": false,
+    "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
+  },
+  "stopPolicy": {
+    "treatControllerIdleAsChunkComplete": true,
+    "treatNeedsStrategyExpansionAsChunkComplete": true,
+    "maxConsecutiveRegressionsRequiresIntervention": false,
+    "maxRepeatedGoalSelectionRequiresIntervention": true
+  },
+  "curriculumScope": {
+    "trainingLayout": "render-training-vendor-fixture",
+    "primaryEvidence": "full_sequence_render",
+    "currentFocus": [
+      "explicit design-intent fit",
+      "quality-consistency repair",
+      "focal-handoff repair",
+      "temporal-continuity guardrails",
+      "palette-purpose preservation",
+      "bounded style variation"
+    ],
+    "targetGoalIds": [
+      "display.video_aesthetic.palette_foundation_guarded_revalidation_v1",
+      "display.video_aesthetic.palette_focal_handoff_guarded_context_sequence_v1",
+      "display.video_aesthetic.palette_foundation_soft_counterpoint_v1",
+      "display.video_aesthetic.palette_foundation_calibrated_counterpoint_v1",
+      "display.video_aesthetic.palette_transition_motion_bridge_v1"
+    ],
+    "excluded": [
+      "auto-refill validation cycles",
+      "production audio analysis",
+      "real audio feature extraction",
+      "human promotion without review evidence"
+    ]
+  },
+  "retentionPolicy": {
+    "maxRunDirectories": 8,
+    "requireSummaryBeforeRunDirectoryDelete": true,
+    "preserveCurrentRun": true,
+    "preserveLatestRunRoot": true,
+    "preserveVideoComparisonBaselineRunRoot": true,
+    "preservePreviousStateRunRoot": true,
+    "deleteRawPreviewFramesAfterLoop": true,
+    "preserveCompactEvidence": true
+  },
+  "operatorReviewPolicy": {
+    "requiredOnlyWhen": [
+      "job slice completes with promotion candidates",
+      "max_repeated_goal_selection",
+      "awaiting_evidence",
+      "new human rubric labels are explicitly requested"
+    ],
+    "preferredReviewSurface": "xLightsDesigner Review page"
+  }
+}

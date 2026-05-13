@@ -133,6 +133,37 @@ test("video aesthetic attempt comparison marks material overall drift as regress
   assert.equal(artifact.summary.overallAestheticScoreDelta, -0.00975);
 });
 
+test("video aesthetic attempt comparison keeps high-quality style variants neutral", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-attempt-style-variant-"));
+  const baseline = path.join(root, "baseline");
+  const candidate = path.join(root, "candidate");
+  writeScore(baseline, {
+    overallAestheticScore: 0.804886,
+    clutterControl: 1,
+    intentMatch: 0.89,
+    sectionQualityMean: 0.835,
+    colorDiscipline: 0.98,
+    transitionFlow: 0.79
+  });
+  writeScore(candidate, {
+    overallAestheticScore: 0.788542,
+    clutterControl: 1,
+    intentMatch: 0.885,
+    sectionQualityMean: 0.833,
+    colorDiscipline: 0.979,
+    transitionFlow: 0.791
+  });
+
+  const artifact = buildVideoAestheticAttemptComparison({
+    baselineRunRoot: baseline,
+    candidateRunRoot: candidate
+  });
+
+  assert.equal(artifact.comparisonStatus, "neutral");
+  assert.equal(artifact.promotionEligible, false);
+  assert.equal(artifact.summary.overallAestheticScoreDelta, -0.016344);
+});
+
 test("video aesthetic attempt comparison treats score recovery with hard tradeoff as neutral", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-video-attempt-tradeoff-"));
   const baseline = path.join(root, "baseline");

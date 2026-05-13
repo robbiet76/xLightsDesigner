@@ -79,13 +79,23 @@ function scoreDeltas(baselineScores = {}, candidateScores = {}) {
 
 const IMPROVEMENT_THRESHOLD = 0.01;
 const REGRESSION_THRESHOLD = 0.0075;
+const ACCEPTABLE_VARIANT_MIN_SCORE = 0.78;
+const ACCEPTABLE_VARIANT_MAX_DROP = 0.02;
 
 function classifyAttempt(deltas = [], improvementThreshold = IMPROVEMENT_THRESHOLD, regressionThreshold = REGRESSION_THRESHOLD) {
-  const overall = deltas.find((row) => row.dimension === "overall_aesthetic_score")?.delta ?? 0;
+  const overallRow = deltas.find((row) => row.dimension === "overall_aesthetic_score") || {};
+  const overall = overallRow.delta ?? 0;
+  const candidateOverall = num(overallRow.candidate);
   const hardRegressionDimensions = new Set(["clutter_control", "intent_match", "section_quality_mean"]);
   const hardRegressions = deltas.filter((row) => hardRegressionDimensions.has(row.dimension) && num(row.delta) <= -0.03);
   const broadRegressions = deltas.filter((row) => row.dimension !== "overall_aesthetic_score" && num(row.delta) <= -0.05);
   if (overall >= improvementThreshold && !hardRegressions.length) return "improved";
+  if (
+    candidateOverall >= ACCEPTABLE_VARIANT_MIN_SCORE
+    && overall >= -ACCEPTABLE_VARIANT_MAX_DROP
+    && !hardRegressions.length
+    && broadRegressions.length < 3
+  ) return "neutral";
   if (overall <= -regressionThreshold || (hardRegressions.length && overall < improvementThreshold) || broadRegressions.length >= 3) return "regressed";
   return "neutral";
 }
@@ -173,6 +183,7 @@ export function buildVideoAestheticAttemptComparison({
     notes: [
       "Compares compact video_aesthetic_score_v1 artifacts only; raw video and frame artifacts stay local.",
       "An improved attempt requires meaningful overall gain without broad dimension regression.",
+      "A high-quality candidate can remain neutral when it is a style variant with a modest overall drop and no hard quality regressions.",
       "Regression detection is slightly more sensitive than improvement promotion so repeated material losses do not pass as neutral."
     ]
   };
