@@ -18,7 +18,7 @@
     "maxRepeatedGoalCount": 8,
     "cleanupPreviewFrames": true,
     "autoRefill": true,
-    "maxAutoRefills": 12,
+    "maxAutoRefills": 36,
     "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
   },
   "stopPolicy": {

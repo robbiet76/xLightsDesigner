@@ -7,7 +7,7 @@ const DEFAULT_OUT = "var/logs/sequencer-layer-composition-training-runs/manual-p
 const DEFAULT_RUN_TYPE = "overnight";
 
 export const DEFAULT_PALETTE_PROFILES = ["mono_white", "rgb_primary"];
-export const RGB_DISPLAY_AUTO_REFILL_VALIDATION_CYCLE_COUNT = 12;
+export const RGB_DISPLAY_AUTO_REFILL_VALIDATION_CYCLE_COUNT = 36;
 
 export const RUNTIME_BUDGETS = {
   smoke: {

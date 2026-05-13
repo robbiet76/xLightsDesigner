@@ -328,6 +328,62 @@ test("unattended quality runner scopes runtime curriculum to job target goals", 
   assert.equal(scopedCurriculum.runtimeScope.scopedGoalCount, 1);
 });
 
+test("unattended quality runner resumes from previous runtime curriculum", async () => {
+  const root = tempDir();
+  const previousRunRoot = path.join(root, "previous-run");
+  const previousRuntimeCurriculum = path.join(previousRunRoot, "runtime-curriculum.json");
+  const previousStatePath = path.join(previousRunRoot, "loop-000001", "controller-state.json");
+  writeJson(previousRuntimeCurriculum, {
+    artifactType: "sequencing_quality_curriculum_v1",
+    goals: [{
+      goalId: "display.video_aesthetic.auto_refill.motion_pacing_cycle_01_v1",
+      areaId: "display_level_composition",
+      priority: 99,
+      status: "not_started",
+      coverage: {
+        passIds: ["display_palette_motion_pacing_validation_cycle_01"]
+      }
+    }]
+  });
+  writeJson(path.join(previousRunRoot, "unattended-run-summary.json"), {
+    runtimeCurriculumRef: previousRuntimeCurriculum
+  });
+  writeJson(previousStatePath, { goalStatuses: [] });
+  const currentRunRoot = path.join(root, "current-run");
+
+  const summary = await runSequencingQualityUnattended({
+    jobSpec: {
+      jobId: "test-runtime-resume"
+    },
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath,
+    outRoot: currentRunRoot,
+    maxLoops: 1,
+    autoRefill: true,
+    deps: {
+      runLoop: async (args) => {
+        const runtimeCurriculum = JSON.parse(fs.readFileSync(args.curriculumPath, "utf8"));
+        assert.equal(runtimeCurriculum.runtimeSourceRef, previousRuntimeCurriculum);
+        assert.equal(runtimeCurriculum.goals[0].goalId, "display.video_aesthetic.auto_refill.motion_pacing_cycle_01_v1");
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "blocked_no_controller_queue",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: "",
+            nextAction: "idle",
+            selectionReason: "no_active_goals"
+          }
+        };
+      }
+    }
+  });
+
+  assert.equal(summary.runtimeCurriculumRef, path.join(currentRunRoot, "runtime-curriculum.json"));
+});
+
 test("unattended quality runner consolidates executed loop evidence", async () => {
   const root = tempDir();
   let consolidatedLoopRoot = "";

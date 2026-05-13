@@ -233,6 +233,15 @@ function copyRuntimeCurriculum({ sourcePath = DEFAULT_CURRICULUM, outRoot = "", 
   return target;
 }
 
+function previousRuntimeCurriculumPath(previousStatePath = "") {
+  const resolvedPreviousStatePath = resolvePath(previousStatePath);
+  if (!resolvedPreviousStatePath) return "";
+  const previousRunRoot = path.dirname(path.dirname(resolvedPreviousStatePath));
+  const previousSummary = readJsonIfExists(path.join(previousRunRoot, "unattended-run-summary.json"));
+  const runtimeRef = resolvePath(previousSummary?.runtimeCurriculumRef);
+  return runtimeRef && fs.existsSync(runtimeRef) ? runtimeRef : "";
+}
+
 function existingGoalPassIds(curriculum = {}) {
   return new Set(arr(curriculum.goals).flatMap((goal) => arr(goal.coverage?.passIds).map(str).filter(Boolean)));
 }
@@ -680,8 +689,10 @@ export async function runSequencingQualityUnattended({
   let repeatedGoalCount = 0;
   const refillEvents = [];
   const targetGoalIds = arr(resolvedJobSpec?.curriculumScope?.targetGoalIds).map(str).filter(Boolean);
+  const resumeCurriculumPath = previousRuntimeCurriculumPath(currentPreviousStatePath);
+  const runtimeCurriculumSourcePath = resumeCurriculumPath || curriculumPath;
   let currentCurriculumPath = autoRefill || targetGoalIds.length
-    ? (deps.copyRuntimeCurriculum || copyRuntimeCurriculum)({ sourcePath: curriculumPath, outRoot: root, targetGoalIds })
+    ? (deps.copyRuntimeCurriculum || copyRuntimeCurriculum)({ sourcePath: runtimeCurriculumSourcePath, outRoot: root, targetGoalIds })
     : resolvePath(curriculumPath || DEFAULT_CURRICULUM);
 
   const writeRunSummary = (payload = {}) => {
