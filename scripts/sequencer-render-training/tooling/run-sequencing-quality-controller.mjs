@@ -514,7 +514,13 @@ function regressedFullSequenceMusicGoalAttempted(goal = {}, records = []) {
     || goalId === "music.baseline_preserving_audio_overlay_call_response.v1"
     || goalId === "music.baseline_preserving_audio_overlay_sparse_palette.v1"
     || goalId === "music.baseline_preserving_audio_overlay_sparse_palette_discipline_repair.v1")
-    && recordsForGoal(records, goal).length > 0;
+    && recordsForGoal(records, goal).some((record) => {
+      const blockers = arr(record?.promotion?.blockers).map(str);
+      return str(record.trendStatus) === "regressing"
+        || blockers.includes("quality_trend_not_stable_or_improving")
+        || blockers.includes("video_aesthetic_attempt_regressed")
+        || blockers.includes("full_sequence_quality_regressed");
+    });
 }
 
 function queueFromBlockedRecords({ records = [], goal = {}, policy = {}, maxQueue = DEFAULT_MAX_QUEUE, colorRichDisplayContext = false, recordFilter = null } = {}) {
@@ -1320,7 +1326,7 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
         missingDesiredCoverageUnits(records, goal).length
         || !recordsForGoal(records, goal).length
         || eligibleRepeatQueue.length
-        || (!requiresWholeDisplayGate && durableCriteriaStillNeedsCoverage(records, goal))
+        || durableCriteriaStillNeedsCoverage(records, goal)
       ) && !regressedFullSequenceMusicGoalAttempted(goal, records)
         && !hasNonRepeatableBlockedRecord(records, goal, policy);
     });
@@ -1554,8 +1560,8 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
   const coverageGapGoals = unblockedGoals.filter(supportsGeneratedCoverageGap);
   const nextGoal = coverageGapGoals.find((goal) => missingDesiredCoverageUnits(records, goal).length && !regressedFullSequenceMusicGoalAttempted(goal, records) && !hasNonRepeatableBlockedRecord(records, goal, policy))
     || coverageGapGoals.find((goal) => !recordsForGoal(records, goal).length && !hasNonRepeatableBlockedRecord(records, goal, policy))
-    || coverageGapGoals.find((goal) => !goalRequiresWholeDisplayRepeatGate(goal) && durableCriteriaStillNeedsCoverage(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
-    || coverageGapGoals.find((goal) => !durableRecordCountForGoal(records, goal) && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || coverageGapGoals.find((goal) => durableCriteriaStillNeedsCoverage(records, goal) && !regressedFullSequenceMusicGoalAttempted(goal, records) && !hasNonRepeatableBlockedRecord(records, goal, policy))
+    || coverageGapGoals.find((goal) => !durableRecordCountForGoal(records, goal) && !regressedFullSequenceMusicGoalAttempted(goal, records) && !hasNonRepeatableBlockedRecord(records, goal, policy))
     || null;
   if (nextGoal) {
     const missingCoverageUnits = missingDesiredCoverageUnits(records, nextGoal);

@@ -3379,6 +3379,103 @@ test("controller treats durable sample completion criteria as covered evidence",
   assert.equal(state.controllerDecision.selectedGoalId, "creative.intent_match.v1");
 });
 
+test("controller repeats stable whole-display music goals when durable sample evidence is short", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [
+    {
+      ...record("baseline_audio_overlay_sparse_delayed_intro", 0.84, []),
+      experimentId: "music-structure-review-rgb_primary",
+      family: "music_structure_review",
+      sampleCount: 2,
+      trendStatus: "stable"
+    },
+    {
+      ...record("baseline_audio_overlay_sparse_delayed_phrase", 0.85, []),
+      experimentId: "music-structure-review-rgb_primary",
+      family: "music_structure_review",
+      sampleCount: 2,
+      trendStatus: "stable"
+    },
+    {
+      ...record("baseline_audio_overlay_sparse_delayed_release", 0.85, []),
+      experimentId: "music-structure-review-rgb_primary",
+      family: "music_structure_review",
+      sampleCount: 2,
+      trendStatus: "stable"
+    }
+  ]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "music.baseline_preserving_audio_overlay_sparse_delayed.v1",
+        areaId: "musical_structure",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["music_structure_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: [
+            "baseline_audio_overlay_sparse_delayed_intro",
+            "baseline_audio_overlay_sparse_delayed_phrase",
+            "baseline_audio_overlay_sparse_delayed_release"
+          ]
+        },
+        completionCriteria: {
+          minimumDurableSampleCount: 12
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].durableSampleCount, 6);
+  assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
+  assert.equal(state.controllerDecision.selectedGoalId, "music.baseline_preserving_audio_overlay_sparse_delayed.v1");
+  assert.equal(state.controllerDecision.nextAction, "plan_goal_coverage");
+});
+
+test("controller does not repeat regressed whole-display music goals for sample count", () => {
+  const runRoot = tempDir();
+  writeRunRoot(runRoot, [{
+    ...record("baseline_audio_overlay_sparse_palette_phrase", 0.7, ["quality_trend_not_stable_or_improving"]),
+    experimentId: "music-structure-review-rgb_primary",
+    family: "music_structure_review",
+    sampleCount: 2,
+    trendStatus: "regressing"
+  }]);
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "music.baseline_preserving_audio_overlay_sparse_palette.v1",
+        areaId: "musical_structure",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["music_structure_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: [
+            "baseline_audio_overlay_sparse_palette_intro",
+            "baseline_audio_overlay_sparse_palette_phrase",
+            "baseline_audio_overlay_sparse_palette_release"
+          ]
+        },
+        completionCriteria: {
+          minimumDurableSampleCount: 12
+        }
+      }]
+    },
+    latestRunRoot: runRoot
+  });
+
+  assert.equal(state.goalStatuses[0].evidenceStatus, "in_progress");
+  assert.equal(state.controllerDecision.nextAction, "idle");
+  assert.deepEqual(state.nextQueue, []);
+});
+
 test("controller matches xLights internal SingleStrand name to single strand coverage", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
