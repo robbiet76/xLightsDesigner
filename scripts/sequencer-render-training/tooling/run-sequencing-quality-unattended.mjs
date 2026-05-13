@@ -212,19 +212,40 @@ function expandedScopedGoalIds(goals = [], targetGoalIds = []) {
   return requested;
 }
 
-function copyRuntimeCurriculum({ sourcePath = DEFAULT_CURRICULUM, outRoot = "", targetGoalIds = [] } = {}) {
+function copyRuntimeCurriculum({ sourcePath = DEFAULT_CURRICULUM, outRoot = "", targetGoalIds = [], curriculumScope = {} } = {}) {
   const source = resolvePath(sourcePath || DEFAULT_CURRICULUM);
   const target = path.join(resolvePath(outRoot || DEFAULT_OUT_ROOT), "runtime-curriculum.json");
   const curriculum = readJsonIfExists(source);
   if (!curriculum) throw new Error(`Unable to read curriculum: ${source}`);
   const scopedGoalIds = expandedScopedGoalIds(curriculum.goals, targetGoalIds);
+  const targetIds = new Set(arr(targetGoalIds).map(str).filter(Boolean));
   if (scopedGoalIds.size) {
     const beforeCount = arr(curriculum.goals).length;
-    curriculum.goals = arr(curriculum.goals).filter((goal) => scopedGoalIds.has(str(goal.goalId)));
+    curriculum.goals = arr(curriculum.goals)
+      .filter((goal) => scopedGoalIds.has(str(goal.goalId)))
+      .map((goal) => {
+        if (!targetIds.has(str(goal.goalId))) return goal;
+        const next = { ...goal };
+        if (curriculumScope.reopenTargetGoals) next.status = "not_started";
+        const minimumDurableCandidateCount = num(curriculumScope.minimumDurableCandidateCountOverride);
+        if (minimumDurableCandidateCount > 0) {
+          next.completionCriteria = {
+            ...next.completionCriteria,
+            minimumDurableCandidateCount,
+            minimumSelectorReadyPriorCount: null,
+            minimumDistinctCoverageUnitCount: null,
+            distinctCoverageFields: [],
+            desiredCoverageUnits: []
+          };
+        }
+        return next;
+      });
     curriculum.runtimeScope = {
       targetGoalIds: arr(targetGoalIds).map(str).filter(Boolean),
       includedPrerequisiteGoalIds: [...scopedGoalIds].filter((goalId) => !arr(targetGoalIds).map(str).includes(goalId)),
       ignoreRecentControllerAttemptHistory: true,
+      reopenTargetGoals: Boolean(curriculumScope.reopenTargetGoals),
+      minimumDurableCandidateCountOverride: num(curriculumScope.minimumDurableCandidateCountOverride) || null,
       sourceGoalCount: beforeCount,
       scopedGoalCount: curriculum.goals.length
     };
@@ -706,7 +727,12 @@ export async function runSequencingQualityUnattended({
   const resumeCurriculumPath = previousRuntimeCurriculumPath(currentPreviousStatePath);
   const runtimeCurriculumSourcePath = resumeCurriculumPath || curriculumPath;
   let currentCurriculumPath = autoRefill || targetGoalIds.length
-    ? (deps.copyRuntimeCurriculum || copyRuntimeCurriculum)({ sourcePath: runtimeCurriculumSourcePath, outRoot: root, targetGoalIds })
+    ? (deps.copyRuntimeCurriculum || copyRuntimeCurriculum)({
+      sourcePath: runtimeCurriculumSourcePath,
+      outRoot: root,
+      targetGoalIds,
+      curriculumScope: resolvedJobSpec?.curriculumScope || {}
+    })
     : resolvePath(curriculumPath || DEFAULT_CURRICULUM);
 
   const writeRunSummary = (payload = {}) => {

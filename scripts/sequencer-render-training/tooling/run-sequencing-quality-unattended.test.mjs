@@ -379,6 +379,61 @@ test("unattended quality runner scopes runtime curriculum to job target goals", 
   assert.equal(scopedCurriculum.runtimeScope.scopedGoalCount, 1);
 });
 
+test("unattended quality runner can reopen scoped goals with stricter durable evidence", async () => {
+  const root = tempDir();
+  const curriculumPath = path.join(root, "curriculum.json");
+  writeJson(curriculumPath, {
+    artifactType: "sequencing_quality_curriculum_v1",
+    goals: [{
+      goalId: "creative.intent_revision_variants.v1",
+      status: "covered",
+      completionCriteria: {
+        minimumDistinctCoverageUnitCount: 3,
+        distinctCoverageFields: ["paletteProfile", "passId"],
+        desiredCoverageUnits: [{ paletteProfile: "mono_white", passId: "intent_focal_handoff_revision" }]
+      }
+    }]
+  });
+  let scopedCurriculum = null;
+  await runSequencingQualityUnattended({
+    jobSpec: {
+      jobId: "reopen-job",
+      curriculumScope: {
+        targetGoalIds: ["creative.intent_revision_variants.v1"],
+        reopenTargetGoals: true,
+        minimumDurableCandidateCountOverride: 12
+      }
+    },
+    latestRunRoot: path.join(root, "seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    curriculumPath,
+    autoRefill: false,
+    maxLoops: 1,
+    deps: {
+      runLoop: async (args) => {
+        scopedCurriculum = JSON.parse(fs.readFileSync(args.curriculumPath, "utf8"));
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "blocked_no_controller_queue",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: { selectedGoalId: "", nextAction: "idle", selectionReason: "no_active_goals" }
+        };
+      }
+    }
+  });
+
+  assert.equal(scopedCurriculum.goals[0].status, "not_started");
+  assert.equal(scopedCurriculum.goals[0].completionCriteria.minimumDurableCandidateCount, 12);
+  assert.equal(scopedCurriculum.goals[0].completionCriteria.minimumDistinctCoverageUnitCount, null);
+  assert.deepEqual(scopedCurriculum.goals[0].completionCriteria.distinctCoverageFields, []);
+  assert.deepEqual(scopedCurriculum.goals[0].completionCriteria.desiredCoverageUnits, []);
+  assert.equal(scopedCurriculum.runtimeScope.reopenTargetGoals, true);
+  assert.equal(scopedCurriculum.runtimeScope.minimumDurableCandidateCountOverride, 12);
+});
+
 test("unattended quality runner resumes from previous runtime curriculum", async () => {
   const root = tempDir();
   const previousRunRoot = path.join(root, "previous-run");
