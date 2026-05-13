@@ -200,6 +200,57 @@ test("unattended quality runner refills runtime curriculum on strategy expansion
   assert.equal(calls.length, 2);
 });
 
+test("unattended quality runner can stop when automated improvement stalls", async () => {
+  const root = tempDir();
+  const calls = [];
+  const summary = await runSequencingQualityUnattended({
+    latestRunRoot: path.join(root, "seed"),
+    videoComparisonBaselineRunRoot: path.join(root, "video-seed"),
+    previousStatePath: path.join(root, "seed-controller.json"),
+    outRoot: root,
+    maxLoops: 5,
+    maxConsecutiveRegressions: 0,
+    maxConsecutiveNonImprovingLoops: 2,
+    autoRefill: false,
+    jobSpec: {
+      jobId: "intent-stall-test",
+      stopPolicy: {
+        treatNoFurtherAutomatedImprovementAsChunkComplete: true
+      }
+    },
+    deps: {
+      runLoop: async (args) => {
+        calls.push(args);
+        const controllerStateRef = path.join(args.loopRoot, "controller-state.json");
+        writeJson(controllerStateRef, { goalStatuses: [] });
+        return {
+          status: "executed",
+          loopRoot: args.loopRoot,
+          controllerStateRef,
+          controllerDecision: {
+            selectedGoalId: `creative.intent_revision_variants.v1`,
+            nextAction: "plan_goal_coverage",
+            selectionReason: "coverage_gap"
+          },
+          passRunner: { processedPasses: 1, renderReviewAcceptedEvidenceCount: 1 },
+          videoAestheticAttemptComparison: {
+            comparisonStatus: "neutral",
+            overallAestheticScoreDelta: 0
+          },
+          crossRunQuality: { durableCandidateCount: 1, blockedRecordCount: 0 }
+        };
+      }
+    }
+  });
+
+  assert.equal(summary.stopReason, "major_chunk_complete_no_further_automated_improvement");
+  assert.equal(summary.majorChunkStatus, "complete");
+  assert.equal(summary.iterationCount, 2);
+  assert.equal(summary.interventionRecommended, false);
+  assert.equal(summary.iterations[1].consecutiveNonImprovingCount, 2);
+  assert.equal(calls.length, 2);
+});
+
 test("unattended quality runner does not stop on auto-refill validation regressions", async () => {
   const root = tempDir();
   const calls = [];

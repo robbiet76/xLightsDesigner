@@ -1,0 +1,102 @@
+{
+  "artifactType": "sequencing_quality_training_job_v1",
+  "artifactVersion": 1,
+  "jobId": "intent-based-human-level-sequencing-v1",
+  "chunkId": "vendor-fixture-intent-based-human-level-sequencing",
+  "status": "active",
+  "description": "Run a broad intent-based full-sequence campaign slice until automated evidence either improves, exhausts the current strategy space, or reaches a no-further-improvement plateau ready for human review.",
+  "defaults": {
+    "outRoot": "var/logs/sequencing-quality-controller/unattended/intent-based-human-level-sequencing-v1",
+    "uniqueOutRoot": true,
+    "curriculumPath": "scripts/sequencer-render-training/catalog/sequencing-quality-curriculum-v1.json",
+    "modelCatalogPath": "scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json",
+    "runType": "overnight",
+    "maxLoops": 360,
+    "maxQueue": 40,
+    "maxPasses": 6,
+    "maxConsecutiveRegressions": 8,
+    "maxConsecutiveNonImprovingLoops": 24,
+    "maxRepeatedGoalCount": 12,
+    "cleanupPreviewFrames": true,
+    "autoRefill": false,
+    "maxAutoRefills": 0,
+    "endpoint": "http://127.0.0.1:49915/xlightsdesigner/api"
+  },
+  "stopPolicy": {
+    "treatControllerIdleAsChunkComplete": true,
+    "treatNeedsStrategyExpansionAsChunkComplete": true,
+    "treatNoFurtherAutomatedImprovementAsChunkComplete": true,
+    "maxConsecutiveRegressionsRequiresIntervention": false,
+    "maxConsecutiveNonImprovingRequiresIntervention": false,
+    "maxRepeatedGoalSelectionRequiresIntervention": true
+  },
+  "curriculumScope": {
+    "trainingLayout": "render-training-vendor-fixture",
+    "primaryEvidence": "full_sequence_render",
+    "currentFocus": [
+      "explicit sequence intent",
+      "style range instead of one fixed recipe",
+      "whole-display quality over isolated effect quality",
+      "synthetic timing tracks for structure, beat, lyric, and release behavior",
+      "palette roles with multiple colors",
+      "focal handoff and visual hierarchy",
+      "target-transfer evidence for project-local adaptation"
+    ],
+    "targetGoalIds": [
+      "music.multi_section_structure.v1",
+      "music.guarded_foundation_sequence.v1",
+      "music.guarded_pacing_sequence.v1",
+      "music.full_sequence_audio_alignment.v1",
+      "music.full_sequence_audio_consistency_repair.v1",
+      "music.full_sequence_audio_guarded_repair.v1",
+      "music.baseline_preserving_audio_overlay.v1",
+      "music.baseline_preserving_audio_overlay_motion_repair.v1",
+      "music.baseline_preserving_audio_overlay_palette_role_repair.v1",
+      "music.baseline_preserving_audio_overlay_existing_motion_repair.v1",
+      "music.baseline_preserving_audio_overlay_style_variation.v1",
+      "music.baseline_preserving_audio_overlay_call_response.v1",
+      "music.baseline_preserving_audio_overlay_single_target_motif.v1",
+      "music.baseline_preserving_audio_overlay_single_target_swell.v1",
+      "music.baseline_preserving_audio_overlay_sparse_accent.v1",
+      "music.baseline_preserving_audio_overlay_sparse_palette.v1",
+      "music.baseline_preserving_audio_overlay_sparse_palette_discipline_repair.v1",
+      "music.baseline_preserving_audio_overlay_sparse_delayed.v1",
+      "music.baseline_preserving_audio_overlay_sparse_early.v1",
+      "music.baseline_preserving_audio_overlay_sparse_syncopated.v1",
+      "music.baseline_preserving_audio_overlay_sparse_release_hold.v1",
+      "creative.intent_match.v1",
+      "creative.intent_revision_comparison.v1",
+      "creative.intent_revision_variants.v1",
+      "target_transfer.compatibility_adaptation.v1"
+    ],
+    "excluded": [
+      "production audio analysis",
+      "real audio feature extraction",
+      "auto-refill validation cycles",
+      "single-color-only optimization",
+      "human promotion without review evidence",
+      "source training asset deletion"
+    ]
+  },
+  "retentionPolicy": {
+    "maxRunDirectories": 8,
+    "requireSummaryBeforeRunDirectoryDelete": true,
+    "preserveCurrentRun": true,
+    "preserveLatestRunRoot": true,
+    "preserveVideoComparisonBaselineRunRoot": true,
+    "preservePreviousStateRunRoot": true,
+    "deleteRawPreviewFramesAfterLoop": true,
+    "preserveCompactEvidence": true
+  },
+  "operatorReviewPolicy": {
+    "requiredOnlyWhen": [
+      "major_chunk_complete_no_further_automated_improvement",
+      "major_chunk_complete_controller_idle",
+      "major_chunk_complete_strategy_exhausted",
+      "max_repeated_goal_selection",
+      "awaiting_evidence",
+      "new human rubric labels are explicitly requested"
+    ],
+    "preferredReviewSurface": "xLightsDesigner Review page"
+  }
+}

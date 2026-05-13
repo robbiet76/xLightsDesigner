@@ -154,8 +154,10 @@ function normalizeTrainingJobSpec(spec = null) {
     stopPolicy: {
       treatControllerIdleAsChunkComplete: Boolean(spec.stopPolicy?.treatControllerIdleAsChunkComplete),
       treatNeedsStrategyExpansionAsChunkComplete: Boolean(spec.stopPolicy?.treatNeedsStrategyExpansionAsChunkComplete),
+      treatNoFurtherAutomatedImprovementAsChunkComplete: Boolean(spec.stopPolicy?.treatNoFurtherAutomatedImprovementAsChunkComplete),
       maxConsecutiveRegressionsRequiresIntervention: spec.stopPolicy?.maxConsecutiveRegressionsRequiresIntervention !== false,
-      maxRepeatedGoalSelectionRequiresIntervention: spec.stopPolicy?.maxRepeatedGoalSelectionRequiresIntervention !== false
+      maxRepeatedGoalSelectionRequiresIntervention: spec.stopPolicy?.maxRepeatedGoalSelectionRequiresIntervention !== false,
+      maxConsecutiveNonImprovingRequiresIntervention: spec.stopPolicy?.maxConsecutiveNonImprovingRequiresIntervention === true
     },
     curriculumScope: spec.curriculumScope || {},
     checkpoints: spec.checkpoints || {},
@@ -357,6 +359,8 @@ function stopReasonForSummary(
   {
     consecutiveRegressionCount = 0,
     maxConsecutiveRegressions = 0,
+    consecutiveNonImprovingCount = 0,
+    maxConsecutiveNonImprovingLoops = 0,
     repeatedGoalCount = 0,
     maxRepeatedGoalCount = 0
   } = {}
@@ -367,6 +371,7 @@ function stopReasonForSummary(
     ? "awaiting_evidence"
     : "blocked_no_controller_queue";
   if (maxConsecutiveRegressions > 0 && consecutiveRegressionCount >= maxConsecutiveRegressions) return "max_consecutive_regressions";
+  if (maxConsecutiveNonImprovingLoops > 0 && consecutiveNonImprovingCount >= maxConsecutiveNonImprovingLoops) return "max_consecutive_non_improving_loops";
   if (maxRepeatedGoalCount > 0 && repeatedGoalCount >= maxRepeatedGoalCount) return "max_repeated_goal_selection";
   if (index >= maxLoops) return "max_loops_reached";
   return "";
@@ -385,6 +390,12 @@ function jobAdjustedStopReason(reason = "", summary = {}, jobSpec = null) {
   ) {
     return "major_chunk_complete_strategy_exhausted";
   }
+  if (
+    reason === "max_consecutive_non_improving_loops"
+    && jobSpec.stopPolicy.treatNoFurtherAutomatedImprovementAsChunkComplete
+  ) {
+    return "major_chunk_complete_no_further_automated_improvement";
+  }
   return reason;
 }
 
@@ -394,6 +405,7 @@ function majorChunkStatus(stopReason = "", jobSpec = null) {
   if ([
     "max_loops_reached",
     "max_consecutive_regressions",
+    "max_consecutive_non_improving_loops",
     "max_repeated_goal_selection",
     "blocked_no_controller_queue",
     "awaiting_evidence"
@@ -664,6 +676,7 @@ export async function runSequencingQualityUnattended({
   maxQueue = 25,
   maxPasses = 5,
   maxConsecutiveRegressions = 1,
+  maxConsecutiveNonImprovingLoops = 0,
   maxRepeatedGoalCount = 6,
   applyRender = true,
   endpoint = DEFAULT_ENDPOINT,
@@ -684,6 +697,7 @@ export async function runSequencingQualityUnattended({
   const iterations = [];
   let stopReason = "max_loops_reached";
   let consecutiveRegressionCount = 0;
+  let consecutiveNonImprovingCount = 0;
   let previousGoalId = "";
   let previousOverallAestheticScore = null;
   let repeatedGoalCount = 0;
@@ -711,6 +725,7 @@ export async function runSequencingQualityUnattended({
         maxQueue,
         maxPasses,
         maxConsecutiveRegressions,
+        maxConsecutiveNonImprovingLoops,
         maxRepeatedGoalCount,
         cleanupPreviewFrames,
         autoRefill,
@@ -775,6 +790,9 @@ export async function runSequencingQualityUnattended({
       && overallAestheticScore >= previousOverallAestheticScore + 0.01;
     const guardOutcome = isRecoveringVideoAttempt || autoRefillGoalId(selectedGoalId) ? "recovering" : outcome;
     consecutiveRegressionCount = guardOutcome === "regressed" ? consecutiveRegressionCount + 1 : 0;
+    consecutiveNonImprovingCount = str(summary.status) === "executed" && !["improved", "recovering"].includes(guardOutcome)
+      ? consecutiveNonImprovingCount + 1
+      : 0;
     repeatedGoalCount = selectedGoalId && selectedGoalId === previousGoalId ? repeatedGoalCount + 1 : selectedGoalId ? 1 : 0;
     previousGoalId = selectedGoalId;
     previousOverallAestheticScore = overallAestheticScore || previousOverallAestheticScore;
@@ -809,6 +827,7 @@ export async function runSequencingQualityUnattended({
       outcome,
       guardOutcome,
       consecutiveRegressionCount,
+      consecutiveNonImprovingCount,
       repeatedGoalCount,
       durableCandidateCount: num(summary.crossRunQuality?.durableCandidateCount),
       blockedRecordCount: num(summary.crossRunQuality?.blockedRecordCount),
@@ -829,6 +848,8 @@ export async function runSequencingQualityUnattended({
     const baseReason = stopReasonForSummary(summary, index, maxLoops, {
       consecutiveRegressionCount,
       maxConsecutiveRegressions,
+      consecutiveNonImprovingCount,
+      maxConsecutiveNonImprovingLoops,
       repeatedGoalCount,
       maxRepeatedGoalCount
     });
@@ -867,12 +888,15 @@ export async function runSequencingQualityUnattended({
     majorChunkStatus: majorChunkStatus(stopReason, resolvedJobSpec),
     interventionRecommended: !str(stopReason).startsWith("major_chunk_complete_") && [
       "max_consecutive_regressions",
+      "max_consecutive_non_improving_loops",
       "max_repeated_goal_selection",
       "blocked_no_controller_queue",
       "awaiting_evidence"
     ].includes(stopReason),
     interventionReason: stopReason === "max_consecutive_regressions"
       ? "The controller produced too many regressions in a row; inspect the latest selected goal and adjust curriculum or strategy selection before continuing."
+      : stopReason === "max_consecutive_non_improving_loops"
+        ? "The controller stopped after repeated non-improving loops; inspect the best candidate or route the generated set to human review before expanding the curriculum."
       : stopReason === "max_repeated_goal_selection"
         ? "The controller selected the same goal repeatedly; inspect blocked promising records and add a narrower repair or exploration strategy."
         : stopReason === "blocked_no_controller_queue" || stopReason === "awaiting_evidence"
@@ -916,6 +940,7 @@ export function parseArgs(argv = []) {
     maxQueue: 25,
     maxPasses: 5,
     maxConsecutiveRegressions: 1,
+    maxConsecutiveNonImprovingLoops: 0,
     maxRepeatedGoalCount: 6,
     applyRender: true,
     endpoint: DEFAULT_ENDPOINT,
@@ -946,6 +971,7 @@ export function parseArgs(argv = []) {
     else if (arg === "--max-queue") take("maxQueue", Number(argv[++index]));
     else if (arg === "--max-passes") take("maxPasses", Number(argv[++index]));
     else if (arg === "--max-consecutive-regressions") take("maxConsecutiveRegressions", Number(argv[++index]));
+    else if (arg === "--max-consecutive-non-improving-loops") take("maxConsecutiveNonImprovingLoops", Number(argv[++index]));
     else if (arg === "--max-repeated-goal-count") take("maxRepeatedGoalCount", Number(argv[++index]));
     else if (arg === "--max-auto-refills") take("maxAutoRefills", Number(argv[++index]));
     else if (arg === "--endpoint") take("endpoint", argv[++index]);
