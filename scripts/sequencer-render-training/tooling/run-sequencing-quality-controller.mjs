@@ -897,6 +897,20 @@ function recentTargetedDisplayAestheticRegressionCount(artifacts = {}) {
   return regressedGoalIds.size;
 }
 
+function recentAutoRefillRegressionCount(artifacts = {}) {
+  return [
+    {
+      goalId: str(arr(artifacts.controllerState?.nextQueue)[0]?.goalId),
+      comparisonStatus: str(artifacts.videoAestheticAttemptComparison?.comparisonStatus)
+    },
+    ...arr(artifacts.recentControllerAttempts)
+  ].filter((attempt) => {
+    const goalId = str(attempt.goalId);
+    return goalId.startsWith("display.video_aesthetic.auto_refill.")
+      && str(attempt.comparisonStatus) === "regressed";
+  }).length;
+}
+
 function weakVideoAestheticDimensions(video = {}, threshold = 0.65) {
   const scores = video.scores || {};
   const dimensions = [
@@ -1148,6 +1162,39 @@ function chooseNextQueue({ curriculum = {}, artifacts = {}, maxQueue = DEFAULT_M
       "display.video_aesthetic.palette_foundation_soft_counterpoint_v1",
       "display.video_aesthetic.palette_foundation_calibrated_counterpoint_v1"
     ]);
+    if (recentAutoRefillRegressionCount(artifacts) >= 4) {
+      const adaptiveRepairGoalIds = [
+        "display.video_aesthetic.palette_focal_handoff_context_sequence_v1",
+        "music.full_sequence_audio_consistency_repair.v1",
+        "display.video_aesthetic.focal_consistency_v1",
+        "display.video_aesthetic.palette_section_pacing_consistency_v1"
+      ];
+      const adaptiveRepairGoal = adaptiveRepairGoalIds
+        .map((goalId) => unblockedGoals.find((goal) => str(goal.goalId) === goalId))
+        .find((goal) => goal
+          && missingDesiredCoverageUnits(records, goal).length
+          && !hasNonRepeatableBlockedRecord(records, goal, policy));
+      if (adaptiveRepairGoal) {
+        const missingCoverageUnits = missingDesiredCoverageUnits(records, adaptiveRepairGoal);
+        return {
+          selectedGoal: adaptiveRepairGoal,
+          nextQueue: [{
+            queueId: `quality-controller:${str(adaptiveRepairGoal.goalId)}:coverage-gap`,
+            goalId: str(adaptiveRepairGoal.goalId),
+            priority: 1,
+            reason: "coverage_gap",
+            missingCoverageUnits,
+            selectionHint: "auto-refill validation repeatedly improved activity signals while regressing consistency, focal handoff, temporal continuity, or full-sequence context; pivot to targeted repair instead of another near-duplicate refill"
+          }],
+          decision: {
+            selectedGoalId: str(adaptiveRepairGoal.goalId),
+            selectionReason: "auto_refill_regression_repair_pivot",
+            blockedBy: [],
+            nextAction: "plan_goal_coverage"
+          }
+        };
+      }
+    }
     const redesignedGoals = unblockedGoals
       .filter((goal) => str(goal.goalId).startsWith("display.video_aesthetic."))
       .filter((goal) => redesignedGoalIds.has(str(goal.goalId))

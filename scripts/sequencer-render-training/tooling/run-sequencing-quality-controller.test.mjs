@@ -753,6 +753,86 @@ test("controller uses auto-refill display goals before declaring strategy expans
   assert.equal(state.nextQueue[0].goalId, "display.video_aesthetic.auto_refill.motion_pacing_cycle_01_v1");
 });
 
+test("controller pivots from repeated auto-refill regressions to adaptive repair", () => {
+  const autoRefillRoots = [
+    "display.video_aesthetic.auto_refill.motion_pacing_cycle_01_v1",
+    "display.video_aesthetic.auto_refill.spatial_negative_space_cycle_01_v1",
+    "display.video_aesthetic.auto_refill.spatial_focal_cycle_01_v1",
+    "display.video_aesthetic.auto_refill.color_purpose_motion_cycle_01_v1"
+  ].map((goalId, index) => {
+    const root = tempDir();
+    writeRunRoot(root, []);
+    writeFullSequenceReview(root);
+    writeVideoAestheticScore(root);
+    writeVideoAestheticAttemptComparison(root, { comparisonStatus: "regressed" });
+    writeJson(path.join(root, "controller-state.json"), {
+      artifactType: "sequencing_quality_training_controller_state_v1",
+      nextQueue: [{
+        goalId,
+        reason: "coverage_gap",
+        missingCoverageUnits: [{ paletteProfile: "rgb_primary", passId: `display_palette_auto_refill_${index + 1}` }]
+      }]
+    });
+    return root;
+  });
+  const latestRoot = autoRefillRoots.at(-1);
+  writeJson(path.join(latestRoot, "cross-run-quality-records.json"), {
+    ...JSON.parse(fs.readFileSync(path.join(latestRoot, "cross-run-quality-records.json"), "utf8")),
+    sourceRunRoots: autoRefillRoots
+  });
+
+  const state = buildSequencingQualityControllerState({
+    curriculum: {
+      ...curriculum(),
+      goals: [{
+        goalId: "display.video_aesthetic.palette_focal_handoff_context_sequence_v1",
+        areaId: "display_level_composition",
+        priority: 1,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: [
+            "display_palette_focal_handoff_context_intro",
+            "display_palette_focal_handoff_context_lift",
+            "display_palette_focal_handoff_context_release"
+          ],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 3,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [
+            { paletteProfile: "rgb_primary", passId: "display_palette_focal_handoff_context_intro" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_focal_handoff_context_lift" },
+            { paletteProfile: "rgb_primary", passId: "display_palette_focal_handoff_context_release" }
+          ]
+        }
+      }, {
+        goalId: "display.video_aesthetic.auto_refill.motion_pacing_cycle_02_v1",
+        areaId: "display_level_composition",
+        priority: 2,
+        status: "not_started",
+        coverage: {
+          families: ["display_quality_review"],
+          paletteProfiles: ["rgb_primary"],
+          passIds: ["display_palette_motion_pacing_validation_cycle_02"],
+          reviewScopes: ["whole_sequence_window"]
+        },
+        completionCriteria: {
+          minimumDistinctCoverageUnitCount: 1,
+          distinctCoverageFields: ["paletteProfile", "passId"],
+          desiredCoverageUnits: [{ paletteProfile: "rgb_primary", passId: "display_palette_motion_pacing_validation_cycle_02" }]
+        }
+      }]
+    },
+    latestRunRoot: latestRoot
+  });
+
+  assert.equal(state.controllerDecision.selectionReason, "auto_refill_regression_repair_pivot");
+  assert.equal(state.nextQueue[0].goalId, "display.video_aesthetic.palette_focal_handoff_context_sequence_v1");
+});
+
 test("controller counts durable music timing records for music-structure goals", () => {
   const runRoot = tempDir();
   writeRunRoot(runRoot, [{
